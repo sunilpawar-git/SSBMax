@@ -96,6 +96,9 @@ dependencies {
     // implementation(libs.firebase.firestore)
     // implementation(libs.firebase.analytics)
     
+    // TODO: Add real billing later
+    // implementation(libs.billing.ktx)
+    
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
