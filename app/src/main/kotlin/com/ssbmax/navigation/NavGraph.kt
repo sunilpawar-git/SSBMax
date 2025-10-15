@@ -91,8 +91,25 @@ fun SSBMaxNavGraph(
         
         // Student Home
         composable(SSBMaxDestinations.StudentHome.route) {
-            // TODO: Implement StudentHomeScreen
-            PlaceholderScreen(title = "Student Home")
+            com.ssbmax.ui.home.student.StudentHomeScreen(
+                onNavigateToTest = { testType ->
+                    // TODO: Navigate to specific test based on type
+                },
+                onNavigateToPhaseDetail = { phase ->
+                    when (phase) {
+                        com.ssbmax.core.domain.model.TestPhase.PHASE_1 -> 
+                            navController.navigate(SSBMaxDestinations.Phase1Detail.route)
+                        com.ssbmax.core.domain.model.TestPhase.PHASE_2 -> 
+                            navController.navigate(SSBMaxDestinations.Phase2Detail.route)
+                    }
+                },
+                onNavigateToStudy = {
+                    navController.navigate(SSBMaxDestinations.StudyMaterialsList.route)
+                },
+                onOpenDrawer = {
+                    // TODO: Open drawer
+                }
+            )
         }
         
         // Student Tests
@@ -119,8 +136,23 @@ fun SSBMaxNavGraph(
         
         // Instructor Home
         composable(SSBMaxDestinations.InstructorHome.route) {
-            // TODO: Implement InstructorHomeScreen
-            PlaceholderScreen(title = "Instructor Home")
+            com.ssbmax.ui.home.instructor.InstructorHomeScreen(
+                onNavigateToStudent = { studentId ->
+                    navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+                },
+                onNavigateToGrading = {
+                    navController.navigate(SSBMaxDestinations.InstructorGrading.route)
+                },
+                onNavigateToBatchDetail = { batchId ->
+                    navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId))
+                },
+                onNavigateToCreateBatch = {
+                    navController.navigate(SSBMaxDestinations.CreateBatch.route)
+                },
+                onOpenDrawer = {
+                    // TODO: Open drawer
+                }
+            )
         }
         
         // Instructor Students
