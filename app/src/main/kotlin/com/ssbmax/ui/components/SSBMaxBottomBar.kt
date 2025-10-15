@@ -1,6 +1,7 @@
 package com.ssbmax.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -70,7 +71,7 @@ private val studentBottomNavItems = listOf(
     BottomNavItem(
         route = SSBMaxDestinations.StudentStudy.route,
         label = "Study",
-        icon = Icons.Default.MenuBook
+        icon = Icons.AutoMirrored.Filled.MenuBook
     ),
     BottomNavItem(
         route = SSBMaxDestinations.StudentProfile.route,

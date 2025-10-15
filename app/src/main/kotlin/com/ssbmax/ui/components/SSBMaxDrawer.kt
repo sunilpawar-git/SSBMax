@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -47,7 +48,7 @@ fun SSBMaxDrawer(
             // User Profile Header
             item {
                 DrawerHeader(user = user)
-                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             }
             
             // Role-specific menu items
@@ -76,7 +77,7 @@ fun SSBMaxDrawer(
                 }
                 
                 item {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
                 
                 // Quick access to specific tests
@@ -93,7 +94,7 @@ fun SSBMaxDrawer(
                 }
                 
                 item {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
                 
                 item {
@@ -145,7 +146,7 @@ fun SSBMaxDrawer(
                 }
                 
                 item {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
             }
             
@@ -175,7 +176,7 @@ fun SSBMaxDrawer(
             
             item {
                 DrawerMenuItem(
-                    icon = Icons.Default.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Sign Out",
                     onClick = onSignOut,
                     tint = MaterialTheme.colorScheme.error
