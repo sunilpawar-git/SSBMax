@@ -1,7 +1,6 @@
 package com.ssbmax.core.domain.model
 
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * SSB Test domain model
@@ -20,22 +19,6 @@ data class SSBTest(
 )
 
 /**
- * Types of SSB tests
- */
-enum class TestType {
-    TAT,        // Thematic Apperception Test
-    WAT,        // Word Association Test
-    SRT,        // Situation Reaction Test
-    SDT,        // Self Description Test
-    PPDT,       // Picture Perception & Discussion Test
-    OIR,        // Officer Intelligence Rating
-    GTO_GD,     // Group Discussion
-    GTO_GPE,    // Group Planning Exercise
-    GTO_PGT,    // Progressive Group Task
-    IO_INTERVIEW // Personal Interview
-}
-
-/**
  * SSB Assessment Categories
  */
 enum class SSBCategory {
@@ -47,7 +30,19 @@ enum class SSBCategory {
 }
 
 /**
- * Test result model
+ * Test session tracking
+ */
+data class TestSession(
+    val sessionId: String,
+    val testId: String,
+    val userId: String,
+    val startedAt: Long,
+    val currentQuestion: Int = 0,
+    val responses: Map<String, String> = emptyMap()
+)
+
+/**
+ * Basic test result model for submissions
  */
 data class TestResult(
     val id: String,
@@ -64,16 +59,4 @@ data class TestResult(
     val passed: Boolean
         get() = score >= 60f
 }
-
-/**
- * Test session tracking
- */
-data class TestSession(
-    val sessionId: String,
-    val testId: String,
-    val userId: String,
-    val startedAt: Long,
-    val currentQuestion: Int = 0,
-    val responses: Map<String, String> = emptyMap()
-)
 
