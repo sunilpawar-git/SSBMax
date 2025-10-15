@@ -113,20 +113,46 @@ fun SSBMaxNavGraph(
         
         // Student Tests
         composable(SSBMaxDestinations.StudentTests.route) {
-            // TODO: Implement StudentTestsScreen
-            PlaceholderScreen(title = "Student Tests")
+            com.ssbmax.ui.tests.StudentTestsScreen(
+                onNavigateToPhase = { phase ->
+                    when (phase) {
+                        com.ssbmax.core.domain.model.TestPhase.PHASE_1 ->
+                            navController.navigate(SSBMaxDestinations.Phase1Detail.route)
+                        com.ssbmax.core.domain.model.TestPhase.PHASE_2 ->
+                            navController.navigate(SSBMaxDestinations.Phase2Detail.route)
+                    }
+                },
+                onNavigateToTest = { testType ->
+                    // TODO: Navigate to specific test based on type
+                }
+            )
         }
         
         // Student Study
         composable(SSBMaxDestinations.StudentStudy.route) {
-            // TODO: Implement StudentStudyScreen
-            PlaceholderScreen(title = "Student Study")
+            com.ssbmax.ui.study.StudyMaterialsScreen(
+                onNavigateToCategory = { category ->
+                    // TODO: Navigate to category detail
+                },
+                onNavigateToSearch = {
+                    // TODO: Navigate to search
+                }
+            )
         }
         
         // Student Profile
         composable(SSBMaxDestinations.StudentProfile.route) {
-            // TODO: Implement StudentProfileScreen
-            PlaceholderScreen(title = "Student Profile")
+            com.ssbmax.ui.profile.StudentProfileScreen(
+                onNavigateToSettings = {
+                    // TODO: Navigate to settings
+                },
+                onNavigateToAchievements = {
+                    // TODO: Navigate to achievements
+                },
+                onNavigateToHistory = {
+                    // TODO: Navigate to test history
+                }
+            )
         }
         
         // ========================
@@ -176,14 +202,22 @@ fun SSBMaxNavGraph(
         
         // Phase 1 Detail
         composable(SSBMaxDestinations.Phase1Detail.route) {
-            // TODO: Implement Phase1DetailScreen
-            PlaceholderScreen(title = "Phase 1 - OIR & PPDT")
+            com.ssbmax.ui.phase.Phase1DetailScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTest = { testType ->
+                    // TODO: Navigate to specific test based on type
+                }
+            )
         }
         
         // Phase 2 Detail
         composable(SSBMaxDestinations.Phase2Detail.route) {
-            // TODO: Implement Phase2DetailScreen
-            PlaceholderScreen(title = "Phase 2 - Psychology & GTO")
+            com.ssbmax.ui.phase.Phase2DetailScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTest = { testType ->
+                    // TODO: Navigate to specific test based on type
+                }
+            )
         }
         
         // ========================
