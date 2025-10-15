@@ -4,8 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
 import com.ssbmax.core.designsystem.theme.SSBMaxTheme
-import com.ssbmax.ui.dashboard.DashboardScreen
+import com.ssbmax.navigation.SSBMaxNavGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -15,17 +16,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SSBMaxTheme {
-                DashboardScreen(
-                    onNavigateToTest = { testId ->
-                        // TODO: Navigate to test screen
-                    },
-                    onNavigateToStudy = {
-                        // TODO: Navigate to study materials
-                    },
-                    onNavigateToProgress = {
-                        // TODO: Navigate to progress tracker
-                    }
-                )
+                val navController = rememberNavController()
+                SSBMaxNavGraph(navController = navController)
             }
         }
     }
