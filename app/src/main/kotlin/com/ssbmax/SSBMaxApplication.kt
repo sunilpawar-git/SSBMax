@@ -1,15 +1,17 @@
 package com.ssbmax
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
 /**
  * SSBMax Application class
- * Future: Will be annotated with @HiltAndroidApp when Hilt is added
+ * Hilt entry point for dependency injection
  */
+@HiltAndroidApp
 class SSBMaxApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Application initialization will go here
+        // Application initialization
     }
 }
 

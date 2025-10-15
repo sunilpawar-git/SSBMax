@@ -37,7 +37,15 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    
+    // Hilt (for @Inject)
+    implementation(libs.hilt.android)
+    
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
