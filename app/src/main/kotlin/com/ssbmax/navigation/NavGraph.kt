@@ -20,6 +20,7 @@ import com.ssbmax.ui.splash.SplashScreen
 @Composable
 fun SSBMaxNavGraph(
     navController: NavHostController,
+    onOpenDrawer: () -> Unit = {},
     modifier: Modifier = Modifier,
     startDestination: String = SSBMaxDestinations.Splash.route
 ) {
@@ -106,9 +107,7 @@ fun SSBMaxNavGraph(
                 onNavigateToStudy = {
                     navController.navigate(SSBMaxDestinations.StudyMaterialsList.route)
                 },
-                onOpenDrawer = {
-                    // TODO: Open drawer
-                }
+                onOpenDrawer = onOpenDrawer
             )
         }
         
@@ -149,9 +148,7 @@ fun SSBMaxNavGraph(
                 onNavigateToCreateBatch = {
                     navController.navigate(SSBMaxDestinations.CreateBatch.route)
                 },
-                onOpenDrawer = {
-                    // TODO: Open drawer
-                }
+                onOpenDrawer = onOpenDrawer
             )
         }
         
