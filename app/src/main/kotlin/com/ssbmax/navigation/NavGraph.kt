@@ -1,0 +1,304 @@
+package com.ssbmax.navigation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.ui.auth.LoginScreen
+import com.ssbmax.ui.auth.RoleSelectionScreen
+import com.ssbmax.ui.splash.SplashScreen
+
+/**
+ * Main navigation graph for SSBMax app
+ * Handles authentication flow and role-based navigation
+ */
+@Composable
+fun SSBMaxNavGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    startDestination: String = SSBMaxDestinations.Splash.route
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier
+    ) {
+        // Splash Screen
+        composable(SSBMaxDestinations.Splash.route) {
+            SplashScreen(
+                onNavigateToLogin = {
+                    navController.navigate(SSBMaxDestinations.Login.route) {
+                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHome = { isStudent ->
+                    val destination = if (isStudent) {
+                        SSBMaxDestinations.StudentHome.route
+                    } else {
+                        SSBMaxDestinations.InstructorHome.route
+                    }
+                    navController.navigate(destination) {
+                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToRoleSelection = {
+                    navController.navigate(SSBMaxDestinations.RoleSelection.route) {
+                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // Login Screen
+        composable(SSBMaxDestinations.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    // TODO: Navigate based on user role from AuthViewModel
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.Login.route) { inclusive = true }
+                    }
+                },
+                onNeedsRoleSelection = {
+                    navController.navigate(SSBMaxDestinations.RoleSelection.route)
+                }
+            )
+        }
+        
+        // Role Selection Screen
+        composable(SSBMaxDestinations.RoleSelection.route) {
+            RoleSelectionScreen(
+                onRoleSelected = { role ->
+                    val destination = when {
+                        role.isStudent -> SSBMaxDestinations.StudentHome.route
+                        role.isInstructor -> SSBMaxDestinations.InstructorHome.route
+                        else -> SSBMaxDestinations.StudentHome.route
+                    }
+                    navController.navigate(destination) {
+                        popUpTo(SSBMaxDestinations.RoleSelection.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // ========================
+        // STUDENT FLOW
+        // ========================
+        
+        // Student Home
+        composable(SSBMaxDestinations.StudentHome.route) {
+            // TODO: Implement StudentHomeScreen
+            PlaceholderScreen(title = "Student Home")
+        }
+        
+        // Student Tests
+        composable(SSBMaxDestinations.StudentTests.route) {
+            // TODO: Implement StudentTestsScreen
+            PlaceholderScreen(title = "Student Tests")
+        }
+        
+        // Student Study
+        composable(SSBMaxDestinations.StudentStudy.route) {
+            // TODO: Implement StudentStudyScreen
+            PlaceholderScreen(title = "Student Study")
+        }
+        
+        // Student Profile
+        composable(SSBMaxDestinations.StudentProfile.route) {
+            // TODO: Implement StudentProfileScreen
+            PlaceholderScreen(title = "Student Profile")
+        }
+        
+        // ========================
+        // INSTRUCTOR FLOW
+        // ========================
+        
+        // Instructor Home
+        composable(SSBMaxDestinations.InstructorHome.route) {
+            // TODO: Implement InstructorHomeScreen
+            PlaceholderScreen(title = "Instructor Home")
+        }
+        
+        // Instructor Students
+        composable(SSBMaxDestinations.InstructorStudents.route) {
+            // TODO: Implement InstructorStudentsScreen
+            PlaceholderScreen(title = "Instructor Students")
+        }
+        
+        // Instructor Grading
+        composable(SSBMaxDestinations.InstructorGrading.route) {
+            // TODO: Implement InstructorGradingScreen
+            PlaceholderScreen(title = "Instructor Grading")
+        }
+        
+        // Instructor Analytics
+        composable(SSBMaxDestinations.InstructorAnalytics.route) {
+            // TODO: Implement InstructorAnalyticsScreen
+            PlaceholderScreen(title = "Instructor Analytics")
+        }
+        
+        // ========================
+        // PHASE SCREENS
+        // ========================
+        
+        // Phase 1 Detail
+        composable(SSBMaxDestinations.Phase1Detail.route) {
+            // TODO: Implement Phase1DetailScreen
+            PlaceholderScreen(title = "Phase 1 - OIR & PPDT")
+        }
+        
+        // Phase 2 Detail
+        composable(SSBMaxDestinations.Phase2Detail.route) {
+            // TODO: Implement Phase2DetailScreen
+            PlaceholderScreen(title = "Phase 2 - Psychology & GTO")
+        }
+        
+        // ========================
+        // TEST SCREENS
+        // ========================
+        
+        // OIR Test
+        composable(
+            route = SSBMaxDestinations.OIRTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            // TODO: Implement OIRTestScreen
+            PlaceholderScreen(title = "OIR Test: $testId")
+        }
+        
+        // PPDT Test
+        composable(
+            route = SSBMaxDestinations.PPDTTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            // TODO: Implement PPDTTestScreen
+            PlaceholderScreen(title = "PPDT Test: $testId")
+        }
+        
+        // Psychology Test
+        composable(
+            route = SSBMaxDestinations.PsychologyTest.route,
+            arguments = listOf(
+                navArgument("testId") { type = NavType.StringType },
+                navArgument("subTest") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            val subTest = backStackEntry.arguments?.getString("subTest") ?: ""
+            // TODO: Implement PsychologyTestScreen
+            PlaceholderScreen(title = "Psychology Test: $subTest")
+        }
+        
+        // GTO Test
+        composable(
+            route = SSBMaxDestinations.GTOTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            // TODO: Implement GTOTestScreen
+            PlaceholderScreen(title = "GTO Test: $testId")
+        }
+        
+        // IO Test
+        composable(
+            route = SSBMaxDestinations.IOTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            // TODO: Implement IOTestScreen
+            PlaceholderScreen(title = "IO Test: $testId")
+        }
+        
+        // ========================
+        // STUDY MATERIALS
+        // ========================
+        
+        // Study Materials List
+        composable(SSBMaxDestinations.StudyMaterialsList.route) {
+            // TODO: Implement StudyMaterialsListScreen
+            PlaceholderScreen(title = "Study Materials")
+        }
+        
+        // Study Material Detail
+        composable(
+            route = SSBMaxDestinations.StudyMaterialDetail.route,
+            arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+            // TODO: Implement StudyMaterialDetailScreen
+            PlaceholderScreen(title = "Study Material: $categoryId")
+        }
+        
+        // ========================
+        // BATCH MANAGEMENT
+        // ========================
+        
+        // Join Batch
+        composable(SSBMaxDestinations.JoinBatch.route) {
+            // TODO: Implement JoinBatchScreen
+            PlaceholderScreen(title = "Join Batch")
+        }
+        
+        // Create Batch
+        composable(SSBMaxDestinations.CreateBatch.route) {
+            // TODO: Implement CreateBatchScreen
+            PlaceholderScreen(title = "Create Batch")
+        }
+        
+        // Batch Detail
+        composable(
+            route = SSBMaxDestinations.BatchDetail.route,
+            arguments = listOf(navArgument("batchId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val batchId = backStackEntry.arguments?.getString("batchId") ?: ""
+            // TODO: Implement BatchDetailScreen
+            PlaceholderScreen(title = "Batch: $batchId")
+        }
+        
+        // ========================
+        // INSTRUCTOR SPECIFIC
+        // ========================
+        
+        // Student Detail (for instructors)
+        composable(
+            route = SSBMaxDestinations.StudentDetail.route,
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
+            // TODO: Implement StudentDetailScreen
+            PlaceholderScreen(title = "Student Details: $studentId")
+        }
+        
+        // Grade Test
+        composable(
+            route = SSBMaxDestinations.GradeTest.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            // TODO: Implement GradeTestScreen
+            PlaceholderScreen(title = "Grade Test: $submissionId")
+        }
+    }
+}
+
+// Temporary placeholder for screens not yet implemented
+@Composable
+private fun PlaceholderScreen(title: String) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        androidx.compose.material3.Text(
+            text = "$title\n(Coming Soon)",
+            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+

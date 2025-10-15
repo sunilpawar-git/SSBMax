@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    // TODO: Enable Firebase later: alias(libs.plugins.google.services)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -77,6 +77,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
@@ -90,11 +93,11 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     
-    // TODO: Add Firebase later
-    // implementation(platform(libs.firebase.bom))
-    // implementation(libs.firebase.auth)
-    // implementation(libs.firebase.firestore)
-    // implementation(libs.firebase.analytics)
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.analytics)
     
     // TODO: Add real billing later
     // implementation(libs.billing.ktx)

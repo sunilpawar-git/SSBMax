@@ -1,7 +1,8 @@
 package com.ssbmax.ui.auth
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.User
+import com.ssbmax.core.domain.model.SSBMaxUser
+import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -36,11 +37,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `signIn with valid credentials shows success`() = runTest {
-        // Given
-        val user = User("1", "test@example.com", "Test User")
-        coEvery { mockRepository.signIn("test@example.com", "password123") } returns Result.success(user)
-        
+    fun `signIn with valid credentials shows error for deprecated method`() = runTest {
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
@@ -48,28 +45,21 @@ class AuthViewModelTest {
             viewModel.signIn("test@example.com", "password123")
             
             assertEquals(AuthUiState.Loading, awaitItem())
-            val successState = awaitItem() as AuthUiState.Success
-            assertEquals(user, successState.user)
+            val errorState = awaitItem() as AuthUiState.Error
+            assertTrue(errorState.message.contains("not yet implemented"))
         }
-        
-        // Then
-        coVerify { mockRepository.signIn("test@example.com", "password123") }
     }
     
     @Test
-    fun `signIn with invalid credentials shows error`() = runTest {
-        // Given
-        coEvery { mockRepository.signIn(any(), any()) } returns Result.failure(Exception("Invalid credentials"))
-        
+    fun `signIn with invalid credentials shows validation error`() = runTest {
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
             
-            viewModel.signIn("test@example.com", "wrongpassword")
+            viewModel.signIn("test@example.com", "12345")
             
-            assertEquals(AuthUiState.Loading, awaitItem())
             val errorState = awaitItem() as AuthUiState.Error
-            assertEquals("Invalid credentials", errorState.message)
+            assertTrue(errorState.message.contains("valid"))
         }
     }
     
@@ -100,11 +90,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `signUp with valid data shows success`() = runTest {
-        // Given
-        val user = User("1", "new@example.com", "New User")
-        coEvery { mockRepository.signUp("new@example.com", "password123", "New User") } returns Result.success(user)
-        
+    fun `signUp with valid data shows error for deprecated method`() = runTest {
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
@@ -112,12 +98,9 @@ class AuthViewModelTest {
             viewModel.signUp("new@example.com", "password123", "New User")
             
             assertEquals(AuthUiState.Loading, awaitItem())
-            val successState = awaitItem() as AuthUiState.Success
-            assertEquals(user, successState.user)
+            val errorState = awaitItem() as AuthUiState.Error
+            assertTrue(errorState.message.contains("not yet implemented"))
         }
-        
-        // Then
-        coVerify { mockRepository.signUp("new@example.com", "password123", "New User") }
     }
     
     @Test

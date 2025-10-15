@@ -1,139 +1,153 @@
 package com.ssbmax.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
- * Login screen with email/password authentication
+ * Login screen with Google Sign-In authentication
  */
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit = {},
+    onNeedsRoleSelection: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isSignUp by remember { mutableStateOf(false) }
-    var displayName by remember { mutableStateOf("") }
-    
-    // Handle success navigation
+    // Handle navigation
     LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) {
-            onLoginSuccess()
+        when (uiState) {
+            is AuthUiState.Success -> onLoginSuccess()
+            is AuthUiState.NeedsRoleSelection -> onNeedsRoleSelection()
+            else -> {}
         }
     }
     
-    Scaffold(modifier = modifier) { padding ->
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Logo and Title
             Text(
-                text = if (isSignUp) "Create Account" else "Welcome Back",
-                style = MaterialTheme.typography.headlineMedium
+                text = "SSBMax",
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
-            // Email field
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = uiState !is AuthUiState.Loading
+            Text(
+                text = "Your Path to SSB Success",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(64.dp))
             
-            // Display name (only for sign up)
-            if (isSignUp) {
-                OutlinedTextField(
-                    value = displayName,
-                    onValueChange = { displayName = it },
-                    label = { Text("Display Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = uiState !is AuthUiState.Loading
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            // Password field
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = uiState !is AuthUiState.Loading
+            // Welcome message
+            Text(
+                text = "Welcome!",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
-            // Sign in/up button
+            Text(
+                text = "Sign in to access study materials, practice tests, and track your progress",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            // Google Sign-In Button
             Button(
-                onClick = {
-                    if (isSignUp) {
-                        viewModel.signUp(email, password, displayName)
-                    } else {
-                        viewModel.signIn(email, password)
-                    }
-                },
+                onClick = { viewModel.signInWithGoogle() },
                 enabled = uiState !is AuthUiState.Loading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 4.dp
+                )
             ) {
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 } else {
-                    Text(if (isSignUp) "Sign Up" else "Sign In")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Login,
+                        contentDescription = "Login",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Continue with Google",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Toggle sign up/in
-            TextButton(
-                onClick = {
-                    isSignUp = !isSignUp
-                    viewModel.resetState()
-                }
-            ) {
-                Text(
-                    if (isSignUp) "Already have an account? Sign In"
-                    else "Don't have an account? Sign Up"
-                )
             }
             
             // Error message
             if (uiState is AuthUiState.Error) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = (uiState as AuthUiState.Error).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = (uiState as AuthUiState.Error).message,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Terms and Privacy
+            Text(
+                text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
     }
 }
