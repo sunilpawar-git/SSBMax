@@ -50,6 +50,7 @@ dependencies {
     
     // Hilt
     implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
     
     // Testing
     testImplementation(libs.junit)

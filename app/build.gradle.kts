@@ -58,6 +58,8 @@ android {
 dependencies {
     // Core modules
     implementation(project(":core:designsystem"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:data"))
     
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -78,6 +80,10 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
+    
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     
     // Hilt
     implementation(libs.hilt.android)

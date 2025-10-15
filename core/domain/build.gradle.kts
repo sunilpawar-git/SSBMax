@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -42,6 +43,7 @@ dependencies {
     
     // Hilt (for @Inject)
     implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
     
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
