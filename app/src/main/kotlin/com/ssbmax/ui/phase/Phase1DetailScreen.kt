@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -123,7 +125,7 @@ private fun PhaseOverviewCard(
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             // Stats Row
             Row(
@@ -131,13 +133,13 @@ private fun PhaseOverviewCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem(
-                    icon = Icons.Default.Assignment,
+                    icon = Icons.AutoMirrored.Filled.Assignment,
                     label = "Tests",
                     value = "$completedTests/$totalTests"
                 )
                 
                 StatItem(
-                    icon = Icons.Default.TrendingUp,
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
                     label = "Avg Score",
                     value = if (completedTests > 0) "${averageScore.toInt()}%" else "N/A"
                 )
@@ -210,7 +212,7 @@ private fun TestCard(
                         imageVector = when (test.type) {
                             TestType.OIR -> Icons.Default.Quiz
                             TestType.PPDT -> Icons.Default.Image
-                            else -> Icons.Default.Assignment
+                            else -> Icons.AutoMirrored.Filled.Assignment
                         },
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,

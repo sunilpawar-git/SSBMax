@@ -205,7 +205,13 @@ fun SSBMaxNavGraph(
             com.ssbmax.ui.phase.Phase1DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTest = { testType ->
-                    // TODO: Navigate to specific test based on type
+                    when (testType) {
+                        com.ssbmax.core.domain.model.TestType.OIR ->
+                            navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard"))
+                        com.ssbmax.core.domain.model.TestType.PPDT ->
+                            navController.navigate(SSBMaxDestinations.PPDTTest.createRoute("ppdt_standard"))
+                        else -> { /* TODO: Other tests */ }
+                    }
                 }
             )
         }
@@ -230,8 +236,38 @@ fun SSBMaxNavGraph(
             arguments = listOf(navArgument("testId") { type = NavType.StringType })
         ) { backStackEntry ->
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
-            // TODO: Implement OIRTestScreen
-            PlaceholderScreen(title = "OIR Test: $testId")
+            com.ssbmax.ui.tests.oir.OIRTestScreen(
+                onTestComplete = { sessionId ->
+                    navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId)) {
+                        popUpTo(SSBMaxDestinations.OIRTest.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // OIR Test Result
+        composable(
+            route = SSBMaxDestinations.OIRTestResult.route,
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            com.ssbmax.ui.tests.oir.OIRTestResultScreen(
+                sessionId = sessionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onRetakeTest = {
+                    navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard")) {
+                        popUpTo(SSBMaxDestinations.OIRTestResult.route) { inclusive = true }
+                    }
+                },
+                onReviewAnswers = {
+                    // TODO: Navigate to review screen
+                }
+            )
         }
         
         // PPDT Test

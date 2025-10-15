@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -169,7 +171,7 @@ private fun Phase2OverviewCard(
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
             
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             // Stats Row
             Row(
@@ -177,13 +179,13 @@ private fun Phase2OverviewCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem(
-                    icon = Icons.Default.Assignment,
+                    icon = Icons.AutoMirrored.Filled.Assignment,
                     label = "Tests",
                     value = "$completedTests/$totalTests"
                 )
                 
                 StatItem(
-                    icon = Icons.Default.TrendingUp,
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
                     label = "Avg Score",
                     value = if (completedTests > 0) "${averageScore.toInt()}%" else "N/A"
                 )
@@ -411,7 +413,7 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         TestType.GTO -> Icons.Default.Groups
         TestType.IO -> Icons.Default.RecordVoiceOver
-        else -> Icons.Default.Assignment
+        else -> Icons.AutoMirrored.Filled.Assignment
     }
 }
 

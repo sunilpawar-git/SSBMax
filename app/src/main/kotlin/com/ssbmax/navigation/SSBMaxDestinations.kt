@@ -29,6 +29,9 @@ sealed class SSBMaxDestinations(val route: String) {
     data object OIRTest : SSBMaxDestinations("test/oir/{testId}") {
         fun createRoute(testId: String) = "test/oir/$testId"
     }
+    data object OIRTestResult : SSBMaxDestinations("test/oir/result/{sessionId}") {
+        fun createRoute(sessionId: String) = "test/oir/result/$sessionId"
+    }
     data object PPDTTest : SSBMaxDestinations("test/ppdt/{testId}") {
         fun createRoute(testId: String) = "test/ppdt/$testId"
     }
