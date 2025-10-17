@@ -54,5 +54,11 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         impl: com.ssbmax.core.data.repository.AuthRepositoryImpl
     ): com.ssbmax.core.domain.repository.AuthRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindSubmissionRepository(
+        impl: com.ssbmax.core.data.remote.FirestoreSubmissionRepository
+    ): com.ssbmax.core.domain.repository.SubmissionRepository
 }
 
