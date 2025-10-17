@@ -69,6 +69,11 @@ private val studentBottomNavItems = listOf(
         icon = Icons.Default.Quiz
     ),
     BottomNavItem(
+        route = SSBMaxDestinations.StudentSubmissions.route,
+        label = "Results",
+        icon = Icons.Default.Assessment
+    ),
+    BottomNavItem(
         route = SSBMaxDestinations.StudentStudy.route,
         label = "Study",
         icon = Icons.AutoMirrored.Filled.MenuBook

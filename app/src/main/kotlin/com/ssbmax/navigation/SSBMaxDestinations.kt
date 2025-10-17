@@ -12,6 +12,7 @@ sealed class SSBMaxDestinations(val route: String) {
     // Student Flow
     data object StudentHome : SSBMaxDestinations("student/home")
     data object StudentTests : SSBMaxDestinations("student/tests")
+    data object StudentSubmissions : SSBMaxDestinations("student/submissions")
     data object StudentStudy : SSBMaxDestinations("student/study")
     data object StudentProfile : SSBMaxDestinations("student/profile")
     
@@ -89,6 +90,11 @@ sealed class SSBMaxDestinations(val route: String) {
     data object InstructorGradingDetail : SSBMaxDestinations("instructor/grading/{submissionId}") {
         fun createRoute(submissionId: String) = "instructor/grading/$submissionId"
     }
+    
+    // Submission Detail (for students - view their own submission)
+    data object SubmissionDetail : SSBMaxDestinations("submission/{submissionId}") {
+        fun createRoute(submissionId: String) = "submission/$submissionId"
+    }
 }
 
 /**
@@ -123,6 +129,7 @@ sealed class BottomNavItem(
     // Student Bottom Nav
     data object StudentHome : BottomNavItem(SSBMaxDestinations.StudentHome.route, "Home")
     data object StudentTests : BottomNavItem(SSBMaxDestinations.StudentTests.route, "Tests")
+    data object StudentSubmissions : BottomNavItem(SSBMaxDestinations.StudentSubmissions.route, "Results")
     data object StudentStudy : BottomNavItem(SSBMaxDestinations.StudentStudy.route, "Study")
     data object StudentProfile : BottomNavItem(SSBMaxDestinations.StudentProfile.route, "Profile")
     

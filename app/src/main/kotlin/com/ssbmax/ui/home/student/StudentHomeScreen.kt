@@ -35,6 +35,7 @@ fun StudentHomeScreen(
     onNavigateToTest: (TestType) -> Unit,
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
+    onNavigateToSubmissions: () -> Unit = {},
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
