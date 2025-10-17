@@ -48,6 +48,16 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+    
+    // Google Sign-In
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+    
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

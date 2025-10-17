@@ -1,5 +1,8 @@
 package com.ssbmax.ui.auth
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,19 @@ fun LoginScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    
+    // Google Sign-In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.handleGoogleSignInResult(result.data)
+        } else {
+            // User cancelled or error occurred
+            // You can show a message here if needed
+        }
+    }
     
     // Handle navigation
     LaunchedEffect(uiState) {
@@ -86,7 +103,11 @@ fun LoginScreen(
             
             // Google Sign-In Button
             Button(
-                onClick = { viewModel.signInWithGoogle() },
+                onClick = {
+                    // Launch Google Sign-In
+                    val signInIntent = viewModel.getGoogleSignInIntent()
+                    googleSignInLauncher.launch(signInIntent)
+                },
                 enabled = uiState !is AuthUiState.Loading,
                 modifier = Modifier
                     .fillMaxWidth()

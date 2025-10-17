@@ -1,7 +1,9 @@
 package com.ssbmax.ui.auth
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
@@ -13,53 +15,46 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel for authentication screens
+ * ViewModel for authentication screens with Firebase integration
  */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val authRepositoryImpl: AuthRepositoryImpl
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
     
-    private var pendingUserId: String? = null
-    private var pendingEmail: String? = null
-    private var pendingDisplayName: String? = null
+    /**
+     * Get Google Sign-In intent
+     */
+    fun getGoogleSignInIntent(): Intent {
+        return authRepositoryImpl.getGoogleSignInIntent()
+    }
     
     /**
-     * Sign in with Google
+     * Handle Google Sign-In result
      */
-    fun signInWithGoogle() {
+    fun handleGoogleSignInResult(data: Intent?) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             
-            // TODO: Implement actual Google Sign-In with Firebase
-            // For now, mock the flow
-            _uiState.value = AuthUiState.NeedsRoleSelection
-            
-            /* Actual implementation would be:
-            authRepository.signInWithGoogle()
-                .onSuccess { result ->
-                    when (result) {
-                        is AuthResult.Success -> {
-                            _uiState.value = AuthUiState.Success(result.user)
-                        }
-                        is AuthResult.NeedsRoleSelection -> {
-                            pendingUserId = result.userId
-                            pendingEmail = result.email
-                            pendingDisplayName = result.displayName
-                            _uiState.value = AuthUiState.NeedsRoleSelection
-                        }
-                        is AuthResult.Error -> {
-                            _uiState.value = AuthUiState.Error(result.message)
-                        }
+            authRepositoryImpl.handleGoogleSignInResult(data)
+                .onSuccess { user ->
+                    // User authenticated successfully
+                    // Check if user needs to select role (first time login)
+                    if (user.role == UserRole.STUDENT && user.createdAt == user.lastLoginAt) {
+                        // New user, might want to offer role selection
+                        _uiState.value = AuthUiState.NeedsRoleSelection(user)
+                    } else {
+                        // Existing user, proceed
+                        _uiState.value = AuthUiState.Success(user)
                     }
                 }
                 .onFailure { error ->
                     _uiState.value = AuthUiState.Error(error.message ?: "Google Sign-In failed")
                 }
-            */
         }
     }
     
@@ -70,30 +65,28 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             
-            // TODO: Implement actual role setting
-            // For now, mock success
-            _uiState.value = AuthUiState.Success(
-                SSBMaxUser(
-                    id = "mock-user-id",
-                    email = "user@example.com",
-                    displayName = "Test User",
-                    role = role
-                )
-            )
-            
-            /* Actual implementation:
-            val userId = pendingUserId ?: return@launch
-            val email = pendingEmail ?: return@launch
-            val displayName = pendingDisplayName ?: return@launch
-            
-            authRepository.setUserRole(userId, role, email, displayName)
-                .onSuccess { user ->
-                    _uiState.value = AuthUiState.Success(user)
+            authRepositoryImpl.updateUserRole(role)
+                .onSuccess {
+                    // Reload user to get updated profile
+                    authRepository.currentUser.collect { user ->
+                        if (user != null) {
+                            _uiState.value = AuthUiState.Success(user)
+                        }
+                    }
                 }
                 .onFailure { error ->
                     _uiState.value = AuthUiState.Error(error.message ?: "Failed to set role")
                 }
-            */
+        }
+    }
+    
+    /**
+     * Sign out current user
+     */
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            _uiState.value = AuthUiState.Initial
         }
     }
     
@@ -152,7 +145,7 @@ sealed class AuthUiState {
     data object Initial : AuthUiState()
     data object Loading : AuthUiState()
     data class Success(val user: SSBMaxUser) : AuthUiState()
-    data object NeedsRoleSelection : AuthUiState()
+    data class NeedsRoleSelection(val user: SSBMaxUser) : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
 
