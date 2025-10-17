@@ -99,6 +99,9 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.analytics)
     
+    // Image Loading
+    implementation(libs.coil.compose)
+    
     // TODO: Add real billing later
     // implementation(libs.billing.ktx)
     

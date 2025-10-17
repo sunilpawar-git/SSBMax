@@ -35,6 +35,9 @@ sealed class SSBMaxDestinations(val route: String) {
     data object PPDTTest : SSBMaxDestinations("test/ppdt/{testId}") {
         fun createRoute(testId: String) = "test/ppdt/$testId"
     }
+    data object PPDTSubmissionResult : SSBMaxDestinations("test/ppdt/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/ppdt/result/$submissionId"
+    }
     
     // Test Screens - Phase 2
     data object PsychologyTest : SSBMaxDestinations("test/psychology/{testId}/{subTest}") {
@@ -66,8 +69,8 @@ sealed class SSBMaxDestinations(val route: String) {
     }
     
     // Test Grading (for instructors)
-    data object GradeTest : SSBMaxDestinations("grade/{submissionId}") {
-        fun createRoute(submissionId: String) = "grade/$submissionId"
+    data object InstructorGradingDetail : SSBMaxDestinations("instructor/grading/{submissionId}") {
+        fun createRoute(submissionId: String) = "instructor/grading/$submissionId"
     }
 }
 
