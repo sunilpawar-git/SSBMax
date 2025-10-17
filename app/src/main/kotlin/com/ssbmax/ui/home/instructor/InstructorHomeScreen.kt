@@ -115,6 +115,7 @@ fun InstructorHomeScreen(
                     subtitle = "to grade",
                     icon = Icons.Default.Schedule,
                     color = Color(0xFFFFA726),
+                    onClick = onNavigateToGrading,
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -170,6 +171,7 @@ private fun StatCard(
     subtitle: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     color: Color,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -177,7 +179,8 @@ private fun StatCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f)
-        )
+        ),
+        onClick = onClick ?: {}
     ) {
         Column(
             modifier = Modifier

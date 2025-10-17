@@ -366,7 +366,7 @@ fun SSBMaxNavGraph(
                     }
                 },
                 onViewFeedback = {
-                    // TODO: Navigate to detailed feedback screen
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
                 }
             )
         }
@@ -402,7 +402,7 @@ fun SSBMaxNavGraph(
                     }
                 },
                 onViewFeedback = {
-                    // TODO: Navigate to detailed feedback screen
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
                 }
             )
         }
@@ -438,7 +438,7 @@ fun SSBMaxNavGraph(
                     }
                 },
                 onViewFeedback = {
-                    // TODO: Navigate to detailed feedback screen
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
                 }
             )
         }
