@@ -39,10 +39,27 @@ sealed class SSBMaxDestinations(val route: String) {
         fun createRoute(submissionId: String) = "test/ppdt/result/$submissionId"
     }
     
-    // Test Screens - Phase 2
-    data object PsychologyTest : SSBMaxDestinations("test/psychology/{testId}/{subTest}") {
-        fun createRoute(testId: String, subTest: String) = "test/psychology/$testId/$subTest"
+    // Test Screens - Phase 2 Psychology Tests
+    data object TATTest : SSBMaxDestinations("test/tat/{testId}") {
+        fun createRoute(testId: String) = "test/tat/$testId"
     }
+    data object TATSubmissionResult : SSBMaxDestinations("test/tat/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/tat/result/$submissionId"
+    }
+    data object WATTest : SSBMaxDestinations("test/wat/{testId}") {
+        fun createRoute(testId: String) = "test/wat/$testId"
+    }
+    data object WATSubmissionResult : SSBMaxDestinations("test/wat/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/wat/result/$submissionId"
+    }
+    data object SRTTest : SSBMaxDestinations("test/srt/{testId}") {
+        fun createRoute(testId: String) = "test/srt/$testId"
+    }
+    data object SRTSubmissionResult : SSBMaxDestinations("test/srt/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/srt/result/$submissionId"
+    }
+    
+    // Test Screens - Phase 2 Other Tests
     data object GTOTest : SSBMaxDestinations("test/gto/{testId}") {
         fun createRoute(testId: String) = "test/gto/$testId"
     }

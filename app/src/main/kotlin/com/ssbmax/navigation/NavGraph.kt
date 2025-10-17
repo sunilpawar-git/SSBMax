@@ -225,7 +225,19 @@ fun SSBMaxNavGraph(
             com.ssbmax.ui.phase.Phase2DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTest = { testType ->
-                    // TODO: Navigate to specific test based on type
+                    when (testType) {
+                        com.ssbmax.core.domain.model.TestType.TAT ->
+                            navController.navigate(SSBMaxDestinations.TATTest.createRoute("tat_standard"))
+                        com.ssbmax.core.domain.model.TestType.WAT ->
+                            navController.navigate(SSBMaxDestinations.WATTest.createRoute("wat_standard"))
+                        com.ssbmax.core.domain.model.TestType.SRT ->
+                            navController.navigate(SSBMaxDestinations.SRTTest.createRoute("srt_standard"))
+                        com.ssbmax.core.domain.model.TestType.GTO ->
+                            navController.navigate(SSBMaxDestinations.GTOTest.createRoute("gto_standard"))
+                        com.ssbmax.core.domain.model.TestType.IO ->
+                            navController.navigate(SSBMaxDestinations.IOTest.createRoute("io_standard"))
+                        else -> { /* Phase 1 tests or other */ }
+                    }
                 }
             )
         }
@@ -310,18 +322,112 @@ fun SSBMaxNavGraph(
             )
         }
         
-        // Psychology Test
+        // TAT Test
         composable(
-            route = SSBMaxDestinations.PsychologyTest.route,
-            arguments = listOf(
-                navArgument("testId") { type = NavType.StringType },
-                navArgument("subTest") { type = NavType.StringType }
-            )
+            route = SSBMaxDestinations.TATTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
         ) { backStackEntry ->
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
-            val subTest = backStackEntry.arguments?.getString("subTest") ?: ""
-            // TODO: Implement PsychologyTestScreen
-            PlaceholderScreen(title = "Psychology Test: $subTest")
+            com.ssbmax.ui.tests.tat.TATTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.TATTest.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // TAT Result
+        composable(
+            route = SSBMaxDestinations.TATSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            com.ssbmax.ui.tests.tat.TATSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onViewFeedback = {
+                    // TODO: Navigate to detailed feedback screen
+                }
+            )
+        }
+        
+        // WAT Test
+        composable(
+            route = SSBMaxDestinations.WATTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            com.ssbmax.ui.tests.wat.WATTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.WATTest.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // WAT Result
+        composable(
+            route = SSBMaxDestinations.WATSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            com.ssbmax.ui.tests.wat.WATSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onViewFeedback = {
+                    // TODO: Navigate to detailed feedback screen
+                }
+            )
+        }
+        
+        // SRT Test
+        composable(
+            route = SSBMaxDestinations.SRTTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            com.ssbmax.ui.tests.srt.SRTTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.SRTTest.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // SRT Result
+        composable(
+            route = SSBMaxDestinations.SRTSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            com.ssbmax.ui.tests.srt.SRTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onViewFeedback = {
+                    // TODO: Navigate to detailed feedback screen
+                }
+            )
         }
         
         // GTO Test
