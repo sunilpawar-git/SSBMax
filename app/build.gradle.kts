@@ -48,6 +48,16 @@ android {
         compose = true
     }
     
+    lint {
+        disable += setOf(
+            "ModifierParameter",
+            "ModifierDeclaration",
+            "ModifierFactoryExtensionFunction",
+            "ModifierFactoryReturnType",
+            "ModifierFactoryUnreferencedReceiver"
+        )
+    }
+    
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

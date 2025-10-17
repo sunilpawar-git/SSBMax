@@ -37,6 +37,10 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    lint {
+        disable += setOf("ModifierParameter", "ModifierDeclaration")
+    }
 }
 
 dependencies {

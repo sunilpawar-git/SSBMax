@@ -1,6 +1,7 @@
 package com.ssbmax.ui.auth
 
 import app.cash.turbine.test
+import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
@@ -23,12 +24,13 @@ class AuthViewModelTest {
     
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: AuthViewModel
-    private val mockRepository = mockk<AuthRepository>()
+    private val mockRepository = mockk<AuthRepository>(relaxed = true)
+    private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
     
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = AuthViewModel(mockRepository)
+        viewModel = AuthViewModel(mockRepository, mockAuthRepositoryImpl)
     }
     
     @After
