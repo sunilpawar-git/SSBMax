@@ -3,12 +3,15 @@ package com.ssbmax.ui.tests.tat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,7 +21,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class TATTestViewModel @Inject constructor(
-    // TODO: Inject TestRepository
+    private val submitTATTest: SubmitTATTestUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(TATTestUiState())
@@ -135,10 +139,19 @@ class TATTestViewModel @Inject constructor(
             try {
                 stopTimer()
                 
+                // Get current user
+                val currentUserId: String = observeCurrentUser().first()?.id ?: run {
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Please login to submit test"
+                    ) }
+                    return@launch
+                }
+                
                 // Create submission
                 val state = _uiState.value
                 val submission = TATSubmission(
-                    userId = "current_user", // TODO: Get from auth
+                    userId = currentUserId,
                     testId = state.testId,
                     stories = state.responses,
                     totalTimeTakenMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt(),
@@ -146,15 +159,22 @@ class TATTestViewModel @Inject constructor(
                     aiPreliminaryScore = generateMockAIScore(state.responses)
                 )
                 
-                // TODO: Save to repository
-                val submissionId = submission.id
+                // Submit to Firestore
+                val result = submitTATTest(submission, batchId = null)
                 
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    isSubmitted = true,
-                    submissionId = submissionId,
-                    phase = TATPhase.SUBMITTED
-                ) }
+                result.onSuccess { submissionId ->
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        isSubmitted = true,
+                        submissionId = submissionId,
+                        phase = TATPhase.SUBMITTED
+                    ) }
+                }.onFailure { error ->
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Failed to submit: ${error.message}"
+                    ) }
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,

@@ -3,10 +3,13 @@ package com.ssbmax.ui.tests.srt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,7 +19,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SRTTestViewModel @Inject constructor(
-    // TODO: Inject TestRepository
+    private val submitSRTTest: SubmitSRTTestUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SRTTestUiState())
@@ -149,12 +153,21 @@ class SRTTestViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
+                // Get current user
+                val currentUserId: String = observeCurrentUser().first()?.id ?: run {
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Please login to submit test"
+                    ) }
+                    return@launch
+                }
+                
                 val state = _uiState.value
                 
                 // Create submission
                 val totalTimeMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt()
                 val submission = SRTSubmission(
-                    userId = "current_user", // TODO: Get from auth
+                    userId = currentUserId,
                     testId = state.testId,
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
@@ -162,15 +175,22 @@ class SRTTestViewModel @Inject constructor(
                     aiPreliminaryScore = generateMockAIScore(state.responses)
                 )
                 
-                // TODO: Save to repository
-                val submissionId = submission.id
+                // Submit to Firestore
+                val result = submitSRTTest(submission, batchId = null)
                 
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    isSubmitted = true,
-                    submissionId = submissionId,
-                    phase = SRTPhase.SUBMITTED
-                ) }
+                result.onSuccess { submissionId ->
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        isSubmitted = true,
+                        submissionId = submissionId,
+                        phase = SRTPhase.SUBMITTED
+                    ) }
+                }.onFailure { error ->
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Failed to submit: ${error.message}"
+                    ) }
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,
