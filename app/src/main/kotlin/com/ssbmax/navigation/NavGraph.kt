@@ -107,6 +107,9 @@ fun SSBMaxNavGraph(
                 onNavigateToStudy = {
                     navController.navigate(SSBMaxDestinations.StudyMaterialsList.route)
                 },
+                onNavigateToSubmissions = {
+                    navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
+                },
                 onOpenDrawer = onOpenDrawer
             )
         }
@@ -125,6 +128,16 @@ fun SSBMaxNavGraph(
                 onNavigateToTest = { testType ->
                     // TODO: Navigate to specific test based on type
                 }
+            )
+        }
+        
+        // Student Submissions List
+        composable(SSBMaxDestinations.StudentSubmissions.route) {
+            com.ssbmax.ui.submissions.SubmissionsListScreen(
+                onSubmissionClick = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
+                },
+                onNavigateBack = { navController.navigateUp() }
             )
         }
         
@@ -494,6 +507,22 @@ fun SSBMaxNavGraph(
             val batchId = backStackEntry.arguments?.getString("batchId") ?: ""
             // TODO: Implement BatchDetailScreen
             PlaceholderScreen(title = "Batch: $batchId")
+        }
+        
+        // ========================
+        // SUBMISSION DETAIL (STUDENT VIEW)
+        // ========================
+        
+        // Submission Detail (for students to view their own submission)
+        composable(
+            route = SSBMaxDestinations.SubmissionDetail.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            com.ssbmax.ui.submissions.SubmissionDetailScreen(
+                submissionId = submissionId,
+                onNavigateBack = { navController.navigateUp() }
+            )
         }
         
         // ========================
