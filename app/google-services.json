@@ -1,30 +1,47 @@
 {
   "project_info": {
-    "project_number": "123456789000",
-    "project_id": "ssbmax-dev",
-    "storage_bucket": "ssbmax-dev.appspot.com"
+    "project_number": "836687498591",
+    "project_id": "ssbmax-49e68",
+    "storage_bucket": "ssbmax-49e68.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789000:android:abcdef1234567890",
+        "mobilesdk_app_id": "1:836687498591:android:cb34a48a03bd0b1ff3baea",
         "android_client_info": {
           "package_name": "com.ssbmax"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ssbmax",
+            "certificate_hash": "bd9b85fe9380305eea621cc35182ab959f66ec05"
+          }
+        },
+        {
+          "client_id": "836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDevelopmentKeyPlaceholder123456789"
+          "current_key": "AIzaSyAZlK8xqn7HHwVSyDxBRK3zlzqL9GdQOtc"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
   ],
   "configuration_version": "1"
 }
-

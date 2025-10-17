@@ -92,8 +92,13 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "33.7.0" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+
+# Play Services for Google Sign-In
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "1.9.0" }
 
 # Billing
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version = "7.1.1" }
