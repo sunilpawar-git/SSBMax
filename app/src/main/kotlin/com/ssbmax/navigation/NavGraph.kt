@@ -184,10 +184,14 @@ fun SSBMaxNavGraph(
             PlaceholderScreen(title = "Instructor Students")
         }
         
-        // Instructor Grading
+        // Instructor Grading Queue
         composable(SSBMaxDestinations.InstructorGrading.route) {
-            // TODO: Implement InstructorGradingScreen
-            PlaceholderScreen(title = "Instructor Grading")
+            com.ssbmax.ui.grading.InstructorGradingScreen(
+                onNavigateToGrading = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.InstructorGradingDetail.createRoute(submissionId))
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
         }
         
         // Instructor Analytics
@@ -276,8 +280,34 @@ fun SSBMaxNavGraph(
             arguments = listOf(navArgument("testId") { type = NavType.StringType })
         ) { backStackEntry ->
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
-            // TODO: Implement PPDTTestScreen
-            PlaceholderScreen(title = "PPDT Test: $testId")
+            com.ssbmax.ui.tests.ppdt.PPDTTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.PPDTTest.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // PPDT Submission Result
+        composable(
+            route = SSBMaxDestinations.PPDTSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+            com.ssbmax.ui.tests.ppdt.PPDTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onViewFeedback = {
+                    // TODO: Navigate to detailed feedback screen
+                }
+            )
         }
         
         // Psychology Test
@@ -374,14 +404,21 @@ fun SSBMaxNavGraph(
             PlaceholderScreen(title = "Student Details: $studentId")
         }
         
-        // Grade Test
+        // Instructor Grading Detail (View & Grade Submission)
         composable(
-            route = SSBMaxDestinations.GradeTest.route,
+            route = SSBMaxDestinations.InstructorGradingDetail.route,
             arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
-            // TODO: Implement GradeTestScreen
-            PlaceholderScreen(title = "Grade Test: $submissionId")
+            com.ssbmax.ui.grading.TestDetailGradingScreen(
+                submissionId = submissionId,
+                onNavigateBack = { navController.navigateUp() },
+                onGradingComplete = {
+                    navController.navigate(SSBMaxDestinations.InstructorGrading.route) {
+                        popUpTo(SSBMaxDestinations.InstructorGrading.route) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
