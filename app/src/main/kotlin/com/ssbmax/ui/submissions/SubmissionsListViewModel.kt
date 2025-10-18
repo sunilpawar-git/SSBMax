@@ -71,13 +71,29 @@ class SubmissionsListViewModel @Inject constructor(
                     _uiState.update { it.copy(
                         isLoading = false,
                         submissions = submissions,
-                        filteredType = filterType
+                        filteredType = filterType,
+                        error = null
                     ) }
                 }.onFailure { error ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = "Failed to load submissions: ${error.message}"
-                    ) }
+                    // If it's an index error, treat as empty list (no submissions yet)
+                    val isIndexError = error.message?.contains("index", ignoreCase = true) == true ||
+                                     error.message?.contains("FAILED_PRECONDITION", ignoreCase = true) == true
+                    
+                    if (isIndexError) {
+                        // Show empty state instead of error
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            submissions = emptyList(),
+                            filteredType = filterType,
+                            error = null
+                        ) }
+                    } else {
+                        // Show actual error for other failures
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            error = "Failed to load submissions: ${error.message}"
+                        ) }
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
