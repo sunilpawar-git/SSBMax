@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.ssbmax" />
-                  <option name="mobileSdkAppId" value="1:123456789000:android:abcdef1234567890" />
-                  <option name="projectId" value="ssbmax-dev" />
-                  <option name="projectNumber" value="123456789000" />
+                  <option name="mobileSdkAppId" value="1:836687498591:android:cb34a48a03bd0b1ff3baea" />
+                  <option name="projectId" value="ssbmax-49e68" />
+                  <option name="projectNumber" value="836687498591" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
