@@ -30,6 +30,7 @@ import com.ssbmax.core.domain.model.TestType
 fun SubmissionsListScreen(
     onSubmissionClick: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onNavigateToTests: () -> Unit = {},
     viewModel: SubmissionsListViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -87,7 +88,7 @@ fun SubmissionsListScreen(
                     )
                 }
                 uiState.submissions.isEmpty() -> {
-                    EmptyState()
+                    EmptyState(onTakeTest = onNavigateToTests)
                 }
                 else -> {
                     SubmissionsList(
@@ -353,7 +354,10 @@ private fun ErrorState(
 }
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
+private fun EmptyState(
+    onTakeTest: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -377,8 +381,20 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             Text(
                 text = "Complete tests to see your submissions here",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Button(
+                onClick = onTakeTest,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Take a Test")
+            }
         }
     }
 }
