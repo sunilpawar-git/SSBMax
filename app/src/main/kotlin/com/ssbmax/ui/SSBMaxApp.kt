@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ssbmax.core.domain.model.SSBMaxUser
+import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.navigation.SSBMaxNavGraph
 import com.ssbmax.ui.components.SSBMaxScaffold
@@ -25,7 +26,8 @@ fun SSBMaxApp() {
                 email = "user@example.com",
                 displayName = "SSB Aspirant",
                 role = UserRole.STUDENT,
-                isPremium = false
+                subscriptionTier = SubscriptionTier.BASIC,
+                subscription = null
             )
         )
     }

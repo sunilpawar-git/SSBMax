@@ -2,10 +2,13 @@ package com.ssbmax.core.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.ssbmax.core.domain.model.BillingCycle
 import com.ssbmax.core.domain.model.InstructorProfile
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.StudentProfile
+import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.core.domain.model.UserSubscription
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -29,7 +32,8 @@ class FirestoreUserRepository @Inject constructor() {
         private const val FIELD_DISPLAY_NAME = "displayName"
         private const val FIELD_PHOTO_URL = "photoUrl"
         private const val FIELD_ROLE = "role"
-        private const val FIELD_IS_PREMIUM = "isPremium"
+        private const val FIELD_SUBSCRIPTION_TIER = "subscriptionTier"
+        private const val FIELD_SUBSCRIPTION = "subscription"
         private const val FIELD_CREATED_AT = "createdAt"
         private const val FIELD_LAST_LOGIN_AT = "lastLoginAt"
         private const val FIELD_STUDENT_PROFILE = "studentProfile"
@@ -47,7 +51,8 @@ class FirestoreUserRepository @Inject constructor() {
                 FIELD_DISPLAY_NAME to user.displayName,
                 FIELD_PHOTO_URL to user.photoUrl,
                 FIELD_ROLE to user.role.name,
-                FIELD_IS_PREMIUM to user.isPremium,
+                FIELD_SUBSCRIPTION_TIER to user.subscriptionTier.name,
+                FIELD_SUBSCRIPTION to user.subscription?.toMap(),
                 FIELD_CREATED_AT to user.createdAt,
                 FIELD_LAST_LOGIN_AT to user.lastLoginAt,
                 FIELD_STUDENT_PROFILE to user.studentProfile?.toMap(),
@@ -208,7 +213,8 @@ private fun com.google.firebase.firestore.DocumentSnapshot.toSSBMaxUser(): SSBMa
             displayName = getString("displayName") ?: return null,
             photoUrl = getString("photoUrl"),
             role = UserRole.valueOf(getString("role") ?: "STUDENT"),
-            isPremium = getBoolean("isPremium") ?: false,
+            subscriptionTier = SubscriptionTier.valueOf(getString("subscriptionTier") ?: "BASIC"),
+            subscription = get("subscription")?.let { mapToUserSubscription(it as? Map<*, *>) },
             createdAt = getLong("createdAt") ?: System.currentTimeMillis(),
             lastLoginAt = getLong("lastLoginAt") ?: System.currentTimeMillis(),
             studentProfile = get("studentProfile")?.let { mapToStudentProfile(it as? Map<*, *>) },
@@ -278,6 +284,37 @@ private fun InstructorProfile.toMap(): Map<String, Any?> {
         "rating" to rating,
         "bio" to bio,
         "certifications" to certifications
+    )
+}
+
+private fun mapToUserSubscription(map: Map<*, *>?): UserSubscription? {
+    if (map == null) return null
+    return try {
+        UserSubscription(
+            userId = map["userId"] as? String ?: return null,
+            tier = SubscriptionTier.valueOf(map["tier"] as? String ?: "BASIC"),
+            subscriptionId = map["subscriptionId"] as? String,
+            startDate = (map["startDate"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            expiryDate = (map["expiryDate"] as? Number)?.toLong(),
+            autoRenew = map["autoRenew"] as? Boolean ?: false,
+            isActive = map["isActive"] as? Boolean ?: true,
+            billingCycle = BillingCycle.valueOf(map["billingCycle"] as? String ?: "MONTHLY")
+        )
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun UserSubscription.toMap(): Map<String, Any?> {
+    return mapOf(
+        "userId" to userId,
+        "tier" to tier.name,
+        "subscriptionId" to subscriptionId,
+        "startDate" to startDate,
+        "expiryDate" to expiryDate,
+        "autoRenew" to autoRenew,
+        "isActive" to isActive,
+        "billingCycle" to billingCycle.name
     )
 }
 

@@ -6,6 +6,7 @@ import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirestoreUserRepository
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.StudentProfile
+import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
@@ -105,13 +106,14 @@ class AuthRepositoryImpl @Inject constructor(
                 existingUser
             } else {
                 // Create new user profile
-                val newUser = SSBMaxUser(
+                val newUser =                 SSBMaxUser(
                     id = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
                     displayName = firebaseUser.displayName ?: "User",
                     photoUrl = firebaseUser.photoUrl?.toString(),
                     role = UserRole.STUDENT, // Default role, can be changed later
-                    isPremium = false,
+                    subscriptionTier = SubscriptionTier.BASIC,
+                    subscription = null,
                     studentProfile = StudentProfile(userId = firebaseUser.uid),
                     instructorProfile = null,
                     createdAt = System.currentTimeMillis(),
