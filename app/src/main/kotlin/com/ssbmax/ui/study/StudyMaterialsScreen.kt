@@ -1,10 +1,12 @@
 package com.ssbmax.ui.study
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
@@ -12,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,95 +30,93 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyMaterialsScreen(
-    onNavigateToCategory: (StudyCategory) -> Unit = {},
+    onNavigateToTopic: (String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
+    onNavigateToBookmarks: () -> Unit = {},
     viewModel: StudyMaterialsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showBookmarks by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study Materials") },
+                title = { 
+                    Text(if (showBookmarks) "Bookmarked Materials" else "Study Materials") 
+                },
+                navigationIcon = {
+                    if (showBookmarks) {
+                        IconButton(onClick = { showBookmarks = false }) {
+                            Icon(Icons.Default.ArrowBack, "Back")
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = onNavigateToSearch) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
+                        Icon(Icons.Default.Search, "Search")
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* TODO: Add bookmark/favorites view */ },
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bookmark,
-                    contentDescription = "Bookmarks",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            if (!showBookmarks) {
+                FloatingActionButton(
+                    onClick = { showBookmarks = true },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.offset(x = 8.dp, y = (-8).dp)
+                    ) {
+                        Text("${uiState.bookmarkedCount}")
+                    }
+                    Icon(Icons.Default.Bookmark, "Bookmarks")
+                }
             }
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Section
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                tonalElevation = 2.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Comprehensive SSB Preparation",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+            if (!showBookmarks) {
+                // Header Section
+                item {
+                    StudyMaterialsHeader(
+                        totalArticles = uiState.totalArticles,
+                        bookmarkedCount = uiState.bookmarkedCount
                     )
-                    Text(
-                        text = "Access study materials, guides, and tips for all SSB stages",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    // Stats Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        StudyStatChip(
-                            icon = Icons.AutoMirrored.Filled.Article,
-                            label = "${uiState.totalArticles} Articles"
-                        )
-                        StudyStatChip(
-                            icon = Icons.Default.Bookmark,
-                            label = "${uiState.bookmarkedCount} Saved"
-                        )
-                    }
                 }
-            }
-            
-            // Categories Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
+                
+                // Categories Section Header
+                item {
+                    Text(
+                        text = "Browse by Category",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                
+                // Vertical Scrollable Category Cards
                 items(uiState.categories) { category ->
-                    CategoryCard(
+                    CategoryCardVertical(
                         category = category,
-                        onClick = { onNavigateToCategory(category.type) }
+                        onClick = { onNavigateToTopic(getCategoryTopicName(category.type)) }
+                    )
+                }
+            } else {
+                // Bookmarked Materials Section
+                item {
+                    Text(
+                        text = "Your saved materials will appear here",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(32.dp)
                     )
                 }
             }
@@ -122,88 +125,202 @@ fun StudyMaterialsScreen(
 }
 
 @Composable
-private fun StudyStatChip(
-    icon: ImageVector,
-    label: String
+private fun StudyMaterialsHeader(
+    totalArticles: Int,
+    bookmarkedCount: Int
 ) {
-    AssistChip(
-        onClick = { },
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
-        leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.MenuBook,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+                Column {
+                    Text(
+                        text = "Comprehensive SSB Preparation",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Access study materials, guides, and tips",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                InfoChip(
+                    icon = Icons.AutoMirrored.Filled.Article,
+                    label = "$totalArticles Articles"
+                )
+                InfoChip(
+                    icon = Icons.Default.Bookmark,
+                    label = "$bookmarkedCount Saved"
+                )
+            }
         }
-    )
+    }
 }
 
 @Composable
-private fun CategoryCard(
+private fun InfoChip(
+    icon: ImageVector,
+    label: String
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryCardVertical(
     category: StudyCategoryItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = category.backgroundColor
-        )
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            category.backgroundColor,
+                            category.backgroundColor.copy(alpha = 0.7f)
+                        )
+                    )
+                )
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Icon and Premium Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            // Icon Circle
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(category.iconColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = category.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(36.dp),
                     tint = category.iconColor
                 )
-                
-                if (category.isPremium) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Premium",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
             
-            // Title and Article Count
+            // Content
             Column(
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = category.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = category.textColor
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = category.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = category.textColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    if (category.isPremium) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    "Premium",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
                 
                 Text(
                     text = "${category.articleCount} ${if (category.articleCount == 1) "article" else "articles"}",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = category.textColor.copy(alpha = 0.7f)
                 )
             }
+            
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "Navigate",
+                tint = category.iconColor,
+                modifier = Modifier.size(24.dp)
+            )
         }
+    }
+}
+
+// Helper function to map category to topic name
+private fun getCategoryTopicName(category: StudyCategory): String {
+    return when (category) {
+        StudyCategory.OIR_PREP -> "OIR"
+        StudyCategory.PPDT_TECHNIQUES -> "PPDT"
+        StudyCategory.PSYCHOLOGY_TESTS -> "PSYCHOLOGY"
+        StudyCategory.GTO_TASKS -> "GTO"
+        StudyCategory.INTERVIEW_PREP -> "INTERVIEW"
+        else -> "GENERAL"
     }
 }
 

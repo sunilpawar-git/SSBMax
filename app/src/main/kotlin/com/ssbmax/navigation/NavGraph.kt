@@ -144,11 +144,15 @@ fun SSBMaxNavGraph(
         // Student Study
         composable(SSBMaxDestinations.StudentStudy.route) {
             com.ssbmax.ui.study.StudyMaterialsScreen(
-                onNavigateToCategory = { category ->
-                    // TODO: Navigate to category detail
+                onNavigateToTopic = { topicName ->
+                    // TODO: Navigate to topic screen
+                    // navController.navigate(SSBMaxDestinations.TopicDetail.createRoute(topicName))
                 },
                 onNavigateToSearch = {
                     // TODO: Navigate to search
+                },
+                onNavigateToBookmarks = {
+                    // TODO: Navigate to bookmarks screen
                 }
             )
         }
