@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.srt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,9 +17,11 @@ import javax.inject.Inject
 
 /**
  * ViewModel for SRT Test Screen
+ * Loads test questions from cloud via TestContentRepository
  */
 @HiltViewModel
 class SRTTestViewModel @Inject constructor(
+    private val testContentRepository: TestContentRepository,
     private val submitSRTTest: SubmitSRTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
@@ -31,8 +34,33 @@ class SRTTestViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                // TODO: Load from repository
-                val situations = generateMockSituations()
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: "mock-user-id"
+                
+                // Create test session
+                val sessionResult = testContentRepository.createTestSession(
+                    userId = userId,
+                    testId = testId,
+                    testType = TestType.SRT
+                )
+                
+                if (sessionResult.isFailure) {
+                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                }
+                
+                // Fetch situations from cloud
+                val situationsResult = testContentRepository.getSRTQuestions(testId)
+                
+                if (situationsResult.isFailure) {
+                    throw situationsResult.exceptionOrNull() ?: Exception("Failed to load test situations")
+                }
+                
+                val situations = situationsResult.getOrNull() ?: emptyList()
+                
+                if (situations.isEmpty()) {
+                    throw Exception("No situations found for this test")
+                }
+                
                 val config = SRTTestConfig()
                 
                 _uiState.update { it.copy(

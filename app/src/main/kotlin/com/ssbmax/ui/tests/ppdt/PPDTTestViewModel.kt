@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.ppdt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.TestContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -15,10 +16,11 @@ import javax.inject.Inject
 
 /**
  * ViewModel for PPDT Test Screen
+ * Loads test questions from cloud via TestContentRepository
  */
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
-    // TODO: Inject PPDTTestRepository
+    private val testContentRepository: TestContentRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(PPDTTestUiState())
@@ -31,18 +33,41 @@ class PPDTTestViewModel @Inject constructor(
         loadTest()
     }
     
-    fun loadTest() {
+    fun loadTest(testId: String = "ppdt_standard", userId: String = "mock-user-id") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
-                // TODO: Load from repository
-                val question = generateMockQuestion()
+                // Create test session
+                val sessionResult = testContentRepository.createTestSession(
+                    userId = userId,
+                    testId = testId,
+                    testType = TestType.PPDT
+                )
+                
+                if (sessionResult.isFailure) {
+                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                }
+                
+                // Fetch questions from cloud
+                val questionsResult = testContentRepository.getPPDTQuestions(testId)
+                
+                if (questionsResult.isFailure) {
+                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+                }
+                
+                val questions = questionsResult.getOrNull() ?: emptyList()
+                
+                if (questions.isEmpty()) {
+                    throw Exception("No questions found for this test")
+                }
+                
+                val question = questions.first() // PPDT typically has one question
                 val config = PPDTTestConfig()
                 
                 currentSession = PPDTTestSession(
-                    sessionId = UUID.randomUUID().toString(),
-                    userId = "mock-user-id",
+                    sessionId = sessionResult.getOrNull()!!,
+                    userId = userId,
                     questionId = question.id,
                     question = question,
                     startTime = System.currentTimeMillis(),

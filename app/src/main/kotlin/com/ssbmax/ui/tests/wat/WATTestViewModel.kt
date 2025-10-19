@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.wat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,9 +19,11 @@ import javax.inject.Inject
 
 /**
  * ViewModel for WAT Test Screen
+ * Loads test questions from cloud via TestContentRepository
  */
 @HiltViewModel
 class WATTestViewModel @Inject constructor(
+    private val testContentRepository: TestContentRepository,
     private val submitWATTest: SubmitWATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
@@ -35,8 +38,33 @@ class WATTestViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                // TODO: Load from repository
-                val words = generateMockWords()
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: "mock-user-id"
+                
+                // Create test session
+                val sessionResult = testContentRepository.createTestSession(
+                    userId = userId,
+                    testId = testId,
+                    testType = TestType.WAT
+                )
+                
+                if (sessionResult.isFailure) {
+                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                }
+                
+                // Fetch words from cloud
+                val wordsResult = testContentRepository.getWATQuestions(testId)
+                
+                if (wordsResult.isFailure) {
+                    throw wordsResult.exceptionOrNull() ?: Exception("Failed to load test words")
+                }
+                
+                val words = wordsResult.getOrNull() ?: emptyList()
+                
+                if (words.isEmpty()) {
+                    throw Exception("No words found for this test")
+                }
+                
                 val config = WATTestConfig()
                 
                 _uiState.update { it.copy(
