@@ -150,15 +150,14 @@ fun SSBMaxNavGraph(
         // Student Study
         composable(SSBMaxDestinations.StudentStudy.route) {
             com.ssbmax.ui.study.StudyMaterialsScreen(
-                onNavigateToTopic = { topicName ->
-                    // TODO: Navigate to topic screen
-                    // navController.navigate(SSBMaxDestinations.TopicDetail.createRoute(topicName))
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
                 },
                 onNavigateToSearch = {
-                    // TODO: Navigate to search
+                    // TODO: Navigate to search (future enhancement)
                 },
                 onNavigateToBookmarks = {
-                    // TODO: Navigate to bookmarks screen
+                    // Already handled internally by StudyMaterialsScreen
                 }
             )
         }
@@ -489,8 +488,38 @@ fun SSBMaxNavGraph(
             arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
-            // TODO: Implement StudyMaterialDetailScreen
-            PlaceholderScreen(title = "Study Material: $categoryId")
+            com.ssbmax.ui.study.StudyMaterialDetailScreen(
+                categoryId = categoryId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // Topic Screen (with Study Material/Tests tabs)
+        composable(
+            route = SSBMaxDestinations.TopicScreen.route,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+            com.ssbmax.ui.topic.TopicScreen(
+                topicId = topicId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTest = { testId ->
+                    // Navigate to appropriate test based on topic
+                    // This will be determined by the TopicViewModel
+                    when {
+                        testId.startsWith("oir_") -> 
+                            navController.navigate(SSBMaxDestinations.OIRTest.createRoute(testId))
+                        testId.startsWith("ppdt_") -> 
+                            navController.navigate(SSBMaxDestinations.PPDTTest.createRoute(testId))
+                        testId.startsWith("tat_") -> 
+                            navController.navigate(SSBMaxDestinations.TATTest.createRoute(testId))
+                        testId.startsWith("wat_") -> 
+                            navController.navigate(SSBMaxDestinations.WATTest.createRoute(testId))
+                        testId.startsWith("srt_") -> 
+                            navController.navigate(SSBMaxDestinations.SRTTest.createRoute(testId))
+                    }
+                }
+            )
         }
         
         // ========================

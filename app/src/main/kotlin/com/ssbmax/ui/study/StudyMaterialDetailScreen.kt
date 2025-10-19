@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.ui.components.BreadcrumbBar
+import com.ssbmax.ui.components.BreadcrumbItem
 
 /**
  * Study Material Detail Screen
@@ -24,12 +26,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyMaterialDetailScreen(
-    materialId: String,
+    categoryId: String,
     onNavigateBack: () -> Unit,
     onNavigateToRelatedMaterial: (String) -> Unit = {},
     viewModel: StudyMaterialDetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    val materialId = categoryId // Alias for compatibility
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     
@@ -101,6 +104,22 @@ fun StudyMaterialDetailScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Breadcrumb Navigation
+                    item {
+                        BreadcrumbBar(
+                            items = listOf(
+                                BreadcrumbItem("Study Materials", null, isClickable = true),
+                                BreadcrumbItem(material.category, null, isClickable = false),
+                                BreadcrumbItem(material.title, null, isClickable = false)
+                            ),
+                            onItemClick = { item ->
+                                if (item.title == "Study Materials") {
+                                    onNavigateBack()
+                                }
+                            }
+                        )
+                    }
+                    
                     // Reading Progress Indicator
                     item {
                         LinearProgressIndicator(

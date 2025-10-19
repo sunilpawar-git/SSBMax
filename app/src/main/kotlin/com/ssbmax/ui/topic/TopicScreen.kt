@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.ui.components.TabSwipeableContent
 
 /**
  * Topic Screen with 3 tabs: Introduction, Study Material, Tests
@@ -23,13 +24,14 @@ import com.ssbmax.core.domain.model.TestType
  */
 @Composable
 fun TopicScreen(
-    testType: String,
+    topicId: String,
     onNavigateBack: () -> Unit,
     onNavigateToStudyMaterial: (String) -> Unit = {},
-    onNavigateToTest: (TestType) -> Unit = {},
+    onNavigateToTest: (String) -> Unit = {},
     viewModel: TopicViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    val testType = topicId // Alias for compatibility
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     
@@ -73,22 +75,32 @@ fun TopicScreen(
                 )
             }
             
-            // Tab Content
-            when (selectedTab) {
-                0 -> IntroductionTab(
-                    introduction = uiState.introduction,
-                    isLoading = uiState.isLoading
-                )
-                1 -> StudyMaterialTab(
-                    materials = uiState.studyMaterials,
-                    isLoading = uiState.isLoading,
-                    onMaterialClick = onNavigateToStudyMaterial
-                )
+            // Tab Content with Swipe Gesture Support
+            TabSwipeableContent(
+                currentIndex = selectedTab,
+                totalTabs = 3,
+                onTabChange = { newTab -> selectedTab = newTab }
+            ) {
+                when (selectedTab) {
+                    0 -> IntroductionTab(
+                        introduction = uiState.introduction,
+                        isLoading = uiState.isLoading
+                    )
+                    1 -> StudyMaterialTab(
+                        materials = uiState.studyMaterials,
+                        isLoading = uiState.isLoading,
+                        onMaterialClick = onNavigateToStudyMaterial
+                    )
                 2 -> TestsTab(
                     tests = uiState.availableTests,
                     isLoading = uiState.isLoading,
-                    onTestClick = onNavigateToTest
+                    onTestClick = { testType ->
+                        // Convert TestType to testId string for navigation
+                        val testId = "${testType.name.lowercase()}_standard"
+                        onNavigateToTest(testId)
+                    }
                 )
+                }
             }
         }
     }
