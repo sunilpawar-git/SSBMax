@@ -91,7 +91,7 @@ class TestContentRepositoryImpl @Inject constructor(
             val document = testsCollection.document(testId).get().await()
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
-            val watQuestions = questions.mapNotNull { it.toWATQuestion() }
+            val watQuestions = questions.mapNotNull { it.toWATWord() }
             watCache[testId] = watQuestions
             
             Result.success(watQuestions)
@@ -107,7 +107,7 @@ class TestContentRepositoryImpl @Inject constructor(
             val document = testsCollection.document(testId).get().await()
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
-            val srtQuestions = questions.mapNotNull { it.toSRTQuestion() }
+            val srtQuestions = questions.mapNotNull { it.toSRTSituation() }
             srtCache[testId] = srtQuestions
             
             Result.success(srtQuestions)
@@ -194,95 +194,6 @@ class TestContentRepositoryImpl @Inject constructor(
         srtCache.clear()
     }
 
-    // Mappers
-    private fun Map<String, Any?>.toOIRQuestion(): OIRQuestion? {
-        return try {
-            OIRQuestion(
-                id = this["id"] as? String ?: return null,
-                questionNumber = (this["questionNumber"] as? Number)?.toInt() ?: return null,
-                type = OIRQuestionType.valueOf(this["type"] as? String ?: return null),
-                questionText = this["questionText"] as? String ?: return null,
-                options = (this["options"] as? List<Map<String, Any?>>)?.mapNotNull { it.toOIROption() } ?: return null,
-                correctAnswerId = this["correctAnswerId"] as? String ?: return null,
-                explanation = this["explanation"] as? String ?: "",
-                difficulty = QuestionDifficulty.valueOf(this["difficulty"] as? String ?: "MEDIUM"),
-                timeSeconds = (this["timeSeconds"] as? Number)?.toInt() ?: 60
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun Map<String, Any?>.toOIROption(): OIROption? {
-        return try {
-            OIROption(
-                id = this["id"] as? String ?: return null,
-                text = this["text"] as? String ?: return null,
-                imageUrl = this["imageUrl"] as? String
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun Map<String, Any?>.toPPDTQuestion(): PPDTQuestion? {
-        return try {
-            PPDTQuestion(
-                id = this["id"] as? String ?: return null,
-                imageUrl = this["imageUrl"] as? String ?: return null,
-                imageDescription = this["imageDescription"] as? String ?: "",
-                viewingTimeSeconds = (this["viewingTimeSeconds"] as? Number)?.toInt() ?: 30,
-                writingTimeMinutes = (this["writingTimeMinutes"] as? Number)?.toInt() ?: 4,
-                guidelines = (this["guidelines"] as? List<String>) ?: emptyList()
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun Map<String, Any?>.toTATQuestion(): TATQuestion? {
-        return try {
-            TATQuestion(
-                id = this["id"] as? String ?: return null,
-                imageUrl = this["imageUrl"] as? String ?: return null,
-                sequenceNumber = (this["sequenceNumber"] as? Number)?.toInt() ?: return null,
-                prompt = this["prompt"] as? String ?: "Write a story about what you see in the picture",
-                viewingTimeSeconds = (this["viewingTimeSeconds"] as? Number)?.toInt() ?: 30,
-                writingTimeMinutes = (this["writingTimeMinutes"] as? Number)?.toInt() ?: 4,
-                minCharacters = (this["minCharacters"] as? Number)?.toInt() ?: 150,
-                maxCharacters = (this["maxCharacters"] as? Number)?.toInt() ?: 800
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun Map<String, Any?>.toWATQuestion(): WATWord? {
-        return try {
-            WATWord(
-                id = this["id"] as? String ?: return null,
-                word = this["word"] as? String ?: return null,
-                sequenceNumber = (this["sequenceNumber"] as? Number)?.toInt() ?: return null,
-                timeAllowedSeconds = (this["timeAllowedSeconds"] as? Number)?.toInt() ?: 15
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun Map<String, Any?>.toSRTQuestion(): SRTSituation? {
-        return try {
-            SRTSituation(
-                id = this["id"] as? String ?: return null,
-                situation = this["situation"] as? String ?: return null,
-                sequenceNumber = (this["sequenceNumber"] as? Number)?.toInt() ?: return null,
-                category = SRTCategory.valueOf(this["category"] as? String ?: "GENERAL"),
-                timeAllowedSeconds = (this["timeAllowedSeconds"] as? Number)?.toInt() ?: 30
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     // Internal data class for test sessions
     private data class TestSession(
