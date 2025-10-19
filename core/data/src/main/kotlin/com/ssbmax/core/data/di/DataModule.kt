@@ -3,8 +3,11 @@ package com.ssbmax.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.ssbmax.core.data.local.SSBDatabase
+import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.TestResultDao
+import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
+import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.repository.TestRepository
 import dagger.Binds
 import dagger.Module
@@ -37,6 +40,11 @@ object DatabaseModule {
     fun provideTestResultDao(database: SSBDatabase): TestResultDao {
         return database.testResultDao()
     }
+    
+    @Provides
+    fun provideNotificationDao(database: SSBDatabase): NotificationDao {
+        return database.notificationDao()
+    }
 }
 
 @Module
@@ -66,5 +74,11 @@ abstract class RepositoryModule {
     abstract fun bindAIScoringService(
         impl: com.ssbmax.core.data.service.MockAIScoringService
     ): com.ssbmax.core.domain.service.AIScoringService
+    
+    @Binds
+    @Singleton
+    abstract fun bindNotificationRepository(
+        impl: NotificationRepositoryImpl
+    ): NotificationRepository
 }
 
