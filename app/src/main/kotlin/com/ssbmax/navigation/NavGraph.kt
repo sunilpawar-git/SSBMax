@@ -521,6 +521,17 @@ fun SSBMaxNavGraph(
         }
         
         // ========================
+        // SETTINGS
+        // ========================
+        
+        // Settings Screen
+        composable(SSBMaxDestinations.Settings.route) {
+            com.ssbmax.ui.settings.SettingsScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // ========================
         // BATCH MANAGEMENT
         // ========================
         

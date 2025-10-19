@@ -74,11 +74,19 @@ sealed class SSBMaxDestinations(val route: String) {
         fun createRoute(categoryId: String) = "study/material/$categoryId"
     }
     
+    // Topic Screens (Phase > Topic with tabs)
+    data object TopicScreen : SSBMaxDestinations("topic/{topicId}") {
+        fun createRoute(topicId: String) = "topic/$topicId"
+    }
+    
     // Premium/Subscription
     data object UpgradeScreen : SSBMaxDestinations("premium/upgrade")
     
     // Notifications
     data object NotificationCenter : SSBMaxDestinations("notifications/center")
+    
+    // Settings
+    data object Settings : SSBMaxDestinations("settings")
     
     // Batch Management
     data object JoinBatch : SSBMaxDestinations("batch/join")
