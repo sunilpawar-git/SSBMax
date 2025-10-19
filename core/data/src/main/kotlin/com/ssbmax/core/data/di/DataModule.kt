@@ -80,5 +80,11 @@ abstract class RepositoryModule {
     abstract fun bindNotificationRepository(
         impl: NotificationRepositoryImpl
     ): NotificationRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindTestSubmissionRepository(
+        impl: com.ssbmax.core.data.repository.TestSubmissionRepositoryImpl
+    ): com.ssbmax.core.domain.repository.TestSubmissionRepository
 }
 

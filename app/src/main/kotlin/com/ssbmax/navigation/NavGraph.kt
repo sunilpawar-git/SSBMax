@@ -584,12 +584,7 @@ fun SSBMaxNavGraph(
             val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
             com.ssbmax.ui.grading.TestDetailGradingScreen(
                 submissionId = submissionId,
-                onNavigateBack = { navController.navigateUp() },
-                onGradingComplete = {
-                    navController.navigate(SSBMaxDestinations.InstructorGrading.route) {
-                        popUpTo(SSBMaxDestinations.InstructorGrading.route) { inclusive = true }
-                    }
-                }
+                onNavigateBack = { navController.navigateUp() }
             )
         }
     }
