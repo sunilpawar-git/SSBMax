@@ -142,12 +142,14 @@ data class UserSubscription(
  */
 enum class BillingCycle {
     MONTHLY,
-    YEARLY;
+    QUARTERLY,
+    ANNUALLY;
     
     val displayName: String
         get() = when (this) {
             MONTHLY -> "Monthly"
-            YEARLY -> "Yearly"
+            QUARTERLY -> "Quarterly"
+            ANNUALLY -> "Annually"
         }
 }
 
