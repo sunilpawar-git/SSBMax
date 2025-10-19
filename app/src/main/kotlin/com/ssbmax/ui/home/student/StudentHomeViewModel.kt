@@ -38,6 +38,7 @@ class StudentHomeViewModel @Inject constructor(
                 currentStreak = 7,
                 testsCompleted = 12,
                 notificationCount = 3,
+                subscriptionTier = SubscriptionTier.BASIC, // TODO: Load from user repository
                 phase1Progress = PhaseProgress(
                     phase = TestPhase.PHASE_1,
                     totalTests = 2,
@@ -115,6 +116,7 @@ data class StudentHomeUiState(
     val currentStreak: Int = 0,
     val testsCompleted: Int = 0,
     val notificationCount: Int = 0,
+    val subscriptionTier: SubscriptionTier = SubscriptionTier.BASIC,
     val phase1Progress: PhaseProgress? = null,
     val phase2Progress: PhaseProgress? = null,
     val recommendedTests: List<TestType> = emptyList(),

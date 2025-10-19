@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.ui.components.SubscriptionRibbon
 
 /**
  * Student Home Screen with Phase Progress Ribbon
@@ -36,6 +37,7 @@ fun StudentHomeScreen(
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
     onNavigateToSubmissions: () -> Unit = {},
+    onNavigateToUpgrade: () -> Unit = {},
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -112,6 +114,14 @@ fun StudentHomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+            
+            // Subscription Ribbon
+            item {
+                SubscriptionRibbon(
+                    currentTier = uiState.subscriptionTier,
+                    onUpgradeClick = onNavigateToUpgrade
+                )
             }
             
             // Progress Ribbon Header
