@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.tat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,9 +19,11 @@ import javax.inject.Inject
 
 /**
  * ViewModel for TAT Test Screen
+ * Loads test questions from cloud via TestContentRepository
  */
 @HiltViewModel
 class TATTestViewModel @Inject constructor(
+    private val testContentRepository: TestContentRepository,
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
@@ -35,8 +38,33 @@ class TATTestViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                // TODO: Load from repository
-                val questions = generateMockQuestions()
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: "mock-user-id"
+                
+                // Create test session
+                val sessionResult = testContentRepository.createTestSession(
+                    userId = userId,
+                    testId = testId,
+                    testType = TestType.TAT
+                )
+                
+                if (sessionResult.isFailure) {
+                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                }
+                
+                // Fetch questions from cloud
+                val questionsResult = testContentRepository.getTATQuestions(testId)
+                
+                if (questionsResult.isFailure) {
+                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+                }
+                
+                val questions = questionsResult.getOrNull() ?: emptyList()
+                
+                if (questions.isEmpty()) {
+                    throw Exception("No questions found for this test")
+                }
+                
                 val config = TATTestConfig()
                 
                 _uiState.update { it.copy(

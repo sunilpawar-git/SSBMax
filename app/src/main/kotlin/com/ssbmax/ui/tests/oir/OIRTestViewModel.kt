@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.oir
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.TestContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -15,10 +16,11 @@ import javax.inject.Inject
 
 /**
  * ViewModel for OIR Test Screen
+ * Loads test questions from cloud via TestContentRepository
  */
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
-    // TODO: Inject OIRTestRepository
+    private val testContentRepository: TestContentRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -31,20 +33,41 @@ class OIRTestViewModel @Inject constructor(
         loadTest()
     }
     
-    fun loadTest() {
+    fun loadTest(testId: String = "oir_standard", userId: String = "mock-user-id") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
-                // TODO: Load from repository
-                // For now, generate mock questions
-                val questions = generateMockQuestions()
+                // Create test session first
+                val sessionResult = testContentRepository.createTestSession(
+                    userId = userId,
+                    testId = testId,
+                    testType = TestType.OIR
+                )
+                
+                if (sessionResult.isFailure) {
+                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                }
+                
+                // Fetch questions from cloud
+                val questionsResult = testContentRepository.getOIRQuestions(testId)
+                
+                if (questionsResult.isFailure) {
+                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+                }
+                
+                val questions = questionsResult.getOrNull() ?: emptyList()
+                
+                if (questions.isEmpty()) {
+                    throw Exception("No questions found for this test")
+                }
+                
                 val config = OIRTestConfig()
                 
                 currentSession = OIRTestSession(
-                    sessionId = UUID.randomUUID().toString(),
-                    userId = "mock-user-id",
-                    testId = config.testId,
+                    sessionId = sessionResult.getOrNull()!!,
+                    userId = userId,
+                    testId = testId,
                     questions = questions,
                     answers = emptyMap(),
                     currentQuestionIndex = 0,
@@ -123,7 +146,13 @@ class OIRTestViewModel @Inject constructor(
             // Calculate results
             val result = calculateResults(session)
             
-            // TODO: Save to repository
+            // End test session
+            testContentRepository.endTestSession(session.sessionId)
+            
+            // Clear cached content
+            testContentRepository.clearCache()
+            
+            // TODO: Save results to repository
             
             // Mark test as completed
             currentSession = session.copy(isCompleted = true)
@@ -262,44 +291,6 @@ class OIRTestViewModel @Inject constructor(
             difficultyBreakdown = difficultyScores,
             answeredQuestions = answeredQuestions,
             completedAt = System.currentTimeMillis()
-        )
-    }
-    
-    private fun generateMockQuestions(): List<OIRQuestion> {
-        // TODO: Load from repository
-        // Generate mock questions for testing
-        return listOf(
-            OIRQuestion(
-                id = "q1",
-                questionNumber = 1,
-                type = OIRQuestionType.VERBAL_REASONING,
-                questionText = "If all roses are flowers and some flowers fade quickly, which of the following must be true?",
-                options = listOf(
-                    OIROption("a", "All roses fade quickly"),
-                    OIROption("b", "Some roses may fade quickly"),
-                    OIROption("c", "No roses fade quickly"),
-                    OIROption("d", "All flowers are roses")
-                ),
-                correctAnswerId = "b",
-                explanation = "Since some flowers fade quickly and all roses are flowers, it's possible that some roses may fade quickly, but we can't say for certain that all roses do.",
-                difficulty = QuestionDifficulty.MEDIUM
-            ),
-            OIRQuestion(
-                id = "q2",
-                questionNumber = 2,
-                type = OIRQuestionType.NUMERICAL_ABILITY,
-                questionText = "What is the next number in the sequence: 2, 6, 12, 20, 30, ?",
-                options = listOf(
-                    OIROption("a", "40"),
-                    OIROption("b", "42"),
-                    OIROption("c", "44"),
-                    OIROption("d", "46")
-                ),
-                correctAnswerId = "b",
-                explanation = "The differences between consecutive numbers are 4, 6, 8, 10, so the next difference should be 12. Therefore, 30 + 12 = 42.",
-                difficulty = QuestionDifficulty.EASY
-            )
-            // TODO: Add 48 more questions
         )
     }
     
