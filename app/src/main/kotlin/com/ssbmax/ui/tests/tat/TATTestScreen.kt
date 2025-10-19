@@ -18,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.ssbmax.core.domain.model.TATPhase
+import com.ssbmax.ui.components.TestContentErrorState
+import com.ssbmax.ui.components.TestContentLoadingState
 
 /**
  * TAT Test Screen - 12 pictures with story writing
@@ -137,14 +139,19 @@ fun TATTestScreen(
             
             // Loading overlay
             if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                TestContentLoadingState(
+                    message = "Loading TAT test images from cloud...",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            
+            // Error overlay
+            if (uiState.error != null) {
+                TestContentErrorState(
+                    error = uiState.error!!,
+                    onRetry = { viewModel.loadTest(testId) },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }

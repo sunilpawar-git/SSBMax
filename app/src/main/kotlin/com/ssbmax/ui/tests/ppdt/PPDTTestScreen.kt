@@ -22,6 +22,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.ssbmax.core.domain.model.PPDTPhase
+import com.ssbmax.ui.components.TestContentErrorState
+import com.ssbmax.ui.components.TestContentLoadingState
 
 /**
  * PPDT Test Screen - Image viewing + Story writing
@@ -72,15 +74,16 @@ fun PPDTTestScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                    TestContentLoadingState(
+                        message = "Loading PPDT test from cloud...",
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 uiState.error != null -> {
-                    ErrorView(
-                        message = uiState.error!!,
+                    TestContentErrorState(
+                        error = uiState.error!!,
                         onRetry = { viewModel.loadTest() },
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 else -> {

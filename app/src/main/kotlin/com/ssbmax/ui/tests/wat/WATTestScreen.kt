@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.WATPhase
+import com.ssbmax.ui.components.TestContentErrorState
+import com.ssbmax.ui.components.TestContentLoadingState
 
 /**
  * WAT Test Screen - 60 words with rapid 15-second responses
@@ -46,34 +48,51 @@ fun WATTestScreen(
         }
     }
     
-    when (uiState.phase) {
-        WATPhase.INSTRUCTIONS -> {
-            InstructionsView(
-                onStart = { viewModel.startTest() },
-                onNavigateBack = onNavigateBack
+    when {
+        uiState.isLoading -> {
+            TestContentLoadingState(
+                message = "Loading WAT test words from cloud...",
+                modifier = Modifier.fillMaxSize()
             )
         }
-        WATPhase.IN_PROGRESS -> {
-            TestInProgressView(
-                word = uiState.currentWord?.word ?: "",
-                wordNumber = uiState.currentWordIndex + 1,
-                totalWords = uiState.words.size,
-                timeRemaining = uiState.timeRemaining,
-                response = uiState.currentResponse,
-                onResponseChange = { viewModel.updateResponse(it) },
-                onSubmit = { viewModel.submitResponse() },
-                onSkip = { viewModel.skipWord() },
-                showExitDialog = showExitDialog,
-                onShowExitDialog = { showExitDialog = true },
-                onDismissExitDialog = { showExitDialog = false },
-                onConfirmExit = onNavigateBack
+        uiState.error != null -> {
+            TestContentErrorState(
+                error = uiState.error!!,
+                onRetry = { viewModel.loadTest(testId) },
+                modifier = Modifier.fillMaxSize()
             )
         }
-        WATPhase.COMPLETED -> {
-            // Handled by auto-submit
-        }
-        WATPhase.SUBMITTED -> {
-            // Handled by navigation
+        else -> {
+            when (uiState.phase) {
+                WATPhase.INSTRUCTIONS -> {
+                    InstructionsView(
+                        onStart = { viewModel.startTest() },
+                        onNavigateBack = onNavigateBack
+                    )
+                }
+                WATPhase.IN_PROGRESS -> {
+                    TestInProgressView(
+                        word = uiState.currentWord?.word ?: "",
+                        wordNumber = uiState.currentWordIndex + 1,
+                        totalWords = uiState.words.size,
+                        timeRemaining = uiState.timeRemaining,
+                        response = uiState.currentResponse,
+                        onResponseChange = { viewModel.updateResponse(it) },
+                        onSubmit = { viewModel.submitResponse() },
+                        onSkip = { viewModel.skipWord() },
+                        showExitDialog = showExitDialog,
+                        onShowExitDialog = { showExitDialog = true },
+                        onDismissExitDialog = { showExitDialog = false },
+                        onConfirmExit = onNavigateBack
+                    )
+                }
+                WATPhase.COMPLETED -> {
+                    // Handled by auto-submit
+                }
+                WATPhase.SUBMITTED -> {
+                    // Handled by navigation
+                }
+            }
         }
     }
 }

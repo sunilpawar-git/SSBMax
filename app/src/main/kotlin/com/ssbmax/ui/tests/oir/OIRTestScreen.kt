@@ -25,6 +25,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.ui.components.TestContentErrorState
+import com.ssbmax.ui.components.TestContentLoadingState
 
 /**
  * OIR Test Screen - Main test interface
@@ -74,15 +76,16 @@ fun OIRTestScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                    TestContentLoadingState(
+                        message = "Loading OIR test questions from cloud...",
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 uiState.error != null -> {
-                    ErrorView(
-                        message = uiState.error!!,
+                    TestContentErrorState(
+                        error = uiState.error!!,
                         onRetry = { viewModel.loadTest() },
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 uiState.currentQuestion != null -> {

@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.SRTPhase
+import com.ssbmax.ui.components.TestContentErrorState
+import com.ssbmax.ui.components.TestContentLoadingState
 
 /**
  * SRT Test Screen - 60 practical situations with response input
@@ -46,41 +48,58 @@ fun SRTTestScreen(
         }
     }
     
-    when (uiState.phase) {
-        SRTPhase.INSTRUCTIONS -> {
-            InstructionsView(
-                onStart = { viewModel.startTest() },
-                onNavigateBack = onNavigateBack
+    when {
+        uiState.isLoading -> {
+            TestContentLoadingState(
+                message = "Loading SRT test situations from cloud...",
+                modifier = Modifier.fillMaxSize()
             )
         }
-        SRTPhase.IN_PROGRESS -> {
-            TestInProgressView(
-                situation = uiState.currentSituation?.situation ?: "",
-                situationNumber = uiState.currentSituationIndex + 1,
-                totalSituations = uiState.situations.size,
-                response = uiState.currentResponse,
-                onResponseChange = { viewModel.updateResponse(it) },
-                minChars = uiState.config?.minResponseLength ?: 20,
-                maxChars = uiState.config?.maxResponseLength ?: 200,
-                canMoveNext = uiState.canMoveToNext,
-                onNext = { viewModel.moveToNext() },
-                onSkip = { viewModel.skipSituation() },
-                showExitDialog = showExitDialog,
-                onShowExitDialog = { showExitDialog = true },
-                onDismissExitDialog = { showExitDialog = false },
-                onConfirmExit = onNavigateBack
+        uiState.error != null -> {
+            TestContentErrorState(
+                error = uiState.error!!,
+                onRetry = { viewModel.loadTest(testId) },
+                modifier = Modifier.fillMaxSize()
             )
         }
-        SRTPhase.REVIEW -> {
-            ReviewScreen(
-                responses = uiState.responses,
-                totalSituations = uiState.situations.size,
-                onEdit = { index -> viewModel.editResponse(index) },
-                onSubmit = { showSubmitDialog = true }
-            )
-        }
-        SRTPhase.COMPLETED, SRTPhase.SUBMITTED -> {
-            // Handled by navigation
+        else -> {
+            when (uiState.phase) {
+                SRTPhase.INSTRUCTIONS -> {
+                    InstructionsView(
+                        onStart = { viewModel.startTest() },
+                        onNavigateBack = onNavigateBack
+                    )
+                }
+                SRTPhase.IN_PROGRESS -> {
+                    TestInProgressView(
+                        situation = uiState.currentSituation?.situation ?: "",
+                        situationNumber = uiState.currentSituationIndex + 1,
+                        totalSituations = uiState.situations.size,
+                        response = uiState.currentResponse,
+                        onResponseChange = { viewModel.updateResponse(it) },
+                        minChars = uiState.config?.minResponseLength ?: 20,
+                        maxChars = uiState.config?.maxResponseLength ?: 200,
+                        canMoveNext = uiState.canMoveToNext,
+                        onNext = { viewModel.moveToNext() },
+                        onSkip = { viewModel.skipSituation() },
+                        showExitDialog = showExitDialog,
+                        onShowExitDialog = { showExitDialog = true },
+                        onDismissExitDialog = { showExitDialog = false },
+                        onConfirmExit = onNavigateBack
+                    )
+                }
+                SRTPhase.REVIEW -> {
+                    ReviewScreen(
+                        responses = uiState.responses,
+                        totalSituations = uiState.situations.size,
+                        onEdit = { index -> viewModel.editResponse(index) },
+                        onSubmit = { showSubmitDialog = true }
+                    )
+                }
+                SRTPhase.COMPLETED, SRTPhase.SUBMITTED -> {
+                    // Handled by navigation
+                }
+            }
         }
     }
     
