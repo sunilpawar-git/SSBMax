@@ -110,6 +110,12 @@ fun SSBMaxNavGraph(
                 onNavigateToSubmissions = {
                     navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
                 },
+                onNavigateToUpgrade = {
+                    navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+                },
+                onNavigateToNotifications = {
+                    navController.navigate(SSBMaxDestinations.NotificationCenter.route)
+                },
                 onOpenDrawer = onOpenDrawer
             )
         }
@@ -485,6 +491,33 @@ fun SSBMaxNavGraph(
             val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
             // TODO: Implement StudyMaterialDetailScreen
             PlaceholderScreen(title = "Study Material: $categoryId")
+        }
+        
+        // ========================
+        // PREMIUM/SUBSCRIPTION
+        // ========================
+        
+        // Upgrade Screen
+        composable(SSBMaxDestinations.UpgradeScreen.route) {
+            com.ssbmax.ui.premium.UpgradeScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // ========================
+        // NOTIFICATIONS
+        // ========================
+        
+        // Notification Center
+        composable(SSBMaxDestinations.NotificationCenter.route) {
+            com.ssbmax.ui.notifications.NotificationCenterScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNotificationClick = { notification ->
+                    // TODO: Handle deep linking based on notification actionUrl
+                    // For now, just dismiss the notification center
+                    navController.navigateUp()
+                }
+            )
         }
         
         // ========================

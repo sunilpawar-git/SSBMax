@@ -38,6 +38,7 @@ fun StudentHomeScreen(
     onNavigateToStudy: () -> Unit,
     onNavigateToSubmissions: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -66,9 +67,11 @@ fun StudentHomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Notifications */ }) {
-                        Badge {
-                            Text("${uiState.notificationCount}")
+                    IconButton(onClick = onNavigateToNotifications) {
+                        if (uiState.notificationCount > 0) {
+                            Badge {
+                                Text("${uiState.notificationCount}")
+                            }
                         }
                         Icon(Icons.Default.Notifications, "Notifications")
                     }
