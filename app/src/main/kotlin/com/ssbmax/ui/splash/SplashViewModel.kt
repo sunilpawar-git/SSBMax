@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,6 +20,7 @@ sealed class SplashNavigationEvent {
     data object NavigateToStudentHome : SplashNavigationEvent()
     data object NavigateToInstructorHome : SplashNavigationEvent()
     data object NavigateToRoleSelection : SplashNavigationEvent()
+    data object NavigateToProfileOnboarding : SplashNavigationEvent()
 }
 
 /**
@@ -27,7 +29,8 @@ sealed class SplashNavigationEvent {
  */
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    // TODO: Inject Firebase Auth and User Repository
+    private val authRepository: com.ssbmax.core.domain.repository.AuthRepository,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _navigationEvent = MutableStateFlow<SplashNavigationEvent?>(null)
@@ -42,28 +45,31 @@ class SplashViewModel @Inject constructor(
             // Show splash for minimum 2 seconds for branding
             delay(2000)
             
-            // TODO: Replace with actual Firebase Auth check
-            val isAuthenticated = false // FirebaseAuth.getInstance().currentUser != null
+            // Check authentication
+            val user = authRepository.currentUser.first()
             
-            if (!isAuthenticated) {
+            if (user == null) {
                 _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
                 return@launch
             }
             
-            // TODO: Fetch user from repository
-            // val user = userRepository.getCurrentUser()
+            // Check if profile is complete
+            val hasProfile = userProfileRepository.hasCompletedProfile(user.id).first()
             
-            // For now, mock user role checking
-            val mockUserRole = UserRole.STUDENT // This should come from repository
+            if (!hasProfile) {
+                _navigationEvent.value = SplashNavigationEvent.NavigateToProfileOnboarding
+                return@launch
+            }
             
+            // Navigate based on user role
             when {
-                mockUserRole == UserRole.STUDENT -> {
+                user.role == UserRole.STUDENT -> {
                     _navigationEvent.value = SplashNavigationEvent.NavigateToStudentHome
                 }
-                mockUserRole == UserRole.INSTRUCTOR -> {
+                user.role == UserRole.INSTRUCTOR -> {
                     _navigationEvent.value = SplashNavigationEvent.NavigateToInstructorHome
                 }
-                mockUserRole == UserRole.BOTH -> {
+                user.role == UserRole.BOTH -> {
                     // User can be both student and instructor
                     // Navigate to role selection or last used role
                     _navigationEvent.value = SplashNavigationEvent.NavigateToRoleSelection

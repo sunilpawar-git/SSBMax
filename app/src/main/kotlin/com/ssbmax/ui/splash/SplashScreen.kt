@@ -25,7 +25,8 @@ fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
     onNavigateToHome: (isStudent: Boolean) -> Unit,
-    onNavigateToRoleSelection: () -> Unit
+    onNavigateToRoleSelection: () -> Unit,
+    onNavigateToProfileOnboarding: () -> Unit
 ) {
     val navigationEvent by viewModel.navigationEvent.collectAsStateWithLifecycle()
     
@@ -36,6 +37,7 @@ fun SplashScreen(
             is SplashNavigationEvent.NavigateToStudentHome -> onNavigateToHome(true)
             is SplashNavigationEvent.NavigateToInstructorHome -> onNavigateToHome(false)
             is SplashNavigationEvent.NavigateToRoleSelection -> onNavigateToRoleSelection()
+            is SplashNavigationEvent.NavigateToProfileOnboarding -> onNavigateToProfileOnboarding()
             null -> { /* Stay on splash */ }
         }
     }

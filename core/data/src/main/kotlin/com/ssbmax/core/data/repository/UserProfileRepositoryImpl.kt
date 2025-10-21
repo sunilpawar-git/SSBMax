@@ -77,10 +77,29 @@ class UserProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun hasCompletedProfile(userId: String): Flow<Boolean> {
-        return getUserProfile(userId).map { result ->
-            result.getOrNull() != null
+    override fun hasCompletedProfile(userId: String): Flow<Boolean> = callbackFlow {
+        val docRef = firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .collection("data")
+            .document(PROFILE_DOCUMENT)
+
+        val listener = docRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(false)
+                return@addSnapshotListener
+            }
+
+            val profile = snapshot?.let { doc ->
+                if (doc.exists()) doc.toUserProfile() else null
+            }
+            trySend(profile?.isComplete() ?: false)
         }
+
+        awaitClose { listener.remove() }
+    }
+
+    private fun UserProfile.isComplete(): Boolean {
+        return fullName.isNotBlank() && age > 0
     }
 
     // Mappers

@@ -51,6 +51,11 @@ fun SSBMaxNavGraph(
                     navController.navigate(SSBMaxDestinations.RoleSelection.route) {
                         popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
                     }
+                },
+                onNavigateToProfileOnboarding = {
+                    navController.navigate(SSBMaxDestinations.UserProfile.createOnboardingRoute()) {
+                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                    }
                 }
             )
         }
