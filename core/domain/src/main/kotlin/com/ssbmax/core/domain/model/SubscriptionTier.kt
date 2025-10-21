@@ -1,5 +1,8 @@
 package com.ssbmax.core.domain.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 /**
  * Subscription tiers available in SSBMax
  */
@@ -156,11 +159,23 @@ enum class BillingCycle {
 /**
  * Subscription plan option for display in upgrade screen
  */
+@Parcelize
 data class SubscriptionPlan(
     val tier: SubscriptionTier,
-    val billingCycle: BillingCycle,
-    val price: String,
-    val savingsText: String? = null,
-    val isRecommended: Boolean = false
-)
+    val name: String,
+    val price: Int, // in rupees
+    val billingPeriod: BillingPeriod,
+    val features: List<String>,
+    val isPopular: Boolean = false,
+    val savings: Int? = null // percentage savings for annual plans
+) : Parcelable
+
+/**
+ * Billing period for subscriptions
+ */
+enum class BillingPeriod(val displayName: String, val months: Int) {
+    MONTHLY("Monthly", 1),
+    QUARTERLY("Quarterly", 3),
+    YEARLY("Yearly", 12)
+}
 

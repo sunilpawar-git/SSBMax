@@ -2,6 +2,7 @@ package com.ssbmax.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -581,7 +582,8 @@ fun SSBMaxNavGraph(
         composable(SSBMaxDestinations.Settings.route) {
             com.ssbmax.ui.settings.SettingsScreen(
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToFAQ = { navController.navigate(SSBMaxDestinations.FAQ.route) }
+                onNavigateToFAQ = { navController.navigate(SSBMaxDestinations.FAQ.route) },
+                onNavigateToUpgrade = { navController.navigate(SSBMaxDestinations.Upgrade.route) }
             )
         }
         
@@ -590,6 +592,79 @@ fun SSBMaxNavGraph(
             com.ssbmax.ui.faq.FAQScreen(
                 onNavigateBack = { navController.navigateUp() }
             )
+        }
+        
+        // ========================
+        // UPGRADE & PAYMENT FLOW
+        // ========================
+        
+        // Upgrade Screen
+        composable(SSBMaxDestinations.Upgrade.route) {
+            com.ssbmax.ui.upgrade.UpgradeScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onPlanSelected = { plan ->
+                    // Store plan in SavedStateHandle and navigate
+                    navController.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("selectedPlan", plan)
+                    navController.navigate(SSBMaxDestinations.Payment.route)
+                }
+            )
+        }
+        
+        // Payment Screen
+        composable(SSBMaxDestinations.Payment.route) {
+            val previousBackStackEntry = navController.previousBackStackEntry
+            val plan = previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<com.ssbmax.core.domain.model.SubscriptionPlan>("selectedPlan")
+            
+            if (plan != null) {
+                com.ssbmax.ui.payment.MockPaymentScreen(
+                    plan = plan,
+                    onPaymentSuccess = {
+                        // Store plan for success screen
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("paidPlan", plan)
+                        navController.navigate(SSBMaxDestinations.PaymentSuccess.route) {
+                            popUpTo(SSBMaxDestinations.Upgrade.route) { inclusive = true }
+                        }
+                    },
+                    onNavigateBack = { navController.navigateUp() }
+                )
+            } else {
+                // No plan selected, navigate back
+                LaunchedEffect(Unit) {
+                    navController.navigateUp()
+                }
+            }
+        }
+        
+        // Payment Success Screen
+        composable(SSBMaxDestinations.PaymentSuccess.route) {
+            val previousBackStackEntry = navController.previousBackStackEntry
+            val plan = previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<com.ssbmax.core.domain.model.SubscriptionPlan>("paidPlan")
+            
+            if (plan != null) {
+                com.ssbmax.ui.payment.PaymentSuccessScreen(
+                    plan = plan,
+                    onNavigateToHome = {
+                        navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                            popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                        }
+                    }
+                )
+            } else {
+                // No plan data, navigate to home
+                LaunchedEffect(Unit) {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            }
         }
         
         // User Profile Screen

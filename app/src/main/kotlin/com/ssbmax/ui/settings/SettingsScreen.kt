@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToFAQ: () -> Unit = {},
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -70,9 +71,7 @@ fun SettingsScreen(
                 item {
                     SubscriptionSection(
                         currentTier = uiState.subscriptionTier,
-                        onUpgradeClick = {
-                            // TODO: Navigate to upgrade screen
-                        },
+                        onUpgradeClick = onNavigateToUpgrade,
                         onManageSubscriptionClick = {
                             // TODO: Navigate to subscription management
                         }
