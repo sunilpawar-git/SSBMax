@@ -18,8 +18,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StudyMaterialDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle
-    // TODO: Inject StudyMaterialRepository when available
+    savedStateHandle: SavedStateHandle,
+    private val bookmarkRepository: com.ssbmax.core.domain.repository.BookmarkRepository,
+    private val observeCurrentUser: com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 ) : ViewModel() {
     
     private val materialId: String = savedStateHandle.get<String>("materialId") ?: ""
@@ -28,9 +29,11 @@ class StudyMaterialDetailViewModel @Inject constructor(
     val uiState: StateFlow<StudyMaterialDetailUiState> = _uiState.asStateFlow()
     
     private var startTime: Long = 0L
+    private var currentUserId: String = ""
     
     init {
         loadMaterial()
+        observeBookmarkStatus()
         startTime = System.currentTimeMillis()
     }
     
@@ -39,6 +42,11 @@ class StudyMaterialDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
+                // Get current user
+                observeCurrentUser().collect { user ->
+                    currentUserId = user?.id ?: ""
+                }
+                
                 // TODO: Load from repository
                 // For now, use mock data
                 val material = getMockMaterial(materialId)
@@ -46,7 +54,6 @@ class StudyMaterialDetailViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         material = material,
-                        isBookmarked = false, // TODO: Load from repository
                         readingProgress = 0f,
                         isLoading = false,
                         error = null
@@ -63,11 +70,25 @@ class StudyMaterialDetailViewModel @Inject constructor(
         }
     }
     
-    fun toggleBookmark() {
-        _uiState.update {
-            it.copy(isBookmarked = !it.isBookmarked)
+    private fun observeBookmarkStatus() {
+        viewModelScope.launch {
+            observeCurrentUser().collect { user ->
+                val userId = user?.id ?: return@collect
+                currentUserId = userId
+                
+                bookmarkRepository.isBookmarked(userId, materialId).collect { isBookmarked ->
+                    _uiState.update { it.copy(isBookmarked = isBookmarked) }
+                }
+            }
         }
-        // TODO: Save bookmark state to repository
+    }
+    
+    fun toggleBookmark() {
+        viewModelScope.launch {
+            if (currentUserId.isNotEmpty()) {
+                bookmarkRepository.toggleBookmark(currentUserId, materialId)
+            }
+        }
     }
     
     fun updateProgress(progress: Float) {

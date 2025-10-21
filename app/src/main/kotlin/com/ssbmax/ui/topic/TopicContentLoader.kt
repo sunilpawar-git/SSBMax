@@ -317,27 +317,7 @@ object TopicContentLoader {
     }
     
     private fun getStudyMaterials(testType: String): List<StudyMaterialItem> {
-        // TODO: Replace with actual data from repository
-        return listOf(
-            StudyMaterialItem(
-                id = "1",
-                title = "Getting Started with ${testType.uppercase()}",
-                duration = "10 min read",
-                isPremium = false
-            ),
-            StudyMaterialItem(
-                id = "2",
-                title = "Advanced Techniques",
-                duration = "15 min read",
-                isPremium = true
-            ),
-            StudyMaterialItem(
-                id = "3",
-                title = "Practice Strategies",
-                duration = "12 min read",
-                isPremium = false
-            )
-        )
+        return StudyMaterialsProvider.getStudyMaterials(testType)
     }
 }
 
