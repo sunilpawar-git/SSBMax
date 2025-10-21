@@ -42,55 +42,55 @@ fun TopicScreen(
                 testType = testType,
                 onNavigateBack = onNavigateBack
             )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp
+            ) {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
+                    label = { Text("Overview") },
+                    alwaysShowLabel = true
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    label = { Text("Study Material") },
+                    alwaysShowLabel = true
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    label = { Text("Tests") },
+                    alwaysShowLabel = true
+                )
+            }
         }
     ) { paddingValues ->
-        Column(
-            modifier = modifier
+        // Tab Content with Swipe Gesture Support
+        TabSwipeableContent(
+            currentIndex = selectedTab,
+            totalTabs = 3,
+            onTabChange = { newTab -> selectedTab = newTab },
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Tab Row with 3 tabs
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("Introduction") },
-                    icon = { Icon(Icons.Default.Info, contentDescription = null) }
+            when (selectedTab) {
+                0 -> IntroductionTab(
+                    introduction = uiState.introduction,
+                    isLoading = uiState.isLoading
                 )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Study Material") },
-                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null) }
+                1 -> StudyMaterialTab(
+                    materials = uiState.studyMaterials,
+                    isLoading = uiState.isLoading,
+                    onMaterialClick = onNavigateToStudyMaterial
                 )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = { Text("Tests") },
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = null) }
-                )
-            }
-            
-            // Tab Content with Swipe Gesture Support
-            TabSwipeableContent(
-                currentIndex = selectedTab,
-                totalTabs = 3,
-                onTabChange = { newTab -> selectedTab = newTab }
-            ) {
-                when (selectedTab) {
-                    0 -> IntroductionTab(
-                        introduction = uiState.introduction,
-                        isLoading = uiState.isLoading
-                    )
-                    1 -> StudyMaterialTab(
-                        materials = uiState.studyMaterials,
-                        isLoading = uiState.isLoading,
-                        onMaterialClick = onNavigateToStudyMaterial
-                    )
                 2 -> TestsTab(
                     tests = uiState.availableTests,
                     isLoading = uiState.isLoading,
@@ -100,7 +100,6 @@ fun TopicScreen(
                         onNavigateToTest(testId)
                     }
                 )
-                }
             }
         }
     }

@@ -42,11 +42,7 @@ fun SSBMaxScaffold(
     
     // Load user profile using ViewModel
     val profileViewModel: UserProfileViewModel = hiltViewModel()
-    android.util.Log.d("SSBMaxScaffold", "ProfileViewModel instance: $profileViewModel")
-    
     val profileUiState by profileViewModel.uiState.collectAsState()
-    android.util.Log.d("SSBMaxScaffold", "ProfileUiState: profile=${profileUiState.profile}, isLoading=${profileUiState.isLoading}, error=${profileUiState.error}")
-    
     val userProfile = profileUiState.profile
     val isLoadingProfile = profileUiState.isLoading
     

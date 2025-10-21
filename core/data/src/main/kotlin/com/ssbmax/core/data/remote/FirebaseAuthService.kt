@@ -69,19 +69,15 @@ class FirebaseAuthService @Inject constructor(
      * Observe authentication state changes
      */
     val authState: Flow<FirebaseUser?> = callbackFlow {
-        android.util.Log.d("FirebaseAuthService", "authState Flow - callbackFlow starting...")
         val listener = FirebaseAuth.AuthStateListener { auth ->
-            android.util.Log.d("FirebaseAuthService", "Auth state listener fired: user=${auth.currentUser?.uid}")
             trySend(auth.currentUser)
         }
         auth.addAuthStateListener(listener)
         
         // Send initial state
-        android.util.Log.d("FirebaseAuthService", "Sending initial auth state: user=${auth.currentUser?.uid}")
         trySend(auth.currentUser)
         
         awaitClose {
-            android.util.Log.d("FirebaseAuthService", "authState Flow - closing...")
             auth.removeAuthStateListener(listener)
         }
     }
