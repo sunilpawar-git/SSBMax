@@ -341,4 +341,3 @@ This SSBMax app represents a **world-class Android implementation** with:
 
 ## 🚀 SHIP IT! 🚀
 
-

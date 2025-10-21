@@ -92,5 +92,11 @@ abstract class RepositoryModule {
     abstract fun bindTestContentRepository(
         impl: com.ssbmax.core.data.repository.TestContentRepositoryImpl
     ): com.ssbmax.core.domain.repository.TestContentRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindUserProfileRepository(
+        impl: com.ssbmax.core.data.repository.UserProfileRepositoryImpl
+    ): com.ssbmax.core.domain.repository.UserProfileRepository
 }
 

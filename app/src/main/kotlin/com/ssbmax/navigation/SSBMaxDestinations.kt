@@ -88,6 +88,9 @@ sealed class SSBMaxDestinations(val route: String) {
     // Settings
     data object Settings : SSBMaxDestinations("settings")
     
+    // User Profile
+    data object UserProfile : SSBMaxDestinations("user/profile")
+    
     // Batch Management
     data object JoinBatch : SSBMaxDestinations("batch/join")
     data object CreateBatch : SSBMaxDestinations("batch/create")

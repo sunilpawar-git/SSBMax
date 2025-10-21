@@ -560,6 +560,14 @@ fun SSBMaxNavGraph(
             )
         }
         
+        // User Profile Screen
+        composable(SSBMaxDestinations.UserProfile.route) {
+            com.ssbmax.ui.profile.UserProfileScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onProfileSaved = { navController.navigateUp() }
+            )
+        }
+        
         // ========================
         // BATCH MANAGEMENT
         // ========================
