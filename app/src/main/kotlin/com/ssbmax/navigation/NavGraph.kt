@@ -580,10 +580,29 @@ fun SSBMaxNavGraph(
         }
         
         // User Profile Screen
-        composable(SSBMaxDestinations.UserProfile.route) {
+        composable(
+            route = SSBMaxDestinations.UserProfile.route + "?isOnboarding={isOnboarding}",
+            arguments = listOf(
+                navArgument("isOnboarding") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val isOnboarding = backStackEntry.arguments?.getBoolean("isOnboarding") ?: false
             com.ssbmax.ui.profile.UserProfileScreen(
                 onNavigateBack = { navController.navigateUp() },
-                onProfileSaved = { navController.navigateUp() }
+                onProfileSaved = {
+                    if (isOnboarding) {
+                        // After onboarding, navigate to home
+                        navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigateUp()
+                    }
+                },
+                isOnboarding = isOnboarding
             )
         }
         

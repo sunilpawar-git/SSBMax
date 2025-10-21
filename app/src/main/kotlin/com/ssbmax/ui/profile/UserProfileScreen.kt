@@ -27,9 +27,15 @@ import com.ssbmax.core.domain.model.Gender
 fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onProfileSaved: () -> Unit,
+    isOnboarding: Boolean = false,
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Prevent back navigation during onboarding if profile incomplete
+    androidx.activity.compose.BackHandler(enabled = isOnboarding && uiState.profile == null) {
+        // Do nothing - prevent back press during onboarding
+    }
 
     // Navigate back when profile is saved
     LaunchedEffect(uiState.isSaved) {
@@ -52,9 +58,9 @@ fun UserProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("User Profile") },
+                title = { Text(if (isOnboarding) "Complete Your Profile" else "User Profile") },
                 navigationIcon = {
-                    if (uiState.profile != null) {
+                    if (!isOnboarding || uiState.profile != null) {
                         IconButton(onClick = onNavigateBack) {
                             Icon(Icons.Default.ArrowBack, "Back")
                         }
