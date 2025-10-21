@@ -588,6 +588,17 @@ fun SSBMaxNavGraph(
         }
         
         // ========================
+        // INFORMATIONAL SCREENS
+        // ========================
+        
+        // SSB Overview
+        composable(SSBMaxDestinations.SSBOverview.route) {
+            com.ssbmax.ui.ssboverview.SSBOverviewScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        
+        // ========================
         // MARKETPLACE & BATCH MANAGEMENT
         // ========================
         

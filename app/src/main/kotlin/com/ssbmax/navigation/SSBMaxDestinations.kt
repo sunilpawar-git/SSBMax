@@ -102,6 +102,9 @@ sealed class SSBMaxDestinations(val route: String) {
     // Marketplace
     data object Marketplace : SSBMaxDestinations("marketplace")
     
+    // SSB Overview
+    data object SSBOverview : SSBMaxDestinations("ssb/overview")
+    
     // Batch Management
     data object JoinBatch : SSBMaxDestinations("batch/join")
     data object CreateBatch : SSBMaxDestinations("batch/create")

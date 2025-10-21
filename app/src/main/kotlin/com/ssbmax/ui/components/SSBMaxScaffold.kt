@@ -73,8 +73,7 @@ fun SSBMaxScaffold(
                         },
                         onNavigateToSSBOverview = {
                             scope.launch { drawerState.close() }
-                            // Navigate to SSB Overview (will be created in Phase 6)
-                            navController.navigate("ssb_overview")
+                            navController.navigate(SSBMaxDestinations.SSBOverview.route)
                         },
                         onNavigateToMyBatches = {
                             scope.launch { drawerState.close() }
