@@ -40,18 +40,55 @@ class UserProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            val currentUser = authRepository.currentUser.first()
+            // First try to get user from AuthRepository Flow
+            var currentUser = authRepository.currentUser.first()
+            
+            // If null, check if user is actually authenticated (Firebase might be ready but Flow not updated yet)
             if (currentUser == null) {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false, 
-                        error = "User not authenticated"
-                    ) 
+                val isAuth = authRepository.isAuthenticated()
+                
+                if (!isAuth) {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            error = "User not authenticated"
+                        ) 
+                    }
+                    return@launch
                 }
-                return@launch
+                
+                // User is authenticated but currentUser Flow hasn't emitted yet
+                // Try again by collecting from the Flow with timeout
+                try {
+                    kotlinx.coroutines.withTimeout(5000) {
+                        authRepository.currentUser.collect { user ->
+                            if (user != null) {
+                                currentUser = user
+                                throw kotlinx.coroutines.CancellationException("User found")
+                            }
+                        }
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // User found, continue
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    // Timeout occurred
+                }
+                
+                // If still null after waiting, there's a problem
+                if (currentUser == null) {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            error = "Failed to load user session"
+                        ) 
+                    }
+                    return@launch
+                }
             }
 
-            userProfileRepository.getUserProfile(currentUser.id)
+            val userId = currentUser!!.id
+            // Collect profile updates reactively
+            userProfileRepository.getUserProfile(userId)
                 .collect { result ->
                     result.fold(
                         onSuccess = { profile ->
@@ -142,6 +179,7 @@ class UserProfileViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.update { 
                         it.copy(
+                            profile = profile,  // Update the profile field with saved data
                             isLoading = false,
                             isSaved = true,
                             error = null

@@ -1,0 +1,243 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is an assessor
+    function isAssessor() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ASSESSOR';
+    }
+    
+    // Check if user is a student
+    function isStudent() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'STUDENT';
+    }
+    
+    // ============================================
+    // USER DATA - CRITICAL FOR PROFILE
+    // ============================================
+    
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isOwner(userId);
+      
+      // Users can create their own profile
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Users can update their own profile (except role)
+      allow update: if isOwner(userId) && 
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      
+      // No one can delete user profiles
+      allow delete: if false;
+      
+      // 🔥 THIS IS THE CRITICAL FIX FOR YOUR PROFILE ERROR
+      // User data subcollection (for profile, settings, etc.)
+      match /data/{document} {
+        // Users can read/write their own data subcollection
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // ============================================
+    // TEST CONTENT
+    // ============================================
+    
+    match /tests/{testId} {
+      // All authenticated users can read test content
+      allow read: if isAuthenticated();
+      
+      // No write access to test content for clients
+      allow write: if false;
+    }
+    
+    // ============================================
+    // TEST CONFIGURATIONS
+    // ============================================
+    
+    match /test_configs/{testId} {
+      // All authenticated users can read test configs
+      allow read: if isAuthenticated();
+      
+      // No write access for clients
+      allow write: if false;
+    }
+    
+    // ============================================
+    // TEST SESSIONS
+    // ============================================
+    
+    match /test_sessions/{sessionId} {
+      // Users can read their own test sessions
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can create test sessions
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.isActive == true;
+      
+      // Users can update their own sessions
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own expired sessions
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // TEST SUBMISSIONS
+    // ============================================
+    
+    match /submissions/{submissionId} {
+      // Students can read their own submissions
+      // Assessors can read submissions assigned to them
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || 
+                      resource.data.instructorId == request.auth.uid);
+      
+      // Students can create submissions
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Only assessors can update submissions (for grading)
+      allow update: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid ||
+                        resource.data.instructorId == request.auth.uid);
+      
+      // Students can delete their own submissions
+      allow delete: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // NOTIFICATIONS
+    // ============================================
+    
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() && 
+                       resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own notifications
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // NOTIFICATION PREFERENCES
+    // ============================================
+    
+    match /notificationPreferences/{userId} {
+      // Users can read/write their own preferences
+      allow read, write: if isOwner(userId);
+    }
+    
+    // ============================================
+    // FCM TOKENS
+    // ============================================
+    
+    match /fcmTokens/{tokenId} {
+      // Users can read their own tokens
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can create/update their own tokens
+      allow create, update: if isAuthenticated() && 
+                               request.resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own tokens
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // STUDY MATERIALS
+    // ============================================
+    
+    match /studyMaterials/{materialId} {
+      // All authenticated users can read study materials
+      allow read: if isAuthenticated();
+      
+      // No write access for clients
+      allow write: if false;
+    }
+    
+    // ============================================
+    // USER PROGRESS
+    // ============================================
+    
+    match /user_progress/{userId} {
+      // Users can read/write their own progress
+      allow read, write: if isOwner(userId);
+    }
+    
+    match /userProgress/{userId} {
+      // Alternative path (for compatibility)
+      allow read, write: if isOwner(userId);
+    }
+    
+    // ============================================
+    // BATCHES (SSB Marketplace)
+    // ============================================
+    
+    match /batches/{batchId} {
+      // All authenticated users can read batch info
+      allow read: if isAuthenticated();
+      
+      // Only assessors can create/update batches
+      allow create, update: if isAuthenticated() && 
+                               request.resource.data.instructorId == request.auth.uid;
+      
+      // No delete
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // BATCH ENROLLMENTS
+    // ============================================
+    
+    match /batchEnrollments/{enrollmentId} {
+      // Users can read their own enrollments
+      // Assessors can read enrollments for their batches
+      allow read: if isAuthenticated() && 
+                     (resource.data.studentId == request.auth.uid ||
+                      (isAssessor() && 
+                       get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
+      
+      // Students can create enrollments
+      allow create: if isAuthenticated() && 
+                       request.resource.data.studentId == request.auth.uid;
+      
+      // No update or delete
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // DEFAULT DENY ALL
+    // ============================================
+    
+    // Deny all other requests by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

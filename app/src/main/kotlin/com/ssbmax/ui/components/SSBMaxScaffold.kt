@@ -39,13 +39,16 @@ fun SSBMaxScaffold(
     // Drawer UI state
     var phase1Expanded by remember { mutableStateOf(false) }
     var phase2Expanded by remember { mutableStateOf(false) }
-    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
     
-    // Load user profile
-    LaunchedEffect(user.id) {
-        // TODO: Load profile from repository
-        // For now, userProfile remains null
-    }
+    // Load user profile using ViewModel
+    val profileViewModel: UserProfileViewModel = hiltViewModel()
+    android.util.Log.d("SSBMaxScaffold", "ProfileViewModel instance: $profileViewModel")
+    
+    val profileUiState by profileViewModel.uiState.collectAsState()
+    android.util.Log.d("SSBMaxScaffold", "ProfileUiState: profile=${profileUiState.profile}, isLoading=${profileUiState.isLoading}, error=${profileUiState.error}")
+    
+    val userProfile = profileUiState.profile
+    val isLoadingProfile = profileUiState.isLoading
     
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -54,6 +57,7 @@ fun SSBMaxScaffold(
                 ModalDrawerSheet {
                     SSBMaxDrawer(
                         userProfile = userProfile,
+                        isLoadingProfile = isLoadingProfile,
                         currentRoute = currentRoute,
                         phase1Expanded = phase1Expanded,
                         phase2Expanded = phase2Expanded,

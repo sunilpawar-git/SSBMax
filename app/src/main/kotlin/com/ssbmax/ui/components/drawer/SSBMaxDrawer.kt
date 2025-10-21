@@ -13,6 +13,7 @@ import com.ssbmax.core.domain.model.UserProfile
 @Composable
 fun SSBMaxDrawer(
     userProfile: UserProfile?,
+    isLoadingProfile: Boolean = false,
     currentRoute: String,
     phase1Expanded: Boolean,
     phase2Expanded: Boolean,
@@ -31,6 +32,7 @@ fun SSBMaxDrawer(
         // User Profile Header
         DrawerHeader(
             userProfile = userProfile,
+            isLoading = isLoadingProfile,
             onEditProfile = onEditProfile
         )
 

@@ -9,10 +9,13 @@ import com.ssbmax.core.domain.model.StudentProfile
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,8 +38,17 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     private fun observeAuthState() {
-        // This will be initialized when the repository is created
-        // We'll listen to Firebase auth changes and load user from Firestore
+        CoroutineScope(Dispatchers.IO).launch {
+            firebaseAuthService.authState.collect { firebaseUser ->
+                if (firebaseUser != null) {
+                    // User is signed in, load their profile from Firestore
+                    loadOrCreateUserProfile(firebaseUser)
+                } else {
+                    // User is signed out
+                    _currentUser.value = null
+                }
+            }
+        }
     }
 
     /**
