@@ -111,6 +111,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateTheme(theme: com.ssbmax.ui.settings.AppTheme) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(appTheme = theme) }
+            // TODO: Save theme preference to SharedPreferences or Firestore
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
@@ -119,6 +126,8 @@ class SettingsViewModel @Inject constructor(
 data class SettingsUiState(
     val isLoading: Boolean = false,
     val notificationPreferences: NotificationPreferences? = null,
+    val subscriptionTier: com.ssbmax.ui.settings.SubscriptionTier = com.ssbmax.ui.settings.SubscriptionTier.BASIC,
+    val appTheme: com.ssbmax.ui.settings.AppTheme = com.ssbmax.ui.settings.AppTheme.SYSTEM,
     val error: String? = null
 )
 

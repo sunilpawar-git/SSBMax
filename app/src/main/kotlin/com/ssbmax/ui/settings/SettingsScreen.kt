@@ -65,6 +65,28 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Subscription Section
+                item {
+                    SubscriptionSection(
+                        currentTier = uiState.subscriptionTier,
+                        onUpgradeClick = {
+                            // TODO: Navigate to upgrade screen
+                        },
+                        onManageSubscriptionClick = {
+                            // TODO: Navigate to subscription management
+                        }
+                    )
+                }
+
+                // Theme Section
+                item {
+                    ThemeSection(
+                        currentTheme = uiState.appTheme,
+                        onThemeSelected = viewModel::updateTheme
+                    )
+                }
+
+                // Notifications Section
                 item {
                     NotificationSettingsSection(
                         preferences = uiState.notificationPreferences,
@@ -72,21 +94,19 @@ fun SettingsScreen(
                     )
                 }
 
+                // Help & Support Section
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                item {
-                    QuietHoursSection(
-                        preferences = uiState.notificationPreferences,
-                        viewModel = viewModel
+                    HelpSection(
+                        onFAQClick = {
+                            // TODO: Navigate to FAQ screen
+                        },
+                        onContactSupportClick = {
+                            // TODO: Open email intent
+                        }
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
+                // About Section
                 item {
                     AppInfoSection()
                 }
@@ -122,7 +142,7 @@ private fun NotificationSettingsSection(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             // Master toggle
             SettingsSwitchItem(
@@ -195,92 +215,6 @@ private fun NotificationSettingsSection(
     }
 }
 
-@Composable
-private fun QuietHoursSection(
-    preferences: com.ssbmax.core.domain.model.NotificationPreferences?,
-    viewModel: SettingsViewModel
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Nightlight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Quiet Hours",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Text(
-                text = "No notifications during these hours",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Start",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = String.format("%02d:00", preferences?.quietHoursStart ?: 22),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "End",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = String.format("%02d:00", preferences?.quietHoursEnd ?: 8),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Text(
-                text = "Tap to customize (Coming soon)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    }
-}
 
 @Composable
 private fun AppInfoSection() {
