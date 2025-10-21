@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.TestPhase
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.UserProfile
 import com.ssbmax.navigation.SSBMaxDestinations
+import com.ssbmax.ui.components.drawer.SSBMaxDrawer
+import com.ssbmax.ui.profile.UserProfileViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -33,54 +36,77 @@ fun SSBMaxScaffold(
     val showBottomBar = shouldShowBottomBar(currentRoute)
     val showDrawer = shouldShowDrawer(currentRoute)
     
+    // Drawer UI state
+    var phase1Expanded by remember { mutableStateOf(false) }
+    var phase2Expanded by remember { mutableStateOf(false) }
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    
+    // Load user profile
+    LaunchedEffect(user.id) {
+        // TODO: Load profile from repository
+        // For now, userProfile remains null
+    }
+    
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             if (showDrawer) {
-                SSBMaxDrawer(
-                    user = user,
-                    onNavigateToPhase = { phase ->
-                        scope.launch { drawerState.close() }
-                        when (phase) {
-                            TestPhase.PHASE_1 -> navController.navigate(SSBMaxDestinations.Phase1Detail.route)
-                            TestPhase.PHASE_2 -> navController.navigate(SSBMaxDestinations.Phase2Detail.route)
+                ModalDrawerSheet {
+                    SSBMaxDrawer(
+                        userProfile = userProfile,
+                        currentRoute = currentRoute,
+                        phase1Expanded = phase1Expanded,
+                        phase2Expanded = phase2Expanded,
+                        onNavigateToHome = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToTopic = { topicId ->
+                            scope.launch { drawerState.close() }
+                            navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                        },
+                        onNavigateToSSBOverview = {
+                            scope.launch { drawerState.close() }
+                            // Navigate to SSB Overview (will be created in Phase 6)
+                            navController.navigate("ssb_overview")
+                        },
+                        onNavigateToMyBatches = {
+                            scope.launch { drawerState.close() }
+                            // Navigate to My Batches
+                            navController.navigate(SSBMaxDestinations.JoinBatch.route)
+                        },
+                        onNavigateToSettings = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(SSBMaxDestinations.Settings.route)
+                        },
+                        onEditProfile = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(SSBMaxDestinations.UserProfile.route)
+                        },
+                        onTogglePhase1 = {
+                            phase1Expanded = !phase1Expanded
+                        },
+                        onTogglePhase2 = {
+                            phase2Expanded = !phase2Expanded
+                        },
+                        onSignOut = {
+                            scope.launch { drawerState.close() }
+                            // TODO: Sign out via AuthRepository
+                            navController.navigate(SSBMaxDestinations.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
-                    },
-                    onNavigateToTest = { testType ->
-                        scope.launch { drawerState.close() }
-                        // TODO: Navigate to specific test based on type
-                    },
-                    onNavigateToBatches = {
-                        scope.launch { drawerState.close() }
-                        // TODO: Navigate to batches
-                    },
-                    onNavigateToSettings = {
-                        scope.launch { drawerState.close() }
-                        // TODO: Navigate to settings
-                    },
-                    onNavigateToPendingGrading = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.InstructorGrading.route)
-                    },
-                    onNavigateToAnalytics = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.InstructorAnalytics.route)
-                    },
-                    onSwitchRole = {
-                        scope.launch { drawerState.close() }
-                        // TODO: Implement role switching
-                    },
-                    onSignOut = {
-                        scope.launch { drawerState.close() }
-                        // TODO: Sign out and navigate to login
-                        navController.navigate(SSBMaxDestinations.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
+                    )
+                }
             }
         },
-        gesturesEnabled = showDrawer && drawerState.isOpen
+        gesturesEnabled = showDrawer
     ) {
         Scaffold(
             bottomBar = {
