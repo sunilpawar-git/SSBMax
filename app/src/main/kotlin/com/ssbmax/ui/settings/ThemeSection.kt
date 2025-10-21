@@ -12,8 +12,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.ui.theme.LocalThemeState
 
 /**
  * Theme selector section for Settings
@@ -24,6 +27,8 @@ fun ThemeSection(
     onThemeSelected: (AppTheme) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val themeState = LocalThemeState.current
+    
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -62,11 +67,14 @@ fun ThemeSection(
                 modifier = Modifier.selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AppTheme.values().forEach { theme ->
+                listOf(AppTheme.SYSTEM, AppTheme.LIGHT, AppTheme.DARK).forEach { theme ->
                     ThemeOption(
                         theme = theme,
                         isSelected = currentTheme == theme,
-                        onSelected = { onThemeSelected(theme) }
+                        onSelected = {
+                            onThemeSelected(theme)
+                            themeState.updateTheme(theme) // Immediate UI update
+                        }
                     )
                 }
             }
@@ -120,27 +128,19 @@ private fun ThemeOption(
 }
 
 /**
- * App theme options
+ * UI-specific properties for AppTheme
  */
-enum class AppTheme(
-    val displayName: String,
-    val description: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    LIGHT(
-        displayName = "Light",
-        description = "Light theme",
-        icon = Icons.Default.LightMode
-    ),
-    DARK(
-        displayName = "Dark",
-        description = "Dark theme",
-        icon = Icons.Default.DarkMode
-    ),
-    SYSTEM(
-        displayName = "System",
-        description = "Follow system setting",
-        icon = Icons.Default.BrightnessAuto
-    )
-}
+val AppTheme.icon: ImageVector
+    get() = when (this) {
+        AppTheme.LIGHT -> Icons.Default.LightMode
+        AppTheme.DARK -> Icons.Default.DarkMode
+        AppTheme.SYSTEM -> Icons.Default.BrightnessAuto
+    }
+
+val AppTheme.description: String
+    get() = when (this) {
+        AppTheme.LIGHT -> "Light theme"
+        AppTheme.DARK -> "Dark theme"
+        AppTheme.SYSTEM -> "Follow system setting"
+    }
 

@@ -2,6 +2,8 @@ package com.ssbmax.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.preferences.ThemePreferenceManager
+import com.ssbmax.core.domain.model.AppTheme
 import com.ssbmax.core.domain.model.NotificationPreferences
 import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -16,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val themePreferenceManager: ThemePreferenceManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -24,6 +27,15 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadNotificationPreferences()
+        loadThemePreference()
+    }
+
+    private fun loadThemePreference() {
+        viewModelScope.launch {
+            themePreferenceManager.themeFlow.collect { theme ->
+                _uiState.update { it.copy(appTheme = theme) }
+            }
+        }
     }
 
     private fun loadNotificationPreferences() {
@@ -111,10 +123,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateTheme(theme: com.ssbmax.ui.settings.AppTheme) {
+    fun updateTheme(theme: AppTheme) {
         viewModelScope.launch {
+            themePreferenceManager.setTheme(theme)
             _uiState.update { it.copy(appTheme = theme) }
-            // TODO: Save theme preference to SharedPreferences or Firestore
         }
     }
 
@@ -127,7 +139,7 @@ data class SettingsUiState(
     val isLoading: Boolean = false,
     val notificationPreferences: NotificationPreferences? = null,
     val subscriptionTier: com.ssbmax.ui.settings.SubscriptionTier = com.ssbmax.ui.settings.SubscriptionTier.BASIC,
-    val appTheme: com.ssbmax.ui.settings.AppTheme = com.ssbmax.ui.settings.AppTheme.SYSTEM,
+    val appTheme: AppTheme = AppTheme.SYSTEM,
     val error: String? = null
 )
 
