@@ -114,7 +114,7 @@ fun SSBMaxNavGraph(
                     navController.navigate(SSBMaxDestinations.NotificationCenter.route)
                 },
                 onNavigateToMarketplace = {
-                    navController.navigate(SSBMaxDestinations.JoinBatch.route)
+                    navController.navigate(SSBMaxDestinations.Marketplace.route)
                 },
                 onOpenDrawer = onOpenDrawer
             )
@@ -588,8 +588,18 @@ fun SSBMaxNavGraph(
         }
         
         // ========================
-        // BATCH MANAGEMENT
+        // MARKETPLACE & BATCH MANAGEMENT
         // ========================
+        
+        // Marketplace
+        composable(SSBMaxDestinations.Marketplace.route) {
+            com.ssbmax.ui.marketplace.MarketplaceScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onInstituteClick = { instituteId ->
+                    // TODO: Navigate to institute detail screen
+                }
+            )
+        }
         
         // Join Batch
         composable(SSBMaxDestinations.JoinBatch.route) {
