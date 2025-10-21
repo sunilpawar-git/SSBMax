@@ -60,6 +60,14 @@ sealed class SSBMaxDestinations(val route: String) {
         fun createRoute(submissionId: String) = "test/srt/result/$submissionId"
     }
     
+    // SD (Self Description) Test
+    data object SDTest : SSBMaxDestinations("test/sd/{testId}") {
+        fun createRoute(testId: String) = "test/sd/$testId"
+    }
+    data object SDSubmissionResult : SSBMaxDestinations("test/sd/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/sd/result/$submissionId"
+    }
+    
     // Test Screens - Phase 2 Other Tests
     data object GTOTest : SSBMaxDestinations("test/gto/{testId}") {
         fun createRoute(testId: String) = "test/gto/$testId"

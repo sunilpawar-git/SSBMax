@@ -23,7 +23,7 @@ class TopicViewModel @Inject constructor(
     // TODO: Inject StudyMaterialRepository, TestRepository when available
 ) : ViewModel() {
     
-    private val testType: String = savedStateHandle.get<String>("testType") ?: "OIR"
+    private val testType: String = savedStateHandle.get<String>("topicId") ?: "OIR"
     
     private val _uiState = MutableStateFlow(TopicUiState())
     val uiState: StateFlow<TopicUiState> = _uiState.asStateFlow()

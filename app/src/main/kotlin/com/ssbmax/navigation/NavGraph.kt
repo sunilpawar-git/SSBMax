@@ -452,6 +452,16 @@ fun SSBMaxNavGraph(
             )
         }
         
+        // SD (Self Description) Test
+        composable(
+            route = SSBMaxDestinations.SDTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.getString("testId") ?: ""
+            // TODO: Implement SDTestScreen
+            PlaceholderScreen(title = "Self Description Test: $testId")
+        }
+        
         // GTO Test
         composable(
             route = SSBMaxDestinations.GTOTest.route,
@@ -505,7 +515,6 @@ fun SSBMaxNavGraph(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTest = { testId ->
                     // Navigate to appropriate test based on topic
-                    // This will be determined by the TopicViewModel
                     when {
                         testId.startsWith("oir_") -> 
                             navController.navigate(SSBMaxDestinations.OIRTest.createRoute(testId))
@@ -517,6 +526,16 @@ fun SSBMaxNavGraph(
                             navController.navigate(SSBMaxDestinations.WATTest.createRoute(testId))
                         testId.startsWith("srt_") -> 
                             navController.navigate(SSBMaxDestinations.SRTTest.createRoute(testId))
+                        testId.startsWith("sd_") -> 
+                            navController.navigate(SSBMaxDestinations.SDTest.createRoute(testId))
+                        testId.startsWith("gto_") -> 
+                            navController.navigate(SSBMaxDestinations.GTOTest.createRoute(testId))
+                        testId.startsWith("io_") -> 
+                            navController.navigate(SSBMaxDestinations.IOTest.createRoute(testId))
+                        else -> {
+                            // Log unknown test type or show error
+                            android.util.Log.w("Navigation", "Unknown test ID: $testId")
+                        }
                     }
                 }
             )
