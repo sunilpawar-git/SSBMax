@@ -147,20 +147,11 @@ fun SSBMaxScaffold(
 
 /**
  * Determines if bottom bar should be shown for the current route
+ * Topic screens have their own internal bottom navigation
+ * Home screens and other screens don't use bottom nav
  */
 private fun shouldShowBottomBar(route: String): Boolean {
-    return route in listOf(
-        // Student routes
-        SSBMaxDestinations.StudentHome.route,
-        SSBMaxDestinations.StudentTests.route,
-        SSBMaxDestinations.StudentStudy.route,
-        SSBMaxDestinations.StudentProfile.route,
-        // Instructor routes
-        SSBMaxDestinations.InstructorHome.route,
-        SSBMaxDestinations.InstructorStudents.route,
-        SSBMaxDestinations.InstructorGrading.route,
-        SSBMaxDestinations.InstructorAnalytics.route
-    )
+    return false
 }
 
 /**
