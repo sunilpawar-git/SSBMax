@@ -3,23 +3,25 @@ package com.ssbmax.ui.home.student
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.AuthRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for Student Home Screen
- * Manages user progress, recommendations, and daily tips
+ * Manages user progress and displays user info
  */
 @HiltViewModel
 class StudentHomeViewModel @Inject constructor(
-    // TODO: Inject repositories
-    // private val userRepository: UserRepository,
-    // private val testRepository: TestRepository,
-    // private val studyRepository: StudyRepository
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository
+    // TODO: Inject test repositories for progress tracking
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -31,14 +33,24 @@ class StudentHomeViewModel @Inject constructor(
     
     private fun loadUserProgress() {
         viewModelScope.launch {
-            // TODO: Load from repository
+            // Load user profile for name
+            val currentUser = authRepository.currentUser.first()
+            if (currentUser != null) {
+                userProfileRepository.getUserProfile(currentUser.id).collect { result ->
+                    result.onSuccess { profile ->
+                        _uiState.value = _uiState.value.copy(
+                            userName = profile?.fullName ?: "Aspirant"
+                        )
+                    }
+                }
+            }
+            
+            // TODO: Load test progress from test repositories
             // For now, use mock data
-            _uiState.value = StudentHomeUiState(
-                userName = "Aspirant",
+            _uiState.value = _uiState.value.copy(
                 currentStreak = 7,
                 testsCompleted = 12,
                 notificationCount = 3,
-                subscriptionTier = SubscriptionTier.BASIC, // TODO: Load from user repository
                 phase1Progress = PhaseProgress(
                     phase = TestPhase.PHASE_1,
                     totalTests = 2,
@@ -91,13 +103,7 @@ class StudentHomeViewModel @Inject constructor(
                             attemptsCount = 0
                         )
                     )
-                ),
-                recommendedTests = listOf(
-                    TestType.TAT,
-                    TestType.WAT,
-                    TestType.GTO
-                ),
-                dailyTip = "Practice TAT regularly to improve your storytelling skills. Focus on creating coherent narratives that demonstrate leadership qualities and problem-solving abilities."
+                )
             )
         }
     }
@@ -112,15 +118,12 @@ class StudentHomeViewModel @Inject constructor(
  */
 data class StudentHomeUiState(
     val isLoading: Boolean = false,
-    val userName: String = "Student",
+    val userName: String = "Aspirant",
     val currentStreak: Int = 0,
     val testsCompleted: Int = 0,
     val notificationCount: Int = 0,
-    val subscriptionTier: SubscriptionTier = SubscriptionTier.BASIC,
     val phase1Progress: PhaseProgress? = null,
     val phase2Progress: PhaseProgress? = null,
-    val recommendedTests: List<TestType> = emptyList(),
-    val dailyTip: String = "",
     val error: String? = null
 )
 

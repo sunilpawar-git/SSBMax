@@ -110,11 +110,11 @@ fun SSBMaxNavGraph(
                 onNavigateToSubmissions = {
                     navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
                 },
-                onNavigateToUpgrade = {
-                    navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
-                },
                 onNavigateToNotifications = {
                     navController.navigate(SSBMaxDestinations.NotificationCenter.route)
+                },
+                onNavigateToMarketplace = {
+                    navController.navigate(SSBMaxDestinations.JoinBatch.route)
                 },
                 onOpenDrawer = onOpenDrawer
             )

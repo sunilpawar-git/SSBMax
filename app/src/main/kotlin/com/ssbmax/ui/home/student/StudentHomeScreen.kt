@@ -23,7 +23,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.ui.components.SubscriptionRibbon
 
 /**
  * Student Home Screen with Phase Progress Ribbon
@@ -37,8 +36,8 @@ fun StudentHomeScreen(
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
     onNavigateToSubmissions: () -> Unit = {},
-    onNavigateToUpgrade: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToMarketplace: () -> Unit = {},
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -117,14 +116,6 @@ fun StudentHomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }
-            
-            // Subscription Ribbon
-            item {
-                SubscriptionRibbon(
-                    currentTier = uiState.subscriptionTier,
-                    onUpgradeClick = onNavigateToUpgrade
-                )
             }
             
             // Progress Ribbon Header
@@ -231,10 +222,10 @@ fun StudentHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickActionCard(
-                        title = "Study Materials",
+                        title = "Self Preparation",
                         icon = Icons.AutoMirrored.Filled.MenuBook,
                         color = Color(0xFF7B1FA2),
-                        onClick = onNavigateToStudy,
+                        onClick = onOpenDrawer,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -242,34 +233,12 @@ fun StudentHomeScreen(
                         title = "Join Batch",
                         icon = Icons.Default.GroupAdd,
                         color = Color(0xFF1976D2),
-                        onClick = { /* Join batch */ },
+                        onClick = onNavigateToMarketplace,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
             
-            // Recommended Tests
-            if (uiState.recommendedTests.isNotEmpty()) {
-                item {
-                    Text(
-                        "Recommended for You",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                items(uiState.recommendedTests) { test ->
-                    RecommendedTestCard(
-                        testType = test,
-                        onClick = { onNavigateToTest(test) }
-                    )
-                }
-            }
-            
-            // Daily Tip
-            item {
-                DailyTipCard(tip = uiState.dailyTip)
-            }
             
             // Bottom spacing
             item {
@@ -374,103 +343,6 @@ private fun QuickActionCard(
     }
 }
 
-@Composable
-private fun RecommendedTestCard(
-    testType: TestType,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(getTestColor(testType).copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    getTestIcon(testType),
-                    contentDescription = null,
-                    tint = getTestColor(testType),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    testType.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                Text(
-                    testType.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun DailyTipCard(tip: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Icon(
-                Icons.Default.Lightbulb,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(24.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column {
-                Text(
-                    "Daily Tip",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                Text(
-                    tip,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-            }
-        }
-    }
-}
 
 // Helper functions
 private fun getTestColor(testType: TestType): Color {
