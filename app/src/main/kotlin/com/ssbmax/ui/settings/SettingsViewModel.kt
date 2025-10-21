@@ -48,15 +48,24 @@ class SettingsViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                notificationPreferences = preferences
+                                notificationPreferences = preferences,
+                                error = null
                             )
                         }
                     }
                     .onFailure { error ->
+                        // Gracefully handle permission errors
+                        val errorMessage = if (error.message?.contains("PERMISSION_DENIED") == true) {
+                            null // Don't show error for permission issues - use default preferences
+                        } else {
+                            error.message
+                        }
+                        
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                error = error.message
+                                notificationPreferences = NotificationPreferences(userId = user.id), // Use defaults
+                                error = errorMessage
                             )
                         }
                     }
@@ -64,7 +73,8 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "User not found"
+                        notificationPreferences = null, // No user, no preferences
+                        error = null
                     )
                 }
             }
