@@ -580,6 +580,14 @@ fun SSBMaxNavGraph(
         // Settings Screen
         composable(SSBMaxDestinations.Settings.route) {
             com.ssbmax.ui.settings.SettingsScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToFAQ = { navController.navigate(SSBMaxDestinations.FAQ.route) }
+            )
+        }
+        
+        // FAQ Screen
+        composable(SSBMaxDestinations.FAQ.route) {
+            com.ssbmax.ui.faq.FAQScreen(
                 onNavigateBack = { navController.navigateUp() }
             )
         }

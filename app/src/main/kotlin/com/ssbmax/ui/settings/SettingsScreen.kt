@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToFAQ: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -97,9 +98,7 @@ fun SettingsScreen(
                 // Help & Support Section
                 item {
                     HelpSection(
-                        onFAQClick = {
-                            // TODO: Navigate to FAQ screen
-                        },
+                        onFAQClick = onNavigateToFAQ,
                         onContactSupportClick = {
                             // TODO: Open email intent
                         }
