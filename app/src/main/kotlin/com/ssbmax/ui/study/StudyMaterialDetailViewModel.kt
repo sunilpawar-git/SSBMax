@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,7 +24,7 @@ class StudyMaterialDetailViewModel @Inject constructor(
     private val observeCurrentUser: com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 ) : ViewModel() {
     
-    private val materialId: String = savedStateHandle.get<String>("materialId") ?: ""
+    private val materialId: String = savedStateHandle.get<String>("categoryId") ?: ""
     
     private val _uiState = MutableStateFlow(StudyMaterialDetailUiState())
     val uiState: StateFlow<StudyMaterialDetailUiState> = _uiState.asStateFlow()
@@ -42,10 +43,9 @@ class StudyMaterialDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                // Get current user
-                observeCurrentUser().collect { user ->
-                    currentUserId = user?.id ?: ""
-                }
+                // Get current user (use first() to get single value, not collect which blocks)
+                val user = observeCurrentUser().first()
+                currentUserId = user?.id ?: ""
                 
                 // TODO: Load from repository
                 // For now, use mock data
