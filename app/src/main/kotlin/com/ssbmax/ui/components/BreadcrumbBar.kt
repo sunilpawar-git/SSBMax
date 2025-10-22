@@ -2,6 +2,8 @@ package com.ssbmax.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
@@ -33,16 +36,17 @@ data class BreadcrumbItem(
  * @param onItemClick Callback when a breadcrumb item is clicked
  * @param modifier Modifier for the breadcrumb bar
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BreadcrumbBar(
     items: List<BreadcrumbItem>,
     onItemClick: (BreadcrumbItem) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Row(
+    FlowRow(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items.forEachIndexed { index, item ->
             val isLast = index == items.lastIndex
@@ -54,13 +58,15 @@ fun BreadcrumbBar(
                 style = if (isLast) {
                     MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                 } else {
-                    MaterialTheme.typography.bodyMedium
+                    MaterialTheme.typography.bodySmall
                 },
                 color = if (isLast) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = if (isClickable) {
                     Modifier
                         .clickable { onItemClick(item) }
@@ -76,7 +82,9 @@ fun BreadcrumbBar(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .align(Alignment.CenterVertically)
                 )
             }
         }
