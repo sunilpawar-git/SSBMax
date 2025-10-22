@@ -50,13 +50,13 @@ object StudyMaterialsProvider {
             id = "oir_5",
             title = "Common Mistakes to Avoid",
             duration = "10 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "oir_6",
             title = "Practice Sets with Solutions",
             duration = "30 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "oir_7",
@@ -89,13 +89,13 @@ object StudyMaterialsProvider {
             id = "ppdt_4",
             title = "Character Perception Skills",
             duration = "10 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "ppdt_5",
             title = "Sample PPDT Stories",
             duration = "20 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "ppdt_6",
@@ -134,19 +134,19 @@ object StudyMaterialsProvider {
             id = "psy_5",
             title = "Self Description Writing",
             duration = "14 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "psy_6",
             title = "Officer Like Qualities Explained",
             duration = "20 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "psy_7",
             title = "Psychology Test Practice Sets",
             duration = "45 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "psy_8",
@@ -179,7 +179,7 @@ object StudyMaterialsProvider {
             id = "gto_4",
             title = "Half Group Task Techniques",
             duration = "14 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "gto_5",
@@ -191,13 +191,13 @@ object StudyMaterialsProvider {
             id = "gto_6",
             title = "Command Task Leadership",
             duration = "12 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "gto_7",
             title = "Snake Race & FGT Strategies",
             duration = "16 min read",
-            isPremium = true,
+            isPremium = false,
         )
     )
     
@@ -218,13 +218,13 @@ object StudyMaterialsProvider {
             id = "int_3",
             title = "Current Affairs Mastery",
             duration = "25 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "int_4",
             title = "Military Knowledge Basics",
             duration = "30 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "int_5",
@@ -242,7 +242,7 @@ object StudyMaterialsProvider {
             id = "int_7",
             title = "Mock Interview Scenarios",
             duration = "40 min read",
-            isPremium = true,
+            isPremium = false,
         )
     )
     
@@ -257,7 +257,7 @@ object StudyMaterialsProvider {
             id = "conf_2",
             title = "Final Assessment Criteria",
             duration = "12 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "conf_3",
@@ -296,13 +296,13 @@ object StudyMaterialsProvider {
             id = "med_4",
             title = "Medical Examination Process",
             duration = "15 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "med_5",
             title = "Common Medical Rejections",
             duration = "10 min read",
-            isPremium = true,
+            isPremium = false,
         )
     )
     
@@ -323,7 +323,7 @@ object StudyMaterialsProvider {
             id = "piq_3",
             title = "Common PIQ Mistakes",
             duration = "8 min read",
-            isPremium = true,
+            isPremium = false,
         )
     )
     
@@ -344,7 +344,7 @@ object StudyMaterialsProvider {
             id = "ssb_3",
             title = "Success Stories",
             duration = "25 min read",
-            isPremium = true,
+            isPremium = false,
         ),
         StudyMaterialItem(
             id = "ssb_4",

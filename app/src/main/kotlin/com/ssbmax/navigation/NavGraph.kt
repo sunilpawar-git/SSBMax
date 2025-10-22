@@ -519,6 +519,9 @@ fun SSBMaxNavGraph(
             com.ssbmax.ui.topic.TopicScreen(
                 topicId = topicId,
                 onNavigateBack = { navController.navigateUp() },
+                onNavigateToStudyMaterial = { materialId ->
+                    navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))
+                },
                 onNavigateToTest = { testId ->
                     // Navigate to appropriate test based on topic
                     when {
