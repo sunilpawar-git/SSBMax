@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.ui.components.BreadcrumbBar
 import com.ssbmax.ui.components.BreadcrumbItem
+import com.ssbmax.ui.components.MarkdownText
 
 /**
  * Study Material Detail Screen
@@ -255,57 +256,8 @@ private fun ContentCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Simple text rendering (can be enhanced with markdown library)
-            content.split("\n\n").forEach { paragraph ->
-                when {
-                    paragraph.startsWith("# ") -> {
-                        Text(
-                            text = paragraph.removePrefix("# "),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    paragraph.startsWith("## ") -> {
-                        Text(
-                            text = paragraph.removePrefix("## "),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                    paragraph.startsWith("### ") -> {
-                        Text(
-                            text = paragraph.removePrefix("### "),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                    paragraph.startsWith("- ") -> {
-                        paragraph.split("\n").forEach { line ->
-                            if (line.startsWith("- ")) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Text("•")
-                                    Text(
-                                        text = line.removePrefix("- "),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    else -> {
-                        Text(
-                            text = paragraph,
-                            style = MaterialTheme.typography.bodyLarge,
-                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight.times(1.5f)
-                        )
-                    }
-                }
-            }
+            // Use centralized markdown renderer for consistent formatting
+            MarkdownText(content = content)
         }
     }
 }

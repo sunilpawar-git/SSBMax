@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.SSBInfoCard
 import com.ssbmax.core.domain.model.SSBInfoIcon
+import com.ssbmax.ui.components.MarkdownText
 
 /**
  * SSB Overview Screen
@@ -150,7 +151,8 @@ fun SSBInfoCardItem(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = if (card.isExpandable) onToggleExpansion else { {} }
     ) {
         Column(
             modifier = Modifier
@@ -159,11 +161,7 @@ fun SSBInfoCardItem(
         ) {
             // Header
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .then(
-                        if (card.isExpandable) Modifier else Modifier
-                    ),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -186,16 +184,15 @@ fun SSBInfoCardItem(
                 }
                 
                 if (card.isExpandable) {
-                    IconButton(onClick = onToggleExpansion) {
-                        Icon(
-                            imageVector = if (isExpanded) {
-                                Icons.Default.KeyboardArrowUp
-                            } else {
-                                Icons.Default.KeyboardArrowDown
-                            },
-                            contentDescription = if (isExpanded) "Collapse" else "Expand"
-                        )
-                    }
+                    Icon(
+                        imageVector = if (isExpanded) {
+                            Icons.Default.KeyboardArrowUp
+                        } else {
+                            Icons.Default.KeyboardArrowDown
+                        },
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -211,13 +208,10 @@ fun SSBInfoCardItem(
                         .padding(top = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Divider()
+                    HorizontalDivider()
                     
-                    Text(
-                        text = card.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // Render formatted text instead of raw markdown
+                    MarkdownText(content = card.content)
 
                     card.videoUrl?.let { url ->
                         OutlinedButton(

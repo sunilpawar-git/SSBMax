@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.ssbmax.MainActivity
-import com.ssbmax.R
 import com.ssbmax.core.domain.model.NotificationType
 import kotlin.random.Random
 
@@ -155,14 +154,14 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
             NotificationType.GRADING_COMPLETE,
             NotificationType.FEEDBACK_AVAILABLE -> {
                 notificationBuilder.addAction(
-                    R.mipmap.ic_launcher,
+                    android.R.drawable.ic_menu_view,
                     "View Results",
                     pendingIntent
                 )
             }
             NotificationType.BATCH_INVITATION -> {
                 notificationBuilder.addAction(
-                    R.mipmap.ic_launcher,
+                    android.R.drawable.ic_menu_view,
                     "View Invitation",
                     pendingIntent
                 )
@@ -249,7 +248,7 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
      */
     private fun getIconForType(type: NotificationType): Int {
         // TODO: Add specific icons for each type
-        return R.mipmap.ic_launcher
+        return android.R.drawable.ic_dialog_info
     }
     
     companion object {

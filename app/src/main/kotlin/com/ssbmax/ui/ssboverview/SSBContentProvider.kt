@@ -20,11 +20,11 @@ object SSBContentProvider {
                     SSB evaluates your personality, intelligence, and suitability for becoming an officer through various tests and tasks designed by expert psychologists and military personnel.
                     
                     Key Points:
-                    • Duration: 5 days
-                    • Conducted at multiple SSB centers across India
-                    • Assesses 15 Officer Like Qualities (OLQs)
-                    • Success rate: Approximately 3-5%
-                    • Final recommendation requires consensus from all assessors
+                    - Duration: 5 days
+                    - Conducted at multiple SSB centers across India
+                    - Assesses 15 Officer Like Qualities (OLQs)
+                    - Success rate: Approximately 3-5%
+                    - Final recommendation requires consensus from all assessors
                     
                     The board consists of:
                     - Interviewing Officer (IO)
@@ -40,32 +40,32 @@ object SSBContentProvider {
                 title = "5-Day Selection Process",
                 content = """
                     **Day 1: Screening Tests**
-                    • Officer Intelligence Rating (OIR) Test - 40-50 questions in 30 minutes
-                    • Picture Perception & Description Test (PPDT)
-                    • Group Discussion on stories
-                    • Only screened-in candidates proceed to Day 2
+                    - Officer Intelligence Rating (OIR) Test - 40-50 questions in 30 minutes
+                    - Picture Perception & Description Test (PPDT)
+                    - Group Discussion on stories
+                    - Only screened-in candidates proceed to Day 2
                     
                     **Day 2: Psychology Tests**
-                    • Thematic Apperception Test (TAT) - 12 pictures, 30 seconds each
-                    • Word Association Test (WAT) - 60 words, 15 seconds each
-                    • Situation Reaction Test (SRT) - 60 situations
-                    • Self Description Test (SD) - Write about yourself
+                    - Thematic Apperception Test (TAT) - 12 pictures, 30 seconds each
+                    - Word Association Test (WAT) - 60 words, 15 seconds each
+                    - Situation Reaction Test (SRT) - 60 situations
+                    - Self Description Test (SD) - Write about yourself
                     
                     **Day 3-5: GTO Tasks & Interview**
-                    • Group Discussion (GD)
-                    • Group Planning Exercise (GPE)
-                    • Progressive Group Task (PGT)
-                    • Half Group Task (HGT)
-                    • Individual Obstacles
-                    • Command Task
-                    • Final Group Task (FGT)
-                    • Lecturette
-                    • Personal Interview with IO (30-45 minutes)
+                    - Group Discussion (GD)
+                    - Group Planning Exercise (GPE)
+                    - Progressive Group Task (PGT)
+                    - Half Group Task (HGT)
+                    - Individual Obstacles
+                    - Command Task
+                    - Final Group Task (FGT)
+                    - Lecturette
+                    - Personal Interview with IO (30-45 minutes)
                     
                     **Day 5: Conference**
-                    • All assessors discuss your performance
-                    • Final recommendation decided
-                    • Results declared same day
+                    - All assessors discuss your performance
+                    - Final recommendation decided
+                    - Results declared same day
                 """.trimIndent(),
                 icon = SSBInfoIcon.PROCESS,
                 order = 2
@@ -131,46 +131,46 @@ object SSBContentProvider {
                 title = "Preparation Tips",
                 content = """
                     **Know Yourself**
-                    • Fill your Personal Information Questionnaire (PIQ) honestly
-                    • Be prepared to explain everything you've written
-                    • Practice self-awareness exercises
+                    - Fill your Personal Information Questionnaire (PIQ) honestly
+                    - Be prepared to explain everything you've written
+                    - Practice self-awareness exercises
                     
                     **Current Affairs & General Knowledge**
-                    • Read newspapers daily (The Hindu, Indian Express)
-                    • Focus on national and international events
-                    • Study Indian Armed Forces history and recent developments
-                    • Know about your state, city, and educational background
+                    - Read newspapers daily (The Hindu, Indian Express)
+                    - Focus on national and international events
+                    - Study Indian Armed Forces history and recent developments
+                    - Know about your state, city, and educational background
                     
                     **Physical Fitness**
-                    • Start running daily (build stamina)
-                    • Practice pull-ups, push-ups, sit-ups
-                    • Work on flexibility and agility
-                    • Outdoor tasks require good fitness
+                    - Start running daily (build stamina)
+                    - Practice pull-ups, push-ups, sit-ups
+                    - Work on flexibility and agility
+                    - Outdoor tasks require good fitness
                     
                     **Communication Skills**
-                    • Practice speaking English fluently
-                    • Improve vocabulary for WAT
-                    • Work on body language and confidence
-                    • Practice group discussions
+                    - Practice speaking English fluently
+                    - Improve vocabulary for WAT
+                    - Work on body language and confidence
+                    - Practice group discussions
                     
                     **Practice Tests**
-                    • Solve OIR practice sets regularly
-                    • Practice TAT story writing (30 seconds thinking)
-                    • Do WAT with timer (15 seconds per word)
-                    • Write responses to SRT situations
+                    - Solve OIR practice sets regularly
+                    - Practice TAT story writing (30 seconds thinking)
+                    - Do WAT with timer (15 seconds per word)
+                    - Write responses to SRT situations
                     
                     **Mental Preparation**
-                    • Stay calm and composed
-                    • Be yourself, don't fake personality
-                    • Think positively and stay motivated
-                    • Don't get discouraged by Day 1 screening
+                    - Stay calm and composed
+                    - Be yourself, don't fake personality
+                    - Think positively and stay motivated
+                    - Don't get discouraged by Day 1 screening
                     
                     **Common Mistakes to Avoid**
-                    • Memorizing answers or stories
-                    • Lying or exaggerating in PIQ or interview
-                    • Being overconfident or under-confident
-                    • Trying to act like a "model officer"
-                    • Ignoring physical fitness
+                    - Memorizing answers or stories
+                    - Lying or exaggerating in PIQ or interview
+                    - Being overconfident or under-confident
+                    - Trying to act like a "model officer"
+                    - Ignoring physical fitness
                 """.trimIndent(),
                 icon = SSBInfoIcon.PREPARATION,
                 order = 4
@@ -180,41 +180,41 @@ object SSBContentProvider {
                 title = "Typical Day-wise Schedule",
                 content = """
                     **Reporting Day (Day 0)**
-                    • Report to SSB center by afternoon
-                    • Document verification
-                    • Chest number allotted
-                    • Briefing about the process
+                    - Report to SSB center by afternoon
+                    - Document verification
+                    - Chest number allotted
+                    - Briefing about the process
                     
                     **Day 1: Screening**
-                    • 0800 hrs: Reporting for OIR Test
-                    • 0830-0930 hrs: OIR Test (50 questions, 30 min)
-                    • 1000 hrs: PPDT (Picture shown for 30 sec)
-                    • 1005-1009 hrs: Story writing (4 min)
-                    • 1030 hrs onwards: Group discussions
-                    • 1400 hrs: Results declared (screened in/out)
+                    - 0800 hrs: Reporting for OIR Test
+                    - 0830-0930 hrs: OIR Test (50 questions, 30 min)
+                    - 1000 hrs: PPDT (Picture shown for 30 sec)
+                    - 1005-1009 hrs: Story writing (4 min)
+                    - 1030 hrs onwards: Group discussions
+                    - 1400 hrs: Results declared (screened in/out)
                     
                     **Day 2: Psychology Tests**
-                    • 0900-1000 hrs: TAT (12 pictures)
-                    • 1015-1030 hrs: WAT (60 words)
-                    • 1045-1145 hrs: SRT (60 situations)
-                    • 1200-1230 hrs: Self Description
+                    - 0900-1000 hrs: TAT (12 pictures)
+                    - 1015-1030 hrs: WAT (60 words)
+                    - 1045-1145 hrs: SRT (60 situations)
+                    - 1200-1230 hrs: Self Description
                     
                     **Day 3: GTO Tasks - Part 1**
-                    • 0900 hrs: Group Discussion
-                    • 1000 hrs: Group Planning Exercise
-                    • 1130 hrs: Progressive Group Task (PGT)
-                    • 1500 hrs: Lecturette preparation
+                    - 0900 hrs: Group Discussion
+                    - 1000 hrs: Group Planning Exercise
+                    - 1130 hrs: Progressive Group Task (PGT)
+                    - 1500 hrs: Lecturette preparation
                     
                     **Day 4: GTO Tasks - Part 2**
-                    • 0900 hrs: Half Group Task (HGT)
-                    • 1100 hrs: Individual Obstacles
-                    • 1400 hrs: Command Tasks
-                    • 1600 hrs: Final Group Task (FGT)
+                    - 0900 hrs: Half Group Task (HGT)
+                    - 1100 hrs: Individual Obstacles
+                    - 1400 hrs: Command Tasks
+                    - 1600 hrs: Final Group Task (FGT)
                     
                     **Day 5: Interview & Conference**
-                    • 0900-1400 hrs: Personal interviews (scheduled)
-                    • 1500 hrs: Conference (candidates not present)
-                    • 1700 hrs: Results declared
+                    - 0900-1400 hrs: Personal interviews (scheduled)
+                    - 1500 hrs: Conference (candidates not present)
+                    - 1700 hrs: Results declared
                     
                     Note: Timings may vary slightly by SSB center
                 """.trimIndent(),
@@ -237,20 +237,20 @@ object SSBContentProvider {
                     
                     **Key Success Factors:**
                     
-                    ✓ Honesty and authenticity throughout the process
-                    ✓ Good command over current affairs and general knowledge
-                    ✓ Physical fitness and mental stamina
-                    ✓ Clear communication skills
-                    ✓ Positive attitude and team spirit
-                    ✓ Quick decision-making ability
-                    ✓ Thorough knowledge of your PIQ
+                    - Honesty and authenticity throughout the process
+                    - Good command over current affairs and general knowledge
+                    - Physical fitness and mental stamina
+                    - Clear communication skills
+                    - Positive attitude and team spirit
+                    - Quick decision-making ability
+                    - Thorough knowledge of your PIQ
                     
                     **Average Selection Statistics:**
-                    • Candidates appearing: 100%
-                    • Screened in: 40-50%
-                    • Recommended: 3-5% of total
-                    • Female candidates: Similar success rate
-                    • Multiple attempts: Common (don't give up!)
+                    - Candidates appearing: 100%
+                    - Screened in: 40-50%
+                    - Recommended: 3-5% of total
+                    - Female candidates: Similar success rate
+                    - Multiple attempts: Common (don't give up!)
                     
                     **Remember:**
                     SSB is not about perfection, it's about showing your genuine personality and potential to be an officer. Many successful officers were recommended after 2-3 attempts.
@@ -263,38 +263,38 @@ object SSBContentProvider {
                 title = "Important Points to Remember",
                 content = """
                     **Documents Required:**
-                    • Valid ID proof (Aadhaar, PAN, or Passport)
-                    • Educational certificates and mark sheets
-                    • Recent passport-size photographs
-                    • Call letter (printed copy)
-                    • Medical fitness certificate (if required)
+                    - Valid ID proof (Aadhaar, PAN, or Passport)
+                    - Educational certificates and mark sheets
+                    - Recent passport-size photographs
+                    - Call letter (printed copy)
+                    - Medical fitness certificate (if required)
                     
                     **What to Carry:**
-                    • Formal clothes for interview (shirt, trousers, tie)
-                    • Sports clothes and shoes for GTO tasks
-                    • Toiletries and personal items
-                    • Watch (for time management)
-                    • Stationery (pen, pencil, eraser)
-                    • Any prescribed medicines
+                    - Formal clothes for interview (shirt, trousers, tie)
+                    - Sports clothes and shoes for GTO tasks
+                    - Toiletries and personal items
+                    - Watch (for time management)
+                    - Stationery (pen, pencil, eraser)
+                    - Any prescribed medicines
                     
                     **SSB Centers in India:**
-                    • Allahabad (UP) - ASB
-                    • Bangalore (Karnataka) - ASB, NSB, AFSB
-                    • Bhopal (MP) - ASB
-                    • Dehradun (Uttarakhand) - NSB
-                    • Kapurthala (Punjab) - ASB
-                    • Varanasi (UP) - AFSB
+                    - Allahabad (UP) - ASB
+                    - Bangalore (Karnataka) - ASB, NSB, AFSB
+                    - Bhopal (MP) - ASB
+                    - Dehradun (Uttarakhand) - NSB
+                    - Kapurthala (Punjab) - ASB
+                    - Varanasi (UP) - AFSB
                     
                     **After SSB:**
-                    • Medical examination at designated centers
-                    • Merit list preparation
-                    • Final selection and training allocation
-                    • Joining instructions sent to recommended candidates
+                    - Medical examination at designated centers
+                    - Merit list preparation
+                    - Final selection and training allocation
+                    - Joining instructions sent to recommended candidates
                     
                     **Contact Information:**
-                    • Helpline: 1800-XXX-XXXX
-                    • Email: support@ssbmax.com
-                    • Website: www.joinindianarmy.nic.in / www.indiannavy.nic.in / www.careerindianairforce.cdac.in
+                    - Helpline: 1800-XXX-XXXX
+                    - Email: support@ssbmax.com
+                    - Website: www.joinindianarmy.nic.in / www.indiannavy.nic.in / www.careerindianairforce.cdac.in
                     
                     **Stay Updated:**
                     Follow official portals and social media handles of the Indian Armed Forces for latest updates on recruitment, SSB dates, and policy changes.

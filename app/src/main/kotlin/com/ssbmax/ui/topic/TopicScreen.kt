@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.ui.components.TabSwipeableContent
+import com.ssbmax.ui.components.MarkdownText
 
 /**
  * Topic Screen with 3 tabs: Introduction, Study Material, Tests
@@ -114,17 +115,19 @@ private fun TopicTopBar(
 ) {
     TopAppBar(
         title = {
-            Column {
+            Column(modifier = Modifier.padding(end = 8.dp)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
                 // Breadcrumb
                 Text(
-                    text = "SSB Preparation > $testType",
+                    text = "SSB Preparation > ${formatBreadcrumbText(testType)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
                 )
             }
         },
@@ -141,6 +144,26 @@ private fun TopicTopBar(
             titleContentColor = MaterialTheme.colorScheme.onSurface
         )
     )
+}
+
+/**
+ * Format breadcrumb text for display
+ * - Keeps acronyms uppercase (OIR, PPDT, TAT, WAT, SRT, GTO, IO, PIQ)
+ * - Converts other text to Title Case
+ */
+private fun formatBreadcrumbText(text: String): String {
+    val upperCaseAcronyms = setOf("OIR", "PPDT", "TAT", "WAT", "SRT", "GTO", "IO", "PIQ", "SD")
+    val normalized = text.trim().uppercase()
+    
+    return if (upperCaseAcronyms.contains(normalized)) {
+        normalized
+    } else {
+        // Convert to title case for multi-word entries
+        text.split("_", "-", " ")
+            .joinToString(" ") { word ->
+                word.lowercase().replaceFirstChar { it.uppercase() }
+            }
+    }
 }
 
 @Composable
@@ -191,10 +214,10 @@ private fun IntroductionTab(
                         )
                     }
                     
-                    Text(
-                        text = introduction,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    // Use formatted text renderer instead of plain text
+                    MarkdownText(
+                        content = introduction,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

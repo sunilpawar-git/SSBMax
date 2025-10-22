@@ -120,22 +120,11 @@ fun StudentHomeScreen(
             
             // Progress Ribbon Header
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Your Progress",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    TextButton(onClick = { /* View all */ }) {
-                        Text("View All")
-                        Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp))
-                    }
-                }
+                Text(
+                    "Your Progress",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
             }
             
             // Phase Progress Ribbon
@@ -150,22 +139,11 @@ fun StudentHomeScreen(
             
             // Recent Submissions Section
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Recent Test Results",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    TextButton(onClick = onNavigateToSubmissions) {
-                        Text("View All")
-                        Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp))
-                    }
-                }
+                Text(
+                    "Recent Test Results",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
             
             // TODO: Add recent submissions cards here when ViewModel is updated
@@ -304,7 +282,7 @@ private fun QuickActionCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(100.dp),
+        modifier = modifier.height(120.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f)
@@ -332,12 +310,13 @@ private fun QuickActionCard(
                 )
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             Text(
                 title,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2
             )
         }
     }
