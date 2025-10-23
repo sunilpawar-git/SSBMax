@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
  * 
  * This is the centralized utility for displaying long-form content across the app.
  * Use this instead of custom text parsing to ensure consistent formatting.
+ * 
+ * Updated to process each line individually for robust inline bold support.
  */
 @Composable
 fun MarkdownText(
@@ -26,101 +28,201 @@ fun MarkdownText(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        content.split("\n\n").forEach { paragraph ->
-            when {
-                // Main heading (#)
-                paragraph.trim().startsWith("# ") -> {
-                    Text(
-                        text = paragraph.removePrefix("# ").trim(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                    )
-                }
-                // Subheading (##)
-                paragraph.trim().startsWith("## ") -> {
-                    Text(
-                        text = paragraph.removePrefix("## ").trim(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = textColor,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                    )
-                }
-                // Small heading (###)
-                paragraph.trim().startsWith("### ") -> {
-                    Text(
-                        text = paragraph.removePrefix("### ").trim(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = textColor,
-                        modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
-                    )
-                }
-                // Bullet list
-                paragraph.trim().startsWith("- ") || 
-                paragraph.trim().startsWith("* ") || 
-                paragraph.trim().startsWith("• ") ||
-                paragraph.trim().startsWith("✓ ") -> {
-                    val items = paragraph.split("\n").filter { it.trim().isNotEmpty() }
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        items.forEach { item ->
-                            val cleanedItem = item.trim()
-                                .removePrefix("- ").removePrefix("* ")
-                                .removePrefix("• ").removePrefix("✓ ")
-                                .trim()
-                            if (cleanedItem.isNotEmpty()) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Text("•", style = MaterialTheme.typography.bodyMedium, color = textColor)
-                                    Text(
-                                        text = buildAnnotatedString { appendWithInlineBold(cleanedItem) },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = textColor,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
+        // Split by double newlines to identify blocks, then process each line within blocks
+        content.split("\n\n").forEach { block ->
+            val lines = block.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+            
+            // Track if we're in a multi-line list
+            var inBulletList = false
+            var inNumberedList = false
+            val bulletItems = mutableListOf<String>()
+            val numberedItems = mutableListOf<String>()
+            
+            lines.forEach { line ->
+                when {
+                    // Main heading (#)
+                    line.startsWith("# ") -> {
+                        // Flush any pending lists
+                        if (inBulletList) {
+                            renderBulletList(bulletItems, textColor)
+                            bulletItems.clear()
+                            inBulletList = false
                         }
+                        if (inNumberedList) {
+                            renderNumberedList(numberedItems, textColor)
+                            numberedItems.clear()
+                            inNumberedList = false
+                        }
+                        
+                        Text(
+                            text = line.removePrefix("# ").trim(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = textColor,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                    }
+                    
+                    // Subheading (##)
+                    line.startsWith("## ") -> {
+                        // Flush any pending lists
+                        if (inBulletList) {
+                            renderBulletList(bulletItems, textColor)
+                            bulletItems.clear()
+                            inBulletList = false
+                        }
+                        if (inNumberedList) {
+                            renderNumberedList(numberedItems, textColor)
+                            numberedItems.clear()
+                            inNumberedList = false
+                        }
+                        
+                        Text(
+                            text = line.removePrefix("## ").trim(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = textColor,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                    }
+                    
+                    // Small heading (###)
+                    line.startsWith("### ") -> {
+                        // Flush any pending lists
+                        if (inBulletList) {
+                            renderBulletList(bulletItems, textColor)
+                            bulletItems.clear()
+                            inBulletList = false
+                        }
+                        if (inNumberedList) {
+                            renderNumberedList(numberedItems, textColor)
+                            numberedItems.clear()
+                            inNumberedList = false
+                        }
+                        
+                        Text(
+                            text = line.removePrefix("### ").trim(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = textColor,
+                            modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
+                        )
+                    }
+                    
+                    // Bullet list item
+                    line.startsWith("- ") || line.startsWith("* ") || 
+                    line.startsWith("• ") || line.startsWith("✓ ") -> {
+                        // Flush numbered list if switching types
+                        if (inNumberedList) {
+                            renderNumberedList(numberedItems, textColor)
+                            numberedItems.clear()
+                            inNumberedList = false
+                        }
+                        
+                        inBulletList = true
+                        val cleanedItem = line.trim()
+                            .removePrefix("- ").removePrefix("* ")
+                            .removePrefix("• ").removePrefix("✓ ")
+                            .trim()
+                        bulletItems.add(cleanedItem)
+                    }
+                    
+                    // Numbered list item
+                    line.matches(Regex("^\\d+\\..*")) -> {
+                        // Flush bullet list if switching types
+                        if (inBulletList) {
+                            renderBulletList(bulletItems, textColor)
+                            bulletItems.clear()
+                            inBulletList = false
+                        }
+                        
+                        inNumberedList = true
+                        val cleanedItem = line.trim().replaceFirst(Regex("^\\d+\\.\\s*"), "")
+                        numberedItems.add(cleanedItem)
+                    }
+                    
+                    // Regular line with inline bold support
+                    else -> {
+                        // Flush any pending lists
+                        if (inBulletList) {
+                            renderBulletList(bulletItems, textColor)
+                            bulletItems.clear()
+                            inBulletList = false
+                        }
+                        if (inNumberedList) {
+                            renderNumberedList(numberedItems, textColor)
+                            numberedItems.clear()
+                            inNumberedList = false
+                        }
+                        
+                        Text(
+                            text = buildAnnotatedString { appendWithInlineBold(line) },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = textColor
+                        )
                     }
                 }
-                // Numbered list
-                paragraph.trim().matches(Regex("^\\d+\\..*")) -> {
-                    val items = paragraph.split("\n").filter { it.trim().isNotEmpty() }
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        items.forEachIndexed { index, item ->
-                            val cleanedItem = item.trim().replaceFirst(Regex("^\\d+\\.\\s*"), "")
-                            if (cleanedItem.isNotEmpty()) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Text(
-                                        "${index + 1}.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = textColor,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = buildAnnotatedString { appendWithInlineBold(cleanedItem) },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = textColor,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                // Regular paragraph (may contain inline bold)
-                paragraph.trim().isNotEmpty() -> {
+            }
+            
+            // Flush any remaining lists at end of block
+            if (inBulletList && bulletItems.isNotEmpty()) {
+                renderBulletList(bulletItems, textColor)
+            }
+            if (inNumberedList && numberedItems.isNotEmpty()) {
+                renderNumberedList(numberedItems, textColor)
+            }
+        }
+    }
+}
+
+/**
+ * Render a bullet list with inline bold support
+ */
+@Composable
+private fun renderBulletList(items: List<String>, textColor: Color) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        items.forEach { item ->
+            if (item.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text("•", style = MaterialTheme.typography.bodyMedium, color = textColor)
                     Text(
-                        text = buildAnnotatedString { appendWithInlineBold(paragraph.trim()) },
+                        text = buildAnnotatedString { appendWithInlineBold(item) },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = textColor
+                        color = textColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Render a numbered list with inline bold support
+ */
+@Composable
+private fun renderNumberedList(items: List<String>, textColor: Color) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        items.forEachIndexed { index, item ->
+            if (item.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        "${index + 1}.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textColor,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = buildAnnotatedString { appendWithInlineBold(item) },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textColor,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -150,4 +252,3 @@ private fun AnnotatedString.Builder.appendWithInlineBold(text: String) {
         }
     }
 }
-
