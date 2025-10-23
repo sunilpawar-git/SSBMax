@@ -262,6 +262,7 @@ private fun ContentCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagsSection(
     tags: List<String>,
@@ -277,11 +278,12 @@ private fun TagsSection(
             fontWeight = FontWeight.SemiBold
         )
         
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            tags.forEach { tag ->
+            tags.filter { it.isNotBlank() }.forEach { tag ->
                 AssistChip(
                     onClick = { /* TODO: Filter by tag */ },
                     label = { Text(tag) },
