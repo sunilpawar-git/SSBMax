@@ -18,6 +18,8 @@ Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation.
 ```
 
+**Root Cause**: Gradle tries to use the system JAVA_HOME or the one configured in `gradle.properties`, but macOS has issues with paths containing spaces (like `/Applications/Android Studio.app/Contents/jbr/Contents/Home`).
+
 ### The Solution with ./gradle.sh:
 ```bash
 $ ./gradle.sh assembleDebug
@@ -31,12 +33,14 @@ BUILD SUCCESSFUL in 23s
 
 ```bash
 #!/bin/zsh
-# Automatically sets correct JAVA_HOME
+# Automatically sets correct JAVA_HOME before running Gradle
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 # Then runs gradlew with all your arguments
 ./gradlew "$@"
 ```
+
+**Why This Works**: By setting `JAVA_HOME` in the script before Gradle starts, we avoid the path parsing issues that occur when Gradle tries to read it from the environment or config files.
 
 ---
 

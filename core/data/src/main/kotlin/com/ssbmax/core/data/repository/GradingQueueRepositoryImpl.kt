@@ -5,9 +5,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.GradingQueueRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,7 +52,7 @@ class GradingQueueRepositoryImpl @Inject constructor(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 val items = snapshot?.documents?.mapNotNull { doc ->
                     try {
                         documentToGradingQueueItem(doc.data ?: return@mapNotNull null)
@@ -58,9 +61,11 @@ class GradingQueueRepositoryImpl @Inject constructor(
                         null
                     }
                 } ?: emptyList()
-                
+
                 Log.d(TAG, "Loaded ${items.size} pending submissions")
-                trySend(items)
+                CoroutineScope(Dispatchers.Main).launch {
+                    trySend(items)
+                }
             }
         
         awaitClose {
@@ -82,7 +87,7 @@ class GradingQueueRepositoryImpl @Inject constructor(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 val items = snapshot?.documents?.mapNotNull { doc ->
                     try {
                         documentToGradingQueueItem(doc.data ?: return@mapNotNull null)
@@ -91,10 +96,12 @@ class GradingQueueRepositoryImpl @Inject constructor(
                         null
                     }
                 } ?: emptyList()
-                
-                trySend(items)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    trySend(items)
+                }
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -111,7 +118,7 @@ class GradingQueueRepositoryImpl @Inject constructor(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 val items = snapshot?.documents?.mapNotNull { doc ->
                     try {
                         documentToGradingQueueItem(doc.data ?: return@mapNotNull null)
@@ -120,10 +127,12 @@ class GradingQueueRepositoryImpl @Inject constructor(
                         null
                     }
                 } ?: emptyList()
-                
-                trySend(items)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    trySend(items)
+                }
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -207,10 +216,12 @@ class GradingQueueRepositoryImpl @Inject constructor(
                     pendingByTestType = pendingByType,
                     averageScoreGiven = averageScore
                 )
-                
-                trySend(stats)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    trySend(stats)
+                }
             }
-        
+
         awaitClose { listener.remove() }
     }
 
