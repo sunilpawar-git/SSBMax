@@ -37,7 +37,7 @@ The issue might be that the Web Client ID in your `google-services.json` doesn't
 ```json
 "oauth_client": [
   {
-    "client_id": "836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q.apps.googleusercontent.com",
+    "client_id": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
     "client_type": 1,
     "android_info": {
       "package_name": "com.ssbmax",
@@ -45,7 +45,7 @@ The issue might be that the Web Client ID in your `google-services.json` doesn't
     }
   },
   {
-    "client_id": "836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com",
+    "client_id": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
     "client_type": 3  ← This is the Web Client ID
   }
 ]
@@ -55,7 +55,7 @@ The issue might be that the Web Client ID in your `google-services.json` doesn't
 
 1. Go to: https://console.cloud.google.com/apis/credentials?project=ssbmax-49e68
 2. Under **"OAuth 2.0 Client IDs"**, find the **Web client** entry
-3. Verify the Client ID matches: `836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com`
+3. Verify the Client ID matches: `YOUR_WEB_CLIENT_ID.apps.googleusercontent.com`
 
 ---
 

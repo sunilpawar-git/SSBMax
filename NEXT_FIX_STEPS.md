@@ -41,12 +41,12 @@ Your `google-services.json` shows:
 
 **Android Client (Type 1):** ✅
 ```
-836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q.apps.googleusercontent.com
+YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com
 ```
 
 **Web Client (Type 3):** ✅
 ```
-836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com
+YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
 ```
 
 This looks correct!
@@ -60,7 +60,7 @@ Sometimes the Google Sign-In API itself is restricted. Let's verify:
 1. **Go to Google Cloud Console**: https://console.cloud.google.com
 2. **Select** the project associated with Firebase (should be `ssbmax-49e68`)
 3. **Click** "APIs & Services" → "Credentials"
-4. **Find** your Android client: `836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q`
+4. **Find** your Android client: `YOUR_ANDROID_CLIENT_ID`
 5. **Click** on it to view details
 6. **Check "API restrictions"** section:
    - Should be **"Don't restrict key"** OR

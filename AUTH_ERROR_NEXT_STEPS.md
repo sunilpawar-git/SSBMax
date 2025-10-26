@@ -86,11 +86,11 @@ Your `google-services.json` should have:
 ```json
 "oauth_client": [
   {
-    "client_id": "836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q.apps.googleusercontent.com",
+    "client_id": "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
     "client_type": 1
   },
   {
-    "client_id": "836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com",
+    "client_id": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
     "client_type": 3  ← Web Client ID
   }
 ]

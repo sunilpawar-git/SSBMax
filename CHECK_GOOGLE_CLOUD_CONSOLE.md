@@ -34,7 +34,7 @@ Look for your **Android client**:
 ```
 Name: "Web client (auto created by Google Service)"
 OR
-Client ID: 836687498591-7t5p233j00egm3pjv4t1d3ucuo4jfl3q.apps.googleusercontent.com
+Client ID: YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com
 ```
 
 **Click on it** to open the details.
@@ -160,7 +160,7 @@ There's also an **API Key** (different from OAuth client) that might need checki
 
 1. In **Credentials** page
 2. Find **"API key"** section (not OAuth 2.0 Client IDs)
-3. Look for key with name like `AIzaSyAZlK8xqn7HHwVSyDxBRK3zlzqL9GdQOtc`
+3. Look for key with name like `AIzaSy***REDACTED***`
 4. **Click on it**
 5. Check **"API restrictions"**:
    - Should be **"Don't restrict key"** (for testing)

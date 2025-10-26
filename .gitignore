@@ -63,6 +63,15 @@ captures/
 google-services.json
 .firebase/
 
+# Firebase Service Account (CRITICAL - Contains Admin Private Keys)
+**/service-account.json
+service-account*.json
+
+# Additional sensitive files
+**/google-services.json
+app/google-services.json
+core/**/google-services.json
+
 # Freeline
 freeline.py
 freeline/

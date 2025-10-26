@@ -34,8 +34,8 @@ adb logcat -s FirebaseAuthService:D LoginScreen:D AuthViewModel:D GoogleAuth:V G
 
 ```
 FirebaseAuthService: Creating GoogleSignInClient...
-FirebaseAuthService: Web Client ID found: 836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com
-FirebaseAuthService: Using Web Client ID: 836687498591-des9k4qnd3s8imtj8o9ql4c5ppm8mfpo.apps.googleusercontent.com
+FirebaseAuthService: Web Client ID found: YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
+FirebaseAuthService: Using Web Client ID: YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
 FirebaseAuthService: GoogleSignInClient created successfully
 LoginScreen: Google Sign-In button clicked
 LoginScreen: Launching Google Sign-In intent
