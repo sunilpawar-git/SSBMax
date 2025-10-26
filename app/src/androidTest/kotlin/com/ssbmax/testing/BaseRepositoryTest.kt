@@ -3,6 +3,7 @@ package com.ssbmax.testing
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.After
@@ -65,7 +66,7 @@ abstract class BaseRepositoryTest {
                     }
                 }
             
-            kotlinx.coroutines.tasks.await(result).user?.uid
+            result.await().user?.uid
                 ?: throw IllegalStateException("Failed to create test user")
         } catch (e: Exception) {
             throw IllegalStateException("Failed to create test user: ${e.message}", e)
@@ -81,11 +82,10 @@ abstract class BaseRepositoryTest {
         data: Map<String, Any>
     ) {
         try {
-            kotlinx.coroutines.tasks.await(
-                firestore.collection(collection)
-                    .document(documentId)
-                    .set(data)
-            )
+            firestore.collection(collection)
+                .document(documentId)
+                .set(data)
+                .await()
         } catch (e: Exception) {
             throw IllegalStateException("Failed to seed Firestore data: ${e.message}", e)
         }
@@ -96,11 +96,9 @@ abstract class BaseRepositoryTest {
      */
     protected suspend fun clearFirestoreCollection(collection: String) {
         try {
-            val snapshot = kotlinx.coroutines.tasks.await(
-                firestore.collection(collection).get()
-            )
+            val snapshot = firestore.collection(collection).get().await()
             snapshot.documents.forEach { doc ->
-                kotlinx.coroutines.tasks.await(doc.reference.delete())
+                doc.reference.delete().await()
             }
         } catch (e: Exception) {
             throw IllegalStateException("Failed to clear Firestore collection: ${e.message}", e)

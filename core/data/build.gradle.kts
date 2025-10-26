@@ -11,7 +11,7 @@ android {
     defaultConfig {
         minSdk = 26
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.ssbmax.core.data.FirebaseTestRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -68,10 +68,15 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     
+    // Android instrumented tests (integration tests with Firebase Emulator)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.turbine) // For Flow testing
+    androidTestImplementation(platform(libs.firebase.bom))
+    androidTestImplementation(libs.firebase.firestore) // For emulator tests
+    androidTestImplementation(libs.firebase.auth) // For auth emulator tests
 }
 

@@ -79,7 +79,7 @@ class ObserveCurrentUserUseCaseTest {
             id = "user2",
             email = "user2@ssbmax.com",
             displayName = "User Two",
-            role = UserRole.ASSESSOR,
+            role = UserRole.INSTRUCTOR,
             subscriptionTier = SubscriptionTier.PRO,
             subscription = null
         )

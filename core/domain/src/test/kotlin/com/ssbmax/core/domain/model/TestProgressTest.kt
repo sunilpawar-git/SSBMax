@@ -75,7 +75,7 @@ class TestProgressTest {
         val progress = Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, TestStatus.NOT_ATTEMPTED),
             gtoProgress = TestProgress(TestType.GTO, TestStatus.NOT_ATTEMPTED),
-            interviewProgress = TestProgress(TestType.INTERVIEW, TestStatus.NOT_ATTEMPTED)
+            interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
         )
         
         // Then
@@ -88,7 +88,7 @@ class TestProgressTest {
         val progress = Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, TestStatus.COMPLETED),
             gtoProgress = TestProgress(TestType.GTO, TestStatus.NOT_ATTEMPTED),
-            interviewProgress = TestProgress(TestType.INTERVIEW, TestStatus.NOT_ATTEMPTED)
+            interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
         )
         
         // Then
@@ -101,7 +101,7 @@ class TestProgressTest {
         val progress = Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, TestStatus.COMPLETED),
             gtoProgress = TestProgress(TestType.GTO, TestStatus.GRADED),
-            interviewProgress = TestProgress(TestType.INTERVIEW, TestStatus.NOT_ATTEMPTED)
+            interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
         )
         
         // Then
@@ -114,7 +114,7 @@ class TestProgressTest {
         val progress = Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, TestStatus.COMPLETED),
             gtoProgress = TestProgress(TestType.GTO, TestStatus.GRADED),
-            interviewProgress = TestProgress(TestType.INTERVIEW, TestStatus.COMPLETED)
+            interviewProgress = TestProgress(TestType.IO, TestStatus.COMPLETED)
         )
         
         // Then
@@ -165,7 +165,7 @@ class TestProgressTest {
         // Given
         val testProgress = TestProgress(
             testType = TestType.TAT,
-            status = TestStatus.SUBMITTED,
+            status = TestStatus.SUBMITTED_PENDING_REVIEW,
             isPendingReview = true
         )
         
@@ -181,10 +181,9 @@ class TestProgressTest {
         TestProgress(testType = TestType.TAT)
         TestProgress(testType = TestType.WAT)
         TestProgress(testType = TestType.SRT)
-        TestProgress(testType = TestType.SDT)
+        TestProgress(testType = TestType.SD)
         TestProgress(testType = TestType.GTO)
-        TestProgress(testType = TestType.INTERVIEW)
-        TestProgress(testType = TestType.CONFERENCE)
+        TestProgress(testType = TestType.IO)
     }
 }
 
