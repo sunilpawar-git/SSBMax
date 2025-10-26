@@ -110,5 +110,11 @@ abstract class RepositoryModule {
     abstract fun bindTestProgressRepository(
         impl: com.ssbmax.core.data.repository.TestProgressRepositoryImpl
     ): com.ssbmax.core.domain.repository.TestProgressRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindGradingQueueRepository(
+        impl: com.ssbmax.core.data.repository.GradingQueueRepositoryImpl
+    ): com.ssbmax.core.domain.repository.GradingQueueRepository
 }
 
