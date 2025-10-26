@@ -91,5 +91,9 @@ lint/tmp/
 # MacOS
 .DS_Store
 
+# Backup files
+*.bak
+*~
+
 # Cursor AI
 .cursor/
