@@ -17,11 +17,26 @@ import kotlin.random.Random
 /**
  * Firebase Cloud Messaging Service for SSBMax
  * Handles incoming push notifications from Firebase
+ * 
+ * Note: Firebase services can't use constructor injection easily.
+ * For now, notifications are handled directly in this service.
+ * 
+ * TODO: Create NotificationRepository for:
+ *  - Saving notification history to local/remote database
+ *  - Tracking notification read/unread status
+ *  - Managing notification preferences
+ *  - Syncing FCM tokens to Firestore
+ * 
+ * TODO: Consider using WorkManager for:
+ *  - Handling notifications when app is killed
+ *  - Background notification processing
+ *  - Retry logic for failed operations
  */
 class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
     
-    // TODO: Inject NotificationHandler when NotificationRepository is available
-    // @Inject lateinit var notificationHandler: NotificationHandler
+    // Note: Services in Android can't easily use Hilt constructor injection
+    // Would need @AndroidEntryPoint and lateinit var with @Inject
+    // For now, keeping notification handling self-contained
     
     /**
      * Called when a new FCM token is generated
@@ -30,9 +45,14 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         
+        android.util.Log.i(TAG, "New FCM token generated (length: ${token.length})")
+        android.util.Log.d(TAG, "Full token: $token")
+        
         // TODO: Send token to NotificationRepository to save in Firestore
-        // This will be implemented when NotificationRepository is created
-        android.util.Log.d(TAG, "New FCM token: $token")
+        // This will allow:
+        //  - Sending targeted push notifications to this device
+        //  - Managing tokens per user (multiple devices)
+        //  - Removing stale tokens when user logs out
     }
     
     /**
@@ -71,6 +91,8 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
         val actionUrl = data["actionUrl"]
         val notificationId = data["notificationId"]
         
+        android.util.Log.i(TAG, "Handling data payload - Type: $type, Title: $title")
+        
         // Show notification
         showNotification(
             type = type,
@@ -81,7 +103,11 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
         )
         
         // TODO: Save notification to local database via NotificationRepository
-        // This allows showing notification history in NotificationCenterScreen
+        // This allows:
+        //  - Showing notification history in NotificationCenterScreen
+        //  - Marking notifications as read/unread
+        //  - Tracking notification engagement analytics
+        //  - Providing offline access to notifications
     }
     
     /**
