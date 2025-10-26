@@ -1,5 +1,6 @@
 package com.ssbmax.ui.marketplace
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.CoachingInstitute
@@ -16,16 +17,25 @@ import javax.inject.Inject
 /**
  * ViewModel for Marketplace Screen
  * Manages coaching institute listings, filters, and search
+ * 
+ * Note: Marketplace feature currently uses mock data (MarketplaceMockData)
+ * TODO: Create MarketplaceRepository when backend API is ready
+ * TODO: Integrate with payment gateway for bookings
+ * TODO: Add user reviews and ratings system
  */
 @HiltViewModel
 class MarketplaceViewModel @Inject constructor(
-    // TODO: Inject MarketplaceRepository when backend is ready
+    // Marketplace backend not yet implemented
+    // Using MarketplaceMockData for UI development
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MarketplaceUiState())
     val uiState: StateFlow<MarketplaceUiState> = _uiState.asStateFlow()
 
-    private val allInstitutes = MarketplaceMockData.getInstitutes()
+    private val allInstitutes: List<CoachingInstitute> by lazy {
+        Log.d("Marketplace", "Loading mock institute data")
+        MarketplaceMockData.getInstitutes()
+    }
 
     init {
         loadInstitutes()
@@ -33,9 +43,15 @@ class MarketplaceViewModel @Inject constructor(
 
     private fun loadInstitutes() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
+                Log.d("Marketplace", "Loading institutes with filters - " +
+                        "search: '${_uiState.value.searchQuery}', " +
+                        "type: ${_uiState.value.filterType}, " +
+                        "price: ${_uiState.value.filterPriceRange}, " +
+                        "city: ${_uiState.value.filterCity}")
+                
                 // Apply filters
                 val filtered = filterInstitutes(
                     institutes = allInstitutes,
@@ -45,6 +61,8 @@ class MarketplaceViewModel @Inject constructor(
                     filterCity = _uiState.value.filterCity
                 )
                 
+                Log.d("Marketplace", "Filtered ${filtered.size} institutes from ${allInstitutes.size} total")
+                
                 _uiState.update {
                     it.copy(
                         institutes = filtered,
@@ -53,6 +71,7 @@ class MarketplaceViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                Log.e("Marketplace", "Error loading institutes", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
