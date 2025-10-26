@@ -31,12 +31,17 @@ class FirebaseAuthService @Inject constructor(
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val googleSignInClient: GoogleSignInClient by lazy {
+        android.util.Log.d("FirebaseAuthService", "Creating GoogleSignInClient...")
+        val webClientId = getWebClientId()
+        android.util.Log.d("FirebaseAuthService", "Using Web Client ID: $webClientId")
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getWebClientId())
+            .requestIdToken(webClientId)
             .requestEmail()
             .requestProfile()
             .build()
-        GoogleSignIn.getClient(context, gso)
+        val client = GoogleSignIn.getClient(context, gso)
+        android.util.Log.d("FirebaseAuthService", "GoogleSignInClient created successfully")
+        client
     }
 
     /**
@@ -53,8 +58,11 @@ class FirebaseAuthService @Inject constructor(
             context.packageName
         )
         return if (resourceId != 0) {
-            resources.getString(resourceId)
+            val webClientId = resources.getString(resourceId)
+            android.util.Log.d("FirebaseAuthService", "Web Client ID found: $webClientId")
+            webClientId
         } else {
+            android.util.Log.e("FirebaseAuthService", "Web Client ID NOT FOUND - this will cause sign-in to fail!")
             throw IllegalStateException("Web Client ID not found. Check google-services.json configuration.")
         }
     }

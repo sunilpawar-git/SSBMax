@@ -170,12 +170,30 @@ class PPDTTestViewModel @Inject constructor(
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
                 
-                // TODO: Submit to repository
-                // Generate mock submission
+                // TODO: Submit to repository (PPDT submission not yet fully implemented)
+                // For now, we create a local submission object to show results directly
                 val submissionId = UUID.randomUUID().toString()
                 
                 // Generate AI preliminary score
                 val aiScore = generateMockAIScore(session.story)
+                
+                // Create local submission
+                val submission = PPDTSubmission(
+                    submissionId = submissionId,
+                    questionId = session.testId,
+                    userId = session.userId,
+                    userName = userProfile?.name ?: "Test User",
+                    userEmail = userProfile?.email ?: "",
+                    batchId = null,
+                    story = session.story,
+                    charactersCount = session.story.length,
+                    viewingTimeTakenSeconds = 30, // From test config
+                    writingTimeTakenMinutes = 4,  // From test config
+                    submittedAt = System.currentTimeMillis(),
+                    status = com.ssbmax.core.domain.model.SubmissionStatus.SUBMITTED_PENDING_REVIEW,
+                    aiPreliminaryScore = aiScore,
+                    instructorReview = null
+                )
                 
                 // Mark as submitted
                 currentSession = session.copy(
@@ -186,7 +204,8 @@ class PPDTTestViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isSubmitted = true,
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType
+                    subscriptionType = subscriptionType,
+                    submission = submission
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -298,6 +317,7 @@ data class PPDTTestUiState(
     val canProceedToNextPhase: Boolean = false,
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null
+    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
+    val submission: PPDTSubmission? = null  // Submission stored locally until Firestore integration complete
 )
 

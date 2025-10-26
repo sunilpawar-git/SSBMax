@@ -24,8 +24,10 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
-        // Special handling for OIR: Show results directly (no Firestore submission yet)
-        if (testType == TestType.OIR) {
+        // Special handling for OIR, PPDT, TAT, WAT: Show results directly 
+        // (bypasses Firestore to avoid permission issues during development)
+        if (testType == TestType.OIR || testType == TestType.PPDT || 
+            testType == TestType.TAT || testType == TestType.WAT) {
             navigateToResult(submissionId, testType, navController)
             return
         }

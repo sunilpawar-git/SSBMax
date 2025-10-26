@@ -1,0 +1,475 @@
+Okay, now all the tests are back to their own place.
+Why did this issue occur in the first place?
+Also, in future, how do we address this issue? What is the problem statement at hand, and what is the best solution for it?
+
+
+---
+
+Excellent questions! Let me explain the root cause and the proper long-term solution.
+
+---
+
+## 🔍 **Why Did This Issue Occur?**
+
+### **Root Cause Analysis:**
+
+The issue happened due to a **mismatch between architecture goals and implementation state**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  INTENDED ARCHITECTURE (Production Goal)                │
+├─────────────────────────────────────────────────────────┤
+│  App → Fetch Questions from Firestore → Show Tests     │
+│  ✅ Prevents APK sideloading (security)                │
+│  ✅ Easy to update questions without app release        │
+│  ✅ Can A/B test different question sets                │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+                   ❌ BUT...
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  ACTUAL STATE (Development Reality)                     │
+├─────────────────────────────────────────────────────────┤
+│  Firestore Collection: /tests/{testId}  ← EMPTY! 🗑️    │
+│  No questions uploaded yet                               │
+│  Development ongoing, questions not finalized           │
+└─────────────────────────────────────────────────────────┘
+                        ↓
+                   RESULT:
+                        ↓
+┌─────────────────────────────────────────────────────────┐
+│  App tries to fetch → Gets empty result → Shows ERROR  │
+│  "Failed to Load Test - Cloud connection required"     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### **Timeline of Events:**
+
+1. **October 21** - Mock data fallback was added to handle this gap:
+   ```kotlin
+   // If Firestore empty → Use mock data
+   // Allows development to continue
+   ```
+
+2. **October 26** - During rollback to fix tech debt:
+   ```bash
+   git reset --hard HEAD
+   git clean -fd  # ← This removed MockTestDataProvider.kt
+   ```
+   - The fallback disappeared
+   - App went back to "fail on empty Firestore" behavior
+
+3. **Today** - Tests failed because:
+   - Repository tried Firestore → empty
+   - No fallback → returned error
+   - UI showed "Failed to Load Test"
+
+---
+
+## 🎯 **What is the Problem Statement?**
+
+### **The Core Challenge:**
+
+> **"How do we develop and test a cloud-first app when the cloud data doesn't exist yet?"**
+
+This is a **classic chicken-and-egg problem** in cloud development:
+
+```
+┌──────────────────────────────────────┐
+│ 🥚 Need Firestore data to test app  │
+│ 🐔 Need app working to finalize data│
+└──────────────────────────────────────┘
+```
+
+### **Requirements in Conflict:**
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| **Security**: No questions in APK | ✅ Met | Questions only in Firestore |
+| **Development**: Tests must work locally | ❌ Blocked | Firestore empty during dev |
+| **Quality**: Can't test without data | ❌ Blocked | Can't wait for prod data |
+| **User Experience**: Never show errors | ❌ Failed | "Failed to load" shown |
+
+---
+
+## 💡 **What is the Best Solution?**
+
+### **Option 1: Environment-Based Strategy** (⭐ **RECOMMENDED**)
+
+Use different data sources for different environments:
+
+```kotlin
+sealed class TestDataSource {
+    object Firestore : TestDataSource()
+    object MockLocal : TestDataSource()
+    object FirestoreWithFallback : TestDataSource()
+}
+
+class TestContentRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    @Named("dataSource") private val dataSource: TestDataSource
+) : TestContentRepository {
+    
+    override suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>> {
+        return when (dataSource) {
+            is TestDataSource.Firestore -> {
+                // PRODUCTION: Fail if Firestore empty (forces proper setup)
+                fetchFromFirestoreOnly(testId)
+            }
+            
+            is TestDataSource.MockLocal -> {
+                // DEVELOPMENT: Always use mocks (fast, offline)
+                Result.success(MockTestDataProvider.getOIRQuestions())
+            }
+            
+            is TestDataSource.FirestoreWithFallback -> {
+                // STAGING: Try Firestore, fallback to mocks (current behavior)
+                fetchFromFirestoreWithFallback(testId)
+            }
+        }
+    }
+    
+    private suspend fun fetchFromFirestoreOnly(testId: String): Result<List<OIRQuestion>> {
+        val questions = firestore.collection("tests")
+            .document(testId)
+            .get()
+            .await()
+            .toQuestions()
+        
+        return if (questions.isEmpty()) {
+            Result.failure(NoQuestionsException("Firestore data not set up!"))
+        } else {
+            Result.success(questions)
+        }
+    }
+    
+    private suspend fun fetchFromFirestoreWithFallback(testId: String): Result<List<OIRQuestion>> {
+        return try {
+            val questions = fetchFromFirestoreOnly(testId)
+            if (questions.isSuccess) {
+                questions
+            } else {
+                Log.w("TestContent", "Firestore empty, using fallback")
+                Result.success(MockTestDataProvider.getOIRQuestions())
+            }
+        } catch (e: Exception) {
+            Log.w("TestContent", "Firestore error, using fallback: ${e.message}")
+            Result.success(MockTestDataProvider.getOIRQuestions())
+        }
+    }
+}
+```
+
+**Configuration** (in build.gradle.kts):
+
+```kotlin
+android {
+    buildTypes {
+        debug {
+            // Development: Always use mocks, no network needed
+            buildConfigField("String", "TEST_DATA_SOURCE", "\"MOCK_LOCAL\"")
+        }
+        staging {
+            // Staging: Try cloud, fallback to mocks
+            buildConfigField("String", "TEST_DATA_SOURCE", "\"FIRESTORE_WITH_FALLBACK\"")
+        }
+        release {
+            // Production: Cloud only, fail if missing (forces proper setup)
+            buildConfigField("String", "TEST_DATA_SOURCE", "\"FIRESTORE\"")
+        }
+    }
+}
+```
+
+**DI Module**:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object DataSourceModule {
+    
+    @Provides
+    @Named("dataSource")
+    fun provideTestDataSource(): TestDataSource {
+        return when (BuildConfig.TEST_DATA_SOURCE) {
+            "MOCK_LOCAL" -> TestDataSource.MockLocal
+            "FIRESTORE_WITH_FALLBACK" -> TestDataSource.FirestoreWithFallback
+            "FIRESTORE" -> TestDataSource.Firestore
+            else -> TestDataSource.FirestoreWithFallback
+        }
+    }
+}
+```
+
+**Benefits**:
+- ✅ Clear separation of concerns
+- ✅ Development never blocked
+- ✅ Production enforces proper setup
+- ✅ Easy to test different scenarios
+- ✅ No confusion about which data is being used
+
+---
+
+### **Option 2: Feature Flags** (Alternative)
+
+Use remote config to control fallback behavior:
+
+```kotlin
+class TestContentRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val remoteConfig: FirebaseRemoteConfig
+) : TestContentRepository {
+    
+    override suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>> {
+        val allowMockFallback = remoteConfig.getBoolean("allow_mock_test_fallback")
+        
+        return try {
+            val questions = fetchFromFirestore(testId)
+            
+            if (questions.isEmpty() && allowMockFallback) {
+                Log.w("TestContent", "Using mock fallback (enabled by remote config)")
+                Result.success(MockTestDataProvider.getOIRQuestions())
+            } else if (questions.isEmpty()) {
+                Result.failure(NoQuestionsException("Questions not available"))
+            } else {
+                Result.success(questions)
+            }
+        } catch (e: Exception) {
+            if (allowMockFallback) {
+                Log.w("TestContent", "Firestore error, using fallback")
+                Result.success(MockTestDataProvider.getOIRQuestions())
+            } else {
+                Result.failure(e)
+            }
+        }
+    }
+}
+```
+
+**Remote Config**:
+```json
+{
+  "allow_mock_test_fallback": {
+    "development": true,
+    "staging": true,
+    "production": false
+  }
+}
+```
+
+**Benefits**:
+- ✅ Can enable/disable without app release
+- ✅ Gradual rollout strategy
+- ✅ Emergency fallback if Firestore fails in production
+
+---
+
+### **Option 3: Separate Test Data Repository** (Cleanest Architecture)
+
+Create dedicated development test data:
+
+```kotlin
+// Production
+interface ProductionTestRepository {
+    suspend fun getQuestions(testId: String): Result<List<Question>>
+}
+
+// Development
+interface DevelopmentTestRepository {
+    fun getMockQuestions(testType: TestType): List<Question>
+}
+
+// Unified Interface
+interface TestContentRepository {
+    suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>>
+}
+
+// Implementation selects appropriate source
+class TestContentRepositoryImpl @Inject constructor(
+    private val productionRepo: ProductionTestRepository,
+    private val developmentRepo: DevelopmentTestRepository,
+    private val buildType: BuildType
+) : TestContentRepository {
+    
+    override suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>> {
+        return when (buildType) {
+            BuildType.DEBUG -> {
+                Result.success(developmentRepo.getMockQuestions(TestType.OIR))
+            }
+            BuildType.RELEASE -> {
+                productionRepo.getQuestions(testId)
+            }
+        }
+    }
+}
+```
+
+**Benefits**:
+- ✅ Clearest separation of concerns
+- ✅ Impossible to ship mock data to production
+- ✅ Different classes, different responsibilities
+- ✅ Easy to test each independently
+
+---
+
+## 🏆 **My Recommendation: Option 1** (Environment-Based)
+
+### **Why This is Best:**
+
+1. **✅ Addresses All Requirements:**
+   - Development: Never blocked (MockLocal)
+   - Staging: Realistic testing (FirestoreWithFallback)
+   - Production: Enforces quality (Firestore only)
+
+2. **✅ Clear Intent:**
+   ```kotlin
+   // It's obvious what's happening
+   when (buildType) {
+       DEBUG -> useMocks()
+       STAGING -> useCloudWithFallback()
+       RELEASE -> useCloudOnly()
+   }
+   ```
+
+3. **✅ Easy to Maintain:**
+   - One place to control behavior
+   - Clear build-time configuration
+   - No runtime complexity
+
+4. **✅ Prevents Your Issue:**
+   - Mock data never removed from debug builds
+   - Production build will fail early if Firestore empty
+   - Impossible to accidentally ship in wrong state
+
+---
+
+## 📋 **Implementation Checklist**
+
+To implement Option 1 properly:
+
+### **Phase 1: Create Data Source Strategy** (1 day)
+```kotlin
+// 1. Create sealed class
+sealed class TestDataSource { ... }
+
+// 2. Update repository
+class TestContentRepositoryImpl(..., dataSource: TestDataSource)
+
+// 3. Add DI module
+@Module object DataSourceModule
+```
+
+### **Phase 2: Configure Build Types** (30 min)
+```kotlin
+// build.gradle.kts
+buildTypes {
+    debug { buildConfigField("String", "TEST_DATA_SOURCE", "\"MOCK_LOCAL\"") }
+    // ... others
+}
+```
+
+### **Phase 3: Move Mock Data** (30 min)
+```bash
+# Keep MockTestDataProvider but document clearly
+# Add comment: "Used in debug builds only"
+```
+
+### **Phase 4: Add Tests** (2 hours)
+```kotlin
+// Test each data source mode
+class TestContentRepositoryTest {
+    @Test fun `debug build uses mock data`()
+    @Test fun `release build requires firestore`()
+    @Test fun `staging falls back gracefully`()
+}
+```
+
+### **Phase 5: Upload Production Data** (When ready)
+```bash
+# Upload real questions to Firestore
+# Production build will automatically use them
+```
+
+---
+
+## 🎯 **Future-Proof Architecture**
+
+### **File Organization:**
+
+```
+core/data/src/
+├── main/kotlin/
+│   ├── repository/
+│   │   ├── TestContentRepositoryImpl.kt  # Production implementation
+│   │   └── TestDataSource.kt             # Strategy sealed class
+│   └── mock/
+│       └── MockTestDataProvider.kt       # Clearly in "mock" package
+│
+├── debug/kotlin/  # Debug-only files (not in release build!)
+│   └── repository/
+│       └── DebugTestDataModule.kt        # Provides MockLocal
+│
+└── release/kotlin/  # Release-only files
+    └── repository/
+        └── ReleaseTestDataModule.kt      # Provides Firestore only
+```
+
+### **Build Variants Handle Everything:**
+
+```kotlin
+// This code only exists in debug builds:
+// src/debug/kotlin/...
+@Module
+object DebugTestDataModule {
+    @Provides
+    fun provideDataSource() = TestDataSource.MockLocal
+}
+
+// This code only exists in release builds:
+// src/release/kotlin/...
+@Module
+object ReleaseTestDataModule {
+    @Provides
+    fun provideDataSource() = TestDataSource.Firestore
+}
+```
+
+**Result**: Impossible to ship mock data in production! 🎉
+
+---
+
+## ✅ **Summary: The Complete Solution**
+
+| Aspect | Current State | Recommended State |
+|--------|--------------|-------------------|
+| **Development** | ❌ Breaks when rollback | ✅ Always uses mocks (fast, reliable) |
+| **Staging** | ❌ No staging environment | ✅ Cloud + fallback (realistic testing) |
+| **Production** | ❌ Might ship with mocks | ✅ Cloud only, fails early if missing |
+| **Technical Debt** | ⚠️ Unclear intent | ✅ Clear, documented strategy |
+| **Testability** | ⚠️ Hard to test scenarios | ✅ Easy to test each mode |
+| **Maintainability** | ⚠️ Confusing | ✅ Crystal clear |
+
+---
+
+## 🚀 **Action Plan**
+
+### **Short Term** (Keep working):
+- ✅ Current solution works fine for now
+- Keep MockTestDataProvider with clear TODO comment
+- Document that it's temporary
+
+### **Medium Term** (Next 1-2 weeks):
+- Implement Option 1 (Environment-Based Strategy)
+- ~2 days of work
+- Prevents this issue forever
+
+### **Long Term** (Before Production):
+- Upload real questions to Firestore
+- Production build automatically uses them
+- Debug builds continue using mocks
+
+---
+
+**Bottom Line**: The issue occurred because we had a cloud-first architecture without cloud data. The solution is to use **environment-specific data sources** so development is never blocked, but production is properly enforced.
+
+Would you like me to implement Option 1 (Environment-Based Strategy) now? It would take about 2-3 hours and prevent this issue from ever happening again.

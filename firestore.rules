@@ -141,9 +141,12 @@ service cloud.firestore {
       
       // Students can create submissions
       // Must include required fields: userId, testType, submittedAt
+      // Note: 'responses' can be at root level OR nested in 'data' field (depending on test type)
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.keys().hasAll(['testType', 'submittedAt', 'responses']);
+                       request.resource.data.keys().hasAll(['testType', 'submittedAt']) &&
+                       (request.resource.data.keys().hasAny(['responses']) || 
+                        request.resource.data.keys().hasAny(['data']));
       
       // Students can update their own IN_PROGRESS submissions (auto-save)
       // Assessors can update submissions for grading (add scores, feedback, status)
