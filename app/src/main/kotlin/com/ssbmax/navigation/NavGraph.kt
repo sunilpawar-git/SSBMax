@@ -10,9 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.ui.auth.LoginScreen
-import com.ssbmax.ui.auth.RoleSelectionScreen
-import com.ssbmax.ui.splash.SplashScreen
 
 /**
  * Main navigation graph for SSBMax app
@@ -30,67 +27,22 @@ fun SSBMaxNavGraph(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        // Splash Screen
-        composable(SSBMaxDestinations.Splash.route) {
-            SplashScreen(
-                onNavigateToLogin = {
-                    navController.navigate(SSBMaxDestinations.Login.route) {
-                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
-                    }
-                },
-                onNavigateToHome = { isStudent ->
-                    val destination = if (isStudent) {
-                        SSBMaxDestinations.StudentHome.route
-                    } else {
-                        SSBMaxDestinations.InstructorHome.route
-                    }
-                    navController.navigate(destination) {
-                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
-                    }
-                },
-                onNavigateToRoleSelection = {
-                    navController.navigate(SSBMaxDestinations.RoleSelection.route) {
-                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
-                    }
-                },
-                onNavigateToProfileOnboarding = {
-                    navController.navigate(SSBMaxDestinations.UserProfile.createOnboardingRoute()) {
-                        popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
-                    }
+        // ========================
+        // AUTHENTICATION FLOW
+        // ========================
+        authNavGraph(
+            navController = navController,
+            onNavigateToHome = { isStudent ->
+                val destination = if (isStudent) {
+                    SSBMaxDestinations.StudentHome.route
+                } else {
+                    SSBMaxDestinations.InstructorHome.route
                 }
-            )
-        }
-        
-        // Login Screen
-        composable(SSBMaxDestinations.Login.route) {
-            LoginScreen(
-                onLoginSuccess = {
-                    // TODO: Navigate based on user role from AuthViewModel
-                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                        popUpTo(SSBMaxDestinations.Login.route) { inclusive = true }
-                    }
-                },
-                onNeedsRoleSelection = {
-                    navController.navigate(SSBMaxDestinations.RoleSelection.route)
+                navController.navigate(destination) {
+                    popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
                 }
-            )
-        }
-        
-        // Role Selection Screen
-        composable(SSBMaxDestinations.RoleSelection.route) {
-            RoleSelectionScreen(
-                onRoleSelected = { role ->
-                    val destination = when {
-                        role.isStudent -> SSBMaxDestinations.StudentHome.route
-                        role.isInstructor -> SSBMaxDestinations.InstructorHome.route
-                        else -> SSBMaxDestinations.StudentHome.route
-                    }
-                    navController.navigate(destination) {
-                        popUpTo(SSBMaxDestinations.RoleSelection.route) { inclusive = true }
-                    }
-                }
-            )
-        }
+            }
+        )
         
         // ========================
         // STUDENT FLOW
