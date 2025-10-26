@@ -43,11 +43,8 @@ class TestContentRepositoryImpl @Inject constructor(
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
             if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock OIR data for $testId")
-                val mockQuestions = MockTestDataProvider.getOIRQuestions()
-                oirCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+                Log.w("TestContent", "No OIR questions found in Firestore for $testId")
+                return Result.failure(Exception("No OIR questions available for test: $testId"))
             }
             
             val oirQuestions = questions.mapNotNull { it.toOIRQuestion() }
@@ -57,11 +54,8 @@ class TestContentRepositoryImpl @Inject constructor(
             
             Result.success(oirQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for OIR, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getOIRQuestions()
-            oirCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Error loading OIR questions for $testId", e)
+            Result.failure(e)
         }
     }
 
@@ -74,11 +68,8 @@ class TestContentRepositoryImpl @Inject constructor(
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
             if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock PPDT data for $testId")
-                val mockQuestions = MockTestDataProvider.getPPDTQuestions()
-                ppdtCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+                Log.w("TestContent", "No PPDT questions found in Firestore for $testId")
+                return Result.failure(Exception("No PPDT questions available for test: $testId"))
             }
             
             val ppdtQuestions = questions.mapNotNull { it.toPPDTQuestion() }
@@ -86,11 +77,8 @@ class TestContentRepositoryImpl @Inject constructor(
             
             Result.success(ppdtQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for PPDT, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getPPDTQuestions()
-            ppdtCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Error loading PPDT questions for $testId", e)
+            Result.failure(e)
         }
     }
 
@@ -103,11 +91,8 @@ class TestContentRepositoryImpl @Inject constructor(
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
             if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock TAT data for $testId")
-                val mockQuestions = MockTestDataProvider.getTATQuestions()
-                tatCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+                Log.w("TestContent", "No TAT questions found in Firestore for $testId")
+                return Result.failure(Exception("No TAT questions available for test: $testId"))
             }
             
             val tatQuestions = questions.mapNotNull { it.toTATQuestion() }
@@ -115,11 +100,8 @@ class TestContentRepositoryImpl @Inject constructor(
             
             Result.success(tatQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for TAT, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getTATQuestions()
-            tatCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Error loading TAT questions for $testId", e)
+            Result.failure(e)
         }
     }
 
@@ -132,11 +114,8 @@ class TestContentRepositoryImpl @Inject constructor(
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
             if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock WAT data for $testId")
-                val mockWords = MockTestDataProvider.getWATWords()
-                watCache[testId] = mockWords
-                return Result.success(mockWords)
+                Log.w("TestContent", "No WAT words found in Firestore for $testId")
+                return Result.failure(Exception("No WAT words available for test: $testId"))
             }
             
             val watQuestions = questions.mapNotNull { it.toWATWord() }
@@ -144,11 +123,8 @@ class TestContentRepositoryImpl @Inject constructor(
             
             Result.success(watQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for WAT, using mock data: ${e.message}")
-            val mockWords = MockTestDataProvider.getWATWords()
-            watCache[testId] = mockWords
-            Result.success(mockWords)
+            Log.e("TestContent", "Error loading WAT words for $testId", e)
+            Result.failure(e)
         }
     }
 
@@ -161,11 +137,8 @@ class TestContentRepositoryImpl @Inject constructor(
             val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
             
             if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock SRT data for $testId")
-                val mockSituations = MockTestDataProvider.getSRTSituations()
-                srtCache[testId] = mockSituations
-                return Result.success(mockSituations)
+                Log.w("TestContent", "No SRT situations found in Firestore for $testId")
+                return Result.failure(Exception("No SRT situations available for test: $testId"))
             }
             
             val srtQuestions = questions.mapNotNull { it.toSRTSituation() }
@@ -173,11 +146,8 @@ class TestContentRepositoryImpl @Inject constructor(
             
             Result.success(srtQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for SRT, using mock data: ${e.message}")
-            val mockSituations = MockTestDataProvider.getSRTSituations()
-            srtCache[testId] = mockSituations
-            Result.success(mockSituations)
+            Log.e("TestContent", "Error loading SRT situations for $testId", e)
+            Result.failure(e)
         }
     }
 

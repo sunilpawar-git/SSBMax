@@ -3,12 +3,10 @@ package com.ssbmax.core.data.repository
 import com.ssbmax.core.domain.model.*
 
 /**
- * Provides mock test data for development and fallback when Firestore is unavailable.
- * This ensures seamless UX while Firestore integration is being set up.
- * 
- * When Firestore is ready with real data, these mocks automatically stop being used.
+ * Provides mock test data for testing purposes only.
+ * Used in unit tests and integration tests.
  */
-object MockTestDataProvider {
+object TestDataFactory {
     
     /**
      * Mock OIR Questions - 10 sample questions across different types
