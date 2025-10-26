@@ -38,21 +38,26 @@ class AuthViewModel @Inject constructor(
      */
     fun handleGoogleSignInResult(data: Intent?) {
         viewModelScope.launch {
+            android.util.Log.d("AuthViewModel", "handleGoogleSignInResult called, data=$data")
             _uiState.value = AuthUiState.Loading
             
             authRepositoryImpl.handleGoogleSignInResult(data)
                 .onSuccess { user ->
+                    android.util.Log.d("AuthViewModel", "Sign-in SUCCESS: user=${user.email}, role=${user.role}")
                     // User authenticated successfully
                     // Check if user needs to select role (first time login)
                     if (user.role == UserRole.STUDENT && user.createdAt == user.lastLoginAt) {
                         // New user, might want to offer role selection
+                        android.util.Log.d("AuthViewModel", "New user detected, showing role selection")
                         _uiState.value = AuthUiState.NeedsRoleSelection(user)
                     } else {
                         // Existing user, proceed
+                        android.util.Log.d("AuthViewModel", "Existing user, proceeding to home")
                         _uiState.value = AuthUiState.Success(user)
                     }
                 }
                 .onFailure { error ->
+                    android.util.Log.e("AuthViewModel", "Sign-in FAILED: ${error.message}", error)
                     _uiState.value = AuthUiState.Error(error.message ?: "Google Sign-In failed")
                 }
         }

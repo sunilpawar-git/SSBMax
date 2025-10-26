@@ -1,7 +1,14 @@
 package com.ssbmax.ui.topic
 
 import androidx.lifecycle.SavedStateHandle
+import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.BookmarkRepository
+import com.ssbmax.core.domain.repository.TestProgressRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -9,7 +16,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for TopicViewModel
+ * Unit tests for TopicViewModel with repository dependencies
  * 
  * Tests study material loading and topic content display
  */
@@ -18,9 +25,51 @@ class TopicViewModelTest : BaseViewModelTest() {
     private lateinit var viewModel: TopicViewModel
     private lateinit var savedStateHandle: SavedStateHandle
     
+    // Mock dependencies
+    private val mockBookmarkRepo = mockk<BookmarkRepository>(relaxed = true)
+    private val mockTestProgressRepo = mockk<TestProgressRepository>(relaxed = true)
+    private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
+    
+    private val mockUser = SSBMaxUser(
+        id = "test-user-123",
+        email = "test@ssbmax.com",
+        displayName = "Test User",
+        photoUrl = null,
+        role = UserRole.STUDENT,
+        createdAt = System.currentTimeMillis(),
+        lastLoginAt = System.currentTimeMillis()
+    )
+    
+    private val mockPhase1Progress = Phase1Progress(
+        oirProgress = TestProgress(TestType.OIR, TestStatus.COMPLETED, latestScore = 75f),
+        ppdtProgress = TestProgress(TestType.PPDT, TestStatus.COMPLETED, latestScore = 80f)
+    )
+    
     @Before
     fun setUp() {
         savedStateHandle = SavedStateHandle(mapOf("topicId" to "OIR"))
+        
+        // Setup mock behavior
+        coEvery { mockObserveCurrentUser() } returns flowOf(mockUser)
+        coEvery { mockBookmarkRepo.getBookmarkedMaterials(any()) } returns flowOf(emptyList())
+        coEvery { mockTestProgressRepo.getPhase1Progress(any()) } returns flowOf(mockPhase1Progress)
+        coEvery { mockTestProgressRepo.getPhase2Progress(any()) } returns flowOf(
+            Phase2Progress(
+                psychologyProgress = TestProgress(TestType.TAT, TestStatus.COMPLETED, latestScore = 85f),
+                gtoProgress = TestProgress(TestType.GTO, TestStatus.IN_PROGRESS),
+                interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
+            )
+        )
+    }
+    
+    private fun createViewModel(topicId: String = "OIR"): TopicViewModel {
+        savedStateHandle = SavedStateHandle(mapOf("topicId" to topicId))
+        return TopicViewModel(
+            savedStateHandle,
+            mockBookmarkRepo,
+            mockTestProgressRepo,
+            mockObserveCurrentUser
+        )
     }
     
     // ==================== Initialization Tests ====================
@@ -28,7 +77,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `init - loads topic content`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -40,11 +89,8 @@ class TopicViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `init - loads OIR topic successfully`() = runTest {
-        // Given
-        savedStateHandle = SavedStateHandle(mapOf("topicId" to "OIR"))
-        
-        // When
-        viewModel = TopicViewModel(savedStateHandle)
+        // Given & When
+        viewModel = createViewModel("OIR")
         advanceTimeBy(200)
         
         // Then
@@ -55,11 +101,8 @@ class TopicViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `init - loads TAT topic successfully`() = runTest {
-        // Given
-        savedStateHandle = SavedStateHandle(mapOf("topicId" to "TAT"))
-        
-        // When
-        viewModel = TopicViewModel(savedStateHandle)
+        // Given & When
+        viewModel = createViewModel("TAT")
         advanceTimeBy(200)
         
         // Then
@@ -74,7 +117,7 @@ class TopicViewModelTest : BaseViewModelTest() {
         savedStateHandle = SavedStateHandle()
         
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then - Should default to OIR
@@ -87,7 +130,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `loads study materials for topic`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -98,7 +141,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `loads available tests for topic`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -109,7 +152,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `loads introduction text`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -123,7 +166,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `refresh - reloads topic content`() = runTest {
         // Given
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         val initialTitle = viewModel.uiState.value.topicTitle
         
@@ -140,7 +183,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `refresh - clears error state`() = runTest {
         // Given
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // When
@@ -156,7 +199,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `initial state is loading`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         
         // Then - Check immediately before loading completes
         // Note: Due to fast loading, this might not catch loading state
@@ -166,7 +209,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `topicTitle is populated after loading`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -178,7 +221,7 @@ class TopicViewModelTest : BaseViewModelTest() {
     @Test
     fun `error is null on successful load`() = runTest {
         // When
-        viewModel = TopicViewModel(savedStateHandle)
+        viewModel = createViewModel()
         advanceTimeBy(200)
         
         // Then
@@ -189,11 +232,8 @@ class TopicViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loads WAT topic content`() = runTest {
-        // Given
-        savedStateHandle = SavedStateHandle(mapOf("topicId" to "WAT"))
-        
-        // When
-        viewModel = TopicViewModel(savedStateHandle)
+        // Given & When
+        viewModel = createViewModel("WAT")
         advanceTimeBy(200)
         
         // Then
@@ -204,11 +244,8 @@ class TopicViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loads SRT topic content`() = runTest {
-        // Given
-        savedStateHandle = SavedStateHandle(mapOf("topicId" to "SRT"))
-        
-        // When
-        viewModel = TopicViewModel(savedStateHandle)
+        // Given & When
+        viewModel = createViewModel("SRT")
         advanceTimeBy(200)
         
         // Then
@@ -220,11 +257,8 @@ class TopicViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loads PPDT topic content`() = runTest {
-        // Given
-        savedStateHandle = SavedStateHandle(mapOf("topicId" to "PPDT"))
-        
-        // When
-        viewModel = TopicViewModel(savedStateHandle)
+        // Given & When
+        viewModel = createViewModel("PPDT")
         advanceTimeBy(200)
         
         // Then

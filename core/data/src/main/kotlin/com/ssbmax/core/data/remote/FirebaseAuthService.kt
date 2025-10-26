@@ -94,17 +94,22 @@ class FirebaseAuthService @Inject constructor(
      */
     suspend fun handleSignInResult(data: Intent?): Result<FirebaseUser> {
         return try {
+            android.util.Log.d("FirebaseAuthService", "handleSignInResult: Processing Google sign-in data")
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             val account = task.getResult(ApiException::class.java)
             
             if (account == null) {
+                android.util.Log.e("FirebaseAuthService", "Google account is null")
                 return Result.failure(Exception("Google Sign-In failed: Account is null"))
             }
             
+            android.util.Log.d("FirebaseAuthService", "Google account obtained: ${account.email}")
             firebaseAuthWithGoogle(account)
         } catch (e: ApiException) {
+            android.util.Log.e("FirebaseAuthService", "ApiException during sign-in: ${e.statusCode} - ${e.message}", e)
             Result.failure(Exception("Google Sign-In failed: ${e.message}", e))
         } catch (e: Exception) {
+            android.util.Log.e("FirebaseAuthService", "Exception during sign-in: ${e.message}", e)
             Result.failure(Exception("Authentication error: ${e.message}", e))
         }
     }
@@ -114,16 +119,20 @@ class FirebaseAuthService @Inject constructor(
      */
     private suspend fun firebaseAuthWithGoogle(account: GoogleSignInAccount): Result<FirebaseUser> {
         return try {
+            android.util.Log.d("FirebaseAuthService", "Authenticating with Firebase using Google credentials")
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             val authResult = auth.signInWithCredential(credential).await()
             val firebaseUser = authResult.user
             
             if (firebaseUser != null) {
+                android.util.Log.d("FirebaseAuthService", "Firebase authentication successful: ${firebaseUser.email}")
                 Result.success(firebaseUser)
             } else {
+                android.util.Log.e("FirebaseAuthService", "Firebase user is null after authentication")
                 Result.failure(Exception("Firebase authentication failed: User is null"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("FirebaseAuthService", "Firebase authentication error: ${e.message}", e)
             Result.failure(Exception("Firebase authentication error: ${e.message}", e))
         }
     }

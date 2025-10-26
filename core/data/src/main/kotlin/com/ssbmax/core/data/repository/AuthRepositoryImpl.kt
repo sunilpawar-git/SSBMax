@@ -81,19 +81,27 @@ class AuthRepositoryImpl @Inject constructor(
      */
     suspend fun handleGoogleSignInResult(data: Intent?): Result<SSBMaxUser> {
         return try {
+            android.util.Log.d("AuthRepositoryImpl", "handleGoogleSignInResult: Starting authentication")
             // Authenticate with Firebase using Google credentials
             val firebaseResult = firebaseAuthService.handleSignInResult(data)
             
             if (firebaseResult.isFailure) {
-                return Result.failure(firebaseResult.exceptionOrNull() ?: Exception("Sign-in failed"))
+                val error = firebaseResult.exceptionOrNull() ?: Exception("Sign-in failed")
+                android.util.Log.e("AuthRepositoryImpl", "Firebase sign-in failed: ${error.message}", error)
+                return Result.failure(error)
             }
             
             val firebaseUser = firebaseResult.getOrNull()
-                ?: return Result.failure(Exception("Firebase user is null"))
+            if (firebaseUser == null) {
+                android.util.Log.e("AuthRepositoryImpl", "Firebase user is null after sign-in")
+                return Result.failure(Exception("Firebase user is null"))
+            }
             
+            android.util.Log.d("AuthRepositoryImpl", "Firebase authentication successful: ${firebaseUser.email}")
             // Load or create user profile in Firestore
             loadOrCreateUserProfile(firebaseUser)
         } catch (e: Exception) {
+            android.util.Log.e("AuthRepositoryImpl", "Google Sign-In error: ${e.message}", e)
             Result.failure(Exception("Google Sign-In error: ${e.message}", e))
         }
     }
@@ -103,22 +111,27 @@ class AuthRepositoryImpl @Inject constructor(
      */
     private suspend fun loadOrCreateUserProfile(firebaseUser: FirebaseUser): Result<SSBMaxUser> {
         return try {
+            android.util.Log.d("AuthRepositoryImpl", "Loading/creating profile for user: ${firebaseUser.uid}")
             // Try to load existing user from Firestore
             val userResult = firestoreUserRepository.getUser(firebaseUser.uid)
             
             if (userResult.isFailure) {
-                return Result.failure(userResult.exceptionOrNull() ?: Exception("Failed to load user"))
+                val error = userResult.exceptionOrNull() ?: Exception("Failed to load user")
+                android.util.Log.e("AuthRepositoryImpl", "Failed to load user: ${error.message}", error)
+                return Result.failure(error)
             }
             
             val existingUser = userResult.getOrNull()
             
             val user = if (existingUser != null) {
+                android.util.Log.d("AuthRepositoryImpl", "Existing user found: ${existingUser.email}")
                 // Update last login time
                 firestoreUserRepository.updateLastLogin(firebaseUser.uid)
                 existingUser
             } else {
+                android.util.Log.d("AuthRepositoryImpl", "Creating new user profile")
                 // Create new user profile
-                val newUser =                 SSBMaxUser(
+                val newUser = SSBMaxUser(
                     id = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
                     displayName = firebaseUser.displayName ?: "User",
@@ -134,12 +147,15 @@ class AuthRepositoryImpl @Inject constructor(
                 
                 // Save to Firestore
                 firestoreUserRepository.saveUser(newUser)
+                android.util.Log.d("AuthRepositoryImpl", "New user profile created and saved")
                 newUser
             }
             
             _currentUser.value = user
+            android.util.Log.d("AuthRepositoryImpl", "User profile loaded successfully")
             Result.success(user)
         } catch (e: Exception) {
+            android.util.Log.e("AuthRepositoryImpl", "Failed to load/create user profile: ${e.message}", e)
             Result.failure(Exception("Failed to load/create user profile: ${e.message}", e))
         }
     }

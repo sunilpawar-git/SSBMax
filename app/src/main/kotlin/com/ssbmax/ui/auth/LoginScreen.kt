@@ -38,9 +38,12 @@ fun LoginScreen(
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        android.util.Log.d("LoginScreen", "Google Sign-In result: resultCode=${result.resultCode}")
         if (result.resultCode == Activity.RESULT_OK) {
+            android.util.Log.d("LoginScreen", "User signed in successfully, processing...")
             viewModel.handleGoogleSignInResult(result.data)
         } else {
+            android.util.Log.w("LoginScreen", "User cancelled or error occurred: resultCode=${result.resultCode}")
             // User cancelled or error occurred
             // You can show a message here if needed
         }
@@ -48,9 +51,16 @@ fun LoginScreen(
     
     // Handle navigation
     LaunchedEffect(uiState) {
+        android.util.Log.d("LoginScreen", "UI State changed: $uiState")
         when (uiState) {
-            is AuthUiState.Success -> onLoginSuccess()
-            is AuthUiState.NeedsRoleSelection -> onNeedsRoleSelection()
+            is AuthUiState.Success -> {
+                android.util.Log.d("LoginScreen", "Navigating to home screen")
+                onLoginSuccess()
+            }
+            is AuthUiState.NeedsRoleSelection -> {
+                android.util.Log.d("LoginScreen", "Navigating to role selection")
+                onNeedsRoleSelection()
+            }
             else -> {}
         }
     }
@@ -108,8 +118,10 @@ fun LoginScreen(
             // Google Sign-In Button
             Button(
                 onClick = {
+                    android.util.Log.d("LoginScreen", "Google Sign-In button clicked")
                     // Launch Google Sign-In
                     val signInIntent = viewModel.getGoogleSignInIntent()
+                    android.util.Log.d("LoginScreen", "Launching Google Sign-In intent")
                     googleSignInLauncher.launch(signInIntent)
                 },
                 enabled = uiState !is AuthUiState.Loading,

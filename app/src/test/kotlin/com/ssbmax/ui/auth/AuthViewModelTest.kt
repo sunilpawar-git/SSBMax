@@ -1,15 +1,18 @@
 package com.ssbmax.ui.auth
 
+import android.content.Intent
 import app.cash.turbine.test
 import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -17,7 +20,10 @@ import org.junit.Test
 import org.junit.Assert.*
 
 /**
- * Tests for AuthViewModel
+ * Tests for AuthViewModel with Google Sign-In
+ * 
+ * Note: Email/password authentication has been removed.
+ * The app now exclusively uses Google Sign-In.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
@@ -26,6 +32,16 @@ class AuthViewModelTest {
     private lateinit var viewModel: AuthViewModel
     private val mockRepository = mockk<AuthRepository>(relaxed = true)
     private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
+    
+    private val mockUser = SSBMaxUser(
+        id = "test-user-123",
+        email = "test@example.com",
+        displayName = "Test User",
+        photoUrl = null,
+        role = UserRole.STUDENT,
+        createdAt = System.currentTimeMillis(),
+        lastLoginAt = System.currentTimeMillis()
+    )
     
     @Before
     fun setup() {
@@ -38,95 +54,197 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
     }
     
+    // ==================== Google Sign-In Tests ====================
+    
     @Test
-    fun `signIn with valid credentials shows error for deprecated method`() = runTest {
+    fun `getGoogleSignInIntent returns valid intent`() = runTest {
+        // Given
+        val mockIntent = mockk<Intent>(relaxed = true)
+        every { mockAuthRepositoryImpl.getGoogleSignInIntent() } returns mockIntent
+        
+        // When
+        val intent = viewModel.getGoogleSignInIntent()
+        
+        // Then
+        assertNotNull("Google Sign-In intent should not be null", intent)
+        verify { mockAuthRepositoryImpl.getGoogleSignInIntent() }
+    }
+    
+    @Test
+    fun `handleGoogleSignInResult with success shows success state`() = runTest {
+        // Given
+        val mockIntent = mockk<Intent>(relaxed = true)
+        val existingUser = mockUser.copy(
+            createdAt = System.currentTimeMillis() - 86400000, // Created 1 day ago
+            lastLoginAt = System.currentTimeMillis()
+        )
+        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.success(existingUser)
+        
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
             
-            viewModel.signIn("test@example.com", "password123")
-            
+            viewModel.handleGoogleSignInResult(mockIntent)
             assertEquals(AuthUiState.Loading, awaitItem())
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("not yet implemented"))
+            
+            val successState = awaitItem() as AuthUiState.Success
+            assertEquals(existingUser.id, successState.user.id)
+            assertEquals(existingUser.email, successState.user.email)
         }
     }
     
     @Test
-    fun `signIn with invalid credentials shows validation error`() = runTest {
+    fun `handleGoogleSignInResult with new user shows needs role selection`() = runTest {
+        // Given
+        val mockIntent = mockk<Intent>(relaxed = true)
+        val newUser = mockUser.copy(
+            createdAt = System.currentTimeMillis(),
+            lastLoginAt = System.currentTimeMillis() // Same as createdAt (first login)
+        )
+        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.success(newUser)
+        
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
             
-            viewModel.signIn("test@example.com", "12345")
-            
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("valid"))
-        }
-    }
-    
-    @Test
-    fun `signIn with invalid email shows validation error`() = runTest {
-        // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            viewModel.signIn("invalidemail", "password123")
-            
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("valid email"))
-        }
-    }
-    
-    @Test
-    fun `signIn with short password shows validation error`() = runTest {
-        // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            viewModel.signIn("test@example.com", "12345")
-            
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("valid"))
-        }
-    }
-    
-    @Test
-    fun `signUp with valid data shows error for deprecated method`() = runTest {
-        // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            viewModel.signUp("new@example.com", "password123", "New User")
-            
+            viewModel.handleGoogleSignInResult(mockIntent)
             assertEquals(AuthUiState.Loading, awaitItem())
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("not yet implemented"))
+            
+            val needsRoleState = awaitItem() as AuthUiState.NeedsRoleSelection
+            assertEquals(newUser.id, needsRoleState.user.id)
         }
     }
     
     @Test
-    fun `signUp with blank display name shows error`() = runTest {
+    fun `handleGoogleSignInResult with null intent shows error`() = runTest {
+        // Given
+        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(null) } returns Result.failure(
+            Exception("Google Sign-In failed")
+        )
+        
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
             
-            viewModel.signUp("test@example.com", "password123", "")
+            viewModel.handleGoogleSignInResult(null)
+            assertEquals(AuthUiState.Loading, awaitItem())
             
             val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("fill all fields"))
+            assertTrue(errorState.message.contains("Google Sign-In failed"))
         }
     }
+    
+    @Test
+    fun `handleGoogleSignInResult with failure shows error state`() = runTest {
+        // Given
+        val mockIntent = mockk<Intent>(relaxed = true)
+        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
+            Exception("Authentication error")
+        )
+        
+        // When
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+            
+            viewModel.handleGoogleSignInResult(mockIntent)
+            assertEquals(AuthUiState.Loading, awaitItem())
+            
+            val errorState = awaitItem() as AuthUiState.Error
+            assertTrue(errorState.message.contains("Authentication error"))
+        }
+    }
+    
+    // ==================== Role Selection Tests ====================
+    
+    @Test
+    fun `setUserRole with student role updates user`() = runTest {
+        // Given
+        val updatedUser = mockUser.copy(role = UserRole.STUDENT)
+        coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.STUDENT) } returns Result.success(Unit)
+        coEvery { mockRepository.currentUser } returns flowOf(updatedUser)
+        
+        // When
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+            
+            viewModel.setUserRole(UserRole.STUDENT)
+            assertEquals(AuthUiState.Loading, awaitItem())
+            
+            val successState = awaitItem() as AuthUiState.Success
+            assertEquals(UserRole.STUDENT, successState.user.role)
+        }
+    }
+    
+    @Test
+    fun `setUserRole with instructor role updates user`() = runTest {
+        // Given
+        val updatedUser = mockUser.copy(role = UserRole.INSTRUCTOR)
+        coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.INSTRUCTOR) } returns Result.success(Unit)
+        coEvery { mockRepository.currentUser } returns flowOf(updatedUser)
+        
+        // When
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+            
+            viewModel.setUserRole(UserRole.INSTRUCTOR)
+            assertEquals(AuthUiState.Loading, awaitItem())
+            
+            val successState = awaitItem() as AuthUiState.Success
+            assertEquals(UserRole.INSTRUCTOR, successState.user.role)
+        }
+    }
+    
+    @Test
+    fun `setUserRole with failure shows error`() = runTest {
+        // Given
+        coEvery { mockAuthRepositoryImpl.updateUserRole(any()) } returns Result.failure(
+            Exception("Failed to set role")
+        )
+        
+        // When
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+            
+            viewModel.setUserRole(UserRole.STUDENT)
+            assertEquals(AuthUiState.Loading, awaitItem())
+            
+            val errorState = awaitItem() as AuthUiState.Error
+            assertTrue(errorState.message.contains("Failed to set role"))
+        }
+    }
+    
+    // ==================== Sign Out Tests ====================
+    
+    @Test
+    fun `signOut returns to initial state`() = runTest {
+        // Given
+        coEvery { mockRepository.signOut() } returns Result.success(Unit)
+        
+        // When
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+            
+            viewModel.signOut()
+            
+            // Then - should stay at Initial state
+            expectNoEvents() // No new events since already at Initial
+        }
+    }
+    
+    // ==================== Reset State Tests ====================
     
     @Test
     fun `resetState returns to initial`() = runTest {
-        // Given
-        coEvery { mockRepository.signIn(any(), any()) } returns Result.failure(Exception("Error"))
+        // Given - simulate an error state first
+        val mockIntent = mockk<Intent>(relaxed = true)
+        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
+            Exception("Error")
+        )
         
         viewModel.uiState.test {
             awaitItem() // Initial
             
-            viewModel.signIn("test@example.com", "password")
+            viewModel.handleGoogleSignInResult(mockIntent)
             awaitItem() // Loading
             awaitItem() // Error
             
@@ -137,5 +255,12 @@ class AuthViewModelTest {
             assertEquals(AuthUiState.Initial, awaitItem())
         }
     }
+    
+    @Test
+    fun `initial state is Initial`() = runTest {
+        // When/Then
+        viewModel.uiState.test {
+            assertEquals(AuthUiState.Initial, awaitItem())
+        }
+    }
 }
-
