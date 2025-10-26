@@ -13,7 +13,7 @@ object TestResultHandler {
     
     /**
      * Handle test submission navigation based on subscription type
-     * @param submissionId The ID of the submitted test
+     * @param submissionId The ID of the submitted test (or sessionId for OIR)
      * @param subscriptionType User's subscription type (FREE, PREMIUM_ASSESSOR, PREMIUM_AI)
      * @param testType The type of test that was submitted
      * @param navController Navigation controller for routing
@@ -24,6 +24,12 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
+        // Special handling for OIR: Show results directly (no Firestore submission yet)
+        if (testType == TestType.OIR) {
+            navigateToResult(submissionId, testType, navController)
+            return
+        }
+        
         when (subscriptionType) {
             SubscriptionType.PREMIUM_AI -> {
                 // Premium AI users get immediate AI-graded results

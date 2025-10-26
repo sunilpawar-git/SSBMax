@@ -165,14 +165,17 @@ class OIRTestViewModel @Inject constructor(
                 // Clear cached content
                 testContentRepository.clearCache()
                 
-                // TODO: Save results to repository
+                // TODO: Save results to repository (OIR submission model not yet implemented)
+                // For now, we pass the sessionId which will be used to show results directly
+                // instead of trying to fetch from Firestore (which would fail with PERMISSION_DENIED)
                 
                 // Mark test as completed
                 currentSession = session.copy(isCompleted = true)
                 _uiState.value = _uiState.value.copy(
                     isCompleted = true,
                     sessionId = session.sessionId,
-                    subscriptionType = subscriptionType
+                    subscriptionType = subscriptionType,
+                    testResult = result
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -337,6 +340,7 @@ data class OIRTestUiState(
     val currentQuestionAnswered: Boolean = false,
     val isCompleted: Boolean = false,
     val sessionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null
+    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
+    val testResult: OIRTestResult? = null  // Result calculated locally, no Firestore needed
 )
 
