@@ -212,14 +212,9 @@ class TATTestViewModel @Inject constructor(
                         phase = TATPhase.SUBMITTED
                     ) }
                 }.onFailure { error ->
-                    // Even if Firestore fails, store locally and show results
                     _uiState.update { it.copy(
                         isLoading = false,
-                        isSubmitted = true,
-                        submissionId = submission.id,
-                        subscriptionType = subscriptionType,
-                        submission = submission,  // Store locally to show results directly
-                        phase = TATPhase.SUBMITTED
+                        error = "Failed to submit: ${error.message}"
                     ) }
                 }
             } catch (e: Exception) {
