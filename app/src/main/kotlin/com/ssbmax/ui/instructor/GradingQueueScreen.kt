@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.core.domain.model.GradingPriority
+import com.ssbmax.core.domain.model.GradingQueueItem
 import com.ssbmax.core.domain.model.TestType
 
 /**
@@ -139,10 +141,10 @@ private fun GradingList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(submissions, key = { it.id }) { item ->
+        items(submissions, key = { it.submissionId }) { item ->
             GradingCard(
                 item = item,
-                onClick = { onSubmissionClick(item.id) }
+                onClick = { onSubmissionClick(item.submissionId) }
             )
         }
     }
@@ -182,7 +184,7 @@ private fun GradingCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = item.timeWaiting,
+                    text = item.timeAgo,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
