@@ -91,50 +91,10 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
-     * Sign in with email and password (legacy, kept for compatibility)
-     */
-    @Deprecated("Use signInWithGoogle instead")
-    fun signIn(email: String, password: String) {
-        if (!validateInput(email, password)) {
-            _uiState.value = AuthUiState.Error("Please enter valid email and password")
-            return
-        }
-        
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            
-            // TODO: Implement if needed
-            _uiState.value = AuthUiState.Error("Email/Password sign-in not yet implemented. Please use Google Sign-In.")
-        }
-    }
-    
-    /**
-     * Sign up with email, password, and display name (legacy)
-     */
-    @Deprecated("Use signInWithGoogle instead")
-    fun signUp(email: String, password: String, displayName: String) {
-        if (!validateInput(email, password) || displayName.isBlank()) {
-            _uiState.value = AuthUiState.Error("Please fill all fields correctly")
-            return
-        }
-        
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            
-            // TODO: Implement if needed
-            _uiState.value = AuthUiState.Error("Email/Password sign-up not yet implemented. Please use Google Sign-In.")
-        }
-    }
-    
-    /**
      * Reset UI state
      */
     fun resetState() {
         _uiState.value = AuthUiState.Initial
-    }
-    
-    private fun validateInput(email: String, password: String): Boolean {
-        return email.contains("@") && password.length >= 6
     }
 }
 
