@@ -180,10 +180,10 @@ class PPDTTestViewModel @Inject constructor(
                 // Create local submission
                 val submission = PPDTSubmission(
                     submissionId = submissionId,
-                    questionId = session.testId,
+                    questionId = session.questionId,
                     userId = session.userId,
-                    userName = userProfile?.name ?: "Test User",
-                    userEmail = userProfile?.email ?: "",
+                    userName = userProfile?.fullName ?: "Test User",
+                    userEmail = "", // Email not stored in UserProfile
                     batchId = null,
                     story = session.story,
                     charactersCount = session.story.length,
@@ -319,5 +319,32 @@ data class PPDTTestUiState(
     val submissionId: String? = null,
     val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
     val submission: PPDTSubmission? = null  // Submission stored locally until Firestore integration complete
+)
+
+/**
+ * Test Session for PPDT
+ */
+data class PPDTTestSession(
+    val sessionId: String,
+    val userId: String,
+    val questionId: String,
+    val question: PPDTQuestion,
+    val startTime: Long,
+    val imageViewingStartTime: Long?,
+    val writingStartTime: Long?,
+    val currentPhase: PPDTPhase,
+    val story: String,
+    val isCompleted: Boolean,
+    val isPaused: Boolean
+)
+
+/**
+ * Test Configuration for PPDT
+ */
+data class PPDTTestConfig(
+    val viewingTimeSeconds: Int = 30,
+    val writingTimeMinutes: Int = 4,
+    val minCharacters: Int = 200,
+    val maxCharacters: Int = 1000
 )
 
