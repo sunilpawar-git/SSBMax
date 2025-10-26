@@ -30,6 +30,14 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'STUDENT';
     }
     
+    // Check if user is assessor for a specific batch
+    function isAssessorForBatch(batchId) {
+      return isAuthenticated() &&
+             isAssessor() &&
+             exists(/databases/$(database)/documents/batches/$(batchId)) &&
+             get(/databases/$(database)/documents/batches/$(batchId)).data.instructorId == request.auth.uid;
+    }
+    
     // ============================================
     // USER DATA - CRITICAL FOR PROFILE
     // ============================================
@@ -57,14 +65,30 @@ service cloud.firestore {
     }
     
     // ============================================
-    // TEST CONTENT
+    // TEST CONTENT (Metadata only - not actual questions)
     // ============================================
     
     match /tests/{testId} {
-      // All authenticated users can read test content
+      // All authenticated users can read test metadata
       allow read: if isAuthenticated();
       
       // No write access to test content for clients
+      allow write: if false;
+    }
+    
+    // ============================================
+    // TEST QUESTIONS (Secure - Cloud-First Architecture)
+    // ============================================
+    
+    match /test_questions/{testId} {
+      // Students can ONLY read questions if they have an active test session
+      // This prevents sideloading APKs from accessing questions
+      allow read: if isAuthenticated() && 
+                     exists(/databases/$(database)/documents/test_sessions/$(request.auth.uid + '_' + testId)) &&
+                     get(/databases/$(database)/documents/test_sessions/$(request.auth.uid + '_' + testId)).data.isActive == true &&
+                     get(/databases/$(database)/documents/test_sessions/$(request.auth.uid + '_' + testId)).data.expiresAt > request.time.toMillis();
+      
+      // No write access for clients
       allow write: if false;
     }
     
@@ -103,28 +127,52 @@ service cloud.firestore {
     }
     
     // ============================================
-    // TEST SUBMISSIONS
+    // TEST SUBMISSIONS (Enhanced for AI + Assessor Grading)
     // ============================================
     
     match /submissions/{submissionId} {
       // Students can read their own submissions
-      // Assessors can read submissions assigned to them
+      // Assessors can read submissions assigned to them or for their batches
       allow read: if isAuthenticated() && 
                      (resource.data.userId == request.auth.uid || 
-                      resource.data.instructorId == request.auth.uid);
+                      resource.data.instructorId == request.auth.uid ||
+                      (isAssessor() && resource.data.keys().hasAny(['batchId']) && 
+                       get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
       
       // Students can create submissions
+      // Must include required fields: userId, testType, submittedAt
       allow create: if isAuthenticated() && 
-                       request.resource.data.userId == request.auth.uid;
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['testType', 'submittedAt', 'responses']);
       
-      // Only assessors can update submissions (for grading)
+      // Students can update their own IN_PROGRESS submissions (auto-save)
+      // Assessors can update submissions for grading (add scores, feedback, status)
       allow update: if isAuthenticated() && 
-                       (resource.data.userId == request.auth.uid ||
-                        resource.data.instructorId == request.auth.uid);
+                       ((resource.data.userId == request.auth.uid && 
+                         resource.data.status == 'IN_PROGRESS') ||
+                        (resource.data.instructorId == request.auth.uid) ||
+                        (isAssessor() && resource.data.keys().hasAny(['batchId']) && 
+                         get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
       
-      // Students can delete their own submissions
+      // Students can delete their own DRAFT submissions only
+      // Assessors cannot delete submissions (audit trail)
       allow delete: if isAuthenticated() && 
-                       resource.data.userId == request.auth.uid;
+                       resource.data.userId == request.auth.uid &&
+                       resource.data.status == 'DRAFT';
+    }
+    
+    // ============================================
+    // AI GRADING RESULTS (Premium AI Feature)
+    // ============================================
+    
+    match /ai_grading_results/{resultId} {
+      // Students can read their own AI grading results
+      // Results are linked to submissions via submissionId field
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // No client write access (AI backend service writes these)
+      allow write: if false;
     }
     
     // ============================================

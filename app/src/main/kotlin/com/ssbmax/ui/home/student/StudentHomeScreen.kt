@@ -32,7 +32,7 @@ import com.ssbmax.core.domain.model.TestType
 @Composable
 fun StudentHomeScreen(
     viewModel: StudentHomeViewModel = hiltViewModel(),
-    onNavigateToTest: (TestType) -> Unit,
+    onNavigateToTopic: (String) -> Unit,
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
     onNavigateToSubmissions: () -> Unit = {},
@@ -133,56 +133,11 @@ fun StudentHomeScreen(
                     phase1Progress = uiState.phase1Progress,
                     phase2Progress = uiState.phase2Progress,
                     onPhaseClick = onNavigateToPhaseDetail,
-                    onTestClick = onNavigateToTest
-                )
-            }
-            
-            // Recent Submissions Section
-            item {
-                Text(
-                    "Recent Test Results",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            // TODO: Add recent submissions cards here when ViewModel is updated
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = onNavigateToSubmissions
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Assessment,
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "View Your Test Results",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                "Check scores, feedback, and progress",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            contentDescription = null
-                        )
+                    onTopicClick = { topicId -> 
+                        // Navigate to topic with Tests tab selected (tab index 2)
+                        onNavigateToTopic("$topicId?selectedTab=2")
                     }
-                }
+                )
             }
             
             // Quick Actions

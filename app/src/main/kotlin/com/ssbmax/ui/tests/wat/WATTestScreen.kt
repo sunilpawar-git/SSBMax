@@ -28,7 +28,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @Composable
 fun WATTestScreen(
     testId: String,
-    onTestComplete: (String) -> Unit = {}, // submissionId
+    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: WATTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -43,8 +43,8 @@ fun WATTestScreen(
     
     // Handle completion
     LaunchedEffect(uiState.isSubmitted) {
-        if (uiState.isSubmitted && uiState.submissionId != null) {
-            onTestComplete(uiState.submissionId!!)
+        if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
+            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
         }
     }
     

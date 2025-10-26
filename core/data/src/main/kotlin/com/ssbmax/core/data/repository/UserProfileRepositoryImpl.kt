@@ -3,6 +3,7 @@ package com.ssbmax.core.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.domain.model.EntryType
 import com.ssbmax.core.domain.model.Gender
+import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.UserProfile
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -110,6 +111,7 @@ class UserProfileRepositoryImpl @Inject constructor(
         "gender" to gender.name,
         "entryType" to entryType.name,
         "profilePictureUrl" to profilePictureUrl,
+        "subscriptionType" to subscriptionType.name,
         "createdAt" to createdAt,
         "updatedAt" to updatedAt
     )
@@ -122,6 +124,7 @@ class UserProfileRepositoryImpl @Inject constructor(
             gender = getString("gender")?.let { Gender.valueOf(it) } ?: Gender.MALE,
             entryType = getString("entryType")?.let { EntryType.valueOf(it) } ?: EntryType.GRADUATE,
             profilePictureUrl = getString("profilePictureUrl"),
+            subscriptionType = getString("subscriptionType")?.let { SubscriptionType.valueOf(it) } ?: SubscriptionType.FREE,
             createdAt = getLong("createdAt") ?: System.currentTimeMillis(),
             updatedAt = getLong("updatedAt") ?: System.currentTimeMillis()
         )

@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.tat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
@@ -25,7 +26,8 @@ import javax.inject.Inject
 class TATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val submitTATTest: SubmitTATTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(TATTestUiState())
@@ -35,7 +37,10 @@ class TATTestViewModel @Inject constructor(
     
     fun loadTest(testId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(
+                isLoading = true,
+                loadingMessage = "Fetching questions from cloud..."
+            ) }
             
             try {
                 val user = observeCurrentUser().first()
@@ -69,6 +74,7 @@ class TATTestViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(
                     isLoading = false,
+                    loadingMessage = null,
                     testId = testId,
                     questions = questions,
                     config = config,
@@ -77,7 +83,8 @@ class TATTestViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,
-                    error = e.message
+                    loadingMessage = null,
+                    error = "Cloud connection required. Please check your internet connection."
                 ) }
             }
         }
@@ -176,6 +183,11 @@ class TATTestViewModel @Inject constructor(
                     return@launch
                 }
                 
+                // Get user profile for subscription type
+                val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
+                val userProfile = userProfileResult.getOrNull()
+                val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
+                
                 // Create submission
                 val state = _uiState.value
                 val submission = TATSubmission(
@@ -195,6 +207,7 @@ class TATTestViewModel @Inject constructor(
                         isLoading = false,
                         isSubmitted = true,
                         submissionId = submissionId,
+                        subscriptionType = subscriptionType,
                         phase = TATPhase.SUBMITTED
                     ) }
                 }.onFailure { error ->
@@ -316,6 +329,7 @@ class TATTestViewModel @Inject constructor(
  */
 data class TATTestUiState(
     val isLoading: Boolean = true,
+    val loadingMessage: String? = null,
     val testId: String = "",
     val questions: List<TATQuestion> = emptyList(),
     val config: TATTestConfig? = null,
@@ -328,6 +342,7 @@ data class TATTestUiState(
     val startTime: Long = System.currentTimeMillis(),
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
+    val subscriptionType: SubscriptionType? = null,
     val error: String? = null
 ) {
     val currentQuestion: TATQuestion?

@@ -11,6 +11,7 @@ data class UserProfile(
     val gender: Gender,
     val entryType: EntryType,
     val profilePictureUrl: String? = null,
+    val subscriptionType: SubscriptionType = SubscriptionType.FREE,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -60,5 +61,14 @@ enum class EntryType(val displayName: String) {
             return values().find { it.displayName.equals(name, ignoreCase = true) }
         }
     }
+}
+
+/**
+ * Subscription type for determining grading method
+ */
+enum class SubscriptionType {
+    FREE,              // Free users - assessor grading (wait for manual review)
+    PREMIUM_ASSESSOR,  // Premium assessor - assessor grading (wait for manual review)
+    PREMIUM_AI         // Premium AI - immediate AI grading
 }
 

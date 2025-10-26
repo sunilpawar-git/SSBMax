@@ -34,7 +34,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OIRTestScreen(
-    onTestComplete: (String) -> Unit = {}, // sessionId
+    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: OIRTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -44,8 +44,8 @@ fun OIRTestScreen(
     
     // Handle test completion
     LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.sessionId != null) {
-            onTestComplete(uiState.sessionId!!)
+        if (uiState.isCompleted && uiState.sessionId != null && uiState.subscriptionType != null) {
+            onTestComplete(uiState.sessionId!!, uiState.subscriptionType!!)
         }
     }
     

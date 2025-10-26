@@ -15,11 +15,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.PhaseProgress
-import com.ssbmax.core.domain.model.SubTestProgress
+import com.ssbmax.core.domain.model.Phase1Progress
+import com.ssbmax.core.domain.model.Phase2Progress
 import com.ssbmax.core.domain.model.TestPhase
+import com.ssbmax.core.domain.model.TestProgress
 import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Phase Progress Ribbon Component
@@ -27,10 +30,10 @@ import com.ssbmax.core.domain.model.TestType
  */
 @Composable
 fun PhaseProgressRibbon(
-    phase1Progress: PhaseProgress?,
-    phase2Progress: PhaseProgress?,
+    phase1Progress: Phase1Progress?,
+    phase2Progress: Phase2Progress?,
     onPhaseClick: (TestPhase) -> Unit,
-    onTestClick: (TestType) -> Unit,
+    onTopicClick: (String) -> Unit,  // Navigate to topic screen with Tests tab
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -54,20 +57,18 @@ fun PhaseProgressRibbon(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Phase 1 Card
-                PhaseCard(
-                    phase = TestPhase.PHASE_1,
+                Phase1Card(
                     progress = phase1Progress,
                     onPhaseClick = { onPhaseClick(TestPhase.PHASE_1) },
-                    onTestClick = onTestClick,
+                    onTopicClick = onTopicClick,
                     modifier = Modifier.weight(1f)
                 )
                 
                 // Phase 2 Card
-                PhaseCard(
-                    phase = TestPhase.PHASE_2,
+                Phase2Card(
                     progress = phase2Progress,
                     onPhaseClick = { onPhaseClick(TestPhase.PHASE_2) },
-                    onTestClick = onTestClick,
+                    onTopicClick = onTopicClick,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -76,18 +77,13 @@ fun PhaseProgressRibbon(
 }
 
 @Composable
-private fun PhaseCard(
-    phase: TestPhase,
-    progress: PhaseProgress?,
+private fun Phase1Card(
+    progress: Phase1Progress?,
     onPhaseClick: () -> Unit,
-    onTestClick: (TestType) -> Unit,
+    onTopicClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val phaseColor = when (phase) {
-        TestPhase.PHASE_1 -> Color(0xFF1976D2)
-        TestPhase.PHASE_2 -> Color(0xFF388E3C)
-    }
-    
+    val phaseColor = Color(0xFF1976D2)
     val percentage = progress?.completionPercentage ?: 0f
     
     Card(
@@ -116,25 +112,18 @@ private fun PhaseCard(
             ) {
                 Column {
                     Text(
-                        when (phase) {
-                            TestPhase.PHASE_1 -> "PHASE 1"
-                            TestPhase.PHASE_2 -> "PHASE 2"
-                        },
+                        "PHASE 1",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = phaseColor
                     )
                     Text(
-                        when (phase) {
-                            TestPhase.PHASE_1 -> "Screening"
-                            TestPhase.PHASE_2 -> "Assessment"
-                        },
+                        "Screening",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
-                // Progress Circle
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -153,7 +142,6 @@ private fun PhaseCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Progress Bar
             LinearProgressIndicator(
                 progress = { percentage / 100f },
                 modifier = Modifier
@@ -166,18 +154,24 @@ private fun PhaseCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Sub-tests List
+            // Tests List
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                progress?.subTests?.forEach { subTest ->
-                    SubTestItem(
-                        subTest = subTest,
+                if (progress != null) {
+                    TestProgressItem(
+                        testProgress = progress.oirProgress,
+                        topicId = "oir",
                         phaseColor = phaseColor,
-                        onClick = { onTestClick(subTest.testType) }
+                        onClick = { onTopicClick("oir") }
                     )
-                } ?: run {
-                    // Empty state
+                    TestProgressItem(
+                        testProgress = progress.ppdtProgress,
+                        topicId = "ppdt",
+                        phaseColor = phaseColor,
+                        onClick = { onTopicClick("ppdt") }
+                    )
+                } else {
                     Text(
                         "No tests attempted yet",
                         style = MaterialTheme.typography.bodySmall,
@@ -188,7 +182,6 @@ private fun PhaseCard(
             
             Spacer(modifier = Modifier.weight(1f))
             
-            // View Details Button
             TextButton(
                 onClick = onPhaseClick,
                 modifier = Modifier.fillMaxWidth()
@@ -207,8 +200,142 @@ private fun PhaseCard(
 }
 
 @Composable
-private fun SubTestItem(
-    subTest: SubTestProgress,
+private fun Phase2Card(
+    progress: Phase2Progress?,
+    onPhaseClick: () -> Unit,
+    onTopicClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val phaseColor = Color(0xFF388E3C)
+    val percentage = progress?.completionPercentage ?: 0f
+    
+    Card(
+        modifier = modifier
+            .height(280.dp)
+            .clickable(onClick = onPhaseClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = phaseColor.copy(alpha = 0.05f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = phaseColor.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            // Phase Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "PHASE 2",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = phaseColor
+                    )
+                    Text(
+                        "Assessment",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(phaseColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "${percentage.toInt()}%",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = phaseColor
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            LinearProgressIndicator(
+                progress = { percentage / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = phaseColor,
+                trackColor = phaseColor.copy(alpha = 0.2f)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Tests List
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (progress != null) {
+                    TestProgressItem(
+                        testProgress = progress.psychologyProgress,
+                        topicId = "psychology",
+                        displayName = "Psychology Tests",
+                        phaseColor = phaseColor,
+                        onClick = { onTopicClick("psychology") }
+                    )
+                    TestProgressItem(
+                        testProgress = progress.gtoProgress,
+                        topicId = "gto",
+                        displayName = "GTO Tasks",
+                        phaseColor = phaseColor,
+                        onClick = { onTopicClick("gto") }
+                    )
+                    TestProgressItem(
+                        testProgress = progress.interviewProgress,
+                        topicId = "interview",
+                        displayName = "Interview",
+                        phaseColor = phaseColor,
+                        onClick = { onTopicClick("interview") }
+                    )
+                } else {
+                    Text(
+                        "No tests attempted yet",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            TextButton(
+                onClick = onPhaseClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("View All Tests", color = phaseColor)
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = phaseColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TestProgressItem(
+    testProgress: TestProgress,
+    topicId: String,
+    displayName: String? = null,
     phaseColor: Color,
     onClick: () -> Unit
 ) {
@@ -220,13 +347,13 @@ private fun SubTestItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Status Icon
-        val (icon, iconColor) = when (subTest.status) {
+        val (icon, iconColor) = when (testProgress.status) {
             TestStatus.COMPLETED, TestStatus.GRADED -> 
                 Icons.Default.CheckCircle to Color(0xFF4CAF50)
-            TestStatus.IN_PROGRESS -> 
-                Icons.Default.Schedule to Color(0xFFFFA726)
             TestStatus.SUBMITTED_PENDING_REVIEW -> 
                 Icons.Default.HourglassEmpty to Color(0xFF2196F3)
+            TestStatus.IN_PROGRESS -> 
+                Icons.Default.Schedule to Color(0xFFFFA726)
             TestStatus.NOT_ATTEMPTED -> 
                 Icons.Default.RadioButtonUnchecked to Color(0xFF9E9E9E)
         }
@@ -242,27 +369,34 @@ private fun SubTestItem(
         
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                subTest.testType.displayName,
+                displayName ?: testProgress.testType.displayName,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium
             )
             
-            subTest.latestScore?.let { score ->
-                Text(
-                    "Score: ${score.toInt()}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = phaseColor
-                )
+            // Show date and status
+            val statusText = when {
+                testProgress.lastAttemptDate != null -> {
+                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                    val attemptDate = testProgress.lastAttemptDate ?: 0L
+                    val dateStr = dateFormat.format(Date(attemptDate))
+                    val score = testProgress.latestScore
+                    when {
+                        testProgress.isPendingReview -> "Pending Review ($dateStr)"
+                        score != null -> "Graded - ${score.toInt()}% ($dateStr)"
+                        else -> "Attempted on $dateStr"
+                    }
+                }
+                else -> "Not Attempted"
             }
-        }
-        
-        if (subTest.attemptsCount > 0) {
+            
             Text(
-                "${subTest.attemptsCount}×",
+                statusText,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (testProgress.isPendingReview) Color(0xFF2196F3) 
+                       else if (testProgress.latestScore != null) phaseColor
+                       else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
-

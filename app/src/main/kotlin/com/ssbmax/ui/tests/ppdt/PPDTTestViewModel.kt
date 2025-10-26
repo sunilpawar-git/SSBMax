@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -20,7 +21,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
-    private val testContentRepository: TestContentRepository
+    private val testContentRepository: TestContentRepository,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(PPDTTestUiState())
@@ -35,7 +37,11 @@ class PPDTTestViewModel @Inject constructor(
     
     fun loadTest(testId: String = "ppdt_standard", userId: String = "mock-user-id") {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                loadingMessage = "Fetching questions from cloud...",
+                error = null
+            )
             
             try {
                 // Create test session
@@ -84,7 +90,8 @@ class PPDTTestViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load test"
+                    loadingMessage = null,
+                    error = "Cloud connection required. Please check your internet connection."
                 )
             }
         }
@@ -157,23 +164,35 @@ class PPDTTestViewModel @Inject constructor(
         val session = currentSession ?: return
         
         viewModelScope.launch {
-            // TODO: Submit to repository
-            // Generate mock submission
-            val submissionId = UUID.randomUUID().toString()
-            
-            // Generate AI preliminary score
-            val aiScore = generateMockAIScore(session.story)
-            
-            // Mark as submitted
-            currentSession = session.copy(
-                currentPhase = PPDTPhase.SUBMITTED,
-                isCompleted = true
-            )
-            
-            _uiState.value = _uiState.value.copy(
-                isSubmitted = true,
-                submissionId = submissionId
-            )
+            try {
+                // Get user profile for subscription type
+                val userProfileResult = userProfileRepository.getUserProfile(session.userId).first()
+                val userProfile = userProfileResult.getOrNull()
+                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                
+                // TODO: Submit to repository
+                // Generate mock submission
+                val submissionId = UUID.randomUUID().toString()
+                
+                // Generate AI preliminary score
+                val aiScore = generateMockAIScore(session.story)
+                
+                // Mark as submitted
+                currentSession = session.copy(
+                    currentPhase = PPDTPhase.SUBMITTED,
+                    isCompleted = true
+                )
+                
+                _uiState.value = _uiState.value.copy(
+                    isSubmitted = true,
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to submit: ${e.message}"
+                )
+            }
         }
     }
     
@@ -211,6 +230,7 @@ class PPDTTestViewModel @Inject constructor(
         
         _uiState.value = _uiState.value.copy(
             isLoading = false,
+            loadingMessage = null,
             currentPhase = session.currentPhase,
             imageUrl = "https://example.com/ppdt-image.jpg", // TODO: Real URL
             story = session.story,
@@ -266,6 +286,7 @@ class PPDTTestViewModel @Inject constructor(
  */
 data class PPDTTestUiState(
     val isLoading: Boolean = true,
+    val loadingMessage: String? = null,
     val error: String? = null,
     val currentPhase: PPDTPhase = PPDTPhase.INSTRUCTIONS,
     val imageUrl: String = "",
@@ -276,6 +297,7 @@ data class PPDTTestUiState(
     val timeRemainingSeconds: Int = 0,
     val canProceedToNextPhase: Boolean = false,
     val isSubmitted: Boolean = false,
-    val submissionId: String? = null
+    val submissionId: String? = null,
+    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null
 )
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -21,12 +22,13 @@ import com.ssbmax.core.domain.model.TestType
 
 /**
  * Phase 1 Detail Screen - Screening Tests (OIR & PPDT)
+ * Shows topic cards that navigate to Topic Screens, not direct test access
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Phase1DetailScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToTest: (TestType) -> Unit = {},
+    onNavigateToTopic: (String) -> Unit = {},
     viewModel: Phase1DetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -70,12 +72,24 @@ fun Phase1DetailScreen(
                 )
             }
             
-            // Test Cards
-            items(uiState.tests) { test ->
-                TestCard(
-                    test = test,
-                    onStartTest = { onNavigateToTest(test.type) },
-                    onViewHistory = { /* TODO: View history */ }
+            // Topic Cards - Navigate to Topic Screen
+            item {
+                TopicCard(
+                    topicId = "OIR",
+                    title = "Officer Intelligence Rating (OIR)",
+                    description = "Evaluates cognitive abilities, logical reasoning, and problem-solving skills under time pressure.",
+                    icon = Icons.Default.Quiz,
+                    onClick = { onNavigateToTopic("OIR") }
+                )
+            }
+            
+            item {
+                TopicCard(
+                    topicId = "PPDT",
+                    title = "Picture Perception & Description Test (PPDT)",
+                    description = "Assesses perception, imagination, and story construction from ambiguous pictures.",
+                    icon = Icons.Default.Image,
+                    onClick = { onNavigateToTopic("PPDT") }
                 )
             }
             
@@ -183,163 +197,73 @@ internal fun StatItem(
     }
 }
 
+/**
+ * Topic Card - Navigates to Topic Screen with tabs (Overview, Study, Tests)
+ * NO direct test access - tests are only in Topic Screen's Tests tab
+ */
 @Composable
-private fun TestCard(
-    test: Phase1Test,
-    onStartTest: () -> Unit,
-    onViewHistory: () -> Unit,
+private fun TopicCard(
+    topicId: String,
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Header Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Icon
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(56.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Icon(
-                        imageVector = when (test.type) {
-                            TestType.OIR -> Icons.Default.Quiz
-                            TestType.PPDT -> Icons.Default.Image
-                            else -> Icons.AutoMirrored.Filled.Assignment
-                        },
+                        imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(32.dp)
                     )
-                    
-                    Column {
-                        Text(
-                            text = test.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = test.subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-                
-                // Status Badge
-                TestStatusBadge(status = test.status)
             }
             
-            // Description
-            Text(
-                text = test.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            // Content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Arrow Icon
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Open topic",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            // Test Details
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                DetailChip(
-                    icon = Icons.Default.Timer,
-                    label = "${test.durationMinutes} min"
-                )
-                DetailChip(
-                    icon = Icons.Default.QuestionMark,
-                    label = "${test.questionCount} questions"
-                )
-                if (test.attemptsCount > 0) {
-                    DetailChip(
-                        icon = Icons.Default.Repeat,
-                        label = "${test.attemptsCount} attempts"
-                    )
-                }
-            }
-            
-            // Score Display (if completed)
-            if (test.status == TestStatus.COMPLETED && test.latestScore != null) {
-                LinearProgressIndicator(
-                    progress = { test.latestScore / 100f },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = when {
-                        test.latestScore >= 75 -> MaterialTheme.colorScheme.tertiary
-                        test.latestScore >= 50 -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.error
-                    },
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Latest Score",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "${test.latestScore.toInt()}%",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onStartTest,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = when (test.status) {
-                            TestStatus.NOT_ATTEMPTED -> Icons.Default.PlayArrow
-                            TestStatus.IN_PROGRESS -> Icons.Default.PlayArrow
-                            TestStatus.SUBMITTED_PENDING_REVIEW -> Icons.Default.HourglassEmpty
-                            TestStatus.GRADED -> Icons.Default.Refresh
-                            TestStatus.COMPLETED -> Icons.Default.Refresh
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        when (test.status) {
-                            TestStatus.NOT_ATTEMPTED -> "Start Test"
-                            TestStatus.IN_PROGRESS -> "Resume"
-                            TestStatus.SUBMITTED_PENDING_REVIEW -> "View Submission"
-                            TestStatus.GRADED -> "View Results"
-                            TestStatus.COMPLETED -> "Retake"
-                        }
-                    )
-                }
-                
-                if (test.attemptsCount > 0) {
-                    OutlinedButton(
-                        onClick = onViewHistory,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("History")
-                    }
-                }
-            }
         }
     }
 }

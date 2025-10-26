@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -21,12 +22,13 @@ import com.ssbmax.core.domain.model.TestType
 
 /**
  * Phase 2 Detail Screen - Assessment Tests (Psychology, GTO, IO)
+ * Shows topic cards that navigate to Topic Screens, not direct test access
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Phase2DetailScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToTest: (TestType) -> Unit = {},
+    onNavigateToTopic: (String) -> Unit = {},
     viewModel: Phase2DetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -72,55 +74,34 @@ fun Phase2DetailScreen(
                 )
             }
             
-            // Test Category Sections
+            // Topic Cards - Navigate to Topic Screens
             item {
-                Text(
-                    text = "Psychology Tests",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            items(uiState.psychologyTests) { test ->
-                Phase2TestCard(
-                    test = test,
-                    onStartTest = { onNavigateToTest(test.type) },
-                    onViewHistory = { /* TODO: View history */ }
+                TopicCard(
+                    topicId = "PSYCHOLOGY",
+                    title = "Psychology Tests",
+                    description = "TAT, WAT, SRT, and Self Description tests to assess personality traits and thought patterns.",
+                    icon = Icons.Default.Psychology,
+                    onClick = { onNavigateToTopic("PSYCHOLOGY") }
                 )
             }
             
             item {
-                Text(
-                    text = "GTO Tasks",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            items(uiState.gtoTests) { test ->
-                Phase2TestCard(
-                    test = test,
-                    onStartTest = { onNavigateToTest(test.type) },
-                    onViewHistory = { /* TODO: View history */ }
+                TopicCard(
+                    topicId = "GTO",
+                    title = "Group Testing Officer Tasks",
+                    description = "Group discussions, planning exercises, command tasks, and lecturettes to evaluate leadership.",
+                    icon = Icons.Default.Groups,
+                    onClick = { onNavigateToTopic("GTO") }
                 )
             }
             
             item {
-                Text(
-                    text = "Interview",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            items(uiState.ioTests) { test ->
-                Phase2TestCard(
-                    test = test,
-                    onStartTest = { onNavigateToTest(test.type) },
-                    onViewHistory = { /* TODO: View history */ }
+                TopicCard(
+                    topicId = "INTERVIEW",
+                    title = "Interview",
+                    description = "Personal interview with the Interviewing Officer to assess overall personality and suitability.",
+                    icon = Icons.Default.RecordVoiceOver,
+                    onClick = { onNavigateToTopic("INTERVIEW") }
                 )
             }
             
@@ -200,157 +181,73 @@ private fun Phase2OverviewCard(
     }
 }
 
+/**
+ * Topic Card - Navigates to Topic Screen with tabs (Overview, Study, Tests)
+ * NO direct test access - tests are only in Topic Screen's Tests tab
+ */
 @Composable
-private fun Phase2TestCard(
-    test: Phase2Test,
-    onStartTest: () -> Unit,
-    onViewHistory: () -> Unit,
+private fun TopicCard(
+    topicId: String,
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Header Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Icon
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                modifier = Modifier.size(56.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Icon(
-                        imageVector = getTestIcon(test.type),
+                        imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
                         modifier = Modifier.size(32.dp)
                     )
-                    
-                    Column {
-                        Text(
-                            text = test.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = test.subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-                
-                TestStatusBadge(status = test.status)
             }
             
-            Text(
-                text = test.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            // Content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Arrow Icon
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Open topic",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            // Test Details Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                DetailChip(
-                    icon = Icons.Default.Timer,
-                    label = "${test.durationMinutes} min"
-                )
-                DetailChip(
-                    icon = Icons.Default.QuestionMark,
-                    label = "${test.questionCount} ${if (test.questionCount == 1) "task" else "tasks"}"
-                )
-                if (test.attemptsCount > 0) {
-                    DetailChip(
-                        icon = Icons.Default.Repeat,
-                        label = "${test.attemptsCount} attempts"
-                    )
-                }
-            }
-            
-            // Score Display (if completed)
-            if (test.status == TestStatus.COMPLETED && test.latestScore != null) {
-                LinearProgressIndicator(
-                    progress = { test.latestScore / 100f },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = when {
-                        test.latestScore >= 75 -> MaterialTheme.colorScheme.tertiary
-                        test.latestScore >= 50 -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.error
-                    },
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Latest Score",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "${test.latestScore.toInt()}%",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onStartTest,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = when (test.status) {
-                            TestStatus.NOT_ATTEMPTED -> Icons.Default.PlayArrow
-                            TestStatus.IN_PROGRESS -> Icons.Default.PlayArrow
-                            TestStatus.SUBMITTED_PENDING_REVIEW -> Icons.Default.HourglassEmpty
-                            TestStatus.GRADED -> Icons.Default.Refresh
-                            TestStatus.COMPLETED -> Icons.Default.Refresh
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        when (test.status) {
-                            TestStatus.NOT_ATTEMPTED -> "Start Test"
-                            TestStatus.IN_PROGRESS -> "Resume"
-                            TestStatus.SUBMITTED_PENDING_REVIEW -> "View Submission"
-                            TestStatus.GRADED -> "View Results"
-                            TestStatus.COMPLETED -> "Retake"
-                        }
-                    )
-                }
-                
-                if (test.attemptsCount > 0) {
-                    OutlinedButton(
-                        onClick = onViewHistory,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("History")
-                    }
-                }
-            }
         }
     }
 }
@@ -408,16 +305,7 @@ private fun Phase2TipsCard(
     }
 }
 
-private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (testType) {
-        TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
-        TestType.GTO -> Icons.Default.Groups
-        TestType.IO -> Icons.Default.RecordVoiceOver
-        else -> Icons.AutoMirrored.Filled.Assignment
-    }
-}
-
-// Data class
+// Data class kept for backward compatibility with ViewModel
 data class Phase2Test(
     val type: TestType,
     val name: String,

@@ -29,7 +29,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @Composable
 fun TATTestScreen(
     testId: String,
-    onTestComplete: (String) -> Unit = {}, // submissionId
+    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> }, // submissionId, subscriptionType
     onNavigateBack: () -> Unit = {},
     viewModel: TATTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -45,8 +45,8 @@ fun TATTestScreen(
     
     // Handle completion
     LaunchedEffect(uiState.isSubmitted) {
-        if (uiState.isSubmitted && uiState.submissionId != null) {
-            onTestComplete(uiState.submissionId!!)
+        if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
+            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
         }
     }
     

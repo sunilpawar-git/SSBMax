@@ -25,7 +25,8 @@ import javax.inject.Inject
 class WATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val submitWATTest: SubmitWATTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(WATTestUiState())
@@ -35,7 +36,10 @@ class WATTestViewModel @Inject constructor(
     
     fun loadTest(testId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(
+                isLoading = true,
+                loadingMessage = "Fetching questions from cloud..."
+            ) }
             
             try {
                 val user = observeCurrentUser().first()
@@ -69,6 +73,7 @@ class WATTestViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(
                     isLoading = false,
+                    loadingMessage = null,
                     testId = testId,
                     words = words,
                     config = config,
@@ -77,7 +82,8 @@ class WATTestViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,
-                    error = e.message
+                    loadingMessage = null,
+                    error = "Cloud connection required. Please check your internet connection."
                 ) }
             }
         }
@@ -180,6 +186,11 @@ class WATTestViewModel @Inject constructor(
                     return@launch
                 }
                 
+                // Get user profile for subscription type
+                val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
+                val userProfile = userProfileResult.getOrNull()
+                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                
                 val state = _uiState.value
                 
                 // Create submission
@@ -201,6 +212,7 @@ class WATTestViewModel @Inject constructor(
                         isLoading = false,
                         isSubmitted = true,
                         submissionId = submissionId,
+                        subscriptionType = subscriptionType,
                         phase = WATPhase.SUBMITTED
                     ) }
                 }.onFailure { error ->
@@ -316,6 +328,7 @@ class WATTestViewModel @Inject constructor(
  */
 data class WATTestUiState(
     val isLoading: Boolean = true,
+    val loadingMessage: String? = null,
     val testId: String = "",
     val words: List<WATWord> = emptyList(),
     val config: WATTestConfig? = null,
@@ -327,6 +340,7 @@ data class WATTestUiState(
     val startTime: Long = System.currentTimeMillis(),
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
+    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
     val error: String? = null
 ) {
     val currentWord: WATWord?

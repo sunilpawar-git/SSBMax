@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -20,7 +21,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
-    private val testContentRepository: TestContentRepository
+    private val testContentRepository: TestContentRepository,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -35,7 +37,11 @@ class OIRTestViewModel @Inject constructor(
     
     fun loadTest(testId: String = "oir_standard", userId: String = "mock-user-id") {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                loadingMessage = "Fetching questions from cloud...",
+                error = null
+            )
             
             try {
                 // Create test session first
@@ -81,7 +87,8 @@ class OIRTestViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load test"
+                    loadingMessage = null,
+                    error = "Cloud connection required. Please check your internet connection."
                 )
             }
         }
@@ -143,23 +150,35 @@ class OIRTestViewModel @Inject constructor(
         val session = currentSession ?: return
         
         viewModelScope.launch {
-            // Calculate results
-            val result = calculateResults(session)
-            
-            // End test session
-            testContentRepository.endTestSession(session.sessionId)
-            
-            // Clear cached content
-            testContentRepository.clearCache()
-            
-            // TODO: Save results to repository
-            
-            // Mark test as completed
-            currentSession = session.copy(isCompleted = true)
-            _uiState.value = _uiState.value.copy(
-                isCompleted = true,
-                sessionId = session.sessionId
-            )
+            try {
+                // Get user profile for subscription type
+                val userProfileResult = userProfileRepository.getUserProfile(session.userId).first()
+                val userProfile = userProfileResult.getOrNull()
+                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                
+                // Calculate results
+                val result = calculateResults(session)
+                
+                // End test session
+                testContentRepository.endTestSession(session.sessionId)
+                
+                // Clear cached content
+                testContentRepository.clearCache()
+                
+                // TODO: Save results to repository
+                
+                // Mark test as completed
+                currentSession = session.copy(isCompleted = true)
+                _uiState.value = _uiState.value.copy(
+                    isCompleted = true,
+                    sessionId = session.sessionId,
+                    subscriptionType = subscriptionType
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to submit: ${e.message}"
+                )
+            }
         }
     }
     
@@ -196,6 +215,7 @@ class OIRTestViewModel @Inject constructor(
         
         _uiState.value = _uiState.value.copy(
             isLoading = false,
+            loadingMessage = null,
             currentQuestion = currentQuestion,
             currentQuestionIndex = session.currentQuestionIndex,
             totalQuestions = session.questions.size,
@@ -305,6 +325,7 @@ class OIRTestViewModel @Inject constructor(
  */
 data class OIRTestUiState(
     val isLoading: Boolean = true,
+    val loadingMessage: String? = null,
     val error: String? = null,
     val currentQuestion: OIRQuestion? = null,
     val currentQuestionIndex: Int = 0,
@@ -315,6 +336,7 @@ data class OIRTestUiState(
     val isCurrentAnswerCorrect: Boolean = false,
     val currentQuestionAnswered: Boolean = false,
     val isCompleted: Boolean = false,
-    val sessionId: String? = null
+    val sessionId: String? = null,
+    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null
 )
 

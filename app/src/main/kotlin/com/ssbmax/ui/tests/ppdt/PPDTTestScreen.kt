@@ -32,7 +32,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @Composable
 fun PPDTTestScreen(
     testId: String,
-    onTestComplete: (String) -> Unit = {}, // submissionId
+    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: PPDTTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -43,8 +43,8 @@ fun PPDTTestScreen(
     
     // Handle test submission
     LaunchedEffect(uiState.isSubmitted) {
-        if (uiState.isSubmitted && uiState.submissionId != null) {
-            onTestComplete(uiState.submissionId!!)
+        if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
+            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
         }
     }
     

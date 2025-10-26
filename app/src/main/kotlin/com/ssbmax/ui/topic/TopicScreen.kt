@@ -27,6 +27,7 @@ import com.ssbmax.ui.components.MarkdownText
 @Composable
 fun TopicScreen(
     topicId: String,
+    initialTab: Int = 0,
     onNavigateBack: () -> Unit,
     onNavigateToStudyMaterial: (String) -> Unit = {},
     onNavigateToTest: (String) -> Unit = {},
@@ -35,7 +36,7 @@ fun TopicScreen(
 ) {
     val testType = topicId // Alias for compatibility
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
     
     Scaffold(
         topBar = {

@@ -99,8 +99,9 @@ fun SSBMaxNavGraph(
         // Student Home
         composable(SSBMaxDestinations.StudentHome.route) {
             com.ssbmax.ui.home.student.StudentHomeScreen(
-                onNavigateToTest = { testType ->
-                    // TODO: Navigate to specific test based on type
+                onNavigateToTopic = { topicRoute ->
+                    // topicRoute includes query param: "oir?selectedTab=2"
+                    navController.navigate("topic/$topicRoute")
                 },
                 onNavigateToPhaseDetail = { phase ->
                     when (phase) {
@@ -232,40 +233,22 @@ fun SSBMaxNavGraph(
         // PHASE SCREENS
         // ========================
         
-        // Phase 1 Detail
+        // Phase 1 Detail - Shows topic cards, navigates to Topic Screens
         composable(SSBMaxDestinations.Phase1Detail.route) {
             com.ssbmax.ui.phase.Phase1DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToTest = { testType ->
-                    when (testType) {
-                        com.ssbmax.core.domain.model.TestType.OIR ->
-                            navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard"))
-                        com.ssbmax.core.domain.model.TestType.PPDT ->
-                            navController.navigate(SSBMaxDestinations.PPDTTest.createRoute("ppdt_standard"))
-                        else -> { /* TODO: Other tests */ }
-                    }
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
                 }
             )
         }
         
-        // Phase 2 Detail
+        // Phase 2 Detail - Shows topic cards, navigates to Topic Screens
         composable(SSBMaxDestinations.Phase2Detail.route) {
             com.ssbmax.ui.phase.Phase2DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
-                onNavigateToTest = { testType ->
-                    when (testType) {
-                        com.ssbmax.core.domain.model.TestType.TAT ->
-                            navController.navigate(SSBMaxDestinations.TATTest.createRoute("tat_standard"))
-                        com.ssbmax.core.domain.model.TestType.WAT ->
-                            navController.navigate(SSBMaxDestinations.WATTest.createRoute("wat_standard"))
-                        com.ssbmax.core.domain.model.TestType.SRT ->
-                            navController.navigate(SSBMaxDestinations.SRTTest.createRoute("srt_standard"))
-                        com.ssbmax.core.domain.model.TestType.GTO ->
-                            navController.navigate(SSBMaxDestinations.GTOTest.createRoute("gto_standard"))
-                        com.ssbmax.core.domain.model.TestType.IO ->
-                            navController.navigate(SSBMaxDestinations.IOTest.createRoute("io_standard"))
-                        else -> { /* Phase 1 tests or other */ }
-                    }
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
                 }
             )
         }
@@ -281,10 +264,13 @@ fun SSBMaxNavGraph(
         ) { backStackEntry ->
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
             com.ssbmax.ui.tests.oir.OIRTestScreen(
-                onTestComplete = { sessionId ->
-                    navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId)) {
-                        popUpTo(SSBMaxDestinations.OIRTest.route) { inclusive = true }
-                    }
+                onTestComplete = { sessionId, subscriptionType ->
+                    com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                        submissionId = sessionId,
+                        subscriptionType = subscriptionType,
+                        testType = com.ssbmax.core.domain.model.TestType.OIR,
+                        navController = navController
+                    )
                 },
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -322,10 +308,13 @@ fun SSBMaxNavGraph(
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
             com.ssbmax.ui.tests.ppdt.PPDTTestScreen(
                 testId = testId,
-                onTestComplete = { submissionId ->
-                    navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)) {
-                        popUpTo(SSBMaxDestinations.PPDTTest.route) { inclusive = true }
-                    }
+                onTestComplete = { submissionId, subscriptionType ->
+                    com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType,
+                        testType = com.ssbmax.core.domain.model.TestType.PPDT,
+                        navController = navController
+                    )
                 },
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -358,10 +347,14 @@ fun SSBMaxNavGraph(
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
             com.ssbmax.ui.tests.tat.TATTestScreen(
                 testId = testId,
-                onTestComplete = { submissionId ->
-                    navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)) {
-                        popUpTo(SSBMaxDestinations.TATTest.route) { inclusive = true }
-                    }
+                onTestComplete = { submissionId, subscriptionType ->
+                    // Use TestResultHandler to navigate based on subscription type
+                    com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType,
+                        testType = com.ssbmax.core.domain.model.TestType.TAT,
+                        navController = navController
+                    )
                 },
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -394,10 +387,13 @@ fun SSBMaxNavGraph(
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
             com.ssbmax.ui.tests.wat.WATTestScreen(
                 testId = testId,
-                onTestComplete = { submissionId ->
-                    navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)) {
-                        popUpTo(SSBMaxDestinations.WATTest.route) { inclusive = true }
-                    }
+                onTestComplete = { submissionId, subscriptionType ->
+                    com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType,
+                        testType = com.ssbmax.core.domain.model.TestType.WAT,
+                        navController = navController
+                    )
                 },
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -430,10 +426,13 @@ fun SSBMaxNavGraph(
             val testId = backStackEntry.arguments?.getString("testId") ?: ""
             com.ssbmax.ui.tests.srt.SRTTestScreen(
                 testId = testId,
-                onTestComplete = { submissionId ->
-                    navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)) {
-                        popUpTo(SSBMaxDestinations.SRTTest.route) { inclusive = true }
-                    }
+                onTestComplete = { submissionId, subscriptionType ->
+                    com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType,
+                        testType = com.ssbmax.core.domain.model.TestType.SRT,
+                        navController = navController
+                    )
                 },
                 onNavigateBack = { navController.navigateUp() }
             )
@@ -512,12 +511,20 @@ fun SSBMaxNavGraph(
         
         // Topic Screen (with Study Material/Tests tabs)
         composable(
-            route = SSBMaxDestinations.TopicScreen.route,
-            arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+            route = SSBMaxDestinations.TopicScreen.route + "?selectedTab={selectedTab}",
+            arguments = listOf(
+                navArgument("topicId") { type = NavType.StringType },
+                navArgument("selectedTab") { 
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
         ) { backStackEntry ->
             val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+            val selectedTab = backStackEntry.arguments?.getInt("selectedTab") ?: 0
             com.ssbmax.ui.topic.TopicScreen(
                 topicId = topicId,
+                initialTab = selectedTab,
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToStudyMaterial = { materialId ->
                     navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))
