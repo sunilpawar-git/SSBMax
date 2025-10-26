@@ -215,8 +215,8 @@ fun SSBMaxNavGraph(
         
         // Instructor Grading Queue
         composable(SSBMaxDestinations.InstructorGrading.route) {
-            com.ssbmax.ui.grading.InstructorGradingScreen(
-                onNavigateToGrading = { submissionId ->
+            com.ssbmax.ui.instructor.GradingQueueScreen(
+                onSubmissionClick = { submissionId ->
                     navController.navigate(SSBMaxDestinations.InstructorGradingDetail.createRoute(submissionId))
                 },
                 onNavigateBack = { navController.navigateUp() }
