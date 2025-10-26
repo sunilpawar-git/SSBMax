@@ -1,5 +1,6 @@
 package com.ssbmax.ui.ssboverview
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SSBInfoCard
@@ -15,10 +16,15 @@ import javax.inject.Inject
 /**
  * ViewModel for SSB Overview Screen
  * Manages informational content about SSB selection process
+ * 
+ * Note: SSB overview content is currently code-based (SSBContentProvider)
+ * This is appropriate for static educational content that rarely changes.
+ * TODO: Consider CMS integration if content needs frequent updates
  */
 @HiltViewModel
 class SSBOverviewViewModel @Inject constructor(
-    // TODO: Inject SSBContentRepository when backend is ready
+    // SSB overview content is static/educational, loaded from SSBContentProvider
+    // No repository needed unless content becomes dynamic/user-specific
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SSBOverviewUiState())
@@ -30,10 +36,27 @@ class SSBOverviewViewModel @Inject constructor(
 
     private fun loadSSBContent() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
+                Log.d("SSBOverview", "Loading SSB informational content")
+                
+                // Load static SSB information cards
                 val cards = SSBContentProvider.getInfoCards()
+                
+                if (cards.isEmpty()) {
+                    Log.w("SSBOverview", "No SSB info cards found")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "No SSB information available"
+                        )
+                    }
+                    return@launch
+                }
+                
+                Log.d("SSBOverview", "Loaded ${cards.size} SSB info cards")
+                
                 _uiState.update {
                     it.copy(
                         infoCards = cards,
@@ -42,6 +65,7 @@ class SSBOverviewViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                Log.e("SSBOverview", "Error loading SSB information", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
