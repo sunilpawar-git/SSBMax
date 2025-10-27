@@ -12,6 +12,9 @@ data class UserProfile(
     val entryType: EntryType,
     val profilePictureUrl: String? = null,
     val subscriptionType: SubscriptionType = SubscriptionType.FREE,
+    val currentStreak: Int = 0,
+    val lastLoginDate: Long? = null,
+    val longestStreak: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {

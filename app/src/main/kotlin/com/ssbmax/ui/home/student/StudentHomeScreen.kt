@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.core.domain.model.TestPhase
@@ -108,7 +109,7 @@ fun StudentHomeScreen(
                     StatsCard(
                         title = "Tests Done",
                         value = "${uiState.testsCompleted}",
-                        subtitle = "completed",
+                        subtitle = "tests",
                         icon = Icons.Default.CheckCircle,
                         gradient = Brush.linearGradient(
                             colors = listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
@@ -191,36 +192,51 @@ private fun StatsCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(120.dp),
+        modifier = modifier.height(84.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradient)
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
-            Column {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Top row: Icon + Value + Unit
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    
+                    Text(
+                        value,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
                 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(4.dp))
                 
+                // Bottom: Title
                 Text(
-                    value,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                
-                Text(
-                    "$title • $subtitle",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.9f)
+                    title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
                 )
             }
         }
@@ -237,7 +253,7 @@ private fun QuickActionCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(120.dp),
+        modifier = modifier.height(84.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f)
@@ -246,13 +262,13 @@ private fun QuickActionCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(color.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
@@ -261,17 +277,18 @@ private fun QuickActionCard(
                     icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             Text(
                 title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 2
+                maxLines = 2,
+                textAlign = TextAlign.Center
             )
         }
     }

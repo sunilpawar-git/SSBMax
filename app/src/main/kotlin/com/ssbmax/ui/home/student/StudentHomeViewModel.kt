@@ -35,14 +35,17 @@ class StudentHomeViewModel @Inject constructor(
     
     private fun loadUserProgress() {
         viewModelScope.launch {
-            // Load user profile for name
+            // Load user profile for name and streak
             val currentUser = authRepository.currentUser.first()
             if (currentUser != null) {
                 userProfileRepository.getUserProfile(currentUser.id).collect { result ->
                     result.onSuccess { profile ->
-                        _uiState.value = _uiState.value.copy(
-                            userName = profile?.fullName ?: "Aspirant"
-                        )
+                        _uiState.update {
+                            it.copy(
+                                userName = profile?.fullName ?: "Aspirant",
+                                currentStreak = profile?.currentStreak ?: 0
+                            )
+                        }
                     }
                 }
             }
@@ -59,10 +62,20 @@ class StudentHomeViewModel @Inject constructor(
             ) { phase1, phase2 ->
                 Pair(phase1, phase2)
             }.collect { (phase1, phase2) ->
+                // Calculate tests completed (tests with scores)
+                val completedTests = listOfNotNull(
+                    phase1.oirProgress.latestScore,
+                    phase1.ppdtProgress.latestScore,
+                    phase2.psychologyProgress.latestScore,
+                    phase2.gtoProgress.latestScore,
+                    phase2.interviewProgress.latestScore
+                ).size
+                
                 _uiState.update { 
                     it.copy(
                         phase1Progress = phase1,
-                        phase2Progress = phase2
+                        phase2Progress = phase2,
+                        testsCompleted = completedTests
                     )
                 }
             }

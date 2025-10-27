@@ -40,5 +40,14 @@ interface UserProfileRepository {
      * @return Flow emitting true if profile exists and is complete, false otherwise
      */
     fun hasCompletedProfile(userId: String): Flow<Boolean>
+
+    /**
+     * Updates the user's login streak based on their last login date.
+     * Increments streak if last login was yesterday, resets to 1 if longer gap, keeps current if today.
+     *
+     * @param userId The unique identifier of the user
+     * @return Result with the new streak count
+     */
+    suspend fun updateLoginStreak(userId: String): Result<Int>
 }
 

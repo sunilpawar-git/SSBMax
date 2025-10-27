@@ -99,6 +99,69 @@ class UserProfileRepositoryImpl @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    override suspend fun updateLoginStreak(userId: String): Result<Int> {
+        return try {
+            val docRef = firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .collection("data")
+                .document(PROFILE_DOCUMENT)
+
+            // Get current profile
+            val snapshot = docRef.get().await()
+            if (!snapshot.exists()) {
+                return Result.failure(Exception("User profile not found"))
+            }
+
+            val currentProfile = snapshot.toUserProfile()
+            val now = System.currentTimeMillis()
+            val todayStart = getTodayStartMillis()
+            val yesterdayStart = todayStart - (24 * 60 * 60 * 1000)
+            
+            // Store lastLoginDate in local variable for smart cast
+            val lastLogin = currentProfile.lastLoginDate
+
+            // Calculate new streak
+            val newStreak = when {
+                // First login ever or no lastLoginDate
+                lastLogin == null -> 1
+                
+                // Already logged in today - keep current streak
+                lastLogin >= todayStart -> currentProfile.currentStreak
+                
+                // Last login was yesterday - increment streak
+                lastLogin >= yesterdayStart && lastLogin < todayStart -> 
+                    currentProfile.currentStreak + 1
+                
+                // Last login was before yesterday - reset to 1
+                else -> 1
+            }
+
+            val newLongestStreak = maxOf(currentProfile.longestStreak, newStreak)
+
+            // Update only streak-related fields
+            val updates = mapOf(
+                "currentStreak" to newStreak,
+                "lastLoginDate" to now,
+                "longestStreak" to newLongestStreak,
+                "updatedAt" to now
+            )
+
+            docRef.update(updates).await()
+            Result.success(newStreak)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun getTodayStartMillis(): Long {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
     private fun UserProfile.isComplete(): Boolean {
         return fullName.isNotBlank() && age > 0
     }
@@ -112,6 +175,9 @@ class UserProfileRepositoryImpl @Inject constructor(
         "entryType" to entryType.name,
         "profilePictureUrl" to profilePictureUrl,
         "subscriptionType" to subscriptionType.name,
+        "currentStreak" to currentStreak,
+        "lastLoginDate" to lastLoginDate,
+        "longestStreak" to longestStreak,
         "createdAt" to createdAt,
         "updatedAt" to updatedAt
     )
@@ -125,6 +191,9 @@ class UserProfileRepositoryImpl @Inject constructor(
             entryType = getString("entryType")?.let { EntryType.valueOf(it) } ?: EntryType.GRADUATE,
             profilePictureUrl = getString("profilePictureUrl"),
             subscriptionType = getString("subscriptionType")?.let { SubscriptionType.valueOf(it) } ?: SubscriptionType.FREE,
+            currentStreak = getLong("currentStreak")?.toInt() ?: 0,
+            lastLoginDate = getLong("lastLoginDate"),
+            longestStreak = getLong("longestStreak")?.toInt() ?: 0,
             createdAt = getLong("createdAt") ?: System.currentTimeMillis(),
             updatedAt = getLong("updatedAt") ?: System.currentTimeMillis()
         )
