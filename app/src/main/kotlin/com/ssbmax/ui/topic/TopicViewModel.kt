@@ -4,8 +4,12 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.repository.ContentSource
+import com.ssbmax.core.data.repository.TopicContentData
+import com.ssbmax.core.domain.config.ContentFeatureFlags
 import com.ssbmax.core.domain.model.StudyMaterial
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.repository.StudyContentRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,14 +24,18 @@ import javax.inject.Inject
 /**
  * ViewModel for Topic Screen
  * Manages topic information, study materials, and tests for a specific SSB topic
- * Note: Topic content currently uses TopicContentLoader (code-based)
- * TODO: Migrate to Firestore-based dynamic content system
+ * 
+ * NOW SUPPORTS CLOUD CONTENT!
+ * - Loads from Firestore when enabled
+ * - Automatically falls back to local on error
+ * - Gradual per-topic rollout
  */
 @HiltViewModel
 class TopicViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val testProgressRepository: TestProgressRepository,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val studyContentRepository: StudyContentRepository
 ) : ViewModel() {
     
     private val testType: String = savedStateHandle.get<String>("topicId") ?: "OIR"
@@ -48,52 +56,27 @@ class TopicViewModel @Inject constructor(
                 val currentUser = observeCurrentUser().first()
                 val userId = currentUser?.id
                 
-                // Load topic content from TopicContentLoader (code-based)
-                // TODO: Migrate to Firestore-based dynamic content
-                val topicInfo = TopicContentLoader.getTopicInfo(testType)
+                // Check if cloud content is enabled for this topic
+                val useCloud = ContentFeatureFlags.isTopicCloudEnabled(testType)
                 
-                // Load test progress if logged in
-                val testProgress = if (userId != null) {
-                    try {
-                        // Get progress based on test type
-                        when (testType) {
-                            "OIR" -> {
-                                val phase1 = testProgressRepository.getPhase1Progress(userId).first()
-                                phase1.oirProgress
-                            }
-                            "PPDT" -> {
-                                val phase1 = testProgressRepository.getPhase1Progress(userId).first()
-                                phase1.ppdtProgress
-                            }
-                            else -> {
-                                // For Phase 2 tests, get appropriate progress
-                                val phase2 = testProgressRepository.getPhase2Progress(userId).first()
-                                phase2.psychologyProgress // Simplified
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.w("Topic", "Failed to load test progress", e)
-                        null
-                    }
+                // CRITICAL DEBUG: Log feature flag state
+                Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                Log.d(TAG, "Feature Flag Check for: $testType")
+                Log.d(TAG, "useCloudContent (master): ${ContentFeatureFlags.useCloudContent}")
+                Log.d(TAG, "isTopicCloudEnabled($testType): $useCloud")
+                Log.d(TAG, "Feature Flags Status:\n${ContentFeatureFlags.getStatus()}")
+                Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                
+                if (useCloud) {
+                    Log.d(TAG, "✓ Loading $testType from CLOUD (Firestore)")
+                    loadFromCloud(userId)
                 } else {
-                    null
+                    Log.d(TAG, "✗ Loading $testType from LOCAL (hardcoded)")
+                    loadFromLocal(userId)
                 }
                 
-                _uiState.update {
-                    it.copy(
-                        testType = testType,
-                        topicTitle = topicInfo.title,
-                        introduction = topicInfo.introduction,
-                        studyMaterials = topicInfo.studyMaterials,
-                        availableTests = topicInfo.tests,
-                        testCompletionStatus = testProgress?.status,
-                        testLatestScore = testProgress?.latestScore,
-                        isLoading = false,
-                        error = null
-                    )
-                }
             } catch (e: Exception) {
-                Log.e("Topic", "Error loading topic content", e)
+                Log.e(TAG, "Error loading topic content", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -102,6 +85,154 @@ class TopicViewModel @Inject constructor(
                 }
             }
         }
+    }
+    
+    /**
+     * Load content from Firestore (cloud)
+     */
+    private suspend fun loadFromCloud(userId: String?) {
+        try {
+            // Collect from Flow
+            studyContentRepository.getTopicContent(testType).collect { result ->
+                result.onSuccess { data ->
+                    when (data) {
+                        is TopicContentData -> {
+                            if (data.source == ContentSource.CLOUD) {
+                                // Got cloud data - convert to UI format
+                                val materials = data.materials.map { cloudMaterial ->
+                                    StudyMaterialItem(
+                                        id = cloudMaterial.id,
+                                        title = cloudMaterial.title,
+                                        duration = cloudMaterial.readTime,
+                                        isPremium = cloudMaterial.isPremium
+                                    )
+                                }
+                                
+                                val testProgress = loadTestProgress(userId)
+                                
+                                _uiState.update {
+                                    it.copy(
+                                        testType = testType,
+                                        topicTitle = data.title,
+                                        introduction = data.introduction,
+                                        studyMaterials = materials,
+                                        availableTests = getTestsForTopic(testType),
+                                        testCompletionStatus = testProgress?.status,
+                                        testLatestScore = testProgress?.latestScore,
+                                        isLoading = false,
+                                        error = null,
+                                        contentSource = "Cloud (Firestore)"
+                                    )
+                                }
+                                
+                                Log.d(TAG, "✓ Loaded $testType from cloud: ${materials.size} materials")
+                            } else {
+                                // Fallback triggered - use local
+                                loadFromLocal(userId)
+                            }
+                        }
+                        else -> loadFromLocal(userId)
+                    }
+                }.onFailure { error ->
+                    Log.e(TAG, "Cloud loading failed: ${error.message}")
+                    if (ContentFeatureFlags.fallbackToLocalOnError) {
+                        loadFromLocal(userId)
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "Failed to load content: ${error.message}"
+                            )
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during cloud load", e)
+            loadFromLocal(userId)
+        }
+    }
+    
+    /**
+     * Load content from local hardcoded data (fallback)
+     */
+    private suspend fun loadFromLocal(userId: String?) {
+        try {
+            val topicInfo = TopicContentLoader.getTopicInfo(testType)
+            val testProgress = loadTestProgress(userId)
+            
+            _uiState.update {
+                it.copy(
+                    testType = testType,
+                    topicTitle = topicInfo.title,
+                    introduction = topicInfo.introduction,
+                    studyMaterials = topicInfo.studyMaterials,
+                    availableTests = topicInfo.tests,
+                    testCompletionStatus = testProgress?.status,
+                    testLatestScore = testProgress?.latestScore,
+                    isLoading = false,
+                    error = null,
+                    contentSource = "Local"
+                )
+            }
+            
+            Log.d(TAG, "✓ Loaded $testType from local: ${topicInfo.studyMaterials.size} materials")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load local content", e)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    error = "Failed to load local content: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Load test progress for user
+     */
+    private suspend fun loadTestProgress(userId: String?): com.ssbmax.core.domain.model.TestProgress? {
+        return if (userId != null) {
+            try {
+                when (testType) {
+                    "OIR" -> {
+                        val phase1 = testProgressRepository.getPhase1Progress(userId).first()
+                        phase1.oirProgress
+                    }
+                    "PPDT" -> {
+                        val phase1 = testProgressRepository.getPhase1Progress(userId).first()
+                        phase1.ppdtProgress
+                    }
+                    else -> {
+                        val phase2 = testProgressRepository.getPhase2Progress(userId).first()
+                        phase2.psychologyProgress
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load test progress", e)
+                null
+            }
+        } else {
+            null
+        }
+    }
+    
+    /**
+     * Get available tests for a topic
+     */
+    private fun getTestsForTopic(testType: String): List<TestType> {
+        return when (testType.uppercase()) {
+            "OIR" -> listOf(TestType.OIR)
+            "PPDT" -> listOf(TestType.PPDT)
+            "PSYCHOLOGY" -> listOf(TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD)
+            "GTO" -> listOf(TestType.GTO)
+            "INTERVIEW" -> listOf(TestType.IO)
+            else -> emptyList()
+        }
+    }
+    
+    companion object {
+        private const val TAG = "TopicViewModel"
     }
     
     fun refresh() {
@@ -121,7 +252,8 @@ data class TopicUiState(
     val testCompletionStatus: com.ssbmax.core.domain.model.TestStatus? = null,
     val testLatestScore: Float? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val contentSource: String = "Local" // "Cloud (Firestore)" or "Local"
 )
 
 /**

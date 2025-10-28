@@ -108,8 +108,34 @@ fun SettingsScreen(
                 item {
                     AppInfoSection()
                 }
+                
+                // Developer Options Section
+                item {
+                    DeveloperOptionsSection(
+                        onRunHealthCheck = viewModel::runHealthCheck,
+                        isCheckingHealth = uiState.isCheckingHealth,
+                        onMigrateOIR = viewModel::migrateOIR,
+                        isMigrating = uiState.isMigrating
+                    )
+                }
             }
         }
+    }
+    
+    // Health Check Result Dialog
+    uiState.healthCheckResult?.let { healthStatus ->
+        HealthCheckDialog(
+            healthStatus = healthStatus,
+            onDismiss = viewModel::clearHealthCheckResult
+        )
+    }
+    
+    // Migration Result Dialog
+    uiState.migrationResult?.let { migrationResult ->
+        MigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearMigrationResult
+        )
     }
 }
 
@@ -339,5 +365,459 @@ private fun SettingsInfoItem(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+@Composable
+private fun DeveloperOptionsSection(
+    onRunHealthCheck: () -> Unit,
+    isCheckingHealth: Boolean,
+    onMigrateOIR: () -> Unit,
+    isMigrating: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Developer Options",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            
+            Text(
+                text = "Testing and debugging tools",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+            )
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            // Firebase Health Check Button
+            Button(
+                onClick = onRunHealthCheck,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isCheckingHealth,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isCheckingHealth) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Checking...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Run Firebase Health Check")
+                }
+            }
+            
+            Text(
+                text = "Tests connectivity to Firestore and Cloud Storage",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate OIR Button
+            Button(
+                onClick = onMigrateOIR,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate OIR to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads OIR topic + 7 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            HorizontalDivider()
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Cloud Content Status
+            Text(
+                text = "Cloud Content Configuration",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            
+            // Enable Cloud Content Button
+            var cloudEnabled by remember { 
+                mutableStateOf(com.ssbmax.core.domain.config.ContentFeatureFlags.useCloudContent) 
+            }
+            
+            var oirCloudEnabled by remember { 
+                mutableStateOf(com.ssbmax.core.domain.config.ContentFeatureFlags.isTopicCloudEnabled("OIR")) 
+            }
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Enable Cloud Content",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Switch(
+                    checked = cloudEnabled,
+                    onCheckedChange = { enabled ->
+                        cloudEnabled = enabled
+                        com.ssbmax.core.domain.config.ContentFeatureFlags.useCloudContent = enabled
+                        android.util.Log.d("SettingsScreen", "Master cloud flag set to: $enabled")
+                        android.util.Log.d("SettingsScreen", "Flags after toggle:\n${com.ssbmax.core.domain.config.ContentFeatureFlags.getStatus()}")
+                    }
+                )
+            }
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Enable OIR from Firestore",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Switch(
+                    checked = oirCloudEnabled,
+                    onCheckedChange = { enabled ->
+                        oirCloudEnabled = enabled
+                        if (enabled) {
+                            com.ssbmax.core.domain.config.ContentFeatureFlags.enableTopicCloud("OIR")
+                            android.util.Log.d("SettingsScreen", "OIR cloud flag ENABLED")
+                        } else {
+                            com.ssbmax.core.domain.config.ContentFeatureFlags.disableTopicCloud("OIR")
+                            android.util.Log.d("SettingsScreen", "OIR cloud flag DISABLED")
+                        }
+                        android.util.Log.d("SettingsScreen", "Flags after OIR toggle:\n${com.ssbmax.core.domain.config.ContentFeatureFlags.getStatus()}")
+                    },
+                    enabled = cloudEnabled
+                )
+            }
+            
+            Text(
+                text = if (cloudEnabled && oirCloudEnabled) 
+                    "✓ OIR will load from Firestore\n⚠ Restart app to apply changes" 
+                else 
+                    "OIR loads from local hardcoded data",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (cloudEnabled && oirCloudEnabled)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun HealthCheckDialog(
+    healthStatus: com.ssbmax.core.data.health.FirebaseHealthCheck.HealthStatus,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (healthStatus.isFullyHealthy) 
+                        Icons.Default.CheckCircle 
+                    else 
+                        Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = if (healthStatus.isFullyHealthy)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.error
+                )
+                Text("Firebase Health Check")
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Firestore Status
+                HealthCheckItem(
+                    title = "Firestore",
+                    isHealthy = healthStatus.isFirestoreHealthy,
+                    error = healthStatus.firestoreError
+                )
+                
+                HorizontalDivider()
+                
+                // Cloud Storage Status
+                HealthCheckItem(
+                    title = "Cloud Storage",
+                    isHealthy = healthStatus.isStorageHealthy,
+                    error = healthStatus.storageError
+                )
+                
+                HorizontalDivider()
+                
+                // Overall Status
+                Text(
+                    text = when {
+                        healthStatus.isFullyHealthy -> "✓ All systems operational"
+                        healthStatus.isPartiallyHealthy -> "⚠ Partial connectivity"
+                        else -> "✗ All systems down - using local fallback"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        healthStatus.isFullyHealthy -> MaterialTheme.colorScheme.primary
+                        healthStatus.isPartiallyHealthy -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun HealthCheckItem(
+    title: String,
+    isHealthy: Boolean,
+    error: String?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
+                contentDescription = null,
+                tint = if (isHealthy) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = if (isHealthy) "✓ Healthy" else "✗ Failed",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isHealthy) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        }
+        
+        error?.let {
+            Text(
+                text = "Error: $it",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MigrationResultDialog(
+    migrationResult: MigrateOIRUseCase.MigrationResult,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        migrationResult.success -> Icons.Default.CheckCircle
+                        migrationResult.materialsMigrated > 0 -> Icons.Default.Warning
+                        else -> Icons.Default.Error
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                Text("OIR Migration Result")
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Summary
+                Text(
+                    text = migrationResult.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                
+                HorizontalDivider()
+                
+                // Details
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Topic:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (migrationResult.topicMigrated) "✓ Migrated" else "✗ Failed",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.topicMigrated) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Materials:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.materialsMigrated}/${migrationResult.totalMaterials}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.materialsMigrated == migrationResult.totalMaterials)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Duration:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.durationMs}ms",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Errors (if any)
+                if (migrationResult.errors.isNotEmpty()) {
+                    HorizontalDivider()
+                    Text(
+                        text = "Errors:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        migrationResult.errors.take(3).forEach { error ->
+                            Text(
+                                text = "• $error",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (migrationResult.errors.size > 3) {
+                            Text(
+                                text = "... and ${migrationResult.errors.size - 3} more",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+                    }
+                }
+                
+                // Success message
+                if (migrationResult.success) {
+                    HorizontalDivider()
+                    Text(
+                        text = "✓ OIR content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Running health check again",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
 

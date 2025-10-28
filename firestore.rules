@@ -282,6 +282,60 @@ service cloud.firestore {
     }
     
     // ============================================
+    // TOPIC CONTENT (Dynamic content from cloud)
+    // ============================================
+    
+    match /topic_content/{topicId} {
+      // All authenticated users can read topic content
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to write (for migration tool)
+      // TODO: In production, restrict this to admin users only
+      allow write: if isAuthenticated();
+    }
+    
+    // ============================================
+    // STUDY MATERIALS (Structured content)
+    // ============================================
+    
+    match /study_materials/{materialId} {
+      // Free materials: all authenticated users can read
+      // Premium materials: only premium users can read
+      allow read: if isAuthenticated();
+      
+      // Allow authenticated users to create (for migration tool)
+      // TODO: In production, restrict this to admin users only
+      allow create: if isAuthenticated();
+      
+      // No update/delete from clients
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // CONTENT VERSIONS (Cache invalidation)
+    // ============================================
+    
+    match /content_versions/{versionId} {
+      // All authenticated users can read version info
+      allow read: if isAuthenticated();
+      
+      // No client write access
+      allow write: if false;
+    }
+    
+    // ============================================
+    // HEALTH CHECK (Firebase connectivity test)
+    // ============================================
+    
+    match /health_check/{document} {
+      // All authenticated users can read health check docs
+      allow read: if isAuthenticated();
+      
+      // No client write access (created manually in Console)
+      allow write: if false;
+    }
+    
+    // ============================================
     // DEFAULT DENY ALL
     // ============================================
     

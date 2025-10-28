@@ -66,6 +66,8 @@ google-services.json
 # Firebase Service Account (CRITICAL - Contains Admin Private Keys)
 **/service-account.json
 service-account*.json
+firebase-admin-key.json
+**/firebase-admin-key.json
 
 # Additional sensitive files
 **/google-services.json
@@ -106,6 +108,10 @@ lint/tmp/
 
 # Cursor AI
 .cursor/
+
+# Node.js dependencies (contains test data with hardcoded passwords)
+node_modules/
+scripts/node_modules/
 
 # Temporary/Debug Documentation (may contain sensitive data during cleanup)
 # Add specific patterns for cleanup/debug docs that shouldn't be committed

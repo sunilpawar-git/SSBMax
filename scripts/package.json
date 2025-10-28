@@ -1,0 +1,19 @@
+{
+  "name": "ssbmax-firestore-setup",
+  "version": "1.0.0",
+  "description": "Automated Firestore collections setup for SSBMax",
+  "main": "setup-firestore.js",
+  "scripts": {
+    "setup": "node setup-firestore.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "author": "SSBMax Team",
+  "license": "MIT",
+  "files": [
+    "setup-firestore.js",
+    "README.md"
+  ]
+}
+

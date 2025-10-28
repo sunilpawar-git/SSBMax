@@ -2,6 +2,7 @@ package com.ssbmax.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.health.FirebaseHealthCheck
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.core.domain.model.AppTheme
 import com.ssbmax.core.domain.model.NotificationPreferences
@@ -19,7 +20,9 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val themePreferenceManager: ThemePreferenceManager
+    private val themePreferenceManager: ThemePreferenceManager,
+    private val firebaseHealthCheck: FirebaseHealthCheck,
+    private val migrateOIRUseCase: MigrateOIRUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -143,6 +146,75 @@ class SettingsViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+    
+    /**
+     * Run Firebase health check and update UI state
+     */
+    fun runHealthCheck() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCheckingHealth = true, healthCheckResult = null) }
+            
+            try {
+                val result = firebaseHealthCheck.checkHealth()
+                _uiState.update { 
+                    it.copy(
+                        isCheckingHealth = false,
+                        healthCheckResult = result
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isCheckingHealth = false,
+                        error = "Health check failed: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    fun clearHealthCheckResult() {
+        _uiState.update { it.copy(healthCheckResult = null) }
+    }
+    
+    /**
+     * Migrate OIR topic and materials to Firestore
+     */
+    fun migrateOIR() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMigrating = true, migrationResult = null) }
+            
+            try {
+                val result = migrateOIRUseCase.execute()
+                result.onSuccess { migrationResult ->
+                    _uiState.update { 
+                        it.copy(
+                            isMigrating = false,
+                            migrationResult = migrationResult
+                        )
+                    }
+                }.onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            isMigrating = false,
+                            error = "Migration failed: ${error.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isMigrating = false,
+                        error = "Migration failed: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    fun clearMigrationResult() {
+        _uiState.update { it.copy(migrationResult = null) }
+    }
 }
 
 data class SettingsUiState(
@@ -150,6 +222,10 @@ data class SettingsUiState(
     val notificationPreferences: NotificationPreferences? = null,
     val subscriptionTier: com.ssbmax.ui.settings.SubscriptionTier = com.ssbmax.ui.settings.SubscriptionTier.BASIC,
     val appTheme: AppTheme = AppTheme.SYSTEM,
-    val error: String? = null
+    val error: String? = null,
+    val isCheckingHealth: Boolean = false,
+    val healthCheckResult: FirebaseHealthCheck.HealthStatus? = null,
+    val isMigrating: Boolean = false,
+    val migrationResult: MigrateOIRUseCase.MigrationResult? = null
 )
 
