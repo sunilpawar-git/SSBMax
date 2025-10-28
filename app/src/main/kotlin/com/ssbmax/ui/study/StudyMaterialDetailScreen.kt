@@ -36,6 +36,7 @@ fun StudyMaterialDetailScreen(
     val materialId = categoryId // Alias for compatibility
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     
     // Track reading progress based on scroll position
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
@@ -56,17 +57,16 @@ fun StudyMaterialDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.toggleBookmark() }) {
-                        Icon(
-                            if (uiState.isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = if (uiState.isBookmarked) "Remove Bookmark" else "Add Bookmark",
-                            tint = if (uiState.isBookmarked) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
-                                MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { /* TODO: Share functionality */ }) {
+                    IconButton(onClick = { 
+                        val shareText = "Check out this SSB study material: ${uiState.material?.title}\n\n" +
+                            "Study with SSBMax - Your complete SSB preparation companion"
+                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, "SSB Study Material")
+                            putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(android.content.Intent.createChooser(intent, "Share via"))
+                    }) {
                         Icon(Icons.Default.Share, "Share")
                     }
                 }
@@ -218,26 +218,14 @@ private fun MaterialHeaderCard(
                 )
             }
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surface
             ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    Text(
-                        text = material.category,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-                
                 Text(
-                    text = "• ${material.publishedDate}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = material.category,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
         }

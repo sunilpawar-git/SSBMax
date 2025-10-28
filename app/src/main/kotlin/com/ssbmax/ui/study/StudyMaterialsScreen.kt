@@ -37,43 +37,17 @@ fun StudyMaterialsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showBookmarks by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
-                    Text(if (showBookmarks) "Bookmarked Materials" else "Study Materials") 
-                },
-                navigationIcon = {
-                    if (showBookmarks) {
-                        IconButton(onClick = { showBookmarks = false }) {
-                            Icon(Icons.Default.ArrowBack, "Back")
-                        }
-                    }
-                },
+                title = { Text("Study Materials") },
                 actions = {
                     IconButton(onClick = onNavigateToSearch) {
                         Icon(Icons.Default.Search, "Search")
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            if (!showBookmarks) {
-                FloatingActionButton(
-                    onClick = { showBookmarks = true },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.offset(x = 8.dp, y = (-8).dp)
-                    ) {
-                        Text("${uiState.bookmarkedCount}")
-                    }
-                    Icon(Icons.Default.Bookmark, "Bookmarks")
-                }
-            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -83,42 +57,29 @@ fun StudyMaterialsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (!showBookmarks) {
-                // Header Section
-                item {
-                    StudyMaterialsHeader(
-                        totalArticles = uiState.totalArticles,
-                        bookmarkedCount = uiState.bookmarkedCount
-                    )
-                }
-                
-                // Categories Section Header
-                item {
-                    Text(
-                        text = "Browse by Category",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-                
-                // Vertical Scrollable Category Cards
-                items(uiState.categories) { category ->
-                    CategoryCardVertical(
-                        category = category,
-                        onClick = { onNavigateToTopic(getCategoryTopicName(category.type)) }
-                    )
-                }
-            } else {
-                // Bookmarked Materials Section
-                item {
-                    Text(
-                        text = "Your saved materials will appear here",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(32.dp)
-                    )
-                }
+            // Header Section
+            item {
+                StudyMaterialsHeader(
+                    totalArticles = uiState.totalArticles
+                )
+            }
+            
+            // Categories Section Header
+            item {
+                Text(
+                    text = "Browse by Category",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            // Vertical Scrollable Category Cards
+            items(uiState.categories) { category ->
+                CategoryCardVertical(
+                    category = category,
+                    onClick = { onNavigateToTopic(getCategoryTopicName(category.type)) }
+                )
             }
         }
     }
@@ -126,8 +87,7 @@ fun StudyMaterialsScreen(
 
 @Composable
 private fun StudyMaterialsHeader(
-    totalArticles: Int,
-    bookmarkedCount: Int
+    totalArticles: Int
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -163,19 +123,10 @@ private fun StudyMaterialsHeader(
                 }
             }
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                InfoChip(
-                    icon = Icons.AutoMirrored.Filled.Article,
-                    label = "$totalArticles Articles"
-                )
-                InfoChip(
-                    icon = Icons.Default.Bookmark,
-                    label = "$bookmarkedCount Saved"
-                )
-            }
+            InfoChip(
+                icon = Icons.AutoMirrored.Filled.Article,
+                label = "$totalArticles Articles"
+            )
         }
     }
 }

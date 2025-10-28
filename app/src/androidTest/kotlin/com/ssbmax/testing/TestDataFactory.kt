@@ -12,7 +12,8 @@ object TestDataFactory {
         fullName: String = "Test User",
         age: Int = 25,
         gender: Gender = Gender.MALE,
-        entryType: EntryType = EntryType.ENTRY_10_PLUS_2
+        entryType: EntryType = EntryType.ENTRY_10_PLUS_2,
+        subscriptionType: SubscriptionType = SubscriptionType.FREE
     ): UserProfile {
         return UserProfile(
             userId = userId,
@@ -21,9 +22,51 @@ object TestDataFactory {
             gender = gender,
             entryType = entryType,
             profilePictureUrl = null,
-            subscriptionType = SubscriptionType.FREE
+            subscriptionType = subscriptionType
         )
     }
+
+    /**
+     * Convenience method to create a FREE tier user
+     */
+    fun createFreeUser(
+        userId: String = "free-user-123",
+        fullName: String = "Free User",
+        age: Int = 25
+    ): UserProfile = createTestUserProfile(
+        userId = userId,
+        fullName = fullName,
+        age = age,
+        subscriptionType = SubscriptionType.FREE
+    )
+
+    /**
+     * Convenience method to create a Pro tier user (Premium Assessor)
+     */
+    fun createProUser(
+        userId: String = "pro-user-123",
+        fullName: String = "Pro User",
+        age: Int = 25
+    ): UserProfile = createTestUserProfile(
+        userId = userId,
+        fullName = fullName,
+        age = age,
+        subscriptionType = SubscriptionType.PREMIUM_ASSESSOR
+    )
+
+    /**
+     * Convenience method to create an AI Premium tier user
+     */
+    fun createAIPremiumUser(
+        userId: String = "ai-user-123",
+        fullName: String = "AI Premium User",
+        age: Int = 25
+    ): UserProfile = createTestUserProfile(
+        userId = userId,
+        fullName = fullName,
+        age = age,
+        subscriptionType = SubscriptionType.PREMIUM_AI
+    )
 
     fun createTestTATQuestion(
         id: String = "tat-1",

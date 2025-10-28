@@ -8,13 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.repository.BookmarkRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,10 +21,7 @@ import javax.inject.Inject
  * TODO: Migrate to Firestore-based StudyMaterialRepository for dynamic content
  */
 @HiltViewModel
-class StudyMaterialsViewModel @Inject constructor(
-    private val bookmarkRepository: BookmarkRepository,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
-) : ViewModel() {
+class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudyMaterialsUiState())
     val uiState: StateFlow<StudyMaterialsUiState> = _uiState.asStateFlow()
@@ -39,24 +33,6 @@ class StudyMaterialsViewModel @Inject constructor(
     private fun loadCategories() {
         viewModelScope.launch {
             try {
-                // Get current user
-                val currentUser = observeCurrentUser().first()
-                val userId = currentUser?.id
-                
-                // Get bookmarked count from repository
-                val bookmarkedCount = if (userId != null) {
-                    try {
-                        // Fetch user's bookmarked materials
-                        val bookmarks = bookmarkRepository.getBookmarkedMaterials(userId).first()
-                        bookmarks.size
-                    } catch (e: Exception) {
-                        Log.w("StudyMaterials", "Failed to load bookmarks", e)
-                        0
-                    }
-                } else {
-                    0
-                }
-                
                 // Study categories are currently hardcoded content
                 // TODO: Move to Firestore-based dynamic content system
                 val categories = listOf(
@@ -147,7 +123,6 @@ class StudyMaterialsViewModel @Inject constructor(
                 _uiState.value = StudyMaterialsUiState(
                     categories = categories,
                     totalArticles = totalArticles,
-                    bookmarkedCount = bookmarkedCount,
                     isLoading = false,
                     error = null
                 )
@@ -169,7 +144,6 @@ class StudyMaterialsViewModel @Inject constructor(
 data class StudyMaterialsUiState(
     val categories: List<StudyCategoryItem> = emptyList(),
     val totalArticles: Int = 0,
-    val bookmarkedCount: Int = 0,
     val isLoading: Boolean = true,
     val error: String? = null
 )

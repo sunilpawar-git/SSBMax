@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.ui.components.ProfileAvatarWithBadge
 
 /**
  * Header section of the navigation drawer showing user profile.
@@ -58,8 +59,9 @@ fun DrawerHeader(
                     }
                     userProfile != null && userProfile.fullName.isNotBlank() -> {
                         // Profile exists and has valid data
-                        ProfileAvatar(
+                        ProfileAvatarWithBadge(
                             initials = userProfile.getInitials(),
+                            subscriptionType = userProfile.subscriptionType,
                             modifier = Modifier.size(72.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -92,8 +94,9 @@ fun DrawerHeader(
                     }
                     else -> {
                         // No profile or empty profile - prompt user
-                        ProfileAvatar(
+                        ProfileAvatarWithBadge(
                             initials = "?",
+                            subscriptionType = null,
                             modifier = Modifier.size(72.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))

@@ -101,12 +101,6 @@ abstract class RepositoryModule {
     
     @Binds
     @Singleton
-    abstract fun bindBookmarkRepository(
-        impl: com.ssbmax.core.data.repository.BookmarkRepositoryImpl
-    ): com.ssbmax.core.domain.repository.BookmarkRepository
-    
-    @Binds
-    @Singleton
     abstract fun bindTestProgressRepository(
         impl: com.ssbmax.core.data.repository.TestProgressRepositoryImpl
     ): com.ssbmax.core.domain.repository.TestProgressRepository

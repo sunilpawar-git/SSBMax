@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.StudyMaterial
 import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.BookmarkRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +26,6 @@ import javax.inject.Inject
 @HiltViewModel
 class TopicViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val bookmarkRepository: BookmarkRepository,
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
@@ -53,18 +51,6 @@ class TopicViewModel @Inject constructor(
                 // Load topic content from TopicContentLoader (code-based)
                 // TODO: Migrate to Firestore-based dynamic content
                 val topicInfo = TopicContentLoader.getTopicInfo(testType)
-                
-                // Load user's bookmarks if logged in
-                val bookmarkedMaterials = if (userId != null) {
-                    try {
-                        bookmarkRepository.getBookmarkedMaterials(userId).first()
-                    } catch (e: Exception) {
-                        Log.w("Topic", "Failed to load bookmarks", e)
-                        emptyList()
-                    }
-                } else {
-                    emptyList()
-                }
                 
                 // Load test progress if logged in
                 val testProgress = if (userId != null) {
@@ -100,7 +86,6 @@ class TopicViewModel @Inject constructor(
                         introduction = topicInfo.introduction,
                         studyMaterials = topicInfo.studyMaterials,
                         availableTests = topicInfo.tests,
-                        bookmarkedMaterialIds = bookmarkedMaterials,
                         testCompletionStatus = testProgress?.status,
                         testLatestScore = testProgress?.latestScore,
                         isLoading = false,
@@ -133,7 +118,6 @@ data class TopicUiState(
     val introduction: String = "",
     val studyMaterials: List<StudyMaterialItem> = emptyList(),
     val availableTests: List<TestType> = emptyList(),
-    val bookmarkedMaterialIds: List<String> = emptyList(),
     val testCompletionStatus: com.ssbmax.core.domain.model.TestStatus? = null,
     val testLatestScore: Float? = null,
     val isLoading: Boolean = false,
