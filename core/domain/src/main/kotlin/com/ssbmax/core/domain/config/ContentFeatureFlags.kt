@@ -18,9 +18,10 @@ object ContentFeatureFlags {
     var fallbackToLocalOnError: Boolean = true
     
     // Per-topic rollout flags (for gradual migration)
-    // TEMPORARY: OIR pre-enabled for testing (normally loaded from SharedPreferences)
+    // TEMPORARY: OIR & PPDT pre-enabled for testing (normally loaded from SharedPreferences)
     private val topicFlags = mutableMapOf<String, Boolean>(
-        "OIR" to true
+        "OIR" to true,
+        "PPDT" to true
     )
     
     /**

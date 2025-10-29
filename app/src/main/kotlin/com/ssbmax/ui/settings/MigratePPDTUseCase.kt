@@ -9,15 +9,10 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
- * Use case to migrate OIR topic and study materials to Firestore
- * 
- * Migrates:
- * - 1 topic introduction document
- * - 7 study material documents
- * 
- * Total: 8 Firestore writes (~$0.0048)
+ * Use case for migrating PPDT topic and study materials to Firestore
+ * Based on successful OIR migration pattern
  */
-class MigrateOIRUseCase @Inject constructor(
+class MigratePPDTUseCase @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     
@@ -26,15 +21,14 @@ class MigrateOIRUseCase @Inject constructor(
         val topicMigrated: Boolean,
         val materialsMigrated: Int,
         val totalMaterials: Int,
-        val errors: List<String> = emptyList(),
-        val durationMs: Long = 0
+        val errors: List<String>,
+        val durationMs: Long
     ) {
         val message: String
-            get() = when {
-                success -> "✓ SUCCESS: Migrated 1 topic + $materialsMigrated materials"
-                topicMigrated && materialsMigrated > 0 -> 
-                    "⚠ PARTIAL: Topic + $materialsMigrated/$totalMaterials materials (${errors.size} errors)"
-                else -> "✗ FAILED: ${errors.firstOrNull() ?: "Unknown error"}"
+            get() = if (success) {
+                "✓ PPDT migration successful! Migrated $materialsMigrated/$totalMaterials materials"
+            } else {
+                "⚠ PPDT migration completed with issues: $materialsMigrated/$totalMaterials materials migrated"
             }
     }
     
@@ -43,7 +37,7 @@ class MigrateOIRUseCase @Inject constructor(
             val startTime = System.currentTimeMillis()
             val errors = mutableListOf<String>()
             
-            Log.d(TAG, "Starting OIR migration...")
+            Log.d(TAG, "Starting PPDT migration...")
             
             // Step 1: Migrate topic introduction
             val topicMigrated = try {
@@ -69,10 +63,10 @@ class MigrateOIRUseCase @Inject constructor(
             
             val duration = System.currentTimeMillis() - startTime
             val result = MigrationResult(
-                success = topicMigrated && materialsMigrated == 7 && errors.isEmpty(),
+                success = topicMigrated && materialsMigrated == 6 && errors.isEmpty(),
                 topicMigrated = topicMigrated,
                 materialsMigrated = materialsMigrated,
-                totalMaterials = 7,
+                totalMaterials = 6,
                 errors = errors,
                 durationMs = duration
             )
@@ -87,30 +81,30 @@ class MigrateOIRUseCase @Inject constructor(
     }
     
     private suspend fun migrateTopicContent() {
-        val topicInfo = TopicContentLoader.getTopicInfo("OIR")
+        val topicInfo = TopicContentLoader.getTopicInfo("PPDT")
         
         val topicDocument = mapOf(
-            "id" to "OIR",
-            "topicType" to "OIR",
+            "id" to "PPDT",
+            "topicType" to "PPDT",
             "title" to topicInfo.title,
             "introduction" to topicInfo.introduction,
             "version" to 1,
             "lastUpdated" to System.currentTimeMillis(),
             "isPremium" to false,
             "metadata" to mapOf(
-                "migratedBy" to "MigrateOIRUseCase",
+                "migratedBy" to "MigratePPDTUseCase",
                 "migratedAt" to System.currentTimeMillis()
             )
         )
         
         firestore.collection("topic_content")
-            .document("OIR")
+            .document("PPDT")
             .set(topicDocument)
             .await()
     }
     
     private suspend fun migrateStudyMaterials(errors: MutableList<String>): Int {
-        val materials = StudyMaterialsProvider.getStudyMaterials("OIR")
+        val materials = StudyMaterialsProvider.getStudyMaterials("PPDT")
         var successCount = 0
         
         for ((index, materialItem) in materials.withIndex()) {
@@ -120,7 +114,7 @@ class MigrateOIRUseCase @Inject constructor(
                 
                 val materialDocument = mapOf(
                     "id" to materialItem.id,
-                    "topicType" to "OIR",
+                    "topicType" to "PPDT",
                     "title" to fullContent.title,
                     "displayOrder" to (index + 1),
                     "category" to fullContent.category,
@@ -130,12 +124,12 @@ class MigrateOIRUseCase @Inject constructor(
                     "isPremium" to materialItem.isPremium,
                     "version" to 1,
                     "lastUpdated" to System.currentTimeMillis(),
-                    "tags" to listOf("OIR", "Screening", "Intelligence Test"),
+                    "tags" to listOf("PPDT", "Screening", "Picture Perception"),
                     "relatedMaterials" to emptyList<String>(),
                     "attachments" to emptyList<Map<String, Any>>(),
                     "metadata" to mapOf(
                         "publishedDate" to fullContent.publishedDate,
-                        "migratedBy" to "MigrateOIRUseCase",
+                        "migratedBy" to "MigratePPDTUseCase",
                         "migratedAt" to System.currentTimeMillis()
                     )
                 )
@@ -147,7 +141,7 @@ class MigrateOIRUseCase @Inject constructor(
                     .await()
                 
                 successCount++
-                Log.d(TAG, "✓ Migrated material ${index + 1}/7: ${materialItem.id}")
+                Log.d(TAG, "✓ Migrated material ${index + 1}/6: ${materialItem.id}")
                 
             } catch (e: Exception) {
                 val error = "Failed to migrate ${materialItem.id}: ${e.message}"
@@ -160,7 +154,7 @@ class MigrateOIRUseCase @Inject constructor(
     }
     
     companion object {
-        private const val TAG = "OIRMigration"
+        private const val TAG = "PPDTMigration"
     }
 }
 

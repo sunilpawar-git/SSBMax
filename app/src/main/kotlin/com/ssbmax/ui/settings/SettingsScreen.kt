@@ -115,6 +115,7 @@ fun SettingsScreen(
                         onRunHealthCheck = viewModel::runHealthCheck,
                         isCheckingHealth = uiState.isCheckingHealth,
                         onMigrateOIR = viewModel::migrateOIR,
+                        onMigratePPDT = viewModel::migratePPDT,
                         isMigrating = uiState.isMigrating
                     )
                 }
@@ -130,11 +131,19 @@ fun SettingsScreen(
         )
     }
     
-    // Migration Result Dialog
+    // Migration Result Dialog (OIR)
     uiState.migrationResult?.let { migrationResult ->
         MigrationResultDialog(
             migrationResult = migrationResult,
             onDismiss = viewModel::clearMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (PPDT)
+    uiState.ppdtMigrationResult?.let { migrationResult ->
+        PPDTMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearPPDTMigrationResult
         )
     }
 }
@@ -372,6 +381,7 @@ private fun DeveloperOptionsSection(
     onRunHealthCheck: () -> Unit,
     isCheckingHealth: Boolean,
     onMigrateOIR: () -> Unit,
+    onMigratePPDT: () -> Unit,
     isMigrating: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -467,6 +477,43 @@ private fun DeveloperOptionsSection(
             
             Text(
                 text = "Uploads OIR topic + 7 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate PPDT Button
+            Button(
+                onClick = onMigratePPDT,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate PPDT to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads PPDT topic + 6 study materials to Firestore",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -807,6 +854,142 @@ private fun MigrationResultDialog(
                     HorizontalDivider()
                     Text(
                         text = "✓ OIR content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Running health check again",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PPDTMigrationResultDialog(
+    migrationResult: MigratePPDTUseCase.MigrationResult,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        migrationResult.success -> Icons.Default.CheckCircle
+                        migrationResult.materialsMigrated > 0 -> Icons.Default.Warning
+                        else -> Icons.Default.Error
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                Text("PPDT Migration Result")
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Summary
+                Text(
+                    text = migrationResult.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                
+                HorizontalDivider()
+                
+                // Details
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Topic:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (migrationResult.topicMigrated) "✓ Migrated" else "✗ Failed",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.topicMigrated) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Materials:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.materialsMigrated}/${migrationResult.totalMaterials}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.materialsMigrated == migrationResult.totalMaterials)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Duration:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.durationMs}ms",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Errors (if any)
+                if (migrationResult.errors.isNotEmpty()) {
+                    HorizontalDivider()
+                    Text(
+                        text = "Errors:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    migrationResult.errors.forEach { error ->
+                        Text(
+                            text = "• $error",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                
+                // Success message
+                if (migrationResult.success) {
+                    HorizontalDivider()
+                    Text(
+                        text = "✓ PPDT content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Navigating to PPDT topic (should show 12+ materials)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -22,7 +22,8 @@ class SettingsViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val themePreferenceManager: ThemePreferenceManager,
     private val firebaseHealthCheck: FirebaseHealthCheck,
-    private val migrateOIRUseCase: MigrateOIRUseCase
+    private val migrateOIRUseCase: MigrateOIRUseCase,
+    private val migratePPDTUseCase: MigratePPDTUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -212,8 +213,47 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Migrate PPDT topic and materials to Firestore
+     */
+    fun migratePPDT() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isMigrating = true, ppdtMigrationResult = null) }
+            
+            try {
+                val result = migratePPDTUseCase.execute()
+                result.onSuccess { migrationResult ->
+                    _uiState.update { 
+                        it.copy(
+                            isMigrating = false,
+                            ppdtMigrationResult = migrationResult
+                        )
+                    }
+                }.onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            isMigrating = false,
+                            error = "PPDT migration failed: ${error.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isMigrating = false,
+                        error = "PPDT migration failed: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
     fun clearMigrationResult() {
         _uiState.update { it.copy(migrationResult = null) }
+    }
+    
+    fun clearPPDTMigrationResult() {
+        _uiState.update { it.copy(ppdtMigrationResult = null) }
     }
 }
 
@@ -226,6 +266,7 @@ data class SettingsUiState(
     val isCheckingHealth: Boolean = false,
     val healthCheckResult: FirebaseHealthCheck.HealthStatus? = null,
     val isMigrating: Boolean = false,
-    val migrationResult: MigrateOIRUseCase.MigrationResult? = null
+    val migrationResult: MigrateOIRUseCase.MigrationResult? = null,
+    val ppdtMigrationResult: MigratePPDTUseCase.MigrationResult? = null
 )
 
