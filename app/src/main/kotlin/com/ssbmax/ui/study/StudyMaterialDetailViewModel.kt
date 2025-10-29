@@ -18,7 +18,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StudyMaterialDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val studyContentRepository: com.ssbmax.core.domain.repository.StudyContentRepository
 ) : ViewModel() {
     
     private val materialId: String = savedStateHandle.get<String>("categoryId") ?: ""
@@ -38,9 +39,27 @@ class StudyMaterialDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                // TODO: Load from repository
-                // For now, use mock data
-                val material = getMockMaterial(materialId)
+                // Try to load from Firestore first
+                val cloudResult = studyContentRepository.getStudyMaterial(materialId)
+                
+                val material = cloudResult.getOrNull()?.let { cloudMaterial ->
+                    // Convert cloud material to UI model
+                    StudyMaterialContent(
+                        id = cloudMaterial.id,
+                        title = cloudMaterial.title,
+                        category = cloudMaterial.category,
+                        author = cloudMaterial.author.ifEmpty { "SSB Expert" },
+                        publishedDate = "2025", // TODO: Add to cloud model
+                        readTime = cloudMaterial.readTime.ifEmpty { "10 min read" },
+                        content = cloudMaterial.contentMarkdown,
+                        isPremium = cloudMaterial.isPremium,
+                        tags = emptyList(), // TODO: Parse from cloud
+                        relatedMaterials = emptyList() // TODO: Parse from cloud
+                    )
+                } ?: run {
+                    // Fallback to local content
+                    getMockMaterial(materialId)
+                }
                 
                 _uiState.update {
                     it.copy(
@@ -51,11 +70,24 @@ class StudyMaterialDetailViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to load material"
-                    )
+                // On error, fallback to local content
+                try {
+                    val fallbackMaterial = getMockMaterial(materialId)
+                    _uiState.update {
+                        it.copy(
+                            material = fallbackMaterial,
+                            readingProgress = 0f,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                } catch (fallbackError: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = fallbackError.message ?: "Failed to load material"
+                        )
+                    }
                 }
             }
         }

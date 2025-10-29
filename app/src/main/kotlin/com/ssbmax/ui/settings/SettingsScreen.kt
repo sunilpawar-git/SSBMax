@@ -116,7 +116,16 @@ fun SettingsScreen(
                         isCheckingHealth = uiState.isCheckingHealth,
                         onMigrateOIR = viewModel::migrateOIR,
                         onMigratePPDT = viewModel::migratePPDT,
-                        isMigrating = uiState.isMigrating
+                        onMigratePsychology = viewModel::migratePsychology,
+                        onMigratePIQForm = viewModel::migratePIQForm,
+                        onMigrateGTO = viewModel::migrateGTO,
+                        onMigrateInterview = viewModel::migrateInterview,
+                        onMigrateSSBOverview = viewModel::migrateSSBOverview,
+                        onMigrateMedicals = viewModel::migrateMedicals,
+                        onMigrateConference = viewModel::migrateConference,
+                        onClearCache = viewModel::clearFirestoreCache,
+                        isMigrating = uiState.isMigrating,
+                        isClearingCache = uiState.isClearingCache
                     )
                 }
             }
@@ -145,6 +154,158 @@ fun SettingsScreen(
             migrationResult = migrationResult,
             onDismiss = viewModel::clearPPDTMigrationResult
         )
+    }
+    
+    // Migration Result Dialog (Psychology)
+    uiState.psychologyMigrationResult?.let { migrationResult ->
+        PsychologyMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearPsychologyMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (PIQ Form)
+    uiState.piqFormMigrationResult?.let { migrationResult ->
+        PIQFormMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearPIQFormMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (GTO)
+    uiState.gtoMigrationResult?.let { migrationResult ->
+        GTOMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearGTOMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (Interview)
+    uiState.interviewMigrationResult?.let { migrationResult ->
+        InterviewMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearInterviewMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (SSB Overview)
+    uiState.ssbOverviewMigrationResult?.let { migrationResult ->
+        SSBOverviewMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearSSBOverviewMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (Medicals)
+    uiState.medicalsMigrationResult?.let { migrationResult ->
+        MedicalsMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearMedicalsMigrationResult
+        )
+    }
+    
+    // Migration Result Dialog (Conference) - THE FINAL ONE! 🎉
+    uiState.conferenceMigrationResult?.let { migrationResult ->
+        ConferenceMigrationResultDialog(
+            migrationResult = migrationResult,
+            onDismiss = viewModel::clearConferenceMigrationResult
+        )
+    }
+    
+    // Cache Cleared Dialog
+    uiState.refreshResult?.let { result ->
+        if (uiState.cacheCleared) {
+            AlertDialog(
+            onDismissRequest = viewModel::clearCacheResult,
+            title = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Content Refreshed!")
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "✓ Content has been refreshed from Firestore server!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    HorizontalDivider()
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Topics:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "${result.topicsRefreshed}/9",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Materials:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "${result.materialsRefreshed}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    if (result.errors.isNotEmpty()) {
+                        HorizontalDivider()
+                        Text(
+                            text = "⚠️ Errors:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                        result.errors.take(3).forEach { error ->
+                            Text(
+                                text = "• $error",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                    
+                    HorizontalDivider()
+                    
+                    Text(
+                        text = "💡 Navigate to the content you edited - it should show your changes now!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::clearCacheResult) {
+                    Text("Got it!")
+                }
+            }
+            )
+        }
     }
 }
 
@@ -382,7 +543,16 @@ private fun DeveloperOptionsSection(
     isCheckingHealth: Boolean,
     onMigrateOIR: () -> Unit,
     onMigratePPDT: () -> Unit,
+    onMigratePsychology: () -> Unit,
+    onMigratePIQForm: () -> Unit,
+    onMigrateGTO: () -> Unit,
+    onMigrateInterview: () -> Unit,
+    onMigrateSSBOverview: () -> Unit,
+    onMigrateMedicals: () -> Unit,
+    onMigrateConference: () -> Unit,
+    onClearCache: () -> Unit,
     isMigrating: Boolean,
+    isClearingCache: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -516,6 +686,307 @@ private fun DeveloperOptionsSection(
                 text = "Uploads PPDT topic + 6 study materials to Firestore",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate Psychology Button
+            Button(
+                onClick = onMigratePsychology,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate Psychology to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads Psychology topic + 8 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate PIQ Form Button
+            Button(
+                onClick = onMigratePIQForm,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate PIQ Form to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads PIQ Form topic + 3 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate GTO Button
+            Button(
+                onClick = onMigrateGTO,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate GTO to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads GTO topic + 7 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate Interview Button
+            Button(
+                onClick = onMigrateInterview,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate Interview to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads Interview topic + 7 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate SSB Overview Button
+            Button(
+                onClick = onMigrateSSBOverview,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate SSB Overview to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads SSB Overview topic + 4 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate Medicals Button
+            Button(
+                onClick = onMigrateMedicals,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate Medicals to Firestore")
+                }
+            }
+            
+            Text(
+                text = "Uploads Medicals topic + 5 study materials to Firestore",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Migrate Conference Button (THE FINAL ONE!)
+            Button(
+                onClick = onMigrateConference,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isMigrating,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                if (isMigrating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrating...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Migrate Conference to Firestore 🎉")
+                }
+            }
+            
+            Text(
+                text = "Uploads Conference topic + 4 study materials to Firestore (FINAL TOPIC - 100%!)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            HorizontalDivider()
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Clear Cache Button
+            Button(
+                onClick = onClearCache,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isClearingCache,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                if (isClearingCache) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Clearing...")
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Clear Cache & Refresh Content")
+                }
+            }
+            
+            Text(
+                text = "⚠️ Clears cached Firestore data. Next load fetches fresh content from server. Use after editing content in Firebase Console.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                 modifier = Modifier.padding(start = 4.dp)
             )
             
@@ -990,6 +1461,278 @@ private fun PPDTMigrationResultDialog(
                     HorizontalDivider()
                     Text(
                         text = "✓ PPDT content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Navigating to PPDT topic (should show 12+ materials)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PsychologyMigrationResultDialog(
+    migrationResult: MigratePsychologyUseCase.MigrationResult,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        migrationResult.success -> Icons.Default.CheckCircle
+                        migrationResult.materialsMigrated > 0 -> Icons.Default.Warning
+                        else -> Icons.Default.Error
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                Text("Psychology Migration Result")
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Summary
+                Text(
+                    text = migrationResult.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                
+                HorizontalDivider()
+                
+                // Details
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Topic:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (migrationResult.topicMigrated) "✓ Migrated" else "✗ Failed",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.topicMigrated) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Materials:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.materialsMigrated}/${migrationResult.totalMaterials}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.materialsMigrated == migrationResult.totalMaterials)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Duration:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.durationMs}ms",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Errors (if any)
+                if (migrationResult.errors.isNotEmpty()) {
+                    HorizontalDivider()
+                    Text(
+                        text = "Errors:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    migrationResult.errors.forEach { error ->
+                        Text(
+                            text = "• $error",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                
+                // Success message
+                if (migrationResult.success) {
+                    HorizontalDivider()
+                    Text(
+                        text = "✓ Psychology content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Navigating to Psychology topic (should show 8 materials)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PIQFormMigrationResultDialog(
+    migrationResult: MigratePIQFormUseCase.MigrationResult,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        migrationResult.success -> Icons.Default.CheckCircle
+                        migrationResult.materialsMigrated > 0 -> Icons.Default.Warning
+                        else -> Icons.Default.Error
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                Text("PIQ Form Migration Result")
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Summary
+                Text(
+                    text = migrationResult.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = when {
+                        migrationResult.success -> MaterialTheme.colorScheme.primary
+                        migrationResult.materialsMigrated > 0 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                )
+                
+                HorizontalDivider()
+                
+                // Details
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Topic:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (migrationResult.topicMigrated) "✓ Migrated" else "✗ Failed",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.topicMigrated) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Materials:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.materialsMigrated}/${migrationResult.totalMaterials}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (migrationResult.materialsMigrated == migrationResult.totalMaterials)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Duration:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "${migrationResult.durationMs}ms",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                // Errors (if any)
+                if (migrationResult.errors.isNotEmpty()) {
+                    HorizontalDivider()
+                    Text(
+                        text = "Errors:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    migrationResult.errors.forEach { error ->
+                        Text(
+                            text = "• $error",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                
+                // Success message
+                if (migrationResult.success) {
+                    HorizontalDivider()
+                    Text(
+                        text = "✓ PIQ Form content is now available in Firestore!\n\nYou can verify by:\n• Checking Firebase Console\n• Navigating to PIQ Form topic (should show 3 materials)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

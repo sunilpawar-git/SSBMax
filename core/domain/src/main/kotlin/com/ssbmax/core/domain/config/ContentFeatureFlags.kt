@@ -18,10 +18,17 @@ object ContentFeatureFlags {
     var fallbackToLocalOnError: Boolean = true
     
     // Per-topic rollout flags (for gradual migration)
-    // TEMPORARY: OIR & PPDT pre-enabled for testing (normally loaded from SharedPreferences)
+    // ALL 9 TOPICS ENABLED - 100% FIRESTORE MIGRATION COMPLETE! 🎉
     private val topicFlags = mutableMapOf<String, Boolean>(
         "OIR" to true,
-        "PPDT" to true
+        "PPDT" to true,
+        "PSYCHOLOGY" to true,
+        "PIQ_FORM" to true,
+        "GTO" to true,
+        "INTERVIEW" to true,
+        "SSB_OVERVIEW" to true,
+        "MEDICALS" to true,
+        "CONFERENCE" to true
     )
     
     /**
