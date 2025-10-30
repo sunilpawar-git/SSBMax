@@ -7,9 +7,11 @@ import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,61 +31,86 @@ class StudentHomeViewModel @Inject constructor(
     val uiState: StateFlow<StudentHomeUiState> = _uiState.asStateFlow()
     
     init {
-        loadUserProgress()
+        observeUserProfile()
         observeTestProgress()
     }
     
-    private fun loadUserProgress() {
+    private fun observeUserProfile() {
         viewModelScope.launch {
-            // Load user profile for name and streak
-            val currentUser = authRepository.currentUser.first()
+            // Get current user and observe their profile with lifecycle awareness
+            val currentUser = authRepository.currentUser.value
             if (currentUser != null) {
-                userProfileRepository.getUserProfile(currentUser.id).collect { result ->
-                    result.onSuccess { profile ->
-                        _uiState.update {
-                            it.copy(
-                                userName = profile?.fullName ?: "Aspirant",
-                                currentStreak = profile?.currentStreak ?: 0
-                            )
+                userProfileRepository.getUserProfile(currentUser.id)
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.WhileSubscribed(5000),
+                        initialValue = Result.success(null)
+                    )
+                    .collect { result ->
+                        result.onSuccess { profile ->
+                            _uiState.update {
+                                it.copy(
+                                    userName = profile?.fullName ?: "Aspirant",
+                                    currentStreak = profile?.currentStreak ?: 0
+                                )
+                            }
                         }
                     }
-                }
             }
         }
     }
     
     private fun observeTestProgress() {
         viewModelScope.launch {
-            val userId = authRepository.currentUser.first()?.id ?: return@launch
+            val userId = authRepository.currentUser.value?.id ?: return@launch
             
+            // Lifecycle-aware combined progress flow
             kotlinx.coroutines.flow.combine(
                 testProgressRepository.getPhase1Progress(userId),
                 testProgressRepository.getPhase2Progress(userId)
             ) { phase1, phase2 ->
                 Pair(phase1, phase2)
-            }.collect { (phase1, phase2) ->
-                // Calculate tests completed (tests with scores)
-                val completedTests = listOfNotNull(
-                    phase1.oirProgress.latestScore,
-                    phase1.ppdtProgress.latestScore,
-                    phase2.psychologyProgress.latestScore,
-                    phase2.gtoProgress.latestScore,
-                    phase2.interviewProgress.latestScore
-                ).size
-                
-                _uiState.update { 
-                    it.copy(
-                        phase1Progress = phase1,
-                        phase2Progress = phase2,
-                        testsCompleted = completedTests
-                    )
-                }
             }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = Pair(
+                        Phase1Progress(
+                            oirProgress = TestProgress(TestType.OIR),
+                            ppdtProgress = TestProgress(TestType.PPDT)
+                        ),
+                        Phase2Progress(
+                            psychologyProgress = TestProgress(TestType.TAT), // Psychology encompasses multiple tests
+                            gtoProgress = TestProgress(TestType.GTO),
+                            interviewProgress = TestProgress(TestType.IO)
+                        )
+                    )
+                )
+                .collect { (phase1, phase2) ->
+                    // Calculate tests completed (tests with scores)
+                    val completedTests = listOfNotNull(
+                        phase1.oirProgress.latestScore,
+                        phase1.ppdtProgress.latestScore,
+                        phase2.psychologyProgress.latestScore,
+                        phase2.gtoProgress.latestScore,
+                        phase2.interviewProgress.latestScore
+                    ).size
+                    
+                    _uiState.update { 
+                        it.copy(
+                            phase1Progress = phase1,
+                            phase2Progress = phase2,
+                            testsCompleted = completedTests
+                        )
+                    }
+                }
         }
     }
     
     fun refreshProgress() {
-        loadUserProgress()
+        // Flows are already observing, just re-trigger by reinitializing observers
+        observeUserProfile()
+        observeTestProgress()
     }
 }
 
