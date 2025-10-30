@@ -3,16 +3,20 @@ package com.ssbmax.ui.phase
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.domain.model.Phase1Progress
+import com.ssbmax.core.domain.model.TestProgress
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -50,7 +54,7 @@ class Phase1DetailViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Observe Phase 1 progress from repository
+                // Observe Phase 1 progress from repository with lifecycle awareness
                 testProgressRepository.getPhase1Progress(userId)
                     .catch { error ->
                         Log.e("Phase1Detail", "Error loading Phase 1 progress", error)
@@ -59,6 +63,14 @@ class Phase1DetailViewModel @Inject constructor(
                             error = "Failed to load Phase 1 progress: ${error.message}"
                         )
                     }
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.WhileSubscribed(5000),
+                        initialValue = Phase1Progress(
+                            oirProgress = TestProgress(TestType.OIR),
+                            ppdtProgress = TestProgress(TestType.PPDT)
+                        )
+                    )
                     .collect { phase1Progress ->
                         // Map domain TestProgress to UI Phase1Test models
                         val tests = listOf(

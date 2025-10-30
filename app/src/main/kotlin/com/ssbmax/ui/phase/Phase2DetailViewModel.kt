@@ -3,16 +3,20 @@ package com.ssbmax.ui.phase
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.domain.model.Phase2Progress
+import com.ssbmax.core.domain.model.TestProgress
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -50,7 +54,7 @@ class Phase2DetailViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Observe Phase 2 progress from repository
+                // Observe Phase 2 progress from repository with lifecycle awareness
                 testProgressRepository.getPhase2Progress(userId)
                     .catch { error ->
                         Log.e("Phase2Detail", "Error loading Phase 2 progress", error)
@@ -59,6 +63,15 @@ class Phase2DetailViewModel @Inject constructor(
                             error = "Failed to load Phase 2 progress: ${error.message}"
                         )
                     }
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.WhileSubscribed(5000),
+                        initialValue = Phase2Progress(
+                            psychologyProgress = TestProgress(TestType.TAT),
+                            gtoProgress = TestProgress(TestType.GTO),
+                            interviewProgress = TestProgress(TestType.IO)
+                        )
+                    )
                     .collect { phase2Progress ->
                         // Map domain TestProgress to UI Phase2Test models
                         
