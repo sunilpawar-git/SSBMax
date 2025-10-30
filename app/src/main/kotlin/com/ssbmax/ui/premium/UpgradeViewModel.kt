@@ -10,10 +10,12 @@ import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -62,7 +64,7 @@ class UpgradeViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Load user profile to get subscription info
+                // Load user profile to get subscription info with lifecycle awareness
                 userProfileRepository.getUserProfile(currentUser.id)
                     .catch { error ->
                         Log.e("Upgrade", "Error loading user profile", error)
@@ -74,6 +76,11 @@ class UpgradeViewModel @Inject constructor(
                             )
                         }
                     }
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.WhileSubscribed(5000),
+                        initialValue = Result.success(null)
+                    )
                     .collect { result ->
                         val profile = result.getOrNull()
                         

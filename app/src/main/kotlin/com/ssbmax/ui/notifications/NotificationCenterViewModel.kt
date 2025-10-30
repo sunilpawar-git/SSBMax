@@ -7,11 +7,13 @@ import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -73,6 +75,11 @@ class NotificationCenterViewModel @Inject constructor(
                         error = e.message ?: "Failed to load notifications"
                     )
                 }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = emptyList()
+                )
                 .collect { filteredNotifications: List<SSBMaxNotification> ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -99,6 +106,11 @@ class NotificationCenterViewModel @Inject constructor(
                 .catch { e: Throwable ->
                     // Log error but don't update UI state
                 }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = 0
+                )
                 .collect { count: Int ->
                     _uiState.value = _uiState.value.copy(unreadCount = count)
                 }

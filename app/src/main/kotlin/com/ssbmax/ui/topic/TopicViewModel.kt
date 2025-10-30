@@ -14,9 +14,11 @@ import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -92,8 +94,14 @@ class TopicViewModel @Inject constructor(
      */
     private suspend fun loadFromCloud(userId: String?) {
         try {
-            // Collect from Flow
-            studyContentRepository.getTopicContent(testType).collect { result ->
+            // Collect from Flow with lifecycle awareness
+            studyContentRepository.getTopicContent(testType)
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = Result.success(null)
+                )
+                .collect { result ->
                 result.onSuccess { data ->
                     when (data) {
                         is TopicContentData -> {
