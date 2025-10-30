@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SSBMaxNotification
 import com.ssbmax.core.domain.repository.NotificationRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,7 +21,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class NotificationCenterViewModel @Inject constructor(
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationCenterUiState())
@@ -35,17 +38,23 @@ class NotificationCenterViewModel @Inject constructor(
 
     /**
      * Load notifications for the current user.
-     * TODO: Get userId from AuthRepository when available.
      */
     private fun loadNotifications() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // TODO: Replace with actual userId from AuthRepository
-            val userId = "current_user_id"
+            // Get current user ID
+            val currentUser = observeCurrentUser().first()
+            if (currentUser == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Please sign in to view notifications"
+                )
+                return@launch
+            }
 
             combine(
-                notificationRepository.getNotifications(userId),
+                notificationRepository.getNotifications(currentUser.id),
                 _selectedFilter
             ) { notifications: List<SSBMaxNotification>, filter: NotificationFilter ->
                 notifications.filter { notification ->
@@ -79,10 +88,14 @@ class NotificationCenterViewModel @Inject constructor(
      */
     private fun observeUnreadCount() {
         viewModelScope.launch {
-            // TODO: Replace with actual userId from AuthRepository
-            val userId = "current_user_id"
+            // Get current user ID
+            val currentUser = observeCurrentUser().first()
+            if (currentUser == null) {
+                // User not logged in, no unread count to display
+                return@launch
+            }
 
-            notificationRepository.getUnreadCount(userId)
+            notificationRepository.getUnreadCount(currentUser.id)
                 .catch { e: Throwable ->
                     // Log error but don't update UI state
                 }
