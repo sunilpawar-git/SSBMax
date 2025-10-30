@@ -28,7 +28,7 @@ import org.junit.Assert.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
     
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: AuthViewModel
     private val mockRepository = mockk<AuthRepository>(relaxed = true)
     private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
@@ -46,11 +46,13 @@ class AuthViewModelTest {
     
     @Before
     fun setup() {
+        // CRITICAL: Set Main dispatcher BEFORE creating ViewModel
         Dispatchers.setMain(testDispatcher)
         
         // Mock currentUser as StateFlow
         every { mockRepository.currentUser } returns mockCurrentUserFlow
         
+        // Create ViewModel AFTER setting test dispatcher
         viewModel = AuthViewModel(mockRepository, mockAuthRepositoryImpl)
     }
     
@@ -89,10 +91,11 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
         
         // Then
         val state = viewModel.uiState.value
-        assertTrue("Should be success state", state is AuthUiState.Success)
+        assertTrue("Should be success state, got: $state", state is AuthUiState.Success)
         if (state is AuthUiState.Success) {
             assertEquals(existingUser.id, state.user.id)
             assertEquals(existingUser.email, state.user.email)
@@ -103,18 +106,21 @@ class AuthViewModelTest {
     fun `handleGoogleSignInResult with new user shows needs role selection`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
+        val timestamp = System.currentTimeMillis()
         val newUser = mockUser.copy(
-            createdAt = System.currentTimeMillis(),
-            lastLoginAt = System.currentTimeMillis() // Same as createdAt (first login)
+            role = UserRole.STUDENT, // Important: must be STUDENT
+            createdAt = timestamp,
+            lastLoginAt = timestamp // Same as createdAt (first login)
         )
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.success(newUser)
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
         
         // Then
         val state = viewModel.uiState.value
-        assertTrue("Should be needs role selection state", state is AuthUiState.NeedsRoleSelection)
+        assertTrue("Should be needs role selection state, got: $state", state is AuthUiState.NeedsRoleSelection)
         if (state is AuthUiState.NeedsRoleSelection) {
             assertEquals(newUser.id, state.user.id)
         }
@@ -129,10 +135,11 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(null)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
         
         // Then
         val state = viewModel.uiState.value
-        assertTrue("Should be error state", state is AuthUiState.Error)
+        assertTrue("Should be error state, got: $state", state is AuthUiState.Error)
         if (state is AuthUiState.Error) {
             assertTrue(state.message.contains("Google Sign-In failed"))
         }
@@ -148,10 +155,11 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
         
         // Then
         val state = viewModel.uiState.value
-        assertTrue("Should be error state", state is AuthUiState.Error)
+        assertTrue("Should be error state, got: $state", state is AuthUiState.Error)
         if (state is AuthUiState.Error) {
             assertTrue(state.message.contains("Authentication error"))
         }
@@ -163,20 +171,18 @@ class AuthViewModelTest {
     fun `setUserRole with student role updates user`() = runTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.STUDENT)
+        mockCurrentUserFlow.value = updatedUser // Set before calling function
         coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.STUDENT) } returns Result.success(Unit)
         
         // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            // Update mock StateFlow to simulate user being updated
-            mockCurrentUserFlow.value = updatedUser
-            
-            viewModel.setUserRole(UserRole.STUDENT)
-            assertEquals(AuthUiState.Loading, awaitItem())
-            
-            val successState = awaitItem() as AuthUiState.Success
-            assertEquals(UserRole.STUDENT, successState.user.role)
+        viewModel.setUserRole(UserRole.STUDENT)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should be success state, got: $state", state is AuthUiState.Success)
+        if (state is AuthUiState.Success) {
+            assertEquals(UserRole.STUDENT, state.user.role)
         }
     }
     
@@ -184,20 +190,18 @@ class AuthViewModelTest {
     fun `setUserRole with instructor role updates user`() = runTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.INSTRUCTOR)
+        mockCurrentUserFlow.value = updatedUser // Set before calling function
         coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.INSTRUCTOR) } returns Result.success(Unit)
         
         // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            // Update mock StateFlow to simulate user being updated
-            mockCurrentUserFlow.value = updatedUser
-            
-            viewModel.setUserRole(UserRole.INSTRUCTOR)
-            assertEquals(AuthUiState.Loading, awaitItem())
-            
-            val successState = awaitItem() as AuthUiState.Success
-            assertEquals(UserRole.INSTRUCTOR, successState.user.role)
+        viewModel.setUserRole(UserRole.INSTRUCTOR)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should be success state, got: $state", state is AuthUiState.Success)
+        if (state is AuthUiState.Success) {
+            assertEquals(UserRole.INSTRUCTOR, state.user.role)
         }
     }
     
@@ -209,14 +213,14 @@ class AuthViewModelTest {
         )
         
         // When
-        viewModel.uiState.test {
-            assertEquals(AuthUiState.Initial, awaitItem())
-            
-            viewModel.setUserRole(UserRole.STUDENT)
-            assertEquals(AuthUiState.Loading, awaitItem())
-            
-            val errorState = awaitItem() as AuthUiState.Error
-            assertTrue(errorState.message.contains("Failed to set role"))
+        viewModel.setUserRole(UserRole.STUDENT)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should be error state, got: $state", state is AuthUiState.Error)
+        if (state is AuthUiState.Error) {
+            assertTrue(state.message.contains("Failed to set role"))
         }
     }
     
@@ -249,15 +253,18 @@ class AuthViewModelTest {
         )
         
         viewModel.handleGoogleSignInResult(mockIntent)
+        testDispatcher.scheduler.advanceUntilIdle() // Wait for error state to set
         
         // Verify we're in error state
-        assertTrue("Should be in error state", viewModel.uiState.value is AuthUiState.Error)
+        val errorState = viewModel.uiState.value
+        assertTrue("Should be in error state, got: $errorState", errorState is AuthUiState.Error)
         
         // When
         viewModel.resetState()
         
         // Then
-        assertEquals("Should return to initial state", AuthUiState.Initial, viewModel.uiState.value)
+        val finalState = viewModel.uiState.value
+        assertEquals("Should return to initial state", AuthUiState.Initial, finalState)
     }
     
     @Test

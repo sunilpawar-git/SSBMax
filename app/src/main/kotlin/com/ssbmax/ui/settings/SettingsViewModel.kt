@@ -38,14 +38,22 @@ class SettingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    // Lifecycle-aware theme Flow - automatically starts/stops with collectors
+    private val themeFlow = themePreferenceManager.themeFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = AppTheme.SYSTEM
+        )
+
     init {
         loadNotificationPreferences()
-        loadThemePreference()
+        observeThemeChanges()
     }
 
-    private fun loadThemePreference() {
+    private fun observeThemeChanges() {
         viewModelScope.launch {
-            themePreferenceManager.themeFlow.collect { theme ->
+            themeFlow.collect { theme ->
                 _uiState.update { it.copy(appTheme = theme) }
             }
         }

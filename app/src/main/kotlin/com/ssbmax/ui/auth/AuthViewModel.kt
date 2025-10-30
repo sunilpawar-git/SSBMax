@@ -72,11 +72,12 @@ class AuthViewModel @Inject constructor(
             
             authRepositoryImpl.updateUserRole(role)
                 .onSuccess {
-                    // Reload user to get updated profile
-                    authRepository.currentUser.collect { user ->
-                        if (user != null) {
-                            _uiState.value = AuthUiState.Success(user)
-                        }
+                    // Reload user to get updated profile (use first() instead of collect)
+                    val user = authRepository.currentUser.value
+                    if (user != null) {
+                        _uiState.value = AuthUiState.Success(user)
+                    } else {
+                        _uiState.value = AuthUiState.Error("Failed to load updated user")
                     }
                 }
                 .onFailure { error ->
