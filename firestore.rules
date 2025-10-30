@@ -289,8 +289,10 @@ service cloud.firestore {
       // All authenticated users can read topic content
       allow read: if isAuthenticated();
       
-      // Allow authenticated users to write (for migration tool)
-      // TODO: In production, restrict this to admin users only
+      // ⚠️ PRODUCTION SECURITY NOTE:
+      // Migration write access should be removed after initial migration is complete.
+      // For now, allowing writes for migration tool. Once migration is done, change to:
+      // allow write: if false; (and manage content via Firebase Console only)
       allow write: if isAuthenticated();
     }
     
@@ -299,12 +301,14 @@ service cloud.firestore {
     // ============================================
     
     match /study_materials/{materialId} {
-      // Free materials: all authenticated users can read
-      // Premium materials: only premium users can read
+      // All authenticated users can read study materials
+      // (Premium filtering can be added later if needed)
       allow read: if isAuthenticated();
       
-      // Allow authenticated users to create (for migration tool)
-      // TODO: In production, restrict this to admin users only
+      // ⚠️ PRODUCTION SECURITY NOTE:
+      // Migration write access should be removed after initial migration is complete.
+      // For now, allowing creates for migration tool. Once migration is done, change to:
+      // allow create: if false; (and manage content via Firebase Console only)
       allow create: if isAuthenticated();
       
       // No update/delete from clients

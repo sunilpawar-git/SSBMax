@@ -135,27 +135,20 @@ class StudyContentRepositoryImpl @Inject constructor(
     }
     
     /**
-     * Load content from local hardcoded data
-     * This ensures the app always works even without internet
+     * Return empty local placeholder with LOCAL flag
+     * The ViewModel will detect this and use TopicContentLoader directly
+     * This avoids circular dependencies (data layer can't access UI layer)
      */
     private fun loadFromLocal(topicType: String): Result<TopicContentData> {
-        return try {
-            // Note: Local content loading is handled by TopicContentLoader
-            // This is a placeholder that indicates to use local loading
-            Log.d(TAG, "✓ Using local content for $topicType")
-            
-            Result.success(
-                TopicContentData(
-                    title = "",
-                    introduction = "",
-                    materials = emptyList(),
-                    source = ContentSource.LOCAL
-                )
+        Log.d(TAG, "REPO: Returning LOCAL flag for $topicType (ViewModel will load from TopicContentLoader)")
+        return Result.success(
+            TopicContentData(
+                title = "",
+                introduction = "",
+                materials = emptyList(),
+                source = ContentSource.LOCAL
             )
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to load local content: ${e.message}", e)
-            Result.failure(e)
-        }
+        )
     }
     
     companion object {
