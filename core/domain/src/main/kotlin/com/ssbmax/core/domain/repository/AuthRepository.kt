@@ -1,7 +1,7 @@
 package com.ssbmax.core.domain.repository
 
 import com.ssbmax.core.domain.model.SSBMaxUser
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Repository interface for authentication
@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
 
     /**
-     * Current authenticated user
+     * Current authenticated user as StateFlow for lifecycle-aware collection
      */
-    val currentUser: Flow<SSBMaxUser?>
+    val currentUser: StateFlow<SSBMaxUser?>
 
     /**
      * Sign in with email and password

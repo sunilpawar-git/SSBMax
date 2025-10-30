@@ -2,6 +2,7 @@ package com.ssbmax.core.data.repository
 
 import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
+import com.ssbmax.core.data.di.ApplicationScope
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirestoreUserRepository
 import com.ssbmax.core.domain.model.SSBMaxUser
@@ -10,46 +11,48 @@ import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Firebase implementation of AuthRepository
  * Manages authentication with Firebase Auth and user profiles with Firestore
+ * 
+ * Uses reactive StateFlow with WhileSubscribed to automatically manage lifecycle:
+ * - Starts collecting when first subscriber attaches
+ * - Stops collecting 5 seconds after last subscriber detaches
+ * - Eliminates memory leak from unbound CoroutineScope
  */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuthService: FirebaseAuthService,
-    private val firestoreUserRepository: FirestoreUserRepository
+    private val firestoreUserRepository: FirestoreUserRepository,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : AuthRepository {
 
-    private val _currentUser = MutableStateFlow<SSBMaxUser?>(null)
-    override val currentUser: Flow<SSBMaxUser?> = _currentUser.asStateFlow()
-
-    init {
-        // Observe Firebase auth state and sync with Firestore user
-        observeAuthState()
-    }
-
-    private fun observeAuthState() {
-        CoroutineScope(Dispatchers.IO).launch {
-            firebaseAuthService.authState.collect { firebaseUser ->
-                if (firebaseUser != null) {
-                    // User is signed in, load their profile from Firestore
-                    loadOrCreateUserProfile(firebaseUser)
-                } else {
-                    // User is signed out
-                    _currentUser.value = null
-                }
+    /**
+     * Reactive auth state that automatically starts/stops based on active collectors.
+     * When Firebase auth state changes, loads or creates user profile from Firestore.
+     */
+    override val currentUser: StateFlow<SSBMaxUser?> = callbackFlow {
+        firebaseAuthService.authState.collect { firebaseUser ->
+            if (firebaseUser != null) {
+                // User is signed in, load their profile from Firestore
+                val result = loadOrCreateUserProfile(firebaseUser)
+                trySend(result.getOrNull())
+            } else {
+                // User is signed out
+                trySend(null)
             }
         }
-    }
+        awaitClose { /* Cleanup if needed */ }
+    }.stateIn(
+        scope = applicationScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+        initialValue = null
+    )
 
     /**
      * Sign in with email and password
@@ -151,8 +154,7 @@ class AuthRepositoryImpl @Inject constructor(
                 newUser
             }
             
-            _currentUser.value = user
-            android.util.Log.d("AuthRepositoryImpl", "User profile loaded successfully")
+            android.util.Log.d("AuthRepositoryImpl", "User profile loaded successfully: ${user.email}")
             Result.success(user)
         } catch (e: Exception) {
             android.util.Log.e("AuthRepositoryImpl", "Failed to load/create user profile: ${e.message}", e)
@@ -162,23 +164,14 @@ class AuthRepositoryImpl @Inject constructor(
 
     /**
      * Update user role
+     * Note: The reactive Flow will automatically emit updated user from Firestore
      */
     suspend fun updateUserRole(role: UserRole): Result<Unit> {
         return try {
             val userId = firebaseAuthService.getCurrentUserId()
                 ?: return Result.failure(Exception("No user logged in"))
             
-            val result = firestoreUserRepository.updateUserRole(userId, role)
-            
-            if (result.isSuccess) {
-                // Reload user to update local state
-                val userResult = firestoreUserRepository.getUser(userId)
-                if (userResult.isSuccess) {
-                    _currentUser.value = userResult.getOrNull()
-                }
-            }
-            
-            result
+            firestoreUserRepository.updateUserRole(userId, role)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to update role: ${e.message}", e))
         }
@@ -187,21 +180,23 @@ class AuthRepositoryImpl @Inject constructor(
     /**
      * Observe user from Firestore in real-time
      */
-    fun observeCurrentUser(): Flow<SSBMaxUser?> {
-        val userId = firebaseAuthService.getCurrentUserId() ?: return _currentUser
+    fun observeCurrentUser(): StateFlow<SSBMaxUser?> {
+        val userId = firebaseAuthService.getCurrentUserId() ?: return currentUser
         return firestoreUserRepository.observeUser(userId)
+            .stateIn(
+                scope = applicationScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = currentUser.value
+            )
     }
     
     /**
      * Sign out current user
+     * Note: The reactive Flow will automatically emit null when Firebase auth state changes
      */
     override suspend fun signOut(): Result<Unit> {
         return try {
-            val result = firebaseAuthService.signOut()
-            if (result.isSuccess) {
-                _currentUser.value = null
-            }
-            result
+            firebaseAuthService.signOut()
         } catch (e: Exception) {
             Result.failure(Exception("Sign out error: ${e.message}", e))
         }
@@ -216,6 +211,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     /**
      * Delete user account
+     * Note: The reactive Flow will automatically emit null when Firebase auth state changes
      */
     suspend fun deleteAccount(): Result<Unit> {
         return try {
@@ -225,14 +221,8 @@ class AuthRepositoryImpl @Inject constructor(
             // Delete from Firestore
             firestoreUserRepository.deleteUser(userId)
             
-            // Delete from Firebase Auth
-            val result = firebaseAuthService.deleteAccount()
-            
-            if (result.isSuccess) {
-                _currentUser.value = null
-            }
-            
-            result
+            // Delete from Firebase Auth (this will trigger auth state change to null)
+            firebaseAuthService.deleteAccount()
         } catch (e: Exception) {
             Result.failure(Exception("Failed to delete account: ${e.message}", e))
         }
