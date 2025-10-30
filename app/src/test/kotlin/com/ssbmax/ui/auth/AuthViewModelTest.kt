@@ -12,11 +12,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.Assert.*
 
@@ -29,10 +28,11 @@ import org.junit.Assert.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
     
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var viewModel: AuthViewModel
     private val mockRepository = mockk<AuthRepository>(relaxed = true)
     private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
+    private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
     
     private val mockUser = SSBMaxUser(
         id = "test-user-123",
@@ -47,6 +47,10 @@ class AuthViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        
+        // Mock currentUser as StateFlow
+        every { mockRepository.currentUser } returns mockCurrentUserFlow
+        
         viewModel = AuthViewModel(mockRepository, mockAuthRepositoryImpl)
     }
     
@@ -71,9 +75,8 @@ class AuthViewModelTest {
         verify { mockAuthRepositoryImpl.getGoogleSignInIntent() }
     }
     
-    @Ignore("TODO: Fix test dispatcher setup for Flow-based state changes")
     @Test
-    fun `handleGoogleSignInResult with success shows success state`() = runTest(testDispatcher) {
+    fun `handleGoogleSignInResult with success shows success state`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         val currentTime = System.currentTimeMillis()
@@ -86,7 +89,6 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        advanceUntilIdle()
         
         // Then
         val state = viewModel.uiState.value
@@ -97,9 +99,8 @@ class AuthViewModelTest {
         }
     }
     
-    @Ignore("TODO: Fix test dispatcher setup for Flow-based state changes")
     @Test
-    fun `handleGoogleSignInResult with new user shows needs role selection`() = runTest(testDispatcher) {
+    fun `handleGoogleSignInResult with new user shows needs role selection`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         val newUser = mockUser.copy(
@@ -110,7 +111,6 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        advanceUntilIdle()
         
         // Then
         val state = viewModel.uiState.value
@@ -120,9 +120,8 @@ class AuthViewModelTest {
         }
     }
     
-    @Ignore("TODO: Fix test dispatcher setup for Flow-based state changes")
     @Test
-    fun `handleGoogleSignInResult with null intent shows error`() = runTest(testDispatcher) {
+    fun `handleGoogleSignInResult with null intent shows error`() = runTest {
         // Given
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(null) } returns Result.failure(
             Exception("Google Sign-In failed")
@@ -130,7 +129,6 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(null)
-        advanceUntilIdle()
         
         // Then
         val state = viewModel.uiState.value
@@ -140,9 +138,8 @@ class AuthViewModelTest {
         }
     }
     
-    @Ignore("TODO: Fix test dispatcher setup for Flow-based state changes")
     @Test
-    fun `handleGoogleSignInResult with failure shows error state`() = runTest(testDispatcher) {
+    fun `handleGoogleSignInResult with failure shows error state`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
@@ -151,7 +148,6 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        advanceUntilIdle()
         
         // Then
         val state = viewModel.uiState.value
@@ -168,11 +164,13 @@ class AuthViewModelTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.STUDENT)
         coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.STUDENT) } returns Result.success(Unit)
-        coEvery { mockRepository.currentUser } returns flowOf(updatedUser)
         
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
+            
+            // Update mock StateFlow to simulate user being updated
+            mockCurrentUserFlow.value = updatedUser
             
             viewModel.setUserRole(UserRole.STUDENT)
             assertEquals(AuthUiState.Loading, awaitItem())
@@ -187,11 +185,13 @@ class AuthViewModelTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.INSTRUCTOR)
         coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.INSTRUCTOR) } returns Result.success(Unit)
-        coEvery { mockRepository.currentUser } returns flowOf(updatedUser)
         
         // When
         viewModel.uiState.test {
             assertEquals(AuthUiState.Initial, awaitItem())
+            
+            // Update mock StateFlow to simulate user being updated
+            mockCurrentUserFlow.value = updatedUser
             
             viewModel.setUserRole(UserRole.INSTRUCTOR)
             assertEquals(AuthUiState.Loading, awaitItem())
@@ -240,9 +240,8 @@ class AuthViewModelTest {
     
     // ==================== Reset State Tests ====================
     
-    @Ignore("TODO: Fix test dispatcher setup for Flow-based state changes")
     @Test
-    fun `resetState returns to initial`() = runTest(testDispatcher) {
+    fun `resetState returns to initial`() = runTest {
         // Given - simulate an error state first
         val mockIntent = mockk<Intent>(relaxed = true)
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
@@ -250,14 +249,12 @@ class AuthViewModelTest {
         )
         
         viewModel.handleGoogleSignInResult(mockIntent)
-        advanceUntilIdle()
         
         // Verify we're in error state
         assertTrue("Should be in error state", viewModel.uiState.value is AuthUiState.Error)
         
         // When
         viewModel.resetState()
-        advanceUntilIdle()
         
         // Then
         assertEquals("Should return to initial state", AuthUiState.Initial, viewModel.uiState.value)
