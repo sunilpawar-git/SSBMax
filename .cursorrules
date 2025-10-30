@@ -1,5 +1,6 @@
 # SSBMax - World-Class Android App Cursor Rules
 # Specialized rules for building an exceptional SSB (Services Selection Board) preparation app
+# Last Updated: October 30, 2025
 
 ## 🎯 PROJECT OVERVIEW
 You are building SSBMax, a comprehensive Android app for SSB preparation that helps candidates:
@@ -13,427 +14,1024 @@ You are building SSBMax, a comprehensive Android app for SSB preparation that he
 
 ### Core Architecture
 - **Pattern**: MVVM (Model-View-ViewModel) with Repository pattern
-- **Navigation**: Single Activity with Navigation Component
-- **UI**: Material Design 3 with consistent theming
-- **Data Binding**: Use ViewBinding for all layouts
-- **Dependency Injection**: Use Hilt/Dagger for clean architecture
+- **UI Framework**: Jetpack Compose (100% Compose, no XML layouts)
+- **Navigation**: Jetpack Navigation Compose with type-safe navigation
+- **State Management**: StateFlow & Compose State with proper hoisting
+- **Dependency Injection**: Hilt/Dagger for clean architecture
+- **Async Operations**: Kotlin Coroutines with structured concurrency
+- **Local Storage**: Room Database + DataStore Preferences
+- **Backend**: Firebase (Auth, Firestore, Storage, Messaging, Analytics)
 
-### Package Structure
-```
-com.example.ssbmax/
-├── data/
-│   ├── local/          # Room database, SharedPreferences
-│   ├── remote/         # API services, DTOs
-│   ├── repository/     # Data repositories
-│   └── models/         # Data classes, entities
-├── domain/
-│   ├── usecase/        # Business logic use cases
-│   └── repository/     # Repository interfaces
-├── presentation/
-│   ├── ui/
-│   │   ├── auth/       # Login, registration
-│   │   ├── dashboard/  # Home, progress tracking
-│   │   ├── tests/      # All SSB test modules
-│   │   ├── study/      # Study materials
-│   │   ├── practice/   # Practice sessions
-│   │   └── profile/    # User profile, settings
-│   ├── viewmodel/      # ViewModels
-│   └── adapter/        # RecyclerView adapters
-├── utils/
-│   ├── extensions/     # Kotlin extensions
-│   ├── constants/      # App constants
-│   └── helpers/        # Utility classes
-└── di/                 # Dependency injection modules
+### Tech Stack (Current Versions - Oct 2025)
+```kotlin
+// Core
+Kotlin: 2.1.0
+AGP: 8.13.0
+Compose BOM: 2024.12.01
+compileSdk: 35
+targetSdk: 35
+minSdk: 26
+JVM Target: 17
+
+// Key Libraries
+Hilt: 2.52
+Room: 2.6.1
+Coroutines: 1.9.0
+Coil: 2.5.0
+Firebase BOM: 33.7.0
+Navigation Compose: 2.8.5
 ```
 
-## 📱 UI/UX EXCELLENCE
+### Multi-Module Architecture
+```
+SSBMax/
+├── app/                          # Main application module
+│   ├── ui/                       # Compose UI screens & components
+│   ├── navigation/               # Navigation graphs
+│   ├── notifications/            # FCM messaging service
+│   └── di/                       # App-level DI modules
+├── core/
+│   ├── designsystem/            # Reusable Compose components, theme
+│   ├── domain/                  # Business logic, use cases, models
+│   └── data/                    # Repositories, data sources, Room DB
+└── gradle/
+    └── libs.versions.toml       # Centralized version catalog
+```
+
+### Package Structure (App Module)
+```
+com.ssbmax/
+├── ui/
+│   ├── auth/                    # Login, role selection
+│   ├── home/                    # Student & instructor dashboards
+│   ├── tests/                   # Test modules (TAT, WAT, SRT, OIR, PPDT)
+│   ├── study/                   # Study materials
+│   ├── profile/                 # User profiles
+│   ├── notifications/           # Notification center
+│   ├── premium/                 # Subscription & upgrades
+│   ├── settings/                # App settings & migrations
+│   ├── components/              # Shared UI components
+│   └── theme/                   # Material 3 theming
+├── navigation/                  # Navigation graphs
+├── notifications/               # FCM service
+└── di/                         # Dependency injection
+```
+
+## 📱 UI/UX EXCELLENCE WITH JETPACK COMPOSE
 
 ### Material Design 3 Implementation
-- Use Material You dynamic theming
-- Implement proper elevation and shadows
-- Follow 8dp grid system for spacing
-- Use appropriate typography scale (headlineLarge, bodyMedium, etc.)
-- Implement proper color contrast ratios (WCAG AA compliant)
-
-### SSB-Specific UI Components
 ```kotlin
-// Custom components for SSB tests
-class TimerView : View {
-    // Countdown timer for timed tests
-    // Visual progress indicator
-    // Audio/vibration alerts
-}
-
-class TestProgressBar : LinearProgressIndicator {
-    // Shows test completion progress
-    // Color-coded based on performance
-}
-
-class SSBCardView : MaterialCardView {
-    // Consistent card styling across app
-    // Elevation animations
-    // Ripple effects
+// Use Material 3 with dynamic theming
+@Composable
+fun SSBMaxTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true, // Material You support
+    content: @Composable () -> Unit
+) {
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            if (darkTheme) dynamicDarkColorScheme(context)
+            else dynamicLightColorScheme(context)
+        }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+    
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = SSBMaxTypography,
+        content = content
+    )
 }
 ```
 
-### Navigation & Flow
-- Implement bottom navigation for main sections
-- Use navigation drawer for secondary features
-- Deep linking for specific tests/materials
-- Proper back stack management
-- Smooth transitions between screens
+### Compose Best Practices
+```kotlin
+// 1. Proper state hoisting
+@Composable
+fun StatelessComponent(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Component doesn't own state
+}
+
+// 2. Use remember & rememberSaveable appropriately
+@Composable
+fun StatefulComponent() {
+    var expanded by remember { mutableStateOf(false) } // Lost on config change
+    var userName by rememberSaveable { mutableStateOf("") } // Survives config change
+}
+
+// 3. Collect StateFlow/Flow with lifecycle awareness
+@Composable
+fun ObserveViewModel(viewModel: MyViewModel) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    when (uiState) {
+        is UiState.Loading -> LoadingIndicator()
+        is UiState.Success -> ContentScreen(data = uiState.data)
+        is UiState.Error -> ErrorScreen(message = uiState.message)
+    }
+}
+
+// 4. Side effects with proper coroutine scopes
+@Composable
+fun ComponentWithSideEffect() {
+    LaunchedEffect(Unit) { /* Runs once when composable enters composition */ }
+    DisposableEffect(Unit) { 
+        onDispose { /* Cleanup */ }
+    }
+}
+
+// 5. Avoid recomposition with derivedStateOf
+@Composable
+fun ExpensiveComputation(items: List<Item>) {
+    val filteredItems by remember(items) {
+        derivedStateOf { items.filter { it.isActive } }
+    }
+}
+```
+
+### SSB-Specific UI Components (Compose)
+```kotlin
+// Custom timer component for SSB tests
+@Composable
+fun SSBTestTimer(
+    remainingMillis: Long,
+    totalMillis: Long,
+    onTimeExpired: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val progress = (remainingMillis.toFloat() / totalMillis).coerceIn(0f, 1f)
+    
+    Column(modifier = modifier) {
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth(),
+            color = when {
+                progress > 0.5f -> MaterialTheme.colorScheme.primary
+                progress > 0.2f -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.error
+            }
+        )
+        Text(
+            text = formatTime(remainingMillis),
+            style = MaterialTheme.typography.titleLarge
+        )
+    }
+}
+
+// Markdown rendering for study materials
+@Composable
+fun MarkdownText(
+    content: String,
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    modifier: Modifier = Modifier
+) {
+    // Custom AnnotatedString-based markdown parser
+    // Supports: headings, bullets, numbered lists, **bold**
+    // See: app/src/main/kotlin/com/ssbmax/ui/components/MarkdownText.kt
+}
+
+// Premium content with lock overlay
+@Composable
+fun PremiumLockCard(
+    isPremiumUser: Boolean,
+    onUpgradeClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box {
+        content()
+        if (!isPremiumUser) {
+            // Show premium lock overlay
+        }
+    }
+}
+```
+
+### Navigation & Deep Linking (Compose)
+```kotlin
+// Type-safe navigation with sealed classes
+sealed class SSBMaxDestination(val route: String) {
+    object Dashboard : SSBMaxDestination("dashboard")
+    data class TestDetail(val testId: String) : SSBMaxDestination("test/{testId}") {
+        fun createRoute(testId: String) = "test/$testId"
+    }
+}
+
+// Navigation setup
+@Composable
+fun SSBMaxNavHost(
+    navController: NavHostController,
+    startDestination: String
+) {
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable(SSBMaxDestination.Dashboard.route) {
+            DashboardScreen(onNavigateToTest = { testId ->
+                navController.navigate(SSBMaxDestination.TestDetail.createRoute(testId))
+            })
+        }
+        composable(
+            route = SSBMaxDestination.TestDetail.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            TestDetailScreen(testId = backStackEntry.arguments?.getString("testId"))
+        }
+    }
+}
+```
 
 ## 🧠 SSB TEST IMPLEMENTATION
 
-### Psychology Tests Module
+### Psychology Tests Module (Compose)
 ```kotlin
 // TAT (Thematic Apperception Test)
-class TATTestActivity : AppCompatActivity() {
-    // Image display with zoom capabilities
-    // Story input with character count
-    // Timer with visual/audio cues
-    // Auto-save functionality
-    // Offline capability
-}
-
-// WAT (Word Association Test)
-class WATTestFragment : Fragment() {
-    // Rapid word display (15 seconds each)
-    // Quick response input
-    // Automatic progression
-    // Response validation
-}
-
-// SRT (Situation Reaction Test)
-class SRTTestFragment : Fragment() {
-    // Scenario presentation
-    // Multiple choice or text input
-    // Time management per question
-    // Progress tracking
-}
-```
-
-### GTO Tests Module
-```kotlin
-class GTOTestSuite {
-    // Group Discussion simulation
-    // Planning exercises with visual aids
-    // Command task scenarios
-    // Lecturette timer and topics
-    // Performance evaluation metrics
-}
-```
-
-### Test Engine Core
-```kotlin
-data class SSBTest(
-    val id: String,
-    val type: TestType,
-    val category: SSBCategory,
-    val questions: List<TestQuestion>,
-    val timeLimit: Duration,
-    val instructions: String,
-    val scoringCriteria: ScoringCriteria
-)
-
-class TestEngine {
-    fun startTest(test: SSBTest): TestSession
-    fun pauseTest(sessionId: String)
-    fun resumeTest(sessionId: String)
-    fun submitTest(sessionId: String): TestResult
-    fun calculateScore(responses: List<TestResponse>): Score
-}
-```
-
-## 📊 PROGRESS TRACKING & ANALYTICS
-
-### Performance Metrics
-```kotlin
-data class UserProgress(
-    val testsCompleted: Int,
-    val studyHours: Float,
-    val streakDays: Int,
-    val categoryScores: Map<SSBCategory, Float>,
-    val weakAreas: List<String>,
-    val recommendations: List<String>
-)
-
-class AnalyticsRepository {
-    suspend fun trackTestCompletion(testId: String, score: Float)
-    suspend fun trackStudyTime(duration: Duration, category: SSBCategory)
-    suspend fun generateProgressReport(): ProgressReport
-    suspend fun getPersonalizedRecommendations(): List<Recommendation>
-}
-```
-
-### Gamification Elements
-- Achievement badges for milestones
-- Daily/weekly challenges
-- Leaderboards (optional, privacy-focused)
-- Streak counters and rewards
-- Progress visualization with charts
-
-## 🎓 STUDY MATERIALS SYSTEM
-
-### Content Management
-```kotlin
-sealed class StudyContent {
-    data class TextMaterial(
-        val title: String,
-        val content: String,
-        val category: SSBCategory,
-        val difficulty: DifficultyLevel,
-        val estimatedReadTime: Duration
-    ) : StudyContent()
+@Composable
+fun TATTestScreen(
+    viewModel: TATViewModel = hiltViewModel(),
+    onComplete: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    data class VideoMaterial(
-        val title: String,
-        val videoUrl: String,
-        val transcript: String?,
-        val duration: Duration
-    ) : StudyContent()
+    Scaffold { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            // Image with zoom capability (Coil + transformable state)
+            AsyncImage(
+                model = uiState.currentImage,
+                contentDescription = "TAT Image",
+                modifier = Modifier.graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+            )
+            
+            // Timer
+            SSBTestTimer(
+                remainingMillis = uiState.remainingTime,
+                totalMillis = 240_000L, // 4 minutes per image
+                onTimeExpired = { viewModel.onTimeExpired() }
+            )
+            
+            // Story input
+            OutlinedTextField(
+                value = uiState.storyText,
+                onValueChange = viewModel::onStoryChanged,
+                maxLines = 10,
+                supportingText = {
+                    Text("${uiState.storyText.length} characters")
+                }
+            )
+        }
+    }
+}
+
+// WAT (Word Association Test) - 15 seconds per word
+@Composable
+fun WATTestScreen(
+    viewModel: WATViewModel = hiltViewModel()
+) {
+    val currentWord by viewModel.currentWord.collectAsStateWithLifecycle()
+    val timeRemaining by viewModel.timeRemaining.collectAsStateWithLifecycle()
     
-    data class InteractiveMaterial(
-        val title: String,
-        val exercises: List<Exercise>,
-        val feedback: FeedbackSystem
-    ) : StudyContent()
+    Column {
+        Text(
+            text = currentWord,
+            style = MaterialTheme.typography.displayLarge
+        )
+        
+        TextField(
+            value = viewModel.responseText,
+            onValueChange = viewModel::onResponseChanged,
+            placeholder = { Text("Type your response...") },
+            singleLine = true
+        )
+        
+        LinearProgressIndicator(
+            progress = { timeRemaining / 15f },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
 ```
 
-### Offline Capability
-- Download materials for offline access
-- Sync progress when online
-- Cache frequently accessed content
-- Efficient storage management
+### Test Engine Architecture
+```kotlin
+// Sealed class for test types
+sealed class TestType {
+    data object TAT : TestType()
+    data object WAT : TestType()
+    data object SRT : TestType()
+    data object OIR : TestType()
+    data object PPDT : TestType()
+}
 
-## 🔒 DATA MANAGEMENT & SECURITY
+// Test state management
+sealed class TestState {
+    data object NotStarted : TestState()
+    data object Loading : TestState()
+    data class InProgress(
+        val currentQuestion: Int,
+        val totalQuestions: Int,
+        val remainingTime: Long
+    ) : TestState()
+    data class Completed(val result: TestResult) : TestState()
+    data class Error(val message: String) : TestState()
+}
 
-### Local Database (Room)
+// ViewModel pattern for tests
+@HiltViewModel
+class TestViewModel @Inject constructor(
+    private val testRepository: TestRepository,
+    private val analyticsRepository: AnalyticsRepository,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    
+    private val testId: String = savedStateHandle["testId"] ?: ""
+    
+    private val _uiState = MutableStateFlow<TestState>(TestState.NotStarted)
+    val uiState: StateFlow<TestState> = _uiState.asStateFlow()
+    
+    fun startTest() {
+        viewModelScope.launch {
+            _uiState.value = TestState.Loading
+            try {
+                val test = testRepository.getTest(testId)
+                _uiState.value = TestState.InProgress(
+                    currentQuestion = 1,
+                    totalQuestions = test.questions.size,
+                    remainingTime = test.timeLimit
+                )
+            } catch (e: Exception) {
+                _uiState.value = TestState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+    
+    fun submitTest(responses: List<TestResponse>) {
+        viewModelScope.launch {
+            val result = testRepository.submitTest(testId, responses)
+            analyticsRepository.trackTestCompletion(testId, result.score)
+            _uiState.value = TestState.Completed(result)
+        }
+    }
+}
+```
+
+## 📊 DATA LAYER & FIREBASE INTEGRATION
+
+### Repository Pattern with Firebase
+```kotlin
+@Singleton
+class AuthRepository @Inject constructor(
+    private val firebaseAuth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
+) {
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+    
+    init {
+        // Observe Firebase auth state changes
+        viewModelScope.launch {
+            firebaseAuth.authStateChanges().collect { firebaseUser ->
+                if (firebaseUser != null) {
+                    loadUserProfile(firebaseUser.uid)
+                } else {
+                    _currentUser.value = null
+                }
+            }
+        }
+    }
+    
+    private suspend fun loadUserProfile(userId: String) {
+        try {
+            val profile = firestore.collection("users")
+                .document(userId)
+                .collection("data")
+                .document("profile")
+                .get()
+                .await()
+                .toObject<UserProfile>()
+            
+            _currentUser.value = profile
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Failed to load profile", e)
+        }
+    }
+}
+
+// Firestore data structure: users/{userId}/data/profile
+// Requires nested security rules for subcollections
+```
+
+### Room Database Setup
 ```kotlin
 @Entity(tableName = "test_results")
 data class TestResultEntity(
-    @PrimaryKey val id: String,
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val testType: String,
     val score: Float,
-    val completedAt: Long,
+    val completedAt: Long = System.currentTimeMillis(),
     val timeSpent: Long,
     val responses: String // JSON serialized
 )
 
-@Entity(tableName = "study_progress")
-data class StudyProgressEntity(
-    @PrimaryKey val materialId: String,
-    val progress: Float,
-    val lastAccessed: Long,
-    val bookmarked: Boolean,
-    val notes: String?
+@Dao
+interface TestResultDao {
+    @Query("SELECT * FROM test_results WHERE testType = :type ORDER BY completedAt DESC")
+    fun getResultsByType(type: String): Flow<List<TestResultEntity>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertResult(result: TestResultEntity)
+}
+
+@Database(
+    entities = [TestResultEntity::class, StudyProgressEntity::class],
+    version = 1,
+    exportSchema = true
 )
+abstract class SSBMaxDatabase : RoomDatabase() {
+    abstract fun testResultDao(): TestResultDao
+}
 ```
 
-### Privacy & Security
-- Encrypt sensitive user data
-- Implement proper authentication
-- GDPR compliance for data handling
-- Secure API communication (HTTPS, certificate pinning)
-- Local data encryption for test results
+### DataStore for Preferences
+```kotlin
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
+class SettingsRepository @Inject constructor(
+    private val dataStore: DataStore<Preferences>
+) {
+    val themeMode: Flow<ThemeMode> = dataStore.data
+        .map { preferences ->
+            ThemeMode.valueOf(preferences[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name)
+        }
+    
+    suspend fun setThemeMode(mode: ThemeMode) {
+        dataStore.edit { preferences ->
+            preferences[THEME_MODE_KEY] = mode.name
+        }
+    }
+}
+```
 
 ## ⚡ PERFORMANCE OPTIMIZATION
 
+### Compose Performance
+```kotlin
+// 1. Use keys in LazyColumn for stable items
+LazyColumn {
+    items(items = testList, key = { it.id }) { test ->
+        TestCard(test = test)
+    }
+}
+
+// 2. Avoid unnecessary recomposition with stable classes
+@Immutable
+data class TestData(val id: String, val title: String)
+
+// 3. Use derivedStateOf for computed values
+val filteredTests by remember(tests, searchQuery) {
+    derivedStateOf {
+        tests.filter { it.title.contains(searchQuery, ignoreCase = true) }
+    }
+}
+
+// 4. Defer expensive operations with LaunchedEffect
+LaunchedEffect(testId) {
+    // Load test data asynchronously
+    viewModel.loadTest(testId)
+}
+```
+
 ### Memory Management
 ```kotlin
-class ImageCache {
-    private val lruCache = LruCache<String, Bitmap>(maxSize)
-    
-    fun loadImage(url: String, imageView: ImageView) {
-        // Efficient image loading with caching
-        // Proper bitmap recycling
-        // Memory leak prevention
+// Image loading with Coil
+AsyncImage(
+    model = ImageRequest.Builder(LocalContext.current)
+        .data(imageUrl)
+        .crossfade(true)
+        .memoryCachePolicy(CachePolicy.ENABLED)
+        .diskCachePolicy(CachePolicy.ENABLED)
+        .build(),
+    contentDescription = null,
+    contentScale = ContentScale.Crop
+)
+
+// Proper coroutine scoping in ViewModels
+class MyViewModel : ViewModel() {
+    init {
+        viewModelScope.launch {
+            // Automatically cancelled when ViewModel is cleared
+        }
     }
 }
 ```
 
 ### Background Processing
-- Use WorkManager for sync operations
-- Implement proper coroutine scoping
-- Background test result processing
-- Efficient data synchronization
+```kotlin
+// Use WorkManager for sync operations
+class SyncWorker(
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        return try {
+            syncRepository.syncData()
+            Result.success()
+        } catch (e: Exception) {
+            Result.retry()
+        }
+    }
+}
 
-### Battery Optimization
-- Minimize background processing
-- Efficient timer implementations
-- Proper wake lock management
-- Doze mode compatibility
+// Schedule periodic sync
+val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
+    repeatInterval = 6,
+    repeatIntervalTimeUnit = TimeUnit.HOURS
+).setConstraints(
+    Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .setRequiresBatteryNotLow(true)
+        .build()
+).build()
+
+WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+    "SyncWork",
+    ExistingPeriodicWorkPolicy.KEEP,
+    syncRequest
+)
+```
 
 ## 🧪 TESTING STRATEGY
 
-### Unit Tests
+### Unit Tests with Mockk
 ```kotlin
-class TestEngineTest {
-    @Test
-    fun `should calculate correct score for TAT test`() {
-        // Test scoring algorithms
-        // Validate test logic
-        // Edge case handling
-    }
+@Test
+fun `test calculation returns correct score`() = runTest {
+    // Given
+    val repository = mockk<TestRepository>()
+    coEvery { repository.getTest(any()) } returns mockTest
+    
+    val viewModel = TestViewModel(repository)
+    
+    // When
+    viewModel.submitTest(mockResponses)
+    
+    // Then
+    val state = viewModel.uiState.value
+    assertTrue(state is TestState.Completed)
+    assertEquals(85.0f, (state as TestState.Completed).result.score)
 }
 ```
 
-### UI Tests
+### Compose UI Tests
 ```kotlin
 @RunWith(AndroidJUnit4::class)
-class TATTestActivityTest {
+class TATTestScreenTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+    
     @Test
-    fun testTimerFunctionality() {
-        // Test timer accuracy
-        // UI state changes
-        // User interaction flows
+    fun testTimer_displaysCorrectly() {
+        composeTestRule.setContent {
+            SSBTestTimer(
+                remainingMillis = 120_000L,
+                totalMillis = 240_000L,
+                onTimeExpired = {}
+            )
+        }
+        
+        composeTestRule.onNodeWithText("2:00").assertIsDisplayed()
     }
 }
 ```
 
-### Integration Tests
-- Test complete user flows
-- Database operations
-- Network connectivity scenarios
-- Offline/online transitions
-
-## 🌐 ACCESSIBILITY & INCLUSIVITY
-
-### Accessibility Features
-- Screen reader support (TalkBack)
-- High contrast mode support
-- Font size scaling
-- Voice input for tests (where appropriate)
-- Keyboard navigation support
-
-### Internationalization
-- Multi-language support (Hindi, English)
-- RTL layout support
-- Cultural considerations for content
-- Regional test variations
-
-## 📈 ANALYTICS & MONITORING
-
-### User Analytics
+### Integration Tests with Hilt
 ```kotlin
-class AnalyticsManager {
-    fun trackScreenView(screenName: String)
-    fun trackTestStart(testType: String)
-    fun trackTestCompletion(testType: String, score: Float)
-    fun trackStudyMaterialAccess(materialId: String)
-    fun trackUserEngagement(sessionDuration: Long)
+@HiltAndroidTest
+class EndToEndTestFlowTest {
+    @get:Rule(order = 0)
+    var hiltRule = HiltAndroidRule(this)
+    
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    
+    @Test
+    fun completeTest_savesResult_showsInHistory() {
+        // Navigate to test
+        composeTestRule.onNodeWithText("Start TAT").performClick()
+        
+        // Complete test
+        composeTestRule.onNodeWithText("Submit").performClick()
+        
+        // Verify result appears in history
+        composeTestRule.onNodeWithText("Test History").performClick()
+        composeTestRule.onNodeWithText("TAT Test").assertIsDisplayed()
+    }
 }
 ```
 
-### Performance Monitoring
-- Crash reporting (Firebase Crashlytics)
-- Performance metrics (app startup time, test loading time)
-- Network request monitoring
-- Memory usage tracking
+## 🔒 SECURITY & PRIVACY
 
-## 🚀 DEPLOYMENT & MAINTENANCE
+### Firebase Security Rules
+```javascript
+// Firestore rules for nested subcollections
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // CRITICAL: Nested rules for subcollections
+      match /data/{document} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /test_results/{resultId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}
+```
 
-### Build Configuration
+### Data Encryption
 ```kotlin
-// build.gradle.kts (app level)
+// Encrypted SharedPreferences for sensitive data
+val masterKey = MasterKey.Builder(context)
+    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+    .build()
+
+val encryptedPrefs = EncryptedSharedPreferences.create(
+    context,
+    "secure_prefs",
+    masterKey,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+)
+```
+
+## 🌐 PUSH NOTIFICATIONS (FCM)
+
+### Firebase Cloud Messaging Service
+```kotlin
+@AndroidEntryPoint
+class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
+    
+    @Inject lateinit var notificationRepository: NotificationRepository
+    
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+        
+        // Handle notification payload
+        remoteMessage.notification?.let { notification ->
+            showNotification(
+                title = notification.title ?: "",
+                body = notification.body ?: "",
+                data = remoteMessage.data
+            )
+        }
+        
+        // Save to local database
+        CoroutineScope(Dispatchers.IO).launch {
+            notificationRepository.saveNotification(
+                NotificationEntity(
+                    title = remoteMessage.notification?.title ?: "",
+                    body = remoteMessage.notification?.body ?: "",
+                    receivedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+    
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        // Upload token to Firestore
+        CoroutineScope(Dispatchers.IO).launch {
+            notificationRepository.updateFCMToken(token)
+        }
+    }
+}
+```
+
+## 📋 CODING STANDARDS & BEST PRACTICES
+
+### Kotlin Best Practices
+```kotlin
+// 1. Use sealed classes for state management
+sealed interface UiState<out T> {
+    data object Loading : UiState<Nothing>
+    data class Success<T>(val data: T) : UiState<T>
+    data class Error(val message: String) : UiState<Nothing>
+}
+
+// 2. Use data classes with validation
+data class TestScore(
+    val value: Float
+) {
+    init {
+        require(value in 0f..100f) { "Score must be between 0 and 100" }
+    }
+}
+
+// 3. Extension functions for utilities
+fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, message, duration).show()
+}
+
+// 4. Proper coroutine exception handling
+viewModelScope.launch {
+    try {
+        val result = repository.fetchData()
+        _uiState.value = UiState.Success(result)
+    } catch (e: CancellationException) {
+        throw e // Don't catch cancellation
+    } catch (e: Exception) {
+        _uiState.value = UiState.Error(e.message ?: "Unknown error")
+        Log.e(TAG, "Error fetching data", e)
+    }
+}
+```
+
+### File Size Limit
+**CRITICAL**: No file should exceed **300 lines of code**. If approaching this limit:
+1. Extract utility functions to separate files
+2. Split large classes into focused components
+3. Create separate ViewModel/Repository classes
+4. Use composition over large single classes
+
+### Code Organization
+- One class per file
+- Meaningful naming (UserProfileViewModel, not UPViewModel)
+- Proper KDoc for public APIs
+- Group related functions with region comments
+- No magic numbers - use constants
+
+## 🎯 SSB-SPECIFIC FEATURES
+
+### Authentic Test Simulation
+- **Exact Timing**: Match real SSB test durations (e.g., WAT: 15s per word, TAT: 4min per image)
+- **Auto-progression**: Automatic advancement when time expires
+- **Auto-save**: Save responses every 30 seconds to prevent data loss
+- **Offline Support**: Allow tests to be taken offline with sync later
+
+### Content Management
+```kotlin
+// Centralized markdown rendering
+@Composable
+fun MarkdownText(
+    content: String,
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    // Use AnnotatedString with SpanStyle for formatting
+    // Supports: #headings, **bold**, bullet lists, numbered lists
+    // This is the ONLY way to render long-form content
+}
+
+// Usage in study materials
+@Composable
+fun StudyMaterialScreen(content: String) {
+    LazyColumn {
+        item {
+            MarkdownText(content = content)
+        }
+    }
+}
+```
+
+### Role-Based Access (Student vs Instructor)
+```kotlin
+sealed class UserRole {
+    data object Student : UserRole()
+    data object Instructor : UserRole()
+    data object Admin : UserRole()
+}
+
+// Different navigation graphs per role
+@Composable
+fun SSBMaxApp(userRole: UserRole) {
+    when (userRole) {
+        UserRole.Student -> StudentNavGraph()
+        UserRole.Instructor -> InstructorNavGraph()
+        UserRole.Admin -> AdminNavGraph()
+    }
+}
+```
+
+### Premium/Subscription Features
+```kotlin
+// Premium gating with graceful UI
+@Composable
+fun PremiumFeature(
+    isPremiumUser: Boolean,
+    onUpgradeClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    if (isPremiumUser) {
+        content()
+    } else {
+        PremiumLockCard(
+            onUpgradeClick = onUpgradeClick,
+            featureName = "Advanced Analytics"
+        )
+    }
+}
+```
+
+## 🔧 DEBUGGING & TROUBLESHOOTING
+
+### Common Issues & Solutions
+
+#### 1. Firebase "Null State" Bug
+**Symptom**: UI shows empty state even though data exists in Firestore
+
+**Solution**: Three-state pattern
+```kotlin
+data class UiState<T>(
+    val isLoading: Boolean = false,
+    val data: T? = null,
+    val error: String? = null
+)
+
+@Composable
+fun DataScreen(uiState: UiState<List<Test>>) {
+    when {
+        uiState.isLoading -> LoadingSpinner()
+        uiState.data != null -> ContentList(uiState.data)
+        uiState.error != null -> ErrorMessage(uiState.error)
+        else -> EmptyState()
+    }
+}
+```
+
+#### 2. Repository Lazy Initialization Race Condition
+**Issue**: AuthRepository singleton injected lazily, so its `init` block doesn't run until first access
+
+**Solution**: Ensure eager initialization or check `isAuthenticated()` in ViewModels
+```kotlin
+@Singleton
+class AuthRepository @Inject constructor(...) {
+    init {
+        // This runs immediately when repository is created
+        observeAuthState()
+    }
+}
+
+// In ViewModel
+init {
+    viewModelScope.launch {
+        if (authRepository.isAuthenticated()) {
+            val user = authRepository.currentUser.first { it != null }
+            loadUserData(user)
+        }
+    }
+}
+```
+
+#### 3. Firestore Permission Denied
+**Issue**: Security rules don't cover nested subcollections
+
+**Solution**: Add nested `match` blocks in firestore.rules
+```javascript
+match /users/{userId} {
+  allow read, write: if isOwner(userId);
+  
+  // Don't forget subcollection rules!
+  match /data/{document} {
+    allow read, write: if isOwner(userId);
+  }
+}
+```
+
+### Strategic Logging
+```kotlin
+// Add comprehensive logging at critical points
+class MyRepository @Inject constructor() {
+    init {
+        Log.d(TAG, "Repository initialized")
+    }
+    
+    private val _data = callbackFlow<Data> {
+        Log.d(TAG, "Starting Flow collection")
+        // ...
+    }
+    
+    fun getData(): Flow<Data> {
+        Log.d(TAG, "getData() called")
+        return _data
+    }
+}
+
+class MyViewModel @Inject constructor(
+    private val repository: MyRepository
+) : ViewModel() {
+    init {
+        Log.d(TAG, "ViewModel initialized")
+        viewModelScope.launch {
+            repository.getData().collect { data ->
+                Log.d(TAG, "Received data: $data")
+            }
+        }
+    }
+}
+```
+
+## 🚀 DEPLOYMENT & BUILD CONFIGURATION
+
+### Build Types
+```kotlin
 android {
     buildTypes {
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            // Use debug Firebase project
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
 ```
 
-### CI/CD Pipeline
-- Automated testing on pull requests
-- Code quality checks (detekt, ktlint)
-- Automated builds for different environments
-- Play Store deployment automation
+### ProGuard Rules
+```proguard
+# Firebase
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.firebase.** { *; }
 
-## 📋 CODING STANDARDS
+# Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
-### Kotlin Best Practices
-```kotlin
-// Use data classes for models
-data class SSBTestResult(
-    val testId: String,
-    val score: Float,
-    val completedAt: Instant,
-    val feedback: String?
-) {
-    init {
-        require(score in 0.0..100.0) { "Score must be between 0 and 100" }
-    }
-}
-
-// Use sealed classes for state management
-sealed class TestState {
-    object Loading : TestState()
-    object Ready : TestState()
-    data class InProgress(val currentQuestion: Int, val totalQuestions: Int) : TestState()
-    data class Completed(val result: TestResult) : TestState()
-    data class Error(val message: String) : TestState()
-}
-
-// Use extension functions for utility operations
-fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
-    Toast.makeText(this, message, duration).show()
-}
+# Room
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
 ```
 
-### Code Organization
-- One class per file
-- Meaningful naming conventions
-- Proper documentation for public APIs
-- Consistent formatting (ktlint)
-- No magic numbers or strings
+## 🎓 LEARNING RESOURCES
 
-## 🎯 SSB-SPECIFIC FEATURES
+### Official Documentation
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Material Design 3](https://m3.material.io/)
+- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
+- [Hilt Dependency Injection](https://dagger.dev/hilt/)
+- [Firebase for Android](https://firebase.google.com/docs/android/setup)
 
-### Authentic Test Simulation
-- Exact timing as real SSB tests
-- Similar UI/UX to actual test conditions
-- Proper instructions and guidelines
-- Realistic test environments
+### Best Practices
+- [Android Architecture Guide](https://developer.android.com/topic/architecture)
+- [Compose Performance](https://developer.android.com/jetpack/compose/performance)
+- [Coroutine Best Practices](https://developer.android.com/kotlin/coroutines/coroutines-best-practices)
 
-### Expert Content
-- Collaborate with SSB experts for content accuracy
-- Regular content updates based on latest patterns
-- Success stories and testimonials
-- Expert tips and strategies
+## 📝 CHANGELOG TRACKING
 
-### Community Features
-- Discussion forums for candidates
-- Peer-to-peer learning
-- Mentor connections
-- Study groups formation
+When making significant changes, update the relevant documentation:
+- Architecture changes → Update `.cursorrules` and `docs/architecture/`
+- Bug fixes → Log in `docs/troubleshooting/`
+- New features → Document in `docs/implementation/`
+- Migrations → Track in `docs/migration/`
 
-## 🔧 DEVELOPMENT WORKFLOW
+**Note**: Per user preference, do NOT auto-create markdown documentation files after every change. Only create .md files when explicitly requested.
 
-### Code Review Checklist
-- [ ] Follows MVVM architecture
-- [ ] Proper error handling
-- [ ] Memory leak prevention
-- [ ] Accessibility compliance
-- [ ] Performance optimization
-- [ ] Security considerations
-- [ ] Test coverage
-- [ ] Documentation updated
+## ✅ CODE REVIEW CHECKLIST
 
-### Git Workflow
-- Feature branch workflow
-- Meaningful commit messages
-- Pull request templates
-- Code review requirements
-- Automated testing before merge
+Before submitting code:
+- [ ] Follows MVVM architecture with proper separation of concerns
+- [ ] Uses Jetpack Compose with proper state management
+- [ ] Implements proper error handling with try-catch and sealed classes
+- [ ] No memory leaks (proper ViewModel scoping, no static context references)
+- [ ] Accessibility support (content descriptions, semantic properties)
+- [ ] Performance optimized (stable keys, derivedStateOf, lazy loading)
+- [ ] Security considerations (input validation, proper Firebase rules)
+- [ ] Test coverage (unit tests for ViewModels, UI tests for critical flows)
+- [ ] No files exceeding 300 lines
+- [ ] Documentation updated (KDoc for public APIs)
+- [ ] No hardcoded strings (use string resources)
+- [ ] Proper logging (strategic debug logs, no sensitive data)
 
-Remember: The goal is to create an app that genuinely helps SSB candidates succeed while providing an exceptional user experience. Focus on authenticity, accuracy, and user engagement throughout the development process.
+## 🎯 DEVELOPMENT PRIORITIES
+
+1. **Correctness**: App must work reliably without crashes
+2. **User Experience**: Smooth, intuitive, Material Design 3 compliant
+3. **Performance**: Fast load times, smooth animations, efficient memory usage
+4. **Security**: Proper authentication, data encryption, secure communication
+5. **Maintainability**: Clean architecture, readable code, comprehensive tests
+6. **Authenticity**: Match real SSB test conditions and content
+
+---
+
+**Remember**: The goal is to create an app that genuinely helps SSB candidates succeed while providing an exceptional, world-class user experience. Focus on authenticity, accuracy, and user engagement throughout the development process.

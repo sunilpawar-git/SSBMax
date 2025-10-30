@@ -1,0 +1,287 @@
+# ================================================
+# CURSOR IDE IGNORE FILE
+# ================================================
+# This file tells Cursor which files to ignore when:
+# - Indexing the codebase
+# - Generating automatic documentation
+# - Creating context for AI completions
+# ================================================
+# Last Updated: October 30, 2025
+
+# ============================================
+# DOCUMENTATION FILES
+# ============================================
+# Prevent Cursor from auto-generating MD files in root
+*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE.md
+
+# All docs should live in /docs directory
+Docu/**/*.md
+docs/**/*.md
+
+# Build/log documentation - prevent AI from creating these
+*BUILD*.md
+*SUCCESS*.md
+*COMPLETE*.md
+*SUMMARY*.md
+*REPORT*.md
+*GUIDE*.md
+*STATUS*.md
+*PROGRESS*.md
+*FIX*.md
+*DEBUG*.md
+*ERROR*.md
+*MIGRATION*.md
+*DEPLOYMENT*.md
+*RELEASE*.md
+*IMPLEMENTATION*.md
+*TESTING*.md
+*PHASE*.md
+*STEP*.md
+*REFACTOR*.md
+*UPDATE*.md
+*CHANGES*.md
+
+# ============================================
+# BUILD ARTIFACTS
+# ============================================
+build/
+.gradle/
+.idea/
+*.iml
+*.apk
+*.aab
+*.dex
+*.class
+out/
+bin/
+gen/
+.cxx/
+captures/
+*.jks
+*.keystore
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ
+*.iws
+/out/
+
+# Gradle cache
+.gradle/
+gradle-app.setting
+
+# ============================================
+# LOGS & TEMPORARY FILES
+# ============================================
+*.log
+*.log.*
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+build_output.log
+test_output.log
+test_results.log
+test_run.log
+test_final_results.log
+Logs/
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~.nib
+*.swo
+*.orig
+
+# ============================================
+# SENSITIVE FILES
+# ============================================
+# Firebase credentials
+google-services.json
+firebase-admin-key.json
+service-account*.json
+local.properties
+secrets.properties
+
+# API keys and credentials
+*.env
+.env.*
+!.env.example
+api-keys.json
+credentials.json
+
+# Firebase state
+.firebase/
+firebase-debug.log
+.firebaserc
+
+# Signing keys
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules/
+scripts/node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Kotlin/JS
+kotlin-js-store/
+
+# CocoaPods (if using KMM)
+Pods/
+*.xcworkspace
+
+# ============================================
+# DUPLICATE/BACKUP FIRESTORE RULES
+# ============================================
+# Only the main firestore.rules should be tracked
+firestore.rules.CORRECT
+firestore.rules.updated
+firestore.rules.backup*
+firestore.rules.old*
+
+# ============================================
+# SYSTEM FILES
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+*.bak
+.cursor/
+
+# Windows
+desktop.ini
+
+# Linux
+.directory
+
+# ============================================
+# SCRIPTS & UTILITIES
+# ============================================
+# Keep scripts indexed but not their outputs
+scripts/migration_logs/
+scripts/test_results/
+scripts/outputs/
+
+# Shell scripts outputs
+*.sh.log
+*.sh.out
+
+# Python script outputs (if any)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ============================================
+# GRADLE WRAPPER
+# ============================================
+# We want Cursor to see these, so explicitly allow
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+!gradle.sh
+
+# ============================================
+# ANDROID SPECIFIC
+# ============================================
+# Keep ProGuard/R8 outputs out of index
+*.pro.map
+mapping.txt
+seeds.txt
+usage.txt
+resources.txt
+
+# Keep lint results but not detailed reports
+lint-results*.html
+lint-results*.xml
+
+# AGP generated files
+build-cache/
+
+# ============================================
+# TEST ARTIFACTS
+# ============================================
+# Test results and coverage reports
+test-results/
+coverage/
+jacoco/
+*.exec
+*.ec
+
+# Screenshot tests
+screenshots/
+snapshots/
+
+# ============================================
+# GENERATED FILES
+# ============================================
+# Hilt generated files (indexed via source)
+*_HiltModules.java
+*_Factory.java
+*_MembersInjector.java
+
+# Room generated files (indexed via source)
+*_Impl.java
+
+# Compose compiler generated
+*.compose_cache
+
+# ============================================
+# LARGE ASSET FILES
+# ============================================
+# Prevent large media files from being indexed
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.mp3
+*.flac
+
+# Large images (keep small ones for context)
+*.psd
+*.ai
+*.sketch
+
+# ============================================
+# VERSIONING
+# ============================================
+# Git internal files
+.git/
+.gitattributes
+.gitmodules
+
+# ============================================
+# CURSOR AI SPECIFIC
+# ============================================
+# AI-generated files we don't want indexed
+.cursor/
+.cursorrules.backup*
+.cursorignore.backup*
+
+# AI conversation logs (if any)
+ai-conversations/
+cursor-logs/
+

@@ -113,9 +113,38 @@ lint/tmp/
 node_modules/
 scripts/node_modules/
 
+# ============================================
+# DOCUMENTATION FILES
+# ============================================
+# All documentation should live in /docs/ directory
+# Prevent auto-generated MD files in root
+*.md
+!README.md
+!CHANGELOG.md
+!docs/**/*.md
+
 # Temporary/Debug Documentation (may contain sensitive data during cleanup)
-# Add specific patterns for cleanup/debug docs that shouldn't be committed
 *CLEANUP*.md
 *DEBUG*.md
 *TEMP*.md
 *SENSITIVE*.md
+
+# Build and status reports
+*BUILD*.md
+*SUCCESS*.md
+*COMPLETE*.md
+*SUMMARY*.md
+*REPORT*.md
+*STATUS*.md
+*PROGRESS*.md
+*FIX*.md
+*ERROR*.md
+
+# ============================================
+# FIREBASE RULES BACKUPS
+# ============================================
+# Only track the main firestore.rules file
+firestore.rules.CORRECT
+firestore.rules.updated
+firestore.rules.backup*
+firestore.rules.old*
