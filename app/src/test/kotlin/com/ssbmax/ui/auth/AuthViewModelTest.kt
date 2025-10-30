@@ -6,16 +6,16 @@ import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
+import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.*
-import org.junit.After
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 
@@ -28,7 +28,9 @@ import org.junit.Assert.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
     
-    private val testDispatcher = StandardTestDispatcher()
+    @get:Rule
+    val dispatcherRule = TestDispatcherRule()
+    
     private lateinit var viewModel: AuthViewModel
     private val mockRepository = mockk<AuthRepository>(relaxed = true)
     private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
@@ -46,19 +48,11 @@ class AuthViewModelTest {
     
     @Before
     fun setup() {
-        // CRITICAL: Set Main dispatcher BEFORE creating ViewModel
-        Dispatchers.setMain(testDispatcher)
-        
         // Mock currentUser as StateFlow
         every { mockRepository.currentUser } returns mockCurrentUserFlow
         
-        // Create ViewModel AFTER setting test dispatcher
+        // Create ViewModel (dispatcher is already set by TestDispatcherRule)
         viewModel = AuthViewModel(mockRepository, mockAuthRepositoryImpl)
-    }
-    
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
     
     // ==================== Google Sign-In Tests ====================
@@ -78,7 +72,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `handleGoogleSignInResult with success shows success state`() = runTest {
+    fun `handleGoogleSignInResult with success shows success state`() {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         val currentTime = System.currentTimeMillis()
@@ -91,7 +85,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -103,7 +97,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `handleGoogleSignInResult with new user shows needs role selection`() = runTest {
+    fun `handleGoogleSignInResult with new user shows needs role selection`() {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         val timestamp = System.currentTimeMillis()
@@ -116,7 +110,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -127,7 +121,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `handleGoogleSignInResult with null intent shows error`() = runTest {
+    fun `handleGoogleSignInResult with null intent shows error`() {
         // Given
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(null) } returns Result.failure(
             Exception("Google Sign-In failed")
@@ -135,7 +129,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(null)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -146,7 +140,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `handleGoogleSignInResult with failure shows error state`() = runTest {
+    fun `handleGoogleSignInResult with failure shows error state`() {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
@@ -155,7 +149,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -168,7 +162,7 @@ class AuthViewModelTest {
     // ==================== Role Selection Tests ====================
     
     @Test
-    fun `setUserRole with student role updates user`() = runTest {
+    fun `setUserRole with student role updates user`() {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.STUDENT)
         mockCurrentUserFlow.value = updatedUser // Set before calling function
@@ -176,7 +170,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.setUserRole(UserRole.STUDENT)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -187,7 +181,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `setUserRole with instructor role updates user`() = runTest {
+    fun `setUserRole with instructor role updates user`() {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.INSTRUCTOR)
         mockCurrentUserFlow.value = updatedUser // Set before calling function
@@ -195,7 +189,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.setUserRole(UserRole.INSTRUCTOR)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -206,7 +200,7 @@ class AuthViewModelTest {
     }
     
     @Test
-    fun `setUserRole with failure shows error`() = runTest {
+    fun `setUserRole with failure shows error`() {
         // Given
         coEvery { mockAuthRepositoryImpl.updateUserRole(any()) } returns Result.failure(
             Exception("Failed to set role")
@@ -214,7 +208,7 @@ class AuthViewModelTest {
         
         // When
         viewModel.setUserRole(UserRole.STUDENT)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for coroutines to complete
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Then
         val state = viewModel.uiState.value
@@ -245,7 +239,7 @@ class AuthViewModelTest {
     // ==================== Reset State Tests ====================
     
     @Test
-    fun `resetState returns to initial`() = runTest {
+    fun `resetState returns to initial`() {
         // Given - simulate an error state first
         val mockIntent = mockk<Intent>(relaxed = true)
         coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
@@ -253,7 +247,7 @@ class AuthViewModelTest {
         )
         
         viewModel.handleGoogleSignInResult(mockIntent)
-        testDispatcher.scheduler.advanceUntilIdle() // Wait for error state to set
+        // With UnconfinedTestDispatcher, coroutines execute immediately - no need to advance time
         
         // Verify we're in error state
         val errorState = viewModel.uiState.value
