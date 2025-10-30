@@ -143,4 +143,7 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Memory leak detection (debug builds only)
+    debugImplementation(libs.leakcanary.android)
 }

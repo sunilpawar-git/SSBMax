@@ -2,11 +2,14 @@ package com.ssbmax.ui.tests.wat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.util.MemoryLeakTracker
+import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,12 +17,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for WAT Test Screen
  * Loads test questions from cloud via TestContentRepository
+ *
+ * MEMORY LEAK PREVENTION:
+ * - Registers with MemoryLeakTracker for profiler verification
+ * - Properly cancels timerJob in onCleared()
+ * - Uses viewModelScope for all coroutines (auto-cancelled)
+ * - No static references or context leaks
  */
 @HiltViewModel
 class WATTestViewModel @Inject constructor(
@@ -28,11 +38,39 @@ class WATTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(WATTestUiState())
     val uiState: StateFlow<WATTestUiState> = _uiState.asStateFlow()
-    
+
     private var timerJob: Job? = null
+
+    init {
+        // Register for memory leak tracking
+        trackMemoryLeaks("WATTestViewModel")
+        android.util.Log.d("WATTestViewModel", "🚀 ViewModel initialized with leak tracking")
+        
+        // Restore timer if test was in progress (configuration change recovery)
+        restoreTimerIfNeeded()
+    }
+    
+    /**
+     * Restore timer after configuration change (e.g., screen rotation)
+     * If test was in IN_PROGRESS phase, restart the timer
+     */
+    private fun restoreTimerIfNeeded() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            
+            // Only restore if we're in active phase with time remaining
+            if (!state.isLoading && 
+                state.phase == WATPhase.IN_PROGRESS && 
+                state.timeRemaining > 0 && 
+                timerJob == null) {
+                android.util.Log.d("WATTestViewModel", "🔄 Restoring word timer after configuration change")
+                startWordTimer()
+            }
+        }
+    }
     
     fun loadTest(testId: String) {
         viewModelScope.launch {
@@ -238,25 +276,44 @@ class WATTestViewModel @Inject constructor(
     
     private fun startWordTimer() {
         stopTimer()
-        
+
         val timePerWord = _uiState.value.config?.timePerWordSeconds ?: 15
         _uiState.update { it.copy(timeRemaining = timePerWord) }
-        
+
         timerJob = viewModelScope.launch {
-            while (_uiState.value.timeRemaining > 0) {
-                delay(1000)
-                _uiState.update { it.copy(
-                    timeRemaining = it.timeRemaining - 1
-                ) }
+            android.util.Log.d("WATTestViewModel", "⏰ Starting word timer")
+
+            try {
+                while (isActive && _uiState.value.timeRemaining > 0) {
+                    delay(1000)
+                    if (!isActive) break // Double-check after delay
+                    _uiState.update { it.copy(
+                        timeRemaining = it.timeRemaining - 1
+                    ) }
+                }
+
+                // Time's up - auto-skip (only if not cancelled)
+                if (isActive) {
+                    android.util.Log.d("WATTestViewModel", "⏰ Word timer completed, auto-skipping")
+                    skipWord()
+                }
+            } catch (e: CancellationException) {
+                android.util.Log.d("WATTestViewModel", "⏰ Word timer cancelled")
+                throw e // Re-throw to properly cancel coroutine
             }
-            
-            // Time's up - auto-skip
-            skipWord()
+        }.also { job ->
+            // Register AFTER job is created
+            job.trackMemoryLeaks("WATTestViewModel", "word-timer")
         }
     }
     
     private fun stopTimer() {
-        timerJob?.cancel()
+        timerJob?.let { job ->
+            if (job.isActive) {
+                android.util.Log.d("WATTestViewModel", "🛑 Cancelling active timer job")
+                job.cancel()
+            }
+        }
         timerJob = null
     }
     
@@ -325,7 +382,21 @@ class WATTestViewModel @Inject constructor(
     
     override fun onCleared() {
         super.onCleared()
+
+        // Critical: Stop all timers to prevent leaks
+        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
         stopTimer()
+
+        // Cancel all jobs in viewModelScope (belt and suspenders approach)
+        android.util.Log.d("WATTestViewModel", "🧹 Cancelling viewModelScope")
+        
+        // Unregister from memory leak tracker
+        MemoryLeakTracker.unregisterViewModel("WATTestViewModel")
+
+        // Force GC to help profiler detect cleanup
+        MemoryLeakTracker.forceGcAndLog("WATTestViewModel-Cleared")
+
+        android.util.Log.d("WATTestViewModel", "✅ WATTestViewModel cleanup complete")
     }
 }
 

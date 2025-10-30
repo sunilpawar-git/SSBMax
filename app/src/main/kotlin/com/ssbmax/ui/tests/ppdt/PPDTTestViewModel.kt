@@ -2,15 +2,19 @@ package com.ssbmax.ui.tests.ppdt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.util.MemoryLeakTracker
+import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -18,6 +22,12 @@ import javax.inject.Inject
 /**
  * ViewModel for PPDT Test Screen
  * Loads test questions from cloud via TestContentRepository
+ * 
+ * MEMORY LEAK PREVENTION:
+ * - Registers with MemoryLeakTracker for profiler verification
+ * - Properly cancels timerJob in onCleared()
+ * - Uses viewModelScope with isActive checks for cooperative cancellation
+ * - No static references or context leaks
  */
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
@@ -32,7 +42,34 @@ class PPDTTestViewModel @Inject constructor(
     private var currentSession: PPDTTestSession? = null
     
     init {
+        // Register for memory leak tracking
+        trackMemoryLeaks("PPDTTestViewModel")
+        android.util.Log.d("PPDTTestViewModel", "🚀 ViewModel initialized with leak tracking")
+        
         loadTest()
+        
+        // Restore timer if test was in progress (configuration change recovery)
+        restoreTimerIfNeeded()
+    }
+    
+    /**
+     * Restore timer after configuration change (e.g., screen rotation)
+     * If test was in progress, restart the timer
+     */
+    private fun restoreTimerIfNeeded() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            
+            // Only restore if we're in active test with time remaining
+            if (!state.isLoading && 
+                !state.isSubmitted && 
+                state.timeRemainingSeconds > 0 && 
+                (state.currentPhase == PPDTPhase.IMAGE_VIEWING || state.currentPhase == PPDTPhase.WRITING) &&
+                timerJob == null) {
+                android.util.Log.d("PPDTTestViewModel", "🔄 Restoring timer after configuration change")
+                startTimer(state.timeRemainingSeconds)
+            }
+        }
     }
     
     fun loadTest(testId: String = "ppdt_standard", userId: String = "mock-user-id") {
@@ -227,20 +264,32 @@ class PPDTTestViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(timeRemainingSeconds = seconds)
         
         timerJob = viewModelScope.launch {
-            while (_uiState.value.timeRemainingSeconds > 0) {
-                delay(1000)
-                val newTime = _uiState.value.timeRemainingSeconds - 1
-                _uiState.value = _uiState.value.copy(timeRemainingSeconds = newTime)
-                
-                if (newTime == 0) {
-                    // Auto-proceed when time runs out
-                    when (_uiState.value.currentPhase) {
-                        PPDTPhase.IMAGE_VIEWING -> proceedToNextPhase()
-                        PPDTPhase.WRITING -> proceedToNextPhase()
-                        else -> {}
+            android.util.Log.d("PPDTTestViewModel", "⏰ Starting timer for $seconds seconds")
+            
+            try {
+                while (isActive && _uiState.value.timeRemainingSeconds > 0) {
+                    delay(1000)
+                    if (!isActive) break // Double-check after delay
+                    
+                    val newTime = _uiState.value.timeRemainingSeconds - 1
+                    _uiState.value = _uiState.value.copy(timeRemainingSeconds = newTime)
+                    
+                    if (newTime == 0 && isActive) {
+                        // Auto-proceed when time runs out
+                        when (_uiState.value.currentPhase) {
+                            PPDTPhase.IMAGE_VIEWING -> proceedToNextPhase()
+                            PPDTPhase.WRITING -> proceedToNextPhase()
+                            else -> {}
+                        }
                     }
                 }
+            } catch (e: CancellationException) {
+                android.util.Log.d("PPDTTestViewModel", "⏰ Timer cancelled")
+                throw e // Re-throw to properly cancel coroutine
             }
+        }.also { job ->
+            // Register AFTER job is created
+            job.trackMemoryLeaks("PPDTTestViewModel", "phase-timer")
         }
     }
     
@@ -296,7 +345,19 @@ class PPDTTestViewModel @Inject constructor(
     
     override fun onCleared() {
         super.onCleared()
+        
+        // Critical: Stop all timers to prevent leaks
+        android.util.Log.d("PPDTTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
         timerJob?.cancel()
+        timerJob = null
+        
+        // Unregister from memory leak tracker
+        MemoryLeakTracker.unregisterViewModel("PPDTTestViewModel")
+        
+        // Force GC to help profiler detect cleanup
+        MemoryLeakTracker.forceGcAndLog("PPDTTestViewModel-Cleared")
+        
+        android.util.Log.d("PPDTTestViewModel", "✅ PPDTTestViewModel cleanup complete")
     }
 }
 

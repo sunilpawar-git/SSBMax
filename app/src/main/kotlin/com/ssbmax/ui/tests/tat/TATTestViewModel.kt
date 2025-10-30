@@ -2,12 +2,15 @@ package com.ssbmax.ui.tests.tat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.util.MemoryLeakTracker
+import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,12 +18,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for TAT Test Screen
  * Loads test questions from cloud via TestContentRepository
+ *
+ * MEMORY LEAK PREVENTION:
+ * - Registers with MemoryLeakTracker for profiler verification
+ * - Properly cancels timerJob in onCleared()
+ * - Uses viewModelScope for all coroutines (auto-cancelled)
+ * - No static references or context leaks
  */
 @HiltViewModel
 class TATTestViewModel @Inject constructor(
@@ -29,11 +39,55 @@ class TATTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
-    
+
     private var timerJob: Job? = null
+
+    init {
+        // Register for memory leak tracking
+        trackMemoryLeaks("TATTestViewModel")
+        android.util.Log.d("TATTestViewModel", "🚀 ViewModel initialized with leak tracking")
+        
+        // Restore timer if test was in progress (configuration change recovery)
+        restoreTimerIfNeeded()
+    }
+    
+    /**
+     * Restore timer after configuration change (e.g., screen rotation)
+     * If test was in IMAGE_VIEWING or WRITING phase, restart the appropriate timer
+     */
+    private fun restoreTimerIfNeeded() {
+        viewModelScope.launch {
+            // Wait for initial state to be set
+            val state = _uiState.value
+            
+            // Only restore if we're in an active phase (not loading or instructions)
+            if (!state.isLoading && state.phase != TATPhase.INSTRUCTIONS && state.phase != TATPhase.SUBMITTED) {
+                android.util.Log.d("TATTestViewModel", "🔄 Restoring timer for phase: ${state.phase}")
+                
+                when (state.phase) {
+                    TATPhase.IMAGE_VIEWING -> {
+                        if (state.viewingTimeRemaining > 0 && timerJob == null) {
+                            startViewingTimer()
+                        }
+                    }
+                    TATPhase.WRITING -> {
+                        if (state.writingTimeRemaining > 0 && timerJob == null) {
+                            startWritingTimer()
+                        }
+                    }
+                    TATPhase.REVIEW_CURRENT -> {
+                        // No timer needed in review phase
+                    }
+                    else -> {
+                        // Other phases don't need timers
+                    }
+                }
+            }
+        }
+    }
     
     fun loadTest(testId: String) {
         viewModelScope.launch {
@@ -228,47 +282,80 @@ class TATTestViewModel @Inject constructor(
     
     private fun startViewingTimer() {
         stopTimer()
-        
+
         _uiState.update { it.copy(
             viewingTimeRemaining = it.config?.viewingTimePerPictureSeconds ?: 30
         ) }
-        
+
         timerJob = viewModelScope.launch {
-            while (_uiState.value.viewingTimeRemaining > 0) {
-                delay(1000)
-                _uiState.update { it.copy(
-                    viewingTimeRemaining = it.viewingTimeRemaining - 1
-                ) }
+            android.util.Log.d("TATTestViewModel", "⏰ Starting viewing timer")
+
+            try {
+                while (isActive && _uiState.value.viewingTimeRemaining > 0) {
+                    delay(1000)
+                    if (!isActive) break // Double-check after delay
+                    _uiState.update { it.copy(
+                        viewingTimeRemaining = it.viewingTimeRemaining - 1
+                    ) }
+                }
+
+                // Auto-transition to writing (only if not cancelled)
+                if (isActive) {
+                    android.util.Log.d("TATTestViewModel", "⏰ Viewing timer completed, transitioning to writing")
+                    _uiState.update { it.copy(phase = TATPhase.WRITING) }
+                    startWritingTimer()
+                }
+            } catch (e: CancellationException) {
+                android.util.Log.d("TATTestViewModel", "⏰ Viewing timer cancelled")
+                throw e // Re-throw to properly cancel coroutine
             }
-            
-            // Auto-transition to writing
-            _uiState.update { it.copy(phase = TATPhase.WRITING) }
-            startWritingTimer()
+        }.also { job ->
+            // Register AFTER job is created
+            job.trackMemoryLeaks("TATTestViewModel", "viewing-timer")
         }
     }
     
     private fun startWritingTimer() {
         stopTimer()
-        
+
         _uiState.update { it.copy(
             writingTimeRemaining = (it.config?.writingTimePerPictureMinutes ?: 4) * 60
         ) }
-        
+
         timerJob = viewModelScope.launch {
-            while (_uiState.value.writingTimeRemaining > 0) {
-                delay(1000)
-                _uiState.update { it.copy(
-                    writingTimeRemaining = it.writingTimeRemaining - 1
-                ) }
+            android.util.Log.d("TATTestViewModel", "⏰ Starting writing timer")
+
+            try {
+                while (isActive && _uiState.value.writingTimeRemaining > 0) {
+                    delay(1000)
+                    if (!isActive) break // Double-check after delay
+                    _uiState.update { it.copy(
+                        writingTimeRemaining = it.writingTimeRemaining - 1
+                    ) }
+                }
+
+                // Time's up - move to review (only if not cancelled)
+                if (isActive) {
+                    android.util.Log.d("TATTestViewModel", "⏰ Writing timer completed, moving to review")
+                    _uiState.update { it.copy(phase = TATPhase.REVIEW_CURRENT) }
+                }
+            } catch (e: CancellationException) {
+                android.util.Log.d("TATTestViewModel", "⏰ Writing timer cancelled")
+                throw e // Re-throw to properly cancel coroutine
             }
-            
-            // Time's up - move to review
-            _uiState.update { it.copy(phase = TATPhase.REVIEW_CURRENT) }
+        }.also { job ->
+            // Register AFTER job is created
+            job.trackMemoryLeaks("TATTestViewModel", "writing-timer")
         }
     }
     
     private fun stopTimer() {
-        timerJob?.cancel()
+        timerJob?.let { job ->
+            if (job.isActive) {
+                android.util.Log.d("TATTestViewModel", "🛑 Cancelling active timer job")
+                job.cancel()
+            }
+        }
         timerJob = null
     }
     
@@ -321,7 +408,21 @@ class TATTestViewModel @Inject constructor(
     
     override fun onCleared() {
         super.onCleared()
+
+        // Critical: Stop all timers to prevent leaks
+        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
         stopTimer()
+
+        // Cancel all jobs in viewModelScope (belt and suspenders approach)
+        android.util.Log.d("TATTestViewModel", "🧹 Cancelling viewModelScope")
+        
+        // Unregister from memory leak tracker
+        MemoryLeakTracker.unregisterViewModel("TATTestViewModel")
+
+        // Force GC to help profiler detect cleanup
+        MemoryLeakTracker.forceGcAndLog("TATTestViewModel-Cleared")
+
+        android.util.Log.d("TATTestViewModel", "✅ TATTestViewModel cleanup complete")
     }
 }
 

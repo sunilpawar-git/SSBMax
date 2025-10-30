@@ -1,10 +1,12 @@
 package com.ssbmax.core.data.repository
 
 import android.content.Intent
+import android.util.Log
 import com.google.firebase.auth.FirebaseUser
 import com.ssbmax.core.data.di.ApplicationScope
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirestoreUserRepository
+import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.StudentProfile
 import com.ssbmax.core.domain.model.SubscriptionTier
@@ -32,22 +34,32 @@ class AuthRepositoryImpl @Inject constructor(
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : AuthRepository {
 
+    init {
+        Log.d("AuthRepositoryImpl", "🔐 AuthRepository singleton initialized")
+        MemoryLeakTracker.logMemoryDump("AuthRepository-Init")
+    }
+
     /**
      * Reactive auth state that automatically starts/stops based on active collectors.
      * When Firebase auth state changes, loads or creates user profile from Firestore.
      */
     override val currentUser: StateFlow<SSBMaxUser?> = callbackFlow {
+        Log.d("AuthRepositoryImpl", "🔄 Starting Firebase auth state collection")
         firebaseAuthService.authState.collect { firebaseUser ->
             if (firebaseUser != null) {
+                Log.d("AuthRepositoryImpl", "👤 User authenticated: ${firebaseUser.email}")
                 // User is signed in, load their profile from Firestore
                 val result = loadOrCreateUserProfile(firebaseUser)
                 trySend(result.getOrNull())
             } else {
+                Log.d("AuthRepositoryImpl", "🚪 User signed out")
                 // User is signed out
                 trySend(null)
             }
         }
-        awaitClose { /* Cleanup if needed */ }
+        awaitClose {
+            Log.d("AuthRepositoryImpl", "🔄 Auth state collection closed")
+        }
     }.stateIn(
         scope = applicationScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
@@ -181,7 +193,13 @@ class AuthRepositoryImpl @Inject constructor(
      * Observe user from Firestore in real-time
      */
     fun observeCurrentUser(): StateFlow<SSBMaxUser?> {
-        val userId = firebaseAuthService.getCurrentUserId() ?: return currentUser
+        val userId = firebaseAuthService.getCurrentUserId()
+        if (userId == null) {
+            Log.w("AuthRepositoryImpl", "⚠️ observeCurrentUser called but no authenticated user")
+            return currentUser
+        }
+
+        Log.d("AuthRepositoryImpl", "👀 Starting real-time user observation for: $userId")
         return firestoreUserRepository.observeUser(userId)
             .stateIn(
                 scope = applicationScope,
