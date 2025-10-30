@@ -34,61 +34,28 @@ class UserProfileViewModel @Inject constructor(
     }
 
     /**
-     * Loads the current user's profile from Firestore
+     * Loads the current user's profile from Firestore.
+     * Now simplified - AuthRepository reactive Flow handles lifecycle automatically.
      */
     fun loadProfile() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            // First try to get user from AuthRepository Flow
-            var currentUser = authRepository.currentUser.first()
+            // Get current user from reactive StateFlow (no timeout needed)
+            val currentUser = authRepository.currentUser.value
             
-            // If null, check if user is actually authenticated (Firebase might be ready but Flow not updated yet)
             if (currentUser == null) {
-                val isAuth = authRepository.isAuthenticated()
-                
-                if (!isAuth) {
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            error = "User not authenticated"
-                        ) 
-                    }
-                    return@launch
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        error = "Please sign in to view your profile"
+                    ) 
                 }
-                
-                // User is authenticated but currentUser Flow hasn't emitted yet
-                // Try again by collecting from the Flow with timeout
-                try {
-                    kotlinx.coroutines.withTimeout(5000) {
-                        authRepository.currentUser.collect { user ->
-                            if (user != null) {
-                                currentUser = user
-                                throw kotlinx.coroutines.CancellationException("User found")
-                            }
-                        }
-                    }
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    // User found, continue
-                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                    // Timeout occurred
-                }
-                
-                // If still null after waiting, there's a problem
-                if (currentUser == null) {
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            error = "Failed to load user session"
-                        ) 
-                    }
-                    return@launch
-                }
+                return@launch
             }
 
-            val userId = currentUser!!.id
             // Collect profile updates reactively
-            userProfileRepository.getUserProfile(userId)
+            userProfileRepository.getUserProfile(currentUser.id)
                 .collect { result ->
                     result.fold(
                         onSuccess = { profile ->
@@ -149,12 +116,12 @@ class UserProfileViewModel @Inject constructor(
 
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            val currentUser = authRepository.currentUser.first()
+            val currentUser = authRepository.currentUser.value
             if (currentUser == null) {
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 
-                        error = "User not authenticated"
+                        error = "Please sign in to save your profile"
                     ) 
                 }
                 return@launch
