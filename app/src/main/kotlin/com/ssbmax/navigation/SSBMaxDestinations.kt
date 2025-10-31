@@ -95,6 +95,7 @@ sealed class SSBMaxDestinations(val route: String) {
     
     // Settings
     data object Settings : SSBMaxDestinations("settings")
+    data object SubscriptionManagement : SSBMaxDestinations("settings/subscription")
     
     // User Profile
     data object UserProfile : SSBMaxDestinations("user/profile") {

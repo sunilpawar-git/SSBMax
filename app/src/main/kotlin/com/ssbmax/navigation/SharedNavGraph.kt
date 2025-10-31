@@ -395,6 +395,19 @@ fun NavGraphBuilder.sharedNavGraph(
             },
             onNavigateToUpgrade = {
                 navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+            },
+            onNavigateToSubscriptionManagement = {
+                navController.navigate(SSBMaxDestinations.SubscriptionManagement.route)
+            }
+        )
+    }
+    
+    // Subscription Management
+    composable(SSBMaxDestinations.SubscriptionManagement.route) {
+        com.ssbmax.ui.settings.SubscriptionManagementScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onUpgrade = { tier ->
+                navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
             }
         )
     }

@@ -23,6 +23,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToFAQ: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit = {},
+    onNavigateToSubscriptionManagement: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -72,9 +73,7 @@ fun SettingsScreen(
                     SubscriptionSection(
                         currentTier = uiState.subscriptionTier,
                         onUpgradeClick = onNavigateToUpgrade,
-                        onManageSubscriptionClick = {
-                            // TODO: Navigate to subscription management
-                        }
+                        onManageSubscriptionClick = onNavigateToSubscriptionManagement
                     )
                 }
 
