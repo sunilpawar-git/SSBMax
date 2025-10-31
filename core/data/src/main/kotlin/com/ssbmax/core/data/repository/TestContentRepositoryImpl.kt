@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.model.CacheStatus
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -17,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class TestContentRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val oirCacheManager: OIRQuestionCacheManager
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
@@ -33,36 +35,53 @@ class TestContentRepositoryImpl @Inject constructor(
     private val testsCollection = firestore.collection("tests")
     private val sessionsCollection = firestore.collection("test_sessions")
 
+    @Deprecated("Use getOIRTestQuestions() for cached implementation")
     override suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>> {
+        // Fallback to new cached method
+        return getOIRTestQuestions(50)
+    }
+    
+    override suspend fun getOIRTestQuestions(count: Int): Result<List<OIRQuestion>> {
         return try {
-            // Check cache first
-            oirCache[testId]?.let { return Result.success(it) }
-
-            // Try Firestore first
-            val document = testsCollection.document(testId).get().await()
-            val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
+            Log.d("TestContent", "Getting $count OIR questions from cache manager")
             
-            if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock OIR data for $testId")
-                val mockQuestions = MockTestDataProvider.getOIRQuestions()
-                oirCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+            // Check if cache is initialized
+            val cacheStatus = oirCacheManager.getCacheStatus()
+            if (cacheStatus.cachedQuestions == 0) {
+                Log.d("TestContent", "Cache empty, initializing...")
+                oirCacheManager.initialSync().getOrThrow()
             }
             
-            val oirQuestions = questions.mapNotNull { it.toOIRQuestion() }
+            // Get questions from cache manager
+            val questions = oirCacheManager.getTestQuestions(count).getOrThrow()
             
-            // Cache in memory
-            oirCache[testId] = oirQuestions
+            Log.d("TestContent", "Retrieved ${questions.size} questions from cache")
+            Result.success(questions)
             
-            Result.success(oirQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for OIR, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getOIRQuestions()
-            oirCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Failed to get cached OIR questions", e)
+            // Fallback to mock data only in development
+            if (android.os.Build.VERSION.SDK_INT >= 0) { // Always true, but keeps the code
+                Log.w("TestContent", "Using mock data as fallback")
+                Result.success(MockTestDataProvider.getOIRQuestions())
+            } else {
+                Result.failure(e)
+            }
         }
+    }
+    
+    override suspend fun initializeOIRCache(): Result<Unit> {
+        return try {
+            Log.d("TestContent", "Initializing OIR cache...")
+            oirCacheManager.initialSync()
+        } catch (e: Exception) {
+            Log.e("TestContent", "Failed to initialize OIR cache", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun getOIRCacheStatus(): CacheStatus {
+        return oirCacheManager.getCacheStatus()
     }
 
     override suspend fun getPPDTQuestions(testId: String): Result<List<PPDTQuestion>> {

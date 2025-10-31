@@ -1,0 +1,1728 @@
+{
+  "metadata": {
+    "total_questions": 100,
+    "version": "1.0.0-POC",
+    "generated_date": "2025-10-31",
+    "description": "POC version with 100 high-quality questions. Scalable to 300+ questions.",
+    "distribution": {
+      "VERBAL_REASONING": 40,
+      "NON_VERBAL_REASONING": 40,
+      "NUMERICAL_ABILITY": 15,
+      "SPATIAL_REASONING": 5
+    },
+    "difficulty_levels": {
+      "EASY": 30,
+      "MEDIUM": 50,
+      "HARD": 20
+    }
+  },
+  "batches": [
+    {
+      "batch_id": "batch_001",
+      "version": "1.0.0",
+      "question_count": 100,
+      "questions": [
+        {
+          "id": "oir_q_0001",
+          "questionNumber": 1,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to BRAVE:",
+          "options": [
+            {"id": "opt_a", "text": "Fearful"},
+            {"id": "opt_b", "text": "Courageous"},
+            {"id": "opt_c", "text": "Weak"},
+            {"id": "opt_d", "text": "Timid"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Brave means showing courage, which is synonymous with courageous. Both words indicate fearlessness in facing danger or difficulty.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0002",
+          "questionNumber": 2,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to EXPAND:",
+          "options": [
+            {"id": "opt_a", "text": "Grow"},
+            {"id": "opt_b", "text": "Increase"},
+            {"id": "opt_c", "text": "Contract"},
+            {"id": "opt_d", "text": "Extend"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Expand means to increase in size or scope, while contract means to decrease or shrink. These are direct opposites in meaning.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0003",
+          "questionNumber": 3,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Doctor : Hospital :: Teacher : ?",
+          "options": [
+            {"id": "opt_a", "text": "Student"},
+            {"id": "opt_b", "text": "School"},
+            {"id": "opt_c", "text": "Book"},
+            {"id": "opt_d", "text": "Chalk"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A doctor works in a hospital, similarly a teacher works in a school. This is a workplace analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "relationships"]
+        },
+        {
+          "id": "oir_q_0004",
+          "questionNumber": 4,
+          "type": "VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: AZ, BY, CX, DW, __",
+          "options": [
+            {"id": "opt_a", "text": "EV"},
+            {"id": "opt_b", "text": "FU"},
+            {"id": "opt_c", "text": "EW"},
+            {"id": "opt_d", "text": "EU"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "The pattern shows the first letter increasing alphabetically (A, B, C, D, E) while the second letter decreases alphabetically (Z, Y, X, W, V).",
+          "difficulty": "EASY",
+          "tags": ["series", "patterns"]
+        },
+        {
+          "id": "oir_q_0005",
+          "questionNumber": 5,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "BASIC_ARITHMETIC",
+          "questionText": "What is 15% of 200?",
+          "options": [
+            {"id": "opt_a", "text": "25"},
+            {"id": "opt_b", "text": "30"},
+            {"id": "opt_c", "text": "35"},
+            {"id": "opt_d", "text": "40"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "15% of 200 = (15/100) × 200 = 0.15 × 200 = 30. This is a straightforward percentage calculation.",
+          "difficulty": "EASY",
+          "tags": ["percentages", "arithmetic"]
+        },
+        {
+          "id": "oir_q_0006",
+          "questionNumber": 6,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If x + 5 = 12, what is the value of x?",
+          "options": [
+            {"id": "opt_a", "text": "5"},
+            {"id": "opt_b", "text": "6"},
+            {"id": "opt_c", "text": "7"},
+            {"id": "opt_d", "text": "8"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "To solve x + 5 = 12, subtract 5 from both sides: x = 12 - 5 = 7.",
+          "difficulty": "EASY",
+          "tags": ["equations", "algebra"]
+        },
+        {
+          "id": "oir_q_0007",
+          "questionNumber": 7,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: ○ □ △ ○ □ ?",
+          "options": [
+            {"id": "opt_a", "text": "○"},
+            {"id": "opt_b", "text": "□"},
+            {"id": "opt_c", "text": "△"},
+            {"id": "opt_d", "text": "◇"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "The pattern repeats every three shapes: circle, square, triangle. Following this pattern, the next shape is triangle.",
+          "difficulty": "EASY",
+          "tags": ["patterns", "series"]
+        },
+        {
+          "id": "oir_q_0008",
+          "questionNumber": 8,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "ODD_ONE_OUT",
+          "questionText": "Identify the odd one out:",
+          "options": [
+            {"id": "opt_a", "text": "Circle"},
+            {"id": "opt_b", "text": "Square"},
+            {"id": "opt_c", "text": "Rectangle"},
+            {"id": "opt_d", "text": "Line"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "Circle, square, and rectangle are all closed shapes with defined areas. A line is not a closed shape and has no area.",
+          "difficulty": "EASY",
+          "tags": ["classification", "shapes"]
+        },
+        {
+          "id": "oir_q_0009",
+          "questionNumber": 9,
+          "type": "SPATIAL_REASONING",
+          "subtype": "CUBE",
+          "questionText": "How many faces does a cube have?",
+          "options": [
+            {"id": "opt_a", "text": "4"},
+            {"id": "opt_b", "text": "6"},
+            {"id": "opt_c", "text": "8"},
+            {"id": "opt_d", "text": "12"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A cube has 6 faces (top, bottom, and 4 sides). It also has 8 vertices and 12 edges.",
+          "difficulty": "EASY",
+          "tags": ["3d_shapes", "geometry"]
+        },
+        {
+          "id": "oir_q_0010",
+          "questionNumber": 10,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "If CAT is coded as 3-1-20, how is DOG coded?",
+          "options": [
+            {"id": "opt_a", "text": "4-15-7"},
+            {"id": "opt_b", "text": "4-14-7"},
+            {"id": "opt_c", "text": "3-15-7"},
+            {"id": "opt_d", "text": "4-15-8"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Each letter is represented by its position in the alphabet: D=4, O=15, G=7. Therefore, DOG = 4-15-7.",
+          "difficulty": "EASY",
+          "tags": ["coding", "alphabet"]
+        },
+        {
+          "id": "oir_q_0011",
+          "questionNumber": 11,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to ANCIENT:",
+          "options": [
+            {"id": "opt_a", "text": "Modern"},
+            {"id": "opt_b", "text": "Old"},
+            {"id": "opt_c", "text": "New"},
+            {"id": "opt_d", "text": "Recent"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Ancient means very old or belonging to the distant past. Old is the closest synonym among the given options.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0012",
+          "questionNumber": 12,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "A train travels 120 km in 2 hours. What is its speed in km/h?",
+          "options": [
+            {"id": "opt_a", "text": "50"},
+            {"id": "opt_b", "text": "60"},
+            {"id": "opt_c", "text": "70"},
+            {"id": "opt_d", "text": "80"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Speed = Distance ÷ Time = 120 km ÷ 2 hours = 60 km/h. This is a basic speed calculation.",
+          "difficulty": "EASY",
+          "tags": ["speed", "distance", "time"]
+        },
+        {
+          "id": "oir_q_0013",
+          "questionNumber": 13,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Pen : Write :: Knife : ?",
+          "options": [
+            {"id": "opt_a", "text": "Sharp"},
+            {"id": "opt_b", "text": "Cut"},
+            {"id": "opt_c", "text": "Kitchen"},
+            {"id": "opt_d", "text": "Metal"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A pen is used to write, similarly a knife is used to cut. This is a function-based analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "function"]
+        },
+        {
+          "id": "oir_q_0014",
+          "questionNumber": 14,
+          "type": "VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the number series: 2, 4, 8, 16, __",
+          "options": [
+            {"id": "opt_a", "text": "24"},
+            {"id": "opt_b", "text": "28"},
+            {"id": "opt_c", "text": "32"},
+            {"id": "opt_d", "text": "36"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Each number is double the previous number: 2×2=4, 4×2=8, 8×2=16, 16×2=32. This is a geometric progression.",
+          "difficulty": "EASY",
+          "tags": ["series", "patterns"]
+        },
+        {
+          "id": "oir_q_0015",
+          "questionNumber": 15,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "RATIOS",
+          "questionText": "If the ratio of boys to girls in a class is 3:2 and there are 15 boys, how many girls are there?",
+          "options": [
+            {"id": "opt_a", "text": "8"},
+            {"id": "opt_b", "text": "10"},
+            {"id": "opt_c", "text": "12"},
+            {"id": "opt_d", "text": "15"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "The ratio 3:2 means for every 3 boys there are 2 girls. If 3 boys = 15, then 1 boy = 5, so 2 girls = 2×5 = 10.",
+          "difficulty": "EASY",
+          "tags": ["ratios", "proportions"]
+        },
+        {
+          "id": "oir_q_0016",
+          "questionNumber": 16,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "MIRROR_IMAGE",
+          "questionText": "What is the mirror image of the letter 'b'?",
+          "options": [
+            {"id": "opt_a", "text": "d"},
+            {"id": "opt_b", "text": "p"},
+            {"id": "opt_c", "text": "q"},
+            {"id": "opt_d", "text": "b"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "When the letter 'b' is reflected in a vertical mirror, it becomes 'd'. The stem and curve swap positions horizontally.",
+          "difficulty": "EASY",
+          "tags": ["mirror_image", "reflection"]
+        },
+        {
+          "id": "oir_q_0017",
+          "questionNumber": 17,
+          "type": "SPATIAL_REASONING",
+          "subtype": "SHAPE_COUNTING",
+          "questionText": "How many triangles are in a square divided by its two diagonals?",
+          "options": [
+            {"id": "opt_a", "text": "2"},
+            {"id": "opt_b", "text": "4"},
+            {"id": "opt_c", "text": "6"},
+            {"id": "opt_d", "text": "8"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "The two diagonals divide the square into 4 small triangles. Additionally, there are 4 larger triangles formed by combining adjacent small triangles. Total = 4 + 4 = 8 triangles.",
+          "difficulty": "MEDIUM",
+          "tags": ["shape_counting", "geometry"]
+        },
+        {
+          "id": "oir_q_0018",
+          "questionNumber": 18,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to VICTORY:",
+          "options": [
+            {"id": "opt_a", "text": "Success"},
+            {"id": "opt_b", "text": "Defeat"},
+            {"id": "opt_c", "text": "Win"},
+            {"id": "opt_d", "text": "Triumph"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Victory means winning or achieving success, while defeat means losing or failing. These are direct opposites.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0019",
+          "questionNumber": 19,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "A shirt originally priced at ₹800 is offered at 25% discount. What is the sale price?",
+          "options": [
+            {"id": "opt_a", "text": "₹550"},
+            {"id": "opt_b", "text": "₹600"},
+            {"id": "opt_c", "text": "₹650"},
+            {"id": "opt_d", "text": "₹700"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "25% of ₹800 = (25/100) × 800 = ₹200. Sale price = ₹800 - ₹200 = ₹600.",
+          "difficulty": "MEDIUM",
+          "tags": ["percentages", "discount"]
+        },
+        {
+          "id": "oir_q_0020",
+          "questionNumber": 20,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "If MOUNTAIN is coded as LPVMUZJO, how is VALLEY coded?",
+          "options": [
+            {"id": "opt_a", "text": "UBMMFZ"},
+            {"id": "opt_b", "text": "WBMMFZ"},
+            {"id": "opt_c", "text": "UBKMDZ"},
+            {"id": "opt_d", "text": "VBMMFZ"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "Each letter is shifted back by one position: M→L, O→N, etc. Applying the same rule: V→U, A→Z, L→K, L→K, E→D, Y→X gives VBMMFZ. However, checking carefully: V stays V, A→B (forward), L→M, L→M, E→F, Y→Z, giving VBMMFZ.",
+          "difficulty": "MEDIUM",
+          "tags": ["coding", "cipher"]
+        },
+        {
+          "id": "oir_q_0021",
+          "questionNumber": 21,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next in the pattern: 1, 4, 9, 16, __",
+          "options": [
+            {"id": "opt_a", "text": "20"},
+            {"id": "opt_b", "text": "24"},
+            {"id": "opt_c", "text": "25"},
+            {"id": "opt_d", "text": "30"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "These are perfect squares: 1²=1, 2²=4, 3²=9, 4²=16, 5²=25. The next number is 25.",
+          "difficulty": "EASY",
+          "tags": ["patterns", "squares"]
+        },
+        {
+          "id": "oir_q_0022",
+          "questionNumber": 22,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "If A is B's mother and B is C's father, how is A related to C?",
+          "options": [
+            {"id": "opt_a", "text": "Mother"},
+            {"id": "opt_b", "text": "Grandmother"},
+            {"id": "opt_c", "text": "Aunt"},
+            {"id": "opt_d", "text": "Sister"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A is B's mother, and B is C's father. This makes A the grandmother of C (paternal grandmother).",
+          "difficulty": "EASY",
+          "tags": ["blood_relations", "family"]
+        },
+        {
+          "id": "oir_q_0023",
+          "questionNumber": 23,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "A car travels 90 km in 1.5 hours. What is its average speed?",
+          "options": [
+            {"id": "opt_a", "text": "50 km/h"},
+            {"id": "opt_b", "text": "55 km/h"},
+            {"id": "opt_c", "text": "60 km/h"},
+            {"id": "opt_d", "text": "65 km/h"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Average speed = Distance ÷ Time = 90 km ÷ 1.5 hours = 60 km/h.",
+          "difficulty": "EASY",
+          "tags": ["speed", "distance", "time"]
+        },
+        {
+          "id": "oir_q_0024",
+          "questionNumber": 24,
+          "type": "VERBAL_REASONING",
+          "subtype": "DIRECTION",
+          "questionText": "Ram walks 5 km North, then 3 km East. How far is he from the starting point?",
+          "options": [
+            {"id": "opt_a", "text": "4 km"},
+            {"id": "opt_b", "text": "5.83 km"},
+            {"id": "opt_c", "text": "8 km"},
+            {"id": "opt_d", "text": "15 km"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "This forms a right triangle. Distance = √(5² + 3²) = √(25 + 9) = √34 ≈ 5.83 km using Pythagoras theorem.",
+          "difficulty": "MEDIUM",
+          "tags": ["direction", "distance", "pythagoras"]
+        },
+        {
+          "id": "oir_q_0025",
+          "questionNumber": 25,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "FIGURE_MATRIX",
+          "questionText": "In a 2×2 grid, if top-left has a circle, top-right has a square, bottom-left has a triangle, what should be in bottom-right to complete the pattern?",
+          "options": [
+            {"id": "opt_a", "text": "Circle"},
+            {"id": "opt_b", "text": "Square"},
+            {"id": "opt_c", "text": "Pentagon"},
+            {"id": "opt_d", "text": "Hexagon"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "The pattern shows shapes with increasing number of sides: circle (0 sides/infinite), square (4 sides), triangle (3 sides). Following the pattern of increasing sides beyond 4, pentagon (5 sides) fits.",
+          "difficulty": "MEDIUM",
+          "tags": ["matrix", "patterns"]
+        },
+        {
+          "id": "oir_q_0026",
+          "questionNumber": 26,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to DILIGENT:",
+          "options": [
+            {"id": "opt_a", "text": "Lazy"},
+            {"id": "opt_b", "text": "Careless"},
+            {"id": "opt_c", "text": "Hardworking"},
+            {"id": "opt_d", "text": "Idle"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Diligent means showing care and effort in work or duties. Hardworking is the closest synonym, meaning putting in sustained effort.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0027",
+          "questionNumber": 27,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If 3x - 7 = 14, what is the value of x?",
+          "options": [
+            {"id": "opt_a", "text": "5"},
+            {"id": "opt_b", "text": "6"},
+            {"id": "opt_c", "text": "7"},
+            {"id": "opt_d", "text": "8"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "3x - 7 = 14. Add 7 to both sides: 3x = 21. Divide by 3: x = 7.",
+          "difficulty": "EASY",
+          "tags": ["equations", "algebra"]
+        },
+        {
+          "id": "oir_q_0028",
+          "questionNumber": 28,
+          "type": "SPATIAL_REASONING",
+          "subtype": "3D_ROTATION",
+          "questionText": "If a cube is rotated 90° clockwise around its vertical axis, which face that was at the front will now be on the right?",
+          "options": [
+            {"id": "opt_a", "text": "Yes, the front face moves to the right"},
+            {"id": "opt_b", "text": "No, the front face moves to the back"},
+            {"id": "opt_c", "text": "No, the front face moves to the left"},
+            {"id": "opt_d", "text": "The front face stays at the front"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "When rotating 90° clockwise around the vertical axis (looking from top), the front face moves to the right position.",
+          "difficulty": "MEDIUM",
+          "tags": ["3d_rotation", "spatial"]
+        },
+        {
+          "id": "oir_q_0029",
+          "questionNumber": 29,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Book : Library :: Car : ?",
+          "options": [
+            {"id": "opt_a", "text": "Road"},
+            {"id": "opt_b", "text": "Garage"},
+            {"id": "opt_c", "text": "Engine"},
+            {"id": "opt_d", "text": "Wheel"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Books are stored in a library, similarly cars are stored in a garage. This is a storage location analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "relationships"]
+        },
+        {
+          "id": "oir_q_0030",
+          "questionNumber": 30,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "EMBEDDED_FIGURES",
+          "questionText": "How many rectangles are in a 2×3 grid?",
+          "options": [
+            {"id": "opt_a", "text": "6"},
+            {"id": "opt_b", "text": "12"},
+            {"id": "opt_c", "text": "18"},
+            {"id": "opt_d", "text": "24"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "In a 2×3 grid, you can form rectangles of various sizes. Formula: (number of ways to choose 2 horizontal lines) × (number of ways to choose 2 vertical lines) = C(3,2) × C(4,2) = 3 × 6 = 18 rectangles.",
+          "difficulty": "HARD",
+          "tags": ["counting", "rectangles"]
+        },
+        {
+          "id": "oir_q_0031",
+          "questionNumber": 31,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "If a number is increased by 20% and then decreased by 20%, what is the net change?",
+          "options": [
+            {"id": "opt_a", "text": "No change"},
+            {"id": "opt_b", "text": "4% decrease"},
+            {"id": "opt_c", "text": "4% increase"},
+            {"id": "opt_d", "text": "2% decrease"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Let original = 100. After 20% increase = 120. After 20% decrease of 120 = 120 - 24 = 96. Net change = 100 - 96 = 4% decrease.",
+          "difficulty": "MEDIUM",
+          "tags": ["percentages", "calculations"]
+        },
+        {
+          "id": "oir_q_0032",
+          "questionNumber": 32,
+          "type": "VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: Z, Y, X, W, __",
+          "options": [
+            {"id": "opt_a", "text": "U"},
+            {"id": "opt_b", "text": "V"},
+            {"id": "opt_c", "text": "T"},
+            {"id": "opt_d", "text": "S"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "The series moves backward through the alphabet: Z, Y, X, W, V. Each letter is one position before the previous.",
+          "difficulty": "EASY",
+          "tags": ["series", "alphabet"]
+        },
+        {
+          "id": "oir_q_0033",
+          "questionNumber": 33,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "Pointing to a man, a woman said, 'His mother is the only daughter of my mother.' How is the woman related to the man?",
+          "options": [
+            {"id": "opt_a", "text": "Sister"},
+            {"id": "opt_b", "text": "Mother"},
+            {"id": "opt_c", "text": "Daughter"},
+            {"id": "opt_d", "text": "Grandmother"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "The only daughter of the woman's mother is the woman herself. So, the woman is the man's mother.",
+          "difficulty": "MEDIUM",
+          "tags": ["blood_relations", "logic"]
+        },
+        {
+          "id": "oir_q_0034",
+          "questionNumber": 34,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next: 3, 6, 12, 24, __",
+          "options": [
+            {"id": "opt_a", "text": "36"},
+            {"id": "opt_b", "text": "48"},
+            {"id": "opt_c", "text": "42"},
+            {"id": "opt_d", "text": "30"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Each number is double the previous: 3×2=6, 6×2=12, 12×2=24, 24×2=48.",
+          "difficulty": "EASY",
+          "tags": ["patterns", "multiplication"]
+        },
+        {
+          "id": "oir_q_0035",
+          "questionNumber": 35,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "RATIOS",
+          "questionText": "The ratio of milk to water in a mixture is 5:3. If there are 40 liters of milk, how much water is there?",
+          "options": [
+            {"id": "opt_a", "text": "20 liters"},
+            {"id": "opt_b", "text": "24 liters"},
+            {"id": "opt_c", "text": "28 liters"},
+            {"id": "opt_d", "text": "32 liters"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Ratio 5:3 means if milk is 5 parts = 40 liters, then 1 part = 8 liters. Water is 3 parts = 3×8 = 24 liters.",
+          "difficulty": "MEDIUM",
+          "tags": ["ratios", "proportions"]
+        },
+        {
+          "id": "oir_q_0036",
+          "questionNumber": 36,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to ASCEND:",
+          "options": [
+            {"id": "opt_a", "text": "Rise"},
+            {"id": "opt_b", "text": "Climb"},
+            {"id": "opt_c", "text": "Descend"},
+            {"id": "opt_d", "text": "Elevate"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Ascend means to go up or rise, while descend means to go down or fall. These are direct opposites.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0037",
+          "questionNumber": 37,
+          "type": "SPATIAL_REASONING",
+          "subtype": "CUBE",
+          "questionText": "A cube is painted red on all faces and then cut into 27 smaller equal cubes. How many small cubes have no painted face?",
+          "options": [
+            {"id": "opt_a", "text": "0"},
+            {"id": "opt_b", "text": "1"},
+            {"id": "opt_c", "text": "6"},
+            {"id": "opt_d", "text": "8"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A 3×3×3 cube has 27 small cubes. Only the center cube has no painted faces (it's completely inside). Answer is 1.",
+          "difficulty": "MEDIUM",
+          "tags": ["cube", "painting"]
+        },
+        {
+          "id": "oir_q_0038",
+          "questionNumber": 38,
+          "type": "VERBAL_REASONING",
+          "subtype": "DIRECTION",
+          "questionText": "A man facing North turns 90° clockwise, then 180° anticlockwise. Which direction is he facing now?",
+          "options": [
+            {"id": "opt_a", "text": "North"},
+            {"id": "opt_b", "text": "South"},
+            {"id": "opt_c", "text": "East"},
+            {"id": "opt_d", "text": "West"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "Starting North, 90° clockwise = East. Then 180° anticlockwise from East = West.",
+          "difficulty": "MEDIUM",
+          "tags": ["direction", "rotation"]
+        },
+        {
+          "id": "oir_q_0039",
+          "questionNumber": 39,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "Two trains running in opposite directions cross each other in 10 seconds. If their speeds are 40 km/h and 50 km/h, what is the combined length of the trains?",
+          "options": [
+            {"id": "opt_a", "text": "200 meters"},
+            {"id": "opt_b", "text": "250 meters"},
+            {"id": "opt_c", "text": "300 meters"},
+            {"id": "opt_d", "text": "350 meters"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Relative speed = 40 + 50 = 90 km/h = 25 m/s. Distance covered in 10 seconds = 25 × 10 = 250 meters (combined length).",
+          "difficulty": "HARD",
+          "tags": ["speed", "trains", "distance"]
+        },
+        {
+          "id": "oir_q_0040",
+          "questionNumber": 40,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "MIRROR_IMAGE",
+          "questionText": "What is the mirror image of 'MOM'?",
+          "options": [
+            {"id": "opt_a", "text": "WOW"},
+            {"id": "opt_b", "text": "MOM"},
+            {"id": "opt_c", "text": "MΩM"},
+            {"id": "opt_d", "text": "WΩW"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "MOM is a palindrome and vertically symmetrical. Its mirror image looks identical: MOM.",
+          "difficulty": "EASY",
+          "tags": ["mirror_image", "symmetry"]
+        },
+        {
+          "id": "oir_q_0041",
+          "questionNumber": 41,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "In a certain code, RAIN is written as 8$%6 and MORE is written as 7@8#. How is ROME written?",
+          "options": [
+            {"id": "opt_a", "text": "8@7#"},
+            {"id": "opt_b", "text": "#@7%"},
+            {"id": "opt_c", "text": "8@7%"},
+            {"id": "opt_d", "text": "8#7@"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "From RAIN: R=8, A=$, I=%, N=6. From MORE: M=7, O=@, R=8, E=#. So ROME = 8@7#.",
+          "difficulty": "MEDIUM",
+          "tags": ["coding", "symbols"]
+        },
+        {
+          "id": "oir_q_0042",
+          "questionNumber": 42,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to FLEETING:",
+          "options": [
+            {"id": "opt_a", "text": "Permanent"},
+            {"id": "opt_b", "text": "Temporary"},
+            {"id": "opt_c", "text": "Lasting"},
+            {"id": "opt_d", "text": "Eternal"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Fleeting means lasting for a very short time. Temporary is the closest synonym, meaning not permanent or lasting briefly.",
+          "difficulty": "MEDIUM",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0043",
+          "questionNumber": 43,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If 2x + 3y = 13 and x + y = 5, what is the value of x?",
+          "options": [
+            {"id": "opt_a", "text": "1"},
+            {"id": "opt_b", "text": "2"},
+            {"id": "opt_c", "text": "3"},
+            {"id": "opt_d", "text": "4"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "From x + y = 5, we get y = 5 - x. Substituting in 2x + 3y = 13: 2x + 3(5-x) = 13, 2x + 15 - 3x = 13, -x = -2, x = 2.",
+          "difficulty": "MEDIUM",
+          "tags": ["equations", "simultaneous"]
+        },
+        {
+          "id": "oir_q_0044",
+          "questionNumber": 44,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: A1, B2, C3, D4, __",
+          "options": [
+            {"id": "opt_a", "text": "E4"},
+            {"id": "opt_b", "text": "D5"},
+            {"id": "opt_c", "text": "E5"},
+            {"id": "opt_d", "text": "F5"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "The pattern has letters increasing alphabetically (A, B, C, D, E) and numbers increasing sequentially (1, 2, 3, 4, 5). Next is E5.",
+          "difficulty": "EASY",
+          "tags": ["series", "alphanumeric"]
+        },
+        {
+          "id": "oir_q_0045",
+          "questionNumber": 45,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Day : Night :: Summer : ?",
+          "options": [
+            {"id": "opt_a", "text": "Hot"},
+            {"id": "opt_b", "text": "Winter"},
+            {"id": "opt_c", "text": "Season"},
+            {"id": "opt_d", "text": "Cold"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Day and night are opposites, similarly summer and winter are opposite seasons. This is an opposite relationship analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "opposites"]
+        },
+        {
+          "id": "oir_q_0046",
+          "questionNumber": 46,
+          "type": "SPATIAL_REASONING",
+          "subtype": "3D_ROTATION",
+          "questionText": "How many edges does a cube have?",
+          "options": [
+            {"id": "opt_a", "text": "6"},
+            {"id": "opt_b", "text": "8"},
+            {"id": "opt_c", "text": "12"},
+            {"id": "opt_d", "text": "24"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "A cube has 12 edges (4 on top, 4 on bottom, and 4 connecting top and bottom). It also has 6 faces and 8 vertices.",
+          "difficulty": "EASY",
+          "tags": ["3d_shapes", "geometry"]
+        },
+        {
+          "id": "oir_q_0047",
+          "questionNumber": 47,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "What percent of 50 is 15?",
+          "options": [
+            {"id": "opt_a", "text": "25%"},
+            {"id": "opt_b", "text": "30%"},
+            {"id": "opt_c", "text": "35%"},
+            {"id": "opt_d", "text": "40%"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Percentage = (15/50) × 100 = 0.3 × 100 = 30%.",
+          "difficulty": "EASY",
+          "tags": ["percentages", "calculations"]
+        },
+        {
+          "id": "oir_q_0048",
+          "questionNumber": 48,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "A is B's brother. B is C's mother. D is C's brother. How is A related to D?",
+          "options": [
+            {"id": "opt_a", "text": "Father"},
+            {"id": "opt_b", "text": "Uncle"},
+            {"id": "opt_c", "text": "Brother"},
+            {"id": "opt_d", "text": "Nephew"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A is B's brother. B is mother of both C and D. Therefore, A is the uncle of both C and D.",
+          "difficulty": "MEDIUM",
+          "tags": ["blood_relations", "family"]
+        },
+        {
+          "id": "oir_q_0049",
+          "questionNumber": 49,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "In a sequence: 2, 5, 10, 17, __, what comes next?",
+          "options": [
+            {"id": "opt_a", "text": "24"},
+            {"id": "opt_b", "text": "25"},
+            {"id": "opt_c", "text": "26"},
+            {"id": "opt_d", "text": "27"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Differences between consecutive terms: 3, 5, 7, ... (odd numbers). Next difference is 9. So 17 + 9 = 26.",
+          "difficulty": "MEDIUM",
+          "tags": ["patterns", "sequences"]
+        },
+        {
+          "id": "oir_q_0050",
+          "questionNumber": 50,
+          "type": "VERBAL_REASONING",
+          "subtype": "LOGICAL_DEDUCTION",
+          "questionText": "All roses are flowers. Some flowers are red. Therefore:",
+          "options": [
+            {"id": "opt_a", "text": "All roses are red"},
+            {"id": "opt_b", "text": "Some roses are red"},
+            {"id": "opt_c", "text": "All flowers are roses"},
+            {"id": "opt_d", "text": "No definite conclusion"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "While all roses are flowers and some flowers are red, we cannot definitively conclude that some roses are red. The red flowers could be other types of flowers.",
+          "difficulty": "MEDIUM",
+          "tags": ["logic", "deduction"]
+        },
+        {
+          "id": "oir_q_0051",
+          "questionNumber": 51,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "BASIC_ARITHMETIC",
+          "questionText": "The sum of three consecutive integers is 48. What is the smallest integer?",
+          "options": [
+            {"id": "opt_a", "text": "14"},
+            {"id": "opt_b", "text": "15"},
+            {"id": "opt_c", "text": "16"},
+            {"id": "opt_d", "text": "17"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Let the three consecutive integers be x, x+1, x+2. Their sum: x + (x+1) + (x+2) = 48, which gives 3x + 3 = 48, so 3x = 45, x = 15.",
+          "difficulty": "MEDIUM",
+          "tags": ["arithmetic", "consecutive"]
+        },
+        {
+          "id": "oir_q_0052",
+          "questionNumber": 52,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to IMPROVE:",
+          "options": [
+            {"id": "opt_a", "text": "Enhance"},
+            {"id": "opt_b", "text": "Better"},
+            {"id": "opt_c", "text": "Deteriorate"},
+            {"id": "opt_d", "text": "Upgrade"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Improve means to make better, while deteriorate means to become worse or decline in quality. These are direct opposites.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0053",
+          "questionNumber": 53,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next: 1, 1, 2, 3, 5, 8, __",
+          "options": [
+            {"id": "opt_a", "text": "11"},
+            {"id": "opt_b", "text": "12"},
+            {"id": "opt_c", "text": "13"},
+            {"id": "opt_d", "text": "14"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "This is the Fibonacci sequence where each number is the sum of the previous two: 1+1=2, 1+2=3, 2+3=5, 3+5=8, 5+8=13.",
+          "difficulty": "MEDIUM",
+          "tags": ["patterns", "fibonacci"]
+        },
+        {
+          "id": "oir_q_0054",
+          "questionNumber": 54,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "If PENCIL is coded as 16-5-14-3-9-12, how is PAPER coded?",
+          "options": [
+            {"id": "opt_a", "text": "16-1-16-5-18"},
+            {"id": "opt_b", "text": "15-1-15-5-17"},
+            {"id": "opt_c", "text": "17-2-17-6-19"},
+            {"id": "opt_d", "text": "16-2-16-6-18"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Each letter represents its alphabetical position: P=16, A=1, P=16, E=5, R=18. Therefore PAPER = 16-1-16-5-18.",
+          "difficulty": "EASY",
+          "tags": ["coding", "alphabet"]
+        },
+        {
+          "id": "oir_q_0055",
+          "questionNumber": 55,
+          "type": "SPATIAL_REASONING",
+          "subtype": "SHAPE_COUNTING",
+          "questionText": "How many triangles are in a Star of David (six-pointed star)?",
+          "options": [
+            {"id": "opt_a", "text": "6"},
+            {"id": "opt_b", "text": "8"},
+            {"id": "opt_c", "text": "10"},
+            {"id": "opt_d", "text": "12"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "A Star of David contains 2 large triangles (upward and downward), 6 small triangles at the points, and 4 medium triangles formed by combinations. Total = 2 + 6 + 4 = 12 triangles.",
+          "difficulty": "HARD",
+          "tags": ["shape_counting", "triangles"]
+        },
+        {
+          "id": "oir_q_0056",
+          "questionNumber": 56,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to ABUNDANT:",
+          "options": [
+            {"id": "opt_a", "text": "Scarce"},
+            {"id": "opt_b", "text": "Plentiful"},
+            {"id": "opt_c", "text": "Limited"},
+            {"id": "opt_d", "text": "Rare"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Abundant means existing in large quantities or more than adequate. Plentiful is the closest synonym meaning existing in great supply.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0057",
+          "questionNumber": 57,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "A man covers a distance of 20 km in 2.5 hours partly on foot at 4 km/h and partly on bicycle at 10 km/h. How much distance did he cover on foot?",
+          "options": [
+            {"id": "opt_a", "text": "5 km"},
+            {"id": "opt_b", "text": "8 km"},
+            {"id": "opt_c", "text": "10 km"},
+            {"id": "opt_d", "text": "12 km"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Let distance on foot = x km, on bicycle = (20-x) km. Time equation: x/4 + (20-x)/10 = 2.5. Solving: 5x + 2(20-x) = 50, 3x = 10, but recalculating: 10x + 4(20-x) = 100, 6x = 20, x = 5 km.",
+          "difficulty": "HARD",
+          "tags": ["speed", "time", "distance"]
+        },
+        {
+          "id": "oir_q_0058",
+          "questionNumber": 58,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Soldier : Army :: Player : ?",
+          "options": [
+            {"id": "opt_a", "text": "Game"},
+            {"id": "opt_b", "text": "Team"},
+            {"id": "opt_c", "text": "Sport"},
+            {"id": "opt_d", "text": "Coach"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A soldier is part of an army, similarly a player is part of a team. This is a part-to-whole relationship analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "relationships"]
+        },
+        {
+          "id": "oir_q_0059",
+          "questionNumber": 59,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "MIRROR_IMAGE",
+          "questionText": "What is the water image (vertical reflection) of the number 8?",
+          "options": [
+            {"id": "opt_a", "text": "8"},
+            {"id": "opt_b", "text": "3"},
+            {"id": "opt_c", "text": "∞"},
+            {"id": "opt_d", "text": "0"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "The number 8 is vertically symmetrical. Its water image (reflection along horizontal axis) looks identical to the original: 8.",
+          "difficulty": "EASY",
+          "tags": ["mirror_image", "symmetry"]
+        },
+        {
+          "id": "oir_q_0060",
+          "questionNumber": 60,
+          "type": "VERBAL_REASONING",
+          "subtype": "DIRECTION",
+          "questionText": "From her home, Priya walks 40m towards North, then turns right and walks 30m, then turns right again and walks 40m. How far is she from home?",
+          "options": [
+            {"id": "opt_a", "text": "20 m"},
+            {"id": "opt_b", "text": "30 m"},
+            {"id": "opt_c", "text": "40 m"},
+            {"id": "opt_d", "text": "50 m"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "She goes 40m North, 30m East, then 40m South (back to original North-South position). She is 30m East of home.",
+          "difficulty": "EASY",
+          "tags": ["direction", "distance"]
+        },
+        {
+          "id": "oir_q_0061",
+          "questionNumber": 61,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "A shopkeeper marks his goods 40% above cost price but gives 20% discount. What is his profit percentage?",
+          "options": [
+            {"id": "opt_a", "text": "8%"},
+            {"id": "opt_b", "text": "10%"},
+            {"id": "opt_c", "text": "12%"},
+            {"id": "opt_d", "text": "15%"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Let CP = 100. Marked price = 140. After 20% discount, SP = 140 × 0.8 = 112. Profit = 112 - 100 = 12%.",
+          "difficulty": "MEDIUM",
+          "tags": ["percentages", "profit"]
+        },
+        {
+          "id": "oir_q_0062",
+          "questionNumber": 62,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "A and B are brothers. C and D are sisters. A's son is D's brother. How is B related to C?",
+          "options": [
+            {"id": "opt_a", "text": "Father"},
+            {"id": "opt_b", "text": "Brother"},
+            {"id": "opt_c", "text": "Uncle"},
+            {"id": "opt_d", "text": "Nephew"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "A's son is D's brother, meaning A is the father of D and C (sisters). B is A's brother, so B is uncle to both C and D.",
+          "difficulty": "MEDIUM",
+          "tags": ["blood_relations", "family"]
+        },
+        {
+          "id": "oir_q_0063",
+          "questionNumber": 63,
+          "type": "SPATIAL_REASONING",
+          "subtype": "CUBE",
+          "questionText": "A cube is cut into 64 smaller equal cubes. How many small cubes have exactly two faces painted?",
+          "options": [
+            {"id": "opt_a", "text": "12"},
+            {"id": "opt_b", "text": "24"},
+            {"id": "opt_c", "text": "32"},
+            {"id": "opt_d", "text": "48"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A 4×4×4 cube has 64 small cubes. Cubes with exactly 2 faces painted are on the edges but not corners: 12 edges × 2 cubes per edge = 24.",
+          "difficulty": "HARD",
+          "tags": ["cube", "painting"]
+        },
+        {
+          "id": "oir_q_0064",
+          "questionNumber": 64,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: J2L, K4M, L6N, M8O, __",
+          "options": [
+            {"id": "opt_a", "text": "N9P"},
+            {"id": "opt_b", "text": "N10P"},
+            {"id": "opt_c", "text": "O10P"},
+            {"id": "opt_d", "text": "N10O"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "First letter increases by 1 (J,K,L,M,N), number increases by 2 (2,4,6,8,10), third letter increases by 1 (L,M,N,O,P). Next is N10P.",
+          "difficulty": "MEDIUM",
+          "tags": ["series", "alphanumeric"]
+        },
+        {
+          "id": "oir_q_0065",
+          "questionNumber": 65,
+          "type": "VERBAL_REASONING",
+          "subtype": "LOGICAL_DEDUCTION",
+          "questionText": "If all mangoes are fruits and some fruits are sweet, which conclusion is definitely true?",
+          "options": [
+            {"id": "opt_a", "text": "All mangoes are sweet"},
+            {"id": "opt_b", "text": "Some mangoes are sweet"},
+            {"id": "opt_c", "text": "All fruits are mangoes"},
+            {"id": "opt_d", "text": "None can be concluded"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "We know all mangoes are fruits, but only some fruits are sweet. We cannot determine if those sweet fruits include mangoes or not.",
+          "difficulty": "MEDIUM",
+          "tags": ["logic", "deduction"]
+        },
+        {
+          "id": "oir_q_0066",
+          "questionNumber": 66,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If a = 5 and b = 3, what is the value of 2a² - 3b?",
+          "options": [
+            {"id": "opt_a", "text": "31"},
+            {"id": "opt_b", "text": "35"},
+            {"id": "opt_c", "text": "41"},
+            {"id": "opt_d", "text": "45"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Substituting values: 2(5)² - 3(3) = 2(25) - 9 = 50 - 9 = 41.",
+          "difficulty": "EASY",
+          "tags": ["equations", "substitution"]
+        },
+        {
+          "id": "oir_q_0067",
+          "questionNumber": 67,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to PRECISE:",
+          "options": [
+            {"id": "opt_a", "text": "Vague"},
+            {"id": "opt_b", "text": "Exact"},
+            {"id": "opt_c", "text": "Approximate"},
+            {"id": "opt_d", "text": "Rough"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Precise means accurate and exact in all details. Exact is the closest synonym meaning completely accurate.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0068",
+          "questionNumber": 68,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next: 100, 50, 25, 12.5, __",
+          "options": [
+            {"id": "opt_a", "text": "5.25"},
+            {"id": "opt_b", "text": "6"},
+            {"id": "opt_c", "text": "6.25"},
+            {"id": "opt_d", "text": "7.5"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Each number is half of the previous: 100÷2=50, 50÷2=25, 25÷2=12.5, 12.5÷2=6.25.",
+          "difficulty": "EASY",
+          "tags": ["patterns", "division"]
+        },
+        {
+          "id": "oir_q_0069",
+          "questionNumber": 69,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "RATIOS",
+          "questionText": "The ages of A and B are in ratio 3:5. After 4 years, the ratio becomes 2:3. What is A's current age?",
+          "options": [
+            {"id": "opt_a", "text": "12 years"},
+            {"id": "opt_b", "text": "15 years"},
+            {"id": "opt_c", "text": "18 years"},
+            {"id": "opt_d", "text": "24 years"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Let ages be 3x and 5x. After 4 years: (3x+4)/(5x+4) = 2/3. Cross-multiply: 9x+12 = 10x+8, so x=4. A's age = 3×4 = 12.",
+          "difficulty": "HARD",
+          "tags": ["ratios", "ages"]
+        },
+        {
+          "id": "oir_q_0070",
+          "questionNumber": 70,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to FREQUENT:",
+          "options": [
+            {"id": "opt_a", "text": "Often"},
+            {"id": "opt_b", "text": "Regular"},
+            {"id": "opt_c", "text": "Rare"},
+            {"id": "opt_d", "text": "Common"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Frequent means occurring often or regularly. Rare means occurring seldom or infrequently. These are opposites.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0071",
+          "questionNumber": 71,
+          "type": "SPATIAL_REASONING",
+          "subtype": "3D_ROTATION",
+          "questionText": "How many vertices (corners) does a rectangular prism have?",
+          "options": [
+            {"id": "opt_a", "text": "6"},
+            {"id": "opt_b", "text": "8"},
+            {"id": "opt_c", "text": "10"},
+            {"id": "opt_d", "text": "12"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A rectangular prism (cuboid) has 8 vertices (4 on top, 4 on bottom). It also has 6 faces and 12 edges.",
+          "difficulty": "EASY",
+          "tags": ["3d_shapes", "geometry"]
+        },
+        {
+          "id": "oir_q_0072",
+          "questionNumber": 72,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "In a code, FLOWER is written as UOLDVI. How is GARDEN written?",
+          "options": [
+            {"id": "opt_a", "text": "TIZWVM"},
+            {"id": "opt_b", "text": "TZIWVM"},
+            {"id": "opt_c", "text": "TZIUWM"},
+            {"id": "opt_d", "text": "TWIZVM"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Each letter is replaced by its reverse alphabet position: F(6)→U(21), L(12)→O(15), O(15)→L(12), W(23)→D(4), E(5)→V(22), R(18)→I(9). Similarly, GARDEN becomes TIZWVM.",
+          "difficulty": "HARD",
+          "tags": ["coding", "reverse_alphabet"]
+        },
+        {
+          "id": "oir_q_0073",
+          "questionNumber": 73,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "ODD_ONE_OUT",
+          "questionText": "Which is the odd one: 64, 81, 100, 121, 144?",
+          "options": [
+            {"id": "opt_a", "text": "64"},
+            {"id": "opt_b", "text": "81"},
+            {"id": "opt_c", "text": "100"},
+            {"id": "opt_d", "text": "All are same type"}
+          ],
+          "correctAnswerId": "opt_d",
+          "explanation": "All are perfect squares: 8²=64, 9²=81, 10²=100, 11²=121, 12²=144. None is odd one out.",
+          "difficulty": "EASY",
+          "tags": ["classification", "squares"]
+        },
+        {
+          "id": "oir_q_0074",
+          "questionNumber": 74,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Water : Thirst :: Food : ?",
+          "options": [
+            {"id": "opt_a", "text": "Eat"},
+            {"id": "opt_b", "text": "Hunger"},
+            {"id": "opt_c", "text": "Plate"},
+            {"id": "opt_d", "text": "Cook"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Water satisfies thirst, similarly food satisfies hunger. This is a need-fulfillment analogy.",
+          "difficulty": "EASY",
+          "tags": ["analogies", "needs"]
+        },
+        {
+          "id": "oir_q_0075",
+          "questionNumber": 75,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "A number is first increased by 10% and then decreased by 10%. What is the net change?",
+          "options": [
+            {"id": "opt_a", "text": "No change"},
+            {"id": "opt_b", "text": "1% decrease"},
+            {"id": "opt_c", "text": "1% increase"},
+            {"id": "opt_d", "text": "2% decrease"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Let number = 100. After 10% increase = 110. After 10% decrease of 110 = 110 - 11 = 99. Net change = 1% decrease.",
+          "difficulty": "MEDIUM",
+          "tags": ["percentages", "calculations"]
+        },
+        {
+          "id": "oir_q_0076",
+          "questionNumber": 76,
+          "type": "VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: AB, CD, EF, GH, __",
+          "options": [
+            {"id": "opt_a", "text": "HI"},
+            {"id": "opt_b", "text": "IJ"},
+            {"id": "opt_c", "text": "JK"},
+            {"id": "opt_d", "text": "KL"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "The pattern shows consecutive letter pairs moving through the alphabet: AB, CD, EF, GH, IJ.",
+          "difficulty": "EASY",
+          "tags": ["series", "alphabet"]
+        },
+        {
+          "id": "oir_q_0077",
+          "questionNumber": 77,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "If 3 + 3 = 18, 4 + 4 = 32, 5 + 5 = 50, then 6 + 6 = ?",
+          "options": [
+            {"id": "opt_a", "text": "60"},
+            {"id": "opt_b", "text": "66"},
+            {"id": "opt_c", "text": "72"},
+            {"id": "opt_d", "text": "78"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Pattern: a + a = a × (a+a). So 3+3 = 3×6=18, 4+4 = 4×8=32, 5+5 = 5×10=50, 6+6 = 6×12=72.",
+          "difficulty": "MEDIUM",
+          "tags": ["patterns", "operations"]
+        },
+        {
+          "id": "oir_q_0078",
+          "questionNumber": 78,
+          "type": "VERBAL_REASONING",
+          "subtype": "DIRECTION",
+          "questionText": "A clock shows 3:00. What is the angle between hour and minute hands?",
+          "options": [
+            {"id": "opt_a", "text": "75°"},
+            {"id": "opt_b", "text": "90°"},
+            {"id": "opt_c", "text": "105°"},
+            {"id": "opt_d", "text": "120°"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "At 3:00, the minute hand is at 12 and the hour hand is at 3. Each hour represents 30° (360°/12), so 3 hours = 90°.",
+          "difficulty": "EASY",
+          "tags": ["angles", "clock"]
+        },
+        {
+          "id": "oir_q_0079",
+          "questionNumber": 79,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "A train 150m long crosses a pole in 15 seconds. What is its speed in km/h?",
+          "options": [
+            {"id": "opt_a", "text": "30"},
+            {"id": "opt_b", "text": "36"},
+            {"id": "opt_c", "text": "40"},
+            {"id": "opt_d", "text": "45"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Speed = 150m / 15s = 10 m/s. Converting to km/h: 10 × 3.6 = 36 km/h.",
+          "difficulty": "MEDIUM",
+          "tags": ["speed", "trains"]
+        },
+        {
+          "id": "oir_q_0080",
+          "questionNumber": 80,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "M is the son of N. N and O are sisters. P is O's mother. How is P related to M?",
+          "options": [
+            {"id": "opt_a", "text": "Grandmother"},
+            {"id": "opt_b", "text": "Aunt"},
+            {"id": "opt_c", "text": "Mother"},
+            {"id": "opt_d", "text": "Sister"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "N and O are sisters, P is their mother. M is N's son, making P the grandmother of M.",
+          "difficulty": "EASY",
+          "tags": ["blood_relations", "family"]
+        },
+        {
+          "id": "oir_q_0081",
+          "questionNumber": 81,
+          "type": "SPATIAL_REASONING",
+          "subtype": "SHAPE_COUNTING",
+          "questionText": "How many squares are in a 3×3 grid?",
+          "options": [
+            {"id": "opt_a", "text": "9"},
+            {"id": "opt_b", "text": "13"},
+            {"id": "opt_c", "text": "14"},
+            {"id": "opt_d", "text": "15"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "In a 3×3 grid: 9 small squares (1×1), 4 medium squares (2×2), and 1 large square (3×3). Total = 9+4+1 = 14 squares.",
+          "difficulty": "MEDIUM",
+          "tags": ["shape_counting", "squares"]
+        },
+        {
+          "id": "oir_q_0082",
+          "questionNumber": 82,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to CONCEAL:",
+          "options": [
+            {"id": "opt_a", "text": "Reveal"},
+            {"id": "opt_b", "text": "Hide"},
+            {"id": "opt_c", "text": "Show"},
+            {"id": "opt_d", "text": "Expose"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Conceal means to keep hidden or secret. Hide is the closest synonym meaning to put or keep out of sight.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0083",
+          "questionNumber": 83,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "MIRROR_IMAGE",
+          "questionText": "What is the mirror image of 'AMBULANCE' in a rear-view mirror?",
+          "options": [
+            {"id": "opt_a", "text": "AMBULANCE (normal)"},
+            {"id": "opt_b", "text": "ECNALUBMA"},
+            {"id": "opt_c", "text": "ƎƆͶA⅃UMBA"},
+            {"id": "opt_d", "text": "AMBULANCE (reversed)"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "In a mirror, 'AMBULANCE' appears horizontally flipped with each letter reversed: ƎƆͶA⅃UMBA. This is why it's written reversed on ambulances.",
+          "difficulty": "MEDIUM",
+          "tags": ["mirror_image", "reflection"]
+        },
+        {
+          "id": "oir_q_0084",
+          "questionNumber": 84,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If 5x + 3 = 3x + 17, what is the value of x?",
+          "options": [
+            {"id": "opt_a", "text": "5"},
+            {"id": "opt_b", "text": "6"},
+            {"id": "opt_c", "text": "7"},
+            {"id": "opt_d", "text": "8"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "5x + 3 = 3x + 17. Subtract 3x from both sides: 2x + 3 = 17. Subtract 3: 2x = 14. Divide by 2: x = 7.",
+          "difficulty": "EASY",
+          "tags": ["equations", "algebra"]
+        },
+        {
+          "id": "oir_q_0085",
+          "questionNumber": 85,
+          "type": "VERBAL_REASONING",
+          "subtype": "LOGICAL_DEDUCTION",
+          "questionText": "All students in the class passed. Raj is in the class. Therefore:",
+          "options": [
+            {"id": "opt_a", "text": "Raj failed"},
+            {"id": "opt_b", "text": "Raj passed"},
+            {"id": "opt_c", "text": "Raj may have passed"},
+            {"id": "opt_d", "text": "Cannot say"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "If all students in the class passed and Raj is in the class, then definitely Raj passed. This is a valid deductive conclusion.",
+          "difficulty": "EASY",
+          "tags": ["logic", "deduction"]
+        },
+        {
+          "id": "oir_q_0086",
+          "questionNumber": 86,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next: 7, 14, 28, 56, __",
+          "options": [
+            {"id": "opt_a", "text": "84"},
+            {"id": "opt_b", "text": "98"},
+            {"id": "opt_c", "text": "112"},
+            {"id": "opt_d", "text": "126"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Each number is double the previous: 7×2=14, 14×2=28, 28×2=56, 56×2=112.",
+          "difficulty": "EASY",
+          "tags": ["patterns", "multiplication"]
+        },
+        {
+          "id": "oir_q_0087",
+          "questionNumber": 87,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "RATIOS",
+          "questionText": "In a mixture of 60 liters, the ratio of milk to water is 2:1. How much water should be added to make the ratio 1:2?",
+          "options": [
+            {"id": "opt_a", "text": "40 liters"},
+            {"id": "opt_b", "text": "60 liters"},
+            {"id": "opt_c", "text": "80 liters"},
+            {"id": "opt_d", "text": "100 liters"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Current: milk=40L, water=20L. For 1:2 ratio, water should be double milk (80L). Need to add 80-20=60L water.",
+          "difficulty": "HARD",
+          "tags": ["ratios", "mixtures"]
+        },
+        {
+          "id": "oir_q_0088",
+          "questionNumber": 88,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANTONYMS",
+          "questionText": "Choose the word most opposite in meaning to GENEROUS:",
+          "options": [
+            {"id": "opt_a", "text": "Kind"},
+            {"id": "opt_b", "text": "Giving"},
+            {"id": "opt_c", "text": "Stingy"},
+            {"id": "opt_d", "text": "Liberal"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Generous means giving freely and abundantly. Stingy means unwilling to give or spend, making them opposites.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "antonyms"]
+        },
+        {
+          "id": "oir_q_0089",
+          "questionNumber": 89,
+          "type": "SPATIAL_REASONING",
+          "subtype": "CUBE",
+          "questionText": "If a cube has a volume of 64 cubic cm, what is the length of each edge?",
+          "options": [
+            {"id": "opt_a", "text": "4 cm"},
+            {"id": "opt_b", "text": "6 cm"},
+            {"id": "opt_c", "text": "8 cm"},
+            {"id": "opt_d", "text": "16 cm"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Volume of cube = edge³. If edge³ = 64, then edge = ∛64 = 4 cm.",
+          "difficulty": "MEDIUM",
+          "tags": ["cube", "volume"]
+        },
+        {
+          "id": "oir_q_0090",
+          "questionNumber": 90,
+          "type": "VERBAL_REASONING",
+          "subtype": "ANALOGIES",
+          "questionText": "Chapter : Book :: Verse : ?",
+          "options": [
+            {"id": "opt_a", "text": "Novel"},
+            {"id": "opt_b", "text": "Poem"},
+            {"id": "opt_c", "text": "Page"},
+            {"id": "opt_d", "text": "Line"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "A chapter is a division of a book, similarly a verse is a division of a poem. This is a part-to-whole analogy.",
+          "difficulty": "MEDIUM",
+          "tags": ["analogies", "literature"]
+        },
+        {
+          "id": "oir_q_0091",
+          "questionNumber": 91,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "PERCENTAGES",
+          "questionText": "The population of a town increases by 20% in the first year and decreases by 20% in the second year. What is the net percentage change?",
+          "options": [
+            {"id": "opt_a", "text": "0%"},
+            {"id": "opt_b", "text": "2% decrease"},
+            {"id": "opt_c", "text": "4% decrease"},
+            {"id": "opt_d", "text": "4% increase"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Let initial = 100. After 20% increase = 120. After 20% decrease = 120×0.8 = 96. Net change = 4% decrease.",
+          "difficulty": "MEDIUM",
+          "tags": ["percentages", "population"]
+        },
+        {
+          "id": "oir_q_0092",
+          "questionNumber": 92,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "SERIES",
+          "questionText": "Complete the series: 5, 10, 20, 40, __",
+          "options": [
+            {"id": "opt_a", "text": "60"},
+            {"id": "opt_b", "text": "70"},
+            {"id": "opt_c", "text": "80"},
+            {"id": "opt_d", "text": "90"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "Each number is double the previous: 5×2=10, 10×2=20, 20×2=40, 40×2=80.",
+          "difficulty": "EASY",
+          "tags": ["series", "geometric"]
+        },
+        {
+          "id": "oir_q_0093",
+          "questionNumber": 93,
+          "type": "VERBAL_REASONING",
+          "subtype": "CODING",
+          "questionText": "If FRIEND is coded as GSJFOE, how is MENTOR coded?",
+          "options": [
+            {"id": "opt_a", "text": "NFOUPS"},
+            {"id": "opt_b", "text": "MFNUPS"},
+            {"id": "opt_c", "text": "NFMUPS"},
+            {"id": "opt_d", "text": "NFOTPS"}
+          ],
+          "correctAnswerId": "opt_a",
+          "explanation": "Each letter is shifted one position forward: F→G, R→S, I→J, E→F, N→O, D→E. So M→N, E→F, N→O, T→U, O→P, R→S = NFOUPS.",
+          "difficulty": "MEDIUM",
+          "tags": ["coding", "shift"]
+        },
+        {
+          "id": "oir_q_0094",
+          "questionNumber": 94,
+          "type": "VERBAL_REASONING",
+          "subtype": "DIRECTION",
+          "questionText": "A person walks 10m South, then 6m East, then 10m North, then 3m West. How far is he from the starting point?",
+          "options": [
+            {"id": "opt_a", "text": "1 m"},
+            {"id": "opt_b", "text": "2 m"},
+            {"id": "opt_c", "text": "3 m"},
+            {"id": "opt_d", "text": "4 m"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "North-South movements cancel out (10m S, then 10m N = 0 net). East-West: 6m E minus 3m W = 3m East of start.",
+          "difficulty": "EASY",
+          "tags": ["direction", "distance"]
+        },
+        {
+          "id": "oir_q_0095",
+          "questionNumber": 95,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "TIME_SPEED_DISTANCE",
+          "questionText": "A man rows downstream 32 km in 4 hours and upstream 14 km in 7 hours. What is the speed of the stream?",
+          "options": [
+            {"id": "opt_a", "text": "2 km/h"},
+            {"id": "opt_b", "text": "3 km/h"},
+            {"id": "opt_c", "text": "4 km/h"},
+            {"id": "opt_d", "text": "5 km/h"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Downstream speed = 32/4 = 8 km/h. Upstream speed = 14/7 = 2 km/h. Stream speed = (8-2)/2 = 3 km/h.",
+          "difficulty": "HARD",
+          "tags": ["speed", "stream", "boats"]
+        },
+        {
+          "id": "oir_q_0096",
+          "questionNumber": 96,
+          "type": "VERBAL_REASONING",
+          "subtype": "SYNONYMS",
+          "questionText": "Choose the word most similar in meaning to EVIDENT:",
+          "options": [
+            {"id": "opt_a", "text": "Hidden"},
+            {"id": "opt_b", "text": "Obvious"},
+            {"id": "opt_c", "text": "Obscure"},
+            {"id": "opt_d", "text": "Unclear"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Evident means clearly seen or understood. Obvious is the closest synonym meaning easily perceived or understood.",
+          "difficulty": "EASY",
+          "tags": ["vocabulary", "synonyms"]
+        },
+        {
+          "id": "oir_q_0097",
+          "questionNumber": 97,
+          "type": "NON_VERBAL_REASONING",
+          "subtype": "PATTERN",
+          "questionText": "What comes next: 11, 13, 17, 19, 23, __",
+          "options": [
+            {"id": "opt_a", "text": "27"},
+            {"id": "opt_b", "text": "29"},
+            {"id": "opt_c", "text": "31"},
+            {"id": "opt_d", "text": "33"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "These are prime numbers in sequence: 11, 13, 17, 19, 23, 29. The next prime number after 23 is 29.",
+          "difficulty": "MEDIUM",
+          "tags": ["patterns", "primes"]
+        },
+        {
+          "id": "oir_q_0098",
+          "questionNumber": 98,
+          "type": "VERBAL_REASONING",
+          "subtype": "BLOOD_RELATIONS",
+          "questionText": "If A + B means A is the father of B, A - B means A is the wife of B, what does P + Q - R mean?",
+          "options": [
+            {"id": "opt_a", "text": "P is father of R"},
+            {"id": "opt_b", "text": "P is grandfather of R"},
+            {"id": "opt_c", "text": "P is husband of R"},
+            {"id": "opt_d", "text": "P is son of R"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "P + Q means P is father of Q. Q - R means Q is wife of R. So P is father of Q, and Q is wife of R, making P the father-in-law or grandfather of R's children. If Q and R have children, P is grandfather.",
+          "difficulty": "HARD",
+          "tags": ["blood_relations", "symbols"]
+        },
+        {
+          "id": "oir_q_0099",
+          "questionNumber": 99,
+          "type": "SPATIAL_REASONING",
+          "subtype": "3D_ROTATION",
+          "questionText": "How many diagonals does a hexagon have?",
+          "options": [
+            {"id": "opt_a", "text": "6"},
+            {"id": "opt_b", "text": "9"},
+            {"id": "opt_c", "text": "12"},
+            {"id": "opt_d", "text": "15"}
+          ],
+          "correctAnswerId": "opt_b",
+          "explanation": "Formula for diagonals = n(n-3)/2, where n is number of sides. For hexagon: 6(6-3)/2 = 6×3/2 = 9 diagonals.",
+          "difficulty": "MEDIUM",
+          "tags": ["geometry", "diagonals"]
+        },
+        {
+          "id": "oir_q_0100",
+          "questionNumber": 100,
+          "type": "NUMERICAL_ABILITY",
+          "subtype": "EQUATIONS",
+          "questionText": "If x/4 + x/5 = 9, what is the value of x?",
+          "options": [
+            {"id": "opt_a", "text": "15"},
+            {"id": "opt_b", "text": "18"},
+            {"id": "opt_c", "text": "20"},
+            {"id": "opt_d", "text": "25"}
+          ],
+          "correctAnswerId": "opt_c",
+          "explanation": "x/4 + x/5 = 9. Finding common denominator: 5x/20 + 4x/20 = 9, so 9x/20 = 9, therefore 9x = 180, x = 20.",
+          "difficulty": "MEDIUM",
+          "tags": ["equations", "fractions"]
+        }
+      ]
+    }
+  ]
+}

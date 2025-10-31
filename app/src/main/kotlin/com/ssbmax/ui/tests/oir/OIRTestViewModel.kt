@@ -66,28 +66,32 @@ class OIRTestViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Check if user is eligible to take the test
+     * TODO: Implement subscription-based test limits
+     */
+    fun checkTestEligibility() {
+        // Eligibility checking temporarily disabled
+        android.util.Log.d("OIRTestViewModel", "✅ Test eligibility check bypassed (all users eligible)")
+    }
+    
     fun loadTest(testId: String = "oir_standard", userId: String = "mock-user-id") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                loadingMessage = "Fetching questions from cloud...",
+                loadingMessage = "Checking eligibility...",
                 error = null
             )
             
             try {
-                // Create test session first
-                val sessionResult = testContentRepository.createTestSession(
-                    userId = userId,
-                    testId = testId,
-                    testType = TestType.OIR
+                // TODO: Check subscription eligibility when feature is implemented
+                
+                _uiState.value = _uiState.value.copy(
+                    loadingMessage = "Loading questions..."
                 )
                 
-                if (sessionResult.isFailure) {
-                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
-                }
-                
-                // Fetch questions from cloud
-                val questionsResult = testContentRepository.getOIRQuestions(testId)
+                // Fetch questions using the new caching system
+                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50)
                 
                 if (questionsResult.isFailure) {
                     throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
@@ -96,13 +100,17 @@ class OIRTestViewModel @Inject constructor(
                 val questions = questionsResult.getOrNull() ?: emptyList()
                 
                 if (questions.isEmpty()) {
-                    throw Exception("No questions found for this test")
+                    throw Exception("No questions available. Please check your internet connection.")
                 }
                 
+                android.util.Log.d("OIRTestViewModel", "✅ Loaded ${questions.size} questions")
+                
+                // Create test session
+                val sessionId = UUID.randomUUID().toString()
                 val config = OIRTestConfig()
                 
                 currentSession = OIRTestSession(
-                    sessionId = sessionResult.getOrNull()!!,
+                    sessionId = sessionId,
                     userId = userId,
                     testId = testId,
                     questions = questions,
@@ -115,11 +123,14 @@ class OIRTestViewModel @Inject constructor(
                 updateUiFromSession()
                 startTimer()
                 
+            } catch (e: CancellationException) {
+                throw e // Don't catch cancellation
             } catch (e: Exception) {
+                android.util.Log.e("OIRTestViewModel", "Failed to load test", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     loadingMessage = null,
-                    error = "Cloud connection required. Please check your internet connection."
+                    error = "Failed to load test: ${e.message ?: "Unknown error"}"
                 )
             }
         }

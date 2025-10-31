@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
     
     // Google Sign-In
     implementation(libs.play.services.auth)
@@ -62,6 +63,9 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    
+    // Gson for JSON serialization
+    implementation(libs.gson)
     
     // Testing
     testImplementation(libs.junit)

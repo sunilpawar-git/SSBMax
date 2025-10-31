@@ -2,9 +2,13 @@ package com.ssbmax.core.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.gson.Gson
+import com.ssbmax.core.data.local.DatabaseMigrations
 import com.ssbmax.core.data.local.SSBDatabase
 import com.ssbmax.core.data.local.dao.NotificationDao
+import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
+import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
 import com.ssbmax.core.domain.repository.NotificationRepository
@@ -33,7 +37,12 @@ object DatabaseModule {
             context,
             SSBDatabase::class.java,
             SSBDatabase.DATABASE_NAME
-        ).build()
+        )
+        .addMigrations(
+            DatabaseMigrations.MIGRATION_2_3,
+            DatabaseMigrations.MIGRATION_3_4
+        )
+        .build()
     }
     
     @Provides
@@ -44,6 +53,22 @@ object DatabaseModule {
     @Provides
     fun provideNotificationDao(database: SSBDatabase): NotificationDao {
         return database.notificationDao()
+    }
+    
+    @Provides
+    fun provideOIRQuestionCacheDao(database: SSBDatabase): OIRQuestionCacheDao {
+        return database.oirQuestionCacheDao()
+    }
+    
+    @Provides
+    fun provideTestUsageDao(database: SSBDatabase): TestUsageDao {
+        return database.testUsageDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
     }
 }
 

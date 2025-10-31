@@ -1,5 +1,6 @@
 package com.ssbmax.core.domain.repository
 
+import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.SRTSituation
@@ -22,8 +23,33 @@ interface TestContentRepository {
      * Fetch OIR test questions from Firestore
      * @param testId The specific test ID to load
      * @return Result with list of OIR questions or error
+     * 
+     * @deprecated Use getOIRTestQuestions() for cached implementation
      */
     suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>>
+    
+    /**
+     * Get OIR test questions from cache (50 questions with proper distribution)
+     * Uses progressive caching strategy for optimal performance
+     * 
+     * @param count Number of questions to fetch (default 50)
+     * @return Result with list of OIR questions or error
+     */
+    suspend fun getOIRTestQuestions(count: Int = 50): Result<List<OIRQuestion>>
+    
+    /**
+     * Initialize OIR question cache
+     * Downloads first batch of questions from Firestore
+     * 
+     * @return Result indicating success or failure
+     */
+    suspend fun initializeOIRCache(): Result<Unit>
+    
+    /**
+     * Get OIR cache status
+     * @return Cache status with statistics
+     */
+    suspend fun getOIRCacheStatus(): CacheStatus
     
     /**
      * Fetch PPDT test questions from Firestore

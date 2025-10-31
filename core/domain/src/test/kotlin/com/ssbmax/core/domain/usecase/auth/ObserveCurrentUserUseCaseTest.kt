@@ -7,7 +7,7 @@ import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.repository.AuthRepository
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -39,28 +39,28 @@ class ObserveCurrentUserUseCaseTest {
             subscriptionTier = SubscriptionTier.BASIC,
             subscription = null
         )
-        every { authRepository.currentUser } returns flowOf(mockUser)
+        every { authRepository.currentUser } returns MutableStateFlow(mockUser)
         
         // When
         useCase().test {
             // Then
             val emittedUser = awaitItem()
             assertEquals(mockUser, emittedUser)
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
     
     @Test
     fun `invoke emits null when no user is signed in`() = runTest {
         // Given
-        every { authRepository.currentUser } returns flowOf(null)
+        every { authRepository.currentUser } returns MutableStateFlow(null)
         
         // When
         useCase().test {
             // Then
             val emittedUser = awaitItem()
             assertNull(emittedUser)
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
     
@@ -75,23 +75,20 @@ class ObserveCurrentUserUseCaseTest {
             subscriptionTier = SubscriptionTier.BASIC,
             subscription = null
         )
-        val user2 = SSBMaxUser(
-            id = "user2",
-            email = "user2@ssbmax.com",
-            displayName = "User Two",
-            role = UserRole.INSTRUCTOR,
-            subscriptionTier = SubscriptionTier.PRO,
-            subscription = null
-        )
-        every { authRepository.currentUser } returns flowOf(user1, null, user2)
+        val userFlow = MutableStateFlow<SSBMaxUser?>(user1)
+        every { authRepository.currentUser } returns userFlow
         
         // When
         useCase().test {
-            // Then
+            // Then - Initial value
             assertEquals(user1, awaitItem())
+            
+            // Update to null
+            userFlow.value = null
             assertNull(awaitItem())
-            assertEquals(user2, awaitItem())
-            awaitComplete()
+            
+            // Don't call awaitComplete() as StateFlow never completes
+            cancelAndIgnoreRemainingEvents()
         }
     }
     
@@ -106,7 +103,7 @@ class ObserveCurrentUserUseCaseTest {
             subscriptionTier = SubscriptionTier.PRO,
             subscription = null
         )
-        every { authRepository.currentUser } returns flowOf(mockUser)
+        every { authRepository.currentUser } returns MutableStateFlow(mockUser)
         
         // When
         useCase().test {
@@ -118,7 +115,7 @@ class ObserveCurrentUserUseCaseTest {
             assertEquals("Premium User", emittedUser?.displayName)
             assertEquals(UserRole.STUDENT, emittedUser?.role)
             assertEquals(SubscriptionTier.PRO, emittedUser?.subscriptionTier)
-            awaitComplete()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 }

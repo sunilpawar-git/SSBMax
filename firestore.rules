@@ -62,6 +62,33 @@ service cloud.firestore {
         // Users can read/write their own data subcollection
         allow read, write: if isOwner(userId);
       }
+      
+      // Test usage tracking (for subscription limits)
+      match /test_usage/{month} {
+        // Users can read their own test usage
+        allow read: if isOwner(userId);
+        
+        // Users can write their own test usage
+        // Validate: month format is "YYYY-MM"
+        allow write: if isOwner(userId) &&
+                        request.resource.data.keys().hasAll([
+                          'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
+                          'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
+                          'interviewTestsUsed', 'lastUpdated'
+                        ]) &&
+                        request.resource.data.oirTestsUsed is int &&
+                        request.resource.data.oirTestsUsed >= 0;
+      }
+      
+      // User subscription data
+      match /data/subscription {
+        // Users can read their own subscription
+        allow read: if isOwner(userId);
+        
+        // Only backend can write subscription data
+        // (Payment processing updates subscription tier)
+        allow write: if false;
+      }
     }
     
     // ============================================
@@ -324,6 +351,27 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       // No client write access
+      allow write: if false;
+    }
+    
+    // ============================================
+    // OIR TEST CONTENT (Progressive Caching)
+    // ============================================
+    
+    match /test_content/oir/meta/{document} {
+      // All authenticated users can read OIR metadata
+      allow read: if isAuthenticated();
+      
+      // No client write access (managed via backend scripts)
+      allow write: if false;
+    }
+    
+    match /test_content/oir/question_batches/{batchId} {
+      // All authenticated users can read question batches
+      // Progressive caching downloads batches as needed
+      allow read: if isAuthenticated();
+      
+      // No client write access (managed via backend scripts)
       allow write: if false;
     }
     
