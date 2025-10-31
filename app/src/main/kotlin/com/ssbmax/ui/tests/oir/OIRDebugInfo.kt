@@ -136,8 +136,9 @@ fun OIRDebugInfoScreen(
                 Text("Non-Verbal: ${debugInfo.nonVerbalCount}")
                 Text("Numerical: ${debugInfo.numericalCount}")
                 Text("Spatial: ${debugInfo.spatialCount}")
-                Text("Last Sync: ${if (debugInfo.lastSyncTime != null) 
-                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(debugInfo.lastSyncTime))
+                val syncTime = debugInfo.lastSyncTime
+                Text("Last Sync: ${if (syncTime != null) 
+                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date(syncTime))
                     else "Never"}")
             }
         }
@@ -152,12 +153,13 @@ fun OIRDebugInfoScreen(
         }
         
         // Error
-        if (debugInfo.error != null) {
+        val errorMsg = debugInfo.error
+        if (errorMsg != null) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Error", style = MaterialTheme.typography.titleMedium, 
                         color = MaterialTheme.colorScheme.onErrorContainer)
-                    Text(debugInfo.error, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text(errorMsg, color = MaterialTheme.colorScheme.onErrorContainer)
                 }
             }
         }
