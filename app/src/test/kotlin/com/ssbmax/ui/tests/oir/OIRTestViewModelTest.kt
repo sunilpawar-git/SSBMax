@@ -1,13 +1,12 @@
 package com.ssbmax.ui.tests.oir
 
+import android.util.Log
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
@@ -15,6 +14,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 /**
@@ -23,6 +23,21 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OIRTestViewModelTest : BaseViewModelTest() {
+    
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setupClass() {
+            // Mock android.util.Log for all tests
+            mockkStatic(Log::class)
+            every { Log.d(any(), any()) } returns 0
+            every { Log.e(any(), any()) } returns 0
+            every { Log.e(any(), any(), any()) } returns 0
+            every { Log.w(any(), any<String>()) } returns 0
+            every { Log.i(any(), any()) } returns 0
+            every { Log.v(any(), any()) } returns 0
+        }
+    }
     
     private lateinit var viewModel: OIRTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
@@ -41,14 +56,9 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     
     @Before
     fun setup() {
-        // Mock successful test session creation
+        // Mock successful question loading using new caching system
         coEvery { 
-            mockTestContentRepo.createTestSession(any(), any(), TestType.OIR) 
-        } returns Result.success("session-123")
-        
-        // Mock successful question loading
-        coEvery { 
-            mockTestContentRepo.getOIRQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any()) 
         } returns Result.success(mockQuestions)
         
         // Mock user profile
@@ -56,11 +66,11 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo.getUserProfile(any()) 
         } returns flowOf(Result.success(mockUserProfile))
         
-        // Mock cache clearing
-        coEvery { mockTestContentRepo.clearCache() } returns Unit
+        // Mock cache initialization (may be called by repository)
+        coEvery { mockTestContentRepo.initializeOIRCache() } returns Result.success(Unit)
         
-        // Mock session ending
-        coEvery { mockTestContentRepo.endTestSession(any()) } returns Result.success(Unit)
+        // Mock cache status
+        coEvery { mockTestContentRepo.getOIRCacheStatus() } returns mockk(relaxed = true)
     }
     
     // ==================== Test Loading ====================
@@ -80,16 +90,15 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         assertNotNull("Should have current question", state.currentQuestion)
         assertEquals("Timer should be 40 minutes (2400s)", 2400, state.timeRemainingSeconds)
         
-        // Verify session was created
-        coVerify { mockTestContentRepo.createTestSession("mock-user-id", "oir_standard", TestType.OIR) }
-        coVerify { mockTestContentRepo.getOIRQuestions("oir_standard") }
+        // Verify questions were fetched using new caching system
+        coVerify { mockTestContentRepo.getOIRTestQuestions(50) }
     }
     
     @Test
     fun `loadTest failure shows error message`() = runTest {
         // Given - mock failure
         coEvery { 
-            mockTestContentRepo.getOIRQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any()) 
         } returns Result.failure(Exception("Network error"))
         
         // When
@@ -103,8 +112,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             assertFalse("Should not be loading", state.isLoading)
             assertNotNull("Should have error", state.error)
             assertTrue(
-                "Error should mention cloud connection",
-                state.error!!.contains("Cloud connection required")
+                "Error should mention failed loading",
+                state.error!!.contains("Failed to load test")
             )
         }
     }
@@ -113,7 +122,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     fun `loadTest with empty questions shows error`() = runTest {
         // Given - mock empty questions
         coEvery { 
-            mockTestContentRepo.getOIRQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any()) 
         } returns Result.success(emptyList())
         
         // When
@@ -127,8 +136,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             assertFalse("Should not be loading", state.isLoading)
             assertNotNull("Should have error", state.error)
             assertTrue(
-                "Error should mention cloud connection",
-                state.error!!.contains("Cloud connection required")
+                "Error should mention no questions available",
+                state.error!!.contains("No questions available")
             )
         }
     }
@@ -279,9 +288,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             assertTrue("Percentage score should be 100%", result.percentageScore >= 99f)
         }
         
-        // Verify session ended and cache cleared
-        coVerify { mockTestContentRepo.endTestSession("session-123") }
-        coVerify { mockTestContentRepo.clearCache() }
+        // Note: Session management is now handled differently (local UUID generation)
+        // No need to verify endTestSession or clearCache calls
     }
     
     @Test
@@ -361,7 +369,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     fun `timer expiry auto-submits test`() = runTest {
         // Given - create ViewModel with shorter time for testing
         coEvery { 
-            mockTestContentRepo.getOIRQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any()) 
         } returns Result.success(createMockQuestions().take(1)) // Only 1 question
         
         viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
