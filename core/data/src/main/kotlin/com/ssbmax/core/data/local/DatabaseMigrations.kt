@@ -272,5 +272,71 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 7 to 8
+     * Adds PPDT image caching tables
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_ppdt_images table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_ppdt_images (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    localFilePath TEXT,
+                    imageDescription TEXT NOT NULL,
+                    viewingTimeSeconds INTEGER NOT NULL,
+                    writingTimeMinutes INTEGER NOT NULL,
+                    minCharacters INTEGER NOT NULL,
+                    maxCharacters INTEGER NOT NULL,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL,
+                    imageDownloaded INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create ppdt_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS ppdt_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    imageCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_category 
+                ON cached_ppdt_images(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_difficulty 
+                ON cached_ppdt_images(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_batchId 
+                ON cached_ppdt_images(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_usageCount 
+                ON cached_ppdt_images(usageCount)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_imageDownloaded 
+                ON cached_ppdt_images(imageDownloaded)
+            """.trimIndent())
+        }
+    }
 }
 

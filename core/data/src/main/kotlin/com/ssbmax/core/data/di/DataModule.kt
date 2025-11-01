@@ -7,6 +7,7 @@ import com.ssbmax.core.data.local.DatabaseMigrations
 import com.ssbmax.core.data.local.SSBDatabase
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
+import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
@@ -46,7 +47,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_3_4,
                 DatabaseMigrations.MIGRATION_4_5,
                 DatabaseMigrations.MIGRATION_5_6,
-                DatabaseMigrations.MIGRATION_6_7
+                DatabaseMigrations.MIGRATION_6_7,
+                DatabaseMigrations.MIGRATION_7_8
             )
         .build()
     }
@@ -84,6 +86,11 @@ object DatabaseModule {
     @Provides
     fun provideTATImageCacheDao(database: SSBDatabase): TATImageCacheDao {
         return database.tatImageCacheDao()
+    }
+    
+    @Provides
+    fun providePPDTImageCacheDao(database: SSBDatabase): PPDTImageCacheDao {
+        return database.ppdtImageCacheDao()
     }
     
     @Provides
