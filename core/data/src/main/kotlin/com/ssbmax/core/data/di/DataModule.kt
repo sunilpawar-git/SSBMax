@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.DatabaseMigrations
 import com.ssbmax.core.data.local.SSBDatabase
+import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
@@ -48,7 +49,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_4_5,
                 DatabaseMigrations.MIGRATION_5_6,
                 DatabaseMigrations.MIGRATION_6_7,
-                DatabaseMigrations.MIGRATION_7_8
+                DatabaseMigrations.MIGRATION_7_8,
+                DatabaseMigrations.MIGRATION_8_9
             )
         .build()
     }
@@ -91,6 +93,11 @@ object DatabaseModule {
     @Provides
     fun providePPDTImageCacheDao(database: SSBDatabase): PPDTImageCacheDao {
         return database.ppdtImageCacheDao()
+    }
+    
+    @Provides
+    fun provideGTOTaskCacheDao(database: SSBDatabase): GTOTaskCacheDao {
+        return database.gtoTaskCacheDao()
     }
     
     @Provides

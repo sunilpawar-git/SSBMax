@@ -338,5 +338,72 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 8 to 9
+     * Adds GTO task caching tables
+     */
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_gto_tasks table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_gto_tasks (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    taskType TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    instructions TEXT NOT NULL,
+                    timeAllowedMinutes INTEGER NOT NULL,
+                    difficultyLevel TEXT,
+                    category TEXT,
+                    scenario TEXT,
+                    resources TEXT,
+                    objectives TEXT,
+                    evaluationCriteria TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create gto_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS gto_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    taskCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gto_tasks_taskType 
+                ON cached_gto_tasks(taskType)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gto_tasks_category 
+                ON cached_gto_tasks(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gto_tasks_difficulty 
+                ON cached_gto_tasks(difficultyLevel)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gto_tasks_batchId 
+                ON cached_gto_tasks(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gto_tasks_usageCount 
+                ON cached_gto_tasks(usageCount)
+            """.trimIndent())
+        }
+    }
 }
 
