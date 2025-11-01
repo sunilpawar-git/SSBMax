@@ -149,5 +149,61 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 5 to 6
+     * Adds SRT situation caching tables
+     */
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_srt_situations table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_srt_situations (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    situation TEXT NOT NULL,
+                    sequenceNumber INTEGER NOT NULL,
+                    category TEXT NOT NULL,
+                    timeAllowedSeconds INTEGER NOT NULL,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create srt_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS srt_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    situationCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_srt_situations_category 
+                ON cached_srt_situations(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_srt_situations_difficulty 
+                ON cached_srt_situations(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_srt_situations_batchId 
+                ON cached_srt_situations(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_srt_situations_usageCount 
+                ON cached_srt_situations(usageCount)
+            """.trimIndent())
+        }
+    }
 }
 

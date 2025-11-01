@@ -7,6 +7,7 @@ import com.ssbmax.core.data.local.DatabaseMigrations
 import com.ssbmax.core.data.local.SSBDatabase
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
+import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
@@ -39,11 +40,12 @@ object DatabaseModule {
             SSBDatabase::class.java,
             SSBDatabase.DATABASE_NAME
         )
-        .addMigrations(
-            DatabaseMigrations.MIGRATION_2_3,
-            DatabaseMigrations.MIGRATION_3_4,
-            DatabaseMigrations.MIGRATION_4_5
-        )
+            .addMigrations(
+                DatabaseMigrations.MIGRATION_2_3,
+                DatabaseMigrations.MIGRATION_3_4,
+                DatabaseMigrations.MIGRATION_4_5,
+                DatabaseMigrations.MIGRATION_5_6
+            )
         .build()
     }
     
@@ -70,6 +72,11 @@ object DatabaseModule {
     @Provides
     fun provideWATWordCacheDao(database: SSBDatabase): WATWordCacheDao {
         return database.watWordCacheDao()
+    }
+    
+    @Provides
+    fun provideSRTSituationCacheDao(database: SSBDatabase): SRTSituationCacheDao {
+        return database.srtSituationCacheDao()
     }
     
     @Provides
