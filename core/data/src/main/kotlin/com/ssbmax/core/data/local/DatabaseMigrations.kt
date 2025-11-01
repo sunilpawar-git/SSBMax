@@ -69,18 +69,19 @@ object DatabaseMigrations {
     val MIGRATION_3_4 = object : Migration(3, 4) {
         override fun migrate(database: SupportSQLiteDatabase) {
             // Create test_usage table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS test_usage (
                     id TEXT PRIMARY KEY NOT NULL,
                     userId TEXT NOT NULL,
                     month TEXT NOT NULL,
-                    oirTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    tatTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    watTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    srtTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    ppdtTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    gtoTestsUsed INTEGER NOT NULL DEFAULT 0,
-                    interviewTestsUsed INTEGER NOT NULL DEFAULT 0,
+                    oirTestsUsed INTEGER NOT NULL,
+                    tatTestsUsed INTEGER NOT NULL,
+                    watTestsUsed INTEGER NOT NULL,
+                    srtTestsUsed INTEGER NOT NULL,
+                    ppdtTestsUsed INTEGER NOT NULL,
+                    gtoTestsUsed INTEGER NOT NULL,
+                    interviewTestsUsed INTEGER NOT NULL,
                     lastUpdated INTEGER NOT NULL
                 )
             """.trimIndent())
