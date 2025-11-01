@@ -93,5 +93,61 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 4 to 5
+     * Adds WAT word caching tables
+     */
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_wat_words table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_wat_words (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    word TEXT NOT NULL,
+                    sequenceNumber INTEGER NOT NULL,
+                    timeAllowedSeconds INTEGER NOT NULL,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create wat_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS wat_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    wordCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_wat_words_category 
+                ON cached_wat_words(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_wat_words_difficulty 
+                ON cached_wat_words(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_wat_words_batchId 
+                ON cached_wat_words(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_wat_words_usageCount 
+                ON cached_wat_words(usageCount)
+            """.trimIndent())
+        }
+    }
 }
 

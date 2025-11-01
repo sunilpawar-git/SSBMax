@@ -6,11 +6,14 @@ import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
+import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
+import com.ssbmax.core.data.local.entity.CachedWATWordEntity
 import com.ssbmax.core.data.local.entity.NotificationEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
+import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 
 /**
  * SSBMax Room Database
@@ -22,9 +25,11 @@ import com.ssbmax.core.data.local.entity.TestUsageEntity
         NotificationEntity::class,
         CachedOIRQuestionEntity::class,
         OIRBatchMetadataEntity::class,
-        TestUsageEntity::class
+        TestUsageEntity::class,
+        CachedWATWordEntity::class,
+        WATBatchMetadataEntity::class
     ],
-    version = 4, // Incremented for test usage tracking
+    version = 5, // Incremented for WAT word caching
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {
@@ -48,6 +53,11 @@ abstract class SSBDatabase : RoomDatabase() {
      * Test usage DAO
      */
     abstract fun testUsageDao(): TestUsageDao
+    
+    /**
+     * WAT word cache DAO
+     */
+    abstract fun watWordCacheDao(): WATWordCacheDao
     
     companion object {
         const val DATABASE_NAME = "ssbmax_database"

@@ -9,6 +9,7 @@ import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
+import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
 import com.ssbmax.core.domain.repository.NotificationRepository
@@ -40,7 +41,8 @@ object DatabaseModule {
         )
         .addMigrations(
             DatabaseMigrations.MIGRATION_2_3,
-            DatabaseMigrations.MIGRATION_3_4
+            DatabaseMigrations.MIGRATION_3_4,
+            DatabaseMigrations.MIGRATION_4_5
         )
         .build()
     }
@@ -63,6 +65,11 @@ object DatabaseModule {
     @Provides
     fun provideTestUsageDao(database: SSBDatabase): TestUsageDao {
         return database.testUsageDao()
+    }
+    
+    @Provides
+    fun provideWATWordCacheDao(database: SSBDatabase): WATWordCacheDao {
+        return database.watWordCacheDao()
     }
     
     @Provides
