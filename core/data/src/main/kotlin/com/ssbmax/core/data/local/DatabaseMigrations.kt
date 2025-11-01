@@ -405,5 +405,64 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 9 to 10 - FINAL MIGRATION!
+     * Adds Interview question caching tables
+     * This completes the progressive caching system for ALL 7 SSB tests!
+     */
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_interview_questions table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_interview_questions (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    question TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    difficulty TEXT,
+                    suggestedAnswer TEXT,
+                    keyPoints TEXT,
+                    commonMistakes TEXT,
+                    followUpQuestions TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create interview_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS interview_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    questionCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_interview_questions_category 
+                ON cached_interview_questions(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_interview_questions_difficulty 
+                ON cached_interview_questions(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_interview_questions_batchId 
+                ON cached_interview_questions(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_interview_questions_usageCount 
+                ON cached_interview_questions(usageCount)
+            """.trimIndent())
+        }
+    }
 }
 
