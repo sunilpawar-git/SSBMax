@@ -205,5 +205,72 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 6 to 7
+     * Adds TAT image caching tables
+     */
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_tat_images table
+            // NOTE: No DEFAULT values in SQL - Room handles defaults via Kotlin data class
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_tat_images (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    localFilePath TEXT,
+                    sequenceNumber INTEGER NOT NULL,
+                    prompt TEXT NOT NULL,
+                    viewingTimeSeconds INTEGER NOT NULL,
+                    writingTimeMinutes INTEGER NOT NULL,
+                    minCharacters INTEGER NOT NULL,
+                    maxCharacters INTEGER NOT NULL,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL,
+                    imageDownloaded INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create tat_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS tat_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    imageCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_tat_images_category 
+                ON cached_tat_images(category)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_tat_images_difficulty 
+                ON cached_tat_images(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_tat_images_batchId 
+                ON cached_tat_images(batchId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_tat_images_usageCount 
+                ON cached_tat_images(usageCount)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_tat_images_imageDownloaded 
+                ON cached_tat_images(imageDownloaded)
+            """.trimIndent())
+        }
+    }
 }
 

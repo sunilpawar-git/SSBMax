@@ -5,15 +5,18 @@ import androidx.room.RoomDatabase
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
+import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.data.local.entity.CachedSRTSituationEntity
+import com.ssbmax.core.data.local.entity.CachedTATImageEntity
 import com.ssbmax.core.data.local.entity.CachedWATWordEntity
 import com.ssbmax.core.data.local.entity.NotificationEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
@@ -32,9 +35,11 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         CachedWATWordEntity::class,
         WATBatchMetadataEntity::class,
         CachedSRTSituationEntity::class,
-        SRTBatchMetadataEntity::class
+        SRTBatchMetadataEntity::class,
+        CachedTATImageEntity::class,
+        TATBatchMetadataEntity::class
     ],
-    version = 6, // Incremented for SRT situation caching
+    version = 7, // Incremented for TAT image caching
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {
@@ -68,6 +73,11 @@ abstract class SSBDatabase : RoomDatabase() {
      * SRT situation cache DAO
      */
     abstract fun srtSituationCacheDao(): SRTSituationCacheDao
+    
+    /**
+     * TAT image cache DAO
+     */
+    abstract fun tatImageCacheDao(): TATImageCacheDao
     
     companion object {
         const val DATABASE_NAME = "ssbmax_database"
