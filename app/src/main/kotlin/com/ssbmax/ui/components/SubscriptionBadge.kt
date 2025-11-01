@@ -24,17 +24,17 @@ fun SubscriptionBadge(
 ) {
     val (label, containerColor, contentColor) = when (subscriptionType) {
         SubscriptionType.FREE -> Triple(
-            "Basic",
+            "Free",
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer
         )
-        SubscriptionType.PREMIUM_ASSESSOR -> Triple(
+        SubscriptionType.PRO -> Triple(
             "Pro",
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer
         )
-        SubscriptionType.PREMIUM_AI -> Triple(
-            "AI",
+        SubscriptionType.PREMIUM -> Triple(
+            "Premium",
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.colorScheme.onTertiaryContainer
         )

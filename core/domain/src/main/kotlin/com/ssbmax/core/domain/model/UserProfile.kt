@@ -70,8 +70,8 @@ enum class EntryType(val displayName: String) {
  * Subscription type for determining grading method
  */
 enum class SubscriptionType {
-    FREE,              // Free users - assessor grading (wait for manual review)
-    PREMIUM_ASSESSOR,  // Premium assessor - assessor grading (wait for manual review)
-    PREMIUM_AI         // Premium AI - immediate AI grading
+    FREE,              // Free users - limited tests, manual grading (wait for assessor review)
+    PRO,               // Pro users - more tests, manual grading (wait for assessor review)  
+    PREMIUM            // Premium users - unlimited tests, AI grading (immediate results)
 }
 

@@ -288,7 +288,7 @@ private fun AnimatedPlanCard(
                     Row(
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        if (plan.tier == SubscriptionTier.BASIC) {
+                        if (plan.tier == SubscriptionTier.FREE) {
                             Text(
                                 "Free",
                                 style = MaterialTheme.typography.displaySmall,

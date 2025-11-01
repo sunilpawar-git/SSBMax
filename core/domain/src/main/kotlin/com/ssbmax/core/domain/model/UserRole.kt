@@ -24,7 +24,7 @@ data class SSBMaxUser(
     val displayName: String,
     val photoUrl: String? = null,
     val role: UserRole,
-    val subscriptionTier: SubscriptionTier = SubscriptionTier.BASIC,
+    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val subscription: UserSubscription? = null,
     val studentProfile: StudentProfile? = null,
     val instructorProfile: InstructorProfile? = null,
@@ -35,9 +35,9 @@ data class SSBMaxUser(
      * Legacy property for backward compatibility
      * @deprecated Use subscriptionTier instead
      */
-    @Deprecated("Use subscriptionTier instead", ReplaceWith("subscriptionTier != SubscriptionTier.BASIC"))
+    @Deprecated("Use subscriptionTier instead", ReplaceWith("subscriptionTier != SubscriptionTier.FREE"))
     val isPremium: Boolean
-        get() = subscriptionTier != SubscriptionTier.BASIC
+        get() = subscriptionTier != SubscriptionTier.FREE
 }
 
 /**

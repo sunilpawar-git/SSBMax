@@ -244,7 +244,7 @@ fun CompactSubscriptionRibbon(
  */
 private fun getTierGradient(tier: SubscriptionTier): List<Color> {
     return when (tier) {
-        SubscriptionTier.BASIC -> listOf(
+        SubscriptionTier.FREE -> listOf(
             Color(0xFF6366f1),
             Color(0xFF8b5cf6)
         )
@@ -252,7 +252,7 @@ private fun getTierGradient(tier: SubscriptionTier): List<Color> {
             Color(0xFF8b5cf6),
             Color(0xFFa855f7)
         )
-        SubscriptionTier.PREMIUM_AI -> listOf(
+        SubscriptionTier.PREMIUM -> listOf(
             Color(0xFFa855f7),
             Color(0xFFc026d3)
         )
@@ -268,9 +268,9 @@ private fun getTierGradient(tier: SubscriptionTier): List<Color> {
  */
 private fun getUpgradeMessage(tier: SubscriptionTier): String {
     return when (tier) {
-        SubscriptionTier.BASIC -> "Unlock unlimited tests & more"
+        SubscriptionTier.FREE -> "Unlock unlimited tests & more"
         SubscriptionTier.PRO -> "Get AI-powered insights"
-        SubscriptionTier.PREMIUM_AI -> "Access SSB Marketplace"
+        SubscriptionTier.PREMIUM -> "Access SSB Marketplace"
         SubscriptionTier.PREMIUM -> ""
     }
 }

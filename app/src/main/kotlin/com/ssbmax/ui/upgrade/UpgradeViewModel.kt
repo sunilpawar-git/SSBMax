@@ -40,7 +40,7 @@ class UpgradeViewModel @Inject constructor() : ViewModel() {
                 )
             ),
             SubscriptionPlan(
-                tier = SubscriptionTier.PREMIUM_AI,
+                tier = SubscriptionTier.PREMIUM,
                 name = "AI Premium",
                 price = 599,
                 billingPeriod = BillingPeriod.MONTHLY,
@@ -81,6 +81,6 @@ class UpgradeViewModel @Inject constructor() : ViewModel() {
 data class UpgradeUiState(
     val plans: List<SubscriptionPlan> = emptyList(),
     val selectedPlan: SubscriptionPlan? = null,
-    val currentTier: SubscriptionTier = SubscriptionTier.BASIC
+    val currentTier: SubscriptionTier = SubscriptionTier.FREE
 )
 

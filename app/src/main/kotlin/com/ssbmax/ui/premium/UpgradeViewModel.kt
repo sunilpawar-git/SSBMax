@@ -57,7 +57,7 @@ class UpgradeViewModel @Inject constructor(
                     Log.w("Upgrade", "No user logged in, defaulting to BASIC tier")
                     _uiState.update {
                         it.copy(
-                            currentTier = SubscriptionTier.BASIC,
+                            currentTier = SubscriptionTier.FREE,
                             isLoading = false
                         )
                     }
@@ -71,7 +71,7 @@ class UpgradeViewModel @Inject constructor(
                         // Default to BASIC on error
                         _uiState.update {
                             it.copy(
-                                currentTier = SubscriptionTier.BASIC,
+                                currentTier = SubscriptionTier.FREE,
                                 isLoading = false
                             )
                         }
@@ -86,10 +86,10 @@ class UpgradeViewModel @Inject constructor(
                         
                         // Map SubscriptionType to SubscriptionTier
                         val tier = when (profile?.subscriptionType) {
-                            com.ssbmax.core.domain.model.SubscriptionType.FREE -> SubscriptionTier.BASIC
-                            com.ssbmax.core.domain.model.SubscriptionType.PREMIUM_ASSESSOR -> SubscriptionTier.PRO
-                            com.ssbmax.core.domain.model.SubscriptionType.PREMIUM_AI -> SubscriptionTier.PREMIUM_AI
-                            null -> SubscriptionTier.BASIC
+                            com.ssbmax.core.domain.model.SubscriptionType.FREE -> SubscriptionTier.FREE
+                            com.ssbmax.core.domain.model.SubscriptionType.PRO -> SubscriptionTier.PRO
+                            com.ssbmax.core.domain.model.SubscriptionType.PREMIUM -> SubscriptionTier.PREMIUM
+                            null -> SubscriptionTier.FREE
                         }
                         
                         Log.d("Upgrade", "Current subscription tier: $tier (from type: ${profile?.subscriptionType})")
@@ -105,7 +105,7 @@ class UpgradeViewModel @Inject constructor(
                 Log.e("Upgrade", "Error in loadCurrentSubscription", e)
                 _uiState.update {
                     it.copy(
-                        currentTier = SubscriptionTier.BASIC,
+                        currentTier = SubscriptionTier.FREE,
                         isLoading = false
                     )
                 }
@@ -116,7 +116,7 @@ class UpgradeViewModel @Inject constructor(
     private fun loadAvailablePlans() {
         val plans = listOf(
             SubscriptionPlan(
-                tier = SubscriptionTier.BASIC,
+                tier = SubscriptionTier.FREE,
                 name = "Basic",
                 tagline = "Get Started with SSB Prep",
                 priceMonthly = 0.0,
@@ -154,7 +154,7 @@ class UpgradeViewModel @Inject constructor(
                 gradient = listOf("#8b5cf6", "#a855f7")
             ),
             SubscriptionPlan(
-                tier = SubscriptionTier.PREMIUM_AI,
+                tier = SubscriptionTier.PREMIUM,
                 name = "Premium (AI)",
                 tagline = "AI-Powered Excellence",
                 priceMonthly = 999.0,
@@ -222,7 +222,7 @@ class UpgradeViewModel @Inject constructor(
  * UI State for Upgrade Screen
  */
 data class UpgradeUiState(
-    val currentTier: SubscriptionTier = SubscriptionTier.BASIC,
+    val currentTier: SubscriptionTier = SubscriptionTier.FREE,
     val availablePlans: List<SubscriptionPlan> = emptyList(),
     val selectedBillingCycle: BillingCycle = BillingCycle.MONTHLY,
     val isLoading: Boolean = true,

@@ -26,7 +26,7 @@ fun SSBMaxApp() {
                 email = "user@example.com",
                 displayName = "SSB Aspirant",
                 role = UserRole.STUDENT,
-                subscriptionTier = SubscriptionTier.BASIC,
+                subscriptionTier = SubscriptionTier.FREE,
                 subscription = null
             )
         )

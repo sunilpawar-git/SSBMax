@@ -33,13 +33,13 @@ object TestResultHandler {
         }
         
         when (subscriptionType) {
-            SubscriptionType.PREMIUM_AI -> {
-                // Premium AI users get immediate AI-graded results
+            SubscriptionType.PREMIUM -> {
+                // Premium users get immediate AI-graded results
                 navigateToResult(submissionId, testType, navController)
             }
-            SubscriptionType.PREMIUM_ASSESSOR,
+            SubscriptionType.PRO,
             SubscriptionType.FREE -> {
-                // Assessor and free users wait for manual grading
+                // Pro and free users wait for manual grading
                 navigateToPendingReview(submissionId, navController)
             }
         }

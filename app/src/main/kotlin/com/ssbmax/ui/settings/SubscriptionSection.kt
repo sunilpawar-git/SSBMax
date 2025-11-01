@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.core.domain.model.SubscriptionTier
 
 /**
  * Subscription & Billing section for Settings
@@ -71,7 +72,7 @@ fun SubscriptionSection(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        if (currentTier != SubscriptionTier.BASIC) {
+                        if (currentTier != SubscriptionTier.FREE) {
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
@@ -147,42 +148,12 @@ private fun UpgradeTierCard(
                 )
             }
             Text(
-                text = tier.price,
+                text = tier.monthlyPrice,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
         }
     }
-}
-
-/**
- * Subscription tier enum with display information
- */
-enum class SubscriptionTier(
-    val displayName: String,
-    val price: String,
-    val description: String
-) {
-    BASIC(
-        displayName = "Basic",
-        price = "Free",
-        description = "Full access to study materials"
-    ),
-    PRO(
-        displayName = "Pro",
-        price = "₹299/mo",
-        description = "Study materials + some tests"
-    ),
-    AI_PREMIUM(
-        displayName = "AI Premium",
-        price = "₹599/mo",
-        description = "Pro + AI test results analysis"
-    ),
-    PREMIUM(
-        displayName = "Premium",
-        price = "₹999/mo",
-        description = "AI Premium + SSB Marketplace access"
-    )
 }
 

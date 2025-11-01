@@ -152,7 +152,7 @@ class AuthRepositoryImpl @Inject constructor(
                     displayName = firebaseUser.displayName ?: "User",
                     photoUrl = firebaseUser.photoUrl?.toString(),
                     role = UserRole.STUDENT, // Default role, can be changed later
-                    subscriptionTier = SubscriptionTier.BASIC,
+                    subscriptionTier = SubscriptionTier.FREE,
                     subscription = null,
                     studentProfile = StudentProfile(userId = firebaseUser.uid),
                     instructorProfile = null,

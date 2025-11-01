@@ -38,9 +38,9 @@ fun PremiumLockCard(
     showBackground: Boolean = true
 ) {
     val defaultMessage = when (requiredTier) {
-        SubscriptionTier.BASIC -> "This feature is available to all users"
+        SubscriptionTier.FREE -> "This feature is available to all users"
         SubscriptionTier.PRO -> "Upgrade to Pro to unlock this feature"
-        SubscriptionTier.PREMIUM_AI -> "Upgrade to AI Premium for AI-powered insights"
+        SubscriptionTier.PREMIUM -> "Upgrade to AI Premium for AI-powered insights"
         SubscriptionTier.PREMIUM -> "Upgrade to Premium for full marketplace access"
     }
     

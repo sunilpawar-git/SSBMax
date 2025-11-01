@@ -596,7 +596,7 @@ class SettingsViewModel @Inject constructor(
 data class SettingsUiState(
     val isLoading: Boolean = false,
     val notificationPreferences: NotificationPreferences? = null,
-    val subscriptionTier: com.ssbmax.ui.settings.SubscriptionTier = com.ssbmax.ui.settings.SubscriptionTier.BASIC,
+    val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
     val appTheme: AppTheme = AppTheme.SYSTEM,
     val error: String? = null,
     val isCheckingHealth: Boolean = false,

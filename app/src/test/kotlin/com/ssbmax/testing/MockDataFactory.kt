@@ -14,7 +14,7 @@ object MockDataFactory {
         email: String = "test@ssbmax.com",
         displayName: String = "Test User",
         role: UserRole = UserRole.STUDENT,
-        subscriptionTier: SubscriptionTier = SubscriptionTier.BASIC
+        subscriptionTier: SubscriptionTier = SubscriptionTier.FREE
     ): SSBMaxUser {
         return SSBMaxUser(
             id = id,

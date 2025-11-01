@@ -5,43 +5,53 @@ import kotlinx.parcelize.Parcelize
 
 /**
  * Subscription tiers available in SSBMax
+ * IMPORTANT: This is the SINGLE SOURCE OF TRUTH for pricing
  */
 enum class SubscriptionTier {
-    BASIC,
+    FREE,
     PRO,
-    PREMIUM_AI,
     PREMIUM;
     
     val displayName: String
         get() = when (this) {
-            BASIC -> "Basic"
+            FREE -> "Free"
             PRO -> "Pro"
-            PREMIUM_AI -> "Premium (AI)"
             PREMIUM -> "Premium"
         }
     
     val description: String
         get() = when (this) {
-            BASIC -> "Overview & study materials access"
-            PRO -> "Everything in Basic plus practice tests"
-            PREMIUM_AI -> "Everything in Pro plus AI-based analysis"
-            PREMIUM -> "Everything in Pro plus SSB Marketplace access"
+            FREE -> "Full access to study materials"
+            PRO -> "Study materials + practice tests"
+            PREMIUM -> "Unlimited tests + AI analysis + Marketplace"
         }
     
     val monthlyPrice: String
         get() = when (this) {
-            BASIC -> "Free"
-            PRO -> "₹299/month"
-            PREMIUM_AI -> "₹599/month"
+            FREE -> "₹0/month"
+            PRO -> "₹99/month"
             PREMIUM -> "₹999/month"
+        }
+    
+    val monthlyPriceInt: Int
+        get() = when (this) {
+            FREE -> 0
+            PRO -> 99
+            PREMIUM -> 999
         }
     
     val yearlyPrice: String?
         get() = when (this) {
-            BASIC -> null
-            PRO -> "₹2,999/year"
-            PREMIUM_AI -> "₹5,999/year"
-            PREMIUM -> "₹9,999/year"
+            FREE -> null
+            PRO -> "₹999/year"  // ~16% savings
+            PREMIUM -> "₹9,999/year" // ~17% savings
+        }
+    
+    val yearlyPriceInt: Int?
+        get() = when (this) {
+            FREE -> null
+            PRO -> 999
+            PREMIUM -> 9999
         }
     
     /**
@@ -60,13 +70,13 @@ enum class SubscriptionTier {
      * Check if this tier has access to practice tests
      */
     val hasTestAccess: Boolean
-        get() = this != BASIC
+        get() = this != FREE
     
     /**
      * Check if this tier has AI-based test result analysis
      */
     val hasAIAnalysis: Boolean
-        get() = this == PREMIUM_AI || this == PREMIUM
+        get() = this == PREMIUM
     
     /**
      * Check if this tier has access to SSB Marketplace
@@ -85,29 +95,32 @@ enum class SubscriptionTier {
      * Get list of features available in this tier
      */
     val features: List<String>
-        get() = buildList {
-            add("Access to Overview sections")
-            add("Full access to Study Materials")
-            
-            if (hasTestAccess) {
-                add("Practice tests and mock exams")
-            }
-            
-            if (hasAIAnalysis) {
-                add("AI-powered test result analysis")
-                add("Personalized improvement suggestions")
-            }
-            
-            if (hasMarketplaceAccess) {
-                add("SSB Marketplace access")
-                add("Book online assessor sessions")
-                add("Enroll in offline/physical classes")
-            }
-            
-            if (hasAssessorFeedback) {
-                add("Professional assessor feedback")
-                add("Detailed performance reports")
-            }
+        get() = when (this) {
+            FREE -> listOf(
+                "1 OIR test per month",
+                "Access to all study materials",
+                "Basic progress tracking",
+                "Community support"
+            )
+            PRO -> listOf(
+                "5 OIR tests per month",
+                "3 TAT, WAT, SRT tests each",
+                "2 PPDT & GTO tests",
+                "1 Interview practice",
+                "Advanced analytics",
+                "Priority support",
+                "Download study materials"
+            )
+            PREMIUM -> listOf(
+                "Unlimited all tests",
+                "AI-powered feedback",
+                "Personalized study plans",
+                "Expert mentor sessions",
+                "SSB Marketplace access",
+                "Premium content library",
+                "Certificate of completion",
+                "Lifetime access to materials"
+            )
         }
 }
 
