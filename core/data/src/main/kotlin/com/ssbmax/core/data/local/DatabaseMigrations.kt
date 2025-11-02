@@ -464,5 +464,48 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+    
+    /**
+     * Migration from version 10 to 11
+     * Adds user performance tracking for adaptive difficulty progression
+     */
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create user_performance table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS user_performance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    testType TEXT NOT NULL,
+                    difficulty TEXT NOT NULL,
+                    totalAttempts INTEGER NOT NULL DEFAULT 0,
+                    correctAnswers INTEGER NOT NULL DEFAULT 0,
+                    incorrectAnswers INTEGER NOT NULL DEFAULT 0,
+                    averageScore REAL NOT NULL DEFAULT 0.0,
+                    averageTimeSeconds REAL NOT NULL DEFAULT 0.0,
+                    currentLevel TEXT NOT NULL,
+                    readyForNextLevel INTEGER NOT NULL DEFAULT 0,
+                    lastAttemptAt INTEGER NOT NULL,
+                    firstAttemptAt INTEGER NOT NULL,
+                    updatedAt INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_user_performance_testType 
+                ON user_performance(testType)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_user_performance_difficulty 
+                ON user_performance(difficulty)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE UNIQUE INDEX IF NOT EXISTS index_user_performance_testType_difficulty 
+                ON user_performance(testType, difficulty)
+            """.trimIndent())
+        }
+    }
 }
 

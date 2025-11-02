@@ -14,6 +14,7 @@ import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
+import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
@@ -52,7 +53,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_6_7,
                 DatabaseMigrations.MIGRATION_7_8,
                 DatabaseMigrations.MIGRATION_8_9,
-                DatabaseMigrations.MIGRATION_9_10 // FINAL MIGRATION!
+                DatabaseMigrations.MIGRATION_9_10,
+                DatabaseMigrations.MIGRATION_10_11 // Added adaptive difficulty!
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -106,6 +108,11 @@ object DatabaseModule {
     @Provides
     fun provideInterviewQuestionCacheDao(database: SSBDatabase): InterviewQuestionCacheDao {
         return database.interviewQuestionCacheDao()
+    }
+    
+    @Provides
+    fun provideUserPerformanceDao(database: SSBDatabase): UserPerformanceDao {
+        return database.userPerformanceDao()
     }
     
     @Provides

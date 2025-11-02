@@ -11,6 +11,7 @@ import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
+import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.local.entity.CachedGTOTaskEntity
 import com.ssbmax.core.data.local.entity.CachedInterviewQuestionEntity
@@ -28,6 +29,7 @@ import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
+import com.ssbmax.core.data.local.entity.UserPerformanceEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 
 /**
@@ -52,9 +54,10 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         CachedGTOTaskEntity::class,
         GTOBatchMetadataEntity::class,
         CachedInterviewQuestionEntity::class,
-        InterviewBatchMetadataEntity::class
+        InterviewBatchMetadataEntity::class,
+        UserPerformanceEntity::class
     ],
-    version = 10, // FINAL VERSION - All 7 tests cached!
+    version = 11, // Added adaptive difficulty progression
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {
@@ -108,6 +111,11 @@ abstract class SSBDatabase : RoomDatabase() {
      * Interview question cache DAO
      */
     abstract fun interviewQuestionCacheDao(): InterviewQuestionCacheDao
+    
+    /**
+     * User performance DAO for adaptive difficulty
+     */
+    abstract fun userPerformanceDao(): UserPerformanceDao
     
     companion object {
         const val DATABASE_NAME = "ssbmax_database"
