@@ -179,10 +179,95 @@ class OIRQuestionCacheManager @Inject constructor(
             val unusedThreshold = System.currentTimeMillis() - (UNUSED_THRESHOLD_DAYS * 24 * 60 * 60 * 1000L)
             
             // Fetch questions by type and difficulty
-            val verbalQuestions = getQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, unusedThreshold, verbalCount, difficulty)
-            val nonVerbalQuestions = getQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount, difficulty)
-            val numericalQuestions = getQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, unusedThreshold, numericalCount, difficulty)
-            val spatialQuestions = getQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, unusedThreshold, spatialCount, difficulty)
+            var verbalQuestions = getQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, unusedThreshold, verbalCount, difficulty)
+            var nonVerbalQuestions = getQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount, difficulty)
+            var numericalQuestions = getQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, unusedThreshold, numericalCount, difficulty)
+            var spatialQuestions = getQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, unusedThreshold, spatialCount, difficulty)
+            
+            // Smart redistribution: If we're short on any type, redistribute to other types
+            val currentTotal = verbalQuestions.size + nonVerbalQuestions.size + numericalQuestions.size + spatialQuestions.size
+            if (currentTotal < count) {
+                val shortage = count - currentTotal
+                Log.d(TAG, "⚠️ Short by $shortage questions, applying smart redistribution...")
+                
+                // Calculate how many we're short per type
+                val verbalShortage = verbalCount - verbalQuestions.size
+                val nonVerbalShortage = nonVerbalCount - nonVerbalQuestions.size
+                val numericalShortage = numericalCount - numericalQuestions.size
+                val spatialShortage = spatialCount - spatialQuestions.size
+                
+                Log.d(TAG, "Shortages: V=$verbalShortage, NV=$nonVerbalShortage, N=$numericalShortage, S=$spatialShortage")
+                
+                // Redistribute shortage proportionally to types that have availability
+                var remainingShortage = shortage
+                
+                // Try to get more verbal questions if we have capacity
+                if (verbalShortage <= 0 && remainingShortage > 0) {
+                    val additionalVerbal = getQuestionsByType(
+                        OIRQuestionType.VERBAL_REASONING.name, 
+                        unusedThreshold, 
+                        verbalCount + remainingShortage, 
+                        difficulty
+                    )
+                    val extraVerbal = additionalVerbal.size - verbalQuestions.size
+                    if (extraVerbal > 0) {
+                        verbalQuestions = additionalVerbal
+                        remainingShortage -= extraVerbal
+                        Log.d(TAG, "✓ Added $extraVerbal extra verbal questions")
+                    }
+                }
+                
+                // Try to get more non-verbal questions if we have capacity
+                if (nonVerbalShortage <= 0 && remainingShortage > 0) {
+                    val additionalNonVerbal = getQuestionsByType(
+                        OIRQuestionType.NON_VERBAL_REASONING.name, 
+                        unusedThreshold, 
+                        nonVerbalCount + remainingShortage, 
+                        difficulty
+                    )
+                    val extraNonVerbal = additionalNonVerbal.size - nonVerbalQuestions.size
+                    if (extraNonVerbal > 0) {
+                        nonVerbalQuestions = additionalNonVerbal
+                        remainingShortage -= extraNonVerbal
+                        Log.d(TAG, "✓ Added $extraNonVerbal extra non-verbal questions")
+                    }
+                }
+                
+                // Try to get more numerical questions if we have capacity
+                if (numericalShortage <= 0 && remainingShortage > 0) {
+                    val additionalNumerical = getQuestionsByType(
+                        OIRQuestionType.NUMERICAL_ABILITY.name, 
+                        unusedThreshold, 
+                        numericalCount + remainingShortage, 
+                        difficulty
+                    )
+                    val extraNumerical = additionalNumerical.size - numericalQuestions.size
+                    if (extraNumerical > 0) {
+                        numericalQuestions = additionalNumerical
+                        remainingShortage -= extraNumerical
+                        Log.d(TAG, "✓ Added $extraNumerical extra numerical questions")
+                    }
+                }
+                
+                // Try to get more spatial questions if we have capacity (unlikely but thorough)
+                if (spatialShortage <= 0 && remainingShortage > 0) {
+                    val additionalSpatial = getQuestionsByType(
+                        OIRQuestionType.SPATIAL_REASONING.name, 
+                        unusedThreshold, 
+                        spatialCount + remainingShortage, 
+                        difficulty
+                    )
+                    val extraSpatial = additionalSpatial.size - spatialQuestions.size
+                    if (extraSpatial > 0) {
+                        spatialQuestions = additionalSpatial
+                        remainingShortage -= extraSpatial
+                        Log.d(TAG, "✓ Added $extraSpatial extra spatial questions")
+                    }
+                }
+                
+                val finalTotal = verbalQuestions.size + nonVerbalQuestions.size + numericalQuestions.size + spatialQuestions.size
+                Log.d(TAG, "✅ Smart redistribution complete: ${finalTotal}/$count questions")
+            }
             
             // Combine and shuffle
             val allQuestions = (verbalQuestions + nonVerbalQuestions + numericalQuestions + spatialQuestions).shuffled()
