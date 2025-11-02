@@ -471,7 +471,10 @@ object DatabaseMigrations {
      */
     val MIGRATION_10_11 = object : Migration(10, 11) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Create user_performance table
+            // Drop the table if it exists (fresh start for this migration)
+            database.execSQL("DROP TABLE IF EXISTS user_performance")
+            
+            // Create user_performance table with correct column order matching Entity
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS user_performance (
                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
