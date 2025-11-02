@@ -46,6 +46,9 @@ fun NavGraphBuilder.studentNavGraph(
             onNavigateToMarketplace = {
                 navController.navigate(SSBMaxDestinations.Marketplace.route)
             },
+            onNavigateToAnalytics = {
+                navController.navigate(SSBMaxDestinations.Analytics.route)
+            },
             onOpenDrawer = onOpenDrawer
         )
     }

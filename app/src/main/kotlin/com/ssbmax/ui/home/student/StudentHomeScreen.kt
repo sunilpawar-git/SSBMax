@@ -39,6 +39,7 @@ fun StudentHomeScreen(
     onNavigateToSubmissions: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToMarketplace: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -168,6 +169,29 @@ fun StudentHomeScreen(
                         icon = Icons.Default.GroupAdd,
                         color = Color(0xFF1976D2),
                         onClick = onNavigateToMarketplace,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuickActionCard(
+                        title = "View Analytics",
+                        icon = Icons.Default.Analytics,
+                        color = Color(0xFF00897B),
+                        onClick = onNavigateToAnalytics,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    QuickActionCard(
+                        title = "Study Materials",
+                        icon = Icons.Default.Book,
+                        color = Color(0xFFD84315),
+                        onClick = onNavigateToStudy,
                         modifier = Modifier.weight(1f)
                     )
                 }

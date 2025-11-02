@@ -97,6 +97,9 @@ sealed class SSBMaxDestinations(val route: String) {
     data object Settings : SSBMaxDestinations("settings")
     data object SubscriptionManagement : SSBMaxDestinations("settings/subscription")
     
+    // Analytics (Student Performance Dashboard)
+    data object Analytics : SSBMaxDestinations("analytics")
+    
     // User Profile
     data object UserProfile : SSBMaxDestinations("user/profile") {
         fun createOnboardingRoute() = "user/profile?isOnboarding=true"

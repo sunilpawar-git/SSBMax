@@ -412,6 +412,17 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
     
+    // ========================
+    // ANALYTICS
+    // ========================
+    
+    // Analytics Dashboard (Student Performance)
+    composable(SSBMaxDestinations.Analytics.route) {
+        com.ssbmax.ui.analytics.AnalyticsScreen(
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+    
     // User Profile
     composable(
         route = SSBMaxDestinations.UserProfile.route + "?onboarding={onboarding}",
