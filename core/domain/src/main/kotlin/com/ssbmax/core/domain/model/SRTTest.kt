@@ -33,6 +33,10 @@ enum class SRTCategory {
     RESPONSIBILITY,
     TEAMWORK,
     COURAGE,
+    ADVERSITY,
+    CONFLICT_RESOLUTION,
+    PERSONAL_SACRIFICE,
+    ALERTNESS,
     GENERAL;
     
     val displayName: String
@@ -45,6 +49,10 @@ enum class SRTCategory {
             RESPONSIBILITY -> "Responsibility"
             TEAMWORK -> "Teamwork"
             COURAGE -> "Courage"
+            ADVERSITY -> "Adversity"
+            CONFLICT_RESOLUTION -> "Conflict Resolution"
+            PERSONAL_SACRIFICE -> "Personal Sacrifice"
+            ALERTNESS -> "Alertness"
             GENERAL -> "General"
         }
 }
