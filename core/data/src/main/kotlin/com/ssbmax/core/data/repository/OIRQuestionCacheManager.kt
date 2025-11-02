@@ -140,7 +140,10 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
-     * Get questions for a test (50 questions with proper distribution)
+     * Get questions for a test with specific difficulty
+     * 
+     * @param count Number of questions (default: 50)
+     * @param difficulty Difficulty level: "EASY", "MEDIUM", or "HARD" (default: null = all)
      * 
      * Distribution:
      * - Verbal: 20 questions (40%)
@@ -148,9 +151,13 @@ class OIRQuestionCacheManager @Inject constructor(
      * - Numerical: 8 questions (15%)
      * - Spatial: 2 questions (5%)
      */
-    suspend fun getTestQuestions(count: Int = 50): Result<List<OIRQuestion>> {
+    suspend fun getTestQuestions(
+        count: Int = 50,
+        difficulty: String? = null
+    ): Result<List<OIRQuestion>> {
         return try {
-            Log.d(TAG, "Generating test with $count questions")
+            val difficultyStr = difficulty?.let { " (difficulty: $it)" } ?: ""
+            Log.d(TAG, "Generating test with $count questions$difficultyStr")
             
             // Ensure we have enough questions cached
             val cachedCount = cacheDao.getCachedQuestionCount()
@@ -170,11 +177,11 @@ class OIRQuestionCacheManager @Inject constructor(
             // Timestamp for "unused" threshold (7 days ago)
             val unusedThreshold = System.currentTimeMillis() - (UNUSED_THRESHOLD_DAYS * 24 * 60 * 60 * 1000L)
             
-            // Fetch questions by type
-            val verbalQuestions = getQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, unusedThreshold, verbalCount)
-            val nonVerbalQuestions = getQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount)
-            val numericalQuestions = getQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, unusedThreshold, numericalCount)
-            val spatialQuestions = getQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, unusedThreshold, spatialCount)
+            // Fetch questions by type and difficulty
+            val verbalQuestions = getQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, unusedThreshold, verbalCount, difficulty)
+            val nonVerbalQuestions = getQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount, difficulty)
+            val numericalQuestions = getQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, unusedThreshold, numericalCount, difficulty)
+            val spatialQuestions = getQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, unusedThreshold, spatialCount, difficulty)
             
             // Combine and shuffle
             val allQuestions = (verbalQuestions + nonVerbalQuestions + numericalQuestions + spatialQuestions).shuffled()
@@ -193,20 +200,34 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
-     * Get questions of a specific type, preferring unused ones
+     * Get questions of a specific type and difficulty, preferring unused ones
      */
     private suspend fun getQuestionsByType(
         type: String, 
         unusedThreshold: Long, 
-        count: Int
+        count: Int,
+        difficulty: String? = null
     ): List<CachedOIRQuestionEntity> {
         // Try to get unused questions first
-        var questions = cacheDao.getUnusedQuestionsByType(type, unusedThreshold, count)
+        var questions = cacheDao.getUnusedQuestionsByType(type, unusedThreshold, count * 2) // Get more to filter
+        
+        // Filter by difficulty if specified
+        if (difficulty != null) {
+            questions = questions.filter { it.difficulty == difficulty }
+            Log.d(TAG, "Filtered to $difficulty: ${questions.size} $type questions")
+        }
         
         // If not enough unused questions, get any questions of this type
         if (questions.size < count) {
             Log.d(TAG, "Not enough unused $type questions (${questions.size}/$count), fetching any")
-            questions = cacheDao.getQuestionsByType(type, count)
+            var allQuestions = cacheDao.getQuestionsByType(type, count * 2)
+            
+            // Filter by difficulty if specified
+            if (difficulty != null) {
+                allQuestions = allQuestions.filter { it.difficulty == difficulty }
+            }
+            
+            questions = allQuestions
         }
         
         return questions.take(count)

@@ -35,7 +35,7 @@ interface TestContentRepository {
      * @param count Number of questions to fetch (default 50)
      * @return Result with list of OIR questions or error
      */
-    suspend fun getOIRTestQuestions(count: Int = 50): Result<List<OIRQuestion>>
+    suspend fun getOIRTestQuestions(count: Int = 50, difficulty: String? = null): Result<List<OIRQuestion>>
     
     /**
      * Initialize OIR question cache

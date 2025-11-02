@@ -26,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -87,11 +88,20 @@ class OIRTestViewModel @Inject constructor(
                 // TODO: Check subscription eligibility when feature is implemented
                 
                 _uiState.value = _uiState.value.copy(
-                    loadingMessage = "Loading questions..."
+                    loadingMessage = "Analyzing your level..."
                 )
                 
-                // Fetch questions using the new caching system
-                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50)
+                // Get recommended difficulty based on past performance
+                val difficulty = difficultyManager.getRecommendedDifficulty("OIR")
+                android.util.Log.d("OIRTestViewModel", "📊 Recommended difficulty: $difficulty")
+                
+                _uiState.value = _uiState.value.copy(
+                    loadingMessage = "Loading $difficulty questions...",
+                    currentDifficulty = difficulty
+                )
+                
+                // Fetch questions using the new caching system with difficulty
+                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50, difficulty = difficulty)
                 
                 if (questionsResult.isFailure) {
                     throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
@@ -200,6 +210,19 @@ class OIRTestViewModel @Inject constructor(
                 
                 // Calculate results
                 val result = calculateResults(session)
+                
+                // Record performance for adaptive difficulty
+                val difficulty = _uiState.value.currentDifficulty
+                val timeSpent = (30 * 60) - _uiState.value.timeRemainingSeconds // seconds
+                difficultyManager.recordPerformance(
+                    testType = "OIR",
+                    difficulty = difficulty,
+                    score = result.percentageScore,
+                    correctAnswers = result.correctAnswers,
+                    totalQuestions = result.totalQuestions,
+                    timeSeconds = timeSpent.toFloat()
+                )
+                android.util.Log.d("OIRTestViewModel", "📊 Recorded performance: ${result.percentageScore}% ($difficulty)")
                 
                 // End test session
                 testContentRepository.endTestSession(session.sessionId)
@@ -407,6 +430,7 @@ data class OIRTestUiState(
     val isCompleted: Boolean = false,
     val sessionId: String? = null,
     val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
-    val testResult: OIRTestResult? = null  // Result calculated locally, no Firestore needed
+    val testResult: OIRTestResult? = null,  // Result calculated locally, no Firestore needed
+    val currentDifficulty: String = "EASY"  // Current difficulty level for adaptive progression
 )
 

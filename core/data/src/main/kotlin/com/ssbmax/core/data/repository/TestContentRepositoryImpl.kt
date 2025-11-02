@@ -43,9 +43,10 @@ class TestContentRepositoryImpl @Inject constructor(
         return getOIRTestQuestions(50)
     }
     
-    override suspend fun getOIRTestQuestions(count: Int): Result<List<OIRQuestion>> {
+    override suspend fun getOIRTestQuestions(count: Int, difficulty: String?): Result<List<OIRQuestion>> {
         return try {
-            Log.d("TestContent", "Getting $count OIR questions from cache manager")
+            val difficultyStr = difficulty?.let { " (difficulty: $it)" } ?: ""
+            Log.d("TestContent", "Getting $count OIR questions from cache manager$difficultyStr")
             
             // Check if cache is initialized
             val cacheStatus = oirCacheManager.getCacheStatus()
@@ -54,8 +55,8 @@ class TestContentRepositoryImpl @Inject constructor(
                 oirCacheManager.initialSync().getOrThrow()
             }
             
-            // Get questions from cache manager
-            val questions = oirCacheManager.getTestQuestions(count).getOrThrow()
+            // Get questions from cache manager with difficulty filter
+            val questions = oirCacheManager.getTestQuestions(count, difficulty).getOrThrow()
             
             Log.d("TestContent", "Retrieved ${questions.size} questions from cache")
             Result.success(questions)
