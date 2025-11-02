@@ -27,7 +27,8 @@ import javax.inject.Inject
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
-    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -68,12 +69,10 @@ class OIRTestViewModel @Inject constructor(
     }
     
     /**
-     * Check if user is eligible to take the test
-     * TODO: Implement subscription-based test limits
+     * Check if user is eligible to take the test based on subscription tier
      */
-    fun checkTestEligibility() {
-        // Eligibility checking temporarily disabled
-        android.util.Log.d("OIRTestViewModel", "✅ Test eligibility check bypassed (all users eligible)")
+    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
+        return subscriptionManager.canTakeTest(TestType.OIR, userId)
     }
     
     fun loadTest(testId: String = "oir_standard", userId: String = "mock-user-id") {
@@ -82,6 +81,44 @@ class OIRTestViewModel @Inject constructor(
                 isLoading = true,
                 loadingMessage = "Checking eligibility...",
                 error = null
+            )
+            
+            try {
+                // Get actual user ID
+                val userProfile = userProfileRepository.getUserProfile(userId).first().getOrNull()
+                val actualUserId = userProfile?.userId ?: userId
+                
+                // Check subscription eligibility
+                val eligibility = checkTestEligibility(actualUserId)
+                
+                when (eligibility) {
+                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                        // Show limit reached state
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = null,
+                            isLimitReached = true,
+                            subscriptionTier = eligibility.tier,
+                            testsLimit = eligibility.limit,
+                            testsUsed = eligibility.usedCount,
+                            resetsAt = eligibility.resetsAt
+                        )
+                        android.util.Log.d("OIRTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                        return@launch
+                    }
+                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                        android.util.Log.d("OIRTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                        // Continue with test loading
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("OIRTestViewModel", "Error checking eligibility", e)
+                // Continue anyway in case of error
+            }
+            
+            _uiState.value = _uiState.value.copy(
+                loadingMessage = "Preparing test..."
             )
             
             try {
@@ -223,6 +260,10 @@ class OIRTestViewModel @Inject constructor(
                     timeSeconds = timeSpent.toFloat()
                 )
                 android.util.Log.d("OIRTestViewModel", "📊 Recorded performance: ${result.percentageScore}% ($difficulty)")
+                
+                // Record test usage for subscription tracking
+                subscriptionManager.recordTestUsage(TestType.OIR, session.userId)
+                android.util.Log.d("OIRTestViewModel", "📝 Recorded test usage for subscription tracking")
                 
                 // End test session
                 testContentRepository.endTestSession(session.sessionId)
@@ -431,6 +472,12 @@ data class OIRTestUiState(
     val sessionId: String? = null,
     val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
     val testResult: OIRTestResult? = null,  // Result calculated locally, no Firestore needed
-    val currentDifficulty: String = "EASY"  // Current difficulty level for adaptive progression
+    val currentDifficulty: String = "EASY",  // Current difficulty level for adaptive progression
+    // Subscription limit fields
+    val isLimitReached: Boolean = false,
+    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
+    val testsLimit: Int = 1,
+    val testsUsed: Int = 0,
+    val resetsAt: String = ""
 )
 
