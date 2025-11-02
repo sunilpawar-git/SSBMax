@@ -54,6 +54,7 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_8_9,
                 DatabaseMigrations.MIGRATION_9_10 // FINAL MIGRATION!
             )
+            .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
     }
     
