@@ -19,7 +19,9 @@ import javax.inject.Singleton
 @Singleton
 class TestContentRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val oirCacheManager: OIRQuestionCacheManager
+    private val oirCacheManager: OIRQuestionCacheManager,
+    private val watWordCacheManager: WATWordCacheManager,
+    private val srtSituationCacheManager: SRTSituationCacheManager
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
@@ -144,59 +146,51 @@ class TestContentRepositoryImpl @Inject constructor(
 
     override suspend fun getWATQuestions(testId: String): Result<List<WATWord>> {
         return try {
-            watCache[testId]?.let { return Result.success(it) }
-
-            // Try Firestore first
-            val document = testsCollection.document(testId).get().await()
-            val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
+            Log.d("TestContent", "Getting WAT words from cache manager")
             
-            if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock WAT data for $testId")
-                val mockQuestions = MockTestDataProvider.getWATWords()
-                watCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+            // Check if cache is initialized
+            val cacheStatus = watWordCacheManager.getCacheStatus()
+            if (cacheStatus.cachedWords == 0) {
+                Log.d("TestContent", "WAT cache empty, initializing...")
+                watWordCacheManager.initialSync().getOrThrow()
             }
             
-            val watQuestions = questions.mapNotNull { it.toWATWord() }
-            watCache[testId] = watQuestions
+            // Get words from cache manager (default 60 words)
+            val words = watWordCacheManager.getWordsForTest(60).getOrThrow()
             
-            Result.success(watQuestions)
+            Log.d("TestContent", "Retrieved ${words.size} WAT words from cache")
+            Result.success(words)
+            
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for WAT, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getWATWords()
-            watCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Failed to get cached WAT words", e)
+            // Fallback to mock data only in development
+            Log.w("TestContent", "Using mock data as fallback")
+            Result.success(MockTestDataProvider.getWATWords())
         }
     }
 
     override suspend fun getSRTQuestions(testId: String): Result<List<SRTSituation>> {
         return try {
-            srtCache[testId]?.let { return Result.success(it) }
-
-            // Try Firestore first
-            val document = testsCollection.document(testId).get().await()
-            val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
+            Log.d("TestContent", "Getting SRT situations from cache manager")
             
-            if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock SRT data for $testId")
-                val mockQuestions = MockTestDataProvider.getSRTSituations()
-                srtCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
+            // Check if cache is initialized
+            val cacheStatus = srtSituationCacheManager.getCacheStatus()
+            if (cacheStatus.cachedSituations == 0) {
+                Log.d("TestContent", "SRT cache empty, initializing...")
+                srtSituationCacheManager.initialSync().getOrThrow()
             }
             
-            val srtQuestions = questions.mapNotNull { it.toSRTSituation() }
-            srtCache[testId] = srtQuestions
+            // Get situations from cache manager (default 60 situations)
+            val situations = srtSituationCacheManager.getSituationsForTest(60).getOrThrow()
             
-            Result.success(srtQuestions)
+            Log.d("TestContent", "Retrieved ${situations.size} SRT situations from cache")
+            Result.success(situations)
+            
         } catch (e: Exception) {
-            // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for SRT, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getSRTSituations()
-            srtCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Log.e("TestContent", "Failed to get cached SRT situations", e)
+            // Fallback to mock data only in development
+            Log.w("TestContent", "Using mock data as fallback")
+            Result.success(MockTestDataProvider.getSRTSituations())
         }
     }
 
