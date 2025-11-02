@@ -42,8 +42,8 @@ class SRTSituationCacheManager @Inject constructor(
                 return Result.success(Unit)
             }
             
-            // Download first batch
-            downloadBatch("batch_001").getOrThrow()
+            // Download first batch (batch_002 contains the uploaded content)
+            downloadBatch("batch_002").getOrThrow()
             
             Log.d(TAG, "Initial sync complete")
             Result.success(Unit)
