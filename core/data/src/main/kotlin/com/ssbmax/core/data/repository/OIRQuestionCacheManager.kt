@@ -54,7 +54,7 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
-     * Initial sync: Download first batch of questions
+     * Initial sync: Download first two batches of questions
      * Called on first app launch or when cache is empty
      */
     suspend fun initialSync(): Result<Unit> {
@@ -63,13 +63,14 @@ class OIRQuestionCacheManager @Inject constructor(
             
             // Check if we already have questions cached
             val cachedCount = cacheDao.getCachedQuestionCount()
-            if (cachedCount >= 50) {
+            if (cachedCount >= 100) {
                 Log.d(TAG, "Cache already has $cachedCount questions, skipping initial sync")
                 return Result.success(Unit)
             }
             
-            // Download batch_001
+            // Download batch_001 and batch_002
             downloadBatch("batch_001").getOrThrow()
+            downloadBatch("batch_002").getOrThrow()
             
             val newCount = cacheDao.getCachedQuestionCount()
             Log.d(TAG, "Initial sync complete: $newCount questions cached")
