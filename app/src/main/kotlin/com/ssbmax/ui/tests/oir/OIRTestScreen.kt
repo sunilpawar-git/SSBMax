@@ -56,6 +56,7 @@ fun OIRTestScreen(
                 questionNumber = uiState.currentQuestionIndex + 1,
                 totalQuestions = uiState.totalQuestions,
                 timeRemainingSeconds = uiState.timeRemainingSeconds,
+                difficulty = uiState.currentDifficulty,
                 onExitClick = { showExitDialog = true }
             )
         },
@@ -135,16 +136,20 @@ private fun OIRTestTopBar(
     questionNumber: Int,
     totalQuestions: Int,
     timeRemainingSeconds: Int,
+    difficulty: String,
     onExitClick: () -> Unit
 ) {
     TopAppBar(
         title = {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Difficulty Badge
+                DifficultyBadge(difficulty = difficulty)
+                
                 Text(
-                    text = "Question $questionNumber/$totalQuestions",
+                    text = "Q $questionNumber/$totalQuestions",
                     style = MaterialTheme.typography.titleMedium
                 )
                 
@@ -508,6 +513,60 @@ private fun ErrorView(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text("Retry")
+        }
+    }
+}
+
+/**
+ * Difficulty Badge - Shows current test difficulty level
+ */
+@Composable
+private fun DifficultyBadge(difficulty: String) {
+    val (color, icon, label) = when (difficulty.uppercase()) {
+        "EASY" -> Triple(
+            Color(0xFF4CAF50), // Green
+            Icons.Default.Done,
+            "Easy"
+        )
+        "MEDIUM" -> Triple(
+            Color(0xFFFFA726), // Orange
+            Icons.Default.Star,
+            "Medium"
+        )
+        "HARD" -> Triple(
+            Color(0xFFEF5350), // Red
+            Icons.Default.Warning,
+            "Hard"
+        )
+        else -> Triple(
+            MaterialTheme.colorScheme.secondary,
+            Icons.Default.Star,
+            difficulty
+        )
+    }
+    
+    Surface(
+        color = color.copy(alpha = 0.2f),
+        shape = MaterialTheme.shapes.small,
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
         }
     }
 }
