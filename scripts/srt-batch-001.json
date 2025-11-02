@@ -1,0 +1,430 @@
+{
+  "batch_id": "batch_001",
+  "version": "1.0.0",
+  "situation_count": 60,
+  "uploaded_at": "2025-11-02",
+  "description": "Base SRT situation repository - Core leadership and decision-making scenarios",
+  "situations": [
+    {
+      "id": "srt_s_0001",
+      "situation": "You are leading a team on a critical mission when suddenly your communication equipment fails.",
+      "category": "crisis_management",
+      "difficulty": "medium",
+      "sequenceNumber": 1
+    },
+    {
+      "id": "srt_s_0002",
+      "situation": "Your junior colleague made a serious mistake that could cost the organization heavily.",
+      "category": "leadership",
+      "difficulty": "medium",
+      "sequenceNumber": 2
+    },
+    {
+      "id": "srt_s_0003",
+      "situation": "You discover that your best friend is involved in unethical activities at work.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 3
+    },
+    {
+      "id": "srt_s_0004",
+      "situation": "During a natural disaster, you must choose between saving equipment or helping injured civilians.",
+      "category": "crisis_management",
+      "difficulty": "hard",
+      "sequenceNumber": 4
+    },
+    {
+      "id": "srt_s_0005",
+      "situation": "Your senior officer gives you an order that you believe is incorrect and potentially dangerous.",
+      "category": "decision_making",
+      "difficulty": "hard",
+      "sequenceNumber": 5
+    },
+    {
+      "id": "srt_s_0006",
+      "situation": "You are assigned a task with insufficient resources and a tight deadline.",
+      "category": "responsibility",
+      "difficulty": "medium",
+      "sequenceNumber": 6
+    },
+    {
+      "id": "srt_s_0007",
+      "situation": "Two of your team members are in constant conflict, affecting team performance.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 7
+    },
+    {
+      "id": "srt_s_0008",
+      "situation": "You witness senior officials engaging in corrupt practices.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 8
+    },
+    {
+      "id": "srt_s_0009",
+      "situation": "Your family member is seriously ill, but you have an important operational duty.",
+      "category": "personal_sacrifice",
+      "difficulty": "hard",
+      "sequenceNumber": 9
+    },
+    {
+      "id": "srt_s_0010",
+      "situation": "You are offered a promotion that requires relocating to a difficult area.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 10
+    },
+    {
+      "id": "srt_s_0011",
+      "situation": "During a rescue operation, you realize that helping one group means leaving another group at risk.",
+      "category": "crisis_management",
+      "difficulty": "hard",
+      "sequenceNumber": 11
+    },
+    {
+      "id": "srt_s_0012",
+      "situation": "You receive credit for work that was actually done by your team member.",
+      "category": "ethical_dilemma",
+      "difficulty": "medium",
+      "sequenceNumber": 12
+    },
+    {
+      "id": "srt_s_0013",
+      "situation": "Your unit is surrounded by hostile forces and supplies are running low.",
+      "category": "crisis_management",
+      "difficulty": "hard",
+      "sequenceNumber": 13
+    },
+    {
+      "id": "srt_s_0014",
+      "situation": "A team member under your command is consistently underperforming despite warnings.",
+      "category": "leadership",
+      "difficulty": "medium",
+      "sequenceNumber": 14
+    },
+    {
+      "id": "srt_s_0015",
+      "situation": "You discover classified information has been leaked from your department.",
+      "category": "crisis_management",
+      "difficulty": "hard",
+      "sequenceNumber": 15
+    },
+    {
+      "id": "srt_s_0016",
+      "situation": "Your innovative idea is rejected by superiors, but you strongly believe it will work.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 16
+    },
+    {
+      "id": "srt_s_0017",
+      "situation": "During a public gathering, you notice someone behaving suspiciously.",
+      "category": "alertness",
+      "difficulty": "easy",
+      "sequenceNumber": 17
+    },
+    {
+      "id": "srt_s_0018",
+      "situation": "Your colleague takes leave frequently, causing additional burden on the team.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 18
+    },
+    {
+      "id": "srt_s_0019",
+      "situation": "You are blamed for a failure that was caused by circumstances beyond your control.",
+      "category": "adversity",
+      "difficulty": "medium",
+      "sequenceNumber": 19
+    },
+    {
+      "id": "srt_s_0020",
+      "situation": "A local community opposes a project you are implementing for national interest.",
+      "category": "conflict_resolution",
+      "difficulty": "hard",
+      "sequenceNumber": 20
+    },
+    {
+      "id": "srt_s_0021",
+      "situation": "You are assigned to work under a junior officer who was recently promoted over you.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 21
+    },
+    {
+      "id": "srt_s_0022",
+      "situation": "During training, you realize a safety protocol is being ignored that could cause accidents.",
+      "category": "responsibility",
+      "difficulty": "medium",
+      "sequenceNumber": 22
+    },
+    {
+      "id": "srt_s_0023",
+      "situation": "Your team fails an important evaluation despite your best efforts.",
+      "category": "adversity",
+      "difficulty": "medium",
+      "sequenceNumber": 23
+    },
+    {
+      "id": "srt_s_0024",
+      "situation": "You witness discrimination against a colleague based on their background.",
+      "category": "ethical_dilemma",
+      "difficulty": "medium",
+      "sequenceNumber": 24
+    },
+    {
+      "id": "srt_s_0025",
+      "situation": "A political figure tries to influence your official decision-making.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 25
+    },
+    {
+      "id": "srt_s_0026",
+      "situation": "Your unit receives outdated equipment while newer units get modern technology.",
+      "category": "adversity",
+      "difficulty": "medium",
+      "sequenceNumber": 26
+    },
+    {
+      "id": "srt_s_0027",
+      "situation": "During a patrol, you encounter civilians in an unauthorized area who claim they are lost.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 27
+    },
+    {
+      "id": "srt_s_0028",
+      "situation": "Your commanding officer asks you to falsify a report to avoid negative consequences.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 28
+    },
+    {
+      "id": "srt_s_0029",
+      "situation": "A fellow officer spreads false rumors about you among colleagues.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 29
+    },
+    {
+      "id": "srt_s_0030",
+      "situation": "You must choose between completing a mission on time or ensuring complete safety of your team.",
+      "category": "decision_making",
+      "difficulty": "hard",
+      "sequenceNumber": 30
+    },
+    {
+      "id": "srt_s_0031",
+      "situation": "Your subordinate shares personal problems that are affecting their work performance.",
+      "category": "leadership",
+      "difficulty": "medium",
+      "sequenceNumber": 31
+    },
+    {
+      "id": "srt_s_0032",
+      "situation": "During an emergency, you realize your training is insufficient for the situation at hand.",
+      "category": "crisis_management",
+      "difficulty": "medium",
+      "sequenceNumber": 32
+    },
+    {
+      "id": "srt_s_0033",
+      "situation": "You are offered a lucrative private sector job while serving in a critical position.",
+      "category": "ethical_dilemma",
+      "difficulty": "medium",
+      "sequenceNumber": 33
+    },
+    {
+      "id": "srt_s_0034",
+      "situation": "Your proposal for improvement is criticized heavily in front of senior officers.",
+      "category": "adversity",
+      "difficulty": "medium",
+      "sequenceNumber": 34
+    },
+    {
+      "id": "srt_s_0035",
+      "situation": "A team member reveals they have been concealing a medical condition that could affect operations.",
+      "category": "crisis_management",
+      "difficulty": "hard",
+      "sequenceNumber": 35
+    },
+    {
+      "id": "srt_s_0036",
+      "situation": "You are asked to train new recruits when you feel you need more training yourself.",
+      "category": "responsibility",
+      "difficulty": "medium",
+      "sequenceNumber": 36
+    },
+    {
+      "id": "srt_s_0037",
+      "situation": "During a joint exercise, you notice safety violations by another unit.",
+      "category": "responsibility",
+      "difficulty": "medium",
+      "sequenceNumber": 37
+    },
+    {
+      "id": "srt_s_0038",
+      "situation": "Your honest feedback about a senior officer is leaked, creating tension.",
+      "category": "interpersonal",
+      "difficulty": "hard",
+      "sequenceNumber": 38
+    },
+    {
+      "id": "srt_s_0039",
+      "situation": "You must decide between following traditional methods or implementing an untested innovative approach.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 39
+    },
+    {
+      "id": "srt_s_0040",
+      "situation": "A local leader demands preferential treatment for their community during resource distribution.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 40
+    },
+    {
+      "id": "srt_s_0041",
+      "situation": "Your team achieves success but you know it was partly due to luck rather than skill.",
+      "category": "ethical_dilemma",
+      "difficulty": "medium",
+      "sequenceNumber": 41
+    },
+    {
+      "id": "srt_s_0042",
+      "situation": "During a crisis, multiple people give you conflicting instructions simultaneously.",
+      "category": "crisis_management",
+      "difficulty": "medium",
+      "sequenceNumber": 42
+    },
+    {
+      "id": "srt_s_0043",
+      "situation": "You discover your predecessor left behind serious unresolved issues in your new assignment.",
+      "category": "responsibility",
+      "difficulty": "hard",
+      "sequenceNumber": 43
+    },
+    {
+      "id": "srt_s_0044",
+      "situation": "A media person approaches you for comments on a sensitive organizational matter.",
+      "category": "decision_making",
+      "difficulty": "hard",
+      "sequenceNumber": 44
+    },
+    {
+      "id": "srt_s_0045",
+      "situation": "Your unit is asked to work extended hours repeatedly without adequate compensation or recognition.",
+      "category": "adversity",
+      "difficulty": "medium",
+      "sequenceNumber": 45
+    },
+    {
+      "id": "srt_s_0046",
+      "situation": "You witness environmental damage being caused by official activities under your supervision.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 46
+    },
+    {
+      "id": "srt_s_0047",
+      "situation": "A team member consistently takes credit for collective achievements.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 47
+    },
+    {
+      "id": "srt_s_0048",
+      "situation": "During inspection, you find serious deficiencies in your unit that reflect poorly on your leadership.",
+      "category": "responsibility",
+      "difficulty": "hard",
+      "sequenceNumber": 48
+    },
+    {
+      "id": "srt_s_0049",
+      "situation": "You are told to compromise on quality to meet a tight deadline for a high-visibility project.",
+      "category": "ethical_dilemma",
+      "difficulty": "medium",
+      "sequenceNumber": 49
+    },
+    {
+      "id": "srt_s_0050",
+      "situation": "Your family expresses concern about the risks and sacrifices required in your profession.",
+      "category": "personal_sacrifice",
+      "difficulty": "medium",
+      "sequenceNumber": 50
+    },
+    {
+      "id": "srt_s_0051",
+      "situation": "A subordinate requests leave during a critical phase of operations citing personal emergency.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 51
+    },
+    {
+      "id": "srt_s_0052",
+      "situation": "You notice morale declining in your unit due to unclear communication from higher authorities.",
+      "category": "leadership",
+      "difficulty": "medium",
+      "sequenceNumber": 52
+    },
+    {
+      "id": "srt_s_0053",
+      "situation": "An important delegation visit is scheduled, but your unit is unprepared due to recent challenges.",
+      "category": "crisis_management",
+      "difficulty": "medium",
+      "sequenceNumber": 53
+    },
+    {
+      "id": "srt_s_0054",
+      "situation": "You are assigned to work with someone you previously had serious disagreements with.",
+      "category": "interpersonal",
+      "difficulty": "medium",
+      "sequenceNumber": 54
+    },
+    {
+      "id": "srt_s_0055",
+      "situation": "During a border patrol, you encounter individuals crossing illegally who claim to be refugees.",
+      "category": "decision_making",
+      "difficulty": "hard",
+      "sequenceNumber": 55
+    },
+    {
+      "id": "srt_s_0056",
+      "situation": "Your innovative training method is questioned by traditionalist seniors despite showing positive results.",
+      "category": "conflict_resolution",
+      "difficulty": "medium",
+      "sequenceNumber": 56
+    },
+    {
+      "id": "srt_s_0057",
+      "situation": "You discover that welfare funds meant for junior personnel are being misused.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 57
+    },
+    {
+      "id": "srt_s_0058",
+      "situation": "A team member's family emergency coincides with a crucial phase of your mission.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 58
+    },
+    {
+      "id": "srt_s_0059",
+      "situation": "You are pressured to show favoritism towards certain team members based on their connections.",
+      "category": "ethical_dilemma",
+      "difficulty": "hard",
+      "sequenceNumber": 59
+    },
+    {
+      "id": "srt_s_0060",
+      "situation": "During extreme weather conditions, you must decide whether to continue operations or seek shelter.",
+      "category": "decision_making",
+      "difficulty": "medium",
+      "sequenceNumber": 60
+    }
+  ]
+}
+

@@ -1,0 +1,490 @@
+{
+  "batch_id": "batch_001",
+  "version": "1.0.0",
+  "word_count": 60,
+  "uploaded_at": "2025-11-02",
+  "description": "Base WAT word repository - Core OLQ and leadership traits",
+  "words": [
+    {
+      "id": "wat_w_0001",
+      "word": "COURAGE",
+      "sequenceNumber": 1,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0002",
+      "word": "LEADERSHIP",
+      "sequenceNumber": 2,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0003",
+      "word": "DETERMINATION",
+      "sequenceNumber": 3,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0004",
+      "word": "RESPONSIBILITY",
+      "sequenceNumber": 4,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0005",
+      "word": "INTEGRITY",
+      "sequenceNumber": 5,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0006",
+      "word": "CONFIDENCE",
+      "sequenceNumber": 6,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0007",
+      "word": "COOPERATION",
+      "sequenceNumber": 7,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0008",
+      "word": "INITIATIVE",
+      "sequenceNumber": 8,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0009",
+      "word": "PATRIOTISM",
+      "sequenceNumber": 9,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0010",
+      "word": "SACRIFICE",
+      "sequenceNumber": 10,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0011",
+      "word": "HONESTY",
+      "sequenceNumber": 11,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0012",
+      "word": "DISCIPLINE",
+      "sequenceNumber": 12,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0013",
+      "word": "PERSEVERANCE",
+      "sequenceNumber": 13,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0014",
+      "word": "ADAPTABILITY",
+      "sequenceNumber": 14,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0015",
+      "word": "RESILIENCE",
+      "sequenceNumber": 15,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0016",
+      "word": "COMPASSION",
+      "sequenceNumber": 16,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0017",
+      "word": "LOYALTY",
+      "sequenceNumber": 17,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0018",
+      "word": "TEAMWORK",
+      "sequenceNumber": 18,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0019",
+      "word": "AMBITION",
+      "sequenceNumber": 19,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0020",
+      "word": "DEDICATION",
+      "sequenceNumber": 20,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0021",
+      "word": "BRAVERY",
+      "sequenceNumber": 21,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0022",
+      "word": "EMPATHY",
+      "sequenceNumber": 22,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0023",
+      "word": "COMMITMENT",
+      "sequenceNumber": 23,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0024",
+      "word": "JUSTICE",
+      "sequenceNumber": 24,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0025",
+      "word": "ACCOUNTABILITY",
+      "sequenceNumber": 25,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "hard"
+    },
+    {
+      "id": "wat_w_0026",
+      "word": "ENTHUSIASM",
+      "sequenceNumber": 26,
+      "timeAllowedSeconds": 15,
+      "category": "positive",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0027",
+      "word": "VISION",
+      "sequenceNumber": 27,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0028",
+      "word": "WISDOM",
+      "sequenceNumber": 28,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0029",
+      "word": "MOTIVATION",
+      "sequenceNumber": 29,
+      "timeAllowedSeconds": 15,
+      "category": "positive",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0030",
+      "word": "PUNCTUALITY",
+      "sequenceNumber": 30,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0031",
+      "word": "DILIGENCE",
+      "sequenceNumber": 31,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0032",
+      "word": "TRUSTWORTHY",
+      "sequenceNumber": 32,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0033",
+      "word": "OPTIMISM",
+      "sequenceNumber": 33,
+      "timeAllowedSeconds": 15,
+      "category": "positive",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0034",
+      "word": "RESOURCEFUL",
+      "sequenceNumber": 34,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0035",
+      "word": "PROACTIVE",
+      "sequenceNumber": 35,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0036",
+      "word": "HUMILITY",
+      "sequenceNumber": 36,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0037",
+      "word": "PASSION",
+      "sequenceNumber": 37,
+      "timeAllowedSeconds": 15,
+      "category": "positive",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0038",
+      "word": "STRATEGIC",
+      "sequenceNumber": 38,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0039",
+      "word": "INNOVATION",
+      "sequenceNumber": 39,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0040",
+      "word": "RELIABILITY",
+      "sequenceNumber": 40,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0041",
+      "word": "PATIENCE",
+      "sequenceNumber": 41,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0042",
+      "word": "ALERTNESS",
+      "sequenceNumber": 42,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0043",
+      "word": "COMPOSURE",
+      "sequenceNumber": 43,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0044",
+      "word": "GENEROUS",
+      "sequenceNumber": 44,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0045",
+      "word": "RESPECTFUL",
+      "sequenceNumber": 45,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0046",
+      "word": "DECISIVE",
+      "sequenceNumber": 46,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0047",
+      "word": "ENDURANCE",
+      "sequenceNumber": 47,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0048",
+      "word": "SINCERE",
+      "sequenceNumber": 48,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0049",
+      "word": "FEARLESS",
+      "sequenceNumber": 49,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0050",
+      "word": "ORGANIZED",
+      "sequenceNumber": 50,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0051",
+      "word": "ANALYTICAL",
+      "sequenceNumber": 51,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0052",
+      "word": "SELFLESS",
+      "sequenceNumber": 52,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0053",
+      "word": "BALANCED",
+      "sequenceNumber": 53,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0054",
+      "word": "INSPIRING",
+      "sequenceNumber": 54,
+      "timeAllowedSeconds": 15,
+      "category": "positive",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0055",
+      "word": "SYSTEMATIC",
+      "sequenceNumber": 55,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0056",
+      "word": "GRACIOUS",
+      "sequenceNumber": 56,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0057",
+      "word": "RATIONAL",
+      "sequenceNumber": 57,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    },
+    {
+      "id": "wat_w_0058",
+      "word": "MODEST",
+      "sequenceNumber": 58,
+      "timeAllowedSeconds": 15,
+      "category": "social",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0059",
+      "word": "FOCUSED",
+      "sequenceNumber": 59,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "easy"
+    },
+    {
+      "id": "wat_w_0060",
+      "word": "STEADFAST",
+      "sequenceNumber": 60,
+      "timeAllowedSeconds": 15,
+      "category": "olq",
+      "difficulty": "medium"
+    }
+  ]
+}
+
