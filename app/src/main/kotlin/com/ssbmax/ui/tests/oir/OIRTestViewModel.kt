@@ -212,12 +212,18 @@ class OIRTestViewModel @Inject constructor(
     fun nextQuestion() {
         val session = currentSession ?: return
         
+        // Only navigate if not on the last question
+        // currentQuestionIndex is 0-based, so last question is at index (size - 1)
         if (session.currentQuestionIndex < session.questions.size - 1) {
             currentSession = session.copy(
                 currentQuestionIndex = session.currentQuestionIndex + 1
             )
             
             updateUiFromSession()
+        } else {
+            // Already on last question, do nothing
+            // User should click "Submit Test" button instead
+            android.util.Log.d("OIRTestViewModel", "Already on last question (${session.currentQuestionIndex + 1}/${session.questions.size}), use Submit button")
         }
     }
     
@@ -332,11 +338,24 @@ class OIRTestViewModel @Inject constructor(
     private fun updateUiFromSession() {
         val session = currentSession ?: return
         val currentQuestion = session.currentQuestion
-        val existingAnswer = currentQuestion?.let { session.answers[it.id] }
+        
+        // Safety check: if currentQuestion is null, we've gone past the last question
+        if (currentQuestion == null) {
+            android.util.Log.e("OIRTestViewModel", "⚠️ currentQuestion is null at index ${session.currentQuestionIndex}/${session.questions.size}")
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                loadingMessage = null,
+                error = "Invalid question index. Please use Submit Test button."
+            )
+            return
+        }
+        
+        val existingAnswer = session.answers[currentQuestion.id]
         
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             loadingMessage = null,
+            error = null, // Clear any previous errors
             currentQuestion = currentQuestion,
             currentQuestionIndex = session.currentQuestionIndex,
             totalQuestions = session.questions.size,
