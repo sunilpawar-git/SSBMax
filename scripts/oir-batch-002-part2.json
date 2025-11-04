@@ -18,7 +18,7 @@
         {"id": "c", "text": "Valor"},
         {"id": "d", "text": "Cowardice"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "Cowardice is the opposite quality, while others are synonyms of bravery.",
       "sequenceNumber": 151
     },
@@ -33,7 +33,7 @@
         {"id": "c", "text": "8"},
         {"id": "d", "text": "9"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "32 ÷ 4 = 8 rows",
       "sequenceNumber": 152
     },
@@ -48,7 +48,7 @@
         {"id": "c", "text": "Commander"},
         {"id": "d", "text": "Veteran"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "The series represents military hierarchy from active duty to civilian life.",
       "sequenceNumber": 153
     },
@@ -63,7 +63,7 @@
         {"id": "c", "text": "40"},
         {"id": "d", "text": "42"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "(5 + 2) × 6 = 7 × 6 = 42 positions",
       "sequenceNumber": 154
     },
@@ -78,7 +78,7 @@
         {"id": "c", "text": "Ship"},
         {"id": "d", "text": "Crew"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "A soldier is part of a battalion; a sailor is part of a crew.",
       "sequenceNumber": 155
     },
@@ -93,7 +93,7 @@
         {"id": "c", "text": "6 km/h"},
         {"id": "d", "text": "8 km/h"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Speed = Distance/Time = 12/2 = 6 km/h",
       "sequenceNumber": 156
     },
@@ -108,7 +108,7 @@
         {"id": "c", "text": "Recipe : Chef"},
         {"id": "d", "text": "Book : Reader"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "A map is a tool used by a navigator, just as a recipe is used by a chef.",
       "sequenceNumber": 157
     },
@@ -123,7 +123,7 @@
         {"id": "c", "text": "6"},
         {"id": "d", "text": "7"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "√25 = 5, so 5 soldiers per side in a square formation",
       "sequenceNumber": 158
     },
@@ -138,7 +138,7 @@
         {"id": "c", "text": "DPNNBNE"},
         {"id": "d", "text": "CPNNBOE"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Each letter shifts by +1 in the alphabet",
       "sequenceNumber": 159
     },
@@ -153,7 +153,7 @@
         {"id": "c", "text": "90"},
         {"id": "d", "text": "95"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "75% of 120 = 0.75 × 120 = 90 enlisted personnel",
       "sequenceNumber": 160
     },
@@ -168,7 +168,7 @@
         {"id": "c", "text": "Attack"},
         {"id": "d", "text": "March"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Retreat is the opposite of advance in military context.",
       "sequenceNumber": 161
     },
@@ -183,7 +183,7 @@
         {"id": "c", "text": "East"},
         {"id": "d", "text": "West"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "North → 90° clockwise → East → 180° counter-clockwise → West",
       "sequenceNumber": 162
     },
@@ -198,7 +198,7 @@
         {"id": "c", "text": "Strength"},
         {"id": "d", "text": "Pride"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Courage opposes fear; confidence opposes doubt.",
       "sequenceNumber": 163
     },
@@ -213,7 +213,7 @@
         {"id": "c", "text": "12"},
         {"id": "d", "text": "14"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Work = 6 × 8 = 48 person-days; 48 ÷ 4 = 12 days",
       "sequenceNumber": 164
     },
@@ -228,7 +228,7 @@
         {"id": "c", "text": "6"},
         {"id": "d", "text": "7"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "20 ÷ 4 = 5 soldiers step forward",
       "sequenceNumber": 165
     },
@@ -243,7 +243,7 @@
         {"id": "c", "text": "Confusion"},
         {"id": "d", "text": "Weakness"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "All are positive military values; discipline fits the pattern.",
       "sequenceNumber": 166
     },
@@ -258,7 +258,7 @@
         {"id": "c", "text": "300 km"},
         {"id": "d", "text": "310 km"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Speed = 180/3 = 60 km/h; Distance = 60 × 5 = 300 km",
       "sequenceNumber": 167
     },
@@ -273,7 +273,7 @@
         {"id": "c", "text": "Ship"},
         {"id": "d", "text": "Officer"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "A General commands the Army; an Admiral commands the Navy.",
       "sequenceNumber": 168
     },
@@ -288,7 +288,7 @@
         {"id": "c", "text": "32"},
         {"id": "d", "text": "36"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Each number doubles: 2×2=4, 4×2=8, 8×2=16, 16×2=32",
       "sequenceNumber": 169
     },
@@ -303,7 +303,7 @@
         {"id": "c", "text": "Defend"},
         {"id": "d", "text": "Retreat"}
       ],
-      "correctAnswer": "a",
+      "correctAnswerId": "a",
       "explanation": "Strategize means to plan, especially in military contexts.",
       "sequenceNumber": 170
     },
@@ -318,7 +318,7 @@
         {"id": "c", "text": "16"},
         {"id": "d", "text": "18"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Total work = 3 × 12 = 36 soldier-hours; 36 ÷ 4 = 9... Wait, if same work, fewer people = more time each: (3 × 12)/4 = 9 hours each, but total coverage = 4 × 9 = 36, so continuous coverage = 36/4 = 9... Actually this is ambiguous. If they work in shifts: 4 soldiers can maintain 12 hours coverage. If working together on same 36 person-hours of work: 36/4 = 9 hours each. But the question asks how many hours 4 can guard (implying continuous coverage with more people = longer total coverage possible): 3 soldiers × 12 hours = 36 soldier-hours available; 4 soldiers working same total = 36 soldier-hours, but spread over fewer shifts means... Actually, let me recalculate: if each soldier has energy for 12 hours, then 4 soldiers = 4 × 12 = 48 hours total coverage possible if working in shifts. But that's not an option. The intended answer is likely inverse proportion: more soldiers = can maintain post longer. 3:12 :: 4:x → 3×12 = 4×x → x = 36/4 = 9. Hmm, that doesn't match. Let me use direct proportion: if 3 soldiers work 12 hours total (meaning the post is guarded for 12 hours), then with 4 soldiers working together, they can extend coverage: (4/3) × 12 = 16 hours.",
       "sequenceNumber": 171
     },
@@ -333,7 +333,7 @@
         {"id": "c", "text": "East"},
         {"id": "d", "text": "West"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "East → left 90° → North → right 180° → South",
       "sequenceNumber": 172
     },
@@ -348,7 +348,7 @@
         {"id": "c", "text": "Colonel"},
         {"id": "d", "text": "Sergeant"}
       ],
-      "correctAnswer": "d",
+      "correctAnswerId": "d",
       "explanation": "Sergeant is a non-commissioned officer; others are commissioned officers.",
       "sequenceNumber": 173
     },
@@ -363,7 +363,7 @@
         {"id": "c", "text": "520"},
         {"id": "d", "text": "540"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "On leave = 20% of 800 = 160; Deployed = 15% of 800 = 120; Remaining = 800 - 160 - 120 = 520",
       "sequenceNumber": 174
     },
@@ -378,7 +378,7 @@
         {"id": "c", "text": "Emergency"},
         {"id": "d", "text": "Victory"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "In universal signaling, yellow represents caution or warning.",
       "sequenceNumber": 175
     },
@@ -393,7 +393,7 @@
         {"id": "c", "text": "Lazy"},
         {"id": "d", "text": "Tired"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Vigilant means watchful or alert.",
       "sequenceNumber": 176
     },
@@ -408,7 +408,7 @@
         {"id": "c", "text": "8"},
         {"id": "d", "text": "9"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Daily consumption = 60/5 = 12 rations; 84/12 = 7 days",
       "sequenceNumber": 177
     },
@@ -423,7 +423,7 @@
         {"id": "c", "text": "QBUSQM"},
         {"id": "d", "text": "QCUSPN"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Each letter shifts: M→N(+1), I→K(+2), S→T(+1), S→T(+1), I→L(+3), O→P(+1), N→O(+1). Pattern seems inconsistent, but if we use +1 for all: P→Q, A→B, T→U, R→S, O→P, L→M. That gives QBUSPM. But answer b is QBUSPN, suggesting L→N (+2). The most consistent pattern with the given code is alternating +1, +2: P→Q(+1), A→B(+1), T→U(+1), R→S(+1), O→P(+1), L→N(+2). Actually looking at MISSION→NKTTLPO more carefully: M→N(+1), I→K(+2), S→T(+1), S→T(+1), I→L(+3), O→P(+1), N→O(+1). This is irregular. Let's assume simpler +1 shift: PATROL→QBUSPM would be answer a. But since answer b QBUSPN is given, the last letter L→N suggests +2 or the pattern varies. Given typical OIR questions, the most likely answer intended is simple Caesar shift +1, making answer a correct, but answer b is listed, so there might be a typo in my encoding. Let me use the exact pattern from MISSION: position-based shifts. Actually, let me just use simple +1 Caesar: PATROL → QBUSPM (answer a). But I'll go with answer b as written.",
       "sequenceNumber": 178
     },
@@ -438,7 +438,7 @@
         {"id": "c", "text": "Triangle"},
         {"id": "d", "text": "Pentagon"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "The pattern repeats: Square, Circle, Triangle",
       "sequenceNumber": 179
     },
@@ -453,7 +453,7 @@
         {"id": "c", "text": "Surrender"},
         {"id": "d", "text": "Escape"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Advance is the opposite of retreat.",
       "sequenceNumber": 180
     },
@@ -468,7 +468,7 @@
         {"id": "c", "text": "200"},
         {"id": "d", "text": "210"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "5 × 40 = 200 soldiers",
       "sequenceNumber": 181
     },
@@ -483,7 +483,7 @@
         {"id": "c", "text": "7 km"},
         {"id": "d", "text": "8 km"}
       ],
-      "correctAnswer": "a",
+      "correctAnswerId": "a",
       "explanation": "Pythagorean theorem: √(3² + 4²) = √(9 + 16) = √25 = 5 km",
       "sequenceNumber": 182
     },
@@ -498,7 +498,7 @@
         {"id": "c", "text": "Failure"},
         {"id": "d", "text": "Laziness"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Training develops skill; practice leads to perfection.",
       "sequenceNumber": 183
     },
@@ -513,7 +513,7 @@
         {"id": "c", "text": "10m"},
         {"id": "d", "text": "12m"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "2:3 :: x:15 → 3x = 30 → x = 10m",
       "sequenceNumber": 184
     },
@@ -528,7 +528,7 @@
         {"id": "c", "text": "26"},
         {"id": "d", "text": "27"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Z is the 26th letter of the alphabet.",
       "sequenceNumber": 185
     },
@@ -543,7 +543,7 @@
         {"id": "c", "text": "Foolish"},
         {"id": "d", "text": "Weak"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Gallant means brave or heroic.",
       "sequenceNumber": 186
     },
@@ -558,7 +558,7 @@
         {"id": "c", "text": "3 min"},
         {"id": "d", "text": "3.5 min"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "1 km = 1000m; (1000/100) × 15 = 150 seconds = 2.5 minutes",
       "sequenceNumber": 187
     },
@@ -573,7 +573,7 @@
         {"id": "c", "text": "Battle"},
         {"id": "d", "text": "Victory"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "A sword is a type of weapon; a medal represents honor.",
       "sequenceNumber": 188
     },
@@ -588,7 +588,7 @@
         {"id": "c", "text": "80"},
         {"id": "d", "text": "100"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Each number doubles: 5×2=10, 10×2=20, 20×2=40, 40×2=80",
       "sequenceNumber": 189
     },
@@ -603,7 +603,7 @@
         {"id": "c", "text": "Some soldiers are not brave"},
         {"id": "d", "text": "No conclusion possible"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Logical deduction: All soldiers are brave + Ravi is a soldier = Ravi is brave",
       "sequenceNumber": 190
     },
@@ -618,7 +618,7 @@
         {"id": "c", "text": "16"},
         {"id": "d", "text": "18"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Work = 8 × 12 = 96 person-days; 96 ÷ 6 = 16 days",
       "sequenceNumber": 191
     },
@@ -633,7 +633,7 @@
         {"id": "c", "text": "West"},
         {"id": "d", "text": "South"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "South → 90° clockwise → West → 90° → North → 90° → East (270° total)",
       "sequenceNumber": 192
     },
@@ -648,7 +648,7 @@
         {"id": "c", "text": "Battle"},
         {"id": "d", "text": "Honor"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Defeat is the opposite of victory.",
       "sequenceNumber": 193
     },
@@ -663,7 +663,7 @@
         {"id": "c", "text": "12"},
         {"id": "d", "text": "13"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "15 - 3 = 12 operational aircraft",
       "sequenceNumber": 194
     },
@@ -678,7 +678,7 @@
         {"id": "c", "text": "78"},
         {"id": "d", "text": "84"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Pattern: (a+b) × (a+b-2). For 2+3: 5×3=15... wait, that doesn't match 10. Let me try: a×b + (a+b). For 2+3: 2×3=6, 6+(2+3)=11... no. Try: a×b + a. For 2+3: 6+2=8... no. Actually, looking at 2+3=10 and 4+5=36: could be (a+b)² + something. 5²=25... Let me try: a² + b². 2²+3²=4+9=13... no. How about: (a+b)(a+1)? (2+3)(2+1)=5×3=15... no. Let me try: a×b + (a×2). 2×3=6, 6+(2×2)=10. Yes! And 4×5=20, 20+(4×4)=36. Yes! So 6×7=42, 42+(6×6)=42+36=78.",
       "sequenceNumber": 195
     },
@@ -693,7 +693,7 @@
         {"id": "c", "text": "Army"},
         {"id": "d", "text": "Battle"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "A helmet protects the head; a shield protects the body.",
       "sequenceNumber": 196
     },
@@ -708,7 +708,7 @@
         {"id": "c", "text": "35 km"},
         {"id": "d", "text": "40 km"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Speed = 15/3 = 5 km/h; Distance = 5 × 7 = 35 km",
       "sequenceNumber": 197
     },
@@ -723,7 +723,7 @@
         {"id": "c", "text": "Battle"},
         {"id": "d", "text": "Armistice"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "A treaty formalizes peace; a declaration formalizes war.",
       "sequenceNumber": 198
     },
@@ -738,7 +738,7 @@
         {"id": "c", "text": "48"},
         {"id": "d", "text": "54"}
       ],
-      "correctAnswer": "c",
+      "correctAnswerId": "c",
       "explanation": "Each number doubles: 3×2=6, 6×2=12, 12×2=24, 24×2=48",
       "sequenceNumber": 199
     },
@@ -753,7 +753,7 @@
         {"id": "c", "text": "Hesitation"},
         {"id": "d", "text": "Confusion"}
       ],
-      "correctAnswer": "b",
+      "correctAnswerId": "b",
       "explanation": "Courage is the quality expected of a soldier facing danger.",
       "sequenceNumber": 200
     }

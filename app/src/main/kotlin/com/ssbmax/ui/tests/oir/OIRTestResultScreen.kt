@@ -20,22 +20,21 @@ import com.ssbmax.core.domain.model.*
 
 /**
  * OIR Test Result Screen - Shows detailed breakdown after test completion
+ * 
+ * IMPORTANT: This screen now accepts OIRTestResult directly from the test screen
+ * instead of fetching from Firestore (to avoid PERMISSION_DENIED issues when
+ * submission data isn't saved yet)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OIRTestResultScreen(
-    sessionId: String,
+    result: OIRTestResult,
     onNavigateHome: () -> Unit = {},
     onRetakeTest: () -> Unit = {},
     onReviewAnswers: () -> Unit = {},
-    viewModel: OIRTestResultViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
-    LaunchedEffect(sessionId) {
-        viewModel.loadResult(sessionId)
-    }
+    // No ViewModel needed - result is passed directly
     
     Scaffold(
         topBar = {
@@ -52,74 +51,60 @@ fun OIRTestResultScreen(
             )
         }
     ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Score Header
+            item {
+                ScoreHeaderCard(result = result)
             }
-            uiState.result != null -> {
-                LazyColumn(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Score Header
-                    item {
-                        ScoreHeaderCard(result = uiState.result!!)
-                    }
-                    
-                    // Quick Stats
-                    item {
-                        QuickStatsCard(result = uiState.result!!)
-                    }
-                    
-                    // Category Performance
-                    item {
-                        Text(
-                            text = "Performance by Category",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    
-                    items(uiState.result!!.categoryScores.values.toList()) { categoryScore ->
-                        CategoryPerformanceCard(categoryScore = categoryScore)
-                    }
-                    
-                    // Difficulty Breakdown
-                    item {
-                        Text(
-                            text = "Difficulty Breakdown",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    
-                    item {
-                        DifficultyBreakdownCard(
-                            difficultyScores = uiState.result!!.difficultyBreakdown
-                        )
-                    }
-                    
-                    // Action Buttons
-                    item {
-                        ActionButtonsCard(
-                            onRetakeTest = onRetakeTest,
-                            onReviewAnswers = onReviewAnswers,
-                            onBackToHome = onNavigateHome
-                        )
-                    }
-                }
+            
+            // Quick Stats
+            item {
+                QuickStatsCard(result = result)
+            }
+            
+            // Category Performance
+            item {
+                Text(
+                    text = "Performance by Category",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            items(result.categoryScores.values.toList()) { categoryScore ->
+                CategoryPerformanceCard(categoryScore = categoryScore)
+            }
+            
+            // Difficulty Breakdown
+            item {
+                Text(
+                    text = "Difficulty Breakdown",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            item {
+                DifficultyBreakdownCard(
+                    difficultyScores = result.difficultyBreakdown
+                )
+            }
+            
+            // Action Buttons
+            item {
+                ActionButtonsCard(
+                    onRetakeTest = onRetakeTest,
+                    onReviewAnswers = onReviewAnswers,
+                    onBackToHome = onNavigateHome
+                )
             }
         }
     }

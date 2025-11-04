@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.validation.OIRQuestionValidator
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -152,6 +153,23 @@ class OIRTestViewModel @Inject constructor(
                 
                 android.util.Log.d("OIRTestViewModel", "✅ Loaded ${questions.size} questions")
                 
+                // 🔍 VALIDATE ALL QUESTIONS - Catch data corruption early!
+                android.util.Log.d("OIRTestViewModel", "🔍 Validating ${questions.size} questions...")
+                val validatedQuestions = OIRQuestionValidator.validateAndFilter(questions) { invalidResult ->
+                    android.util.Log.e("OIRTestViewModel", "❌ INVALID QUESTION DETECTED:\n${invalidResult.toLogString()}")
+                }
+                
+                if (validatedQuestions.size < questions.size) {
+                    val removedCount = questions.size - validatedQuestions.size
+                    android.util.Log.w("OIRTestViewModel", "⚠️  Removed $removedCount invalid questions from test")
+                }
+                
+                if (validatedQuestions.isEmpty()) {
+                    throw Exception("All questions failed validation. Please contact support.")
+                }
+                
+                android.util.Log.d("OIRTestViewModel", "✅ Validation complete: ${validatedQuestions.size} valid questions")
+                
                 // Create test session
                 val sessionId = UUID.randomUUID().toString()
                 val config = OIRTestConfig()
@@ -160,7 +178,7 @@ class OIRTestViewModel @Inject constructor(
                     sessionId = sessionId,
                     userId = userId,
                     testId = testId,
-                    questions = questions,
+                    questions = validatedQuestions, // Use validated questions only!
                     answers = emptyMap(),
                     currentQuestionIndex = 0,
                     startTime = System.currentTimeMillis(),
@@ -184,8 +202,28 @@ class OIRTestViewModel @Inject constructor(
     }
     
     fun selectOption(optionId: String) {
-        val session = currentSession ?: return
-        val question = session.currentQuestion ?: return
+        android.util.Log.d("OIRTestViewModel", "🟢 selectOption() called: optionId=$optionId")
+        
+        val session = currentSession ?: run {
+            android.util.Log.e("OIRTestViewModel", "❌ currentSession is null in selectOption!")
+            return
+        }
+        
+        val question = session.currentQuestion ?: run {
+            android.util.Log.e("OIRTestViewModel", "❌ currentQuestion is null in selectOption!")
+            return
+        }
+        
+        android.util.Log.d("OIRTestViewModel", "   Question: ${question.id}")
+        android.util.Log.d("OIRTestViewModel", "   Current index: ${session.currentQuestionIndex}/${session.questions.size}")
+        android.util.Log.d("OIRTestViewModel", "   Total answers before: ${session.answers.size}")
+        
+        // 🔍 RUNTIME VALIDATION - Double-check question integrity before scoring
+        val validationResult = OIRQuestionValidator.validate(question)
+        if (!validationResult.isValid) {
+            android.util.Log.e("OIRTestViewModel", "❌ FATAL: Invalid question detected during answer selection!\n${validationResult.toLogString()}")
+            // Still allow the answer, but log the critical error
+        }
         
         val answer = OIRAnswer(
             questionId = question.id,
@@ -200,6 +238,9 @@ class OIRTestViewModel @Inject constructor(
             answers = session.answers + (question.id to answer)
         )
         
+        android.util.Log.d("OIRTestViewModel", "   Total answers after: ${currentSession?.answers?.size}")
+        android.util.Log.d("OIRTestViewModel", "   Answer correct? ${answer.isCorrect}")
+        
         // Show immediate feedback for OIR tests
         _uiState.value = _uiState.value.copy(
             selectedOptionId = optionId,
@@ -207,6 +248,8 @@ class OIRTestViewModel @Inject constructor(
             isCurrentAnswerCorrect = answer.isCorrect,
             currentQuestionAnswered = true
         )
+        
+        android.util.Log.d("OIRTestViewModel", "✅ selectOption() complete")
     }
     
     fun nextQuestion() {
@@ -240,12 +283,22 @@ class OIRTestViewModel @Inject constructor(
     }
     
     fun submitTest() {
+        android.util.Log.d("OIRTestViewModel", "🔵 submitTest() called")
         timerJob?.cancel()
         
-        val session = currentSession ?: return
+        val session = currentSession ?: run {
+            android.util.Log.e("OIRTestViewModel", "❌ currentSession is null in submitTest!")
+            return
+        }
+        
+        android.util.Log.d("OIRTestViewModel", "   Session ID: ${session.sessionId}")
+        android.util.Log.d("OIRTestViewModel", "   Questions: ${session.questions.size}")
+        android.util.Log.d("OIRTestViewModel", "   Answers: ${session.answers.size}")
+        android.util.Log.d("OIRTestViewModel", "   Current index: ${session.currentQuestionIndex}")
         
         viewModelScope.launch {
             try {
+                android.util.Log.d("OIRTestViewModel", "   Starting test submission...")
                 // Get user profile for subscription type
                 val userProfileResult = userProfileRepository.getUserProfile(session.userId).first()
                 val userProfile = userProfileResult.getOrNull()
@@ -290,6 +343,11 @@ class OIRTestViewModel @Inject constructor(
                     testResult = result
                 )
             } catch (e: Exception) {
+                android.util.Log.e("OIRTestViewModel", "❌ Test submission failed", e)
+                android.util.Log.e("OIRTestViewModel", "   Error type: ${e.javaClass.simpleName}")
+                android.util.Log.e("OIRTestViewModel", "   Error message: ${e.message}")
+                e.printStackTrace()
+                
                 _uiState.value = _uiState.value.copy(
                     error = "Failed to submit: ${e.message}"
                 )
@@ -337,18 +395,35 @@ class OIRTestViewModel @Inject constructor(
     
     private fun updateUiFromSession() {
         val session = currentSession ?: return
+        
+        // Detailed debug logging
+        android.util.Log.d("OIRTestViewModel", "📍 updateUiFromSession: index=${session.currentQuestionIndex}, total=${session.questions.size}")
+        android.util.Log.d("OIRTestViewModel", "   Questions list size: ${session.questions.size}")
+        android.util.Log.d("OIRTestViewModel", "   Trying to get question at index: ${session.currentQuestionIndex}")
+        
         val currentQuestion = session.currentQuestion
+        
+        android.util.Log.d("OIRTestViewModel", "   currentQuestion null? ${currentQuestion == null}")
         
         // Safety check: if currentQuestion is null, we've gone past the last question
         if (currentQuestion == null) {
             android.util.Log.e("OIRTestViewModel", "⚠️ currentQuestion is null at index ${session.currentQuestionIndex}/${session.questions.size}")
+            android.util.Log.e("OIRTestViewModel", "   This should NOT happen! Index should be 0..${session.questions.size - 1}")
+            
+            // Log all question IDs to debug
+            session.questions.forEachIndexed { index, q ->
+                android.util.Log.d("OIRTestViewModel", "   Question[$index]: id=${q.id}")
+            }
+            
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 loadingMessage = null,
-                error = "Invalid question index. Please use Submit Test button."
+                error = "Invalid question index (${session.currentQuestionIndex}/${session.questions.size}). Please click Submit Test button."
             )
             return
         }
+        
+        android.util.Log.d("OIRTestViewModel", "   ✅ Got question: ${currentQuestion.id}")
         
         val existingAnswer = session.answers[currentQuestion.id]
         
@@ -417,9 +492,23 @@ class OIRTestViewModel @Inject constructor(
         }
         
         // Create answered questions list
+        android.util.Log.d("OIRTestViewModel", "📋 Creating answered questions list from ${session.questions.size} questions")
+        
         val answeredQuestions = session.questions.mapNotNull { question ->
             val answer = session.answers[question.id] ?: return@mapNotNull null
-            val correctOption = question.options.find { it.id == question.correctAnswerId }!!
+            
+            android.util.Log.d("OIRTestViewModel", "   Processing question: ${question.id}")
+            android.util.Log.d("OIRTestViewModel", "     correctAnswerId: ${question.correctAnswerId}")
+            android.util.Log.d("OIRTestViewModel", "     Options: ${question.options.map { it.id }}")
+            
+            val correctOption = question.options.find { it.id == question.correctAnswerId }
+            
+            if (correctOption == null) {
+                android.util.Log.e("OIRTestViewModel", "❌ FATAL: Question ${question.id} has correctAnswerId='${question.correctAnswerId}' but no matching option!")
+                android.util.Log.e("OIRTestViewModel", "   Available options: ${question.options.joinToString { "${it.id}: ${it.text.take(50)}" }}")
+                return@mapNotNull null // Skip this question instead of crashing
+            }
+            
             val selectedOption = answer.selectedOptionId?.let { id ->
                 question.options.find { it.id == id }
             }
@@ -432,6 +521,8 @@ class OIRTestViewModel @Inject constructor(
                 selectedOption = selectedOption
             )
         }
+        
+        android.util.Log.d("OIRTestViewModel", "✅ Created ${answeredQuestions.size} answered questions")
         
         val timeTaken = ((System.currentTimeMillis() - session.startTime) / 1000).toInt()
         

@@ -42,6 +42,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     private lateinit var viewModel: OIRTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
+    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
+    private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
     private val mockUserProfile = UserProfile(
@@ -58,13 +60,25 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     fun setup() {
         // Mock successful question loading using new caching system
         coEvery { 
-            mockTestContentRepo.getOIRTestQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
         } returns Result.success(mockQuestions)
         
         // Mock user profile
         coEvery { 
             mockUserProfileRepo.getUserProfile(any()) 
         } returns flowOf(Result.success(mockUserProfile))
+        
+        // Mock difficulty manager
+        coEvery {
+            mockDifficultyManager.getRecommendedDifficulty(any())
+        } returns "EASY"
+        
+        // Mock subscription manager - use sealed class subtype
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(
+            remainingTests = 1
+        )
         
         // Mock cache initialization (may be called by repository)
         coEvery { mockTestContentRepo.initializeOIRCache() } returns Result.success(Unit)
@@ -78,7 +92,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadTest success loads questions and starts timer`() = runTest {
         // When - Create ViewModel (calls loadTest() in init with UnconfinedTestDispatcher)
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         
         // Then - state should be updated immediately due to UnconfinedTestDispatcher
         val state = viewModel.uiState.value
@@ -90,19 +104,19 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         assertNotNull("Should have current question", state.currentQuestion)
         assertEquals("Timer should be 40 minutes (2400s)", 2400, state.timeRemainingSeconds)
         
-        // Verify questions were fetched using new caching system
-        coVerify { mockTestContentRepo.getOIRTestQuestions(50) }
+        // Verify questions were fetched using new caching system with difficulty
+        coVerify { mockTestContentRepo.getOIRTestQuestions(50, any()) }
     }
     
     @Test
     fun `loadTest failure shows error message`() = runTest {
         // Given - mock failure
         coEvery { 
-            mockTestContentRepo.getOIRTestQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
         } returns Result.failure(Exception("Network error"))
         
         // When
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Then
@@ -122,11 +136,11 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     fun `loadTest with empty questions shows error`() = runTest {
         // Given - mock empty questions
         coEvery { 
-            mockTestContentRepo.getOIRTestQuestions(any()) 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
         } returns Result.success(emptyList())
         
         // When
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Then
@@ -147,7 +161,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `selectOption records correct answer and shows feedback`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         val firstQuestion = mockQuestions[0]
@@ -170,7 +184,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `selectOption records incorrect answer`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         val firstQuestion = mockQuestions[0]
@@ -195,7 +209,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `nextQuestion moves to next question`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Answer first question
@@ -219,7 +233,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `previousQuestion moves to previous question`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Move to second question
@@ -240,7 +254,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `previousQuestion at start does nothing`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         val initialIndex = viewModel.uiState.value.currentQuestionIndex
@@ -257,7 +271,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest calculates correct score and ends session`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Answer all questions correctly
@@ -295,7 +309,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest with mixed answers calculates partial score`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Answer first 3 correctly, last 2 incorrectly
@@ -325,7 +339,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest with unanswered questions counts as skipped`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Answer only first 2 questions
@@ -348,7 +362,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `timer decrements every second`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         // NOTE: Don't call advanceUntilIdle() here - with UnconfinedTestDispatcher,
         // the init block runs immediately and state is already updated
         
@@ -372,7 +386,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo.getOIRTestQuestions(any()) 
         } returns Result.success(createMockQuestions().take(1)) // Only 1 question
         
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // When - advance time to expiry (30 minutes = 1800 seconds)
@@ -387,7 +401,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `calculateResults generates category scores`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         advanceUntilIdle()
         
         // Answer all questions
@@ -413,12 +427,191 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         }
     }
     
+    // ==================== Validation Tests ====================
+    
+    @Test
+    fun `loadTest filters out invalid questions with malformed option IDs`() = runTest {
+        // Given - questions with corrupted option IDs (single letter instead of opt_X)
+        val corruptedQuestions = listOf(
+            OIRQuestion(
+                id = "oir_corrupt_1",
+                questionNumber = 1,
+                type = OIRQuestionType.VERBAL_REASONING,
+                difficulty = QuestionDifficulty.EASY,
+                questionText = "Test question?",
+                options = listOf(
+                    OIROption("a", "Option A"),  // ❌ Should be "opt_a"
+                    OIROption("b", "Option B"),  // ❌ Should be "opt_b"
+                    OIROption("c", "Option C"),  // ❌ Should be "opt_c"
+                    OIROption("d", "Option D")   // ❌ Should be "opt_d"
+                ),
+                correctAnswerId = "b",  // ❌ Should be "opt_b"
+                explanation = "Test"
+            )
+        )
+        
+        coEvery { 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
+        } returns Result.success(corruptedQuestions)
+        
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then - corrupted question should be filtered out
+        viewModel.uiState.test {
+            val state = awaitItem()
+            
+            // Should show error because ALL questions were invalid
+            assertTrue(
+                "Should have error about validation",
+                state.error?.contains("validation") == true || 
+                state.error?.contains("contact support") == true
+            )
+        }
+    }
+    
+    @Test
+    fun `loadTest filters out questions with malformed correctAnswerId`() = runTest {
+        // Given - question with embedded question number in correctAnswerId
+        val corruptedQuestions = listOf(
+            OIRQuestion(
+                id = "oir_103",
+                questionNumber = 103,
+                type = OIRQuestionType.NUMERICAL_ABILITY,
+                difficulty = QuestionDifficulty.MEDIUM,
+                questionText = "What is 2+2?",
+                options = listOf(
+                    OIROption("opt_a", "3"),
+                    OIROption("opt_b", "4"),  // Correct
+                    OIROption("opt_c", "5"),
+                    OIROption("opt_d", "6")
+                ),
+                correctAnswerId = "opt_103_b",  // ❌ Should be "opt_b"
+                explanation = "2+2=4"
+            )
+        )
+        
+        coEvery { 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
+        } returns Result.success(corruptedQuestions)
+        
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then - should filter out invalid question
+        val state = viewModel.uiState.value
+        assertTrue(
+            "Should have error or filter out question",
+            state.error != null || state.totalQuestions == 0
+        )
+    }
+    
+    @Test
+    fun `loadTest handles mix of valid and invalid questions`() = runTest {
+        // Given - mix of valid and invalid questions
+        val mixedQuestions = listOf(
+            // Valid question
+            OIRQuestion(
+                id = "oir_valid_1",
+                questionNumber = 1,
+                type = OIRQuestionType.VERBAL_REASONING,
+                difficulty = QuestionDifficulty.EASY,
+                questionText = "Valid question?",
+                options = listOf(
+                    OIROption("opt_a", "A"),
+                    OIROption("opt_b", "B"),
+                    OIROption("opt_c", "C"),
+                    OIROption("opt_d", "D")
+                ),
+                correctAnswerId = "opt_b",
+                explanation = "Test"
+            ),
+            // Invalid question (malformed option IDs)
+            OIRQuestion(
+                id = "oir_invalid_1",
+                questionNumber = 2,
+                type = OIRQuestionType.VERBAL_REASONING,
+                difficulty = QuestionDifficulty.EASY,
+                questionText = "Invalid question?",
+                options = listOf(
+                    OIROption("a", "A"),  // ❌ Invalid
+                    OIROption("b", "B"),  // ❌ Invalid
+                    OIROption("c", "C"),  // ❌ Invalid
+                    OIROption("d", "D")   // ❌ Invalid
+                ),
+                correctAnswerId = "b",  // ❌ Invalid
+                explanation = "Test"
+            ),
+            // Another valid question
+            OIRQuestion(
+                id = "oir_valid_2",
+                questionNumber = 3,
+                type = OIRQuestionType.NUMERICAL_ABILITY,
+                difficulty = QuestionDifficulty.MEDIUM,
+                questionText = "Another valid question?",
+                options = listOf(
+                    OIROption("opt_a", "1"),
+                    OIROption("opt_b", "2"),
+                    OIROption("opt_c", "3"),
+                    OIROption("opt_d", "4")
+                ),
+                correctAnswerId = "opt_c",
+                explanation = "Test"
+            )
+        )
+        
+        coEvery { 
+            mockTestContentRepo.getOIRTestQuestions(any(), any()) 
+        } returns Result.success(mixedQuestions)
+        
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then - should only load valid questions
+        val state = viewModel.uiState.value
+        
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+        assertEquals(
+            "Should have 2 valid questions (1 invalid filtered out)",
+            2,
+            state.totalQuestions
+        )
+        
+        // Verify only valid questions are present
+        val session = viewModel.uiState.value.currentQuestion
+        assertNotNull("Should have current question", session)
+        assertTrue(
+            "Current question should be valid",
+            session?.id?.startsWith("oir_valid") == true
+        )
+    }
+    
+    @Test
+    fun `selectOption validates question before scoring`() = runTest {
+        // Given - valid setup
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // When - select an option
+        val firstQuestion = mockQuestions[0]
+        viewModel.selectOption(firstQuestion.correctAnswerId)
+        
+        // Then - answer should be recorded (validation happens internally but doesn't fail)
+        val state = viewModel.uiState.value
+        assertTrue("Answer should be recorded", state.currentQuestionAnswered)
+        assertTrue("Feedback should be shown", state.showFeedback)
+    }
+    
     // ==================== Cleanup ====================
     
     @Test
     fun `onCleared cancels timer job`() = runTest {
         // Given
-        viewModel = OIRTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = createViewModel()
         // NOTE: Don't call advanceUntilIdle() here - with UnconfinedTestDispatcher,
         // the init block runs immediately and state is already updated
         
@@ -438,6 +631,15 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     }
     
     // ==================== Helper Methods ====================
+    
+    private fun createViewModel(): OIRTestViewModel {
+        return OIRTestViewModel(
+            mockTestContentRepo,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+    }
     
     private fun createMockQuestions(): List<OIRQuestion> {
         return listOf(

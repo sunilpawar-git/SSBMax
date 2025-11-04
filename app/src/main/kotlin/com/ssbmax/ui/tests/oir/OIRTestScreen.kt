@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
+import com.ssbmax.ui.tests.common.AnswerFeedbackEffect
 
 /**
  * OIR Test Screen - Main test interface
@@ -35,7 +37,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OIRTestScreen(
-    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (com.ssbmax.core.domain.model.OIRTestResult) -> Unit = { },
     onNavigateBack: () -> Unit = {},
     viewModel: OIRTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -43,10 +45,10 @@ fun OIRTestScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     
-    // Handle test completion
+    // Handle test completion - Pass result object directly
     LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.sessionId != null && uiState.subscriptionType != null) {
-            onTestComplete(uiState.sessionId!!, uiState.subscriptionType!!)
+        if (uiState.isCompleted && uiState.testResult != null) {
+            onTestComplete(uiState.testResult!!)
         }
     }
     
@@ -114,7 +116,8 @@ fun OIRTestScreen(
                             viewModel.selectOption(optionId)
                         },
                         showFeedback = uiState.showFeedback,
-                        isCorrect = uiState.isCurrentAnswerCorrect
+                        isCorrect = uiState.isCurrentAnswerCorrect,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
@@ -231,9 +234,20 @@ private fun QuestionView(
     selectedOptionId: String?,
     onOptionSelected: (String) -> Unit,
     showFeedback: Boolean,
-    isCorrect: Boolean
+    isCorrect: Boolean,
+    modifier: Modifier = Modifier
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+    
+    // Trigger haptic feedback when answer feedback is shown
+    AnswerFeedbackEffect(
+        showFeedback = showFeedback,
+        isCorrect = isCorrect,
+        hapticFeedback = hapticFeedback
+    )
+    
     LazyColumn(
+        modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

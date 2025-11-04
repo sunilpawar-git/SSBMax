@@ -67,13 +67,16 @@ fun NavGraphBuilder.sharedNavGraph(
     ) { backStackEntry ->
         val testId = backStackEntry.arguments?.getString("testId") ?: ""
         com.ssbmax.ui.tests.oir.OIRTestScreen(
-            onTestComplete = { sessionId, subscriptionType ->
-                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
-                    submissionId = sessionId,
-                    subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.OIR,
-                    navController = navController
-                )
+            onTestComplete = { result ->
+                // Store result in holder (temporary workaround for complex object navigation)
+                com.ssbmax.ui.tests.oir.OIRTestResultHolder.setResult(result)
+                
+                // Navigate to result screen
+                navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(result.sessionId)) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = false
+                    }
+                }
             },
             onNavigateBack = { navController.navigateUp() }
         )
@@ -84,15 +87,30 @@ fun NavGraphBuilder.sharedNavGraph(
         route = SSBMaxDestinations.OIRTestResult.route,
         arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+        // Get result from holder (temporary workaround)
+        val result = com.ssbmax.ui.tests.oir.OIRTestResultHolder.getResult()
+        
+        if (result == null) {
+            // Fallback: Show error if result is missing
+            androidx.compose.foundation.layout.Box(
+                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                androidx.compose.material3.Text("Test result not found")
+            }
+            return@composable
+        }
+        
         com.ssbmax.ui.tests.oir.OIRTestResultScreen(
-            sessionId = sessionId,
+            result = result,
             onNavigateHome = {
+                com.ssbmax.ui.tests.oir.OIRTestResultHolder.clearResult()
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
                 }
             },
             onRetakeTest = {
+                com.ssbmax.ui.tests.oir.OIRTestResultHolder.clearResult()
                 navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard")) {
                     popUpTo(SSBMaxDestinations.OIRTestResult.route) { inclusive = true }
                 }
