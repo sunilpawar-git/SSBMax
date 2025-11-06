@@ -34,6 +34,7 @@ class WATTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
+    private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     
     private val mockWords = createMockWords()
     private val mockUser = SSBMaxUser(
@@ -92,7 +93,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -127,7 +129,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -159,7 +162,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -181,7 +185,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -211,7 +216,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -236,7 +242,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -264,7 +271,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -296,7 +304,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -327,7 +336,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -354,7 +364,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -389,7 +400,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -425,7 +437,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -470,7 +483,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -508,7 +522,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -551,7 +566,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -584,7 +600,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -623,7 +640,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -665,7 +683,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -704,7 +723,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -736,7 +756,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -758,7 +779,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -780,7 +802,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()

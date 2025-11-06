@@ -46,6 +46,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
+    private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
     private val mockUser = SSBMaxUser(
@@ -713,7 +714,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
-            mockSubscriptionManager
+            mockSubscriptionManager,
+            mockSecurityLogger
         )
     }
     
