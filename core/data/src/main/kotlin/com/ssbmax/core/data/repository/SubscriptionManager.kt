@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.entity.TestUsageEntity
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.TestType
 import kotlinx.coroutines.flow.first
@@ -23,7 +24,8 @@ import javax.inject.Singleton
 class SubscriptionManager @Inject constructor(
     private val testUsageDao: TestUsageDao,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val securityLogger: SecurityEventLogger
 ) {
     private val TAG = "SubscriptionManager"
     
@@ -62,6 +64,15 @@ class SubscriptionManager @Inject constructor(
             return if (usedCount < limit) {
                 TestEligibility.Eligible(remainingTests = limit - usedCount)
             } else {
+                // SECURITY: Log when limit is properly enforced
+                securityLogger.logLimitReached(
+                    userId = userId,
+                    testType = testType,
+                    subscriptionTier = tier.name,
+                    testsUsed = usedCount,
+                    testsLimit = limit
+                )
+                
                 TestEligibility.LimitReached(
                     tier = tier,
                     limit = limit,
@@ -168,6 +179,15 @@ class SubscriptionManager @Inject constructor(
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error recording test usage atomically", e)
+            
+            // SECURITY: Log transaction failure for monitoring
+            securityLogger.logTransactionFailure(
+                userId = userId,
+                testType = testType,
+                month = getCurrentMonth(),
+                errorMessage = e.message ?: "Unknown error"
+            )
+            
             throw e // Propagate error so ViewModels know submission failed
         }
     }
