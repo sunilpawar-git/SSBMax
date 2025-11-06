@@ -300,7 +300,6 @@ private fun TestInProgressView(
             modifier = Modifier.fillMaxSize(),
             color = when {
                 timeRemaining <= 5 -> MaterialTheme.colorScheme.errorContainer
-                timeRemaining <= 10 -> MaterialTheme.colorScheme.tertiaryContainer
                 else -> MaterialTheme.colorScheme.surface
             }
         ) {
@@ -309,7 +308,8 @@ private fun TestInProgressView(
                     .fillMaxSize()
                     .imePadding()  // Lift content when keyboard appears
                     .verticalScroll(rememberScrollState())  // Make scrollable
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .padding(top = 32.dp),  // Extra top padding to prevent cutoff
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Top bar with progress and exit
@@ -348,7 +348,9 @@ private fun TestInProgressView(
                     }
                 }
                 
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(32.dp))
+                
+                Spacer(Modifier.weight(0.3f))
                 
                 // Word display (Large, centered)
                 AnimatedContent(
@@ -365,11 +367,11 @@ private fun TestInProgressView(
                         ),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(32.dp)
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                     )
                 }
                 
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.weight(0.3f))
                 
                 // Response input
                 OutlinedTextField(
