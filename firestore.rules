@@ -80,6 +80,26 @@ service cloud.firestore {
                         request.resource.data.oirTestsUsed >= 0;
       }
       
+      // Subscription usage tracking (server-side persistence)
+      // SECURITY: Cannot be bypassed by clearing app cache
+      match /subscription/{document} {
+        // Users can read their own subscription usage
+        allow read: if isOwner(userId);
+        
+        // Users can write their own usage with validation
+        allow write: if isOwner(userId) &&
+                        request.resource.data.userId == userId &&
+                        request.resource.data.keys().hasAll([
+                          'month', 'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
+                          'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
+                          'interviewTestsUsed', 'lastUpdated'
+                        ]) &&
+                        request.resource.data.oirTestsUsed is int &&
+                        request.resource.data.oirTestsUsed >= 0 &&
+                        request.resource.data.watTestsUsed >= 0 &&
+                        request.resource.data.srtTestsUsed >= 0;
+      }
+      
       // User subscription data
       match /data/subscription {
         // Users can read their own subscription

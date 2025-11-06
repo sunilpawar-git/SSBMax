@@ -308,8 +308,8 @@ private fun TestInProgressView(
                     .fillMaxSize()
                     .imePadding()  // Lift content when keyboard appears
                     .verticalScroll(rememberScrollState())  // Make scrollable
-                    .padding(24.dp)
-                    .padding(top = 32.dp),  // Extra top padding to prevent cutoff
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 80.dp, bottom = 24.dp),  // 1 inch (~80dp) top padding
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Top bar with progress and exit
@@ -348,7 +348,7 @@ private fun TestInProgressView(
                     }
                 }
                 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(48.dp))
                 
                 Spacer(Modifier.weight(0.3f))
                 
@@ -363,11 +363,13 @@ private fun TestInProgressView(
                     Text(
                         text = currentWord,
                         style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 44.sp  // Reduced from 56sp to prevent 2-line breaks
+                            fontSize = 36.sp  // Further reduced from 44sp to 36sp
                         ),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
                     )
                 }
                 
