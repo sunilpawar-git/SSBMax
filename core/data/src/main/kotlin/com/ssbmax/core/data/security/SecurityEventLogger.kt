@@ -19,6 +19,119 @@ import javax.inject.Singleton
  * - Subscription limit bypass attempts
  * - Usage recording failures
  * - Firestore transaction failures
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ⚠️ CRITICAL TODO: When implementing new test ViewModels, ensure they include:
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * SECURITY CHECKLIST FOR NEW TEST VIEWMODELS:
+ * 
+ * ✅ IMPLEMENTED (5/8 test types):
+ *    - OIRTestViewModel      ✅ Auth guard + Security logging
+ *    - WATTestViewModel      ✅ Auth guard + Security logging
+ *    - SRTTestViewModel      ✅ Auth guard + Security logging
+ *    - TATTestViewModel      ✅ Auth guard + Security logging
+ *    - PPDTTestViewModel     ✅ Auth guard + Security logging
+ * 
+ * ❌ PENDING IMPLEMENTATION (3/8 test types):
+ *    - SDTestViewModel       ⚠️ NOT YET CREATED - Needs auth guard + logging
+ *    - GTOTestViewModel      ⚠️ NOT YET CREATED - Needs auth guard + logging
+ *    - IOTestViewModel       ⚠️ NOT YET CREATED - Needs auth guard + logging
+ * 
+ * REQUIRED IMPLEMENTATION PATTERN:
+ * ────────────────────────────────────────────────────────────────────────────
+ * 
+ * @HiltViewModel
+ * class [TestType]ViewModel @Inject constructor(
+ *     private val observeCurrentUser: ObserveCurrentUserUseCase,
+ *     private val subscriptionManager: SubscriptionManager,
+ *     private val difficultyManager: DifficultyProgressionManager,
+ *     private val securityLogger: SecurityEventLogger,  // ← INJECT THIS
+ *     // ... other dependencies
+ * ) : ViewModel() {
+ * 
+ *     fun loadTest(testId: String) {
+ *         viewModelScope.launch {
+ *             // 1. AUTHENTICATION GUARD (REQUIRED)
+ *             val user = observeCurrentUser().first()
+ *             val userId = user?.id ?: run {
+ *                 Log.e(TAG, "🚨 SECURITY: Unauthenticated test access blocked")
+ *                 
+ *                 // 2. LOG SECURITY EVENT (REQUIRED)
+ *                 securityLogger.logUnauthenticatedAccess(
+ *                     testType = TestType.[YOUR_TEST_TYPE],
+ *                     context = "[TestType]ViewModel.loadTest"
+ *                 )
+ *                 
+ *                 // 3. UPDATE UI WITH ERROR (REQUIRED)
+ *                 _uiState.update { it.copy(
+ *                     isLoading = false,
+ *                     error = "Authentication required. Please login to continue."
+ *                 ) }
+ *                 return@launch
+ *             }
+ *             
+ *             // 4. CHECK SUBSCRIPTION ELIGIBILITY (REQUIRED)
+ *             val eligibility = subscriptionManager.canTakeTest(userId, TestType.[YOUR_TEST_TYPE])
+ *             when (eligibility) {
+ *                 is TestEligibility.LimitReached -> {
+ *                     _uiState.update { it.copy(
+ *                         isLimitReached = true,
+ *                         subscriptionTier = eligibility.subscriptionTier,
+ *                         testsLimit = eligibility.testsLimit,
+ *                         testsUsed = eligibility.testsUsed,
+ *                         resetsAt = eligibility.resetsAt
+ *                     ) }
+ *                     return@launch
+ *                 }
+ *                 is TestEligibility.Allowed -> {
+ *                     // Proceed with loading test
+ *                 }
+ *             }
+ *             
+ *             // ... rest of test loading logic
+ *         }
+ *     }
+ *     
+ *     fun submitTest() {
+ *         viewModelScope.launch {
+ *             val userId = observeCurrentUser().first()?.id ?: return@launch
+ *             
+ *             // 5. RECORD PERFORMANCE (REQUIRED for analytics)
+ *             difficultyManager.recordPerformance(
+ *                 userId = userId,
+ *                 testType = TestType.[YOUR_TEST_TYPE],
+ *                 score = calculatedScore,
+ *                 timeSpent = timeSpentMillis,
+ *                 submissionId = submissionId
+ *             )
+ *             
+ *             // 6. RECORD USAGE (REQUIRED for subscription enforcement)
+ *             subscriptionManager.recordTestUsage(
+ *                 userId = userId,
+ *                 testType = TestType.[YOUR_TEST_TYPE],
+ *                 submissionId = submissionId
+ *             )
+ *         }
+ *     }
+ * }
+ * 
+ * REFERENCE IMPLEMENTATIONS:
+ * ────────────────────────────────────────────────────────────────────────────
+ * - See: app/src/main/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModel.kt
+ * - See: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt
+ * 
+ * UNIT TEST REQUIREMENTS:
+ * ────────────────────────────────────────────────────────────────────────────
+ * For each new ViewModel, create corresponding tests that verify:
+ * 1. Unauthenticated access is blocked
+ * 2. SecurityEventLogger.logUnauthenticatedAccess() is called
+ * 3. Subscription limits are enforced
+ * 4. Performance is recorded after submission
+ * 5. Test usage is recorded after submission
+ * 
+ * See: app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 @Singleton
 class SecurityEventLogger @Inject constructor(

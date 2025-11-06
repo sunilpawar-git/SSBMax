@@ -19,6 +19,15 @@ import javax.inject.Singleton
  * Manages subscription limits and test usage tracking
  * 
  * SECURITY: Usage data is stored in Firestore (server-side) to prevent bypass via cache clearing
+ * 
+ * 🔒 IMPORTANT: When implementing new test ViewModels (GTO, IO, SD), ensure they:
+ * 1. Call canTakeTest() BEFORE loading test content
+ * 2. Call recordTestUsage() AFTER successful submission
+ * 3. Implement authentication guards (observeCurrentUser)
+ * 4. Log security events via SecurityEventLogger
+ * 
+ * See: docs/SECURITY_CHECKLIST.md for complete implementation guide
+ * Reference: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt
  */
 @Singleton
 class SubscriptionManager @Inject constructor(

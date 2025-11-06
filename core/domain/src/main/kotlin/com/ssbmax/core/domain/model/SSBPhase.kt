@@ -16,6 +16,48 @@ enum class TestPhase {
 
 /**
  * Test types within each phase
+ * 
+ * 🔒 SECURITY TODO: When implementing GTO and IO (Interview) ViewModels:
+ * 
+ * CRITICAL - All new test ViewModels MUST implement these security measures:
+ * 
+ * 1. AUTHENTICATION GUARD:
+ *    ```kotlin
+ *    val user = observeCurrentUser().first()
+ *    val userId = user?.id ?: run {
+ *        securityLogger.logUnauthenticatedAccess(testType = TestType.GTO, context = "GTOViewModel.loadTest")
+ *        _uiState.update { it.copy(error = "Authentication required. Please login to continue.") }
+ *        return@launch
+ *    }
+ *    ```
+ * 
+ * 2. SUBSCRIPTION LIMIT CHECK:
+ *    ```kotlin
+ *    private suspend fun checkTestEligibility(userId: String): TestEligibility {
+ *        return subscriptionManager.canTakeTest(userId, TestType.GTO)
+ *    }
+ *    ```
+ * 
+ * 3. USAGE RECORDING AFTER SUBMISSION:
+ *    ```kotlin
+ *    subscriptionManager.recordTestUsage(userId, TestType.GTO, submissionId)
+ *    ```
+ * 
+ * 4. INJECT THESE DEPENDENCIES:
+ *    - ObserveCurrentUserUseCase
+ *    - DifficultyProgressionManager
+ *    - SubscriptionManager
+ *    - SecurityEventLogger
+ * 
+ * 5. REFERENCE IMPLEMENTATIONS:
+ *    - See: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt
+ *    - See: app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModel.kt
+ * 
+ * ⚠️ WARNING: Skipping these steps will create a security vulnerability allowing
+ *    unlimited test attempts and bypassing subscription limits!
+ * 
+ * ✅ VERIFIED SECURE: OIR, WAT, SRT, TAT, PPDT
+ * ❌ PENDING: GTO, IO (SD not implemented yet)
  */
 enum class TestType {
     // Phase 1
@@ -27,8 +69,8 @@ enum class TestType {
     WAT,        // Word Association Test
     SRT,        // Situation Reaction Test
     SD,         // Self Description
-    GTO,        // Group Testing Officer
-    IO;         // Interview Officer
+    GTO,        // Group Testing Officer - TODO: Implement ViewModel with security measures above
+    IO;         // Interview Officer - TODO: Implement ViewModel with security measures above
     
     val phase: TestPhase
         get() = when (this) {
