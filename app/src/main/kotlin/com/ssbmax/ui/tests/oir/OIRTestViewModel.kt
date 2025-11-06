@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.validation.OIRQuestionValidator
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
@@ -27,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
@@ -76,7 +78,7 @@ class OIRTestViewModel @Inject constructor(
         return subscriptionManager.canTakeTest(TestType.OIR, userId)
     }
     
-    fun loadTest(testId: String = "oir_standard", userId: String = "mock-user-id") {
+    fun loadTest(testId: String = "oir_standard") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
@@ -84,13 +86,23 @@ class OIRTestViewModel @Inject constructor(
                 error = null
             )
             
+            // Get current user - SECURITY: Require authentication
+            val user = observeCurrentUser().first()
+            val userId = user?.id ?: run {
+                android.util.Log.e("OIRTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    loadingMessage = null,
+                    error = "Authentication required. Please login to continue."
+                )
+                return@launch
+            }
+            
+            android.util.Log.d("OIRTestViewModel", "✅ User authenticated: $userId")
+            
             try {
-                // Get actual user ID
-                val userProfile = userProfileRepository.getUserProfile(userId).first().getOrNull()
-                val actualUserId = userProfile?.userId ?: userId
-                
                 // Check subscription eligibility
-                val eligibility = checkTestEligibility(actualUserId)
+                val eligibility = checkTestEligibility(userId)
                 
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {

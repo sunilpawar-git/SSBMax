@@ -89,9 +89,19 @@ class WATTestViewModel @Inject constructor(
             ) }
             
             try {
-                // Get current user
+                // Get current user - SECURITY: Require authentication
                 val user = observeCurrentUser().first()
-                val userId = user?.id ?: "mock-user-id"
+                val userId = user?.id ?: run {
+                    android.util.Log.e("WATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        loadingMessage = null,
+                        error = "Authentication required. Please login to continue."
+                    ) }
+                    return@launch
+                }
+                
+                android.util.Log.d("WATTestViewModel", "✅ User authenticated: $userId")
                 
                 // Check subscription eligibility BEFORE loading test
                 val eligibility = checkTestEligibility(userId)
