@@ -6,6 +6,7 @@ import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -614,6 +615,92 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Note: onCleared() is protected and called by Android system when ViewModel is destroyed
         // For this test, we verify the timer was running before
         assertTrue("Timer was active", initialTime > 0)
+    }
+    
+    // ==================== Subscription Limit Tests ====================
+    
+    @Test
+    fun `loadTest shows limit reached when FREE tier exhausted`() = runTest {
+        // Given - mock limit reached
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
+            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            limit = 1,
+            usedCount = 1,
+            resetsAt = "01 Dec 2025"
+        )
+        
+        // When
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("ppdt_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should show limit reached", state.isLimitReached)
+        assertEquals("Should show FREE tier", SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show 1 test limit", 1, state.testsLimit)
+        assertEquals("Should show 1 test used", 1, state.testsUsed)
+        assertEquals("Should show reset date", "01 Dec 2025", state.resetsAt)
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals("Should have empty image URL when limited", "", state.imageUrl)
+    }
+    
+    @Test
+    fun `loadTest proceeds when user is eligible`() = runTest {
+        // Given - mock eligible (this is the default setup)
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(
+            remainingTests = 5
+        )
+        
+        // When
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("ppdt_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("Should NOT show limit reached", state.isLimitReached)
+        assertTrue("Should have loaded image URL", state.imageUrl.isNotEmpty())
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+    }
+    
+    @Test
+    fun `loadTest calls canTakeTest with correct test type`() = runTest {
+        // When
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("ppdt_standard")
+        advanceUntilIdle()
+        
+        // Then - verify subscription manager was called with PPDT type
+        coVerify(atLeast = 1) {
+            mockSubscriptionManager.canTakeTest(TestType.PPDT, any())
+        }
     }
     
     // ==================== Helper Methods ====================

@@ -616,6 +616,95 @@ class TATTestViewModelTest : BaseViewModelTest() {
         assertEquals("Writing time should decrease by 10 seconds", initialTime - 10, newTime)
     }
     
+    // ==================== Subscription Limit Tests ====================
+    
+    @Test
+    fun `loadTest shows limit reached when FREE tier exhausted`() = runTest {
+        // Given - mock limit reached
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
+            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            limit = 1,
+            usedCount = 1,
+            resetsAt = "01 Dec 2025"
+        )
+        
+        // When
+        viewModel = TATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitTATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should show limit reached", state.isLimitReached)
+        assertEquals("Should show FREE tier", com.ssbmax.core.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show 1 test limit", 1, state.testsLimit)
+        assertEquals("Should show 1 test used", 1, state.testsUsed)
+        assertEquals("Should show reset date", "01 Dec 2025", state.resetsAt)
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals("Should have 0 questions", 0, state.questions.size)
+    }
+    
+    @Test
+    fun `loadTest proceeds when user is eligible`() = runTest {
+        // Given - mock eligible (this is the default setup)
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(
+            remainingTests = 5
+        )
+        
+        // When
+        viewModel = TATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitTATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("Should NOT show limit reached", state.isLimitReached)
+        assertTrue("Should have loaded questions", state.questions.size > 0)
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+    }
+    
+    @Test
+    fun `loadTest calls canTakeTest with correct test type`() = runTest {
+        // When
+        viewModel = TATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitTATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager,
+            mockSecurityLogger
+        )
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+        
+        // Then - verify subscription manager was called with TAT type
+        coVerify(exactly = 1) {
+            mockSubscriptionManager.canTakeTest(TestType.TAT, any())
+        }
+    }
+    
     // ==================== Cleanup ====================
     
     @Test
