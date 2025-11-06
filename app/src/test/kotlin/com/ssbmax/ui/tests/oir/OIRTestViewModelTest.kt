@@ -119,17 +119,15 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         viewModel = createViewModel()
         advanceUntilIdle()
         
-        // Then
-        viewModel.uiState.test {
-            val state = awaitItem()
-            
-            assertFalse("Should not be loading", state.isLoading)
-            assertNotNull("Should have error", state.error)
-            assertTrue(
-                "Error should mention failed loading",
-                state.error!!.contains("Failed to load test")
-            )
-        }
+        // Then - check final state directly (not using turbine due to multiple emissions)
+        val state = viewModel.uiState.value
+        
+        assertFalse("Should not be loading", state.isLoading)
+        assertNotNull("Should have error", state.error)
+        assertTrue(
+            "Error should mention failed loading",
+            state.error!!.contains("Failed to load test")
+        )
     }
     
     @Test
@@ -143,17 +141,18 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         viewModel = createViewModel()
         advanceUntilIdle()
         
-        // Then
-        viewModel.uiState.test {
-            val state = awaitItem()
-            
-            assertFalse("Should not be loading", state.isLoading)
-            assertNotNull("Should have error", state.error)
-            assertTrue(
-                "Error should mention no questions available",
-                state.error!!.contains("No questions available")
-            )
-        }
+        // Then - check final state directly
+        val state = viewModel.uiState.value
+        
+        // Debug output
+        android.util.Log.d("TEST", "isLoading: ${state.isLoading}, error: ${state.error}, isLimitReached: ${state.isLimitReached}")
+        
+        assertFalse("Should not be loading, but was ${state.isLoading}", state.isLoading)
+        assertNotNull("Should have error, but was null", state.error)
+        assertTrue(
+            "Error should mention no questions available, but was: ${state.error}",
+            state.error?.contains("No questions available") == true
+        )
     }
     
     // ==================== Answer Selection ====================
@@ -458,17 +457,15 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         viewModel = createViewModel()
         advanceUntilIdle()
         
-        // Then - corrupted question should be filtered out
-        viewModel.uiState.test {
-            val state = awaitItem()
-            
-            // Should show error because ALL questions were invalid
-            assertTrue(
-                "Should have error about validation",
-                state.error?.contains("validation") == true || 
-                state.error?.contains("contact support") == true
-            )
-        }
+        // Then - corrupted question should be filtered out, check final state
+        val state = viewModel.uiState.value
+        
+        // Should show error because ALL questions were invalid
+        assertTrue(
+            "Should have error about validation",
+            state.error?.contains("validation") == true || 
+            state.error?.contains("contact support") == true
+        )
     }
     
     @Test
@@ -628,6 +625,68 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         // In actual usage, onCleared() is called by Android system when ViewModel is destroyed
         // The test verifies that timer functionality works correctly
         assertTrue("Timer was active and working", initialTime > 0)
+    }
+    
+    // ==================== Subscription Limit Tests ====================
+    
+    @Test
+    fun `loadTest shows limit reached when FREE tier exhausted`() = runTest {
+        // Given - mock limit reached
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.OIR, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
+            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            limit = 1,
+            usedCount = 1,
+            resetsAt = "Dec 1, 2025"
+        )
+        
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should show limit reached", state.isLimitReached)
+        assertEquals("Should show FREE tier", com.ssbmax.core.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show 1 test limit", 1, state.testsLimit)
+        assertEquals("Should show 1 test used", 1, state.testsUsed)
+        assertEquals("Should show reset date", "Dec 1, 2025", state.resetsAt)
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals("Should have 0 questions", 0, state.totalQuestions)
+    }
+    
+    @Test
+    fun `loadTest proceeds when user is eligible`() = runTest {
+        // Given - mock eligible with remaining tests
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.OIR, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(
+            remainingTests = 5
+        )
+        
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("Should NOT show limit reached", state.isLimitReached)
+        assertTrue("Should have loaded questions", state.totalQuestions > 0)
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+    }
+    
+    @Test
+    fun `loadTest calls canTakeTest with correct parameters`() = runTest {
+        // When
+        viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Then - verify subscription manager was called
+        coVerify(exactly = 1) {
+            mockSubscriptionManager.canTakeTest(TestType.OIR, any())
+        }
     }
     
     // ==================== Helper Methods ====================

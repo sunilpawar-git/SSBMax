@@ -683,6 +683,92 @@ class WATTestViewModelTest : BaseViewModelTest() {
         assertEquals("Progress should be 50%", 0.5f, state.progress, 0.01f)
     }
     
+    // ==================== Subscription Limit Tests ====================
+    
+    @Test
+    fun `loadTest shows limit reached when FREE tier exhausted`() = runTest {
+        // Given - mock limit reached
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.WAT, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
+            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            limit = 1,
+            usedCount = 1,
+            resetsAt = "Dec 1, 2025"
+        )
+        
+        // When
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue("Should show limit reached", state.isLimitReached)
+        assertEquals("Should show FREE tier", com.ssbmax.core.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show 1 test limit", 1, state.testsLimit)
+        assertEquals("Should show 1 test used", 1, state.testsUsed)
+        assertEquals("Should show reset date", "Dec 1, 2025", state.resetsAt)
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals("Should have 0 words", 0, state.words.size)
+    }
+    
+    @Test
+    fun `loadTest proceeds when user is eligible`() = runTest {
+        // Given - mock eligible (this is the default setup)
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.WAT, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(
+            remainingTests = 5
+        )
+        
+        // When
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("Should NOT show limit reached", state.isLimitReached)
+        assertTrue("Should have loaded words", state.words.size > 0)
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+    }
+    
+    @Test
+    fun `loadTest calls canTakeTest with correct test type`() = runTest {
+        // When
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        
+        // Then - verify subscription manager was called with WAT type
+        coVerify(exactly = 1) {
+            mockSubscriptionManager.canTakeTest(TestType.WAT, any())
+        }
+    }
+    
     // ==================== Cleanup ====================
     
     @Test
