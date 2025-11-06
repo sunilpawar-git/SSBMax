@@ -32,16 +32,53 @@ class SRTTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SRTTestUiState())
     val uiState: StateFlow<SRTTestUiState> = _uiState.asStateFlow()
     
+    /**
+     * Check if user is eligible to take the test based on subscription tier
+     */
+    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
+        return subscriptionManager.canTakeTest(TestType.SRT, userId)
+    }
+    
     fun loadTest(testId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(
                 isLoading = true,
-                loadingMessage = "Fetching questions from cloud..."
+                loadingMessage = "Checking eligibility..."
             ) }
             
             try {
+                // Get current user
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: "mock-user-id"
+                
+                // Check subscription eligibility BEFORE loading test
+                val eligibility = checkTestEligibility(userId)
+                
+                when (eligibility) {
+                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                        // Show limit reached state
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = null,
+                            isLimitReached = true,
+                            subscriptionTier = eligibility.tier,
+                            testsLimit = eligibility.limit,
+                            testsUsed = eligibility.usedCount,
+                            resetsAt = eligibility.resetsAt
+                        ) }
+                        android.util.Log.d("SRTTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                        return@launch
+                    }
+                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                        android.util.Log.d("SRTTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                        // Continue with test loading
+                    }
+                }
+                
+                _uiState.update { it.copy(
+                    loadingMessage = "Fetching questions from cloud..."
+                ) }
                 
                 // Create test session
                 val sessionResult = testContentRepository.createTestSession(
@@ -346,7 +383,13 @@ data class SRTTestUiState(
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
     val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
-    val error: String? = null
+    val error: String? = null,
+    // Subscription limit fields
+    val isLimitReached: Boolean = false,
+    val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+    val testsLimit: Int = 1,
+    val testsUsed: Int = 0,
+    val resetsAt: String = ""
 ) {
     val currentSituation: SRTSituation?
         get() = situations.getOrNull(currentSituationIndex)

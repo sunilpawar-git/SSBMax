@@ -49,10 +49,26 @@ fun SRTTestScreen(
         }
     }
     
+    // Show limit reached dialog if needed
+    if (uiState.isLimitReached) {
+        com.ssbmax.ui.tests.common.TestLimitReachedDialog(
+            tier = uiState.subscriptionTier,
+            testsLimit = uiState.testsLimit,
+            testsUsed = uiState.testsUsed,
+            resetsAt = uiState.resetsAt,
+            onUpgrade = {
+                // TODO: Navigate to upgrade screen
+                onNavigateBack()
+            },
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+    
     when {
         uiState.isLoading -> {
             TestContentLoadingState(
-                message = "Loading SRT test situations from cloud...",
+                message = uiState.loadingMessage ?: "Loading SRT test situations from cloud...",
                 modifier = Modifier.fillMaxSize()
             )
         }

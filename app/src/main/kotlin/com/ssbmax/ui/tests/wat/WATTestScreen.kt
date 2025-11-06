@@ -3,6 +3,8 @@ package com.ssbmax.ui.tests.wat
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -49,10 +51,26 @@ fun WATTestScreen(
         }
     }
     
+    // Show limit reached dialog if needed
+    if (uiState.isLimitReached) {
+        com.ssbmax.ui.tests.common.TestLimitReachedDialog(
+            tier = uiState.subscriptionTier,
+            testsLimit = uiState.testsLimit,
+            testsUsed = uiState.testsUsed,
+            resetsAt = uiState.resetsAt,
+            onUpgrade = {
+                // TODO: Navigate to upgrade screen
+                onNavigateBack()
+            },
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+    
     when {
         uiState.isLoading -> {
             TestContentLoadingState(
-                message = "Loading WAT test words from cloud...",
+                message = uiState.loadingMessage ?: "Loading WAT test words from cloud...",
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -289,6 +307,8 @@ private fun TestInProgressView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .imePadding()  // Lift content when keyboard appears
+                    .verticalScroll(rememberScrollState())  // Make scrollable
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -341,7 +361,7 @@ private fun TestInProgressView(
                     Text(
                         text = currentWord,
                         style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 56.sp
+                            fontSize = 44.sp  // Reduced from 56sp to prevent 2-line breaks
                         ),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
