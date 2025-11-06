@@ -31,6 +31,8 @@ class SRTTestViewModelTest : BaseViewModelTest() {
     private val mockSubmitSRTTest = mockk<SubmitSRTTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
+    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
+    private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     
     private val mockSituations = createMockSituations()
     private val mockUser = SSBMaxUser(
@@ -87,7 +89,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -119,7 +123,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -149,7 +155,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -169,7 +177,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -196,7 +206,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -219,7 +231,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -245,7 +259,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -275,7 +291,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -304,7 +322,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -336,7 +356,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -369,7 +391,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -408,7 +432,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -447,7 +473,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -466,6 +494,171 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         }
     }
     
+    // ==================== Performance Analytics ====================
+    
+    @Test
+    fun `submitTest records performance analytics with correct score`() = runTest {
+        // Given - use 10 situations for controlled test
+        val shortSituations = mockSituations.take(10)
+        coEvery { 
+            mockTestContentRepo.getSRTQuestions(any()) 
+        } returns Result.success(shortSituations)
+        
+        viewModel = SRTTestViewModel(
+            mockTestContentRepo,
+            mockSubmitSRTTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("srt_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - answer 7 out of 10 situations, skip 3
+        repeat(7) {
+            viewModel.updateResponse("Valid response with sufficient length for this situation")
+            viewModel.moveToNext()
+        }
+        repeat(3) {
+            viewModel.skipSituation()
+        }
+        advanceUntilIdle()
+        viewModel.submitTest()
+        advanceUntilIdle()
+        
+        // Then - verify recordPerformance was called with correct score (70%)
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "SRT",
+                difficulty = "MEDIUM",
+                score = 70f, // 7 valid / 10 total = 70%
+                correctAnswers = 7,
+                totalQuestions = 10,
+                timeSeconds = any()
+            )
+        }
+    }
+    
+    @Test
+    fun `submitTest records subscription usage`() = runTest {
+        // Given
+        val shortSituations = mockSituations.take(3)
+        coEvery { 
+            mockTestContentRepo.getSRTQuestions(any()) 
+        } returns Result.success(shortSituations)
+        
+        viewModel = SRTTestViewModel(
+            mockTestContentRepo,
+            mockSubmitSRTTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("srt_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - complete all situations
+        repeat(3) {
+            viewModel.updateResponse("Valid response for situation $it with enough length")
+            viewModel.moveToNext()
+        }
+        advanceUntilIdle()
+        viewModel.submitTest()
+        advanceUntilIdle()
+        
+        // Then - verify subscription usage was recorded
+        coVerify { 
+            mockSubscriptionManager.recordTestUsage(TestType.SRT, "test-user-123")
+        }
+    }
+    
+    @Test
+    fun `submitTest with all skipped situations records 0 percent score`() = runTest {
+        // Given
+        val shortSituations = mockSituations.take(5)
+        coEvery { 
+            mockTestContentRepo.getSRTQuestions(any()) 
+        } returns Result.success(shortSituations)
+        
+        viewModel = SRTTestViewModel(
+            mockTestContentRepo,
+            mockSubmitSRTTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("srt_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - skip all situations
+        repeat(5) {
+            viewModel.skipSituation()
+        }
+        advanceUntilIdle()
+        viewModel.submitTest()
+        advanceUntilIdle()
+        
+        // Then - verify 0% score recorded
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "SRT",
+                difficulty = "MEDIUM",
+                score = 0f, // 0 valid / 5 total = 0%
+                correctAnswers = 0,
+                totalQuestions = 5,
+                timeSeconds = any()
+            )
+        }
+    }
+    
+    @Test
+    fun `submitTest with all valid responses records 100 percent score`() = runTest {
+        // Given
+        val shortSituations = mockSituations.take(5)
+        coEvery { 
+            mockTestContentRepo.getSRTQuestions(any()) 
+        } returns Result.success(shortSituations)
+        
+        viewModel = SRTTestViewModel(
+            mockTestContentRepo,
+            mockSubmitSRTTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("srt_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - answer all situations
+        repeat(5) {
+            viewModel.updateResponse("Valid response for this situation $it with sufficient length")
+            viewModel.moveToNext()
+        }
+        advanceUntilIdle()
+        viewModel.submitTest()
+        advanceUntilIdle()
+        
+        // Then - verify 100% score recorded
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "SRT",
+                difficulty = "MEDIUM",
+                score = 100f, // 5 valid / 5 total = 100%
+                correctAnswers = 5,
+                totalQuestions = 5,
+                timeSeconds = any()
+            )
+        }
+    }
+    
     // ==================== Progress Tracking ====================
     
     @Test
@@ -480,7 +673,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -510,7 +705,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()
@@ -549,7 +746,9 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("srt_standard")
         advanceUntilIdle()

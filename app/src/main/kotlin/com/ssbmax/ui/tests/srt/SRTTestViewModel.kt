@@ -24,7 +24,9 @@ class SRTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val submitSRTTest: SubmitSRTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SRTTestUiState())
@@ -213,6 +215,26 @@ class SRTTestViewModel @Inject constructor(
                     submittedAt = System.currentTimeMillis(),
                     aiPreliminaryScore = generateMockAIScore(state.responses)
                 )
+                
+                // Calculate score for analytics (valid responses / total)
+                val validCount = submission.validResponses
+                val totalCount = submission.totalResponses
+                val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
+                
+                // Record performance for analytics
+                difficultyManager.recordPerformance(
+                    testType = "SRT",
+                    difficulty = "MEDIUM", // SRT doesn't have difficulty levels yet
+                    score = scorePercentage,
+                    correctAnswers = validCount,
+                    totalQuestions = totalCount,
+                    timeSeconds = (totalTimeMinutes * 60).toFloat()
+                )
+                android.util.Log.d("SRTTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                
+                // Record test usage for subscription tracking
+                subscriptionManager.recordTestUsage(TestType.SRT, currentUserId)
+                android.util.Log.d("SRTTestViewModel", "📝 Recorded test usage for subscription tracking")
                 
                 // Submit to Firestore
                 val result = submitSRTTest(submission, batchId = null)

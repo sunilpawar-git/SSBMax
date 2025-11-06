@@ -32,6 +32,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
     private val mockSubmitWATTest = mockk<SubmitWATTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
+    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
+    private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     
     private val mockWords = createMockWords()
     private val mockUser = SSBMaxUser(
@@ -88,7 +90,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -121,7 +125,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -151,7 +157,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -171,7 +179,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -199,7 +209,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -222,7 +234,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -248,7 +262,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -278,7 +294,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -307,7 +325,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -332,7 +352,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -365,7 +387,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -399,7 +423,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -442,7 +468,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -464,6 +492,163 @@ class WATTestViewModelTest : BaseViewModelTest() {
         }
     }
     
+    // ==================== Performance Analytics ====================
+    
+    @Test
+    fun `submitTest records performance analytics with correct score`() = runTest {
+        // Given - use 10 words for controlled test
+        val shortWords = mockWords.take(10)
+        coEvery { 
+            mockTestContentRepo.getWATQuestions(any()) 
+        } returns Result.success(shortWords)
+        
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - answer 7 out of 10 words, skip 3
+        repeat(7) {
+            viewModel.updateResponse("Response${it + 1}")
+            viewModel.submitResponse()
+        }
+        repeat(3) {
+            viewModel.skipWord()
+        }
+        advanceUntilIdle()
+        
+        // Then - verify recordPerformance was called with correct score (70%)
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "WAT",
+                difficulty = "MEDIUM",
+                score = 70f, // 7 valid / 10 total = 70%
+                correctAnswers = 7,
+                totalQuestions = 10,
+                timeSeconds = any()
+            )
+        }
+    }
+    
+    @Test
+    fun `submitTest records subscription usage`() = runTest {
+        // Given
+        val shortWords = mockWords.take(3)
+        coEvery { 
+            mockTestContentRepo.getWATQuestions(any()) 
+        } returns Result.success(shortWords)
+        
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - complete all words
+        repeat(3) {
+            viewModel.updateResponse("Response${it + 1}")
+            viewModel.submitResponse()
+        }
+        advanceUntilIdle()
+        
+        // Then - verify subscription usage was recorded
+        coVerify { 
+            mockSubscriptionManager.recordTestUsage(TestType.WAT, "test-user-123")
+        }
+    }
+    
+    @Test
+    fun `submitTest with all skipped words records 0 percent score`() = runTest {
+        // Given
+        val shortWords = mockWords.take(5)
+        coEvery { 
+            mockTestContentRepo.getWATQuestions(any()) 
+        } returns Result.success(shortWords)
+        
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - skip all words
+        repeat(5) {
+            viewModel.skipWord()
+        }
+        advanceUntilIdle()
+        
+        // Then - verify 0% score recorded
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "WAT",
+                difficulty = "MEDIUM",
+                score = 0f, // 0 valid / 5 total = 0%
+                correctAnswers = 0,
+                totalQuestions = 5,
+                timeSeconds = any()
+            )
+        }
+    }
+    
+    @Test
+    fun `submitTest with all valid responses records 100 percent score`() = runTest {
+        // Given
+        val shortWords = mockWords.take(5)
+        coEvery { 
+            mockTestContentRepo.getWATQuestions(any()) 
+        } returns Result.success(shortWords)
+        
+        viewModel = WATTestViewModel(
+            mockTestContentRepo,
+            mockSubmitWATTest,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
+        viewModel.loadTest("wat_standard")
+        advanceUntilIdle()
+        viewModel.startTest()
+        
+        // When - answer all words
+        repeat(5) {
+            viewModel.updateResponse("ValidResponse${it + 1}")
+            viewModel.submitResponse()
+        }
+        advanceUntilIdle()
+        
+        // Then - verify 100% score recorded
+        coVerify { 
+            mockDifficultyManager.recordPerformance(
+                testType = "WAT",
+                difficulty = "MEDIUM",
+                score = 100f, // 5 valid / 5 total = 100%
+                correctAnswers = 5,
+                totalQuestions = 5,
+                timeSeconds = any()
+            )
+        }
+    }
+    
     // ==================== Progress Tracking ====================
     
     @Test
@@ -478,7 +663,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -505,7 +692,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockTestContentRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
-            mockUserProfileRepo
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()

@@ -36,7 +36,9 @@ class WATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val submitWATTest: SubmitWATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WATTestUiState())
@@ -241,6 +243,26 @@ class WATTestViewModel @Inject constructor(
                     submittedAt = System.currentTimeMillis(),
                     aiPreliminaryScore = generateMockAIScore(state.responses)
                 )
+                
+                // Calculate score for analytics (valid responses / total)
+                val validCount = submission.validResponses
+                val totalCount = submission.totalResponses
+                val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
+                
+                // Record performance for analytics
+                difficultyManager.recordPerformance(
+                    testType = "WAT",
+                    difficulty = "MEDIUM", // WAT doesn't have difficulty levels yet
+                    score = scorePercentage,
+                    correctAnswers = validCount,
+                    totalQuestions = totalCount,
+                    timeSeconds = (totalTimeMinutes * 60).toFloat()
+                )
+                android.util.Log.d("WATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                
+                // Record test usage for subscription tracking
+                subscriptionManager.recordTestUsage(TestType.WAT, currentUserId)
+                android.util.Log.d("WATTestViewModel", "📝 Recorded test usage for subscription tracking")
                 
                 // Submit to Firestore (but also store locally to bypass permission issues)
                 val result = submitWATTest(submission, batchId = null)

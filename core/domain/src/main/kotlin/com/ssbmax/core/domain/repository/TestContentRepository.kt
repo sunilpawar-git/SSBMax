@@ -66,18 +66,18 @@ interface TestContentRepository {
     suspend fun getTATQuestions(testId: String): Result<List<TATQuestion>>
     
     /**
-     * Fetch WAT test questions from Firestore
+     * Fetch WAT test words from Firestore/Cache
      * @param testId The specific test ID to load
-     * @return Result with list of WAT questions or error
+     * @return Result with list of WAT words or error
      */
-    suspend fun getWATQuestions(testId: String): Result<List<WATQuestion>>
+    suspend fun getWATQuestions(testId: String): Result<List<WATWord>>
     
     /**
-     * Fetch SRT test questions from Firestore
+     * Fetch SRT test situations from Firestore/Cache
      * @param testId The specific test ID to load
-     * @return Result with list of SRT questions or error
+     * @return Result with list of SRT situations or error
      */
-    suspend fun getSRTQuestions(testId: String): Result<List<SRTQuestion>>
+    suspend fun getSRTQuestions(testId: String): Result<List<SRTSituation>>
     
     /**
      * Check if user has active test session for given test

@@ -138,9 +138,9 @@ class UpgradeViewModel @Inject constructor(
                 tier = SubscriptionTier.PRO,
                 name = "Pro",
                 tagline = "Accelerate Your Preparation",
-                priceMonthly = 499.0,
-                priceQuarterly = 1299.0,
-                priceAnnually = 4499.0,
+                priceMonthly = 99.0,
+                priceQuarterly = 249.0,
+                priceAnnually = 999.0,
                 features = listOf(
                     PlanFeature("Everything in Basic", true),
                     PlanFeature("Unlimited practice tests", true),
