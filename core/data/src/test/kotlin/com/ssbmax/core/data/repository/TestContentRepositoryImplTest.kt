@@ -45,15 +45,21 @@ class TestContentRepositoryImplTest {
     private lateinit var repository: TestContentRepositoryImpl
     private lateinit var mockFirestore: FirebaseFirestore
     private lateinit var mockCacheManager: OIRQuestionCacheManager
+    private lateinit var mockWATCacheManager: WATWordCacheManager
+    private lateinit var mockSRTCacheManager: SRTSituationCacheManager
     
     @Before
     fun setup() {
         mockFirestore = mockk(relaxed = true)
         mockCacheManager = mockk(relaxed = true)
+        mockWATCacheManager = mockk(relaxed = true)
+        mockSRTCacheManager = mockk(relaxed = true)
         
         repository = TestContentRepositoryImpl(
             firestore = mockFirestore,
-            oirCacheManager = mockCacheManager
+            oirCacheManager = mockCacheManager,
+            watWordCacheManager = mockWATCacheManager,
+            srtSituationCacheManager = mockSRTCacheManager
         )
     }
     

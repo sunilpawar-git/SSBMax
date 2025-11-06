@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,11 +42,21 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     
     private lateinit var viewModel: OIRTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
+    private val mockUser = SSBMaxUser(
+        id = "test-user-123",
+        email = "test@example.com",
+        displayName = "Test User",
+        photoUrl = null,
+        role = UserRole.STUDENT,
+        createdAt = System.currentTimeMillis(),
+        lastLoginAt = System.currentTimeMillis()
+    )
     private val mockUserProfile = UserProfile(
         userId = "test-user-123",
         fullName = "Test User",
@@ -62,6 +73,11 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         coEvery { 
             mockTestContentRepo.getOIRTestQuestions(any(), any()) 
         } returns Result.success(mockQuestions)
+        
+        // Mock current user observable
+        coEvery {
+            mockObserveCurrentUser()
+        } returns flowOf(mockUser)
         
         // Mock user profile
         coEvery { 
@@ -694,6 +710,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     private fun createViewModel(): OIRTestViewModel {
         return OIRTestViewModel(
             mockTestContentRepo,
+            mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager

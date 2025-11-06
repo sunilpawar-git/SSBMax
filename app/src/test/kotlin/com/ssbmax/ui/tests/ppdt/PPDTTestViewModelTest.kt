@@ -25,9 +25,21 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     private lateinit var viewModel: PPDTTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockObserveCurrentUser = mockk<com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
+    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
+    private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     
     private val mockQuestion = createMockQuestion()
+    private val mockUser = SSBMaxUser(
+        id = "test-user-123",
+        email = "test@example.com",
+        displayName = "Test User",
+        photoUrl = null,
+        role = UserRole.STUDENT,
+        createdAt = System.currentTimeMillis(),
+        lastLoginAt = System.currentTimeMillis()
+    )
     private val mockUserProfile = UserProfile(
         userId = "test-user-123",
         fullName = "Test User",
@@ -40,6 +52,11 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     @Before
     fun setup() {
+        // Mock current user
+        coEvery { 
+            mockObserveCurrentUser() 
+        } returns flowOf(mockUser)
+        
         // Mock test session creation
         coEvery { 
             mockTestContentRepo.createTestSession(any(), any(), TestType.PPDT) 
@@ -54,6 +71,20 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         coEvery { 
             mockUserProfileRepo.getUserProfile(any()) 
         } returns flowOf(Result.success(mockUserProfile))
+        
+        // Mock subscription manager
+        coEvery {
+            mockSubscriptionManager.canTakeTest(any(), any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.Eligible(remainingTests = 1)
+        
+        coEvery {
+            mockSubscriptionManager.recordTestUsage(any(), any(), any())
+        } returns Unit
+        
+        // Mock difficulty manager
+        coEvery {
+            mockDifficultyManager.recordPerformance(any(), any(), any(), any(), any(), any())
+        } returns Unit
     }
     
     // ==================== Test Loading ====================
@@ -61,7 +92,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadTest success loads question and shows instructions`() = runTest {
         // When
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         
         // Then
@@ -85,7 +122,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         } returns Result.failure(Exception("Network error"))
         
         // When
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         
         // Then
@@ -109,7 +152,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         } returns Result.success(emptyList())
         
         // When
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         
         // Then
@@ -123,7 +172,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `startTest transitions to image viewing with 30s timer`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         
         // When
@@ -141,7 +196,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `image viewing auto-advances to writing after 30 seconds`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -160,7 +221,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `proceedToNextPhase from viewing to writing transitions correctly`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -179,7 +246,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `proceedToNextPhase from writing to review requires min characters`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Auto-advance to writing
@@ -205,7 +278,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `returnToWriting transitions from review back to writing`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -231,7 +310,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `updateStory updates story text and character count`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -253,7 +338,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `canProceedToNextPhase validates min characters`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -277,7 +368,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `story enforces max characters of 1000`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -297,7 +394,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest creates submission with story and AI score`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -335,7 +438,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `AI score includes detailed breakdown`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000)
@@ -368,7 +477,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `viewing timer decrements correctly`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -387,7 +502,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `writing timer decrements correctly`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -405,7 +526,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `writing timer expiry auto-advances to review`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -427,7 +554,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `pauseTest cancels timer`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -447,7 +580,13 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `onCleared cancels timer job`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(mockTestContentRepo, mockUserProfileRepo)
+        viewModel = PPDTTestViewModel(
+            mockTestContentRepo,
+            mockObserveCurrentUser,
+            mockUserProfileRepo,
+            mockDifficultyManager,
+            mockSubscriptionManager
+        )
         advanceUntilIdle()
         viewModel.startTest()
         
