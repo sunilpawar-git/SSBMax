@@ -6,6 +6,7 @@ import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -32,7 +33,10 @@ import javax.inject.Inject
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(PPDTTestUiState())
@@ -50,6 +54,14 @@ class PPDTTestViewModel @Inject constructor(
         
         // Restore timer if test was in progress (configuration change recovery)
         restoreTimerIfNeeded()
+    }
+    
+    /**
+     * Check if user is eligible to take the test based on subscription tier
+     * SECURITY: Server-side check via Firestore
+     */
+    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
+        return subscriptionManager.canTakeTest(TestType.PPDT, userId)
     }
     
     /**
@@ -72,15 +84,58 @@ class PPDTTestViewModel @Inject constructor(
         }
     }
     
-    fun loadTest(testId: String = "ppdt_standard", userId: String = "mock-user-id") {
+    fun loadTest(testId: String = "ppdt_standard") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                loadingMessage = "Fetching questions from cloud...",
+                loadingMessage = "Checking eligibility...",
                 error = null
             )
             
+            // Get current user - SECURITY: Require authentication
+            val user = observeCurrentUser().first()
+            val userId = user?.id ?: run {
+                android.util.Log.e("PPDTTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    loadingMessage = null,
+                    error = "Authentication required. Please login to continue."
+                )
+                return@launch
+            }
+            
+            android.util.Log.d("PPDTTestViewModel", "✅ User authenticated: $userId")
+            
             try {
+                // Check subscription eligibility BEFORE loading test
+                val eligibility = checkTestEligibility(userId)
+                
+                when (eligibility) {
+                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                        // Show limit reached state
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = null,
+                            isLimitReached = true,
+                            subscriptionTier = eligibility.tier,
+                            testsLimit = eligibility.limit,
+                            testsUsed = eligibility.usedCount,
+                            resetsAt = eligibility.resetsAt
+                        )
+                        android.util.Log.d("PPDTTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                        return@launch
+                    }
+                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                        android.util.Log.d("PPDTTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                        // Continue with test loading
+                    }
+                }
+                
+                _uiState.value = _uiState.value.copy(
+                    loadingMessage = "Fetching questions from cloud..."
+                )
+                
                 // Create test session
                 val sessionResult = testContentRepository.createTestSession(
                     userId = userId,
@@ -232,6 +287,25 @@ class PPDTTestViewModel @Inject constructor(
                     instructorReview = null
                 )
                 
+                // Calculate score for analytics (story >200 chars is "valid")
+                val isValid = session.story.length >= 200
+                val scorePercentage = if (isValid) 100f else 0f
+                
+                // Record performance for analytics
+                difficultyManager.recordPerformance(
+                    testType = "PPDT",
+                    difficulty = "MEDIUM", // PPDT doesn't have difficulty levels
+                    score = scorePercentage,
+                    correctAnswers = if (isValid) 1 else 0,
+                    totalQuestions = 1,
+                    timeSeconds = (4 * 60).toFloat() // 4 minutes
+                )
+                android.util.Log.d("PPDTTestViewModel", "📊 Recorded performance: $scorePercentage%")
+                
+                // Record test usage for subscription tracking
+                subscriptionManager.recordTestUsage(TestType.PPDT, session.userId)
+                android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
+                
                 // Mark as submitted
                 currentSession = session.copy(
                     currentPhase = PPDTPhase.SUBMITTED,
@@ -379,7 +453,13 @@ data class PPDTTestUiState(
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
     val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
-    val submission: PPDTSubmission? = null  // Submission stored locally until Firestore integration complete
+    val submission: PPDTSubmission? = null,  // Submission stored locally until Firestore integration complete
+    // Subscription limit fields
+    val isLimitReached: Boolean = false,
+    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
+    val testsLimit: Int = 1,
+    val testsUsed: Int = 0,
+    val resetsAt: String = ""
 )
 
 /**
