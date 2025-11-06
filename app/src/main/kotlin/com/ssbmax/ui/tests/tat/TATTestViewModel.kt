@@ -37,7 +37,9 @@ class TATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TATTestUiState())
@@ -52,6 +54,14 @@ class TATTestViewModel @Inject constructor(
         
         // Restore timer if test was in progress (configuration change recovery)
         restoreTimerIfNeeded()
+    }
+    
+    /**
+     * Check if user is eligible to take the test based on subscription tier
+     * SECURITY: Server-side check via Firestore
+     */
+    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
+        return subscriptionManager.canTakeTest(TestType.TAT, userId)
     }
     
     /**
@@ -93,12 +103,52 @@ class TATTestViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(
                 isLoading = true,
-                loadingMessage = "Fetching questions from cloud..."
+                loadingMessage = "Checking eligibility..."
             ) }
             
             try {
+                // Get current user - SECURITY: Require authentication
                 val user = observeCurrentUser().first()
-                val userId = user?.id ?: "mock-user-id"
+                val userId = user?.id ?: run {
+                    android.util.Log.e("TATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        loadingMessage = null,
+                        error = "Authentication required. Please login to continue."
+                    ) }
+                    return@launch
+                }
+                
+                android.util.Log.d("TATTestViewModel", "✅ User authenticated: $userId")
+                
+                // Check subscription eligibility BEFORE loading test
+                val eligibility = checkTestEligibility(userId)
+                
+                when (eligibility) {
+                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                        // Show limit reached state
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = null,
+                            isLimitReached = true,
+                            subscriptionTier = eligibility.tier,
+                            testsLimit = eligibility.limit,
+                            testsUsed = eligibility.usedCount,
+                            resetsAt = eligibility.resetsAt
+                        ) }
+                        android.util.Log.d("TATTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                        return@launch
+                    }
+                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                        android.util.Log.d("TATTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                        // Continue with test loading
+                    }
+                }
+                
+                _uiState.update { it.copy(
+                    loadingMessage = "Fetching questions from cloud..."
+                ) }
                 
                 // Create test session
                 val sessionResult = testContentRepository.createTestSession(
@@ -257,6 +307,26 @@ class TATTestViewModel @Inject constructor(
                 val result = submitTATTest(submission, batchId = null)
                 
                 result.onSuccess { submissionId ->
+                    // Calculate score for analytics (stories with >150 chars are "valid")
+                    val validCount = submission.stories.count { it.charactersCount >= 150 }
+                    val totalCount = submission.stories.size
+                    val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
+                    
+                    // Record performance for analytics
+                    difficultyManager.recordPerformance(
+                        testType = "TAT",
+                        difficulty = "MEDIUM", // TAT doesn't have difficulty levels
+                        score = scorePercentage,
+                        correctAnswers = validCount,
+                        totalQuestions = totalCount,
+                        timeSeconds = (submission.totalTimeTakenMinutes * 60).toFloat()
+                    )
+                    android.util.Log.d("TATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                    
+                    // Record test usage for subscription tracking
+                    subscriptionManager.recordTestUsage(TestType.TAT, currentUserId)
+                    android.util.Log.d("TATTestViewModel", "📝 Recorded test usage for subscription tracking")
+                    
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
@@ -446,7 +516,13 @@ data class TATTestUiState(
     val submissionId: String? = null,
     val subscriptionType: SubscriptionType? = null,
     val submission: TATSubmission? = null,  // Submission stored locally to bypass Firestore permission issues
-    val error: String? = null
+    val error: String? = null,
+    // Subscription limit fields
+    val isLimitReached: Boolean = false,
+    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
+    val testsLimit: Int = 1,
+    val testsUsed: Int = 0,
+    val resetsAt: String = ""
 ) {
     val currentQuestion: TATQuestion?
         get() = questions.getOrNull(currentQuestionIndex)
