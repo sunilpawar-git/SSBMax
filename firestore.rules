@@ -86,18 +86,49 @@ service cloud.firestore {
         // Users can read their own subscription usage
         allow read: if isOwner(userId);
         
-        // Users can write their own usage with validation
-        allow write: if isOwner(userId) &&
-                        request.resource.data.userId == userId &&
-                        request.resource.data.keys().hasAll([
-                          'month', 'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
-                          'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
-                          'interviewTestsUsed', 'lastUpdated'
-                        ]) &&
-                        request.resource.data.oirTestsUsed is int &&
-                        request.resource.data.oirTestsUsed >= 0 &&
-                        request.resource.data.watTestsUsed >= 0 &&
-                        request.resource.data.srtTestsUsed >= 0;
+        // Users can CREATE new usage document with initial values
+        allow create: if isOwner(userId) &&
+                         request.resource.data.userId == userId &&
+                         request.resource.data.keys().hasAll([
+                           'month', 'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
+                           'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
+                           'interviewTestsUsed', 'sdTestsUsed', 'lastUpdated'
+                         ]) &&
+                         // All counts must start at 0 for new documents
+                         request.resource.data.oirTestsUsed == 0 &&
+                         request.resource.data.tatTestsUsed == 0 &&
+                         request.resource.data.watTestsUsed == 0 &&
+                         request.resource.data.srtTestsUsed == 0 &&
+                         request.resource.data.ppdtTestsUsed == 0 &&
+                         request.resource.data.gtoTestsUsed == 0 &&
+                         request.resource.data.interviewTestsUsed == 0 &&
+                         request.resource.data.sdTestsUsed == 0;
+        
+        // Users can UPDATE usage with STRICT anti-decrement validation
+        // SECURITY: Only allow increments, never decrements
+        allow update: if isOwner(userId) &&
+                         request.resource.data.userId == userId &&
+                         // Prevent decrementing (CRITICAL SECURITY)
+                         request.resource.data.oirTestsUsed >= resource.data.oirTestsUsed &&
+                         request.resource.data.tatTestsUsed >= resource.data.tatTestsUsed &&
+                         request.resource.data.watTestsUsed >= resource.data.watTestsUsed &&
+                         request.resource.data.srtTestsUsed >= resource.data.srtTestsUsed &&
+                         request.resource.data.ppdtTestsUsed >= resource.data.ppdtTestsUsed &&
+                         request.resource.data.gtoTestsUsed >= resource.data.gtoTestsUsed &&
+                         request.resource.data.interviewTestsUsed >= resource.data.interviewTestsUsed &&
+                         request.resource.data.sdTestsUsed >= resource.data.sdTestsUsed &&
+                         // Limit maximum increment per update (prevent abuse)
+                         request.resource.data.oirTestsUsed <= resource.data.oirTestsUsed + 10 &&
+                         request.resource.data.tatTestsUsed <= resource.data.tatTestsUsed + 10 &&
+                         request.resource.data.watTestsUsed <= resource.data.watTestsUsed + 10 &&
+                         request.resource.data.srtTestsUsed <= resource.data.srtTestsUsed + 10 &&
+                         request.resource.data.ppdtTestsUsed <= resource.data.ppdtTestsUsed + 10 &&
+                         request.resource.data.gtoTestsUsed <= resource.data.gtoTestsUsed + 10 &&
+                         request.resource.data.interviewTestsUsed <= resource.data.interviewTestsUsed + 10 &&
+                         request.resource.data.sdTestsUsed <= resource.data.sdTestsUsed + 10;
+        
+        // NEVER allow delete (audit trail)
+        allow delete: if false;
       }
       
       // User subscription data
