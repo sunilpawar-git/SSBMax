@@ -85,35 +85,89 @@ class SubscriptionManager @Inject constructor(
     /**
      * Record that a test was taken
      * 
-     * SECURITY: Writes to Firestore (server-side) to prevent cache-clearing bypass
+     * SECURITY: Uses Firestore transaction for atomic increment
+     * RACE CONDITION PREVENTION: Multiple simultaneous submissions handled correctly
      */
-    suspend fun recordTestUsage(testType: TestType, userId: String) {
+    suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String? = null) {
         try {
             val currentMonth = getCurrentMonth()
+            val docRef = firestore.collection("users")
+                .document(userId)
+                .collection("subscription")
+                .document("usage_$currentMonth")
             
-            // Get current usage from Firestore
+            // Use Firestore Transaction for atomic operations
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(docRef)
+                
+                // Idempotency check: Prevent duplicate recording for same submission
+                if (submissionId != null && snapshot.exists()) {
+                    val recordedSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
+                    if (recordedSubmissions.contains(submissionId)) {
+                        Log.d(TAG, "⚠️ Submission $submissionId already recorded, skipping (idempotent)")
+                        return@runTransaction // Exit transaction without recording
+                    }
+                }
+                
+                if (!snapshot.exists()) {
+                    // Create new document with initial data
+                    val initialData = hashMapOf(
+                        "userId" to userId,
+                        "month" to currentMonth,
+                        "oirTestsUsed" to 0,
+                        "tatTestsUsed" to 0,
+                        "watTestsUsed" to 0,
+                        "srtTestsUsed" to 0,
+                        "ppdtTestsUsed" to 0,
+                        "gtoTestsUsed" to 0,
+                        "interviewTestsUsed" to 0,
+                        "sdTestsUsed" to 0,
+                        "lastUpdated" to System.currentTimeMillis(),
+                        "recordedSubmissions" to (if (submissionId != null) listOf(submissionId) else emptyList<String>())
+                    )
+                    transaction.set(docRef, initialData)
+                    Log.d(TAG, "📝 Created new usage document for $currentMonth")
+                } else {
+                    // Document exists, update with atomic increment
+                    val updates = hashMapOf<String, Any>(
+                        "lastUpdated" to System.currentTimeMillis()
+                    )
+                    
+                    // Add submission ID to recorded list if provided
+                    if (submissionId != null) {
+                        val existingSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
+                        updates["recordedSubmissions"] = existingSubmissions + submissionId
+                    }
+                    
+                    transaction.update(docRef, updates)
+                }
+                
+                // Atomic increment using FieldValue (prevents race conditions)
+                val fieldName = when (testType) {
+                    TestType.OIR -> "oirTestsUsed"
+                    TestType.TAT -> "tatTestsUsed"
+                    TestType.WAT -> "watTestsUsed"
+                    TestType.SRT -> "srtTestsUsed"
+                    TestType.PPDT -> "ppdtTestsUsed"
+                    TestType.GTO -> "gtoTestsUsed"
+                    TestType.IO -> "interviewTestsUsed"
+                    TestType.SD -> "sdTestsUsed"
+                    else -> null
+                }
+                
+                if (fieldName != null) {
+                    transaction.update(docRef, fieldName, com.google.firebase.firestore.FieldValue.increment(1))
+                }
+            }.await()
+            
+            // After successful Firestore transaction, update local Room DB
             val usage = getUsageFromFirestore(userId, currentMonth)
+            testUsageDao.insertOrReplace(usage)
             
-            val updatedUsage = when (testType) {
-                TestType.OIR -> usage.copy(oirTestsUsed = usage.oirTestsUsed + 1)
-                TestType.TAT -> usage.copy(tatTestsUsed = usage.tatTestsUsed + 1)
-                TestType.WAT -> usage.copy(watTestsUsed = usage.watTestsUsed + 1)
-                TestType.SRT -> usage.copy(srtTestsUsed = usage.srtTestsUsed + 1)
-                TestType.PPDT -> usage.copy(ppdtTestsUsed = usage.ppdtTestsUsed + 1)
-                TestType.GTO -> usage.copy(gtoTestsUsed = usage.gtoTestsUsed + 1)
-                else -> usage
-            }.copy(lastUpdated = System.currentTimeMillis())
-            
-            // Write to FIRESTORE (primary source of truth)
-            saveUsageToFirestore(userId, currentMonth, updatedUsage)
-            
-            // Also update local Room DB for offline reference
-            testUsageDao.insertOrReplace(updatedUsage)
-            
-            Log.d(TAG, "✅ Recorded $testType usage for $userId (saved to Firestore)")
+            Log.d(TAG, "✅ Atomically recorded $testType usage for $userId (Firestore transaction)")
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error recording test usage", e)
+            Log.e(TAG, "❌ Error recording test usage atomically", e)
             throw e // Propagate error so ViewModels know submission failed
         }
     }
