@@ -38,7 +38,8 @@ class WATTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WATTestUiState())
@@ -93,6 +94,13 @@ class WATTestViewModel @Inject constructor(
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: run {
                     android.util.Log.e("WATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                    
+                    // SECURITY: Log unauthenticated access attempt to Firebase Analytics
+                    securityLogger.logUnauthenticatedAccess(
+                        testType = TestType.WAT,
+                        context = "WATTestViewModel.loadTest"
+                    )
+                    
                     _uiState.update { it.copy(
                         isLoading = false,
                         loadingMessage = null,

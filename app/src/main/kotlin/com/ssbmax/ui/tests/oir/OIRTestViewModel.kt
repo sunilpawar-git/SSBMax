@@ -2,6 +2,7 @@ package com.ssbmax.ui.tests.oir
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -31,7 +32,8 @@ class OIRTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager
+    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val securityLogger: SecurityEventLogger
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -90,6 +92,13 @@ class OIRTestViewModel @Inject constructor(
             val user = observeCurrentUser().first()
             val userId = user?.id ?: run {
                 android.util.Log.e("OIRTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                
+                // SECURITY: Log unauthenticated access attempt to Firebase Analytics
+                securityLogger.logUnauthenticatedAccess(
+                    testType = TestType.OIR,
+                    context = "OIRTestViewModel.loadTest"
+                )
+                
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     loadingMessage = null,
