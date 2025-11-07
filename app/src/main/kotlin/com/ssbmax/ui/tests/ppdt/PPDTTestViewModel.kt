@@ -33,6 +33,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
@@ -270,14 +271,13 @@ class PPDTTestViewModel @Inject constructor(
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
                 
-                // TODO: Submit to repository (PPDT submission not yet fully implemented)
-                // For now, we create a local submission object to show results directly
+                // Generate submission ID
                 val submissionId = UUID.randomUUID().toString()
                 
                 // Generate AI preliminary score
                 val aiScore = generateMockAIScore(session.story)
                 
-                // Create local submission
+                // Create submission
                 val submission = PPDTSubmission(
                     submissionId = submissionId,
                     questionId = session.questionId,
@@ -294,6 +294,10 @@ class PPDTTestViewModel @Inject constructor(
                     aiPreliminaryScore = aiScore,
                     instructorReview = null
                 )
+                
+                // Submit to Firestore
+                submissionRepository.submitPPDT(submission, null).getOrThrow()
+                android.util.Log.d("PPDTTestViewModel", "✅ Submitted PPDT to Firestore: $submissionId")
                 
                 // Calculate score for analytics (story >200 chars is "valid")
                 val isValid = session.story.length >= 200
@@ -382,7 +386,7 @@ class PPDTTestViewModel @Inject constructor(
             isLoading = false,
             loadingMessage = null,
             currentPhase = session.currentPhase,
-            imageUrl = "https://example.com/ppdt-image.jpg", // TODO: Real URL
+            imageUrl = session.question.imageUrl,
             story = session.story,
             charactersCount = session.story.length,
             minCharacters = session.question.minCharacters,

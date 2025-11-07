@@ -34,7 +34,8 @@ class SubscriptionManager @Inject constructor(
     private val testUsageDao: TestUsageDao,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val firestore: FirebaseFirestore,
-    private val securityLogger: SecurityEventLogger
+    private val securityLogger: SecurityEventLogger,
+    private val debugConfig: com.ssbmax.core.data.debug.DebugConfig
 ) {
     private val TAG = "SubscriptionManager"
     
@@ -46,6 +47,16 @@ class SubscriptionManager @Inject constructor(
      */
     suspend fun canTakeTest(testType: TestType, userId: String): TestEligibility {
         try {
+            // 🔓 DEBUG BYPASS: Allow unlimited tests in debug builds
+            // This is ONLY active in debug variant, production builds have this disabled
+            // APPLIES TO ALL TESTS: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
+            if (debugConfig.bypassSubscriptionLimits) {
+                Log.w(TAG, "🔓 DEBUG BYPASS: Unlimited tests enabled for $testType (user: $userId)")
+                Log.w(TAG, "⚠️ This bypass is ONLY available in debug builds")
+                Log.w(TAG, "📋 Affected tests: ALL (OIR, PPDT, WAT, SRT, TAT, GTO, SD, Interview)")
+                return TestEligibility.Eligible(remainingTests = 999)
+            }
+            
             // Get user's subscription tier
             val userProfile = userProfileRepository.getUserProfile(userId).first().getOrNull()
             // Convert SubscriptionType to SubscriptionTier

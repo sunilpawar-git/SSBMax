@@ -26,12 +26,26 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            // TODO: Add applicationIdSuffix = ".debug" after updating Firebase console with debug app
+            // applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            
+            // Debug bypass for subscription limits during development
+            // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
+            buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
+        }
+        
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            
+            // Production: Subscription limits enforced
+            buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
         }
     }
     
@@ -46,6 +60,7 @@ android {
     
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     
     lint {

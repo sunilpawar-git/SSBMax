@@ -42,11 +42,32 @@ fun PPDTTestScreen(
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSubmitDialog by rememberSaveable { mutableStateOf(false) }
     
+    // Initialize test
+    LaunchedEffect(testId) {
+        viewModel.loadTest(testId)
+    }
+    
     // Handle test submission
     LaunchedEffect(uiState.isSubmitted) {
         if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
             onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
         }
+    }
+    
+    // Show limit reached dialog if needed
+    if (uiState.isLimitReached) {
+        com.ssbmax.ui.tests.common.TestLimitReachedDialog(
+            tier = uiState.subscriptionTier,
+            testsLimit = uiState.testsLimit,
+            testsUsed = uiState.testsUsed,
+            resetsAt = uiState.resetsAt,
+            onUpgrade = {
+                // TODO: Navigate to upgrade screen
+                onNavigateBack()
+            },
+            onDismiss = onNavigateBack
+        )
+        return
     }
     
     Scaffold(
