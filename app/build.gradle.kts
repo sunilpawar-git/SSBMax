@@ -147,3 +147,51 @@ dependencies {
     // Memory leak detection (debug builds only)
     debugImplementation(libs.leakcanary.android)
 }
+
+// Jacoco code coverage configuration
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports for Debug build"
+    
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    
+    val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+            "android/**/*.*",
+            "**/*\$ViewInjector*.*",
+            "**/*\$ViewBinder*.*",
+            "**/Lambda$*.class",
+            "**/Lambda.class",
+            "**/*Lambda.class",
+            "**/*Lambda*.class",
+            "**/*_MembersInjector.class",
+            "**/Dagger*Component*.*",
+            "**/*Module_*Factory.class",
+            "**/di/**",
+            "**/*_Factory*.*",
+            "**/*_Impl*.*",
+            "**/*Application*.*",
+            "**/HiltWrapper*.*",
+            "**/*_Hilt*.*"
+        )
+    }
+    
+    val mainSrc = "${project.projectDir}/src/main/kotlin"
+    
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(project.buildDir) {
+        include("jacoco/testDebugUnitTest.exec")
+    })
+}

@@ -7,4 +7,21 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.google.services) apply false
+    jacoco
+}
+
+// Configure Jacoco for all subprojects
+subprojects {
+    apply(plugin = "jacoco")
+    
+    configure<JacocoPluginExtension> {
+        toolVersion = "0.8.11"
+    }
+    
+    tasks.withType<Test> {
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
+    }
 }

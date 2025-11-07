@@ -374,8 +374,9 @@ class FirebaseRulesValidationTest {
             "TEST CONTENT",
             "TEST SESSIONS",
             "TEST SUBMISSIONS",
-            "SECURITY",
-            "OIR TEST CONTENT"
+            "OIR Test Content",
+            "WAT Test Content",
+            "SRT Test Content"
         )
         
         expectedSections.forEach { section ->

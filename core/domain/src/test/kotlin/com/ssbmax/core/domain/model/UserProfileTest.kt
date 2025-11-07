@@ -188,11 +188,11 @@ class UserProfileTest {
             age = 25,
             gender = Gender.MALE,
             entryType = EntryType.GRADUATE,
-            subscriptionType = SubscriptionType.PREMIUM_AI
+            subscriptionType = SubscriptionType.PREMIUM
         )
         
         // Then
-        assertEquals(SubscriptionType.PREMIUM_AI, profile.subscriptionType)
+        assertEquals(SubscriptionType.PREMIUM, profile.subscriptionType)
     }
     
     @Test
