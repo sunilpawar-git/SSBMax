@@ -26,6 +26,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     private lateinit var viewModel: PPDTTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSubmissionRepo = mockk<com.ssbmax.core.domain.repository.SubmissionRepository>(relaxed = true)
     private val mockObserveCurrentUser = mockk<com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
@@ -96,6 +97,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -127,6 +129,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -158,6 +161,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -179,6 +183,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -204,6 +209,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -230,6 +236,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -256,6 +263,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -289,6 +297,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -322,6 +331,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -351,6 +361,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -382,6 +393,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -409,6 +421,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -454,6 +467,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -494,6 +508,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -520,6 +535,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -545,6 +561,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -574,6 +591,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -601,6 +619,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -634,6 +653,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -666,6 +686,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
@@ -688,6 +709,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockDifficultyManager,
