@@ -29,6 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
@@ -345,21 +346,34 @@ class OIRTestViewModel @Inject constructor(
                 subscriptionManager.recordTestUsage(TestType.OIR, session.userId)
                 android.util.Log.d("OIRTestViewModel", "📝 Recorded test usage for subscription tracking")
                 
+                // Create OIR submission
+                val submissionId = UUID.randomUUID().toString()
+                val submission = OIRSubmission(
+                    id = submissionId,
+                    userId = session.userId,
+                    testId = session.testId,
+                    testResult = result,
+                    submittedAt = System.currentTimeMillis(),
+                    status = com.ssbmax.core.domain.model.SubmissionStatus.SUBMITTED_PENDING_REVIEW,
+                    gradedByInstructorId = null,
+                    gradingTimestamp = null
+                )
+                
+                // Submit to Firestore
+                submissionRepository.submitOIR(submission, null).getOrThrow()
+                android.util.Log.d("OIRTestViewModel", "✅ Submitted OIR to Firestore: $submissionId")
+                
                 // End test session
                 testContentRepository.endTestSession(session.sessionId)
                 
                 // Clear cached content
                 testContentRepository.clearCache()
                 
-                // TODO: Save results to repository (OIR submission model not yet implemented)
-                // For now, we pass the sessionId which will be used to show results directly
-                // instead of trying to fetch from Firestore (which would fail with PERMISSION_DENIED)
-                
-                // Mark test as completed
+                // Mark test as completed with submission ID
                 currentSession = session.copy(isCompleted = true)
                 _uiState.value = _uiState.value.copy(
                     isCompleted = true,
-                    sessionId = session.sessionId,
+                    sessionId = submissionId, // Use submissionId for consistency with other tests
                     subscriptionType = subscriptionType,
                     testResult = result
                 )
