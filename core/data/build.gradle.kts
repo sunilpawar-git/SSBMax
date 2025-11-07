@@ -33,6 +33,18 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
+tasks.withType<Test> {
+    systemProperty("firebase.emulator.host", "localhost")
+    systemProperty("firestore.emulator.host", "localhost:8080")
+    systemProperty("auth.emulator.host", "localhost:9099")
 }
 
 dependencies {

@@ -24,11 +24,9 @@ import org.junit.Test
  * Tests subscription tier loading, usage tracking, error handling,
  * and UI state management.
  * 
- * NOTE: These tests currently require proper Firebase Task mocking or Firebase emulator.
- * They are temporarily ignored pending mock improvements or conversion to instrumented tests.
- * The ViewModel logic is validated via manual testing and E2E tests.
+ * Tests use MockK to properly mock Firebase Task responses.
+ * Firebase emulator configuration is available in core/data/build.gradle.kts.
  */
-@Ignore("Requires improved Firebase Task mocking or emulator setup")
 class SubscriptionManagementViewModelTest : BaseViewModelTest() {
     
     companion object {
@@ -248,16 +246,35 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         every { mockFirebaseAuth.currentUser } returns mockUser
         every { mockUser.uid } returns "test-user-123"
         
-        val mockCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
-        val mockDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockUsersCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUserDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockDataCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockSubscriptionDocRef = mockk<DocumentReference>(relaxed = true)
         val mockTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
         
-        every { mockFirestore.collection("users") } returns mockCollection
-        every { mockCollection.document(any()) } returns mockDocRef
-        every { mockDocRef.collection(any()) } returns mockCollection
-        every { mockDocRef.get() } returns mockTask
+        val testException = Exception("Network error")
+        
+        every { mockFirestore.collection("users") } returns mockUsersCollection
+        every { mockUsersCollection.document(any()) } returns mockUserDocRef
+        every { mockUserDocRef.collection("data") } returns mockDataCollection
+        every { mockDataCollection.document("subscription") } returns mockSubscriptionDocRef
+        every { mockSubscriptionDocRef.get() } returns mockTask
+        
+        // Mock Task to fail
         every { mockTask.isSuccessful } returns false
-        every { mockTask.exception } returns Exception("Network error")
+        every { mockTask.isComplete } returns true
+        every { mockTask.exception } returns testException
+        
+        // Mock failure callback for await()
+        every { mockTask.addOnSuccessListener(any()) } returns mockTask
+        every { 
+            mockTask.addOnFailureListener(any())
+        } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnFailureListener>()
+            listener.onFailure(testException)
+            mockTask
+        }
+        every { mockTask.addOnCompleteListener(any()) } returns mockTask
         
         viewModel = SubscriptionManagementViewModel(mockFirebaseAuth, mockFirestore)
         
@@ -277,9 +294,14 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loads successfully even when usage document is missing`() = runTest {
-        // Given - tier exists but usage document doesn't
-        val mockCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
-        val mockDocRef = mockk<DocumentReference>(relaxed = true)
+        // Given - tier exists but usage document returns nulls
+        val mockUsersCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUserDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockDataCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUsageCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockSubscriptionDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockUsageDocRef = mockk<DocumentReference>(relaxed = true)
+        
         val mockTierTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
         val mockUsageTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
         val mockTierDoc = mockk<DocumentSnapshot>(relaxed = true)
@@ -288,20 +310,51 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         every { mockFirebaseAuth.currentUser } returns mockUser
         every { mockUser.uid } returns "test-user-123"
         
-        every { mockFirestore.collection("users") } returns mockCollection
-        every { mockCollection.document(any()) } returns mockDocRef
-        every { mockDocRef.collection(any()) } returns mockCollection
-        every { mockDocRef.get() } returns mockTierTask andThen mockUsageTask
+        // Mock Firestore navigation
+        every { mockFirestore.collection("users") } returns mockUsersCollection
+        every { mockUsersCollection.document(any()) } returns mockUserDocRef
+        every { mockUserDocRef.collection("data") } returns mockDataCollection
+        every { mockDataCollection.document("subscription") } returns mockSubscriptionDocRef
+        every { mockSubscriptionDocRef.get() } returns mockTierTask
+        every { mockUserDocRef.collection("test_usage") } returns mockUsageCollection
+        every { mockUsageCollection.document(any()) } returns mockUsageDocRef
+        every { mockUsageDocRef.get() } returns mockUsageTask
         
         // Tier document exists
         every { mockTierTask.isSuccessful } returns true
+        every { mockTierTask.isComplete } returns true
         every { mockTierTask.result } returns mockTierDoc
+        every { mockTierTask.exception } returns null
         every { mockTierDoc.getString("tier") } returns "PRO"
+        every { mockTierDoc.exists() } returns true
         
         // Usage document doesn't exist (returns nulls)
         every { mockUsageTask.isSuccessful } returns true
+        every { mockUsageTask.isComplete } returns true
         every { mockUsageTask.result } returns mockUsageDoc
+        every { mockUsageTask.exception } returns null
         every { mockUsageDoc.getLong(any()) } returns null
+        every { mockUsageDoc.exists() } returns false
+        
+        // Mock callbacks for await()
+        every { 
+            mockTierTask.addOnSuccessListener(any())
+        } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+            listener.onSuccess(mockTierDoc)
+            mockTierTask
+        }
+        every { 
+            mockUsageTask.addOnSuccessListener(any())
+        } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+            listener.onSuccess(mockUsageDoc)
+            mockUsageTask
+        }
+        every { mockTierTask.addOnFailureListener(any()) } returns mockTierTask
+        every { mockTierTask.addOnCompleteListener(any()) } returns mockTierTask
+        every { mockUsageTask.addOnFailureListener(any()) } returns mockUsageTask
+        every { mockUsageTask.addOnCompleteListener(any()) } returns mockUsageTask
         
         viewModel = SubscriptionManagementViewModel(mockFirebaseAuth, mockFirestore)
         
@@ -330,31 +383,73 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         srtUsed: Int = 0,
         ppdtUsed: Int = 0
     ) {
-        val mockCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
-        val mockDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockUsersCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUserDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockDataCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUsageCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockSubscriptionDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockUsageDocRef = mockk<DocumentReference>(relaxed = true)
+        
         val mockTierTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
         val mockUsageTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
         val mockTierDoc = mockk<DocumentSnapshot>(relaxed = true)
         val mockUsageDoc = mockk<DocumentSnapshot>(relaxed = true)
         
-        every { mockFirestore.collection("users") } returns mockCollection
-        every { mockCollection.document(any()) } returns mockDocRef
-        every { mockDocRef.collection(any()) } returns mockCollection
-        every { mockDocRef.get() } returns mockTierTask andThen mockUsageTask
+        // Mock Firestore collection navigation
+        every { mockFirestore.collection("users") } returns mockUsersCollection
+        every { mockUsersCollection.document(any()) } returns mockUserDocRef
         
-        // Tier document
+        // Mock data subcollection for subscription tier
+        every { mockUserDocRef.collection("data") } returns mockDataCollection
+        every { mockDataCollection.document("subscription") } returns mockSubscriptionDocRef
+        every { mockSubscriptionDocRef.get() } returns mockTierTask
+        
+        // Mock test_usage subcollection
+        every { mockUserDocRef.collection("test_usage") } returns mockUsageCollection
+        every { mockUsageCollection.document(any()) } returns mockUsageDocRef
+        every { mockUsageDocRef.get() } returns mockUsageTask
+        
+        // Setup tier document mock with await() support
         every { mockTierTask.isSuccessful } returns true
+        every { mockTierTask.isComplete } returns true
         every { mockTierTask.result } returns mockTierDoc
+        every { mockTierTask.exception } returns null
         every { mockTierDoc.getString("tier") } returns tier
+        every { mockTierDoc.exists() } returns (tier != null)
         
-        // Usage document
+        // Setup usage document mock with await() support
         every { mockUsageTask.isSuccessful } returns true
+        every { mockUsageTask.isComplete } returns true
         every { mockUsageTask.result } returns mockUsageDoc
+        every { mockUsageTask.exception } returns null
         every { mockUsageDoc.getLong("oirTestsUsed") } returns oirUsed.toLong()
         every { mockUsageDoc.getLong("tatTestsUsed") } returns tatUsed.toLong()
         every { mockUsageDoc.getLong("watTestsUsed") } returns watUsed.toLong()
         every { mockUsageDoc.getLong("srtTestsUsed") } returns srtUsed.toLong()
         every { mockUsageDoc.getLong("ppdtTestsUsed") } returns ppdtUsed.toLong()
+        every { mockUsageDoc.exists() } returns true
+        
+        // Mock Task callback registration for await() support
+        every { 
+            mockTierTask.addOnSuccessListener(any())
+        } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+            listener.onSuccess(mockTierDoc)
+            mockTierTask
+        }
+        
+        every { 
+            mockUsageTask.addOnSuccessListener(any())
+        } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
+            listener.onSuccess(mockUsageDoc)
+            mockUsageTask
+        }
+        
+        every { mockTierTask.addOnFailureListener(any()) } returns mockTierTask
+        every { mockTierTask.addOnCompleteListener(any()) } returns mockTierTask
+        every { mockUsageTask.addOnFailureListener(any()) } returns mockUsageTask
+        every { mockUsageTask.addOnCompleteListener(any()) } returns mockUsageTask
     }
 }
 
