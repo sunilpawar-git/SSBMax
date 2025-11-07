@@ -389,8 +389,8 @@ private fun OIRSubmission.toMap(): Map<String, Any?> {
             "timeTakenSeconds" to testResult.timeTakenSeconds,
             "rawScore" to testResult.rawScore,
             "percentageScore" to testResult.percentageScore,
-            "categoryScores" to testResult.categoryScores.mapValues { (_, score) ->
-                mapOf(
+            "categoryScores" to testResult.categoryScores.entries.associate { (category, score) ->
+                category.name to mapOf(
                     "category" to score.category.name,
                     "totalQuestions" to score.totalQuestions,
                     "correctAnswers" to score.correctAnswers,
@@ -398,8 +398,8 @@ private fun OIRSubmission.toMap(): Map<String, Any?> {
                     "averageTimeSeconds" to score.averageTimeSeconds
                 )
             },
-            "difficultyBreakdown" to testResult.difficultyBreakdown.mapValues { (_, score) ->
-                mapOf(
+            "difficultyBreakdown" to testResult.difficultyBreakdown.entries.associate { (difficulty, score) ->
+                difficulty.name to mapOf(
                     "difficulty" to score.difficulty.name,
                     "totalQuestions" to score.totalQuestions,
                     "correctAnswers" to score.correctAnswers,
