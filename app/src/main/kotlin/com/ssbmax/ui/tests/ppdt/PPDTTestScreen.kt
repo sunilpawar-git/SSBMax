@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.ppdt
 
 import androidx.compose.animation.*
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,12 +17,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ssbmax.core.domain.model.PPDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -431,14 +436,65 @@ private fun ImageViewingPhase(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                // TODO: Load actual image from URL
-                // For now, show placeholder
-                Image(
-                    painter = rememberAsyncImagePainter(imageUrl),
-                    contentDescription = "PPDT Test Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                val context = LocalContext.current
+                
+                // Log the URL being loaded
+                LaunchedEffect(imageUrl) {
+                    Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
+                }
+                
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .listener(
+                            onStart = {
+                                Log.d("PPDTTestScreen", "🖼️ Image loading started...")
+                            },
+                            onSuccess = { _, _ ->
+                                Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
+                            },
+                            onError = { _, result ->
+                                Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
+                            }
+                        )
+                        .build()
                 )
+                
+                // Show loading/error states based on painter state
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is AsyncImagePainter.State.Error -> {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BrokenImage,
+                                contentDescription = "Image Error",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Failed to load image",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    else -> {
+                        Image(
+                            painter = painter,
+                            contentDescription = "PPDT Test Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
             }
         }
         
