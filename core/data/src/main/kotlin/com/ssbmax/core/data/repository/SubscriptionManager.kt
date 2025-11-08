@@ -50,11 +50,20 @@ class SubscriptionManager @Inject constructor(
             // 🔓 DEBUG BYPASS: Allow unlimited tests in debug builds
             // This is ONLY active in debug variant, production builds have this disabled
             // APPLIES TO ALL TESTS: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
+            Log.d(TAG, "🔍 Debug bypass status: ${debugConfig.bypassSubscriptionLimits}")
             if (debugConfig.bypassSubscriptionLimits) {
-                Log.w(TAG, "🔓 DEBUG BYPASS: Unlimited tests enabled for $testType (user: $userId)")
-                Log.w(TAG, "⚠️ This bypass is ONLY available in debug builds")
+                Log.w(TAG, "════════════════════════════════════════")
+                Log.w(TAG, "🔓 DEBUG BYPASS ACTIVE!")
+                Log.w(TAG, "   Unlimited tests enabled for $testType")
+                Log.w(TAG, "   User: $userId")
+                Log.w(TAG, "   Returning: 999 remaining tests")
+                Log.w(TAG, "⚠️  This bypass is ONLY active when BYPASS_SUBSCRIPTION_LIMITS=true")
                 Log.w(TAG, "📋 Affected tests: ALL (OIR, PPDT, WAT, SRT, TAT, GTO, SD, Interview)")
+                Log.w(TAG, "💡 To test real subscription limits, set BYPASS_SUBSCRIPTION_LIMITS=false in build.gradle.kts")
+                Log.w(TAG, "════════════════════════════════════════")
                 return TestEligibility.Eligible(remainingTests = 999)
+            } else {
+                Log.d(TAG, "✅ Debug bypass is DISABLED - checking real subscription limits")
             }
             
             // Get user's subscription tier

@@ -56,13 +56,15 @@ class TestContentRepositoryImplTest {
         mockSRTCacheManager = mockk(relaxed = true)
         
         val mockPPDTImageCacheManager = mockk<PPDTImageCacheManager>(relaxed = true)
+        val mockTATImageCacheManager = mockk<TATImageCacheManager>(relaxed = true)
         
         repository = TestContentRepositoryImpl(
             firestore = mockFirestore,
             oirCacheManager = mockCacheManager,
             watWordCacheManager = mockWATCacheManager,
             srtSituationCacheManager = mockSRTCacheManager,
-            ppdtImageCacheManager = mockPPDTImageCacheManager
+            ppdtImageCacheManager = mockPPDTImageCacheManager,
+            tatImageCacheManager = mockTATImageCacheManager
         )
     }
     

@@ -1,6 +1,5 @@
 package com.ssbmax.core.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedTATImageEntity
@@ -30,27 +29,73 @@ class TATImageCacheManager @Inject constructor(
         private const val MIN_CACHE_SIZE = 4 // Minimum before resyncing
     }
     
+    // Safe logging that works in unit tests
+    private fun logD(message: String) {
+        try {
+            Class.forName("android.util.Log")
+                .getMethod("d", String::class.java, String::class.java)
+                .invoke(null, TAG, message)
+        } catch (e: Exception) {
+            // Silent fail in unit tests
+            println("$TAG: $message")
+        }
+    }
+    
+    private fun logW(message: String, throwable: Throwable? = null) {
+        try {
+            if (throwable != null) {
+                Class.forName("android.util.Log")
+                    .getMethod("w", String::class.java, String::class.java, Throwable::class.java)
+                    .invoke(null, TAG, message, throwable)
+            } else {
+                Class.forName("android.util.Log")
+                    .getMethod("w", String::class.java, String::class.java)
+                    .invoke(null, TAG, message)
+            }
+        } catch (e: Exception) {
+            // Silent fail in unit tests
+            println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
+        }
+    }
+    
+    private fun logE(message: String, throwable: Throwable? = null) {
+        try {
+            if (throwable != null) {
+                Class.forName("android.util.Log")
+                    .getMethod("e", String::class.java, String::class.java, Throwable::class.java)
+                    .invoke(null, TAG, message, throwable)
+            } else {
+                Class.forName("android.util.Log")
+                    .getMethod("e", String::class.java, String::class.java)
+                    .invoke(null, TAG, message)
+            }
+        } catch (e: Exception) {
+            // Silent fail in unit tests
+            System.err.println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
+        }
+    }
+    
     /**
      * Initialize cache with first batch
      * Called when app starts or cache is empty
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
-            Log.d(TAG, "Starting initial sync...")
+            logD("Starting initial sync...")
             
             val currentCount = dao.getTotalImageCount()
             if (currentCount >= TARGET_CACHE_SIZE) {
-                Log.d(TAG, "Cache already initialized ($currentCount images)")
+                logD("Cache already initialized ($currentCount images)")
                 return Result.success(Unit)
             }
             
             // Download first batch
             downloadBatch("batch_001").getOrThrow()
             
-            Log.d(TAG, "Initial sync complete")
+            logD("Initial sync complete")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Initial sync failed", e)
+            logE("Initial sync failed", e)
             Result.failure(e)
         }
     }
@@ -60,7 +105,7 @@ class TATImageCacheManager @Inject constructor(
      */
     suspend fun downloadBatch(batchId: String): Result<Unit> {
         return try {
-            Log.d(TAG, "Downloading batch: $batchId")
+            logD("Downloading batch: $batchId")
             
             val doc = firestore.document("$COLLECTION_PATH/$batchId").get().await()
             
@@ -96,7 +141,7 @@ class TATImageCacheManager @Inject constructor(
                         imageDownloaded = false
                     )
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to parse image: ${imageMap["id"]}", e)
+                    logW("Failed to parse image: ${imageMap["id"]}", e)
                     null
                 }
             }
@@ -116,10 +161,10 @@ class TATImageCacheManager @Inject constructor(
                 )
             )
             
-            Log.d(TAG, "Downloaded batch $batchId: ${images.size} images")
+            logD("Downloaded batch $batchId: ${images.size} images")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to download batch $batchId", e)
+            logE("Failed to download batch $batchId", e)
             Result.failure(e)
         }
     }
@@ -129,12 +174,12 @@ class TATImageCacheManager @Inject constructor(
      */
     suspend fun getImagesForTest(count: Int = 12): Result<List<TATQuestion>> {
         return try {
-            Log.d(TAG, "Getting $count images for test")
+            logD("Getting $count images for test")
             
             // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
-                Log.w(TAG, "Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
+                logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
             
@@ -162,10 +207,10 @@ class TATImageCacheManager @Inject constructor(
                 )
             }
             
-            Log.d(TAG, "Retrieved ${questions.size} images for test")
+            logD("Retrieved ${questions.size} images for test")
             Result.success(questions)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get images for test", e)
+            logE("Failed to get images for test", e)
             Result.failure(e)
         }
     }
@@ -188,7 +233,7 @@ class TATImageCacheManager @Inject constructor(
                 lastSyncTime = lastSyncTime
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get cache status", e)
+            logE("Failed to get cache status", e)
             TATCacheStatus()
         }
     }
@@ -198,11 +243,11 @@ class TATImageCacheManager @Inject constructor(
      */
     suspend fun clearCache() {
         try {
-            Log.d(TAG, "Clearing cache...")
+            logD("Clearing cache...")
             dao.clearAllImages()
-            Log.d(TAG, "Cache cleared")
+            logD("Cache cleared")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to clear cache", e)
+            logE("Failed to clear cache", e)
         }
     }
 }
