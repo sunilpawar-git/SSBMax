@@ -1,0 +1,17 @@
+🎯 Recommendations for Future Test Implementations
+When implementing GTO, Self Description, or Interview tests:
+1. Data Model Design
+Avoid using Map<EnumType, ...> in data classes that will be serialized to Firestore
+If you must use enums as keys, always convert to strings during serialization:
+  "myMap" to myMap.entries.associate { it.key.name to it.value }
+2. Follow the SRT Pattern
+Use .mapKeys { it.key.name } for enum-key maps
+Reference SRTAIScore.toMap() and SRTInstructorScore.toMap() as examples
+3. Testing Checklist
+✅ Create unit tests for submission serialization (like FirestoreSubmissionRepositoryTest)
+✅ Test end-to-end submission flow manually on device/emulator
+✅ Verify submissions appear in Firebase Console
+✅ Check that all enum fields are correctly serialized
+4. Security Rules
+Ensure Firestore rules allow writing to submissions/{submissionId}
+Test with actual authentication (not just emulator/debug mode)

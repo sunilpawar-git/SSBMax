@@ -61,25 +61,22 @@ echo ""
 UPLOADED=0
 FAILED=0
 
-for i in {1..30}; do
-    # Format number with leading zeros
-    NUM=$(printf "%03d" $i)
-    IMAGE_FILE="ppdt_${NUM}.jpg"
-    LOCAL_PATH="$IMAGES_DIR/$IMAGE_FILE"
-    STORAGE_PATH="ppdt_images/batch_001/$IMAGE_FILE"
-    
+# Get all ppdt images and upload them
+for LOCAL_PATH in "$IMAGES_DIR"/ppdt_*.jpg; do
     if [ -f "$LOCAL_PATH" ]; then
+        IMAGE_FILE=$(basename "$LOCAL_PATH")
+        STORAGE_PATH="ppdt_images/batch_001/$IMAGE_FILE"
+        
         echo "⬆️  Uploading $IMAGE_FILE..."
         
-        if gsutil cp "$LOCAL_PATH" "gs://${PROJECT_ID}.appspot.com/$STORAGE_PATH" 2>/dev/null; then
+        # Use Firebase CLI to upload
+        if firebase storage:upload "$LOCAL_PATH" "$STORAGE_PATH" --project "$PROJECT_ID"; then
             echo "   ✅ Success"
             ((UPLOADED++))
         else
-            echo "   ❌ Failed"
+            echo "   ❌ Failed (see error above)"
             ((FAILED++))
         fi
-    else
-        echo "⚠️  Skipping $IMAGE_FILE (not found)"
     fi
 done
 
