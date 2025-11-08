@@ -122,6 +122,62 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     }
 
     /**
+     * Submit PPDT test
+     */
+    override suspend fun submitPPDT(submission: PPDTSubmission, batchId: String?): Result<String> {
+        return try {
+            val submissionMap = mapOf(
+                FIELD_ID to submission.submissionId,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.questionId,
+                FIELD_TEST_TYPE to TestType.PPDT.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to null,
+                FIELD_GRADING_TIMESTAMP to null,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to submission.toMap()
+            )
+
+            submissionsCollection.document(submission.submissionId)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Result.success(submission.submissionId)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to submit PPDT: ${e.message}", e))
+        }
+    }
+
+    /**
+     * Submit OIR test
+     */
+    override suspend fun submitOIR(submission: OIRSubmission, batchId: String?): Result<String> {
+        return try {
+            val submissionMap = mapOf(
+                FIELD_ID to submission.id,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.testId,
+                FIELD_TEST_TYPE to TestType.OIR.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
+                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to submission.toMap()
+            )
+
+            submissionsCollection.document(submission.id)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Result.success(submission.id)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to submit OIR: ${e.message}", e))
+        }
+    }
+
+    /**
      * Get submission by ID
      */
     override suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?> {
@@ -316,6 +372,114 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
 /**
  * Extension functions to convert domain models to maps for Firestore
  */
+private fun OIRSubmission.toMap(): Map<String, Any?> {
+    return mapOf(
+        "id" to id,
+        "userId" to userId,
+        "testId" to testId,
+        "testResult" to mapOf(
+            "testId" to testResult.testId,
+            "sessionId" to testResult.sessionId,
+            "userId" to testResult.userId,
+            "totalQuestions" to testResult.totalQuestions,
+            "correctAnswers" to testResult.correctAnswers,
+            "incorrectAnswers" to testResult.incorrectAnswers,
+            "skippedQuestions" to testResult.skippedQuestions,
+            "totalTimeSeconds" to testResult.totalTimeSeconds,
+            "timeTakenSeconds" to testResult.timeTakenSeconds,
+            "rawScore" to testResult.rawScore,
+            "percentageScore" to testResult.percentageScore,
+            "categoryScores" to testResult.categoryScores.entries.associate { (category, score) ->
+                category.name to mapOf(
+                    "category" to score.category.name,
+                    "totalQuestions" to score.totalQuestions,
+                    "correctAnswers" to score.correctAnswers,
+                    "percentage" to score.percentage,
+                    "averageTimeSeconds" to score.averageTimeSeconds
+                )
+            },
+            "difficultyBreakdown" to testResult.difficultyBreakdown.entries.associate { (difficulty, score) ->
+                difficulty.name to mapOf(
+                    "difficulty" to score.difficulty.name,
+                    "totalQuestions" to score.totalQuestions,
+                    "correctAnswers" to score.correctAnswers,
+                    "percentage" to score.percentage
+                )
+            },
+            "answeredQuestions" to testResult.answeredQuestions.map { aq ->
+                mapOf(
+                    "questionId" to aq.question.id,
+                    "questionNumber" to aq.question.questionNumber,
+                    "questionType" to aq.question.type.name,
+                    "questionText" to aq.question.questionText,
+                    "difficulty" to aq.question.difficulty.name,
+                    "correctAnswerId" to aq.question.correctAnswerId,
+                    "selectedOptionId" to aq.userAnswer.selectedOptionId,
+                    "isCorrect" to aq.isCorrect,
+                    "timeTakenSeconds" to aq.userAnswer.timeTakenSeconds,
+                    "skipped" to aq.userAnswer.skipped
+                )
+            },
+            "completedAt" to testResult.completedAt,
+            "passed" to testResult.passed,
+            "grade" to testResult.grade.name
+        ),
+        "submittedAt" to submittedAt,
+        "status" to status.name,
+        "gradedByInstructorId" to gradedByInstructorId,
+        "gradingTimestamp" to gradingTimestamp
+    )
+}
+
+private fun PPDTSubmission.toMap(): Map<String, Any?> {
+    return mapOf(
+        "submissionId" to submissionId,
+        "questionId" to questionId,
+        "userId" to userId,
+        "userName" to userName,
+        "userEmail" to userEmail,
+        "batchId" to batchId,
+        "story" to story,
+        "charactersCount" to charactersCount,
+        "viewingTimeTakenSeconds" to viewingTimeTakenSeconds,
+        "writingTimeTakenMinutes" to writingTimeTakenMinutes,
+        "submittedAt" to submittedAt,
+        "status" to status.name,
+        "aiPreliminaryScore" to aiPreliminaryScore?.let {
+            mapOf(
+                "perceptionScore" to it.perceptionScore,
+                "imaginationScore" to it.imaginationScore,
+                "narrationScore" to it.narrationScore,
+                "characterDepictionScore" to it.characterDepictionScore,
+                "positivityScore" to it.positivityScore,
+                "overallScore" to it.overallScore,
+                "feedback" to it.feedback,
+                "strengths" to it.strengths,
+                "areasForImprovement" to it.areasForImprovement
+            )
+        },
+        "instructorReview" to instructorReview?.let {
+            mapOf(
+                "reviewId" to it.reviewId,
+                "instructorId" to it.instructorId,
+                "instructorName" to it.instructorName,
+                "finalScore" to it.finalScore,
+                "feedback" to it.feedback,
+                "detailedScores" to mapOf(
+                    "perception" to it.detailedScores.perception,
+                    "imagination" to it.detailedScores.imagination,
+                    "narration" to it.detailedScores.narration,
+                    "characterDepiction" to it.detailedScores.characterDepiction,
+                    "positivity" to it.detailedScores.positivity
+                ),
+                "agreedWithAI" to it.agreedWithAI,
+                "reviewedAt" to it.reviewedAt,
+                "timeSpentMinutes" to it.timeSpentMinutes
+            )
+        }
+    )
+}
+
 private fun TATSubmission.toMap(): Map<String, Any?> {
     return mapOf(
         "id" to id,

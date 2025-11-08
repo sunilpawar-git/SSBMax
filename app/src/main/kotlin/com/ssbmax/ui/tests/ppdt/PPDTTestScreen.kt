@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.ppdt
 
 import androidx.compose.animation.*
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,12 +17,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ssbmax.core.domain.model.PPDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -42,11 +47,32 @@ fun PPDTTestScreen(
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSubmitDialog by rememberSaveable { mutableStateOf(false) }
     
+    // Initialize test
+    LaunchedEffect(testId) {
+        viewModel.loadTest(testId)
+    }
+    
     // Handle test submission
     LaunchedEffect(uiState.isSubmitted) {
         if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
             onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
         }
+    }
+    
+    // Show limit reached dialog if needed
+    if (uiState.isLimitReached) {
+        com.ssbmax.ui.tests.common.TestLimitReachedDialog(
+            tier = uiState.subscriptionTier,
+            testsLimit = uiState.testsLimit,
+            testsUsed = uiState.testsUsed,
+            resetsAt = uiState.resetsAt,
+            onUpgrade = {
+                // TODO: Navigate to upgrade screen
+                onNavigateBack()
+            },
+            onDismiss = onNavigateBack
+        )
+        return
     }
     
     Scaffold(
@@ -379,6 +405,10 @@ private fun ImageViewingPhase(
     imageUrl: String,
     timeRemainingSeconds: Int
 ) {
+    // CRITICAL DEBUG: Log every time this composable is called
+    android.util.Log.d("PPDTTestScreen", "🎨 ImageViewingPhase recomposed with imageUrl: $imageUrl")
+    android.util.Log.d("PPDTTestScreen", "🎨 imageUrl length: ${imageUrl.length}, isEmpty: ${imageUrl.isEmpty()}")
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -410,14 +440,57 @@ private fun ImageViewingPhase(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                // TODO: Load actual image from URL
-                // For now, show placeholder
-                Image(
-                    painter = rememberAsyncImagePainter(imageUrl),
-                    contentDescription = "PPDT Test Image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
-                )
+                // Show imageUrl in UI for debugging
+                if (imageUrl.isEmpty()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "⚠️ IMAGE URL IS EMPTY",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Check ViewModel logs",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                } else {
+                    val context = LocalContext.current
+                    
+                    // Log the URL being loaded (only when URL changes)
+                    LaunchedEffect(imageUrl) {
+                        android.util.Log.d("PPDTTestScreen", "🖼️ NEW URL SET: $imageUrl")
+                    }
+                    
+                    // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
+                    // This ensures the request is ONLY recreated when imageUrl changes
+                    val imageRequest = remember(imageUrl) {
+                        android.util.Log.d("PPDTTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
+                        ImageRequest.Builder(context)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .listener(
+                                onStart = {
+                                    android.util.Log.d("PPDTTestScreen", "🖼️ Coil: Loading started")
+                                },
+                                onSuccess = { _, _ ->
+                                    android.util.Log.d("PPDTTestScreen", "✅ Coil: Image loaded successfully!")
+                                },
+                                onError = { _, result ->
+                                    android.util.Log.e("PPDTTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
+                                }
+                            )
+                            .build()
+                    }
+                    
+                    // AsyncImage with stable model - won't restart on recomposition
+                    AsyncImage(
+                        model = imageRequest,
+                        contentDescription = "PPDT Test Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
         

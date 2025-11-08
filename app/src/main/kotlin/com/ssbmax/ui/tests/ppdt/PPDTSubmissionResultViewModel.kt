@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,38 +27,38 @@ class PPDTSubmissionResultViewModel @Inject constructor(
     
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.update { it.copy(isLoading = true) }
             
             submissionRepository.getSubmission(submissionId)
                 .onSuccess { data ->
                     if (data == null) {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             error = "Submission not found"
-                        )
+                        ) }
                         return@onSuccess
                     }
 
                     // Parse PPDT submission from map
                     val submission = parsePPDTSubmission(data)
                     if (submission != null) {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             submission = submission
-                        )
+                        ) }
                     } else {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             error = "Failed to parse submission data"
-                        )
+                        ) }
                     }
                 }
                 .onFailure { error ->
                     Log.e("PPDTSubmissionResult", "Error loading submission", error)
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load submission"
-                    )
+                    ) }
                 }
         }
     }
@@ -88,32 +89,17 @@ class PPDTSubmissionResultViewModel @Inject constructor(
             // Parse instructor review if present
             val instructorReviewData = submissionData["instructorReview"] as? Map<*, *>
             val instructorReview = instructorReviewData?.let {
-                // Parse detailed scores
                 val detailedScoresData = it["detailedScores"] as? Map<*, *>
-                val detailedScores = if (detailedScoresData != null) {
+                val detailedScores = detailedScoresData?.let { scores ->
                     PPDTDetailedScores(
-                        perception = (detailedScoresData["perception"] as? Number)?.toFloat() ?: 0f,
-                        imagination = (detailedScoresData["imagination"] as? Number)?.toFloat() ?: 0f,
-                        narration = (detailedScoresData["narration"] as? Number)?.toFloat() ?: 0f,
-                        characterDepiction = (detailedScoresData["characterDepiction"] as? Number)?.toFloat() ?: 0f,
-                        positivity = (detailedScoresData["positivity"] as? Number)?.toFloat() ?: 0f,
-                        notes = (detailedScoresData["notes"] as? Map<*, *>)?.mapNotNull { entry ->
-                            val key = entry.key as? String
-                            val value = entry.value as? String
-                            if (key != null && value != null) key to value else null
-                        }?.toMap() ?: emptyMap()
+                        perception = (scores["perception"] as? Number)?.toFloat() ?: 0f,
+                        imagination = (scores["imagination"] as? Number)?.toFloat() ?: 0f,
+                        narration = (scores["narration"] as? Number)?.toFloat() ?: 0f,
+                        characterDepiction = (scores["characterDepiction"] as? Number)?.toFloat() ?: 0f,
+                        positivity = (scores["positivity"] as? Number)?.toFloat() ?: 0f
                     )
-                } else {
-                    // Create default scores if not present
-                    PPDTDetailedScores(
-                        perception = 0f,
-                        imagination = 0f,
-                        narration = 0f,
-                        characterDepiction = 0f,
-                        positivity = 0f
-                    )
-                }
-
+                } ?: PPDTDetailedScores(0f, 0f, 0f, 0f, 0f)
+                
                 PPDTInstructorReview(
                     reviewId = it["reviewId"] as? String ?: "",
                     instructorId = it["instructorId"] as? String ?: "",
@@ -128,18 +114,16 @@ class PPDTSubmissionResultViewModel @Inject constructor(
             }
 
             PPDTSubmission(
-                submissionId = submissionData["submissionId"] as? String 
-                    ?: data["id"] as? String ?: "",
+                submissionId = submissionData["submissionId"] as? String ?: data["id"] as? String ?: "",
                 questionId = submissionData["questionId"] as? String ?: "",
-                userId = submissionData["userId"] as? String 
-                    ?: data["userId"] as? String ?: "",
+                userId = submissionData["userId"] as? String ?: data["userId"] as? String ?: "",
                 userName = submissionData["userName"] as? String ?: "",
                 userEmail = submissionData["userEmail"] as? String ?: "",
                 batchId = submissionData["batchId"] as? String,
                 story = submissionData["story"] as? String ?: "",
                 charactersCount = (submissionData["charactersCount"] as? Number)?.toInt() ?: 0,
-                viewingTimeTakenSeconds = (submissionData["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                writingTimeTakenMinutes = (submissionData["writingTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+                viewingTimeTakenSeconds = (submissionData["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 30,
+                writingTimeTakenMinutes = (submissionData["writingTimeTakenMinutes"] as? Number)?.toInt() ?: 4,
                 submittedAt = (submissionData["submittedAt"] as? Number)?.toLong()
                     ?: (data["submittedAt"] as? Number)?.toLong() ?: 0L,
                 status = SubmissionStatus.valueOf(
@@ -156,11 +140,10 @@ class PPDTSubmissionResultViewModel @Inject constructor(
 }
 
 /**
- * UI State for PPDT Submission Result Screen
+ * UI State for PPDT Submission Result
  */
 data class PPDTSubmissionResultUiState(
     val isLoading: Boolean = true,
     val submission: PPDTSubmission? = null,
     val error: String? = null
 )
-

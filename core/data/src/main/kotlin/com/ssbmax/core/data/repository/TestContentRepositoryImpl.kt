@@ -21,7 +21,8 @@ class TestContentRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val oirCacheManager: OIRQuestionCacheManager,
     private val watWordCacheManager: WATWordCacheManager,
-    private val srtSituationCacheManager: SRTSituationCacheManager
+    private val srtSituationCacheManager: SRTSituationCacheManager,
+    private val ppdtImageCacheManager: PPDTImageCacheManager
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
@@ -91,21 +92,34 @@ class TestContentRepositoryImpl @Inject constructor(
         return try {
             ppdtCache[testId]?.let { return Result.success(it) }
 
-            // Try Firestore first
-            val document = testsCollection.document(testId).get().await()
-            val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
+            // Use cache manager for progressive loading
+            Log.d("TestContent", "Fetching PPDT image from cache manager")
             
-            if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock PPDT data for $testId")
+            // Initialize cache if needed OR if we have old placeholder data
+            val cacheStatus = ppdtImageCacheManager.getCacheStatus()
+            if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 50) {
+                // If we have less than 50 images, force refresh to get the new 57 images
+                Log.d("TestContent", "Initializing PPDT image cache (current: ${cacheStatus.cachedImages})...")
+                ppdtImageCacheManager.clearCache() // Clear old data
+                ppdtImageCacheManager.initialSync().getOrThrow()
+            }
+            
+            // Get one image for the test
+            val questionResult = ppdtImageCacheManager.getImageForTest()
+            
+            if (questionResult.isFailure) {
+                // Fallback to mock data if cache manager fails
+                Log.w("TestContent", "Cache manager failed, using mock data: ${questionResult.exceptionOrNull()?.message}")
                 val mockQuestions = MockTestDataProvider.getPPDTQuestions()
                 ppdtCache[testId] = mockQuestions
                 return Result.success(mockQuestions)
             }
             
-            val ppdtQuestions = questions.mapNotNull { it.toPPDTQuestion() }
+            val question = questionResult.getOrNull()!!
+            val ppdtQuestions = listOf(question)
             ppdtCache[testId] = ppdtQuestions
             
+            Log.d("TestContent", "✅ Loaded PPDT image: ${question.id}")
             Result.success(ppdtQuestions)
         } catch (e: Exception) {
             // On any error, use mock data

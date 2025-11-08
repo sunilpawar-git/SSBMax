@@ -224,3 +224,17 @@ data class OIRTestConfig(
     val shuffleQuestions: Boolean = true
 )
 
+/**
+ * OIR Test Submission - for saving completed tests to Firestore
+ */
+data class OIRSubmission(
+    val id: String,
+    val userId: String,
+    val testId: String,
+    val testResult: OIRTestResult,
+    val submittedAt: Long,
+    val status: SubmissionStatus,
+    val gradedByInstructorId: String? = null,
+    val gradingTimestamp: Long? = null
+)
+
