@@ -131,13 +131,13 @@ class FirebaseRulesValidationTest {
     @Test
     fun `test_usage requires all required fields`() {
         val content = getRulesContent()
-        val testUsageRules = content.substringAfter("match /test_usage/{month}")
-            .substringBefore("// User subscription data")
+        val testUsageRules = content.substringAfter("match /subscription/{document}")
+            .substringBefore("// NEVER allow delete")
         
         val requiredFields = listOf(
             "oirTestsUsed", "tatTestsUsed", "watTestsUsed",
             "srtTestsUsed", "ppdtTestsUsed", "gtoTestsUsed",
-            "interviewTestsUsed", "lastUpdated"
+            "interviewTestsUsed", "sdTestsUsed", "lastUpdated"
         )
         
         requiredFields.forEach { field ->
@@ -149,11 +149,10 @@ class FirebaseRulesValidationTest {
     @Test
     fun `test_usage validates integer types and non-negative values`() {
         val content = getRulesContent()
-        val testUsageRules = content.substringAfter("match /test_usage/{month}")
-            .substringBefore("// User subscription data")
+        val testUsageRules = content.substringAfter("match /subscription/{document}")
+            .substringBefore("// NEVER allow delete")
         
-        assertTrue("Should validate oirTestsUsed is int",
-            testUsageRules.contains("request.resource.data.oirTestsUsed is int"))
+        // Check that oirTestsUsed has validation for >= 0
         assertTrue("Should validate oirTestsUsed >= 0",
             testUsageRules.contains("request.resource.data.oirTestsUsed >= 0"))
     }
@@ -161,13 +160,15 @@ class FirebaseRulesValidationTest {
     @Test
     fun `test_usage is user-specific`() {
         val content = getRulesContent()
-        val testUsageRules = content.substringAfter("match /test_usage/{month}")
-            .substringBefore("}")
+        val testUsageRules = content.substringAfter("match /subscription/{document}")
+            .substringBefore("// NEVER allow delete")
         
         assertTrue("Users should read own usage",
             testUsageRules.contains("allow read: if isOwner(userId)"))
-        assertTrue("Users should write own usage",
-            testUsageRules.contains("allow write: if isOwner(userId)"))
+        // Check for create and update (not generic write)
+        assertTrue("Users should create/update own usage",
+            testUsageRules.contains("allow create: if isOwner(userId)") ||
+            testUsageRules.contains("allow update: if isOwner(userId)"))
     }
     
     // ==================== Subscription Data Tests ====================

@@ -119,7 +119,8 @@ fun StableAsyncImage(
     loading: @Composable (() -> Unit)? = null,
     error: @Composable ((String) -> Unit)? = null,
     onLoadingStart: (() -> Unit)? = null,
-    onSuccess: (() -> Unit)? = null
+    onSuccess: (() -> Unit)? = null,
+    onError: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     
@@ -135,7 +136,8 @@ fun StableAsyncImage(
                     onSuccess?.invoke()
                 },
                 onError = { _, result ->
-                    error?.invoke(result.throwable.message ?: "Unknown error")
+                    // Call non-composable callback
+                    onError?.invoke(result.throwable.message ?: "Unknown error")
                 }
             )
             .build()

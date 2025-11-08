@@ -72,12 +72,6 @@ class PPDTImageCacheManagerTest {
         
         // Mock Firestore document fetch
         val mockDoc = mockk<DocumentSnapshot>()
-        val mockTask = mockk<Task<DocumentSnapshot>>()
-        every { mockTask.isComplete } returns true
-        every { mockTask.exception } returns null
-        every { mockTask.isCanceled } returns false
-        every { mockTask.result } returns mockDoc
-        coEvery { mockTask.result } returns mockDoc
         
         every { mockDoc.exists() } returns true
         every { mockDoc.getString("version") } returns "1.0.0"
@@ -85,11 +79,12 @@ class PPDTImageCacheManagerTest {
             createMockImageMap("ppdt_001", "https://example.com/image1.jpg")
         )
         
+        val mockDocRef = mockk<com.google.firebase.firestore.DocumentReference>()
+        every { mockDocRef.get() } returns Tasks.forResult(mockDoc)
+        
         every { 
             mockFirestore.document("test_content/ppdt/image_batches/batch_001")
-        } returns mockk {
-            every { get() } returns Tasks.forResult(mockDoc)
-        }
+        } returns mockDocRef
         
         coEvery { mockDao.insertImages(any()) } just Runs
         coEvery { mockDao.insertBatchMetadata(any()) } just Runs
@@ -121,12 +116,6 @@ class PPDTImageCacheManagerTest {
     fun `downloadBatch parses images correctly`() = runTest {
         // Given
         val mockDoc = mockk<DocumentSnapshot>()
-        val mockTask = mockk<Task<DocumentSnapshot>>()
-        every { mockTask.isComplete } returns true
-        every { mockTask.exception } returns null
-        every { mockTask.isCanceled } returns false
-        every { mockTask.result } returns mockDoc
-        coEvery { mockTask.result } returns mockDoc
         
         every { mockDoc.exists() } returns true
         every { mockDoc.getString("version") } returns "1.0.0"
@@ -135,11 +124,12 @@ class PPDTImageCacheManagerTest {
             createMockImageMap("ppdt_002", "https://example.com/image2.jpg")
         )
         
+        val mockDocRef = mockk<com.google.firebase.firestore.DocumentReference>()
+        every { mockDocRef.get() } returns Tasks.forResult(mockDoc)
+        
         every { 
             mockFirestore.document("test_content/ppdt/image_batches/batch_001")
-        } returns mockk {
-            every { get() } returns Tasks.forResult(mockDoc)
-        }
+        } returns mockDocRef
         
         coEvery { mockDao.insertImages(any()) } just Runs
         coEvery { mockDao.insertBatchMetadata(any()) } just Runs
@@ -164,20 +154,15 @@ class PPDTImageCacheManagerTest {
     fun `downloadBatch handles missing batch gracefully`() = runTest {
         // Given - batch doesn't exist
         val mockDoc = mockk<DocumentSnapshot>()
-        val mockTask = mockk<Task<DocumentSnapshot>>()
-        every { mockTask.isComplete } returns true
-        every { mockTask.exception } returns null
-        every { mockTask.isCanceled } returns false
-        every { mockTask.result } returns mockDoc
-        coEvery { mockTask.result } returns mockDoc
         
         every { mockDoc.exists() } returns false
         
+        val mockDocRef = mockk<com.google.firebase.firestore.DocumentReference>()
+        every { mockDocRef.get() } returns Tasks.forResult(mockDoc)
+        
         every { 
             mockFirestore.document("test_content/ppdt/image_batches/batch_999")
-        } returns mockk {
-            every { get() } returns Tasks.forResult(mockDoc)
-        }
+        } returns mockDocRef
         
         // When
         val result = cacheManager.downloadBatch("batch_999")
@@ -220,12 +205,6 @@ class PPDTImageCacheManagerTest {
         
         // Mock initialSync behavior
         val mockDoc = mockk<DocumentSnapshot>()
-        val mockTask = mockk<Task<DocumentSnapshot>>()
-        every { mockTask.isComplete } returns true
-        every { mockTask.exception } returns null
-        every { mockTask.isCanceled } returns false
-        every { mockTask.result } returns mockDoc
-        coEvery { mockTask.result } returns mockDoc
         
         every { mockDoc.exists() } returns true
         every { mockDoc.getString("version") } returns "1.0.0"
@@ -233,11 +212,12 @@ class PPDTImageCacheManagerTest {
             createMockImageMap("ppdt_001", "https://example.com/image1.jpg")
         )
         
+        val mockDocRef = mockk<com.google.firebase.firestore.DocumentReference>()
+        every { mockDocRef.get() } returns Tasks.forResult(mockDoc)
+        
         every { 
             mockFirestore.document(any())
-        } returns mockk {
-            every { get() } returns Tasks.forResult(mockDoc)
-        }
+        } returns mockDocRef
         
         coEvery { mockDao.insertImages(any()) } answers {
             cacheCount = 10 // Simulate cache populated
