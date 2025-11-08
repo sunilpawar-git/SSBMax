@@ -457,31 +457,36 @@ private fun ImageViewingPhase(
                 } else {
                     val context = LocalContext.current
                     
-                    // Log the URL being loaded
+                    // Log the URL being loaded (only when URL changes)
                     LaunchedEffect(imageUrl) {
                         android.util.Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
                     }
                     
-                    val painter = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(context)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .listener(
-                                onStart = {
-                                    android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
-                                },
-                                onSuccess = { _, _ ->
-                                    android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
-                                },
-                                onError = { _, result ->
-                                    android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
-                                }
-                            )
-                            .build()
-                    )
-                    
-                    // Show loading/error states based on painter state
-                    when (val state = painter.state) {
+                    // CRITICAL FIX: Wrap painter in key() to prevent recreation on every recomposition
+                    // key() ensures the block only re-executes when imageUrl changes, not when timer updates
+                    key(imageUrl) {
+                        val painter = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(context)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .memoryCacheKey(imageUrl)  // Explicit memory cache key
+                                .diskCacheKey(imageUrl)    // Explicit disk cache key
+                                .listener(
+                                    onStart = {
+                                        android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
+                                    },
+                                    onSuccess = { _, _ ->
+                                        android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
+                                    },
+                                    onError = { _, result ->
+                                        android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
+                                    }
+                                )
+                                .build()
+                        )
+                        
+                        // Show loading/error states based on painter state
+                        when (val state = painter.state) {
                         is AsyncImagePainter.State.Loading -> {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -541,6 +546,7 @@ private fun ImageViewingPhase(
                             Text("Initializing...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
+                    }  // Close key(imageUrl) block
                 }
             }
         }
