@@ -102,6 +102,10 @@ class TATTestViewModel @Inject constructor(
     
     fun loadTest(testId: String) {
         viewModelScope.launch {
+            android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
+            android.util.Log.d("TATTestViewModel", "🎬 loadTest() called for testId: $testId")
+            android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
+            
             _uiState.update { it.copy(
                 isLoading = true,
                 loadingMessage = "Checking eligibility..."
@@ -109,6 +113,7 @@ class TATTestViewModel @Inject constructor(
             
             try {
                 // Get current user - SECURITY: Require authentication
+                android.util.Log.d("TATTestViewModel", "📍 Step 1: Fetching current user...")
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: run {
                     android.util.Log.e("TATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
@@ -128,12 +133,22 @@ class TATTestViewModel @Inject constructor(
                 }
                 
                 android.util.Log.d("TATTestViewModel", "✅ User authenticated: $userId")
+                android.util.Log.d("TATTestViewModel", "   User email: ${user.email}")
+                android.util.Log.d("TATTestViewModel", "   User role: ${user.role}")
                 
                 // Check subscription eligibility BEFORE loading test
+                android.util.Log.d("TATTestViewModel", "📍 Step 2: Checking subscription eligibility...")
                 val eligibility = checkTestEligibility(userId)
+                android.util.Log.d("TATTestViewModel", "   Eligibility result: ${eligibility.javaClass.simpleName}")
                 
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                        android.util.Log.w("TATTestViewModel", "❌ TEST LIMIT REACHED!")
+                        android.util.Log.w("TATTestViewModel", "   Tier: ${eligibility.tier}")
+                        android.util.Log.w("TATTestViewModel", "   Limit: ${eligibility.limit}")
+                        android.util.Log.w("TATTestViewModel", "   Used: ${eligibility.usedCount}")
+                        android.util.Log.w("TATTestViewModel", "   Resets at: ${eligibility.resetsAt}")
+                        
                         // Show limit reached state
                         _uiState.update { it.copy(
                             isLoading = false,
@@ -145,11 +160,14 @@ class TATTestViewModel @Inject constructor(
                             testsUsed = eligibility.usedCount,
                             resetsAt = eligibility.resetsAt
                         ) }
-                        android.util.Log.d("TATTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                        
+                        android.util.Log.d("TATTestViewModel", "🛑 Stopping test load - showing subscription screen")
+                        android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                         return@launch
                     }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
-                        android.util.Log.d("TATTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                        android.util.Log.d("TATTestViewModel", "✅ Test eligible!")
+                        android.util.Log.d("TATTestViewModel", "   Remaining tests: ${eligibility.remainingTests}")
                         // Continue with test loading
                     }
                 }
@@ -159,6 +177,7 @@ class TATTestViewModel @Inject constructor(
                 ) }
                 
                 // Create test session
+                android.util.Log.d("TATTestViewModel", "📍 Step 3: Creating test session...")
                 val sessionResult = testContentRepository.createTestSession(
                     userId = userId,
                     testId = testId,
@@ -166,19 +185,25 @@ class TATTestViewModel @Inject constructor(
                 )
                 
                 if (sessionResult.isFailure) {
+                    android.util.Log.e("TATTestViewModel", "❌ Failed to create test session: ${sessionResult.exceptionOrNull()?.message}")
                     throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
                 }
+                android.util.Log.d("TATTestViewModel", "✅ Test session created")
                 
                 // Fetch questions from cloud
+                android.util.Log.d("TATTestViewModel", "📍 Step 4: Fetching TAT questions from cloud...")
                 val questionsResult = testContentRepository.getTATQuestions(testId)
                 
                 if (questionsResult.isFailure) {
+                    android.util.Log.e("TATTestViewModel", "❌ Failed to load questions: ${questionsResult.exceptionOrNull()?.message}")
                     throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
                 }
                 
                 val questions = questionsResult.getOrNull() ?: emptyList()
+                android.util.Log.d("TATTestViewModel", "✅ Loaded ${questions.size} TAT questions")
                 
                 if (questions.isEmpty()) {
+                    android.util.Log.e("TATTestViewModel", "❌ No questions found!")
                     throw Exception("No questions found for this test")
                 }
                 
@@ -192,7 +217,12 @@ class TATTestViewModel @Inject constructor(
                     config = config,
                     phase = TATPhase.INSTRUCTIONS
                 ) }
+                
+                android.util.Log.d("TATTestViewModel", "✅ Test loaded successfully - showing instructions")
+                android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
             } catch (e: Exception) {
+                android.util.Log.e("TATTestViewModel", "❌ Error loading test: ${e.message}", e)
+                android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
@@ -281,26 +311,36 @@ class TATTestViewModel @Inject constructor(
     
     fun submitTest() {
         viewModelScope.launch {
+            android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
+            android.util.Log.d("TATTestViewModel", "📤 submitTest() called")
+            android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
+            
             _uiState.update { it.copy(isLoading = true) }
             
             try {
                 stopTimer()
                 
                 // Get current user
+                android.util.Log.d("TATTestViewModel", "📍 Step 1: Getting current user...")
                 val currentUserId: String = observeCurrentUser().first()?.id ?: run {
+                    android.util.Log.e("TATTestViewModel", "❌ User not authenticated")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = "Please login to submit test"
                     ) }
                     return@launch
                 }
+                android.util.Log.d("TATTestViewModel", "✅ User ID: $currentUserId")
                 
                 // Get user profile for subscription type
+                android.util.Log.d("TATTestViewModel", "📍 Step 2: Getting user profile...")
                 val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
+                android.util.Log.d("TATTestViewModel", "✅ Subscription type: $subscriptionType")
                 
                 // Create submission
+                android.util.Log.d("TATTestViewModel", "📍 Step 3: Creating submission...")
                 val state = _uiState.value
                 val submission = TATSubmission(
                     userId = currentUserId,
@@ -310,17 +350,22 @@ class TATTestViewModel @Inject constructor(
                     submittedAt = System.currentTimeMillis(),
                     aiPreliminaryScore = generateMockAIScore(state.responses)
                 )
+                android.util.Log.d("TATTestViewModel", "✅ Submission created with ${submission.stories.size} stories")
                 
                 // Submit to Firestore (but also store locally to bypass permission issues)
+                android.util.Log.d("TATTestViewModel", "📍 Step 4: Submitting to Firestore...")
                 val result = submitTATTest(submission, batchId = null)
                 
                 result.onSuccess { submissionId ->
+                    android.util.Log.d("TATTestViewModel", "✅ Submission successful! ID: $submissionId")
+                    
                     // Calculate score for analytics (stories with >150 chars are "valid")
                     val validCount = submission.stories.count { it.charactersCount >= 150 }
                     val totalCount = submission.stories.size
                     val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
                     
                     // Record performance for analytics
+                    android.util.Log.d("TATTestViewModel", "📍 Step 5: Recording performance analytics...")
                     difficultyManager.recordPerformance(
                         testType = "TAT",
                         difficulty = "MEDIUM", // TAT doesn't have difficulty levels
@@ -329,13 +374,17 @@ class TATTestViewModel @Inject constructor(
                         totalQuestions = totalCount,
                         timeSeconds = (submission.totalTimeTakenMinutes * 60).toFloat()
                     )
-                    android.util.Log.d("TATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                    android.util.Log.d("TATTestViewModel", "✅ Performance recorded: $scorePercentage% (${validCount}/${totalCount})")
                     
                     // Record test usage for subscription tracking (with submissionId for idempotency)
-                    android.util.Log.d("TATTestViewModel", "📝 Recording test usage for subscription tracking: userId=$currentUserId, submissionId=$submissionId")
+                    android.util.Log.d("TATTestViewModel", "📍 Step 6: Recording test usage for subscription...")
+                    android.util.Log.d("TATTestViewModel", "   userId: $currentUserId")
+                    android.util.Log.d("TATTestViewModel", "   testType: TAT")
+                    android.util.Log.d("TATTestViewModel", "   submissionId: $submissionId")
                     subscriptionManager.recordTestUsage(TestType.TAT, currentUserId, submissionId)
-                    android.util.Log.d("TATTestViewModel", "✅ Test usage recorded successfully")
+                    android.util.Log.d("TATTestViewModel", "✅ Test usage recorded successfully!")
                     
+                    android.util.Log.d("TATTestViewModel", "📍 Step 7: Updating UI state...")
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
@@ -344,13 +393,20 @@ class TATTestViewModel @Inject constructor(
                         submission = submission,  // Store locally to show results directly
                         phase = TATPhase.SUBMITTED
                     ) }
+                    
+                    android.util.Log.d("TATTestViewModel", "✅ TAT test submission complete!")
+                    android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 }.onFailure { error ->
+                    android.util.Log.e("TATTestViewModel", "❌ Submission failed: ${error.message}", error)
+                    android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = "Failed to submit: ${error.message}"
                     ) }
                 }
             } catch (e: Exception) {
+                android.util.Log.e("TATTestViewModel", "❌ Exception during submission: ${e.message}", e)
+                android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message

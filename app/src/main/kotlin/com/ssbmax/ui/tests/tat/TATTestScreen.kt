@@ -52,6 +52,19 @@ fun TATTestScreen(
         }
     }
     
+    // Show subscription limit dialog if test limit reached
+    if (uiState.isLimitReached) {
+        com.ssbmax.ui.tests.common.TestLimitReachedDialog(
+            tier = uiState.subscriptionTier,
+            testsLimit = uiState.testsLimit,
+            testsUsed = uiState.testsUsed,
+            resetsAt = uiState.resetsAt,
+            onDismiss = onNavigateBack,
+            onUpgrade = onNavigateBack // Navigate back, user will handle upgrade from dashboard
+        )
+        return // Don't show the test UI
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
