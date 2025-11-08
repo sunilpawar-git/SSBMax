@@ -440,7 +440,7 @@ private fun ImageViewingPhase(
                 
                 // Log the URL being loaded
                 LaunchedEffect(imageUrl) {
-                    Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
+                    android.util.Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
                 }
                 
                 val painter = rememberAsyncImagePainter(
@@ -449,22 +449,32 @@ private fun ImageViewingPhase(
                         .crossfade(true)
                         .listener(
                             onStart = {
-                                Log.d("PPDTTestScreen", "🖼️ Image loading started...")
+                                android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
                             },
                             onSuccess = { _, _ ->
-                                Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
+                                android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
                             },
                             onError = { _, result ->
-                                Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
+                                android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
                             }
                         )
                         .build()
                 )
                 
                 // Show loading/error states based on painter state
-                when (painter.state) {
+                when (val state = painter.state) {
                     is AsyncImagePainter.State.Loading -> {
-                        CircularProgressIndicator()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Loading image...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     is AsyncImagePainter.State.Error -> {
                         Column(
@@ -484,15 +494,26 @@ private fun ImageViewingPhase(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = state.result.throwable.message ?: "Unknown error",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
-                    else -> {
+                    is AsyncImagePainter.State.Success -> {
                         Image(
                             painter = painter,
                             contentDescription = "PPDT Test Image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Fit
                         )
+                    }
+                    else -> {
+                        // Empty state
+                        Text("Initializing...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
