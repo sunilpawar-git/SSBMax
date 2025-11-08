@@ -22,7 +22,8 @@ class TestContentRepositoryImpl @Inject constructor(
     private val oirCacheManager: OIRQuestionCacheManager,
     private val watWordCacheManager: WATWordCacheManager,
     private val srtSituationCacheManager: SRTSituationCacheManager,
-    private val ppdtImageCacheManager: PPDTImageCacheManager
+    private val ppdtImageCacheManager: PPDTImageCacheManager,
+    private val tatImageCacheManager: TATImageCacheManager
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
@@ -134,25 +135,37 @@ class TestContentRepositoryImpl @Inject constructor(
         return try {
             tatCache[testId]?.let { return Result.success(it) }
 
-            // Try Firestore first
-            val document = testsCollection.document(testId).get().await()
-            val questions = document.get("questions") as? List<Map<String, Any?>> ?: emptyList()
+            // Use cache manager for progressive loading (12 images per test)
+            Log.d("TestContent", "Fetching TAT images from cache manager")
             
-            if (questions.isEmpty()) {
-                // Fallback to mock data
-                Log.d("TestContent", "Using mock TAT data for $testId")
+            // Initialize cache if needed
+            val cacheStatus = tatImageCacheManager.getCacheStatus()
+            if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 12) {
+                // If we have less than 12 images, initialize cache
+                Log.d("TestContent", "Initializing TAT image cache (current: ${cacheStatus.cachedImages})...")
+                tatImageCacheManager.clearCache() // Clear old data if any
+                tatImageCacheManager.initialSync().getOrThrow()
+            }
+            
+            // Get 12 images for the test (11 regular + blank_slide randomly selected)
+            val questionsResult = tatImageCacheManager.getImagesForTest(12)
+            
+            if (questionsResult.isFailure) {
+                // Fallback to mock data if cache manager fails
+                Log.w("TestContent", "Cache manager failed, using mock data: ${questionsResult.exceptionOrNull()?.message}")
                 val mockQuestions = MockTestDataProvider.getTATQuestions()
                 tatCache[testId] = mockQuestions
                 return Result.success(mockQuestions)
             }
             
-            val tatQuestions = questions.mapNotNull { it.toTATQuestion() }
+            val tatQuestions = questionsResult.getOrNull() ?: emptyList()
             tatCache[testId] = tatQuestions
             
+            Log.d("TestContent", "✅ Loaded ${tatQuestions.size} TAT images")
             Result.success(tatQuestions)
         } catch (e: Exception) {
             // On any error, use mock data
-            Log.w("TestContent", "Firestore failed for TAT, using mock data: ${e.message}")
+            Log.w("TestContent", "Failed to load TAT images, using mock data: ${e.message}")
             val mockQuestions = MockTestDataProvider.getTATQuestions()
             tatCache[testId] = mockQuestions
             Result.success(mockQuestions)

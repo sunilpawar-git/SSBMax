@@ -413,8 +413,34 @@ private fun ImageViewingView(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            
+            // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
+            // This ensures the request is ONLY recreated when imageUrl changes
+            val imageRequest = remember(imageUrl) {
+                android.util.Log.d("TATTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
+                coil.request.ImageRequest.Builder(context)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .listener(
+                        onStart = {
+                            android.util.Log.d("TATTestScreen", "🖼️ Coil: Loading started")
+                        },
+                        onSuccess = { _, _ ->
+                            android.util.Log.d("TATTestScreen", "✅ Coil: Image loaded successfully!")
+                        },
+                        onError = { _, result ->
+                            android.util.Log.e("TATTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
+                        }
+                    )
+                    .build()
+            }
+            
+            // AsyncImage with stable model - won't restart on recomposition
             AsyncImage(
-                model = imageUrl,
+                model = imageRequest,
                 contentDescription = "TAT Picture $sequenceNumber",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
