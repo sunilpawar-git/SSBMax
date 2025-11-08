@@ -405,6 +405,10 @@ private fun ImageViewingPhase(
     imageUrl: String,
     timeRemainingSeconds: Int
 ) {
+    // CRITICAL DEBUG: Log every time this composable is called
+    android.util.Log.d("PPDTTestScreen", "🎨 ImageViewingPhase recomposed with imageUrl: $imageUrl")
+    android.util.Log.d("PPDTTestScreen", "🎨 imageUrl length: ${imageUrl.length}, isEmpty: ${imageUrl.isEmpty()}")
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -436,84 +440,106 @@ private fun ImageViewingPhase(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                val context = LocalContext.current
-                
-                // Log the URL being loaded
-                LaunchedEffect(imageUrl) {
-                    android.util.Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
-                }
-                
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .listener(
-                            onStart = {
-                                android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
-                            },
-                            onSuccess = { _, _ ->
-                                android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
-                            },
-                            onError = { _, result ->
-                                android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
+                // Show imageUrl in UI for debugging
+                if (imageUrl.isEmpty()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "⚠️ IMAGE URL IS EMPTY",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Check ViewModel logs",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                } else {
+                    val context = LocalContext.current
+                    
+                    // Log the URL being loaded
+                    LaunchedEffect(imageUrl) {
+                        android.util.Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
+                    }
+                    
+                    val painter = rememberAsyncImagePainter(
+                        model = ImageRequest.Builder(context)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .listener(
+                                onStart = {
+                                    android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
+                                },
+                                onSuccess = { _, _ ->
+                                    android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
+                                },
+                                onError = { _, result ->
+                                    android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
+                                }
+                            )
+                            .build()
+                    )
+                    
+                    // Show loading/error states based on painter state
+                    when (val state = painter.state) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Loading image...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = imageUrl.takeLast(30),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-                        )
-                        .build()
-                )
-                
-                // Show loading/error states based on painter state
-                when (val state = painter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Loading image...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        is AsyncImagePainter.State.Error -> {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.BrokenImage,
+                                    contentDescription = "Image Error",
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Failed to load image",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = state.result.throwable.message ?: "Unknown error",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                        is AsyncImagePainter.State.Success -> {
+                            Image(
+                                painter = painter,
+                                contentDescription = "PPDT Test Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
                             )
                         }
-                    }
-                    is AsyncImagePainter.State.Error -> {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.BrokenImage,
-                                contentDescription = "Image Error",
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Failed to load image",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = state.result.throwable.message ?: "Unknown error",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center
-                            )
+                        else -> {
+                            // Empty state
+                            Text("Initializing...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                    }
-                    is AsyncImagePainter.State.Success -> {
-                        Image(
-                            painter = painter,
-                            contentDescription = "PPDT Test Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                    else -> {
-                        // Empty state
-                        Text("Initializing...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
