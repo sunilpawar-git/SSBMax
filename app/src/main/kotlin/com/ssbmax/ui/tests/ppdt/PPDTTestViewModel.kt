@@ -170,6 +170,11 @@ class PPDTTestViewModel @Inject constructor(
                 }
                 
                 val question = questions.first() // PPDT typically has one question
+                android.util.Log.d("PPDTTestViewModel", "📸 Loaded question: ${question.id}")
+                android.util.Log.d("PPDTTestViewModel", "📸 Question imageUrl: ${question.imageUrl}")
+                android.util.Log.d("PPDTTestViewModel", "📸 ImageUrl length: ${question.imageUrl.length}")
+                android.util.Log.d("PPDTTestViewModel", "📸 ImageUrl isEmpty: ${question.imageUrl.isEmpty()}")
+                
                 val config = PPDTTestConfig()
                 
                 currentSession = PPDTTestSession(
@@ -381,6 +386,9 @@ class PPDTTestViewModel @Inject constructor(
     
     private fun updateUiFromSession() {
         val session = currentSession ?: return
+        
+        android.util.Log.d("PPDTTestViewModel", "📸 Image URL from session: ${session.question.imageUrl}")
+        android.util.Log.d("PPDTTestViewModel", "📸 Image ID: ${session.question.id}")
         
         _uiState.value = _uiState.value.copy(
             isLoading = false,

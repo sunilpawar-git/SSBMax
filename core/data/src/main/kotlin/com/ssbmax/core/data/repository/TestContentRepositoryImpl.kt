@@ -95,10 +95,12 @@ class TestContentRepositoryImpl @Inject constructor(
             // Use cache manager for progressive loading
             Log.d("TestContent", "Fetching PPDT image from cache manager")
             
-            // Initialize cache if needed
+            // Initialize cache if needed OR if we have old placeholder data
             val cacheStatus = ppdtImageCacheManager.getCacheStatus()
-            if (cacheStatus.cachedImages == 0) {
-                Log.d("TestContent", "Initializing PPDT image cache...")
+            if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 50) {
+                // If we have less than 50 images, force refresh to get the new 57 images
+                Log.d("TestContent", "Initializing PPDT image cache (current: ${cacheStatus.cachedImages})...")
+                ppdtImageCacheManager.clearCache() // Clear old data
                 ppdtImageCacheManager.initialSync().getOrThrow()
             }
             
