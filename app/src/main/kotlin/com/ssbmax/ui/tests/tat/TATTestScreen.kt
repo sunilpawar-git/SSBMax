@@ -135,7 +135,8 @@ fun TATTestScreen(
                         timeRemaining = uiState.writingTimeRemaining,
                         minCharacters = uiState.currentQuestion?.minCharacters ?: 150,
                         maxCharacters = uiState.currentQuestion?.maxCharacters ?: 800,
-                        charactersCount = uiState.currentStory.length
+                        charactersCount = uiState.currentStory.length,
+                        sequenceNumber = uiState.currentQuestionIndex + 1
                     )
                 }
                 TATPhase.REVIEW_CURRENT -> {
@@ -500,7 +501,8 @@ private fun StoryWritingView(
     timeRemaining: Int,
     minCharacters: Int,
     maxCharacters: Int,
-    charactersCount: Int
+    charactersCount: Int,
+    sequenceNumber: Int
 ) {
     Column(
         modifier = Modifier
@@ -508,6 +510,37 @@ private fun StoryWritingView(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Show blank slide reminder for 12th picture
+        if (sequenceNumber == 12) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null)
+                        Text(
+                            "Blank Slide (Picture 12/12)",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Text(
+                        "Use your imagination to create a story. There was no picture shown - write what you visualize in your mind.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+        
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -522,7 +555,7 @@ private fun StoryWritingView(
             ) {
                 Column {
                     Text(
-                        "Write Your Story",
+                        if (sequenceNumber == 12) "Write Your Imagination" else "Write Your Story",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
