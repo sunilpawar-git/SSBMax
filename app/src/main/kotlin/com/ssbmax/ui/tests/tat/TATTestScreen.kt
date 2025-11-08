@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.tat
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -413,39 +414,69 @@ private fun ImageViewingView(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            val context = androidx.compose.ui.platform.LocalContext.current
-            
-            // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
-            // This ensures the request is ONLY recreated when imageUrl changes
-            val imageRequest = remember(imageUrl) {
-                android.util.Log.d("TATTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
-                coil.request.ImageRequest.Builder(context)
-                    .data(imageUrl)
-                    .crossfade(true)
-                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .listener(
-                        onStart = {
-                            android.util.Log.d("TATTestScreen", "🖼️ Coil: Loading started")
-                        },
-                        onSuccess = { _, _ ->
-                            android.util.Log.d("TATTestScreen", "✅ Coil: Image loaded successfully!")
-                        },
-                        onError = { _, result ->
-                            android.util.Log.e("TATTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
-                        }
+            // Check if this is the 12th image (blank slide for imagination test)
+            if (sequenceNumber == 12) {
+                // Show blank white box for imagination test
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Blank Slide\n(Use your imagination)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.3f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
-                    .build()
+                }
+            } else {
+                // Existing image loading code for regular TAT images (1-11)
+                val context = androidx.compose.ui.platform.LocalContext.current
+                
+                // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
+                // This ensures the request is ONLY recreated when imageUrl changes
+                val imageRequest = remember(imageUrl) {
+                    android.util.Log.d("TATTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
+                    coil.request.ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .listener(
+                            onStart = {
+                                android.util.Log.d("TATTestScreen", "🖼️ Coil: Loading started")
+                            },
+                            onSuccess = { _, _ ->
+                                android.util.Log.d("TATTestScreen", "✅ Coil: Image loaded successfully!")
+                            },
+                            onError = { _, result ->
+                                android.util.Log.e("TATTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
+                            }
+                        )
+                        .build()
+                }
+                
+                // AsyncImage with stable model - won't restart on recomposition
+                AsyncImage(
+                    model = imageRequest,
+                    contentDescription = "TAT Picture $sequenceNumber",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
             }
-            
-            // AsyncImage with stable model - won't restart on recomposition
-            AsyncImage(
-                model = imageRequest,
-                contentDescription = "TAT Picture $sequenceNumber",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
         }
+        
+        // Full-width timer progress bar (matches PPDT implementation)
+        LinearProgressIndicator(
+            progress = { timeRemaining / 30f },
+            modifier = Modifier.fillMaxWidth(),
+            color = if (timeRemaining < 10) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.primary
+            }
+        )
     }
 }
 
@@ -523,6 +554,17 @@ private fun StoryWritingView(
                 Text("Include: Who, What, Why, How the story unfolds, and What happens in the end")
             },
             isError = charactersCount > maxCharacters
+        )
+        
+        // Full-width timer progress bar (matches PPDT implementation)
+        LinearProgressIndicator(
+            progress = { timeRemaining.toFloat() / 240f },
+            modifier = Modifier.fillMaxWidth(),
+            color = if (timeRemaining < 60) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.primary
+            }
         )
     }
 }

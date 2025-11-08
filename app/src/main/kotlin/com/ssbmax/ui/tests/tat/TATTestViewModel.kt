@@ -331,9 +331,10 @@ class TATTestViewModel @Inject constructor(
                     )
                     android.util.Log.d("TATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
                     
-                    // Record test usage for subscription tracking
-                    subscriptionManager.recordTestUsage(TestType.TAT, currentUserId)
-                    android.util.Log.d("TATTestViewModel", "📝 Recorded test usage for subscription tracking")
+                    // Record test usage for subscription tracking (with submissionId for idempotency)
+                    android.util.Log.d("TATTestViewModel", "📝 Recording test usage for subscription tracking: userId=$currentUserId, submissionId=$submissionId")
+                    subscriptionManager.recordTestUsage(TestType.TAT, currentUserId, submissionId)
+                    android.util.Log.d("TATTestViewModel", "✅ Test usage recorded successfully")
                     
                     _uiState.update { it.copy(
                         isLoading = false,
