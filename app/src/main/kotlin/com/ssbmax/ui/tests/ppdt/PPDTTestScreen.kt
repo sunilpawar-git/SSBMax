@@ -459,94 +459,37 @@ private fun ImageViewingPhase(
                     
                     // Log the URL being loaded (only when URL changes)
                     LaunchedEffect(imageUrl) {
-                        android.util.Log.d("PPDTTestScreen", "🖼️ Loading image from URL: $imageUrl")
+                        android.util.Log.d("PPDTTestScreen", "🖼️ NEW URL SET: $imageUrl")
                     }
                     
-                    // CRITICAL FIX: Wrap painter in key() to prevent recreation on every recomposition
-                    // key() ensures the block only re-executes when imageUrl changes, not when timer updates
-                    key(imageUrl) {
-                        val painter = rememberAsyncImagePainter(
-                            model = ImageRequest.Builder(context)
-                                .data(imageUrl)
-                                .crossfade(true)
-                                .memoryCacheKey(imageUrl)  // Explicit memory cache key
-                                .diskCacheKey(imageUrl)    // Explicit disk cache key
-                                .listener(
-                                    onStart = {
-                                        android.util.Log.d("PPDTTestScreen", "🖼️ Image loading started...")
-                                    },
-                                    onSuccess = { _, _ ->
-                                        android.util.Log.d("PPDTTestScreen", "✅ Image loaded successfully!")
-                                    },
-                                    onError = { _, result ->
-                                        android.util.Log.e("PPDTTestScreen", "❌ Image load failed: ${result.throwable.message}", result.throwable)
-                                    }
-                                )
-                                .build()
-                        )
-                        
-                        // Show loading/error states based on painter state
-                        when (val state = painter.state) {
-                        is AsyncImagePainter.State.Loading -> {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "Loading image...",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = imageUrl.takeLast(30),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        is AsyncImagePainter.State.Error -> {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.BrokenImage,
-                                    contentDescription = "Image Error",
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Failed to load image",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = state.result.throwable.message ?: "Unknown error",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                        is AsyncImagePainter.State.Success -> {
-                            Image(
-                                painter = painter,
-                                contentDescription = "PPDT Test Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
+                    // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
+                    // This ensures the request is ONLY recreated when imageUrl changes
+                    val imageRequest = remember(imageUrl) {
+                        android.util.Log.d("PPDTTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
+                        ImageRequest.Builder(context)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .listener(
+                                onStart = {
+                                    android.util.Log.d("PPDTTestScreen", "🖼️ Coil: Loading started")
+                                },
+                                onSuccess = { _, _ ->
+                                    android.util.Log.d("PPDTTestScreen", "✅ Coil: Image loaded successfully!")
+                                },
+                                onError = { _, result ->
+                                    android.util.Log.e("PPDTTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
+                                }
                             )
-                        }
-                        else -> {
-                            // Empty state
-                            Text("Initializing...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                            .build()
                     }
-                    }  // Close key(imageUrl) block
+                    
+                    // AsyncImage with stable model - won't restart on recomposition
+                    AsyncImage(
+                        model = imageRequest,
+                        contentDescription = "PPDT Test Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
                 }
             }
         }
