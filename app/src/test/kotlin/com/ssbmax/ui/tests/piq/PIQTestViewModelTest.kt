@@ -10,20 +10,19 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
-import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class PIQTestViewModelTest {
+class PIQTestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: PIQTestViewModel
     private lateinit var submissionRepository: SubmissionRepository
@@ -34,12 +33,8 @@ class PIQTestViewModelTest {
     private lateinit var securityLogger: SecurityEventLogger
     private lateinit var savedStateHandle: SavedStateHandle
 
-    private val testDispatcher = StandardTestDispatcher()
-
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
-
         submissionRepository = mockk()
         observeCurrentUser = mockk()
         userProfileRepository = mockk()
@@ -48,22 +43,16 @@ class PIQTestViewModelTest {
         securityLogger = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("testId" to "piq_standard"))
 
-        // Default mocks
+        // Default mocks - observeCurrentUser returns SSBMaxUser
         every { observeCurrentUser() } returns flowOf(
-            UserProfile(
+            SSBMaxUser(
                 id = "test-user-id",
                 email = "test@example.com",
-                name = "Test User",
+                displayName = "Test User",
                 role = UserRole.STUDENT,
-                subscriptionType = SubscriptionType.FREE
+                subscriptionTier = SubscriptionTier.FREE
             )
         )
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        clearAllMocks()
     }
 
     @Test
@@ -132,7 +121,12 @@ class PIQTestViewModelTest {
     @Test
     fun `submitTest fails when subscription limit reached`() = runTest {
         coEvery { subscriptionManager.canTakeTest(TestType.PIQ, any()) } returns 
-            TestEligibility.LimitReached("Monthly limit reached", 0)
+            TestEligibility.LimitReached(
+                tier = SubscriptionTier.FREE,
+                limit = 10,
+                usedCount = 10,
+                resetsAt = "2025-12-01"
+            )
         
         viewModel = createViewModel()
 
@@ -153,10 +147,11 @@ class PIQTestViewModelTest {
         coEvery { userProfileRepository.getUserProfile(any()) } returns 
             flowOf(Result.success(
                 UserProfile(
-                    id = "test-user-id",
-                    email = "test@example.com",
-                    name = "Test User",
-                    role = UserRole.STUDENT,
+                    userId = "test-user-id",
+                    fullName = "Test User",
+                    age = 25,
+                    gender = Gender.MALE,
+                    entryType = EntryType.GRADUATE,
                     subscriptionType = SubscriptionType.FREE
                 )
             ))
@@ -241,4 +236,3 @@ class PIQTestViewModelTest {
         savedStateHandle = savedStateHandle
     )
 }
-
