@@ -24,10 +24,10 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
-        // Special handling for OIR, PPDT, TAT, WAT: Show results directly 
+        // Special handling for OIR, PPDT, TAT, WAT, PIQ: Show results directly 
         // (bypasses Firestore to avoid permission issues during development)
         if (testType == TestType.OIR || testType == TestType.PPDT || 
-            testType == TestType.TAT || testType == TestType.WAT) {
+            testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ) {
             navigateToResult(submissionId, testType, navController)
             return
         }
@@ -59,6 +59,7 @@ object TestResultHandler {
             TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
             TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
             TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
+            TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
             TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
             else -> SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)
         }

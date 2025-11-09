@@ -233,9 +233,15 @@ class PIQTestViewModel @Inject constructor(
                 val submission = createSubmissionFromState(currentUserId, SubmissionStatus.SUBMITTED_PENDING_REVIEW)
                 Log.d(TAG, "✅ PIQ: Submission created")
                 
+                // Step 4.5: Generate AI quality score
+                Log.d(TAG, "📍 PIQ Step 4.5: Generating AI quality score...")
+                val aiScore = generateMockAIScore(submission)
+                val submissionWithAI = submission.copy(aiPreliminaryScore = aiScore)
+                Log.d(TAG, "✅ PIQ: AI score generated - Overall: ${aiScore.overallScore}/100")
+                
                 // Step 5: Submit to Firestore
                 Log.d(TAG, "📍 PIQ Step 5: Submitting to Firestore...")
-                val result = submissionRepository.submitPIQ(submission, batchId = null)
+                val result = submissionRepository.submitPIQ(submissionWithAI, batchId = null)
                 
                 result.onSuccess { submissionId ->
                     Log.d(TAG, "✅ PIQ: Successfully submitted with ID: $submissionId")
@@ -259,7 +265,8 @@ class PIQTestViewModel @Inject constructor(
                     
                     _uiState.update { it.copy(
                         isLoading = false,
-                        submissionComplete = true
+                        submissionComplete = true,
+                        submissionId = submissionId
                     ) }
                     
                     Log.d(TAG, "════════════════════════════════════════")
@@ -280,6 +287,57 @@ class PIQTestViewModel @Inject constructor(
                 ) }
             }
         }
+    }
+
+    /**
+     * Generate mock AI quality score for PIQ
+     */
+    private fun generateMockAIScore(submission: PIQSubmission): PIQAIScore {
+        // Calculate completeness
+        val totalFields = 21 // All PIQ fields
+        val filledFields = listOf(
+            submission.fullName, submission.dateOfBirth, submission.phone,
+            submission.fatherName, submission.motherName,
+            submission.whyDefenseForces, submission.strengths, submission.weaknesses,
+            submission.hobbies, submission.sports
+        ).count { it.isNotBlank() }
+        val completeness = (filledFields.toFloat() / totalFields * 100).toInt()
+        
+        // Mock scores based on completeness and length
+        val personalInfo = (completeness * 0.25f * 0.8f) + kotlin.random.Random.nextFloat() * 5f
+        val familyInfo = (completeness * 0.25f * 0.9f) + kotlin.random.Random.nextFloat() * 3f
+        val motivation = if (submission.whyDefenseForces.length > 100) 
+            18f + kotlin.random.Random.nextFloat() * 7f else 12f + kotlin.random.Random.nextFloat() * 6f
+        val selfAssessment = if (submission.strengths.isNotBlank() && submission.weaknesses.isNotBlank())
+            17f + kotlin.random.Random.nextFloat() * 8f else 10f + kotlin.random.Random.nextFloat() * 7f
+        
+        val overall = personalInfo + familyInfo + motivation + selfAssessment
+        
+        return PIQAIScore(
+            overallScore = overall.coerceIn(60f, 95f),
+            personalInfoScore = personalInfo.coerceIn(15f, 25f),
+            familyInfoScore = familyInfo.coerceIn(16f, 25f),
+            motivationScore = motivation.coerceIn(12f, 25f),
+            selfAssessmentScore = selfAssessment.coerceIn(10f, 25f),
+            feedback = when {
+                overall >= 85 -> "Excellent PIQ! Comprehensive information with clear motivation. Well-prepared for assessor questions."
+                overall >= 75 -> "Good PIQ. Adequate information provided. Some areas could be more detailed."
+                else -> "PIQ needs improvement. Add more details to motivation and self-assessment sections."
+            },
+            strengths = buildList {
+                if (completeness > 80) add("Comprehensive information")
+                if (submission.whyDefenseForces.length > 150) add("Clear defense forces motivation")
+                if (submission.strengths.isNotBlank()) add("Self-awareness of strengths")
+            },
+            areasForImprovement = buildList {
+                if (completeness < 70) add("Fill all sections completely")
+                if (submission.whyDefenseForces.length < 100) add("Elaborate on defense forces motivation")
+                if (submission.weaknesses.isBlank()) add("Add areas for improvement (shows self-awareness)")
+            },
+            completenessPercentage = completeness,
+            clarityScore = if (submission.whyDefenseForces.length > 150) 8.5f else 6.5f,
+            consistencyScore = 8.0f + kotlin.random.Random.nextFloat() * 2f
+        )
     }
 
     /**
@@ -338,6 +396,7 @@ data class PIQUiState(
     val lastModifiedAt: Long = System.currentTimeMillis(),
     val showReviewScreen: Boolean = false,
     val submissionComplete: Boolean = false,
+    val submissionId: String? = null,
     val error: String? = null
 ) {
     val canSubmit: Boolean

@@ -312,7 +312,23 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
+
+    // PIQ Result (Personal Information Questionnaire Result)
+    composable(
+        route = SSBMaxDestinations.PIQSubmissionResult.route,
+        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+        com.ssbmax.ui.tests.piq.PIQSubmissionResultScreen(
+            submissionId = submissionId,
+            onNavigateHome = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
     // PIQ Test (Personal Information Questionnaire)
     composable(
         route = SSBMaxDestinations.PIQTest.route,
@@ -324,6 +340,11 @@ fun NavGraphBuilder.sharedNavGraph(
             onNavigateBack = {
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            },
+            onNavigateToResult = { submissionId ->
+                navController.navigate(SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)) {
+                    popUpTo(navController.graph.startDestinationId) { saveState = false }
                 }
             }
         )

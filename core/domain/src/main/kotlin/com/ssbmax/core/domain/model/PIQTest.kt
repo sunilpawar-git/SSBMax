@@ -150,7 +150,8 @@ data class PIQSubmission(
     val submittedAt: Long = System.currentTimeMillis(),
     val lastModifiedAt: Long = System.currentTimeMillis(),
     val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null
+    val gradingTimestamp: Long? = null,
+    val aiPreliminaryScore: PIQAIScore? = null
 ) {
     /**
      * Convert to Firestore map format
@@ -229,6 +230,25 @@ data class PIQSubmission(
                 dateOfBirth.isNotBlank() && 
                 phone.isNotBlank()
 }
+
+/**
+ * AI Quality Assessment for PIQ
+ * Mock scores until actual AI integration
+ */
+data class PIQAIScore(
+    val overallScore: Float, // 0-100
+    val personalInfoScore: Float, // 0-25 (completeness, clarity)
+    val familyInfoScore: Float, // 0-25 (completeness, consistency)
+    val motivationScore: Float, // 0-25 (depth, clarity of "Why Defense Forces")
+    val selfAssessmentScore: Float, // 0-25 (strengths/weaknesses quality)
+    val feedback: String,
+    val strengths: List<String>,
+    val areasForImprovement: List<String>,
+    val completenessPercentage: Int, // % of fields filled
+    val clarityScore: Float, // How detailed are answers (0-10)
+    val consistencyScore: Float, // Logical consistency (0-10)
+    val analysisTimestamp: Long = System.currentTimeMillis()
+)
 
 /**
  * PIQ test configuration

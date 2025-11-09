@@ -20,6 +20,7 @@ import com.ssbmax.core.domain.model.PIQPage
 fun PIQTestScreen(
     testId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToResult: (String) -> Unit = {},
     viewModel: PIQTestViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -120,18 +121,13 @@ fun PIQTestScreen(
                 )
             }
 
-            // Show success dialog
+            // Navigate to result screen on submission complete
             if (uiState.submissionComplete) {
-                AlertDialog(
-                    onDismissRequest = onNavigateBack,
-                    title = { Text("PIQ Submitted") },
-                    text = { Text("Your Personal Information Questionnaire has been submitted successfully.") },
-                    confirmButton = {
-                        TextButton(onClick = onNavigateBack) {
-                            Text("Done")
-                        }
-                    }
-                )
+                LaunchedEffect(Unit) {
+                    uiState.submissionId?.let { submissionId ->
+                        onNavigateToResult(submissionId)
+                    } ?: onNavigateBack()
+                }
             }
         }
     }
