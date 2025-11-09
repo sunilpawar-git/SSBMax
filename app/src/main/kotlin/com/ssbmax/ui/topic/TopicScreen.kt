@@ -69,7 +69,7 @@ fun TopicScreen(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
-                    label = { Text("Tests") },
+                    label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") },
                     alwaysShowLabel = true
                 )
             }

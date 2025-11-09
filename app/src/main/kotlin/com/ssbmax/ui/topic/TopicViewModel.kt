@@ -232,6 +232,7 @@ class TopicViewModel @Inject constructor(
         return when (testType.uppercase()) {
             "OIR" -> listOf(TestType.OIR)
             "PPDT" -> listOf(TestType.PPDT)
+            "PIQ", "PIQ_FORM" -> listOf(TestType.PIQ)
             "PSYCHOLOGY" -> listOf(TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD)
             "GTO" -> listOf(TestType.GTO)
             "INTERVIEW" -> listOf(TestType.IO)
