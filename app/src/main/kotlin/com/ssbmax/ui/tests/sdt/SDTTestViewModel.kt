@@ -187,9 +187,14 @@ class SDTTestViewModel @Inject constructor(
                     .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
                 val state = _uiState.value
                 val totalTimeMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt()
-                val submission = SDTSubmission(currentUserId, state.testId, state.responses,
-                    totalTimeMinutes, System.currentTimeMillis(),
-                    aiPreliminaryScore = SDTTestScoring.generateMockAIScore(state.responses))
+                val submission = SDTSubmission(
+                    userId = currentUserId,
+                    testId = state.testId,
+                    responses = state.responses,
+                    totalTimeTakenMinutes = totalTimeMinutes,
+                    submittedAt = System.currentTimeMillis(),
+                    aiPreliminaryScore = SDTTestScoring.generateMockAIScore(state.responses)
+                )
 
                 val scorePercentage = if (submission.totalResponses > 0)
                     (submission.validResponses.toFloat() / submission.totalResponses) * 100 else 0f
