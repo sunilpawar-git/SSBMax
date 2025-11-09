@@ -92,21 +92,22 @@ service cloud.firestore {
         // Users can CREATE new usage document with initial values
         // Note: Transactions may increment immediately after set(), so allow counts 0-10
         allow create: if isOwner(userId) &&
-                         request.resource.data.userId == userId &&
-                         request.resource.data.keys().hasAll([
-                           'month', 'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
-                           'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
-                           'interviewTestsUsed', 'sdTestsUsed', 'lastUpdated'
-                         ]) &&
+                        request.resource.data.userId == userId &&
+                        request.resource.data.keys().hasAll([
+                          'month', 'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
+                          'srtTestsUsed', 'ppdtTestsUsed', 'piqTestsUsed', 'gtoTestsUsed',
+                          'interviewTestsUsed', 'sdTestsUsed', 'lastUpdated'
+                        ]) &&
                          // Allow counts 0-10 on create (transaction may increment immediately)
-                         request.resource.data.oirTestsUsed >= 0 && request.resource.data.oirTestsUsed <= 10 &&
-                         request.resource.data.tatTestsUsed >= 0 && request.resource.data.tatTestsUsed <= 10 &&
-                         request.resource.data.watTestsUsed >= 0 && request.resource.data.watTestsUsed <= 10 &&
-                         request.resource.data.srtTestsUsed >= 0 && request.resource.data.srtTestsUsed <= 10 &&
-                         request.resource.data.ppdtTestsUsed >= 0 && request.resource.data.ppdtTestsUsed <= 10 &&
-                         request.resource.data.gtoTestsUsed >= 0 && request.resource.data.gtoTestsUsed <= 10 &&
-                         request.resource.data.interviewTestsUsed >= 0 && request.resource.data.interviewTestsUsed <= 10 &&
-                         request.resource.data.sdTestsUsed >= 0 && request.resource.data.sdTestsUsed <= 10;
+                        request.resource.data.oirTestsUsed >= 0 && request.resource.data.oirTestsUsed <= 10 &&
+                        request.resource.data.tatTestsUsed >= 0 && request.resource.data.tatTestsUsed <= 10 &&
+                        request.resource.data.watTestsUsed >= 0 && request.resource.data.watTestsUsed <= 10 &&
+                        request.resource.data.srtTestsUsed >= 0 && request.resource.data.srtTestsUsed <= 10 &&
+                        request.resource.data.ppdtTestsUsed >= 0 && request.resource.data.ppdtTestsUsed <= 10 &&
+                        request.resource.data.piqTestsUsed >= 0 && request.resource.data.piqTestsUsed <= 10 &&
+                        request.resource.data.gtoTestsUsed >= 0 && request.resource.data.gtoTestsUsed <= 10 &&
+                        request.resource.data.interviewTestsUsed >= 0 && request.resource.data.interviewTestsUsed <= 10 &&
+                        request.resource.data.sdTestsUsed >= 0 && request.resource.data.sdTestsUsed <= 10;
         
         // Users can UPDATE usage 
         // Allow updates for transactions with basic validation
@@ -121,9 +122,11 @@ service cloud.firestore {
                           request.resource.data.watTestsUsed > resource.data.watTestsUsed) &&
                          (request.resource.data.srtTestsUsed == resource.data.srtTestsUsed || 
                           request.resource.data.srtTestsUsed > resource.data.srtTestsUsed) &&
-                         (request.resource.data.ppdtTestsUsed == resource.data.ppdtTestsUsed || 
+                        (request.resource.data.ppdtTestsUsed == resource.data.ppdtTestsUsed || 
                           request.resource.data.ppdtTestsUsed > resource.data.ppdtTestsUsed) &&
-                         (request.resource.data.gtoTestsUsed == resource.data.gtoTestsUsed || 
+                        (request.resource.data.piqTestsUsed == resource.data.piqTestsUsed || 
+                          request.resource.data.piqTestsUsed > resource.data.piqTestsUsed) &&
+                        (request.resource.data.gtoTestsUsed == resource.data.gtoTestsUsed || 
                           request.resource.data.gtoTestsUsed > resource.data.gtoTestsUsed) &&
                          (request.resource.data.interviewTestsUsed == resource.data.interviewTestsUsed || 
                           request.resource.data.interviewTestsUsed > resource.data.interviewTestsUsed) &&

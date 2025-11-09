@@ -16,8 +16,10 @@ data class TestUsageEntity(
     val watTestsUsed: Int = 0,
     val srtTestsUsed: Int = 0,
     val ppdtTestsUsed: Int = 0,
+    val piqTestsUsed: Int = 0,
     val gtoTestsUsed: Int = 0,
     val interviewTestsUsed: Int = 0,
+    val sdTestsUsed: Int = 0,
     val lastUpdated: Long = System.currentTimeMillis()
 )
 

@@ -39,6 +39,11 @@ interface SubmissionRepository {
     suspend fun submitOIR(submission: OIRSubmission, batchId: String? = null): Result<String>
 
     /**
+     * Submit PIQ test
+     */
+    suspend fun submitPIQ(submission: PIQSubmission, batchId: String? = null): Result<String>
+
+    /**
      * Get submission by ID
      */
     suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?>

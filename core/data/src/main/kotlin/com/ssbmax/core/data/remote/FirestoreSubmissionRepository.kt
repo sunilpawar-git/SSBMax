@@ -221,6 +221,45 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     }
 
     /**
+     * Submit PIQ test
+     */
+    override suspend fun submitPIQ(submission: PIQSubmission, batchId: String?): Result<String> {
+        return try {
+            Log.d(TAG, "☁️ Firestore PIQ: Preparing submission for Firestore...")
+            Log.d(TAG, "   Document ID: ${submission.id}")
+            Log.d(TAG, "   User ID: ${submission.userId}")
+            Log.d(TAG, "   Test ID: ${submission.testId}")
+            Log.d(TAG, "   Status: ${submission.status.name}")
+            
+            val submissionMap = mapOf(
+                FIELD_ID to submission.id,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.testId,
+                FIELD_TEST_TYPE to TestType.PIQ.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
+                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to submission.toMap()
+            )
+
+            Log.d(TAG, "☁️ Firestore PIQ: Writing to collection 'submissions' at path: submissions/${submission.id}")
+            submissionsCollection.document(submission.id)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Log.d(TAG, "✅ Firestore PIQ: Successfully written to Firestore!")
+            Log.d(TAG, "   Collection: submissions")
+            Log.d(TAG, "   Document: ${submission.id}")
+            Result.success(submission.id)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Firestore PIQ: Failed to write to Firestore - ${e.message}", e)
+            Result.failure(Exception("Failed to submit PIQ: ${e.message}", e))
+        }
+    }
+
+    /**
      * Get submission by ID
      */
     override suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?> {

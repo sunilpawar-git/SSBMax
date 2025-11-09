@@ -28,7 +28,7 @@ object TopicContentLoader {
                 title = "Personal Information Questionnaire",
                 introduction = getIntroduction("PIQ_FORM"),
                 studyMaterials = getStudyMaterials("PIQ_FORM"),
-                tests = emptyList() // PIQ is a form, not a test
+                tests = listOf(TestType.PIQ) // Show PIQ form filling option
             )
             "PSYCHOLOGY" -> TopicInfo(
                 title = "Psychology Tests",

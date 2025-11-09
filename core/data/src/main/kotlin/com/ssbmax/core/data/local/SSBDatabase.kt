@@ -57,7 +57,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 11, // Added adaptive difficulty progression
+    version = 12, // Added piqTestsUsed and sdTestsUsed fields to TestUsageEntity
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

@@ -69,7 +69,7 @@ fun TopicScreen(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
-                    label = { Text("Tests") },
+                    label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") },
                     alwaysShowLabel = true
                 )
             }
@@ -436,6 +436,7 @@ private fun getTestColor(testType: TestType): Color {
     return when (testType) {
         TestType.OIR -> Color(0xFF1976D2)
         TestType.PPDT -> Color(0xFF388E3C)
+        TestType.PIQ -> Color(0xFF009688)
         TestType.TAT -> Color(0xFFD32F2F)
         TestType.WAT -> Color(0xFFF57C00)
         TestType.SRT -> Color(0xFF7B1FA2)
@@ -449,6 +450,7 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
     return when (testType) {
         TestType.OIR -> Icons.Default.Psychology
         TestType.PPDT -> Icons.Default.Image
+        TestType.PIQ -> Icons.Default.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         TestType.GTO -> Icons.Default.Groups
         TestType.IO -> Icons.Default.RecordVoiceOver

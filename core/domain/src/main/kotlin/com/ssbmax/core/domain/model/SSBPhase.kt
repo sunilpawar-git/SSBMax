@@ -65,6 +65,7 @@ enum class TestType {
     PPDT,       // Picture Perception & Description Test
     
     // Phase 2
+    PIQ,        // Personal Information Questionnaire
     TAT,        // Thematic Apperception Test
     WAT,        // Word Association Test
     SRT,        // Situation Reaction Test
@@ -75,13 +76,14 @@ enum class TestType {
     val phase: TestPhase
         get() = when (this) {
             OIR, PPDT -> TestPhase.PHASE_1
-            TAT, WAT, SRT, SD, GTO, IO -> TestPhase.PHASE_2
+            PIQ, TAT, WAT, SRT, SD, GTO, IO -> TestPhase.PHASE_2
         }
     
     val displayName: String
         get() = when (this) {
             OIR -> "OIR Test"
             PPDT -> "PPDT"
+            PIQ -> "PIQ"
             TAT -> "TAT"
             WAT -> "WAT"
             SRT -> "SRT"
@@ -94,6 +96,7 @@ enum class TestType {
         get() = when (this) {
             OIR -> "Officer Intelligence Rating"
             PPDT -> "Picture Perception & Description Test"
+            PIQ -> "Personal Information Questionnaire"
             TAT -> "Thematic Apperception Test"
             WAT -> "Word Association Test"
             SRT -> "Situation Reaction Test"
@@ -106,6 +109,7 @@ enum class TestType {
         get() = when (this) {
             OIR -> "Test your reasoning, verbal, and non-verbal intelligence"
             PPDT -> "Observe a picture and describe what you see"
+            PIQ -> "Complete your personal information form"
             TAT -> "Create stories based on ambiguous pictures"
             WAT -> "Write first response to 60 words in 15 minutes"
             SRT -> "React to 60 practical situations"
@@ -118,7 +122,7 @@ enum class TestType {
         get() = this == OIR
     
     val requiresInstructorReview: Boolean
-        get() = this in listOf(PPDT, TAT, WAT, SRT, SD, GTO, IO)
+        get() = this in listOf(PPDT, TAT, WAT, SRT, SD, GTO, IO) // PIQ is for reference, not graded
 }
 
 /**

@@ -180,6 +180,7 @@ data class SubmissionItem(
             TestType.WAT -> "WAT - Word Association Test"
             TestType.SRT -> "SRT - Situation Reaction Test"
             TestType.PPDT -> "PPDT - Picture Perception Test"
+            TestType.PIQ -> "PIQ - Personal Information Questionnaire"
             TestType.SD -> "SD - Self Description"
             TestType.OIR -> "OIR - Officers Intelligence Rating"
             TestType.GTO -> "GTO - Group Testing Officer"

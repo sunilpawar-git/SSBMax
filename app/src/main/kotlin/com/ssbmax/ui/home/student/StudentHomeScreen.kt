@@ -331,6 +331,7 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
     return when (testType) {
         TestType.OIR -> Icons.Default.Psychology
         TestType.PPDT -> Icons.Default.Image
+        TestType.PIQ -> Icons.Default.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         TestType.GTO -> Icons.Default.Groups
         TestType.IO -> Icons.Default.RecordVoiceOver
