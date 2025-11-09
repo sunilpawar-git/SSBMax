@@ -25,6 +25,15 @@ fun PIQTestScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Navigate to result screen on submission complete (outside if-else to always execute)
+    if (uiState.submissionComplete) {
+        LaunchedEffect(Unit) {
+            uiState.submissionId?.let { submissionId ->
+                onNavigateToResult(submissionId)
+            } ?: onNavigateBack()
+        }
+    }
+
     // Show review screen or form
     if (uiState.showReviewScreen) {
         PIQReviewScreen(
@@ -119,15 +128,6 @@ fun PIQTestScreen(
                         }
                     }
                 )
-            }
-
-            // Navigate to result screen on submission complete
-            if (uiState.submissionComplete) {
-                LaunchedEffect(Unit) {
-                    uiState.submissionId?.let { submissionId ->
-                        onNavigateToResult(submissionId)
-                    } ?: onNavigateBack()
-                }
             }
         }
     }
