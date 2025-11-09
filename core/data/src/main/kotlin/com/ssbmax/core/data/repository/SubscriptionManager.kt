@@ -49,7 +49,7 @@ class SubscriptionManager @Inject constructor(
         try {
             // 🔓 DEBUG BYPASS: Allow unlimited tests in debug builds
             // This is ONLY active in debug variant, production builds have this disabled
-            // APPLIES TO ALL TESTS: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
+            // APPLIES TO ALL TESTS: OIR, PPDT, PIQ, WAT, SRT, TAT, GTO, Self Description, Interview
             Log.d(TAG, "🔍 Debug bypass status: ${debugConfig.bypassSubscriptionLimits}")
             if (debugConfig.bypassSubscriptionLimits) {
                 Log.w(TAG, "════════════════════════════════════════")
@@ -58,7 +58,7 @@ class SubscriptionManager @Inject constructor(
                 Log.w(TAG, "   User: $userId")
                 Log.w(TAG, "   Returning: 999 remaining tests")
                 Log.w(TAG, "⚠️  This bypass is ONLY active when BYPASS_SUBSCRIPTION_LIMITS=true")
-                Log.w(TAG, "📋 Affected tests: ALL (OIR, PPDT, WAT, SRT, TAT, GTO, SD, Interview)")
+                Log.w(TAG, "📋 Affected tests: ALL (OIR, PPDT, PIQ, WAT, SRT, TAT, GTO, SD, Interview)")
                 Log.w(TAG, "💡 To test real subscription limits, set BYPASS_SUBSCRIPTION_LIMITS=false in build.gradle.kts")
                 Log.w(TAG, "════════════════════════════════════════")
                 return TestEligibility.Eligible(remainingTests = 999)
@@ -189,10 +189,10 @@ class SubscriptionManager @Inject constructor(
                     TestType.WAT -> "watTestsUsed"
                     TestType.SRT -> "srtTestsUsed"
                     TestType.PPDT -> "ppdtTestsUsed"
+                    TestType.PIQ -> "piqTestsUsed"
                     TestType.GTO -> "gtoTestsUsed"
                     TestType.IO -> "interviewTestsUsed"
                     TestType.SD -> "sdTestsUsed"
-                    else -> null
                 }
                 
                 if (fieldName != null) {
@@ -252,7 +252,7 @@ class SubscriptionManager @Inject constructor(
     private fun getUsedCountForTestType(usage: TestUsageEntity, testType: TestType): Int {
         // For simplicity, count ALL tests towards the limit (not per-test-type)
         return usage.oirTestsUsed + usage.tatTestsUsed + usage.watTestsUsed +
-               usage.srtTestsUsed + usage.ppdtTestsUsed + usage.gtoTestsUsed
+               usage.srtTestsUsed + usage.ppdtTestsUsed + usage.piqTestsUsed + usage.gtoTestsUsed
     }
     
     private fun getCurrentMonth(): String {
@@ -302,8 +302,10 @@ class SubscriptionManager @Inject constructor(
                     watTestsUsed = (doc.getLong("watTestsUsed") ?: 0).toInt(),
                     srtTestsUsed = (doc.getLong("srtTestsUsed") ?: 0).toInt(),
                     ppdtTestsUsed = (doc.getLong("ppdtTestsUsed") ?: 0).toInt(),
+                    piqTestsUsed = (doc.getLong("piqTestsUsed") ?: 0).toInt(),
                     gtoTestsUsed = (doc.getLong("gtoTestsUsed") ?: 0).toInt(),
                     interviewTestsUsed = (doc.getLong("interviewTestsUsed") ?: 0).toInt(),
+                    sdTestsUsed = (doc.getLong("sdTestsUsed") ?: 0).toInt(),
                     lastUpdated = doc.getLong("lastUpdated") ?: System.currentTimeMillis()
                 )
             } else {
@@ -337,8 +339,10 @@ class SubscriptionManager @Inject constructor(
                 "watTestsUsed" to usage.watTestsUsed,
                 "srtTestsUsed" to usage.srtTestsUsed,
                 "ppdtTestsUsed" to usage.ppdtTestsUsed,
+                "piqTestsUsed" to usage.piqTestsUsed,
                 "gtoTestsUsed" to usage.gtoTestsUsed,
                 "interviewTestsUsed" to usage.interviewTestsUsed,
+                "sdTestsUsed" to usage.sdTestsUsed,
                 "lastUpdated" to usage.lastUpdated
             )
             

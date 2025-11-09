@@ -313,6 +313,22 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
     
+    // PIQ Test (Personal Information Questionnaire)
+    composable(
+        route = SSBMaxDestinations.PIQTest.route,
+        arguments = listOf(navArgument("testId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val testId = backStackEntry.arguments?.getString("testId") ?: ""
+        com.ssbmax.ui.tests.piq.PIQTestScreen(
+            testId = testId,
+            onNavigateBack = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+    
     // GTO Test
     composable(
         route = SSBMaxDestinations.GTOTest.route,
@@ -389,6 +405,8 @@ fun NavGraphBuilder.sharedNavGraph(
                         navController.navigate(SSBMaxDestinations.SRTTest.createRoute(testId))
                     testId.startsWith("sd_") -> 
                         navController.navigate(SSBMaxDestinations.SDTest.createRoute(testId))
+                    testId.startsWith("piq_") -> 
+                        navController.navigate(SSBMaxDestinations.PIQTest.createRoute(testId))
                     testId.startsWith("gto_") -> 
                         navController.navigate(SSBMaxDestinations.GTOTest.createRoute(testId))
                     testId.startsWith("io_") -> 
