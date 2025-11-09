@@ -24,6 +24,11 @@ interface SubmissionRepository {
     suspend fun submitSRT(submission: SRTSubmission, batchId: String? = null): Result<String>
 
     /**
+     * Submit SDT test
+     */
+    suspend fun submitSDT(submission: SDTSubmission, batchId: String? = null): Result<String>
+
+    /**
      * Submit PPDT test
      */
     suspend fun submitPPDT(submission: PPDTSubmission, batchId: String? = null): Result<String>

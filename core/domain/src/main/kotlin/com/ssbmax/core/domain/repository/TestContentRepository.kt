@@ -3,6 +3,7 @@ package com.ssbmax.core.domain.repository
 import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.PPDTQuestion
+import com.ssbmax.core.domain.model.SDTQuestion
 import com.ssbmax.core.domain.model.SRTSituation
 import com.ssbmax.core.domain.model.TATQuestion
 import com.ssbmax.core.domain.model.TestType
@@ -78,6 +79,13 @@ interface TestContentRepository {
      * @return Result with list of SRT situations or error
      */
     suspend fun getSRTQuestions(testId: String): Result<List<SRTSituation>>
+    
+    /**
+     * Fetch SDT test questions (4 predefined questions)
+     * @param testId The specific test ID to load
+     * @return Result with list of SDT questions or error
+     */
+    suspend fun getSDTQuestions(testId: String): Result<List<SDTQuestion>>
     
     /**
      * Check if user has active test session for given test

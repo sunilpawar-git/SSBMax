@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.remote
 
+import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -24,6 +25,8 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     private val submissionsCollection = firestore.collection("submissions")
 
     companion object {
+        private const val TAG = "FirestoreSubmission"
+        
         // Field names
         private const val FIELD_ID = "id"
         private const val FIELD_USER_ID = "userId"
@@ -118,6 +121,46 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             Result.success(submission.id)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to submit SRT: ${e.message}", e))
+        }
+    }
+
+    /**
+     * Submit SDT test
+     */
+    override suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> {
+        return try {
+            Log.d(TAG, "☁️ Firestore SDT: Preparing submission for Firestore...")
+            Log.d(TAG, "   Document ID: ${submission.id}")
+            Log.d(TAG, "   User ID: ${submission.userId}")
+            Log.d(TAG, "   Test ID: ${submission.testId}")
+            Log.d(TAG, "   Responses: ${submission.responses.size}")
+            Log.d(TAG, "   Status: ${submission.status.name}")
+            
+            val submissionMap = mapOf(
+                FIELD_ID to submission.id,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.testId,
+                FIELD_TEST_TYPE to TestType.SD.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
+                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to submission.toMap()
+            )
+
+            Log.d(TAG, "☁️ Firestore SDT: Writing to collection 'submissions' at path: submissions/${submission.id}")
+            submissionsCollection.document(submission.id)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Log.d(TAG, "✅ Firestore SDT: Successfully written to Firestore!")
+            Log.d(TAG, "   Collection: submissions")
+            Log.d(TAG, "   Document: ${submission.id}")
+            Result.success(submission.id)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Firestore SDT: Failed to write to Firestore - ${e.message}", e)
+            Result.failure(Exception("Failed to submit SDT: ${e.message}", e))
         }
     }
 
@@ -655,6 +698,81 @@ private fun SRTInstructorScore.toMap(): Map<String, Any?> {
         "socialResponsibilityScore" to socialResponsibilityScore,
         "feedback" to feedback,
         "categoryWiseComments" to categoryWiseComments.mapKeys { it.key.name },
+        "flaggedResponses" to flaggedResponses,
+        "exemplaryResponses" to exemplaryResponses,
+        "gradedByInstructorId" to gradedByInstructorId,
+        "gradedByInstructorName" to gradedByInstructorName,
+        "gradedAt" to gradedAt,
+        "agreedWithAI" to agreedWithAI
+    )
+}
+
+// ==================== SDT Mapping Functions ====================
+
+private fun SDTSubmission.toMap(): Map<String, Any?> {
+    return mapOf(
+        "id" to id,
+        "userId" to userId,
+        "testId" to testId,
+        "responses" to responses.map { it.toMap() },
+        "totalTimeTakenMinutes" to totalTimeTakenMinutes,
+        "submittedAt" to submittedAt,
+        "status" to status.name,
+        "aiPreliminaryScore" to aiPreliminaryScore?.toMap(),
+        "instructorScore" to instructorScore?.toMap(),
+        "gradedByInstructorId" to gradedByInstructorId,
+        "gradingTimestamp" to gradingTimestamp
+    )
+}
+
+private fun SDTQuestionResponse.toMap(): Map<String, Any?> {
+    return mapOf(
+        "questionId" to questionId,
+        "question" to question,
+        "answer" to answer,
+        "wordCount" to wordCount,
+        "timeTakenSeconds" to timeTakenSeconds,
+        "submittedAt" to submittedAt,
+        "isSkipped" to isSkipped
+    )
+}
+
+private fun SDTAIScore.toMap(): Map<String, Any?> {
+    return mapOf(
+        "overallScore" to overallScore,
+        "selfAwarenessScore" to selfAwarenessScore,
+        "emotionalMaturityScore" to emotionalMaturityScore,
+        "socialPerceptionScore" to socialPerceptionScore,
+        "introspectionScore" to introspectionScore,
+        "feedback" to feedback,
+        "positiveTraits" to positiveTraits,
+        "concerningPatterns" to concerningPatterns,
+        "responseQuality" to responseQuality.name,
+        "strengths" to strengths,
+        "areasForImprovement" to areasForImprovement,
+        "questionWiseAnalysis" to questionWiseAnalysis.map { it.toMap() }
+    )
+}
+
+private fun QuestionAnalysis.toMap(): Map<String, Any?> {
+    return mapOf(
+        "questionId" to questionId,
+        "sequenceNumber" to sequenceNumber,
+        "score" to score,
+        "themes" to themes,
+        "sentimentScore" to sentimentScore,
+        "keyInsights" to keyInsights
+    )
+}
+
+private fun SDTInstructorScore.toMap(): Map<String, Any?> {
+    return mapOf(
+        "overallScore" to overallScore,
+        "selfAwarenessScore" to selfAwarenessScore,
+        "emotionalMaturityScore" to emotionalMaturityScore,
+        "socialPerceptionScore" to socialPerceptionScore,
+        "introspectionScore" to introspectionScore,
+        "feedback" to feedback,
         "flaggedResponses" to flaggedResponses,
         "exemplaryResponses" to exemplaryResponses,
         "gradedByInstructorId" to gradedByInstructorId,
