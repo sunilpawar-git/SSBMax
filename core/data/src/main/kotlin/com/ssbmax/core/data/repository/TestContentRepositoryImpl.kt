@@ -221,6 +221,23 @@ class TestContentRepositoryImpl @Inject constructor(
             Result.success(MockTestDataProvider.getSRTSituations())
         }
     }
+    
+    override suspend fun getSDTQuestions(testId: String): Result<List<SDTQuestion>> {
+        return try {
+            Log.d("TestContent", "Getting SDT questions (hardcoded 4 questions)")
+            
+            // SDT questions are predefined and don't need Firestore fetch
+            // Return the standard 4 questions
+            val questions = createStandardSDTQuestions()
+            
+            Log.d("TestContent", "Retrieved ${questions.size} SDT questions")
+            Result.success(questions)
+            
+        } catch (e: Exception) {
+            Log.e("TestContent", "Failed to get SDT questions", e)
+            Result.failure(e)
+        }
+    }
 
     override suspend fun hasActiveTestSession(userId: String, testId: String): Result<Boolean> {
         return try {
