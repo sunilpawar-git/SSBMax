@@ -531,7 +531,11 @@ fun NavGraphBuilder.sharedNavGraph(
         val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
         com.ssbmax.ui.submissions.SubmissionDetailScreen(
             submissionId = submissionId,
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateHome = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
         )
     }
     

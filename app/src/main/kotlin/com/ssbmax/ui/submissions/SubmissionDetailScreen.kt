@@ -23,7 +23,7 @@ import com.ssbmax.core.domain.model.SubmissionStatus
 @Composable
 fun SubmissionDetailScreen(
     submissionId: String,
-    onNavigateBack: () -> Unit = {},
+    onNavigateHome: () -> Unit = {},
     viewModel: SubmissionDetailViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -32,12 +32,7 @@ fun SubmissionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Submission Details") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                }
+                title = { Text("Submission Details") }
             )
         }
     ) { padding ->
@@ -55,6 +50,7 @@ fun SubmissionDetailScreen(
             else -> {
                 DetailContent(
                     uiState = uiState,
+                    onNavigateHome = onNavigateHome,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -65,6 +61,7 @@ fun SubmissionDetailScreen(
 @Composable
 private fun DetailContent(
     uiState: SubmissionDetailUiState,
+    onNavigateHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -100,6 +97,16 @@ private fun DetailContent(
         if (uiState.status == SubmissionStatus.SUBMITTED_PENDING_REVIEW) {
             item {
                 PendingMessage()
+            }
+        }
+        
+        // Actions - Back to Home button
+        item {
+            Button(
+                onClick = onNavigateHome,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Home")
             }
         }
     }

@@ -53,7 +53,7 @@ fun GradingDetailScreen(
         // Show submission details
         SubmissionDetailScreen(
             submissionId = submissionId,
-            onNavigateBack = { /* Already handled by topBar */ },
+            onNavigateHome = { /* Already handled by topBar */ },
             modifier = Modifier.padding(padding)
         )
         
