@@ -221,7 +221,23 @@ data class PIQSubmission(
             "submittedAt" to submittedAt,
             "lastModifiedAt" to lastModifiedAt,
             "gradedByInstructorId" to gradedByInstructorId,
-            "gradingTimestamp" to gradingTimestamp
+            "gradingTimestamp" to gradingTimestamp,
+            "aiPreliminaryScore" to aiPreliminaryScore?.let { score ->
+                mapOf(
+                    "overallScore" to score.overallScore,
+                    "personalInfoScore" to score.personalInfoScore,
+                    "familyInfoScore" to score.familyInfoScore,
+                    "motivationScore" to score.motivationScore,
+                    "selfAssessmentScore" to score.selfAssessmentScore,
+                    "feedback" to score.feedback,
+                    "strengths" to score.strengths,
+                    "areasForImprovement" to score.areasForImprovement,
+                    "completenessPercentage" to score.completenessPercentage,
+                    "clarityScore" to score.clarityScore,
+                    "consistencyScore" to score.consistencyScore,
+                    "analysisTimestamp" to score.analysisTimestamp
+                )
+            }
         )
     }
     

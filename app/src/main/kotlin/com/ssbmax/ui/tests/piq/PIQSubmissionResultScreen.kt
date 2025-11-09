@@ -2,7 +2,6 @@ package com.ssbmax.ui.tests.piq
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -11,95 +10,115 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.PIQAIScore
 
 /**
  * PIQ Submission Result Screen - Shows AI quality score
- * Similar to TAT/WAT/SRT result screens with mock AI analysis
+ * Follows SDT/TAT pattern: fetches submission from Firestore via ViewModel
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PIQSubmissionResultScreen(
     submissionId: String,
-    onNavigateHome: () -> Unit,
-    modifier: Modifier = Modifier
+    onNavigateHome: () -> Unit = {},
+    viewModel: PIQSubmissionResultViewModel = hiltViewModel()
 ) {
-    // For now, we'll pass the AI score directly via navigation
-    // In future, this will fetch from Firestore/ViewModel
-    // Mock data for demonstration
-    val mockAIScore = remember {
-        PIQAIScore(
-            overallScore = 82f,
-            personalInfoScore = 20f,
-            familyInfoScore = 22f,
-            motivationScore = 19f,
-            selfAssessmentScore = 21f,
-            feedback = "Good PIQ. Adequate information provided. Some areas could be more detailed.",
-            strengths = listOf(
-                "Comprehensive information",
-                "Clear defense forces motivation",
-                "Self-awareness of strengths"
-            ),
-            areasForImprovement = listOf(
-                "Elaborate on defense forces motivation"
-            ),
-            completenessPercentage = 85,
-            clarityScore = 8.5f,
-            consistencyScore = 8.2f
-        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(submissionId) {
+        viewModel.loadSubmission(submissionId)
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("PIQ Quality Assessment") }
             )
         }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Success message
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+    ) { padding ->
+        when {
+            uiState.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            uiState.error != null -> {
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                "PIQ Submitted Successfully",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Submission ID: ${submissionId.take(8)}...",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
+                        Button(onClick = onNavigateHome) {
+                            Text("Return to Home")
                         }
                     }
                 }
             }
-            
-            // AI Quality Score
+            uiState.submission != null -> {
+                ResultContent(
+                    submissionId = submissionId,
+                    aiScore = uiState.submission!!.aiPreliminaryScore,
+                    onNavigateHome = onNavigateHome,
+                    modifier = Modifier.padding(padding)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultContent(
+    submissionId: String,
+    aiScore: PIQAIScore?,
+    onNavigateHome: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Success message
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            "PIQ Submitted Successfully",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Submission ID: ${submissionId.take(8)}...",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+        
+        // AI Quality Score - only show if available
+        aiScore?.let { score ->
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(
@@ -124,7 +143,7 @@ fun PIQSubmissionResultScreen(
                                 )
                             }
                             Text(
-                                "${mockAIScore.overallScore.toInt()}/100",
+                                "${score.overallScore.toInt()}/100",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -134,10 +153,10 @@ fun PIQSubmissionResultScreen(
                         HorizontalDivider()
                         
                         // Category Breakdown
-                        ScoreBreakdown("Personal Information", mockAIScore.personalInfoScore, 25f)
-                        ScoreBreakdown("Family Information", mockAIScore.familyInfoScore, 25f)
-                        ScoreBreakdown("Motivation & Goals", mockAIScore.motivationScore, 25f)
-                        ScoreBreakdown("Self-Assessment", mockAIScore.selfAssessmentScore, 25f)
+                        ScoreBreakdown("Personal Information", score.personalInfoScore, 25f)
+                        ScoreBreakdown("Family Information", score.familyInfoScore, 25f)
+                        ScoreBreakdown("Motivation & Goals", score.motivationScore, 25f)
+                        ScoreBreakdown("Self-Assessment", score.selfAssessmentScore, 25f)
                         
                         HorizontalDivider()
                         
@@ -148,7 +167,7 @@ fun PIQSubmissionResultScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    "${mockAIScore.completenessPercentage}%",
+                                    "${score.completenessPercentage}%",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -160,7 +179,7 @@ fun PIQSubmissionResultScreen(
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    "${mockAIScore.clarityScore}/10",
+                                    "%.1f/10".format(score.clarityScore),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.tertiary
@@ -172,7 +191,7 @@ fun PIQSubmissionResultScreen(
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    "${mockAIScore.consistencyScore}/10",
+                                    "%.1f/10".format(score.consistencyScore),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.secondary
@@ -193,7 +212,7 @@ fun PIQSubmissionResultScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            mockAIScore.feedback,
+                            score.feedback,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -201,7 +220,7 @@ fun PIQSubmissionResultScreen(
             }
             
             // Strengths
-            if (mockAIScore.strengths.isNotEmpty()) {
+            if (score.strengths.isNotEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -226,7 +245,7 @@ fun PIQSubmissionResultScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            mockAIScore.strengths.forEach { strength ->
+                            score.strengths.forEach { strength ->
                                 Row(
                                     modifier = Modifier.padding(start = 32.dp),
                                     verticalAlignment = Alignment.Top
@@ -247,7 +266,7 @@ fun PIQSubmissionResultScreen(
             }
             
             // Areas for Improvement
-            if (mockAIScore.areasForImprovement.isNotEmpty()) {
+            if (score.areasForImprovement.isNotEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -272,7 +291,7 @@ fun PIQSubmissionResultScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-                            mockAIScore.areasForImprovement.forEach { area ->
+                            score.areasForImprovement.forEach { area ->
                                 Row(
                                     modifier = Modifier.padding(start = 32.dp),
                                     verticalAlignment = Alignment.Top
@@ -291,42 +310,42 @@ fun PIQSubmissionResultScreen(
                     }
                 }
             }
-            
-            // Info Card
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+        }
+        
+        // Info Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            "Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
-            
-            // Return Home Button
-            item {
-                Button(
-                    onClick = onNavigateHome,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Return to Home")
-                }
+        }
+        
+        // Return Home Button
+        item {
+            Button(
+                onClick = onNavigateHome,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Return to Home")
             }
         }
     }
@@ -360,4 +379,3 @@ private fun ScoreBreakdown(
         )
     }
 }
-
