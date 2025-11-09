@@ -277,14 +277,36 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
     
-    // SD Test
+    // SD Test (Self Description Test)
     composable(
         route = SSBMaxDestinations.SDTest.route,
         arguments = listOf(navArgument("testId") { type = NavType.StringType })
     ) { backStackEntry ->
         val testId = backStackEntry.arguments?.getString("testId") ?: ""
-        // TODO: Implement SDTestScreen
-        SharedPlaceholderScreen(title = "SD Test: $testId")
+        com.ssbmax.ui.tests.sdt.SDTTestScreen(
+            testId = testId,
+            onTestComplete = { submissionId, subscriptionType ->
+                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = com.ssbmax.core.domain.model.TestType.SD,
+                    navController = navController
+                )
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+    
+    // SD Result (Self Description Test Result)
+    composable(
+        route = SSBMaxDestinations.SDSubmissionResult.route,
+        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+        com.ssbmax.ui.tests.sdt.SDTSubmissionResultScreen(
+            submissionId = submissionId,
+            onNavigateBack = { navController.navigateUp() }
+        )
     }
     
     // GTO Test
