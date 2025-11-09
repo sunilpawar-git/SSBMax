@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.sdt
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
@@ -20,17 +21,41 @@ class SDTSubmissionResultViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SDTSubmissionResultUiState())
     val uiState: StateFlow<SDTSubmissionResultUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val TAG = "SDTResultViewModel"
+    }
+
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
+            Log.d(TAG, "📥 SDT Result: Loading submission from Firestore...")
+            Log.d(TAG, "   Submission ID: $submissionId")
             _uiState.update { it.copy(isLoading = true) }
 
             submissionRepository.getSubmission(submissionId)
                 .onSuccess { data ->
-                    val submission = data?.let { parseSDTSubmission(it) }
+                    if (data == null) {
+                        Log.e(TAG, "❌ SDT Result: Submission data is null")
+                        _uiState.update { it.copy(isLoading = false, submission = null, error = "Submission not found") }
+                        return@onSuccess
+                    }
+                    
+                    Log.d(TAG, "✅ SDT Result: Submission data received from Firestore")
+                    Log.d(TAG, "   Parsing submission data...")
+                    val submission = parseSDTSubmission(data)
+                    
+                    if (submission != null) {
+                        Log.d(TAG, "✅ SDT Result: Successfully parsed submission")
+                        Log.d(TAG, "   Responses: ${submission.responses.size}")
+                        Log.d(TAG, "   AI Score: ${submission.aiPreliminaryScore?.overallScore}")
+                    } else {
+                        Log.e(TAG, "❌ SDT Result: Failed to parse submission data")
+                    }
+                    
                     _uiState.update { it.copy(isLoading = false, submission = submission,
                         error = if (submission == null) "Submission not found" else null) }
                 }
                 .onFailure { error ->
+                    Log.e(TAG, "❌ SDT Result: Failed to load submission - ${error.message}", error)
                     _uiState.update { it.copy(isLoading = false,
                         error = error.message ?: "Failed to load submission") }
                 }

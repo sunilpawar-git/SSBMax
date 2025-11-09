@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.remote
 
+import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -24,6 +25,8 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     private val submissionsCollection = firestore.collection("submissions")
 
     companion object {
+        private const val TAG = "FirestoreSubmission"
+        
         // Field names
         private const val FIELD_ID = "id"
         private const val FIELD_USER_ID = "userId"
@@ -126,6 +129,13 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
      */
     override suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> {
         return try {
+            Log.d(TAG, "☁️ Firestore SDT: Preparing submission for Firestore...")
+            Log.d(TAG, "   Document ID: ${submission.id}")
+            Log.d(TAG, "   User ID: ${submission.userId}")
+            Log.d(TAG, "   Test ID: ${submission.testId}")
+            Log.d(TAG, "   Responses: ${submission.responses.size}")
+            Log.d(TAG, "   Status: ${submission.status.name}")
+            
             val submissionMap = mapOf(
                 FIELD_ID to submission.id,
                 FIELD_USER_ID to submission.userId,
@@ -139,12 +149,17 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                 FIELD_DATA to submission.toMap()
             )
 
+            Log.d(TAG, "☁️ Firestore SDT: Writing to collection 'submissions' at path: submissions/${submission.id}")
             submissionsCollection.document(submission.id)
                 .set(submissionMap, SetOptions.merge())
                 .await()
 
+            Log.d(TAG, "✅ Firestore SDT: Successfully written to Firestore!")
+            Log.d(TAG, "   Collection: submissions")
+            Log.d(TAG, "   Document: ${submission.id}")
             Result.success(submission.id)
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Firestore SDT: Failed to write to Firestore - ${e.message}", e)
             Result.failure(Exception("Failed to submit SDT: ${e.message}", e))
         }
     }

@@ -18,7 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun SDTSubmissionResultScreen(
     submissionId: String,
-    onNavigateBack: () -> Unit = {},
+    onNavigateHome: () -> Unit = {},
     viewModel: SDTSubmissionResultViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -30,12 +30,7 @@ fun SDTSubmissionResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SDT Test Result") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                }
+                title = { Text("SDT Test Results") }
             )
         }
     ) { padding ->
@@ -51,14 +46,22 @@ fun SDTSubmissionResultScreen(
                 }
             }
             uiState.submission != null -> {
-                ResultContent(submission = uiState.submission!!, modifier = Modifier.padding(padding))
+                ResultContent(
+                    submission = uiState.submission!!, 
+                    onNavigateHome = onNavigateHome,
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ResultContent(submission: com.ssbmax.core.domain.model.SDTSubmission, modifier: Modifier = Modifier) {
+private fun ResultContent(
+    submission: com.ssbmax.core.domain.model.SDTSubmission, 
+    onNavigateHome: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -136,6 +139,16 @@ private fun ResultContent(submission: com.ssbmax.core.domain.model.SDTSubmission
                             color = MaterialTheme.colorScheme.error)
                     }
                 }
+            }
+        }
+        
+        // Actions - Back to Home button
+        item {
+            Button(
+                onClick = onNavigateHome,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Home")
             }
         }
     }
