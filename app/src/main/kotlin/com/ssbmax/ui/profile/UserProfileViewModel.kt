@@ -1,5 +1,6 @@
 package com.ssbmax.ui.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.EntryType
@@ -26,57 +27,90 @@ class UserProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "UserProfileViewModel"
+    }
+
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadProfile()
+        Log.d(TAG, "🔄 UserProfileViewModel initialized")
+        // Start observing auth state changes reactively
+        observeAuthState()
     }
 
     /**
-     * Loads the current user's profile from Firestore.
-     * Now simplified - AuthRepository reactive Flow handles lifecycle automatically.
+     * Observe authentication state changes and load profile when user is available
      */
-    fun loadProfile() {
+    private fun observeAuthState() {
+        Log.d(TAG, "👀 Starting auth state observation")
+        viewModelScope.launch {
+            authRepository.currentUser.collect { currentUser ->
+                Log.d(TAG, "🔄 Auth state changed - user: ${currentUser?.id}, email: ${currentUser?.email}")
+                if (currentUser != null) {
+                    loadProfileForUser(currentUser.id)
+                } else {
+                    Log.d(TAG, "🚪 User signed out - clearing profile")
+                    _uiState.update {
+                        it.copy(
+                            profile = null,
+                            isLoading = false,
+                            error = "Please sign in to view your profile"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads the current user's profile from Firestore for a specific user
+     */
+    private fun loadProfileForUser(userId: String) {
+        Log.d(TAG, "📥 loadProfileForUser() called for user: $userId")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            
-            // Get current user from reactive StateFlow (no timeout needed)
-            val currentUser = authRepository.currentUser.value
-            
-            if (currentUser == null) {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false, 
-                        error = "Please sign in to view your profile"
-                    ) 
-                }
-                return@launch
-            }
+
+            Log.d(TAG, "🔍 Loading profile for user: $userId")
 
             // Collect profile updates reactively
-            userProfileRepository.getUserProfile(currentUser.id)
+            userProfileRepository.getUserProfile(userId)
                 .collect { result ->
                     result.fold(
                         onSuccess = { profile ->
-                            _uiState.update { 
+                            Log.d(TAG, "✅ Profile loaded successfully: fullName=${profile?.fullName}, age=${profile?.age}")
+                            _uiState.update {
                                 it.copy(
                                     profile = profile,
                                     isLoading = false,
                                     error = null
-                                ) 
+                                )
                             }
                         },
                         onFailure = { error ->
-                            _uiState.update { 
+                            Log.e(TAG, "❌ Failed to load profile: ${error.message}", error)
+                            _uiState.update {
                                 it.copy(
                                     isLoading = false,
                                     error = error.message
-                                ) 
+                                )
                             }
                         }
                     )
                 }
+        }
+    }
+
+    /**
+     * Public method to manually refresh profile (for backwards compatibility)
+     */
+    fun loadProfile() {
+        val currentUser = authRepository.currentUser.value
+        if (currentUser != null) {
+            loadProfileForUser(currentUser.id)
+        } else {
+            Log.w(TAG, "❌ loadProfile() called but no current user")
         }
     }
 
@@ -104,12 +138,15 @@ class UserProfileViewModel @Inject constructor(
      * Validates and saves the profile
      */
     fun saveProfile() {
+        Log.d(TAG, "💾 saveProfile() called")
         viewModelScope.launch {
             val state = _uiState.value
-            
+            Log.d(TAG, "📝 Current state: fullName=${state.fullName}, age=${state.age}, gender=${state.gender}, entryType=${state.entryType}")
+
             // Validation
             val validationError = validateProfile(state)
             if (validationError != null) {
+                Log.w(TAG, "❌ Validation failed: $validationError")
                 _uiState.update { it.copy(error = validationError) }
                 return@launch
             }
@@ -117,12 +154,14 @@ class UserProfileViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val currentUser = authRepository.currentUser.value
+            Log.d(TAG, "👤 Current user for save: ${currentUser?.id}")
             if (currentUser == null) {
-                _uiState.update { 
+                Log.w(TAG, "❌ No current user found for save operation")
+                _uiState.update {
                     it.copy(
-                        isLoading = false, 
+                        isLoading = false,
                         error = "Please sign in to save your profile"
-                    ) 
+                    )
                 }
                 return@launch
             }
@@ -135,30 +174,35 @@ class UserProfileViewModel @Inject constructor(
                 entryType = state.entryType!!,
                 profilePictureUrl = state.profilePictureUrl
             )
+            Log.d(TAG, "📋 Created profile: $profile")
 
             val result = if (state.profile == null) {
+                Log.d(TAG, "🆕 Saving new profile")
                 userProfileRepository.saveUserProfile(profile)
             } else {
+                Log.d(TAG, "🔄 Updating existing profile")
                 userProfileRepository.updateUserProfile(profile)
             }
 
             result.fold(
                 onSuccess = {
-                    _uiState.update { 
+                    Log.d(TAG, "✅ Profile saved successfully")
+                    _uiState.update {
                         it.copy(
                             profile = profile,  // Update the profile field with saved data
                             isLoading = false,
                             isSaved = true,
                             error = null
-                        ) 
+                        )
                     }
                 },
                 onFailure = { error ->
-                    _uiState.update { 
+                    Log.e(TAG, "❌ Failed to save profile: ${error.message}", error)
+                    _uiState.update {
                         it.copy(
                             isLoading = false,
                             error = error.message
-                        ) 
+                        )
                     }
                 }
             )
