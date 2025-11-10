@@ -4,7 +4,4 @@
 4. Wait for CI to pass ✅
 5. Merge PR on GitHub
 6. Switch to main + pull main
-7. Delete feature/ppdt branch (local & remote) ✅ DONE!
-Key point: After merging the PR on GitHub, you don't push the feature branch again - you just pull main and delete the feature branch (which we did automatically last time).
----
-
+7. Delete feature/ branch (local & remote) ✅ DONE!

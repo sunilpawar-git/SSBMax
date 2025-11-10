@@ -1,5 +1,6 @@
 package com.ssbmax.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -45,6 +46,11 @@ fun SSBMaxScaffold(
     val profileUiState by profileViewModel.uiState.collectAsState()
     val userProfile = profileUiState.profile
     val isLoadingProfile = profileUiState.isLoading
+
+    // Debug logging for profile state
+    LaunchedEffect(userProfile, isLoadingProfile) {
+        Log.d("SSBMaxScaffold", "📱 Profile state: userProfile=${userProfile?.fullName}, isLoading=$isLoadingProfile, hasProfile=${userProfile != null}")
+    }
     
     ModalNavigationDrawer(
         drawerState = drawerState,
