@@ -182,16 +182,24 @@ private fun DrawerMenuItem(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when {
-        isHomeButton -> MaterialTheme.colorScheme.primaryContainer
+        isHomeButton -> MaterialTheme.colorScheme.primary // Bright primary color for home button
         isSelected -> MaterialTheme.colorScheme.secondaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
 
     val contentColor = when {
-        isHomeButton -> MaterialTheme.colorScheme.onPrimaryContainer
+        isHomeButton -> MaterialTheme.colorScheme.onPrimary // High contrast for home button
         isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
         else -> MaterialTheme.colorScheme.onSurface
     }
+
+    val iconSize = if (isHomeButton) 28.dp else 24.dp // Bigger icon for home button
+    val textStyle = if (isHomeButton) {
+        MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+    } else {
+        MaterialTheme.typography.bodyLarge
+    }
+    val verticalPadding = if (isHomeButton) 16.dp else 12.dp // More padding for home button
 
     Surface(
         modifier = modifier
@@ -201,18 +209,19 @@ private fun DrawerMenuItem(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = contentColor
+                tint = contentColor,
+                modifier = Modifier.size(iconSize)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = textStyle,
                 color = contentColor
             )
         }
