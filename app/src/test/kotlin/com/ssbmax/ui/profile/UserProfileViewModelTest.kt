@@ -12,6 +12,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,12 +64,18 @@ class UserProfileViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        mockkStatic(android.util.Log::class)
+        every { android.util.Log.d(any<String>(), any<String>()) } returns 0
+        every { android.util.Log.w(any<String>(), any<String>()) } returns 0
+        every { android.util.Log.e(any<String>(), any<String>()) } returns 0
+        every { android.util.Log.e(any<String>(), any<String>(), any()) } returns 0
         every { mockAuthRepository.currentUser } returns mockCurrentUserFlow
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        unmockkStatic(android.util.Log::class)
     }
 
     // ==================== loadProfile() Tests ====================
@@ -522,11 +530,11 @@ class UserProfileViewModelTest {
     fun `resetSavedState clears isSaved flag`() = runTest {
         // Given
         mockCurrentUserFlow.value = testUser
-        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns 
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
             flowOf(Result.success(null))
-        coEvery { mockUserProfileRepository.saveUserProfile(any()) } returns 
+        coEvery { mockUserProfileRepository.saveUserProfile(any()) } returns
             Result.success(Unit)
-        
+
         viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
         advanceUntilIdle()
 
@@ -544,6 +552,193 @@ class UserProfileViewModelTest {
 
         // Then
         assertFalse(viewModel.uiState.value.isSaved)
+    }
+
+    // ==================== Reactive Auth State Observation Tests ====================
+
+    @Test
+    fun `reactive auth state - profile loads when user signs in after ViewModel creation`() = runTest {
+        // Given - Start with no user signed in
+        mockCurrentUserFlow.value = null
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+
+        // When - Create ViewModel (starts observing auth state)
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // Initially no profile loaded
+        assertNull(viewModel.uiState.value.profile)
+
+        // User signs in (auth state changes)
+        mockCurrentUserFlow.value = testUser
+        advanceUntilIdle()
+
+        // Then - Profile should be loaded automatically
+        val state = viewModel.uiState.value
+        assertEquals(testProfile, state.profile)
+        assertFalse(state.isLoading)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun `reactive auth state - profile clears when user signs out`() = runTest {
+        // Given - Start with user signed in and profile loaded
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // Verify profile is loaded
+        assertEquals(testProfile, viewModel.uiState.value.profile)
+
+        // When - User signs out (auth state changes to null)
+        mockCurrentUserFlow.value = null
+        advanceUntilIdle()
+
+        // Then - Profile should be cleared
+        val state = viewModel.uiState.value
+        assertNull(state.profile)
+        assertFalse(state.isLoading)
+        assertEquals("Please sign in to view your profile", state.error)
+    }
+
+    @Test
+    fun `reactive auth state - handles multiple auth state changes correctly`() = runTest {
+        // Given - Start with no user
+        mockCurrentUserFlow.value = null
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.profile)
+
+        // When - User signs in
+        mockCurrentUserFlow.value = testUser
+        advanceUntilIdle()
+        assertEquals(testProfile, viewModel.uiState.value.profile)
+
+        // User signs out
+        mockCurrentUserFlow.value = null
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.profile)
+
+        // User signs in again (different user)
+        val differentUser = testUser.copy(id = "different-user-456")
+        coEvery { mockUserProfileRepository.getUserProfile(differentUser.id) } returns
+            flowOf(Result.success(testProfile.copy(userId = differentUser.id, fullName = "Different User")))
+
+        mockCurrentUserFlow.value = differentUser
+        advanceUntilIdle()
+
+        // Then - New profile should be loaded
+        val state = viewModel.uiState.value
+        assertEquals("Different User", state.profile?.fullName)
+        assertEquals(differentUser.id, state.profile?.userId)
+    }
+
+    @Test
+    fun `reactive auth state - handles profile loading errors gracefully`() = runTest {
+        // Given - Start with no user
+        mockCurrentUserFlow.value = null
+        val errorMessage = "Network error"
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.failure(Exception(errorMessage)))
+
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // User signs in
+        mockCurrentUserFlow.value = testUser
+        advanceUntilIdle()
+
+        // Then - Error should be handled gracefully
+        val state = viewModel.uiState.value
+        assertNull(state.profile)
+        assertFalse(state.isLoading)
+        assertEquals(errorMessage, state.error)
+    }
+
+    @Test
+    fun `reactive auth state - profile data flows correctly to UI state`() = runTest {
+        // Given - Complete profile with all fields
+        val completeProfile = UserProfile(
+            userId = testUser.id,
+            fullName = "John Doe",
+            age = 25,
+            gender = Gender.MALE,
+            entryType = EntryType.ENTRY_10_PLUS_2,
+            subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.PREMIUM
+        )
+
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(completeProfile))
+
+        // When - ViewModel observes auth state and loads profile
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // Then - Profile data should be available in UI state
+        val state = viewModel.uiState.value
+        assertEquals(completeProfile, state.profile)
+        assertEquals("John Doe", state.profile?.fullName)
+        assertEquals(25, state.profile?.age)
+        assertEquals(Gender.MALE, state.profile?.gender)
+        assertEquals(EntryType.ENTRY_10_PLUS_2, state.profile?.entryType)
+        assertEquals(com.ssbmax.core.domain.model.SubscriptionType.PREMIUM, state.profile?.subscriptionType)
+    }
+
+    @Test
+    fun `reactive auth state - prevents race condition from synchronous access`() = runTest {
+        // Given - Auth repository returns null initially, then user later
+        mockCurrentUserFlow.value = null
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+
+        // When - Create ViewModel (starts observing) before auth state is ready
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // Verify no profile loaded yet (reactive observation waiting for auth state)
+        assertNull(viewModel.uiState.value.profile)
+
+        // Auth state becomes available later (simulating real app startup timing)
+        mockCurrentUserFlow.value = testUser
+        advanceUntilIdle()
+
+        // Then - Profile should load automatically without manual refresh
+        val state = viewModel.uiState.value
+        assertEquals(testProfile, state.profile)
+        assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun `backwards compatibility - loadProfile method still works when called manually`() = runTest {
+        // Given - User is signed in
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+
+        viewModel = UserProfileViewModel(mockUserProfileRepository, mockAuthRepository)
+        advanceUntilIdle()
+
+        // Verify profile is loaded initially
+        assertEquals(testProfile, viewModel.uiState.value.profile)
+
+        // When - Manually call loadProfile (backwards compatibility)
+        val updatedProfile = testProfile.copy(fullName = "Updated Name")
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(updatedProfile))
+
+        viewModel.loadProfile()
+        advanceUntilIdle()
+
+        // Then - Profile should be refreshed
+        assertEquals("Updated Name", viewModel.uiState.value.profile?.fullName)
     }
 }
 
