@@ -38,12 +38,13 @@ fun DrawerContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Home Link
+        // Home Link - Always brightly colored for easy navigation
         DrawerMenuItem(
             icon = Icons.Default.Home,
             title = "Home",
             onClick = onNavigateToHome,
-            isSelected = currentRoute.contains("home")
+            isSelected = currentRoute.contains("home"),
+            isHomeButton = true
         )
 
         Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -177,17 +178,26 @@ private fun DrawerMenuItem(
     title: String,
     onClick: () -> Unit,
     isSelected: Boolean = false,
+    isHomeButton: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val backgroundColor = when {
+        isHomeButton -> MaterialTheme.colorScheme.primaryContainer
+        isSelected -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    val contentColor = when {
+        isHomeButton -> MaterialTheme.colorScheme.onPrimaryContainer
+        isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        color = if (isSelected) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.surface
-        }
+        color = backgroundColor
     ) {
         Row(
             modifier = Modifier
@@ -197,21 +207,13 @@ private fun DrawerMenuItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
+                tint = contentColor
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
+                color = contentColor
             )
         }
     }
