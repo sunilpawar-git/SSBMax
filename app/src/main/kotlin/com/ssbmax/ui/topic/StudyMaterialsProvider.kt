@@ -308,6 +308,12 @@ object StudyMaterialsProvider {
     
     private fun getPIQFormMaterials() = listOf(
         StudyMaterialItem(
+            id = "piq_form_reference",
+            title = "SSB PIQ Form (Reference)",
+            duration = "5 min read",
+            isPremium = false,
+        ),
+        StudyMaterialItem(
             id = "piq_1",
             title = "PIQ Form Guide",
             duration = "15 min read",
