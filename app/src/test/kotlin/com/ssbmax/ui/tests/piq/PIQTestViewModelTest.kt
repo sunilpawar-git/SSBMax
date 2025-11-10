@@ -208,19 +208,23 @@ class PIQTestViewModelTest : BaseViewModelTest() {
     }
 
     @Test
-    fun `canSubmit is false without required fields`() = runTest {
+    fun `canSubmit is true with lenient form - all fields optional`() = runTest {
         viewModel = createViewModel()
 
-        assertFalse(viewModel.uiState.value.canSubmit)
+        // With lenient form, canSubmit is always true as all fields are optional
+        assertTrue(viewModel.uiState.value.canSubmit)
     }
 
     @Test
-    fun `canSubmit is true with required fields`() = runTest {
+    fun `canSubmit remains true even without filling fields - lenient form`() = runTest {
         viewModel = createViewModel()
 
+        // Even without filling any fields, canSubmit should be true due to lenient form
+        assertTrue(viewModel.uiState.value.canSubmit)
+
+        // Filling some fields still keeps it true
         viewModel.updateField("fullName", "John Doe")
         viewModel.updateField("dateOfBirth", "01/01/2000")
-        viewModel.updateField("phone", "1234567890")
         advanceTimeBy(100)
 
         assertTrue(viewModel.uiState.value.canSubmit)
