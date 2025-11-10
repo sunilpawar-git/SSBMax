@@ -74,20 +74,24 @@ data class Sibling(
     val name: String = "",
     val age: String = "",
     val occupation: String = "",
-    val education: String = ""
+    val education: String = "",
+    val income: String = "" // Monthly income
 )
 
 /**
  * Educational qualification entry
  */
 data class Education(
-    val level: String, // "10th", "12th", "Graduation"
+    val level: String, // "10th", "12th", "Graduation", "Post-Graduation"
     val institution: String = "",
     val board: String = "",
     val stream: String = "", // For 12th
     val year: String = "",
     val percentage: String = "",
-    val cgpa: String = "" // For graduation
+    val cgpa: String = "", // For graduation
+    val mediumOfInstruction: String = "", // NEW: Medium of instruction
+    val boarderDayScholar: String = "", // NEW: "Boarder" or "Day Scholar"
+    val outstandingAchievement: String = "" // NEW: Outstanding achievements
 )
 
 /**
@@ -102,12 +106,64 @@ data class WorkExperience(
 )
 
 /**
+ * NCC Training information
+ */
+data class NCCTraining(
+    val hasTraining: Boolean = false,
+    val totalTraining: String = "",
+    val wing: String = "", // "Army", "Navy", "Air Force"
+    val division: String = "",
+    val certificateObtained: String = ""
+)
+
+/**
+ * Sports participation entry
+ */
+data class SportsParticipation(
+    val id: String = UUID.randomUUID().toString(),
+    val sport: String = "",
+    val period: String = "",
+    val representedInstitution: String = "",
+    val outstandingAchievement: String = ""
+)
+
+/**
+ * Extra-curricular activity entry
+ */
+data class ExtraCurricularActivity(
+    val id: String = UUID.randomUUID().toString(),
+    val activityName: String = "",
+    val duration: String = "",
+    val outstandingAchievement: String = ""
+)
+
+/**
+ * Previous interview entry
+ */
+data class PreviousInterview(
+    val id: String = UUID.randomUUID().toString(),
+    val typeOfEntry: String = "",
+    val ssbNumber: String = "",
+    val ssbPlace: String = "",
+    val date: String = "",
+    val chestNumber: String = "",
+    val batchNumber: String = ""
+)
+
+/**
  * Complete PIQ submission
  */
 data class PIQSubmission(
     val id: String = UUID.randomUUID().toString(),
     val userId: String,
     val testId: String = "piq_standard",
+    
+    // Header Section
+    val oirNumber: String = "", // Auto-filled from OIR result
+    val selectionBoard: String = "", // Dropdown: Army/Navy/Air Force/Coast Guard locations
+    val batchNumber: String = "", // Disabled: "To be filled at SSB"
+    val chestNumber: String = "", // Disabled: "To be filled at SSB"
+    val upscRollNumber: String = "", // Disabled: "To be filled at SSB"
     
     // Page 1: Personal & Family
     val fullName: String = "",
@@ -116,8 +172,27 @@ data class PIQSubmission(
     val gender: String = "",
     val phone: String = "",
     val email: String = "",
+    
+    // Personal Details Table
+    val state: String = "",
+    val district: String = "",
+    val religion: String = "",
+    val scStObcStatus: String = "", // "SC", "ST", "OBC", or ""
+    val motherTongue: String = "",
+    val maritalStatus: String = "", // "Married", "Single", "Widower"
+    
+    // Residence Information
     val permanentAddress: String = "",
     val presentAddress: String = "",
+    val maximumResidence: String = "",
+    val maximumResidencePopulation: String = "",
+    val presentResidencePopulation: String = "",
+    val permanentResidencePopulation: String = "",
+    val isDistrictHQ: Boolean = false,
+    
+    // Physical Details
+    val height: String = "", // in metres
+    val weight: String = "", // in kilograms
     
     // Father details
     val fatherName: String = "",
@@ -130,17 +205,47 @@ data class PIQSubmission(
     val motherOccupation: String = "",
     val motherEducation: String = "",
     
+    // Family Enhancement
+    val parentsAlive: String = "", // "Both", "Father Only", "Mother Only", "None"
+    val ageAtFatherDeath: String = "",
+    val ageAtMotherDeath: String = "",
+    val guardianName: String = "",
+    val guardianOccupation: String = "",
+    val guardianEducation: String = "",
+    val guardianIncome: String = "",
+    
     // Siblings
     val siblings: List<Sibling> = emptyList(),
+    
+    // Occupation
+    val presentOccupation: String = "",
+    val personalMonthlyIncome: String = "",
     
     // Page 2: Education & Career
     val education10th: Education = Education("10th"),
     val education12th: Education = Education("12th"),
     val educationGraduation: Education = Education("Graduation"),
+    val educationPostGraduation: Education = Education("Post-Graduation"),
     
     val hobbies: String = "",
-    val sports: String = "",
+    val sports: String = "", // Legacy field, use sportsParticipation for structured data
+    val sportsParticipation: List<SportsParticipation> = emptyList(),
+    val extraCurricularActivities: List<ExtraCurricularActivity> = emptyList(),
+    val positionsOfResponsibility: String = "",
+    
     val workExperience: List<WorkExperience> = emptyList(),
+    
+    // NCC Training
+    val nccTraining: NCCTraining = NCCTraining(),
+    
+    // Service Selection
+    val natureOfCommission: String = "",
+    val choiceOfService: String = "", // "Army", "Navy", "Air Force", "Coast Guard", "Any"
+    val chancesAvailed: String = "",
+    
+    // Previous Interviews
+    val previousInterviews: List<PreviousInterview> = emptyList(),
+    
     val whyDefenseForces: String = "",
     val strengths: String = "",
     val weaknesses: String = "",
@@ -161,34 +266,87 @@ data class PIQSubmission(
             "id" to id,
             "userId" to userId,
             "testId" to testId,
+            
+            // Header Section
+            "oirNumber" to oirNumber,
+            "selectionBoard" to selectionBoard,
+            "batchNumber" to batchNumber,
+            "chestNumber" to chestNumber,
+            "upscRollNumber" to upscRollNumber,
+            
+            // Personal Information
             "fullName" to fullName,
             "dateOfBirth" to dateOfBirth,
             "age" to age,
             "gender" to gender,
             "phone" to phone,
             "email" to email,
+            
+            // Personal Details Table
+            "state" to state,
+            "district" to district,
+            "religion" to religion,
+            "scStObcStatus" to scStObcStatus,
+            "motherTongue" to motherTongue,
+            "maritalStatus" to maritalStatus,
+            
+            // Residence Information
             "permanentAddress" to permanentAddress,
             "presentAddress" to presentAddress,
+            "maximumResidence" to maximumResidence,
+            "maximumResidencePopulation" to maximumResidencePopulation,
+            "presentResidencePopulation" to presentResidencePopulation,
+            "permanentResidencePopulation" to permanentResidencePopulation,
+            "isDistrictHQ" to isDistrictHQ,
+            
+            // Physical Details
+            "height" to height,
+            "weight" to weight,
+            
+            // Father details
             "fatherName" to fatherName,
             "fatherOccupation" to fatherOccupation,
             "fatherEducation" to fatherEducation,
             "fatherIncome" to fatherIncome,
+            
+            // Mother details
             "motherName" to motherName,
             "motherOccupation" to motherOccupation,
             "motherEducation" to motherEducation,
+            
+            // Family Enhancement
+            "parentsAlive" to parentsAlive,
+            "ageAtFatherDeath" to ageAtFatherDeath,
+            "ageAtMotherDeath" to ageAtMotherDeath,
+            "guardianName" to guardianName,
+            "guardianOccupation" to guardianOccupation,
+            "guardianEducation" to guardianEducation,
+            "guardianIncome" to guardianIncome,
+            
+            // Siblings
             "siblings" to siblings.map { mapOf(
                 "id" to it.id,
                 "name" to it.name,
                 "age" to it.age,
                 "occupation" to it.occupation,
-                "education" to it.education
+                "education" to it.education,
+                "income" to it.income
             ) },
+            
+            // Occupation
+            "presentOccupation" to presentOccupation,
+            "personalMonthlyIncome" to personalMonthlyIncome,
+            
+            // Education
             "education10th" to mapOf(
                 "level" to education10th.level,
                 "institution" to education10th.institution,
                 "board" to education10th.board,
                 "year" to education10th.year,
-                "percentage" to education10th.percentage
+                "percentage" to education10th.percentage,
+                "mediumOfInstruction" to education10th.mediumOfInstruction,
+                "boarderDayScholar" to education10th.boarderDayScholar,
+                "outstandingAchievement" to education10th.outstandingAchievement
             ),
             "education12th" to mapOf(
                 "level" to education12th.level,
@@ -196,17 +354,51 @@ data class PIQSubmission(
                 "board" to education12th.board,
                 "stream" to education12th.stream,
                 "year" to education12th.year,
-                "percentage" to education12th.percentage
+                "percentage" to education12th.percentage,
+                "mediumOfInstruction" to education12th.mediumOfInstruction,
+                "boarderDayScholar" to education12th.boarderDayScholar,
+                "outstandingAchievement" to education12th.outstandingAchievement
             ),
             "educationGraduation" to mapOf(
                 "level" to educationGraduation.level,
                 "institution" to educationGraduation.institution,
                 "board" to educationGraduation.board,
                 "year" to educationGraduation.year,
-                "cgpa" to educationGraduation.cgpa
+                "cgpa" to educationGraduation.cgpa,
+                "mediumOfInstruction" to educationGraduation.mediumOfInstruction,
+                "boarderDayScholar" to educationGraduation.boarderDayScholar,
+                "outstandingAchievement" to educationGraduation.outstandingAchievement
             ),
+            "educationPostGraduation" to mapOf(
+                "level" to educationPostGraduation.level,
+                "institution" to educationPostGraduation.institution,
+                "board" to educationPostGraduation.board,
+                "year" to educationPostGraduation.year,
+                "cgpa" to educationPostGraduation.cgpa,
+                "mediumOfInstruction" to educationPostGraduation.mediumOfInstruction,
+                "boarderDayScholar" to educationPostGraduation.boarderDayScholar,
+                "outstandingAchievement" to educationPostGraduation.outstandingAchievement
+            ),
+            
+            // Activities
             "hobbies" to hobbies,
-            "sports" to sports,
+            "sports" to sports, // Legacy field
+            "sportsParticipation" to sportsParticipation.map { mapOf(
+                "id" to it.id,
+                "sport" to it.sport,
+                "period" to it.period,
+                "representedInstitution" to it.representedInstitution,
+                "outstandingAchievement" to it.outstandingAchievement
+            ) },
+            "extraCurricularActivities" to extraCurricularActivities.map { mapOf(
+                "id" to it.id,
+                "activityName" to it.activityName,
+                "duration" to it.duration,
+                "outstandingAchievement" to it.outstandingAchievement
+            ) },
+            "positionsOfResponsibility" to positionsOfResponsibility,
+            
+            // Work Experience
             "workExperience" to workExperience.map { mapOf(
                 "id" to it.id,
                 "company" to it.company,
@@ -214,9 +406,38 @@ data class PIQSubmission(
                 "duration" to it.duration,
                 "description" to it.description
             ) },
+            
+            // NCC Training
+            "nccTraining" to mapOf(
+                "hasTraining" to nccTraining.hasTraining,
+                "totalTraining" to nccTraining.totalTraining,
+                "wing" to nccTraining.wing,
+                "division" to nccTraining.division,
+                "certificateObtained" to nccTraining.certificateObtained
+            ),
+            
+            // Service Selection
+            "natureOfCommission" to natureOfCommission,
+            "choiceOfService" to choiceOfService,
+            "chancesAvailed" to chancesAvailed,
+            
+            // Previous Interviews
+            "previousInterviews" to previousInterviews.map { mapOf(
+                "id" to it.id,
+                "typeOfEntry" to it.typeOfEntry,
+                "ssbNumber" to it.ssbNumber,
+                "ssbPlace" to it.ssbPlace,
+                "date" to it.date,
+                "chestNumber" to it.chestNumber,
+                "batchNumber" to it.batchNumber
+            ) },
+            
+            // Motivation & Self Assessment
             "whyDefenseForces" to whyDefenseForces,
             "strengths" to strengths,
             "weaknesses" to weaknesses,
+            
+            // Metadata
             "status" to status.name,
             "submittedAt" to submittedAt,
             "lastModifiedAt" to lastModifiedAt,

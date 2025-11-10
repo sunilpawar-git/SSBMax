@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 /**
  * ViewModel for Study Material Detail Screen
@@ -19,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class StudyMaterialDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val studyContentRepository: com.ssbmax.core.domain.repository.StudyContentRepository
+    private val studyContentRepository: com.ssbmax.core.domain.repository.StudyContentRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     
     private val materialId: String = savedStateHandle.get<String>("categoryId") ?: ""
@@ -58,7 +61,18 @@ class StudyMaterialDetailViewModel @Inject constructor(
                     )
                 } ?: run {
                     // Fallback to local content
-                    getMockMaterial(materialId)
+                    val localMaterial = getMockMaterial(materialId)
+                    // If it's HTML content, load from assets
+                    if (localMaterial.content.startsWith("<!DOCTYPE html>")) {
+                        localMaterial.copy(
+                            content = StudyMaterialContentProvider.loadHTMLFromAssets(
+                                context,
+                                "piq_form.html"
+                            )
+                        )
+                    } else {
+                        localMaterial
+                    }
                 }
                 
                 _uiState.update {
@@ -73,9 +87,19 @@ class StudyMaterialDetailViewModel @Inject constructor(
                 // On error, fallback to local content
                 try {
                     val fallbackMaterial = getMockMaterial(materialId)
+                    val finalMaterial = if (fallbackMaterial.content.startsWith("<!DOCTYPE html>")) {
+                        fallbackMaterial.copy(
+                            content = StudyMaterialContentProvider.loadHTMLFromAssets(
+                                context,
+                                "piq_form.html"
+                            )
+                        )
+                    } else {
+                        fallbackMaterial
+                    }
                     _uiState.update {
                         it.copy(
-                            material = fallbackMaterial,
+                            material = finalMaterial,
                             readingProgress = 0f,
                             isLoading = false,
                             error = null

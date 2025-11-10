@@ -107,13 +107,28 @@ class TopicViewModel @Inject constructor(
                         is TopicContentData -> {
                             if (data.source == ContentSource.CLOUD) {
                                 // Got cloud data - convert to UI format
-                                val materials = data.materials.map { cloudMaterial ->
+                                val cloudMaterials = data.materials.map { cloudMaterial ->
                                     StudyMaterialItem(
                                         id = cloudMaterial.id,
                                         title = cloudMaterial.title,
                                         duration = cloudMaterial.readTime,
                                         isPremium = cloudMaterial.isPremium
                                     )
+                                }
+                                
+                                // For PIQ_FORM, merge with local piq_form_reference material
+                                val materials = if (testType.uppercase() == "PIQ_FORM" || testType.uppercase() == "PIQ") {
+                                    val localMaterials = TopicContentLoader.getTopicInfo(testType).studyMaterials
+                                    val piqFormReference = localMaterials.firstOrNull { it.id == "piq_form_reference" }
+                                    
+                                    if (piqFormReference != null) {
+                                        // Prepend piq_form_reference to cloud materials
+                                        listOf(piqFormReference) + cloudMaterials
+                                    } else {
+                                        cloudMaterials
+                                    }
+                                } else {
+                                    cloudMaterials
                                 }
                                 
                                 val testProgress = loadTestProgress(userId)
@@ -133,7 +148,7 @@ class TopicViewModel @Inject constructor(
                                     )
                                 }
                                 
-                                Log.d(TAG, "✓ Loaded $testType from cloud: ${materials.size} materials")
+                                Log.d(TAG, "✓ Loaded $testType from cloud: ${materials.size} materials (${cloudMaterials.size} cloud + ${materials.size - cloudMaterials.size} local)")
                             } else {
                                 // Fallback triggered - use local
                                 loadFromLocal(userId)

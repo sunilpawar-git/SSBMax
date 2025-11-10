@@ -20,6 +20,27 @@ import javax.inject.Inject
 private const val TAG = "PIQTestViewModel"
 
 /**
+ * Selection Board options for PIQ dropdown
+ */
+val SELECTION_BOARD_OPTIONS = listOf(
+    "Army (Prayagraj)",
+    "Army (Bhopal)",
+    "Army (Bangalore)",
+    "Army (Jalandhar)",
+    "Navy (Coimbatore)",
+    "Navy (Visakhapatnam)",
+    "Navy (Kolkata)",
+    "Navy (Bhopal)",
+    "Navy (Bengaluru)",
+    "Air Force (Dehradun)",
+    "Air Force (Mysore)",
+    "Air Force (Gandhinagar)",
+    "Air Force (Varanasi)",
+    "Air Force (Guwahati)",
+    "Coast Guard (Noida)"
+)
+
+/**
  * ViewModel for PIQ (Personal Information Questionnaire) Test
  * 
  * Features:
@@ -28,6 +49,7 @@ private const val TAG = "PIQTestViewModel"
  * - Free navigation between pages
  * - Draft/final submission
  * - Security checks and subscription validation
+ * - OIR number auto-fill from OIR test result
  */
 @HiltViewModel
 class PIQTestViewModel @Inject constructor(
@@ -68,7 +90,7 @@ class PIQTestViewModel @Inject constructor(
     }
 
     /**
-     * Load existing draft if available
+     * Load existing draft if available and auto-fill OIR number
      */
     private fun loadDraft() {
         viewModelScope.launch {
@@ -80,12 +102,58 @@ class PIQTestViewModel @Inject constructor(
                     return@launch
                 }
 
+                // Load OIR number from latest OIR submission
+                loadOIRNumber(userId)
+                
                 // TODO: Implement draft loading from Firestore
                 // For now, start with empty form
                 Log.d(TAG, "✅ PIQ: Ready for new form")
             } catch (e: Exception) {
                 Log.e(TAG, "❌ PIQ: Error loading draft", e)
             }
+        }
+    }
+    
+    /**
+     * Auto-fill OIR number from latest OIR test result
+     */
+    private suspend fun loadOIRNumber(userId: String) {
+        try {
+            Log.d(TAG, "🔍 PIQ: Loading OIR number from latest OIR submission...")
+            
+            // Get user's latest OIR submission
+            val submissionsResult = submissionRepository.getUserSubmissionsByTestType(
+                userId = userId,
+                testType = TestType.OIR,
+                limit = 1
+            )
+            
+            val submissions = submissionsResult.getOrNull() ?: emptyList()
+            val latestOIR = submissions.firstOrNull()
+            
+            if (latestOIR != null) {
+                // Extract OIR number from submission (assuming it's stored in test result)
+                // For now, use submission ID as OIR number placeholder
+                // TODO: Extract actual OIR number from OIR test result when available
+                val submissionId = latestOIR["id"] as? String ?: ""
+                val oirNumber = submissionId.takeIf { it.isNotBlank() } ?: ""
+                
+                if (oirNumber.isNotBlank()) {
+                    Log.d(TAG, "✅ PIQ: Auto-filled OIR number: $oirNumber")
+                    _uiState.update { state ->
+                        val updatedAnswers = state.answers.toMutableMap()
+                        updatedAnswers["oirNumber"] = oirNumber
+                        state.copy(answers = updatedAnswers)
+                    }
+                } else {
+                    Log.d(TAG, "ℹ️ PIQ: No OIR number found in latest submission")
+                }
+            } else {
+                Log.d(TAG, "ℹ️ PIQ: No OIR submissions found")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ PIQ: Error loading OIR number", e)
+            // Don't fail the whole form if OIR loading fails
         }
     }
 
@@ -293,49 +361,46 @@ class PIQTestViewModel @Inject constructor(
      * Generate mock AI quality score for PIQ
      */
     private fun generateMockAIScore(submission: PIQSubmission): PIQAIScore {
-        // Calculate completeness
-        val totalFields = 21 // All PIQ fields
+        // Calculate completeness (excluding strengths/weaknesses as they're not in actual SSB PIQ)
+        val totalFields = 18 // All PIQ fields (excluding gender/phone/email which are not in actual SSB PIQ)
         val filledFields = listOf(
-            submission.fullName, submission.dateOfBirth, submission.phone,
+            submission.fullName, submission.dateOfBirth,
             submission.fatherName, submission.motherName,
-            submission.whyDefenseForces, submission.strengths, submission.weaknesses,
             submission.hobbies, submission.sports
         ).count { it.isNotBlank() }
         val completeness = (filledFields.toFloat() / totalFields * 100).toInt()
         
-        // Mock scores based on completeness and length
-        val personalInfo = (completeness * 0.25f * 0.8f) + kotlin.random.Random.nextFloat() * 5f
-        val familyInfo = (completeness * 0.25f * 0.9f) + kotlin.random.Random.nextFloat() * 3f
-        val motivation = if (submission.whyDefenseForces.length > 100) 
-            18f + kotlin.random.Random.nextFloat() * 7f else 12f + kotlin.random.Random.nextFloat() * 6f
-        val selfAssessment = if (submission.strengths.isNotBlank() && submission.weaknesses.isNotBlank())
+        // Mock scores based on completeness
+        val personalInfo = (completeness * 0.33f * 0.8f) + kotlin.random.Random.nextFloat() * 5f
+        val familyInfo = (completeness * 0.33f * 0.9f) + kotlin.random.Random.nextFloat() * 3f
+        val educationCareer = (completeness * 0.34f * 0.85f) + kotlin.random.Random.nextFloat() * 4f
+        // Self-assessment score based on overall completeness
+        val selfAssessment = if (completeness > 80)
             17f + kotlin.random.Random.nextFloat() * 8f else 10f + kotlin.random.Random.nextFloat() * 7f
         
-        val overall = personalInfo + familyInfo + motivation + selfAssessment
+        val overall = personalInfo + familyInfo + educationCareer + selfAssessment
         
         return PIQAIScore(
             overallScore = overall.coerceIn(60f, 95f),
             personalInfoScore = personalInfo.coerceIn(15f, 25f),
             familyInfoScore = familyInfo.coerceIn(16f, 25f),
-            motivationScore = motivation.coerceIn(12f, 25f),
+            motivationScore = educationCareer.coerceIn(12f, 25f), // Using educationCareer for motivationScore field
             selfAssessmentScore = selfAssessment.coerceIn(10f, 25f),
             feedback = when {
-                overall >= 85 -> "Excellent PIQ! Comprehensive information with clear motivation. Well-prepared for assessor questions."
+                overall >= 85 -> "Excellent PIQ! Comprehensive information provided. Well-prepared for assessor questions."
                 overall >= 75 -> "Good PIQ. Adequate information provided. Some areas could be more detailed."
-                else -> "PIQ needs improvement. Add more details to motivation and self-assessment sections."
+                else -> "PIQ needs improvement. Add more details to all sections."
             },
             strengths = buildList {
                 if (completeness > 80) add("Comprehensive information")
-                if (submission.whyDefenseForces.length > 150) add("Clear defense forces motivation")
-                if (submission.strengths.isNotBlank()) add("Self-awareness of strengths")
+                if (submission.hobbies.isNotBlank()) add("Well-documented interests")
             },
             areasForImprovement = buildList {
                 if (completeness < 70) add("Fill all sections completely")
-                if (submission.whyDefenseForces.length < 100) add("Elaborate on defense forces motivation")
-                if (submission.weaknesses.isBlank()) add("Add areas for improvement (shows self-awareness)")
+                if (submission.hobbies.isBlank()) add("Add hobbies and interests")
             },
             completenessPercentage = completeness,
-            clarityScore = if (submission.whyDefenseForces.length > 150) 8.5f else 6.5f,
+            clarityScore = 7.5f,
             consistencyScore = 8.0f + kotlin.random.Random.nextFloat() * 2f
         )
     }
@@ -344,34 +409,207 @@ class PIQTestViewModel @Inject constructor(
      * Create PIQSubmission from current state
      */
     private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission {
-        val answers = _uiState.value.answers
+        val state = _uiState.value
+        val answers = state.answers
+        
+        // Parse siblings from answers map (elderSibling1_name, elderSibling2_name, etc.)
+        val siblings = mutableListOf<Sibling>()
+        // Parse elder siblings
+        repeat(2) { index ->
+            val prefix = "elderSibling${index + 1}_"
+            val name = answers["${prefix}name"] ?: ""
+            if (name.isNotBlank()) {
+                siblings.add(Sibling(
+                    name = name,
+                    age = answers["${prefix}age"] ?: "",
+                    education = answers["${prefix}education"] ?: "",
+                    occupation = answers["${prefix}occupation"] ?: "",
+                    income = answers["${prefix}income"] ?: ""
+                ))
+            }
+        }
+        // Parse younger siblings
+        repeat(2) { index ->
+            val prefix = "youngerSibling${index + 1}_"
+            val name = answers["${prefix}name"] ?: ""
+            if (name.isNotBlank()) {
+                siblings.add(Sibling(
+                    name = name,
+                    age = answers["${prefix}age"] ?: "",
+                    education = answers["${prefix}education"] ?: "",
+                    occupation = answers["${prefix}occupation"] ?: "",
+                    income = answers["${prefix}income"] ?: ""
+                ))
+            }
+        }
+        
+        // Parse education details
+        val education10th = Education(
+            level = "10th",
+            institution = answers["education10th_institution"] ?: "",
+            board = answers["education10th_board"] ?: "",
+            year = answers["education10th_year"] ?: "",
+            percentage = answers["education10th_percentage"] ?: "",
+            mediumOfInstruction = answers["education10th_medium"] ?: "",
+            boarderDayScholar = answers["education10th_boarder"] ?: "",
+            outstandingAchievement = answers["education10th_achievement"] ?: ""
+        )
+        
+        val education12th = Education(
+            level = "12th",
+            institution = answers["education12th_institution"] ?: "",
+            board = answers["education12th_board"] ?: "",
+            stream = answers["education12th_stream"] ?: "",
+            year = answers["education12th_year"] ?: "",
+            percentage = answers["education12th_percentage"] ?: "",
+            mediumOfInstruction = answers["education12th_medium"] ?: "",
+            boarderDayScholar = answers["education12th_boarder"] ?: "",
+            outstandingAchievement = answers["education12th_achievement"] ?: ""
+        )
+        
+        val educationGraduation = Education(
+            level = "Graduation",
+            institution = answers["educationGrad_institution"] ?: "",
+            board = answers["educationGrad_university"] ?: "",
+            year = answers["educationGrad_year"] ?: "",
+            cgpa = answers["educationGrad_cgpa"] ?: "",
+            mediumOfInstruction = answers["educationGrad_medium"] ?: "",
+            boarderDayScholar = answers["educationGrad_boarder"] ?: "",
+            outstandingAchievement = answers["educationGrad_achievement"] ?: ""
+        )
+        
+        val educationPostGraduation = Education(
+            level = "Post-Graduation",
+            institution = answers["educationPG_institution"] ?: "",
+            board = answers["educationPG_university"] ?: "",
+            year = answers["educationPG_year"] ?: "",
+            cgpa = answers["educationPG_cgpa"] ?: "",
+            mediumOfInstruction = answers["educationPG_medium"] ?: "",
+            boarderDayScholar = answers["educationPG_boarder"] ?: "",
+            outstandingAchievement = answers["educationPG_achievement"] ?: ""
+        )
+        
+        // Parse NCC Training
+        val nccTraining = NCCTraining(
+            hasTraining = answers["ncc_hasTraining"]?.toBoolean() ?: false,
+            totalTraining = answers["ncc_totalTraining"] ?: "",
+            wing = answers["ncc_wing"] ?: "",
+            division = answers["ncc_division"] ?: "",
+            certificateObtained = answers["ncc_certificate"] ?: ""
+        )
+        
+        // Parse sports participation (from structured list in state)
+        val sportsParticipation = state.sportsParticipation
+        
+        // Parse extra-curricular activities
+        val extraCurricularActivities = state.extraCurricularActivities
+        
+        // Parse previous interviews
+        val previousInterviews = state.previousInterviews
         
         return PIQSubmission(
             userId = userId,
             testId = testId,
+            
+            // Header Section
+            oirNumber = answers["oirNumber"] ?: "",
+            selectionBoard = answers["selectionBoard"] ?: "",
+            batchNumber = answers["batchNumber"] ?: "",
+            chestNumber = answers["chestNumber"] ?: "",
+            upscRollNumber = answers["upscRollNumber"] ?: "",
+            
+            // Personal Information
             fullName = answers["fullName"] ?: "",
             dateOfBirth = answers["dateOfBirth"] ?: "",
             age = answers["age"] ?: "",
-            gender = answers["gender"] ?: "",
-            phone = answers["phone"] ?: "",
-            email = answers["email"] ?: "",
+            gender = "", // Not in actual SSB PIQ
+            phone = "", // Not in actual SSB PIQ
+            email = "", // Not in actual SSB PIQ
+            
+            // Personal Details Table
+            state = answers["state"] ?: "",
+            district = answers["district"] ?: "",
+            religion = answers["religion"] ?: "",
+            scStObcStatus = answers["scStObcStatus"] ?: "",
+            motherTongue = answers["motherTongue"] ?: "",
+            maritalStatus = answers["maritalStatus"] ?: "",
+            
+            // Residence Information
             permanentAddress = answers["permanentAddress"] ?: "",
             presentAddress = answers["presentAddress"] ?: "",
+            maximumResidence = answers["maximumResidence"] ?: "",
+            maximumResidencePopulation = answers["maximumResidencePopulation"] ?: "",
+            presentResidencePopulation = answers["presentResidencePopulation"] ?: "",
+            permanentResidencePopulation = answers["permanentResidencePopulation"] ?: "",
+            isDistrictHQ = answers["isDistrictHQ"]?.toBoolean() ?: false,
+            
+            // Physical Details
+            height = answers["height"] ?: "",
+            weight = answers["weight"] ?: "",
+            
+            // Father details
             fatherName = answers["fatherName"] ?: "",
             fatherOccupation = answers["fatherOccupation"] ?: "",
             fatherEducation = answers["fatherEducation"] ?: "",
             fatherIncome = answers["fatherIncome"] ?: "",
+            
+            // Mother details
             motherName = answers["motherName"] ?: "",
             motherOccupation = answers["motherOccupation"] ?: "",
             motherEducation = answers["motherEducation"] ?: "",
+            
+            // Family Enhancement
+            parentsAlive = answers["parentsAlive"] ?: "",
+            ageAtFatherDeath = answers["ageAtFatherDeath"] ?: "",
+            ageAtMotherDeath = answers["ageAtMotherDeath"] ?: "",
+            guardianName = answers["guardianName"] ?: "",
+            guardianOccupation = answers["guardianOccupation"] ?: "",
+            guardianEducation = answers["guardianEducation"] ?: "",
+            guardianIncome = answers["guardianIncome"] ?: "",
+            
+            // Siblings
+            siblings = siblings,
+            
+            // Occupation
+            presentOccupation = answers["presentOccupation"] ?: "",
+            personalMonthlyIncome = answers["personalMonthlyIncome"] ?: "",
+            
+            // Education
+            education10th = education10th,
+            education12th = education12th,
+            educationGraduation = educationGraduation,
+            educationPostGraduation = educationPostGraduation,
+            
+            // Activities
             hobbies = answers["hobbies"] ?: "",
-            sports = answers["sports"] ?: "",
+            sports = answers["sports"] ?: "", // Legacy field
+            sportsParticipation = sportsParticipation,
+            extraCurricularActivities = extraCurricularActivities,
+            positionsOfResponsibility = answers["positionsOfResponsibility"] ?: "",
+            
+            // Work Experience (from state)
+            workExperience = state.workExperience,
+            
+            // NCC Training
+            nccTraining = nccTraining,
+            
+            // Service Selection
+            natureOfCommission = answers["natureOfCommission"] ?: "",
+            choiceOfService = answers["choiceOfService"] ?: "",
+            chancesAvailed = answers["chancesAvailed"] ?: "",
+            
+            // Previous Interviews
+            previousInterviews = previousInterviews,
+            
+            // Motivation & Self Assessment
             whyDefenseForces = answers["whyDefenseForces"] ?: "",
-            strengths = answers["strengths"] ?: "",
-            weaknesses = answers["weaknesses"] ?: "",
+            strengths = "", // Not in actual SSB PIQ form - kept for backward compatibility
+            weaknesses = "", // Not in actual SSB PIQ form - kept for backward compatibility
+            
+            // Metadata
             status = status,
             submittedAt = System.currentTimeMillis(),
-            lastModifiedAt = _uiState.value.lastModifiedAt
+            lastModifiedAt = state.lastModifiedAt
         )
     }
 
@@ -397,11 +635,15 @@ data class PIQUiState(
     val showReviewScreen: Boolean = false,
     val submissionComplete: Boolean = false,
     val submissionId: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    // Complex structures
+    val siblings: List<Sibling> = emptyList(),
+    val sportsParticipation: List<SportsParticipation> = emptyList(),
+    val extraCurricularActivities: List<ExtraCurricularActivity> = emptyList(),
+    val previousInterviews: List<PreviousInterview> = emptyList(),
+    val workExperience: List<WorkExperience> = emptyList()
 ) {
     val canSubmit: Boolean
-        get() = answers["fullName"]?.isNotBlank() == true &&
-                answers["dateOfBirth"]?.isNotBlank() == true &&
-                answers["phone"]?.isNotBlank() == true
+        get() = true // All fields are optional - lenient form
 }
 

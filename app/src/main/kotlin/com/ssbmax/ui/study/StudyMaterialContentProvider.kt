@@ -1,5 +1,8 @@
 package com.ssbmax.ui.study
 
+import android.content.Context
+import java.io.IOException
+
 /**
  * Provides comprehensive study material content for all SSB topics
  * Separated from ViewModel to keep files under 300 lines
@@ -11,6 +14,14 @@ object StudyMaterialContentProvider {
     
     fun getMaterial(materialId: String): StudyMaterialContent {
         return when (materialId) {
+            // PIQ Form HTML document
+            "piq_form_reference" -> getPIQFormHTML()
+            
+            // PIQ Materials (placeholder content)
+            "piq_1" -> getPIQ1()
+            "piq_2" -> getPIQ2()
+            "piq_3" -> getPIQ3()
+            
             // OIR Materials (7 materials)
             "oir_1" -> getOir1()
             "oir_2" -> getOir2()
@@ -392,6 +403,107 @@ Verbal reasoning mastery comes from consistent practice, strategic learning, and
         content = "Content for this material is being prepared. Please check back soon!",
         isPremium = false,
         tags = listOf("SSB", "Preparation"),
+        relatedMaterials = emptyList()
+    )
+    
+    /**
+     * Load PIQ form HTML from assets
+     */
+    private fun getPIQFormHTML(): StudyMaterialContent {
+        // HTML content will be loaded from assets in ViewModel
+        // Return a placeholder that indicates HTML content
+        return StudyMaterialContent(
+            id = "piq_form_reference",
+            title = "SSB PIQ Form (Reference)",
+            category = "PIQ Form",
+            author = "SSB",
+            publishedDate = "2025",
+            readTime = "5 min read",
+            content = "<!DOCTYPE html>", // Marker to indicate HTML content
+            isPremium = false,
+            tags = listOf("PIQ", "Form", "Reference"),
+            relatedMaterials = emptyList()
+        )
+    }
+    
+    /**
+     * Load HTML content from assets file
+     */
+    fun loadHTMLFromAssets(context: Context, fileName: String): String {
+        return try {
+            context.assets.open(fileName).bufferedReader().use { it.readText() }
+        } catch (e: IOException) {
+            "<html><body><p>Error loading HTML content</p></body></html>"
+        }
+    }
+    
+    // PIQ Materials (placeholder content until full content is added)
+    private fun getPIQ1() = StudyMaterialContent(
+        id = "piq_1",
+        title = "PIQ Form Guide",
+        category = "PIQ Form",
+        author = "SSB Expert",
+        publishedDate = "Oct 22, 2025",
+        readTime = "15 min read",
+        content = """
+# PIQ Form Guide
+
+This comprehensive guide will help you understand and complete the Personal Information Questionnaire (PIQ) form correctly for your SSB interview.
+
+## Coming Soon
+
+Detailed content for this material is being prepared and will be available soon.
+
+**Key Points to Remember**:
+- Fill the PIQ form honestly and accurately
+- Maintain consistency across all sections
+- Be prepared to explain every detail
+- Know your PIQ thoroughly for the interview
+        """.trimIndent(),
+        isPremium = false,
+        tags = listOf("PIQ", "Form", "Guide"),
+        relatedMaterials = emptyList()
+    )
+    
+    private fun getPIQ2() = StudyMaterialContent(
+        id = "piq_2",
+        title = "Self-Consistency Tips",
+        category = "PIQ Form",
+        author = "SSB Expert",
+        publishedDate = "Oct 22, 2025",
+        readTime = "10 min read",
+        content = """
+# Self-Consistency Tips for PIQ
+
+Maintaining consistency in your PIQ form is crucial for SSB success.
+
+## Coming Soon
+
+Detailed content for this material is being prepared and will be available soon.
+        """.trimIndent(),
+        isPremium = false,
+        tags = listOf("PIQ", "Consistency"),
+        relatedMaterials = emptyList()
+    )
+    
+    private fun getPIQ3() = StudyMaterialContent(
+        id = "piq_3",
+        title = "Common PIQ Mistakes",
+        category = "PIQ Form",
+        author = "SSB Expert",
+        publishedDate = "Oct 22, 2025",
+        readTime = "8 min read",
+        content = """
+# Common PIQ Mistakes
+
+Avoid these common mistakes when filling out your PIQ form.
+
+## Coming Soon
+
+Detailed content for this material is being prepared and will be available soon.
+        """.trimIndent(),
+        isPremium = false,
+        tags = listOf("PIQ", "Mistakes"),
         relatedMaterials = emptyList()
     )
 }

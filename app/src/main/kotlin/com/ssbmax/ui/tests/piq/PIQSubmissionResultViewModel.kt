@@ -75,7 +75,8 @@ class PIQSubmissionResultViewModel @Inject constructor(
                     name = sibling["name"] as? String ?: "",
                     age = sibling["age"]?.toString() ?: "",
                     occupation = sibling["occupation"] as? String ?: "",
-                    education = sibling["education"] as? String ?: ""
+                    education = sibling["education"] as? String ?: "",
+                    income = sibling["income"] as? String ?: ""
                 )
             }
             
@@ -89,7 +90,10 @@ class PIQSubmissionResultViewModel @Inject constructor(
                     stream = "",
                     year = eduMap["year"]?.toString() ?: "",
                     percentage = eduMap["percentage"]?.toString() ?: "",
-                    cgpa = ""
+                    cgpa = "",
+                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
                 )
             } ?: Education(level = "10th")
             
@@ -102,7 +106,10 @@ class PIQSubmissionResultViewModel @Inject constructor(
                     stream = eduMap["stream"] as? String ?: "",
                     year = eduMap["year"]?.toString() ?: "",
                     percentage = eduMap["percentage"]?.toString() ?: "",
-                    cgpa = ""
+                    cgpa = "",
+                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
                 )
             } ?: Education(level = "12th")
             
@@ -115,9 +122,80 @@ class PIQSubmissionResultViewModel @Inject constructor(
                     stream = "",
                     year = eduMap["year"]?.toString() ?: "",
                     percentage = "",
-                    cgpa = eduMap["cgpa"]?.toString() ?: ""
+                    cgpa = eduMap["cgpa"]?.toString() ?: "",
+                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
                 )
             } ?: Education(level = "Graduation")
+            
+            val educationPostGraduationMap = submissionData["educationPostGraduation"] as? Map<*, *>
+            val educationPostGraduation = educationPostGraduationMap?.let { eduMap ->
+                Education(
+                    level = eduMap["level"] as? String ?: "",
+                    institution = eduMap["institution"] as? String ?: "",
+                    board = eduMap["board"] as? String ?: "",
+                    stream = "",
+                    year = eduMap["year"]?.toString() ?: "",
+                    percentage = "",
+                    cgpa = eduMap["cgpa"]?.toString() ?: "",
+                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
+                )
+            } ?: Education(level = "Post-Graduation")
+            
+            // Parse NCC Training
+            val nccTrainingMap = submissionData["nccTraining"] as? Map<*, *>
+            val nccTraining = nccTrainingMap?.let { nccMap ->
+                NCCTraining(
+                    hasTraining = nccMap["hasTraining"] as? Boolean ?: false,
+                    totalTraining = nccMap["totalTraining"] as? String ?: "",
+                    wing = nccMap["wing"] as? String ?: "",
+                    division = nccMap["division"] as? String ?: "",
+                    certificateObtained = nccMap["certificateObtained"] as? String ?: ""
+                )
+            } ?: NCCTraining()
+            
+            // Parse sports participation
+            val sportsParticipationList = submissionData["sportsParticipation"] as? List<*> ?: emptyList<Any>()
+            val sportsParticipation = sportsParticipationList.mapNotNull { sportData ->
+                val sport = sportData as? Map<*, *> ?: return@mapNotNull null
+                SportsParticipation(
+                    id = sport["id"] as? String ?: "",
+                    sport = sport["sport"] as? String ?: "",
+                    period = sport["period"] as? String ?: "",
+                    representedInstitution = sport["representedInstitution"] as? String ?: "",
+                    outstandingAchievement = sport["outstandingAchievement"] as? String ?: ""
+                )
+            }
+            
+            // Parse extra-curricular activities
+            val extraCurricularList = submissionData["extraCurricularActivities"] as? List<*> ?: emptyList<Any>()
+            val extraCurricularActivities = extraCurricularList.mapNotNull { activityData ->
+                val activity = activityData as? Map<*, *> ?: return@mapNotNull null
+                ExtraCurricularActivity(
+                    id = activity["id"] as? String ?: "",
+                    activityName = activity["activityName"] as? String ?: "",
+                    duration = activity["duration"] as? String ?: "",
+                    outstandingAchievement = activity["outstandingAchievement"] as? String ?: ""
+                )
+            }
+            
+            // Parse previous interviews
+            val previousInterviewsList = submissionData["previousInterviews"] as? List<*> ?: emptyList<Any>()
+            val previousInterviews = previousInterviewsList.mapNotNull { interviewData ->
+                val interview = interviewData as? Map<*, *> ?: return@mapNotNull null
+                PreviousInterview(
+                    id = interview["id"] as? String ?: "",
+                    typeOfEntry = interview["typeOfEntry"] as? String ?: "",
+                    ssbNumber = interview["ssbNumber"] as? String ?: "",
+                    ssbPlace = interview["ssbPlace"] as? String ?: "",
+                    date = interview["date"] as? String ?: "",
+                    chestNumber = interview["chestNumber"] as? String ?: "",
+                    batchNumber = interview["batchNumber"] as? String ?: ""
+                )
+            }
             
             // Parse work experience
             val workExpList = submissionData["workExperience"] as? List<*> ?: emptyList<Any>()
@@ -155,31 +233,103 @@ class PIQSubmissionResultViewModel @Inject constructor(
                 id = submissionData["id"] as? String ?: "",
                 userId = submissionData["userId"] as? String ?: "",
                 testId = submissionData["testId"] as? String ?: "",
+                
+                // Header Section
+                oirNumber = submissionData["oirNumber"] as? String ?: "",
+                selectionBoard = submissionData["selectionBoard"] as? String ?: "",
+                batchNumber = submissionData["batchNumber"] as? String ?: "",
+                chestNumber = submissionData["chestNumber"] as? String ?: "",
+                upscRollNumber = submissionData["upscRollNumber"] as? String ?: "",
+                
+                // Personal Information
                 fullName = submissionData["fullName"] as? String ?: "",
                 dateOfBirth = submissionData["dateOfBirth"] as? String ?: "",
                 age = submissionData["age"]?.toString() ?: "",
                 gender = submissionData["gender"] as? String ?: "",
                 phone = submissionData["phone"] as? String ?: "",
                 email = submissionData["email"] as? String ?: "",
+                
+                // Personal Details Table
+                state = submissionData["state"] as? String ?: "",
+                district = submissionData["district"] as? String ?: "",
+                religion = submissionData["religion"] as? String ?: "",
+                scStObcStatus = submissionData["scStObcStatus"] as? String ?: "",
+                motherTongue = submissionData["motherTongue"] as? String ?: "",
+                maritalStatus = submissionData["maritalStatus"] as? String ?: "",
+                
+                // Residence Information
                 permanentAddress = submissionData["permanentAddress"] as? String ?: "",
                 presentAddress = submissionData["presentAddress"] as? String ?: "",
+                maximumResidence = submissionData["maximumResidence"] as? String ?: "",
+                maximumResidencePopulation = submissionData["maximumResidencePopulation"] as? String ?: "",
+                presentResidencePopulation = submissionData["presentResidencePopulation"] as? String ?: "",
+                permanentResidencePopulation = submissionData["permanentResidencePopulation"] as? String ?: "",
+                isDistrictHQ = submissionData["isDistrictHQ"] as? Boolean ?: false,
+                
+                // Physical Details
+                height = submissionData["height"] as? String ?: "",
+                weight = submissionData["weight"] as? String ?: "",
+                
+                // Father details
                 fatherName = submissionData["fatherName"] as? String ?: "",
                 fatherOccupation = submissionData["fatherOccupation"] as? String ?: "",
                 fatherEducation = submissionData["fatherEducation"] as? String ?: "",
                 fatherIncome = submissionData["fatherIncome"] as? String ?: "",
+                
+                // Mother details
                 motherName = submissionData["motherName"] as? String ?: "",
                 motherOccupation = submissionData["motherOccupation"] as? String ?: "",
                 motherEducation = submissionData["motherEducation"] as? String ?: "",
+                
+                // Family Enhancement
+                parentsAlive = submissionData["parentsAlive"] as? String ?: "",
+                ageAtFatherDeath = submissionData["ageAtFatherDeath"] as? String ?: "",
+                ageAtMotherDeath = submissionData["ageAtMotherDeath"] as? String ?: "",
+                guardianName = submissionData["guardianName"] as? String ?: "",
+                guardianOccupation = submissionData["guardianOccupation"] as? String ?: "",
+                guardianEducation = submissionData["guardianEducation"] as? String ?: "",
+                guardianIncome = submissionData["guardianIncome"] as? String ?: "",
+                
+                // Siblings
                 siblings = siblings,
+                
+                // Occupation
+                presentOccupation = submissionData["presentOccupation"] as? String ?: "",
+                personalMonthlyIncome = submissionData["personalMonthlyIncome"] as? String ?: "",
+                
+                // Education
                 education10th = education10th,
                 education12th = education12th,
                 educationGraduation = educationGraduation,
+                educationPostGraduation = educationPostGraduation,
+                
+                // Activities
                 hobbies = submissionData["hobbies"] as? String ?: "",
                 sports = submissionData["sports"] as? String ?: "",
+                sportsParticipation = sportsParticipation,
+                extraCurricularActivities = extraCurricularActivities,
+                positionsOfResponsibility = submissionData["positionsOfResponsibility"] as? String ?: "",
+                
+                // Work Experience
                 workExperience = workExperience,
+                
+                // NCC Training
+                nccTraining = nccTraining,
+                
+                // Service Selection
+                natureOfCommission = submissionData["natureOfCommission"] as? String ?: "",
+                choiceOfService = submissionData["choiceOfService"] as? String ?: "",
+                chancesAvailed = submissionData["chancesAvailed"] as? String ?: "",
+                
+                // Previous Interviews
+                previousInterviews = previousInterviews,
+                
+                // Motivation & Self Assessment
                 whyDefenseForces = submissionData["whyDefenseForces"] as? String ?: "",
                 strengths = submissionData["strengths"] as? String ?: "",
                 weaknesses = submissionData["weaknesses"] as? String ?: "",
+                
+                // Metadata
                 status = try {
                     SubmissionStatus.valueOf(submissionData["status"] as? String ?: "DRAFT")
                 } catch (e: Exception) {

@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.ui.components.BreadcrumbBar
 import com.ssbmax.ui.components.BreadcrumbItem
 import com.ssbmax.ui.components.MarkdownText
+import com.ssbmax.ui.components.PIQFormWebView
 
 /**
  * Study Material Detail Screen
@@ -137,7 +138,27 @@ fun StudyMaterialDetailScreen(
                     
                     // Content
                     item {
-                        ContentCard(content = material.content)
+                        if (material.content.startsWith("<!DOCTYPE html>") || 
+                            material.content.startsWith("<html")) {
+                            // Render HTML content in WebView - wrap in Card and use fixed height for scrolling
+                            Card(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(2000.dp) // Increased height to show full form (both pages)
+                                ) {
+                                    PIQFormWebView(
+                                        htmlContent = material.content,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                        } else {
+                            // Render markdown content
+                            ContentCard(content = material.content)
+                        }
                     }
                     
                     // Tags

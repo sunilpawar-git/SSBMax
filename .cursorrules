@@ -1005,7 +1005,25 @@ When making significant changes, update the relevant documentation:
 - New features → Document in `docs/implementation/`
 - Migrations → Track in `docs/migration/`
 
-**Note**: Per user preference, do NOT auto-create markdown documentation files after every change. Only create .md files when explicitly requested.
+### Documentation File Policy
+
+**CRITICAL RULE**: 
+- **DO NOT** automatically create markdown (.md) files during normal development operations
+- **DO NOT** create status reports, summaries, completion documents, or progress updates as .md files
+- **DO** create and save .md files when the user **explicitly requests** documentation creation
+
+**When User Explicitly Requests Documentation**:
+- User says: "create documentation", "write a guide", "save as markdown", "create a PRD", "write a README", etc.
+- Agent should create the requested .md file(s) in the appropriate location (typically `/docs/` directory)
+- Agent should save the file(s) using the `write` tool
+
+**Examples of Explicit Requests**:
+- ✅ "Create a PRD for the new feature"
+- ✅ "Write documentation for this module"
+- ✅ "Save this as a markdown file"
+- ✅ "Create a guide for X"
+- ❌ "Implement feature X" (don't create docs automatically)
+- ❌ "Fix bug Y" (don't create status reports)
 
 ## ✅ CODE REVIEW CHECKLIST
 
