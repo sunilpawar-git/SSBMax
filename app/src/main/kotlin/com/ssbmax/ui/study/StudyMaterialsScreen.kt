@@ -269,6 +269,7 @@ private fun getCategoryTopicName(category: StudyCategory): String {
         StudyCategory.OIR_PREP -> "OIR"
         StudyCategory.PPDT_TECHNIQUES -> "PPDT"
         StudyCategory.PSYCHOLOGY_TESTS -> "PSYCHOLOGY"
+        StudyCategory.PIQ_PREP -> "PIQ"
         StudyCategory.GTO_TASKS -> "GTO"
         StudyCategory.INTERVIEW_PREP -> "INTERVIEW"
         else -> "GENERAL"
@@ -291,6 +292,7 @@ enum class StudyCategory {
     OIR_PREP,
     PPDT_TECHNIQUES,
     PSYCHOLOGY_TESTS,
+    PIQ_PREP,
     GTO_TASKS,
     INTERVIEW_PREP,
     GENERAL_TIPS,
