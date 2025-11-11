@@ -92,7 +92,6 @@ fun TopicScreen(
                 1 -> StudyMaterialTab(
                     materials = uiState.studyMaterials,
                     isLoading = uiState.isLoading,
-                    topicId = topicId,
                     onMaterialClick = onNavigateToStudyMaterial
                 )
                 2 -> TestsTab(
@@ -233,7 +232,6 @@ private fun IntroductionTab(
 private fun StudyMaterialTab(
     materials: List<StudyMaterialItem>,
     isLoading: Boolean,
-    topicId: String,
     onMaterialClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -269,7 +267,6 @@ private fun StudyMaterialTab(
         items(materials) { material ->
             StudyMaterialCard(
                 material = material,
-                topicId = topicId,
                 onClick = { onMaterialClick(material.id) }
             )
         }
@@ -279,7 +276,6 @@ private fun StudyMaterialTab(
 @Composable
 private fun StudyMaterialCard(
     material: StudyMaterialItem,
-    topicId: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -300,7 +296,7 @@ private fun StudyMaterialCard(
                 tint = if (material.isPremium)
                     MaterialTheme.colorScheme.tertiary
                 else
-                    getTopicColor(topicId), // Use vibrant topic-specific color
+                    getStudyMaterialColor(material.id), // Use diverse vibrant colors
                 modifier = Modifier.size(40.dp)
             )
             
@@ -512,16 +508,32 @@ private fun getTestColor(testType: TestType): Color {
     }
 }
 
-private fun getTopicColor(topicId: String): Color {
-    return when (topicId.uppercase()) {
-        "OIR" -> Color(0xFF1976D2)        // Bright Blue (same as OIR test)
-        "PPDT" -> Color(0xFF4CAF50)       // Bright Green (same as PPDT test)
-        "PSYCHOLOGY" -> Color(0xFF009688) // Bright Teal
-        "PIQ_FORM", "PIQ" -> Color(0xFF9C27B0) // Bright Purple
-        "GTO" -> Color(0xFF2196F3)        // Bright Blue (same as GTO_GD)
-        "INTERVIEW" -> Color(0xFFE91E63)  // Bright Pink
-        else -> Color(0xFF1976D2) // Fallback to bright blue
-    }
+private fun getStudyMaterialColor(materialId: String): Color {
+    // Create a diverse color palette for study materials
+    // Use material ID to deterministically assign colors
+    val colorPalette = listOf(
+        Color(0xFF1976D2), // Bright Blue
+        Color(0xFF4CAF50), // Bright Green
+        Color(0xFFFF9800), // Bright Orange
+        Color(0xFF9C27B0), // Bright Purple
+        Color(0xFF00BCD4), // Bright Cyan
+        Color(0xFF3F51B5), // Bright Indigo
+        Color(0xFF8BC34A), // Bright Light Green
+        Color(0xFFFF5722), // Bright Deep Orange
+        Color(0xFFE91E63), // Bright Pink
+        Color(0xFF009688), // Bright Teal
+        Color(0xFFF44336), // Bright Red
+        Color(0xFF673AB7), // Bright Deep Purple
+        Color(0xFFCDDC39), // Bright Lime
+        Color(0xFF795548), // Brown
+        Color(0xFF607D8B)  // Blue Grey
+    )
+
+    // Use hash of material ID to get consistent color assignment
+    val hash = materialId.hashCode()
+    val colorIndex = (hash % colorPalette.size).let { if (it < 0) it + colorPalette.size else it }
+
+    return colorPalette[colorIndex]
 }
 
 private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector.ImageVector {
