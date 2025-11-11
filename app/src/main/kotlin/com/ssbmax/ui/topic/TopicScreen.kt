@@ -96,6 +96,7 @@ fun TopicScreen(
                 )
                 2 -> TestsTab(
                     tests = uiState.availableTests,
+                    topicId = topicId,
                     isLoading = uiState.isLoading,
                     onTestClick = { testType ->
                         // Convert TestType to testId string for navigation
@@ -334,6 +335,7 @@ private fun StudyMaterialCard(
 @Composable
 private fun TestsTab(
     tests: List<TestType>,
+    topicId: String,
     isLoading: Boolean,
     onTestClick: (TestType) -> Unit,
     modifier: Modifier = Modifier
@@ -367,12 +369,64 @@ private fun TestsTab(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(tests) { test ->
-            TestCard(
-                test = test,
-                onClick = { onTestClick(test) }
-            )
+        if (topicId.equals("GTO", ignoreCase = true)) {
+            // Special handling for GTO tests - divided into Day 1 and Day 2
+            val day1Tests = tests.take(4) // First 4 tests
+            val day2Tests = tests.drop(4) // Last 4 tests
+
+            // Day 1 Section
+            item {
+                DayHeader("Day 1")
+            }
+            items(day1Tests) { test ->
+                TestCard(
+                    test = test,
+                    onClick = { onTestClick(test) }
+                )
+            }
+
+            // Day 2 Section
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                DayHeader("Day 2")
+            }
+            items(day2Tests) { test ->
+                TestCard(
+                    test = test,
+                    onClick = { onTestClick(test) }
+                )
+            }
+        } else {
+            // Default behavior for other topics
+            items(tests) { test ->
+                TestCard(
+                    test = test,
+                    onClick = { onTestClick(test) }
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun DayHeader(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        HorizontalDivider(
+            thickness = 2.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+        )
     }
 }
 
@@ -441,7 +495,15 @@ private fun getTestColor(testType: TestType): Color {
         TestType.WAT -> Color(0xFFF57C00)
         TestType.SRT -> Color(0xFF7B1FA2)
         TestType.SD -> Color(0xFF0097A7)
-        TestType.GTO -> Color(0xFF5D4037)
+        // GTO Tasks - using different shades of brown/green
+        TestType.GTO_GD -> Color(0xFF8D6E63)
+        TestType.GTO_GPE -> Color(0xFFA1887F)
+        TestType.GTO_PGT -> Color(0xFFBCAAA4)
+        TestType.GTO_GOR -> Color(0xFFD7CCC8)
+        TestType.GTO_HGT -> Color(0xFF6D4C41)
+        TestType.GTO_LECTURETTE -> Color(0xFF5D4037)
+        TestType.GTO_IO -> Color(0xFF4E342E)
+        TestType.GTO_CT -> Color(0xFF3E2723)
         TestType.IO -> Color(0xFF455A64)
     }
 }
@@ -452,7 +514,15 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
         TestType.PPDT -> Icons.Default.Image
         TestType.PIQ -> Icons.Default.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
-        TestType.GTO -> Icons.Default.Groups
+        // GTO Tasks
+        TestType.GTO_GD -> Icons.Default.Forum
+        TestType.GTO_GPE -> Icons.Default.Map
+        TestType.GTO_PGT -> Icons.Default.TrendingUp
+        TestType.GTO_GOR -> Icons.Default.DirectionsRun
+        TestType.GTO_HGT -> Icons.Default.People
+        TestType.GTO_LECTURETTE -> Icons.Default.Mic
+        TestType.GTO_IO -> Icons.Default.Person
+        TestType.GTO_CT -> Icons.Default.MilitaryTech
         TestType.IO -> Icons.Default.RecordVoiceOver
     }
 }

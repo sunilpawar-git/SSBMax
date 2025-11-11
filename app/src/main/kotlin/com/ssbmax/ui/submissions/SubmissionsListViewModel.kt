@@ -183,7 +183,15 @@ data class SubmissionItem(
             TestType.PIQ -> "PIQ - Personal Information Questionnaire"
             TestType.SD -> "SD - Self Description"
             TestType.OIR -> "OIR - Officers Intelligence Rating"
-            TestType.GTO -> "GTO - Group Testing Officer"
+            // GTO Tasks
+            TestType.GTO_GD -> "GTO - Group Discussion"
+            TestType.GTO_GPE -> "GTO - Group Planning Exercise"
+            TestType.GTO_PGT -> "GTO - Progressive Group Task"
+            TestType.GTO_GOR -> "GTO - Group Obstacle Race"
+            TestType.GTO_HGT -> "GTO - Half Group Task"
+            TestType.GTO_LECTURETTE -> "GTO - Lecturette"
+            TestType.GTO_IO -> "GTO - Individual Obstacles"
+            TestType.GTO_CT -> "GTO - Command Task"
             TestType.IO -> "IO - Interview Officer"
         }
     

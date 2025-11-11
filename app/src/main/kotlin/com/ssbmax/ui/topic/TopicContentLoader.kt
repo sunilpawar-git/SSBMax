@@ -40,7 +40,16 @@ object TopicContentLoader {
                 title = "Group Testing Officer Tasks",
                 introduction = getIntroduction(testType),
                 studyMaterials = getStudyMaterials(testType),
-                tests = listOf(TestType.GTO)
+                tests = listOf(
+                    TestType.GTO_GD,
+                    TestType.GTO_GPE,
+                    TestType.GTO_PGT,
+                    TestType.GTO_GOR,
+                    TestType.GTO_HGT,
+                    TestType.GTO_LECTURETTE,
+                    TestType.GTO_IO,
+                    TestType.GTO_CT
+                )
             )
             "INTERVIEW" -> TopicInfo(
                 title = "Interview Preparation",

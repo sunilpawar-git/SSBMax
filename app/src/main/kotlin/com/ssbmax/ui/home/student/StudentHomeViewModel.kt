@@ -81,7 +81,7 @@ class StudentHomeViewModel @Inject constructor(
                         ),
                         Phase2Progress(
                             psychologyProgress = TestProgress(TestType.TAT), // Psychology encompasses multiple tests
-                            gtoProgress = TestProgress(TestType.GTO),
+                            gtoProgress = TestProgress(TestType.GTO_GD),
                             interviewProgress = TestProgress(TestType.IO)
                         )
                     )

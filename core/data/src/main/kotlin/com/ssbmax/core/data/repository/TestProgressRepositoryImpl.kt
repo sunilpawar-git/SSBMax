@@ -87,7 +87,7 @@ class TestProgressRepositoryImpl @Inject constructor(
                         mostRecentPsychology,
                         isPsychologyGroup = true
                     ),
-                    gtoProgress = createTestProgress(TestType.GTO, gtoSubmission),
+                    gtoProgress = createTestProgress(TestType.GTO_GD, gtoSubmission),
                     interviewProgress = createTestProgress(TestType.IO, interviewSubmission)
                 )
                 

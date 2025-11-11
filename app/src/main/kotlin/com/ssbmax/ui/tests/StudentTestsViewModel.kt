@@ -125,12 +125,82 @@ class StudentTestsViewModel @Inject constructor(
                     ),
                     // GTO Tests
                     TestOverviewItem(
-                        type = TestType.GTO,
-                        name = "GTO Tasks",
-                        icon = Icons.Default.Groups,
+                        type = TestType.GTO_GD,
+                        name = "Group Discussion",
+                        icon = Icons.Default.Forum,
                         category = "GTO",
-                        durationMinutes = 180,
-                        questionCount = 8,
+                        durationMinutes = 20,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_GPE,
+                        name = "Group Planning Exercise",
+                        icon = Icons.Default.Map,
+                        category = "GTO",
+                        durationMinutes = 30,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_PGT,
+                        name = "Progressive Group Task",
+                        icon = Icons.Default.TrendingUp,
+                        category = "GTO",
+                        durationMinutes = 45,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_GOR,
+                        name = "Group Obstacle Race",
+                        icon = Icons.Default.DirectionsRun,
+                        category = "GTO",
+                        durationMinutes = 60,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_HGT,
+                        name = "Half Group Task",
+                        icon = Icons.Default.People,
+                        category = "GTO",
+                        durationMinutes = 25,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_LECTURETTE,
+                        name = "Lecturette",
+                        icon = Icons.Default.Mic,
+                        category = "GTO",
+                        durationMinutes = 3,
+                        questionCount = 1,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_IO,
+                        name = "Individual Obstacles",
+                        icon = Icons.Default.Person,
+                        category = "GTO",
+                        durationMinutes = 10,
+                        questionCount = 10,
+                        status = phase2Progress.gtoProgress.status,
+                        latestScore = phase2Progress.gtoProgress.latestScore
+                    ),
+                    TestOverviewItem(
+                        type = TestType.GTO_CT,
+                        name = "Command Task",
+                        icon = Icons.Default.MilitaryTech,
+                        category = "GTO",
+                        durationMinutes = 15,
+                        questionCount = 1,
                         status = phase2Progress.gtoProgress.status,
                         latestScore = phase2Progress.gtoProgress.latestScore
                     ),

@@ -249,7 +249,16 @@ class TopicViewModel @Inject constructor(
             "PPDT" -> listOf(TestType.PPDT)
             "PIQ", "PIQ_FORM" -> listOf(TestType.PIQ)
             "PSYCHOLOGY" -> listOf(TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD)
-            "GTO" -> listOf(TestType.GTO)
+            "GTO" -> listOf(
+                TestType.GTO_GD,
+                TestType.GTO_GPE,
+                TestType.GTO_PGT,
+                TestType.GTO_GOR,
+                TestType.GTO_HGT,
+                TestType.GTO_LECTURETTE,
+                TestType.GTO_IO,
+                TestType.GTO_CT
+            )
             "INTERVIEW" -> listOf(TestType.IO)
             else -> emptyList()
         }

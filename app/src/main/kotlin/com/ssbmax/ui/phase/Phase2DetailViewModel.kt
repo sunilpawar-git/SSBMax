@@ -68,7 +68,7 @@ class Phase2DetailViewModel @Inject constructor(
                         started = SharingStarted.WhileSubscribed(5000),
                         initialValue = Phase2Progress(
                             psychologyProgress = TestProgress(TestType.TAT),
-                            gtoProgress = TestProgress(TestType.GTO),
+                            gtoProgress = TestProgress(TestType.GTO_GD),
                             interviewProgress = TestProgress(TestType.IO)
                         )
                     )
@@ -123,7 +123,7 @@ class Phase2DetailViewModel @Inject constructor(
                         
                         val gtoTests = listOf(
                             createPhase2Test(
-                                type = TestType.GTO,
+                                type = TestType.GTO_GD,
                                 name = "GTO Tasks",
                                 subtitle = "Group Testing Officer",
                                 description = "Group tasks including Group Discussion, Group Planning Exercise, Progressive Group Task, " +

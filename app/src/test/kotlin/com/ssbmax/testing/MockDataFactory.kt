@@ -150,7 +150,7 @@ object MockDataFactory {
     ): Phase2Progress {
         return Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, tatStatus),
-            gtoProgress = TestProgress(TestType.GTO, TestStatus.NOT_ATTEMPTED),
+            gtoProgress = TestProgress(TestType.GTO_GD, TestStatus.NOT_ATTEMPTED),
             interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
         )
     }

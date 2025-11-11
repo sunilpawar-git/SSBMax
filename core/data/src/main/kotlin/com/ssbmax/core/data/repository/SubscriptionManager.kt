@@ -190,7 +190,9 @@ class SubscriptionManager @Inject constructor(
                     TestType.SRT -> "srtTestsUsed"
                     TestType.PPDT -> "ppdtTestsUsed"
                     TestType.PIQ -> "piqTestsUsed"
-                    TestType.GTO -> "gtoTestsUsed"
+                    // GTO Tasks
+                    TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+                    TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> "gtoTestsUsed"
                     TestType.IO -> "interviewTestsUsed"
                     TestType.SD -> "sdTestsUsed"
                 }

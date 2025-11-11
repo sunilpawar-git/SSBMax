@@ -70,13 +70,21 @@ enum class TestType {
     WAT,        // Word Association Test
     SRT,        // Situation Reaction Test
     SD,         // Self Description
-    GTO,        // Group Testing Officer - TODO: Implement ViewModel with security measures above
+    // GTO Tasks (8 individual tests)
+    GTO_GD,     // Group Discussion
+    GTO_GPE,    // Group Planning Exercise
+    GTO_PGT,    // Progressive Group Task
+    GTO_GOR,    // Group Obstacle Race
+    GTO_HGT,    // Half Group Task
+    GTO_LECTURETTE, // Lecturette
+    GTO_IO,     // Individual Obstacles
+    GTO_CT,     // Command Task
     IO;         // Interview Officer - TODO: Implement ViewModel with security measures above
     
     val phase: TestPhase
         get() = when (this) {
             OIR, PPDT -> TestPhase.PHASE_1
-            PIQ, TAT, WAT, SRT, SD, GTO, IO -> TestPhase.PHASE_2
+            PIQ, TAT, WAT, SRT, SD, GTO_GD, GTO_GPE, GTO_PGT, GTO_GOR, GTO_HGT, GTO_LECTURETTE, GTO_IO, GTO_CT, IO -> TestPhase.PHASE_2
         }
     
     val displayName: String
@@ -88,7 +96,15 @@ enum class TestType {
             WAT -> "WAT"
             SRT -> "SRT"
             SD -> "Self Description"
-            GTO -> "GTO Tasks"
+            // GTO Tasks
+            GTO_GD -> "Group Discussion"
+            GTO_GPE -> "Group Planning Exercise"
+            GTO_PGT -> "Progressive Group Task"
+            GTO_GOR -> "Group Obstacle Race"
+            GTO_HGT -> "Half Group Task"
+            GTO_LECTURETTE -> "Lecturette"
+            GTO_IO -> "Individual Obstacles"
+            GTO_CT -> "Command Task"
             IO -> "Interview"
         }
     
@@ -101,7 +117,15 @@ enum class TestType {
             WAT -> "Word Association Test"
             SRT -> "Situation Reaction Test"
             SD -> "Self Description"
-            GTO -> "Group Testing Officer Tasks"
+            // GTO Tasks
+            GTO_GD -> "Group Discussion"
+            GTO_GPE -> "Group Planning Exercise"
+            GTO_PGT -> "Progressive Group Task"
+            GTO_GOR -> "Group Obstacle Race"
+            GTO_HGT -> "Half Group Task"
+            GTO_LECTURETTE -> "Lecturette"
+            GTO_IO -> "Individual Obstacles"
+            GTO_CT -> "Command Task"
             IO -> "Interview Officer Assessment"
         }
     
@@ -114,7 +138,15 @@ enum class TestType {
             WAT -> "Write first response to 60 words in 15 minutes"
             SRT -> "React to 60 practical situations"
             SD -> "Describe yourself from different perspectives"
-            GTO -> "Participate in group discussions and tasks"
+            // GTO Tasks
+            GTO_GD -> "Discuss topics with your group and reach consensus"
+            GTO_GPE -> "Plan and execute group activities with limited resources"
+            GTO_PGT -> "Work progressively through increasingly complex group challenges"
+            GTO_GOR -> "Navigate physical obstacles as a coordinated team"
+            GTO_HGT -> "Lead half your group through problem-solving tasks"
+            GTO_LECTURETTE -> "Deliver a short speech on a chosen topic"
+            GTO_IO -> "Complete individual physical challenges and obstacles"
+            GTO_CT -> "Command and lead your group through tactical exercises"
             IO -> "Personal interview with the Interviewing Officer"
         }
     
@@ -122,7 +154,7 @@ enum class TestType {
         get() = this == OIR
     
     val requiresInstructorReview: Boolean
-        get() = this in listOf(PPDT, TAT, WAT, SRT, SD, GTO, IO) // PIQ is for reference, not graded
+        get() = this in listOf(PPDT, TAT, WAT, SRT, SD, GTO_GD, GTO_GPE, GTO_PGT, GTO_GOR, GTO_HGT, GTO_LECTURETTE, GTO_IO, GTO_CT, IO) // PIQ is for reference, not graded
 }
 
 /**
