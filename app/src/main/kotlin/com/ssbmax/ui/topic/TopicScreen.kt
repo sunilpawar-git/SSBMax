@@ -291,7 +291,7 @@ private fun StudyMaterialCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                if (material.isPremium) Icons.Default.Lock else Icons.Default.MenuBook,
+                if (material.isPremium) Icons.Default.Lock else getStudyMaterialIcon(material.id),
                 contentDescription = null,
                 tint = if (material.isPremium)
                     MaterialTheme.colorScheme.tertiary
@@ -534,6 +534,73 @@ private fun getStudyMaterialColor(materialId: String): Color {
     val colorIndex = (hash % colorPalette.size).let { if (it < 0) it + colorPalette.size else it }
 
     return colorPalette[colorIndex]
+}
+
+private fun getStudyMaterialIcon(materialId: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return when {
+        // OIR Materials
+        materialId.contains("oir_1") -> Icons.Default.Psychology // Understanding OIR Test Pattern
+        materialId.contains("oir_2") -> Icons.Default.School // Verbal Reasoning Mastery
+        materialId.contains("oir_3") -> Icons.Default.Extension // Non-Verbal Reasoning Strategies
+        materialId.contains("oir_4") -> Icons.Default.Schedule // Time Management in OIR
+        materialId.contains("oir_5") -> Icons.Default.Warning // Common Mistakes to Avoid
+        materialId.contains("oir_6") -> Icons.Default.Assignment // Practice Sets with Solutions
+        materialId.contains("oir_7") -> Icons.Default.Calculate // Mental Math Shortcuts
+
+        // PPDT Materials
+        materialId.contains("ppdt_1") -> Icons.Default.Info // PPDT Test Overview
+        materialId.contains("ppdt_2") -> Icons.Default.Edit // Story Writing Techniques
+        materialId.contains("ppdt_3") -> Icons.Default.Groups // Group Discussion Strategies
+        materialId.contains("ppdt_4") -> Icons.Default.Visibility // Character Perception Skills
+        materialId.contains("ppdt_5") -> Icons.Default.LibraryBooks // Sample PPDT Stories
+        materialId.contains("ppdt_6") -> Icons.Default.Error // Common PPDT Mistakes
+
+        // Psychology Materials
+        materialId.contains("psy_1") -> Icons.Default.Psychology // Psychology Tests Overview
+        materialId.contains("psy_2") -> Icons.Default.Lightbulb // TAT Mastery Guide
+        materialId.contains("psy_3") -> Icons.Default.Chat // WAT Response Strategies
+        materialId.contains("psy_4") -> Icons.Default.Extension // SRT Situation Analysis
+        materialId.contains("psy_5") -> Icons.Default.Person // Self Description Writing
+        materialId.contains("psy_6") -> Icons.Default.Star // Officer Like Qualities Explained
+        materialId.contains("psy_7") -> Icons.Default.Assignment // Psychology Test Practice Sets
+        materialId.contains("psy_8") -> Icons.Default.FitnessCenter // Psychological Mindset Development
+
+        // PIQ Materials
+        materialId.contains("piq_form") -> Icons.Default.Assignment // SSB PIQ Form (Reference)
+        materialId.contains("piq_1") -> Icons.Default.Help // PIQ Form Guide
+        materialId.contains("piq_2") -> Icons.Default.CheckCircle // Self-Consistency Tips
+        materialId.contains("piq_3") -> Icons.Default.Warning // Common PIQ Mistakes
+
+        // GTO Materials
+        materialId.contains("gto_1") -> Icons.Default.Groups // GTO Tasks Overview
+        materialId.contains("gto_2") -> Icons.Default.Forum // Group Discussion Mastery
+        materialId.contains("gto_3") -> Icons.Default.TrendingUp // Progressive Group Task Tips
+        materialId.contains("gto_4") -> Icons.Default.People // Half Group Task Techniques
+        materialId.contains("gto_5") -> Icons.Default.Mic // Lecturette Preparation
+        materialId.contains("gto_6") -> Icons.Default.Leaderboard // Command Task Leadership
+        materialId.contains("gto_7") -> Icons.Default.DirectionsRun // Snake Race & FGT Strategies
+
+        // Interview Materials
+        materialId.contains("int_1") -> Icons.Default.RecordVoiceOver // SSB Interview Process
+        materialId.contains("int_2") -> Icons.Default.Person // Personal Interview Preparation
+        materialId.contains("int_3") -> Icons.Default.Public // Current Affairs Mastery
+        materialId.contains("int_4") -> Icons.Default.MilitaryTech // Military Knowledge Basics
+        materialId.contains("int_5") -> Icons.Default.Face // Interview Body Language
+        materialId.contains("int_6") -> Icons.Default.QuestionAnswer // Common Interview Questions
+        materialId.contains("int_7") -> Icons.Default.PlayCircle // Mock Interview Scenarios
+
+        // Conference Materials
+        materialId.contains("conf_") -> Icons.Default.AccountBalance // Conference related
+
+        // Medicals Materials
+        materialId.contains("med_") -> Icons.Default.LocalHospital // Medical related
+
+        // SSB Overview Materials
+        materialId.contains("ssb_") -> Icons.Default.Explore // SSB Overview
+
+        // Default fallback
+        else -> Icons.Default.MenuBook
+    }
 }
 
 private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector.ImageVector {
