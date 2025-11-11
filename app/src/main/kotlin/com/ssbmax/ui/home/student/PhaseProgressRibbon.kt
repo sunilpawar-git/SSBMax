@@ -44,11 +44,20 @@ fun PhaseProgressRibbon(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                "SSB Preparation Progress",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "🏆",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    "SSB Preparation Progress",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             

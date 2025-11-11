@@ -51,12 +51,13 @@ fun StudentHomeScreen(
                 title = {
                     Column {
                         Text(
-                            "Welcome, ${uiState.userName}",
+                            "Welcome, ${uiState.userName} 🎖️",
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Keep up the great work!",
+                            "Your SSB journey starts here",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -120,12 +121,17 @@ fun StudentHomeScreen(
                 }
             }
             
+            // Section Divider
+            item {
+                SectionDivider()
+            }
+            
             // Progress Ribbon Header
             item {
-                Text(
-                    "Your Progress",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                SectionHeader(
+                    icon = "📊",
+                    title = "Your Progress",
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
             
@@ -142,12 +148,17 @@ fun StudentHomeScreen(
                 )
             }
             
+            // Section Divider
+            item {
+                SectionDivider()
+            }
+            
             // Quick Actions
             item {
-                Text(
-                    "Quick Actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                SectionHeader(
+                    icon = "⚡",
+                    title = "Quick Actions",
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
             
@@ -206,6 +217,10 @@ fun StudentHomeScreen(
     }
 }
 
+/**
+ * Stats Card - Original Design
+ * Gradient background with icon and horizontal layout
+ */
 @Composable
 private fun StatsCard(
     title: String,
@@ -318,6 +333,46 @@ private fun QuickActionCard(
     }
 }
 
+
+/**
+ * Section Divider - Subtle horizontal line for visual separation
+ */
+@Composable
+private fun SectionDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(
+        modifier = modifier.padding(vertical = 8.dp),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    )
+}
+
+/**
+ * Section Header Component with Icon and Title
+ * Creates visual separation between content sections
+ */
+@Composable
+private fun SectionHeader(
+    icon: String,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = icon,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
 
 // Helper functions
 private fun getTestColor(testType: TestType): Color {
