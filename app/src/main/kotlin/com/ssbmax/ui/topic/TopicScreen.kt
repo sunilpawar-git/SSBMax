@@ -92,6 +92,7 @@ fun TopicScreen(
                 1 -> StudyMaterialTab(
                     materials = uiState.studyMaterials,
                     isLoading = uiState.isLoading,
+                    topicId = topicId,
                     onMaterialClick = onNavigateToStudyMaterial
                 )
                 2 -> TestsTab(
@@ -232,6 +233,7 @@ private fun IntroductionTab(
 private fun StudyMaterialTab(
     materials: List<StudyMaterialItem>,
     isLoading: Boolean,
+    topicId: String,
     onMaterialClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -267,6 +269,7 @@ private fun StudyMaterialTab(
         items(materials) { material ->
             StudyMaterialCard(
                 material = material,
+                topicId = topicId,
                 onClick = { onMaterialClick(material.id) }
             )
         }
@@ -276,6 +279,7 @@ private fun StudyMaterialTab(
 @Composable
 private fun StudyMaterialCard(
     material: StudyMaterialItem,
+    topicId: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -293,10 +297,10 @@ private fun StudyMaterialCard(
             Icon(
                 if (material.isPremium) Icons.Default.Lock else Icons.Default.MenuBook,
                 contentDescription = null,
-                tint = if (material.isPremium) 
-                    MaterialTheme.colorScheme.tertiary 
-                else 
-                    MaterialTheme.colorScheme.primary,
+                tint = if (material.isPremium)
+                    MaterialTheme.colorScheme.tertiary
+                else
+                    getTopicColor(topicId), // Use vibrant topic-specific color
                 modifier = Modifier.size(40.dp)
             )
             
@@ -505,6 +509,18 @@ private fun getTestColor(testType: TestType): Color {
         TestType.GTO_IO -> Color(0xFF8BC34A)      // Bright Light Green
         TestType.GTO_CT -> Color(0xFFFF5722)      // Bright Deep Orange
         TestType.IO -> Color(0xFF455A64)
+    }
+}
+
+private fun getTopicColor(topicId: String): Color {
+    return when (topicId.uppercase()) {
+        "OIR" -> Color(0xFF1976D2)        // Bright Blue (same as OIR test)
+        "PPDT" -> Color(0xFF4CAF50)       // Bright Green (same as PPDT test)
+        "PSYCHOLOGY" -> Color(0xFF009688) // Bright Teal
+        "PIQ_FORM", "PIQ" -> Color(0xFF9C27B0) // Bright Purple
+        "GTO" -> Color(0xFF2196F3)        // Bright Blue (same as GTO_GD)
+        "INTERVIEW" -> Color(0xFFE91E63)  // Bright Pink
+        else -> Color(0xFF1976D2) // Fallback to bright blue
     }
 }
 
