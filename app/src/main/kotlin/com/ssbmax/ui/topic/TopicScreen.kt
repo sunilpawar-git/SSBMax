@@ -398,12 +398,12 @@ private fun TestsTab(
             }
         } else {
             // Default behavior for other topics
-            items(tests) { test ->
-                TestCard(
-                    test = test,
-                    onClick = { onTestClick(test) }
-                )
-            }
+        items(tests) { test ->
+            TestCard(
+                test = test,
+                onClick = { onTestClick(test) }
+            )
+        }
         }
     }
 }
@@ -495,15 +495,15 @@ private fun getTestColor(testType: TestType): Color {
         TestType.WAT -> Color(0xFFF57C00)
         TestType.SRT -> Color(0xFF7B1FA2)
         TestType.SD -> Color(0xFF0097A7)
-        // GTO Tasks - using different shades of brown/green
-        TestType.GTO_GD -> Color(0xFF8D6E63)
-        TestType.GTO_GPE -> Color(0xFFA1887F)
-        TestType.GTO_PGT -> Color(0xFFBCAAA4)
-        TestType.GTO_GOR -> Color(0xFFD7CCC8)
-        TestType.GTO_HGT -> Color(0xFF6D4C41)
-        TestType.GTO_LECTURETTE -> Color(0xFF5D4037)
-        TestType.GTO_IO -> Color(0xFF4E342E)
-        TestType.GTO_CT -> Color(0xFF3E2723)
+        // GTO Tasks - vibrant colors consistent with app design
+        TestType.GTO_GD -> Color(0xFF2196F3)      // Bright Blue
+        TestType.GTO_GPE -> Color(0xFF4CAF50)     // Bright Green
+        TestType.GTO_PGT -> Color(0xFFFF9800)     // Bright Orange
+        TestType.GTO_GOR -> Color(0xFF9C27B0)     // Bright Purple
+        TestType.GTO_HGT -> Color(0xFF00BCD4)     // Bright Cyan
+        TestType.GTO_LECTURETTE -> Color(0xFF3F51B5) // Bright Indigo
+        TestType.GTO_IO -> Color(0xFF8BC34A)      // Bright Light Green
+        TestType.GTO_CT -> Color(0xFFFF5722)      // Bright Deep Orange
         TestType.IO -> Color(0xFF455A64)
     }
 }
