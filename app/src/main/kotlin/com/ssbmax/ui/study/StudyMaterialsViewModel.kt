@@ -42,9 +42,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Quiz,
                         articleCount = 24,
                         isPremium = false,
-                        backgroundColor = Color(0xFFE3F2FD),
-                        iconColor = Color(0xFF1976D2),
-                        textColor = Color(0xFF0D47A1)
+                        backgroundColor = Color(0xFFE3F2FD), // Light blue background
+                        iconColor = Color(0xFF1976D2),      // Bright Blue (matches OIR test)
+                        textColor = Color(0xFF0D47A1)       // Dark blue text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.PPDT_TECHNIQUES,
@@ -52,9 +52,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Image,
                         articleCount = 18,
                         isPremium = false,
-                        backgroundColor = Color(0xFFF3E5F5),
-                        iconColor = Color(0xFF7B1FA2),
-                        textColor = Color(0xFF4A148C)
+                        backgroundColor = Color(0xFFE8F5E9), // Light green background
+                        iconColor = Color(0xFF4CAF50),      // Bright Green (matches PPDT test)
+                        textColor = Color(0xFF1B5E20)       // Dark green text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.PSYCHOLOGY_TESTS,
@@ -62,9 +62,19 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Psychology,
                         articleCount = 32,
                         isPremium = true,
-                        backgroundColor = Color(0xFFE8F5E9),
-                        iconColor = Color(0xFF388E3C),
-                        textColor = Color(0xFF1B5E20)
+                        backgroundColor = Color(0xFFE0F7FA), // Light cyan background
+                        iconColor = Color(0xFF009688),      // Bright Teal
+                        textColor = Color(0xFF004D40)       // Dark teal text
+                    ),
+                    StudyCategoryItem(
+                        type = StudyCategory.PIQ_PREP,
+                        title = "PIQ Form Guide",
+                        icon = Icons.Default.Assignment,
+                        articleCount = 15,
+                        isPremium = false,
+                        backgroundColor = Color(0xFFF3E5F5), // Light purple background
+                        iconColor = Color(0xFF9C27B0),      // Bright Purple
+                        textColor = Color(0xFF4A148C)       // Dark purple text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.GTO_TASKS,
@@ -72,9 +82,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Groups,
                         articleCount = 28,
                         isPremium = true,
-                        backgroundColor = Color(0xFFFFF3E0),
-                        iconColor = Color(0xFFF57C00),
-                        textColor = Color(0xFFE65100)
+                        backgroundColor = Color(0xFFE3F2FD), // Light blue background
+                        iconColor = Color(0xFF2196F3),      // Bright Blue (matches GTO_GD)
+                        textColor = Color(0xFF0D47A1)       // Dark blue text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.INTERVIEW_PREP,
@@ -82,9 +92,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.RecordVoiceOver,
                         articleCount = 45,
                         isPremium = true,
-                        backgroundColor = Color(0xFFFFEBEE),
-                        iconColor = Color(0xFFC62828),
-                        textColor = Color(0xFFB71C1C)
+                        backgroundColor = Color(0xFFFCE4EC), // Light pink background
+                        iconColor = Color(0xFFE91E63),      // Bright Pink
+                        textColor = Color(0xFF880E4F)       // Dark pink text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.GENERAL_TIPS,
@@ -92,9 +102,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Lightbulb,
                         articleCount = 56,
                         isPremium = false,
-                        backgroundColor = Color(0xFFFFF9C4),
-                        iconColor = Color(0xFFF9A825),
-                        textColor = Color(0xFFF57F17)
+                        backgroundColor = Color(0xFFFFF8E1), // Light amber background
+                        iconColor = Color(0xFFFF9800),     // Bright Orange
+                        textColor = Color(0xFFE65100)      // Dark orange text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.CURRENT_AFFAIRS,
@@ -102,9 +112,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.Public,
                         articleCount = 120,
                         isPremium = true,
-                        backgroundColor = Color(0xFFE0F2F1),
-                        iconColor = Color(0xFF00796B),
-                        textColor = Color(0xFF004D40)
+                        backgroundColor = Color(0xFFF3E5F5), // Light purple background
+                        iconColor = Color(0xFF673AB7),     // Bright Deep Purple
+                        textColor = Color(0xFF311B92)      // Dark deep purple text
                     ),
                     StudyCategoryItem(
                         type = StudyCategory.PHYSICAL_FITNESS,
@@ -112,9 +122,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                         icon = Icons.Default.FitnessCenter,
                         articleCount = 22,
                         isPremium = false,
-                        backgroundColor = Color(0xFFFCE4EC),
-                        iconColor = Color(0xFFC2185B),
-                        textColor = Color(0xFF880E4F)
+                        backgroundColor = Color(0xFFFFEBEE), // Light red background
+                        iconColor = Color(0xFFF44336),     // Bright Red
+                        textColor = Color(0xFFB71C1C)      // Dark red text
                     )
                 )
                 
