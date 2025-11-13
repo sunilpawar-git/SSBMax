@@ -148,3 +148,6 @@ firestore.rules.CORRECT
 firestore.rules.updated
 firestore.rules.backup*
 firestore.rules.old*
+# PR and CI files
+PR_SUMMARY.md
+ci_check.sh
