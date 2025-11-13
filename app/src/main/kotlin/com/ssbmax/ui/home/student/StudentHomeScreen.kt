@@ -9,6 +9,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -386,13 +389,13 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
     return when (testType) {
         TestType.OIR -> Icons.Default.Psychology
         TestType.PPDT -> Icons.Default.Image
-        TestType.PIQ -> Icons.Default.Assignment
+        TestType.PIQ -> Icons.AutoMirrored.Filled.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         // GTO Tasks
         TestType.GTO_GD -> Icons.Default.Forum
         TestType.GTO_GPE -> Icons.Default.Map
-        TestType.GTO_PGT -> Icons.Default.TrendingUp
-        TestType.GTO_GOR -> Icons.Default.DirectionsRun
+        TestType.GTO_PGT -> Icons.AutoMirrored.Filled.TrendingUp
+        TestType.GTO_GOR -> Icons.AutoMirrored.Filled.DirectionsRun
         TestType.GTO_HGT -> Icons.Default.People
         TestType.GTO_LECTURETTE -> Icons.Default.Mic
         TestType.GTO_IO -> Icons.Default.Person
