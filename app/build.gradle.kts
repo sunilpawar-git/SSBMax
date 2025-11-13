@@ -138,10 +138,10 @@ dependencies {
     
     // Image Loading
     implementation(libs.coil.compose)
-    
-    // TODO: Add real billing later
-    // implementation(libs.billing.ktx)
-    
+
+    // Google Play Billing
+    implementation(libs.billing.ktx)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
