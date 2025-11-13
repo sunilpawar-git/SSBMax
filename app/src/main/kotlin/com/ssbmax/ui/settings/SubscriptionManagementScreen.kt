@@ -321,11 +321,17 @@ private fun UsageRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Progress bar
+            // Progress bar - handle divide by zero for FREE tier (limit=0)
             LinearProgressIndicator(
-                progress = { info.used.toFloat() / info.limit.toFloat() },
+                progress = { 
+                    when {
+                        info.limit <= 0 -> 1f  // Show full bar for zero limit (not available)
+                        info.limit == Int.MAX_VALUE -> 0f  // Show empty bar for unlimited
+                        else -> (info.used.toFloat() / info.limit.toFloat()).coerceIn(0f, 1f)
+                    }
+                },
                 modifier = Modifier.width(60.dp),
-                color = if (info.used >= info.limit) {
+                color = if (info.used >= info.limit && info.limit > 0) {
                     MaterialTheme.colorScheme.error
                 } else {
                     MaterialTheme.colorScheme.primary
@@ -333,16 +339,16 @@ private fun UsageRow(
             )
             
             Text(
-                text = if (info.limit == -1) {
-                    "${info.used} used"
-                } else {
-                    "${info.used}/${info.limit}"
+                text = when {
+                    info.limit == Int.MAX_VALUE || info.limit == -1 -> "${info.used} used"
+                    info.limit == 0 -> "N/A"  // Not available for this tier
+                    else -> "${info.used}/${info.limit}"
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = if (info.used >= info.limit && info.limit != -1) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                color = when {
+                    info.limit == 0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    info.used >= info.limit && info.limit > 0 -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 modifier = Modifier.width(60.dp),
                 textAlign = TextAlign.End
