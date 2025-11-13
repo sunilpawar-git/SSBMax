@@ -21,6 +21,8 @@
 # All docs should live in /docs directory
 Docu/**/*.md
 docs/**/*.md
+!docs/implementation/GPE_PRD.md
+!docs/implementation/PGT_PRD.md
 
 # Build/log documentation - prevent AI from creating these
 *BUILD*.md

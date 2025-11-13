@@ -1,5 +1,6 @@
 package com.ssbmax.ui.settings
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,10 +28,20 @@ fun SubscriptionManagementScreen(
     viewModel: SubscriptionManagementViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    val TAG = "SubscriptionManagementScreen"
     val uiState by viewModel.uiState.collectAsState()
     
     LaunchedEffect(Unit) {
+        Log.d(TAG, "Screen launched, loading subscription data")
         viewModel.loadSubscriptionData()
+    }
+    
+    // Log UI state changes
+    LaunchedEffect(uiState) {
+        Log.d(TAG, "UI State changed: isLoading=${uiState.isLoading}, " +
+                "tier=${uiState.currentTier.displayName}, " +
+                "usageItems=${uiState.monthlyUsage.size}, " +
+                "error=${uiState.error}")
     }
     
     Scaffold(
@@ -38,7 +49,14 @@ fun SubscriptionManagementScreen(
             TopAppBar(
                 title = { Text("Subscription & Billing") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { 
+                        Log.d(TAG, "Back button clicked, navigating back")
+                        try {
+                            onNavigateBack()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "ERROR during navigation back", e)
+                        }
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -88,11 +106,16 @@ private fun SubscriptionContent(
     onUpgrade: (SubscriptionTierModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val TAG = "SubscriptionContent"
+    
+    Log.d(TAG, "Rendering content for tier=${uiState.currentTier.displayName}")
+    
     Column(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Current Plan Card
+        Log.d(TAG, "Rendering CurrentPlanCard")
         CurrentPlanCard(
             tier = uiState.currentTier,
             expiresAt = uiState.subscriptionExpiresAt
@@ -100,7 +123,10 @@ private fun SubscriptionContent(
         
         // Monthly Usage Card
         if (uiState.currentTier != SubscriptionTierModel.PREMIUM) {
+            Log.d(TAG, "Rendering MonthlyUsageCard for non-PREMIUM user")
             MonthlyUsageCard(usage = uiState.monthlyUsage)
+        } else {
+            Log.d(TAG, "Skipping MonthlyUsageCard for PREMIUM user")
         }
         
         // Benefits Comparison
@@ -206,11 +232,29 @@ private fun MonthlyUsageCard(
     usage: Map<String, UsageInfo>,
     modifier: Modifier = Modifier
 ) {
+    val TAG = "MonthlyUsageCard"
     var expanded by remember { mutableStateOf(false) }
+    
+    // Log when composable is created
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "MonthlyUsageCard composed with ${usage.size} usage items")
+        usage.forEach { (key, value) ->
+            Log.d(TAG, "  $key: used=${value.used}, limit=${value.limit}")
+        }
+    }
     
     Card(
         modifier = modifier.fillMaxWidth(),
-        onClick = { expanded = !expanded }
+        onClick = { 
+            Log.d(TAG, "MonthlyUsageCard clicked! Current expanded=$expanded, toggling to ${!expanded}")
+            try {
+                expanded = !expanded
+                Log.d(TAG, "Successfully toggled expanded state to $expanded")
+            } catch (e: Exception) {
+                Log.e(TAG, "ERROR toggling expanded state", e)
+                throw e
+            }
+        }
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -226,7 +270,7 @@ private fun MonthlyUsageCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Assessment,
+                        imageVector = Icons.Default.BarChart,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -244,9 +288,11 @@ private fun MonthlyUsageCard(
             }
             
             AnimatedVisibility(visible = expanded) {
+                Log.d(TAG, "AnimatedVisibility: expanded=$expanded, rendering ${usage.size} usage rows")
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     HorizontalDivider()
                     usage.forEach { (testType, info) ->
+                        Log.d(TAG, "  Rendering UsageRow for $testType")
                         UsageRow(testType = testType, info = info)
                     }
                 }
@@ -275,11 +321,17 @@ private fun UsageRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Progress bar
+            // Progress bar - handle divide by zero for FREE tier (limit=0)
             LinearProgressIndicator(
-                progress = { info.used.toFloat() / info.limit.toFloat() },
+                progress = { 
+                    when {
+                        info.limit <= 0 -> 1f  // Show full bar for zero limit (not available)
+                        info.limit == Int.MAX_VALUE -> 0f  // Show empty bar for unlimited
+                        else -> (info.used.toFloat() / info.limit.toFloat()).coerceIn(0f, 1f)
+                    }
+                },
                 modifier = Modifier.width(60.dp),
-                color = if (info.used >= info.limit) {
+                color = if (info.used >= info.limit && info.limit > 0) {
                     MaterialTheme.colorScheme.error
                 } else {
                     MaterialTheme.colorScheme.primary
@@ -287,16 +339,16 @@ private fun UsageRow(
             )
             
             Text(
-                text = if (info.limit == -1) {
-                    "${info.used} used"
-                } else {
-                    "${info.used}/${info.limit}"
+                text = when {
+                    info.limit == Int.MAX_VALUE || info.limit == -1 -> "${info.used} used"
+                    info.limit == 0 -> "N/A"  // Not available for this tier
+                    else -> "${info.used}/${info.limit}"
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = if (info.used >= info.limit && info.limit != -1) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                color = when {
+                    info.limit == 0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    info.used >= info.limit && info.limit > 0 -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 modifier = Modifier.width(60.dp),
                 textAlign = TextAlign.End

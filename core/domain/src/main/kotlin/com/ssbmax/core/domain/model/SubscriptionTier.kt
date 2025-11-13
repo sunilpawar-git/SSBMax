@@ -98,15 +98,19 @@ enum class SubscriptionTier {
         get() = when (this) {
             FREE -> listOf(
                 "1 OIR test per month",
+                "1 PPDT test per month",
+                "1 PIQ form (required)",
                 "Access to all study materials",
                 "Basic progress tracking",
                 "Community support"
             )
             PRO -> listOf(
                 "5 OIR tests per month",
-                "3 TAT, WAT, SRT tests each",
-                "2 PPDT & GTO tests",
+                "5 PPDT tests per month",
+                "3 TAT, WAT, SRT, SD tests each",
+                "3 attempts per GTO test (8 tests)",
                 "1 Interview practice",
+                "Unlimited PIQ updates",
                 "Advanced analytics",
                 "Priority support",
                 "Download study materials"

@@ -11,8 +11,13 @@ import org.junit.Test
 /**
  * Security-focused tests for SubscriptionManager
  * 
- * NOTE: Full integration tests with Firestore are covered by ViewModel tests.
- * These tests focus on business logic validation.
+ * NOTE: Comprehensive subscription limit tests are now in SubscriptionManagerMasterTest.kt
+ * This file contains additional security-specific edge case tests.
+ * 
+ * For complete subscription testing coverage, see:
+ * - SubscriptionManagerMasterTest.kt - Parameterized tests for all 48 tier×type combinations
+ * - SubscriptionManagerEdgeCasesTest.kt - Month reset, concurrency, error handling
+ * - SubscriptionManagementViewModelTest.kt - Full integration tests with Firestore
  * 
  * Tests critical security scenarios:
  * - Tier limit calculations

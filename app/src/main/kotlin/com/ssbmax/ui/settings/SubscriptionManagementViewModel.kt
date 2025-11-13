@@ -100,17 +100,29 @@ class SubscriptionManagementViewModel @Inject constructor(
     ): Map<String, UsageInfo> {
         return try {
             val currentMonth = monthFormat.format(Date())
+            Log.d(TAG, "Loading monthly usage for userId=$userId, month=$currentMonth, tier=${tier.displayName}")
+            
             val doc = firestore.collection("users")
                 .document(userId)
-                .collection("test_usage")
-                .document(currentMonth)
+                .collection("subscription")
+                .document("usage_$currentMonth")
                 .get()
                 .await()
             
-            mapOf(
+            Log.d(TAG, "Firestore doc exists: ${doc.exists()}")
+            
+            val usageMap = mapOf(
                 "OIR Tests" to UsageInfo(
                     used = doc.getLong("oirTestsUsed")?.toInt() ?: 0,
                     limit = tier.oirTestLimit
+                ),
+                "PPDT Tests" to UsageInfo(
+                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
+                    limit = tier.ppdtTestLimit
+                ),
+                "PIQ Forms" to UsageInfo(
+                    used = doc.getLong("piqTestsUsed")?.toInt() ?: 0,
+                    limit = tier.piqTestLimit
                 ),
                 "TAT Tests" to UsageInfo(
                     used = doc.getLong("tatTestsUsed")?.toInt() ?: 0,
@@ -124,13 +136,29 @@ class SubscriptionManagementViewModel @Inject constructor(
                     used = doc.getLong("srtTestsUsed")?.toInt() ?: 0,
                     limit = tier.srtTestLimit
                 ),
-                "PPDT Tests" to UsageInfo(
-                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
-                    limit = tier.ppdtTestLimit
+                "Self Description" to UsageInfo(
+                    used = doc.getLong("sdTestsUsed")?.toInt() ?: 0,
+                    limit = tier.sdTestLimit
+                ),
+                "GTO Tests" to UsageInfo(
+                    used = doc.getLong("gtoTestsUsed")?.toInt() ?: 0,
+                    limit = tier.gtoTestLimit
+                ),
+                "Interview" to UsageInfo(
+                    used = doc.getLong("interviewTestsUsed")?.toInt() ?: 0,
+                    limit = tier.interviewTestLimit
                 )
             )
+            
+            Log.d(TAG, "Successfully loaded ${usageMap.size} usage items:")
+            usageMap.forEach { (key, value) ->
+                Log.d(TAG, "  $key: used=${value.used}, limit=${value.limit}")
+            }
+            
+            usageMap
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load usage, returning empty", e)
+            Log.e(TAG, "Exception details:", e)
             emptyMap()
         }
     }
@@ -158,6 +186,8 @@ enum class SubscriptionTierModel(
     val watTestLimit: Int,
     val srtTestLimit: Int,
     val ppdtTestLimit: Int,
+    val piqTestLimit: Int,
+    val sdTestLimit: Int,
     val gtoTestLimit: Int,
     val interviewTestLimit: Int,
     val features: List<String>
@@ -169,11 +199,15 @@ enum class SubscriptionTierModel(
         tatTestLimit = 0,
         watTestLimit = 0,
         srtTestLimit = 0,
-        ppdtTestLimit = 0,
+        ppdtTestLimit = 1,
+        piqTestLimit = 1,
+        sdTestLimit = 0,
         gtoTestLimit = 0,
         interviewTestLimit = 0,
         features = listOf(
             "1 OIR test per month",
+            "1 PPDT test per month",
+            "1 PIQ form (required)",
             "Access to all study materials",
             "Basic progress tracking",
             "Community support"
@@ -186,14 +220,18 @@ enum class SubscriptionTierModel(
         tatTestLimit = 3,
         watTestLimit = 3,
         srtTestLimit = 3,
-        ppdtTestLimit = 2,
-        gtoTestLimit = 2,
+        ppdtTestLimit = 5,
+        piqTestLimit = -1,
+        sdTestLimit = 3,
+        gtoTestLimit = 3,
         interviewTestLimit = 1,
         features = listOf(
             "5 OIR tests per month",
-            "3 TAT, WAT, SRT tests each",
-            "2 PPDT & GTO tests",
+            "5 PPDT tests per month",
+            "3 TAT, WAT, SRT, SD tests each",
+            "3 attempts per GTO test (8 tests)",
             "1 Interview practice",
+            "Unlimited PIQ updates",
             "Advanced analytics",
             "Priority support",
             "Download study materials"
@@ -207,6 +245,8 @@ enum class SubscriptionTierModel(
         watTestLimit = -1,
         srtTestLimit = -1,
         ppdtTestLimit = -1,
+        piqTestLimit = -1,
+        sdTestLimit = -1,
         gtoTestLimit = -1,
         interviewTestLimit = -1,
         features = listOf(

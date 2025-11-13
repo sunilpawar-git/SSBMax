@@ -824,6 +824,32 @@ fun SSBMaxApp(userRole: UserRole) {
 }
 ```
 
+### Subscription Model (SINGLE SOURCE OF TRUTH)
+
+**Monthly Test Limits by Tier:**
+
+| Test Type | FREE | PRO | PREMIUM |
+|-----------|------|-----|---------|
+| OIR | 1 | 5 | Unlimited |
+| PPDT | 1 | 5 | Unlimited |
+| PIQ | 1 | Unlimited | Unlimited |
+| TAT | 0 | 3 | Unlimited |
+| WAT | 0 | 3 | Unlimited |
+| SRT | 0 | 3 | Unlimited |
+| Self Description | 0 | 3 | Unlimited |
+| GTO (each of 8 tests) | 0 | 3 | Unlimited |
+| Interview | 0 | 1 | Unlimited |
+
+**Key Points:**
+- GTO: PRO tier gets 3 attempts for EACH of the 8 GTO sub-tests (Group Discussion, Group Planning Exercise, Progressive Group Task, Group Obstacle Race, Half Group Task, Lecturette, Individual Obstacles, Command Task)
+- PIQ: FREE tier gets 1 form (required for Interview), PRO/PREMIUM get unlimited updates
+- Limits reset on 1st of each month
+- Server-side enforcement via Firestore (cannot be bypassed by clearing app cache)
+
+**Implementation Location:**
+- `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubscriptionManager.kt` - `getTestLimitForTier()` function
+- This is the SINGLE SOURCE OF TRUTH - all other displays derive from this
+
 ### Premium/Subscription Features
 ```kotlin
 // Premium gating with graceful UI

@@ -87,14 +87,19 @@ class StudentHomeViewModel @Inject constructor(
                     )
                 )
                 .collect { (phase1, phase2) ->
-                    // Calculate tests completed (tests with scores)
-                    val completedTests = listOfNotNull(
-                        phase1.oirProgress.latestScore,
-                        phase1.ppdtProgress.latestScore,
-                        phase2.psychologyProgress.latestScore,
-                        phase2.gtoProgress.latestScore,
-                        phase2.interviewProgress.latestScore
-                    ).size
+                    // Calculate tests completed (tests that have been attempted)
+                    // Count tests with status other than NOT_ATTEMPTED
+                    val allProgress = listOf(
+                        phase1.oirProgress,
+                        phase1.ppdtProgress,
+                        phase2.psychologyProgress,
+                        phase2.gtoProgress,
+                        phase2.interviewProgress
+                    )
+                    
+                    val completedTests = allProgress.count { progress ->
+                        progress.status != TestStatus.NOT_ATTEMPTED
+                    }
                     
                     _uiState.update { 
                         it.copy(
