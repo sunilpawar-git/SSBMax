@@ -83,9 +83,9 @@ class SubscriptionManager @Inject constructor(
             
             // Get used count for this test type
             val usedCount = getUsedCountForTestType(usage, testType)
-            val limit = getTestLimitForTier(tier)
+            val limit = getTestLimitForTier(tier, testType)
             
-            Log.d(TAG, "📊 Usage: $usedCount/$limit tests this month (from Firestore)")
+            Log.d(TAG, "📊 Usage: $usedCount/$limit tests this month for $testType (from Firestore)")
             
             // Also sync to local Room DB for offline reference
             testUsageDao.insertOrReplace(usage)
@@ -243,18 +243,60 @@ class SubscriptionManager @Inject constructor(
     
     // Helper functions
     
-    private fun getTestLimitForTier(tier: SubscriptionTier): Int {
+    /**
+     * Get test limit for a specific test type and tier
+     * SINGLE SOURCE OF TRUTH for subscription limits
+     */
+    private fun getTestLimitForTier(tier: SubscriptionTier, testType: TestType): Int {
         return when (tier) {
-            SubscriptionTier.FREE -> 1
-            SubscriptionTier.PRO -> 5
-            SubscriptionTier.PREMIUM -> Int.MAX_VALUE
+            SubscriptionTier.FREE -> when (testType) {
+                TestType.OIR -> 1
+                TestType.PPDT -> 1
+                TestType.PIQ -> 1
+                TestType.TAT -> 0
+                TestType.WAT -> 0
+                TestType.SRT -> 0
+                TestType.SD -> 0  // Self Description
+                // GTO Tests (8 individual tests, each with separate limits)
+                TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+                TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 0
+                TestType.IO -> 0  // Interview Officer
+            }
+            SubscriptionTier.PRO -> when (testType) {
+                TestType.OIR -> 5
+                TestType.PPDT -> 5
+                TestType.PIQ -> Int.MAX_VALUE  // Unlimited
+                TestType.TAT -> 3
+                TestType.WAT -> 3
+                TestType.SRT -> 3
+                TestType.SD -> 3  // Self Description
+                // GTO Tests: 3 attempts per sub-test
+                TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+                TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 3
+                TestType.IO -> 1  // Interview Officer
+            }
+            SubscriptionTier.PREMIUM -> Int.MAX_VALUE  // Unlimited for all
         }
     }
     
+    /**
+     * Get used count for a specific test type
+     * Returns the actual count for that test type only
+     */
     private fun getUsedCountForTestType(usage: TestUsageEntity, testType: TestType): Int {
-        // For simplicity, count ALL tests towards the limit (not per-test-type)
-        return usage.oirTestsUsed + usage.tatTestsUsed + usage.watTestsUsed +
-               usage.srtTestsUsed + usage.ppdtTestsUsed + usage.piqTestsUsed + usage.gtoTestsUsed
+        return when (testType) {
+            TestType.OIR -> usage.oirTestsUsed
+            TestType.PPDT -> usage.ppdtTestsUsed
+            TestType.PIQ -> usage.piqTestsUsed
+            TestType.TAT -> usage.tatTestsUsed
+            TestType.WAT -> usage.watTestsUsed
+            TestType.SRT -> usage.srtTestsUsed
+            TestType.SD -> usage.sdTestsUsed  // Self Description
+            // All GTO tests count towards gtoTestsUsed
+            TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+            TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> usage.gtoTestsUsed
+            TestType.IO -> usage.interviewTestsUsed  // Interview Officer
+        }
     }
     
     private fun getCurrentMonth(): String {
