@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(./gradle.sh test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(./gradle.sh:*)",
+      "Bash(/tmp/developer_section.txt)",
+      "Bash(app/src/main/kotlin/com/ssbmax/ui/settings/components/DeveloperOptionsSection.kt)",
+      "Bash(/tmp/SettingsScreen_trimmed.kt)"
     ],
     "deny": [],
     "ask": []
