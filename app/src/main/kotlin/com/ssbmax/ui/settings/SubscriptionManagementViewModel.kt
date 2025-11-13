@@ -102,8 +102,8 @@ class SubscriptionManagementViewModel @Inject constructor(
             val currentMonth = monthFormat.format(Date())
             val doc = firestore.collection("users")
                 .document(userId)
-                .collection("test_usage")
-                .document(currentMonth)
+                .collection("subscription")
+                .document("usage_$currentMonth")
                 .get()
                 .await()
             
@@ -111,6 +111,14 @@ class SubscriptionManagementViewModel @Inject constructor(
                 "OIR Tests" to UsageInfo(
                     used = doc.getLong("oirTestsUsed")?.toInt() ?: 0,
                     limit = tier.oirTestLimit
+                ),
+                "PPDT Tests" to UsageInfo(
+                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
+                    limit = tier.ppdtTestLimit
+                ),
+                "PIQ Forms" to UsageInfo(
+                    used = doc.getLong("piqTestsUsed")?.toInt() ?: 0,
+                    limit = tier.piqTestLimit
                 ),
                 "TAT Tests" to UsageInfo(
                     used = doc.getLong("tatTestsUsed")?.toInt() ?: 0,
@@ -124,9 +132,17 @@ class SubscriptionManagementViewModel @Inject constructor(
                     used = doc.getLong("srtTestsUsed")?.toInt() ?: 0,
                     limit = tier.srtTestLimit
                 ),
-                "PPDT Tests" to UsageInfo(
-                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
-                    limit = tier.ppdtTestLimit
+                "Self Description" to UsageInfo(
+                    used = doc.getLong("sdTestsUsed")?.toInt() ?: 0,
+                    limit = tier.sdTestLimit
+                ),
+                "GTO Tests" to UsageInfo(
+                    used = doc.getLong("gtoTestsUsed")?.toInt() ?: 0,
+                    limit = tier.gtoTestLimit
+                ),
+                "Interview" to UsageInfo(
+                    used = doc.getLong("interviewTestsUsed")?.toInt() ?: 0,
+                    limit = tier.interviewTestLimit
                 )
             )
         } catch (e: Exception) {
