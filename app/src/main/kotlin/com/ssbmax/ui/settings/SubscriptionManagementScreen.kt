@@ -226,7 +226,7 @@ private fun MonthlyUsageCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Assessment,
+                        imageVector = Icons.Default.BarChart,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
