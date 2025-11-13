@@ -39,12 +39,13 @@ android {
         }
         
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            
+
             // Production: Subscription limits enforced
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
         }
