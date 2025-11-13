@@ -316,7 +316,7 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         every { mockUserDocRef.collection("data") } returns mockDataCollection
         every { mockDataCollection.document("subscription") } returns mockSubscriptionDocRef
         every { mockSubscriptionDocRef.get() } returns mockTierTask
-        every { mockUserDocRef.collection("test_usage") } returns mockUsageCollection
+        every { mockUserDocRef.collection("subscription") } returns mockUsageCollection
         every { mockUsageCollection.document(any()) } returns mockUsageDocRef
         every { mockUsageDocRef.get() } returns mockUsageTask
         
@@ -381,7 +381,11 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         tatUsed: Int = 0,
         watUsed: Int = 0,
         srtUsed: Int = 0,
-        ppdtUsed: Int = 0
+        ppdtUsed: Int = 0,
+        piqUsed: Int = 0,
+        sdUsed: Int = 0,
+        gtoUsed: Int = 0,
+        interviewUsed: Int = 0
     ) {
         val mockUsersCollection = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
         val mockUserDocRef = mockk<DocumentReference>(relaxed = true)
@@ -404,8 +408,8 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         every { mockDataCollection.document("subscription") } returns mockSubscriptionDocRef
         every { mockSubscriptionDocRef.get() } returns mockTierTask
         
-        // Mock test_usage subcollection
-        every { mockUserDocRef.collection("test_usage") } returns mockUsageCollection
+        // Mock subscription subcollection for usage tracking
+        every { mockUserDocRef.collection("subscription") } returns mockUsageCollection
         every { mockUsageCollection.document(any()) } returns mockUsageDocRef
         every { mockUsageDocRef.get() } returns mockUsageTask
         
@@ -427,6 +431,10 @@ class SubscriptionManagementViewModelTest : BaseViewModelTest() {
         every { mockUsageDoc.getLong("watTestsUsed") } returns watUsed.toLong()
         every { mockUsageDoc.getLong("srtTestsUsed") } returns srtUsed.toLong()
         every { mockUsageDoc.getLong("ppdtTestsUsed") } returns ppdtUsed.toLong()
+        every { mockUsageDoc.getLong("piqTestsUsed") } returns piqUsed.toLong()
+        every { mockUsageDoc.getLong("sdTestsUsed") } returns sdUsed.toLong()
+        every { mockUsageDoc.getLong("gtoTestsUsed") } returns gtoUsed.toLong()
+        every { mockUsageDoc.getLong("interviewTestsUsed") } returns interviewUsed.toLong()
         every { mockUsageDoc.exists() } returns true
         
         // Mock Task callback registration for await() support
