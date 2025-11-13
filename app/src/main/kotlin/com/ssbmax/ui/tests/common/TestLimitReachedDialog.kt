@@ -98,12 +98,12 @@ fun TestLimitReachedDialog(
                 ) {
                     UpgradeBenefit(
                         title = "Pro Plan",
-                        subtitle = "5 tests/month for just ₹99",
+                        subtitle = "More tests per month for just ₹99",
                         isRecommended = tier == SubscriptionTier.FREE
                     )
                     UpgradeBenefit(
                         title = "Premium Plan",
-                        subtitle = "Unlimited tests for ₹999/month",
+                        subtitle = "Unlimited all tests for ₹999/month",
                         isRecommended = tier == SubscriptionTier.PRO
                     )
                 }
