@@ -29,10 +29,10 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            // TODO: Add applicationIdSuffix = ".debug" after updating Firebase console with debug app
+            // TODO: Enable after adding com.ssbmax.debug to Firebase Console
             // applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            
+
             // Debug bypass for subscription limits during development
             // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
             // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
