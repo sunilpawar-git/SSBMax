@@ -100,6 +100,8 @@ class SubscriptionManagementViewModel @Inject constructor(
     ): Map<String, UsageInfo> {
         return try {
             val currentMonth = monthFormat.format(Date())
+            Log.d(TAG, "Loading monthly usage for userId=$userId, month=$currentMonth, tier=${tier.displayName}")
+            
             val doc = firestore.collection("users")
                 .document(userId)
                 .collection("subscription")
@@ -107,7 +109,9 @@ class SubscriptionManagementViewModel @Inject constructor(
                 .get()
                 .await()
             
-            mapOf(
+            Log.d(TAG, "Firestore doc exists: ${doc.exists()}")
+            
+            val usageMap = mapOf(
                 "OIR Tests" to UsageInfo(
                     used = doc.getLong("oirTestsUsed")?.toInt() ?: 0,
                     limit = tier.oirTestLimit
@@ -145,8 +149,16 @@ class SubscriptionManagementViewModel @Inject constructor(
                     limit = tier.interviewTestLimit
                 )
             )
+            
+            Log.d(TAG, "Successfully loaded ${usageMap.size} usage items:")
+            usageMap.forEach { (key, value) ->
+                Log.d(TAG, "  $key: used=${value.used}, limit=${value.limit}")
+            }
+            
+            usageMap
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load usage, returning empty", e)
+            Log.e(TAG, "Exception details:", e)
             emptyMap()
         }
     }
