@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.ui.settings.components.NotificationSettingsSection
 
 /**
  * Settings Screen with notification preferences and app settings
@@ -308,105 +309,6 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun NotificationSettingsSection(
-    preferences: com.ssbmax.core.domain.model.NotificationPreferences?,
-    viewModel: SettingsViewModel
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Notifications",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = "Manage your notification preferences",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Master toggle
-            SettingsSwitchItem(
-                title = "Push Notifications",
-                description = "Enable or disable all push notifications",
-                icon = Icons.Default.Notifications,
-                checked = preferences?.enablePushNotifications ?: true,
-                onCheckedChange = { viewModel.togglePushNotifications(it) }
-            )
-
-            if (preferences?.enablePushNotifications == true) {
-                // Individual notification types
-                SettingsSwitchItem(
-                    title = "Grading Complete",
-                    description = "When your test is graded",
-                    icon = Icons.Default.CheckCircle,
-                    checked = preferences.enableGradingNotifications,
-                    onCheckedChange = { viewModel.toggleGradingComplete(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Feedback Available",
-                    description = "When new feedback is added",
-                    icon = Icons.Default.Comment,
-                    checked = preferences.enableFeedbackNotifications,
-                    onCheckedChange = { viewModel.toggleFeedbackAvailable(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Batch Invitations",
-                    description = "When you're invited to a batch",
-                    icon = Icons.Default.Group,
-                    checked = preferences.enableBatchInvitations,
-                    onCheckedChange = { viewModel.toggleBatchInvitation(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Announcements",
-                    description = "General updates from SSBMax",
-                    icon = Icons.Default.Campaign,
-                    checked = preferences.enableGeneralAnnouncements,
-                    onCheckedChange = { viewModel.toggleGeneralAnnouncement(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Study Reminders",
-                    description = "Daily study reminders",
-                    icon = Icons.Default.School,
-                    checked = preferences.enableStudyReminders,
-                    onCheckedChange = { viewModel.toggleStudyReminders(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Test Reminders",
-                    description = "Reminders to complete tests",
-                    icon = Icons.Default.Quiz,
-                    checked = preferences.enableTestReminders,
-                    onCheckedChange = { viewModel.toggleTestReminders(it) }
-                )
-
-                SettingsSwitchItem(
-                    title = "Marketplace Updates",
-                    description = "New classes and assessors",
-                    icon = Icons.Default.ShoppingBag,
-                    checked = preferences.enableMarketplaceUpdates,
-                    onCheckedChange = { viewModel.toggleMarketplaceUpdates(it) }
-                )
-            }
-        }
-    }
-}
 
 
 @Composable
@@ -451,53 +353,6 @@ private fun AppInfoSection() {
                 icon = Icons.Default.Description
             )
         }
-    }
-}
-
-@Composable
-private fun SettingsSwitchItem(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
     }
 }
 
