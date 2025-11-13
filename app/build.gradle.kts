@@ -182,27 +182,41 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     
     val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
         exclude(
+            // Android generated
             "**/R.class",
             "**/R$*.class",
             "**/BuildConfig.*",
             "**/Manifest*.*",
             "**/*Test*.*",
             "android/**/*.*",
-            "**/*\$ViewInjector*.*",
-            "**/*\$ViewBinder*.*",
-            "**/Lambda$*.class",
-            "**/Lambda.class",
-            "**/*Lambda.class",
-            "**/*Lambda*.class",
+
+            // Hilt/Dagger generated
             "**/*_MembersInjector.class",
             "**/Dagger*Component*.*",
             "**/*Module_*Factory.class",
             "**/di/**",
             "**/*_Factory*.*",
             "**/*_Impl*.*",
-            "**/*Application*.*",
             "**/HiltWrapper*.*",
-            "**/*_Hilt*.*"
+            "**/*_Hilt*.*",
+
+            // Navigation generated
+            "**/*Navigation*.*",
+            "**/*Destinations*.*",
+            "**/*NavGraph*.*",
+
+            // Application class
+            "**/*Application*.*",
+
+            // Theme/Design system (UI only, no logic)
+            "**/ui/theme/**",
+            "**/designsystem/**",
+
+            // Lambda classes
+            "**/Lambda$*.class",
+            "**/Lambda.class",
+            "**/*Lambda.class",
+            "**/*Lambda*.class"
         )
     }
     
