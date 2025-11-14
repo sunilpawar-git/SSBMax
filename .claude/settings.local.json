@@ -10,7 +10,8 @@
       "Bash(./gradle.sh:*)",
       "Bash(/tmp/developer_section.txt)",
       "Bash(app/src/main/kotlin/com/ssbmax/ui/settings/components/DeveloperOptionsSection.kt)",
-      "Bash(/tmp/SettingsScreen_trimmed.kt)"
+      "Bash(/tmp/SettingsScreen_trimmed.kt)",
+      "Bash(/tmp/PIQTestScreen_trimmed.kt)"
     ],
     "deny": [],
     "ask": []

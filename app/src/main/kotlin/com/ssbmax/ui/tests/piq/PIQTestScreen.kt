@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.PIQPage
 import com.ssbmax.ui.tests.piq.SELECTION_BOARD_OPTIONS
+import com.ssbmax.ui.tests.piq.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,7 +151,7 @@ private fun Page1Content(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Privacy Warning Banner
-        PrivacyWarningBanner()
+        PIQPrivacyWarningBanner()
         
         Text(
             "Personal & Family Details",
@@ -158,7 +159,7 @@ private fun Page1Content(
         )
         
         // Header Section (Exact SSB PIQ sequence)
-        SectionHeader("Header Information")
+        PIQSectionHeader("Header Information")
         PIQTextField(
             label = "OIR Number",
             value = answers["oirNumber"] ?: "",
@@ -205,7 +206,7 @@ private fun Page1Content(
         )
         
         // Residence Information - comes after Name as per SSB PIQ
-        SectionHeader("Residence Information")
+        PIQSectionHeader("Residence Information")
         PIQTextField(
             label = "Maximum Residence",
             value = answers["maximumResidence"] ?: "",
@@ -256,7 +257,7 @@ private fun Page1Content(
         }
         
         // Personal Details Table - comes after Residence as per SSB PIQ
-        SectionHeader("Personal Details")
+        PIQSectionHeader("Personal Details")
         PIQTextField(
             label = "State",
             value = answers["state"] ?: "",
@@ -297,7 +298,7 @@ private fun Page1Content(
         )
         
         // Parents Alive - comes after Personal Details Table as per SSB PIQ
-        SectionHeader("Family Enhancement")
+        PIQSectionHeader("Family Enhancement")
         PIQDropdownField(
             label = "Parents Alive",
             value = answers["parentsAlive"] ?: "",
@@ -323,7 +324,7 @@ private fun Page1Content(
             )
         }
         if (answers["parentsAlive"] == "None") {
-            SectionHeader("Guardian Information")
+            PIQSectionHeader("Guardian Information")
             PIQTextField(
                 label = "Guardian Name",
                 value = answers["guardianName"] ?: "",
@@ -348,7 +349,7 @@ private fun Page1Content(
         
         // Parents/Guardian/Siblings table (Education, Occupation, Income)
         // Father's Information
-        SectionHeader("Father's Information")
+        PIQSectionHeader("Father's Information")
         PIQTextField(
             label = "Father's Name",
             value = answers["fatherName"] ?: "",
@@ -371,7 +372,7 @@ private fun Page1Content(
         )
 
         // Mother's Information
-        SectionHeader("Mother's Information")
+        PIQSectionHeader("Mother's Information")
         PIQTextField(
             label = "Mother's Name",
             value = answers["motherName"] ?: "",
@@ -389,7 +390,7 @@ private fun Page1Content(
         )
         
         // Siblings Information - comes after Mother's Information as per SSB PIQ
-        SectionHeader("Siblings Information")
+        PIQSectionHeader("Siblings Information")
         Text(
             "Elder Brother/Sister",
             style = MaterialTheme.typography.titleSmall,
@@ -494,7 +495,7 @@ private fun Page1Content(
         }
 
         // Educational Record - moved from Page 2 to end of Page 1
-        SectionHeader("Educational Record")
+        PIQSectionHeader("Educational Record")
         
         // 10th Standard Education
         Text("10th Standard", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
@@ -707,7 +708,7 @@ private fun Page2Content(
         )
 
         // Physical Details - moved from Page 1 to start of Page 2
-        SectionHeader("Physical Details")
+        PIQSectionHeader("Physical Details")
         PIQTextField(
             label = "Age (Years & Months)",
             value = answers["age"] ?: "",
@@ -728,7 +729,7 @@ private fun Page2Content(
         )
         
         // Occupation - moved from Page 1 to Page 2
-        SectionHeader("Occupation")
+        PIQSectionHeader("Occupation")
         PIQTextField(
             label = "Present Occupation",
             value = answers["presentOccupation"] ?: "",
@@ -742,7 +743,7 @@ private fun Page2Content(
         )
 
         // NCC Training - comes after Occupation as per SSB PIQ
-        SectionHeader("NCC Training")
+        PIQSectionHeader("NCC Training")
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -779,7 +780,7 @@ private fun Page2Content(
         }
         
         // Participation in games & sports - comes after NCC Training as per SSB PIQ
-        SectionHeader("Sports Participation")
+        PIQSectionHeader("Sports Participation")
         PIQTextField(
             label = "Sports Played",
             value = answers["sports"] ?: "",
@@ -790,7 +791,7 @@ private fun Page2Content(
         )
         
         // Hobbies/Interest - comes after Sports as per SSB PIQ
-        SectionHeader("Interests")
+        PIQSectionHeader("Interests")
         PIQTextField(
             label = "Hobbies & Interests",
             value = answers["hobbies"] ?: "",
@@ -804,7 +805,7 @@ private fun Page2Content(
         // Note: Currently using simple text field. Dynamic list can be added later.
         
         // Position of responsibility/offices held - comes after Activities as per SSB PIQ
-        SectionHeader("Positions of Responsibility")
+        PIQSectionHeader("Positions of Responsibility")
         PIQTextField(
             label = "Positions Held",
             value = answers["positionsOfResponsibility"] ?: "",
@@ -815,7 +816,7 @@ private fun Page2Content(
         )
         
         // Service Selection - comes after Positions as per SSB PIQ
-        SectionHeader("Service Selection")
+        PIQSectionHeader("Service Selection")
         PIQTextField(
             label = "Nature of Commission",
             value = answers["natureOfCommission"] ?: "",
@@ -840,158 +841,3 @@ private fun Page2Content(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun PIQTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    placeholder: String = "",
-    multiline: Boolean = false,
-    minLines: Int = 1,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    isRequired: Boolean = false,
-    enabled: Boolean = true,
-    supportingText: String? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = if (placeholder.isNotEmpty()) {
-            { Text(placeholder) }
-        } else null,
-        modifier = modifier.fillMaxWidth(),
-        singleLine = !multiline,
-        minLines = if (multiline) minLines else 1,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
-        supportingText = supportingText?.let { { Text(it) } },
-        isError = false,
-        enabled = enabled
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PIQDropdownField(
-    label: String,
-    value: String,
-    options: List<String>,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor()
-        )
-        
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PrivacyWarningBanner() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Privacy Notice",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "All information entered in this form is stored securely in the cloud. " +
-                            "This is a practice form to help you familiarize yourself with the actual PIQ format. " +
-                            "Please use generic or sample information only. Do not enter sensitive personal details.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PIQNavigationBar(
-    currentPage: PIQPage,
-    onPreviousPage: () -> Unit,
-    onNextPage: () -> Unit,
-    canGoBack: Boolean,
-    nextButtonText: String
-) {
-    Surface(
-        shadowElevation = 8.dp,
-        tonalElevation = 3.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (canGoBack) {
-                OutlinedButton(onClick = onPreviousPage) {
-                    Text("Previous")
-                }
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
-            }
-
-            Button(onClick = onNextPage) {
-                Text(nextButtonText)
-            }
-        }
-    }
-}
-
