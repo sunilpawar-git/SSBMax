@@ -1,6 +1,8 @@
 package com.ssbmax.ui
 
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ssbmax.core.domain.model.SSBMaxUser
@@ -14,23 +16,23 @@ import com.ssbmax.ui.components.SSBMaxScaffold
  * Manages global app state and navigation
  */
 @Composable
-fun SSBMaxApp() {
+fun SSBMaxApp(
+    viewModel: AppViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
-    
-    // TODO: Get current user from ViewModel/Repository
-    // For now, use mock user
-    val currentUser by remember {
-        mutableStateOf(
-            SSBMaxUser(
-                id = "mock-user-id",
-                email = "user@example.com",
-                displayName = "SSB Aspirant",
-                role = UserRole.STUDENT,
-                subscriptionTier = SubscriptionTier.FREE,
-                subscription = null
-            )
-        )
-    }
+
+    // Get current authenticated user from ViewModel
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+
+    // Fallback to mock user if not authenticated (for preview/development)
+    val user = currentUser ?: SSBMaxUser(
+        id = "mock-user-id",
+        email = "user@example.com",
+        displayName = "SSB Aspirant",
+        role = UserRole.STUDENT,
+        subscriptionTier = SubscriptionTier.FREE,
+        subscription = null
+    )
     
     // Check if we're on a route that needs the scaffold
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -45,7 +47,7 @@ fun SSBMaxApp() {
     if (needsScaffold) {
         SSBMaxScaffold(
             navController = navController,
-            user = currentUser
+            user = user
         ) { drawerState, onOpenDrawer ->
             SSBMaxNavGraph(
                 navController = navController,
