@@ -87,14 +87,14 @@ class AuthRepositoryImpl @Inject constructor(
     /**
      * Get Google Sign-In intent
      */
-    fun getGoogleSignInIntent(): Intent {
+    override fun getGoogleSignInIntent(): Intent {
         return firebaseAuthService.getSignInIntent()
     }
 
     /**
      * Handle Google Sign-In result
      */
-    suspend fun handleGoogleSignInResult(data: Intent?): Result<SSBMaxUser> {
+    override suspend fun handleGoogleSignInResult(data: Intent?): Result<SSBMaxUser> {
         return try {
             android.util.Log.d("AuthRepositoryImpl", "handleGoogleSignInResult: Starting authentication")
             // Authenticate with Firebase using Google credentials
@@ -178,7 +178,7 @@ class AuthRepositoryImpl @Inject constructor(
      * Update user role
      * Note: The reactive Flow will automatically emit updated user from Firestore
      */
-    suspend fun updateUserRole(role: UserRole): Result<Unit> {
+    override suspend fun updateUserRole(role: UserRole): Result<Unit> {
         return try {
             val userId = firebaseAuthService.getCurrentUserId()
                 ?: return Result.failure(Exception("No user logged in"))

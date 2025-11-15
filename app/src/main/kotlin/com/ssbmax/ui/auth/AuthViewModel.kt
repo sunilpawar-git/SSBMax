@@ -3,24 +3,32 @@ package com.ssbmax.ui.auth
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.AuthRepository
+import com.ssbmax.core.domain.usecase.auth.GetGoogleSignInIntentUseCase
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.core.domain.usecase.auth.UpdateUserRoleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for authentication screens with Firebase integration
+ * REFACTORED: Now uses use cases instead of direct repository implementation injection
  */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val authRepositoryImpl: AuthRepositoryImpl
+    private val getGoogleSignInIntent: GetGoogleSignInIntentUseCase,
+    private val signInWithGoogle: SignInWithGoogleUseCase,
+    private val updateUserRole: UpdateUserRoleUseCase,
+    private val signOut: SignOutUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
@@ -30,7 +38,7 @@ class AuthViewModel @Inject constructor(
      * Get Google Sign-In intent
      */
     fun getGoogleSignInIntent(): Intent {
-        return authRepositoryImpl.getGoogleSignInIntent()
+        return getGoogleSignInIntent.invoke()
     }
     
     /**
@@ -41,7 +49,7 @@ class AuthViewModel @Inject constructor(
             android.util.Log.d("AuthViewModel", "handleGoogleSignInResult called, data=$data")
             _uiState.value = AuthUiState.Loading
             
-            authRepositoryImpl.handleGoogleSignInResult(data)
+            signInWithGoogle(data)
                 .onSuccess { user ->
                     android.util.Log.d("AuthViewModel", "Sign-in SUCCESS: user=${user.email}, role=${user.role}")
                     // User authenticated successfully
@@ -70,10 +78,10 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             
-            authRepositoryImpl.updateUserRole(role)
+            updateUserRole(role)
                 .onSuccess {
-                    // Reload user to get updated profile (use first() instead of collect)
-                    val user = authRepository.currentUser.value
+                    // Reload user to get updated profile
+                    val user = observeCurrentUser().first()
                     if (user != null) {
                         _uiState.value = AuthUiState.Success(user)
                     } else {
@@ -91,7 +99,7 @@ class AuthViewModel @Inject constructor(
      */
     fun signOut() {
         viewModelScope.launch {
-            authRepository.signOut()
+            signOut.invoke()
             _uiState.value = AuthUiState.Initial
         }
     }
@@ -114,4 +122,3 @@ sealed class AuthUiState {
     data class NeedsRoleSelection(val user: SSBMaxUser) : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
-

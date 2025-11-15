@@ -2,10 +2,13 @@ package com.ssbmax.ui.auth
 
 import android.content.Intent
 import app.cash.turbine.test
-import com.ssbmax.core.data.repository.AuthRepositoryImpl
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.AuthRepository
+import com.ssbmax.core.domain.usecase.auth.GetGoogleSignInIntentUseCase
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.core.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -22,9 +25,7 @@ import org.junit.Assert.*
 
 /**
  * Tests for AuthViewModel with Google Sign-In
- * 
- * Note: Email/password authentication has been removed.
- * The app now exclusively uses Google Sign-In.
+ * UPDATED: Now tests use cases instead of repositories
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
@@ -33,8 +34,11 @@ class AuthViewModelTest {
     val dispatcherRule = TestDispatcherRule()
     
     private lateinit var viewModel: AuthViewModel
-    private val mockRepository = mockk<AuthRepository>(relaxed = true)
-    private val mockAuthRepositoryImpl = mockk<AuthRepositoryImpl>(relaxed = true)
+    private val mockGetGoogleSignInIntent = mockk<GetGoogleSignInIntentUseCase>(relaxed = true)
+    private val mockSignInWithGoogle = mockk<SignInWithGoogleUseCase>(relaxed = true)
+    private val mockUpdateUserRole = mockk<UpdateUserRoleUseCase>(relaxed = true)
+    private val mockSignOut = mockk<SignOutUseCase>(relaxed = true)
+    private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
     
     private val mockUser = SSBMaxUser(
@@ -56,10 +60,16 @@ class AuthViewModelTest {
         every { android.util.Log.e(any(), any(), any()) } returns 0
 
         // Mock currentUser as StateFlow
-        every { mockRepository.currentUser } returns mockCurrentUserFlow
+        every { mockObserveCurrentUser() } returns mockCurrentUserFlow
 
-        // Create ViewModel (dispatcher is already set by TestDispatcherRule)
-        viewModel = AuthViewModel(mockRepository, mockAuthRepositoryImpl)
+        // Create ViewModel with use cases
+        viewModel = AuthViewModel(
+            mockGetGoogleSignInIntent,
+            mockSignInWithGoogle,
+            mockUpdateUserRole,
+            mockSignOut,
+            mockObserveCurrentUser
+        )
     }
     
     // ==================== Google Sign-In Tests ====================
@@ -68,14 +78,14 @@ class AuthViewModelTest {
     fun `getGoogleSignInIntent returns valid intent`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
-        every { mockAuthRepositoryImpl.getGoogleSignInIntent() } returns mockIntent
+        every { mockGetGoogleSignInIntent() } returns mockIntent
         
         // When
         val intent = viewModel.getGoogleSignInIntent()
         
         // Then
         assertNotNull("Google Sign-In intent should not be null", intent)
-        verify { mockAuthRepositoryImpl.getGoogleSignInIntent() }
+        verify { mockGetGoogleSignInIntent() }
     }
     
     @Test
@@ -88,7 +98,7 @@ class AuthViewModelTest {
             createdAt = currentTime - 86400000, // Created 1 day ago
             lastLoginAt = currentTime
         )
-        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.success(existingUser)
+        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.success(existingUser)
 
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
@@ -114,7 +124,7 @@ class AuthViewModelTest {
             createdAt = timestamp,
             lastLoginAt = timestamp // Same as createdAt (first login)
         )
-        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.success(newUser)
+        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.success(newUser)
 
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
@@ -132,7 +142,7 @@ class AuthViewModelTest {
     @Test
     fun `handleGoogleSignInResult with null intent shows error`() = runTest {
         // Given
-        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(null) } returns Result.failure(
+        coEvery { mockSignInWithGoogle(null) } returns Result.failure(
             Exception("Google Sign-In failed")
         )
 
@@ -153,7 +163,7 @@ class AuthViewModelTest {
     fun `handleGoogleSignInResult with failure shows error state`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
-        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
+        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.failure(
             Exception("Authentication error")
         )
 
@@ -177,7 +187,7 @@ class AuthViewModelTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.STUDENT)
         mockCurrentUserFlow.value = updatedUser // Set before calling function
-        coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.STUDENT) } returns Result.success(Unit)
+        coEvery { mockUpdateUserRole(UserRole.STUDENT) } returns Result.success(Unit)
 
         // When
         viewModel.setUserRole(UserRole.STUDENT)
@@ -197,7 +207,7 @@ class AuthViewModelTest {
         // Given
         val updatedUser = mockUser.copy(role = UserRole.INSTRUCTOR)
         mockCurrentUserFlow.value = updatedUser // Set before calling function
-        coEvery { mockAuthRepositoryImpl.updateUserRole(UserRole.INSTRUCTOR) } returns Result.success(Unit)
+        coEvery { mockUpdateUserRole(UserRole.INSTRUCTOR) } returns Result.success(Unit)
 
         // When
         viewModel.setUserRole(UserRole.INSTRUCTOR)
@@ -215,7 +225,7 @@ class AuthViewModelTest {
     @Test
     fun `setUserRole with failure shows error`() = runTest {
         // Given
-        coEvery { mockAuthRepositoryImpl.updateUserRole(any()) } returns Result.failure(
+        coEvery { mockUpdateUserRole(any()) } returns Result.failure(
             Exception("Failed to set role")
         )
 
@@ -237,7 +247,7 @@ class AuthViewModelTest {
     @Test
     fun `signOut returns to initial state`() = runTest {
         // Given
-        coEvery { mockRepository.signOut() } returns Result.success(Unit)
+        coEvery { mockSignOut() } returns Result.success(Unit)
         
         // When
         viewModel.uiState.test {
@@ -256,7 +266,7 @@ class AuthViewModelTest {
     fun `resetState returns to initial`() = runTest {
         // Given - simulate an error state first
         val mockIntent = mockk<Intent>(relaxed = true)
-        coEvery { mockAuthRepositoryImpl.handleGoogleSignInResult(mockIntent) } returns Result.failure(
+        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.failure(
             Exception("Error")
         )
 
