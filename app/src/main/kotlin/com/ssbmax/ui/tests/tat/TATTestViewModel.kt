@@ -9,6 +9,7 @@ import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
+import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -38,8 +39,9 @@ class TATTestViewModel @Inject constructor(
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
-    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
+    private val generateTATAIScore: GenerateTATAIScoreUseCase,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
 ) : ViewModel() {
 
@@ -57,13 +59,7 @@ class TATTestViewModel @Inject constructor(
         restoreTimerIfNeeded()
     }
     
-    /**
-     * Check if user is eligible to take the test based on subscription tier
-     * SECURITY: Server-side check via Firestore
-     */
-    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
-        return subscriptionManager.canTakeTest(TestType.TAT, userId)
-    }
+    // Removed: Business logic moved to CheckTestEligibilityUseCase
     
     /**
      * Restore timer after configuration change (e.g., screen rotation)
@@ -138,7 +134,7 @@ class TATTestViewModel @Inject constructor(
                 
                 // Check subscription eligibility BEFORE loading test
                 android.util.Log.d("TATTestViewModel", "📍 Step 2: Checking subscription eligibility...")
-                val eligibility = checkTestEligibility(userId)
+                val eligibility = subscriptionManager.canTakeTest(TestType.TAT, userId)
                 android.util.Log.d("TATTestViewModel", "   Eligibility result: ${eligibility.javaClass.simpleName}")
                 
                 when (eligibility) {
@@ -348,7 +344,7 @@ class TATTestViewModel @Inject constructor(
                     stories = state.responses,
                     totalTimeTakenMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt(),
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateMockAIScore(state.responses)
+                    aiPreliminaryScore = generateTATAIScore(state.responses)
                 )
                 android.util.Log.d("TATTestViewModel", "✅ Submission created with ${submission.stories.size} stories")
                 
@@ -494,52 +490,8 @@ class TATTestViewModel @Inject constructor(
         timerJob = null
     }
     
-    private fun generateMockQuestions(): List<TATQuestion> {
-        return (1..12).map { index ->
-            TATQuestion(
-                id = "tat_q_$index",
-                imageUrl = "https://via.placeholder.com/800x600/3498db/ffffff?text=TAT+Picture+$index",
-                sequenceNumber = index,
-                prompt = "Write a story about what you see in the picture",
-                viewingTimeSeconds = 30,
-                writingTimeMinutes = 4,
-                minCharacters = 150,
-                maxCharacters = 800
-            )
-        }
-    }
-    
-    private fun generateMockAIScore(stories: List<TATStoryResponse>): TATAIScore {
-        // TODO: Actual AI scoring
-        return TATAIScore(
-            overallScore = 78f,
-            thematicPerceptionScore = 16f,
-            imaginationScore = 15f,
-            characterDepictionScore = 16f,
-            emotionalToneScore = 16f,
-            narrativeStructureScore = 15f,
-            feedback = "Good storytelling with positive themes. Shows leadership qualities and imagination.",
-            storyWiseAnalysis = stories.mapIndexed { index, story ->
-                StoryAnalysis(
-                    questionId = story.questionId,
-                    sequenceNumber = index + 1,
-                    score = (70..85).random().toFloat(),
-                    themes = listOf("Leadership", "Courage", "Teamwork").shuffled().take(2),
-                    sentimentScore = kotlin.random.Random.nextFloat() * 0.4f + 0.5f, // 0.5 to 0.9
-                    keyInsights = listOf("Shows initiative", "Positive resolution")
-                )
-            },
-            strengths = listOf(
-                "Creative storytelling",
-                "Positive outlook",
-                "Good character development"
-            ),
-            areasForImprovement = listOf(
-                "Add more detail to situation descriptions",
-                "Include emotional depth"
-            )
-        )
-    }
+    // Removed: Mock question generation (tests now loaded from cloud)
+    // Removed: AI score generation moved to GenerateTATAIScoreUseCase
     
     override fun onCleared() {
         super.onCleared()
