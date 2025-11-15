@@ -8,10 +8,12 @@ import com.ssbmax.core.domain.model.SSBMaxNotification
 import com.ssbmax.core.domain.model.TestSubmission
 import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.repository.TestSubmissionRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -23,7 +25,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TestDetailGradingViewModel @Inject constructor(
     private val testSubmissionRepository: TestSubmissionRepository,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GradingUiState())
@@ -83,6 +86,16 @@ class TestDetailGradingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSubmitting = true, error = null)
 
+            // Get current instructor ID from authenticated user
+            val currentUser = observeCurrentUser().first()
+            val instructorId = currentUser?.id ?: run {
+                _uiState.value = _uiState.value.copy(
+                    isSubmitting = false,
+                    error = "You must be logged in to submit grading"
+                )
+                return@launch
+            }
+
             // Update submission with grade and remarks
             val updatedSubmission = submission.copy(
                 instructorScore = _uiState.value.grade,
@@ -90,7 +103,7 @@ class TestDetailGradingViewModel @Inject constructor(
                 instructorFeedback = _uiState.value.remarks,
                 gradedAt = System.currentTimeMillis(),
                 gradingStatus = com.ssbmax.core.domain.model.GradingStatus.GRADED,
-                instructorId = "current_assessor_id" // TODO: Get from AuthRepository
+                instructorId = instructorId
             )
 
             testSubmissionRepository.updateSubmission(updatedSubmission)
