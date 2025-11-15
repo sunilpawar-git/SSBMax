@@ -197,5 +197,11 @@ abstract class RepositoryModule {
     abstract fun bindSubscriptionRepository(
         impl: com.ssbmax.core.data.repository.SubscriptionRepositoryImpl
     ): com.ssbmax.core.domain.repository.SubscriptionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindStudyProgressRepository(
+        impl: com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
+    ): com.ssbmax.core.domain.repository.StudyProgressRepository
 }
 
