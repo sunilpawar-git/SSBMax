@@ -3,25 +3,29 @@ package com.ssbmax.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.subscription.GetMonthlyUsageUseCase
+import com.ssbmax.core.domain.usecase.subscription.GetSubscriptionTierUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
 /**
  * ViewModel for Subscription Management Screen
+ * REFACTORED: Now uses use cases instead of direct Firebase dependencies
  */
 @HiltViewModel
 class SubscriptionManagementViewModel @Inject constructor(
-    private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
+    private val getMonthlyUsage: GetMonthlyUsageUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SubscriptionManagementUiState())
@@ -29,7 +33,6 @@ class SubscriptionManagementViewModel @Inject constructor(
     
     companion object {
         private const val TAG = "SubscriptionVM"
-        private val monthFormat = SimpleDateFormat("yyyy-MM", Locale.US)
     }
     
     fun loadSubscriptionData() {
@@ -37,17 +40,31 @@ class SubscriptionManagementViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
-                val userId = firebaseAuth.currentUser?.uid
-                    ?: throw Exception("User not authenticated")
+                // Get current user ID
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: throw Exception("User not authenticated")
                 
                 // Load subscription tier
-                val tier = loadSubscriptionTier(userId)
+                val tierResult = getSubscriptionTier(userId)
+                val tier = tierResult.getOrElse {
+                    throw Exception("Failed to load subscription tier: ${it.message}")
+                }
                 
                 // Load monthly usage
-                val usage = loadMonthlyUsage(userId, tier)
+                val usageResult = getMonthlyUsage(userId)
+                val domainUsage = usageResult.getOrElse {
+                    Log.w(TAG, "Failed to load usage, using empty map", it)
+                    emptyMap()
+                }
+                
+                // Map domain models to UI models
+                val uiTier = SubscriptionTierModel.from(tier)
+                val uiUsage = domainUsage.mapValues { (_, value) ->
+                    UsageInfo.from(value)
+                }
                 
                 // Calculate expiry date (mock for now)
-                val expiresAt = if (tier != SubscriptionTierModel.FREE) {
+                val expiresAt = if (tier != SubscriptionTier.FREE) {
                     val calendar = Calendar.getInstance()
                     calendar.add(Calendar.MONTH, 1)
                     SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.time)
@@ -57,12 +74,12 @@ class SubscriptionManagementViewModel @Inject constructor(
                 
                 _uiState.value = SubscriptionManagementUiState(
                     isLoading = false,
-                    currentTier = tier,
-                    monthlyUsage = usage,
+                    currentTier = uiTier,
+                    monthlyUsage = uiUsage,
                     subscriptionExpiresAt = expiresAt
                 )
                 
-                Log.d(TAG, "Loaded subscription data: tier=$tier, usage=${usage.size} tests")
+                Log.d(TAG, "Loaded subscription data: tier=$uiTier, usage=${uiUsage.size} tests")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load subscription data", e)
                 _uiState.value = _uiState.value.copy(
@@ -70,96 +87,6 @@ class SubscriptionManagementViewModel @Inject constructor(
                     error = "Failed to load subscription data: ${e.message}"
                 )
             }
-        }
-    }
-    
-    private suspend fun loadSubscriptionTier(userId: String): SubscriptionTierModel {
-        return try {
-            val doc = firestore.collection("users")
-                .document(userId)
-                .collection("data")
-                .document("subscription")
-                .get()
-                .await()
-            
-            val tierString = doc.getString("tier") ?: "FREE"
-            when (tierString.uppercase()) {
-                "PRO" -> SubscriptionTierModel.PRO
-                "PREMIUM" -> SubscriptionTierModel.PREMIUM
-                else -> SubscriptionTierModel.FREE
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to load tier, defaulting to FREE", e)
-            SubscriptionTierModel.FREE
-        }
-    }
-    
-    private suspend fun loadMonthlyUsage(
-        userId: String,
-        tier: SubscriptionTierModel
-    ): Map<String, UsageInfo> {
-        return try {
-            val currentMonth = monthFormat.format(Date())
-            Log.d(TAG, "Loading monthly usage for userId=$userId, month=$currentMonth, tier=${tier.displayName}")
-            
-            val doc = firestore.collection("users")
-                .document(userId)
-                .collection("subscription")
-                .document("usage_$currentMonth")
-                .get()
-                .await()
-            
-            Log.d(TAG, "Firestore doc exists: ${doc.exists()}")
-            
-            val usageMap = mapOf(
-                "OIR Tests" to UsageInfo(
-                    used = doc.getLong("oirTestsUsed")?.toInt() ?: 0,
-                    limit = tier.oirTestLimit
-                ),
-                "PPDT Tests" to UsageInfo(
-                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
-                    limit = tier.ppdtTestLimit
-                ),
-                "PIQ Forms" to UsageInfo(
-                    used = doc.getLong("piqTestsUsed")?.toInt() ?: 0,
-                    limit = tier.piqTestLimit
-                ),
-                "TAT Tests" to UsageInfo(
-                    used = doc.getLong("tatTestsUsed")?.toInt() ?: 0,
-                    limit = tier.tatTestLimit
-                ),
-                "WAT Tests" to UsageInfo(
-                    used = doc.getLong("watTestsUsed")?.toInt() ?: 0,
-                    limit = tier.watTestLimit
-                ),
-                "SRT Tests" to UsageInfo(
-                    used = doc.getLong("srtTestsUsed")?.toInt() ?: 0,
-                    limit = tier.srtTestLimit
-                ),
-                "Self Description" to UsageInfo(
-                    used = doc.getLong("sdTestsUsed")?.toInt() ?: 0,
-                    limit = tier.sdTestLimit
-                ),
-                "GTO Tests" to UsageInfo(
-                    used = doc.getLong("gtoTestsUsed")?.toInt() ?: 0,
-                    limit = tier.gtoTestLimit
-                ),
-                "Interview" to UsageInfo(
-                    used = doc.getLong("interviewTestsUsed")?.toInt() ?: 0,
-                    limit = tier.interviewTestLimit
-                )
-            )
-            
-            Log.d(TAG, "Successfully loaded ${usageMap.size} usage items:")
-            usageMap.forEach { (key, value) ->
-                Log.d(TAG, "  $key: used=${value.used}, limit=${value.limit}")
-            }
-            
-            usageMap
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to load usage, returning empty", e)
-            Log.e(TAG, "Exception details:", e)
-            emptyMap()
         }
     }
 }
@@ -176,7 +103,8 @@ data class SubscriptionManagementUiState(
 )
 
 /**
- * Subscription tier model with pricing and limits
+ * UI model for subscription tier with display properties
+ * Maps from domain SubscriptionTier to UI-specific display model
  */
 enum class SubscriptionTierModel(
     val displayName: String,
@@ -259,6 +187,32 @@ enum class SubscriptionTierModel(
             "Certificate of completion",
             "Lifetime access to materials"
         )
-    )
+    );
+
+    companion object {
+        fun from(tier: SubscriptionTier): SubscriptionTierModel {
+            return when (tier) {
+                SubscriptionTier.FREE -> FREE
+                SubscriptionTier.PRO -> PRO
+                SubscriptionTier.PREMIUM -> PREMIUM
+            }
+        }
+    }
 }
 
+/**
+ * Usage information for display
+ */
+data class UsageInfo(
+    val used: Int,
+    val limit: Int
+) {
+    companion object {
+        fun from(domain: com.ssbmax.core.domain.repository.UsageInfo): UsageInfo {
+            return UsageInfo(
+                used = domain.used,
+                limit = domain.limit
+            )
+        }
+    }
+}

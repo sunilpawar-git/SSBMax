@@ -576,11 +576,4 @@ private fun ErrorState(
     }
 }
 
-/**
- * Usage info for a specific test type
- */
-data class UsageInfo(
-    val used: Int,
-    val limit: Int // -1 for unlimited
-)
 
