@@ -11,11 +11,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.CoachingInstitute
 import com.ssbmax.core.domain.model.InstituteType
 import com.ssbmax.core.domain.model.PriceRange
@@ -38,17 +40,17 @@ fun MarketplaceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SSB Coaching Institutes") },
+                title = { Text(stringResource(R.string.marketplace_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showFilters = !showFilters }) {
                         Icon(
                             imageVector = if (showFilters) Icons.Default.FilterListOff else Icons.Default.FilterList,
-                            contentDescription = "Toggle Filters"
+                            contentDescription = stringResource(R.string.marketplace_toggle_filters)
                         )
                     }
                 }
@@ -122,11 +124,11 @@ fun MarketplaceScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                "No institutes found",
+                                stringResource(R.string.marketplace_no_institutes),
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                "Try adjusting your filters",
+                                stringResource(R.string.marketplace_adjust_filters),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -140,7 +142,7 @@ fun MarketplaceScreen(
                     ) {
                         item {
                             Text(
-                                "${uiState.institutes.size} institutes found",
+                                stringResource(R.string.marketplace_institutes_found, uiState.institutes.size),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -168,12 +170,12 @@ fun SearchBar(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier,
-        placeholder = { Text("Search institutes, locations...") },
+        placeholder = { Text(stringResource(R.string.marketplace_search_hint)) },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Clear, "Clear")
+                    Icon(Icons.Default.Clear, stringResource(R.string.marketplace_clear))
                 }
             }
         },
@@ -211,17 +213,17 @@ fun FiltersSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Filters",
+                    stringResource(R.string.marketplace_filters_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 TextButton(onClick = onClearFilters) {
-                    Text("Clear All")
+                    Text(stringResource(R.string.marketplace_clear_all))
                 }
             }
 
             // Type Filter Chips
-            Text("Class Type", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.marketplace_class_type), style = MaterialTheme.typography.labelMedium)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -229,7 +231,7 @@ fun FiltersSection(
                 FilterChip(
                     selected = filterType == null,
                     onClick = { onTypeChange(null) },
-                    label = { Text("All") }
+                    label = { Text(stringResource(R.string.marketplace_all)) }
                 )
                 InstituteType.values().forEach { type ->
                     FilterChip(
@@ -241,7 +243,7 @@ fun FiltersSection(
             }
 
             // Price Range Filter
-            Text("Price Range", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.marketplace_price_range), style = MaterialTheme.typography.labelMedium)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -249,7 +251,7 @@ fun FiltersSection(
                 FilterChip(
                     selected = filterPriceRange == null,
                     onClick = { onPriceRangeChange(null) },
-                    label = { Text("All") }
+                    label = { Text(stringResource(R.string.marketplace_all)) }
                 )
                 PriceRange.values().forEach { range ->
                     FilterChip(
@@ -363,7 +365,7 @@ fun InstituteCard(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            "${rate.toInt()}% Success Rate",
+                            stringResource(R.string.marketplace_success_rate, rate.toInt()),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
