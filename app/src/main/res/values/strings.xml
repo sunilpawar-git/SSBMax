@@ -752,4 +752,18 @@
     <string name="dialog_coming_soon_message">Payment integration for the %s plan is coming soon! We\'re working hard to bring you seamless subscription management.</string>
     <string name="dialog_action_got_it">Got it</string>
 
+    <!-- ============================================ -->
+    <!-- FAQ SCREEN -->
+    <!-- ============================================ -->
+    <string name="faq_title">Frequently Asked Questions</string>
+    <string name="faq_search_label">Search FAQs</string>
+    <string name="faq_search_placeholder">Ask a question...</string>
+    <string name="faq_filter_all">All</string>
+    <string name="faq_action_collapse">Collapse</string>
+    <string name="faq_action_expand">Expand</string>
+    <string name="faq_footer_contact">Can\'t find what you\'re looking for? Contact our support team.</string>
+    <string name="faq_empty_no_faqs">No FAQs available</string>
+    <string name="faq_empty_no_results">No results found for \"%s\"</string>
+    <string name="faq_empty_suggestion">Try a different search term or browse categories</string>
+
 </resources>
