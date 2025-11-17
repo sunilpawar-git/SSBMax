@@ -46,6 +46,201 @@ com.example.ssbmax/
 └── di/                 # Dependency injection modules
 ```
 
+## 🚦 NAVIGATION & STATE MANAGEMENT RULES
+
+### **CRITICAL: ID-Based Navigation Pattern**
+
+**ALL test screens MUST follow this pattern. NO EXCEPTIONS.**
+
+#### ✅ CORRECT Pattern (Required)
+```kotlin
+@Composable
+fun MyTestScreen(
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit,
+    onNavigateBack: () -> Unit,
+    viewModel: MyTestViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted && uiState.submissionId != null) {
+            // Pass ONLY the ID
+            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
+        }
+    }
+}
+
+// Result Screen - Fetches data via ViewModel
+@Composable
+fun MyTestResultScreen(
+    submissionId: String,
+    viewModel: MyTestResultViewModel = hiltViewModel()
+) {
+    LaunchedEffect(submissionId) {
+        viewModel.loadSubmission(submissionId)  // Fetch from Firestore
+    }
+}
+
+// ViewModel fetches from Repository
+@HiltViewModel
+class MyTestResultViewModel @Inject constructor(
+    private val repository: SubmissionRepository
+) : ViewModel() {
+    fun loadSubmission(submissionId: String) {
+        viewModelScope.launch {
+            repository.getSubmission(submissionId)
+        }
+    }
+}
+```
+
+#### ❌ WRONG - Anti-Pattern (DO NOT USE)
+```kotlin
+// ANTI-PATTERN: Passing complex object
+@Composable
+fun MyTestScreen(
+    onTestComplete: (TestResult) -> Unit  // ❌ WRONG!
+) {
+    onTestComplete(complexResultObject)  // Not process-death safe
+}
+
+// ANTI-PATTERN: Singleton state holder
+object TestResultHolder {  // ❌ WRONG!
+    var result: TestResult? = null  // Memory leak, state pollution
+}
+```
+
+### **Why ID-Based Navigation?**
+
+1. **Process-Death Safe**: Configuration changes don't lose data
+2. **Deep Linking**: Can create deep links with IDs
+3. **Size Limits**: Avoids 1MB Parcelable transaction limit
+4. **Single Source of Truth**: Firestore/database is authority
+5. **Testable**: Easy to mock repository in tests
+
+### **Forbidden Anti-Patterns**
+
+#### ❌ 1. Singleton State Holders
+**NEVER create singleton objects with mutable state:**
+
+```kotlin
+// ❌ FORBIDDEN
+object MyHolder {
+    private var data: MyData? = null
+    fun setData(d: MyData) { data = d }
+}
+```
+
+**Why forbidden:**
+- Memory leaks (singleton lives forever)
+- State pollution between tests
+- Not thread-safe
+- Not process-death safe
+- Difficult to test
+
+**✅ Use instead:**
+- ViewModel for UI state
+- Repository for data management
+- Pass IDs via navigation
+
+#### ❌ 2. Complex Object Navigation
+**NEVER pass complex objects via navigation:**
+
+```kotlin
+// ❌ FORBIDDEN
+navController.navigate("result") {
+    putExtra("result", complexObject)  // Will fail on process death
+}
+
+onComplete: (User, Settings, Data) -> Unit  // Too complex
+```
+
+**✅ Use instead:**
+```kotlin
+navController.navigate("result/$submissionId")
+
+onComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit
+```
+
+#### ❌ 3. *Holder File Naming
+**NEVER create files ending in `*Holder.kt`:**
+
+```kotlin
+// ❌ FORBIDDEN FILE NAMES
+UserHolder.kt
+TestResultHolder.kt
+DataHolder.kt
+```
+
+These names signal anti-patterns. Use:
+- `*ViewModel.kt` for UI state
+- `*Repository.kt` for data
+
+### **Architecture Enforcement**
+
+The following systems prevent anti-patterns:
+
+1. **Custom Lint Rules** (ERROR severity):
+   - `SingletonMutableStateDetector` - Catches mutable singletons
+   - `NavigationComplexObjectDetector` - Catches complex object navigation
+   - `ViewModelLifecycleDetector` - Ensures proper cleanup
+
+2. **Pre-Commit Hooks**:
+   - Blocks commit if *Holder.kt files added
+   - Blocks commit if singleton with mutable state detected
+   - Blocks commit if complex object navigation detected
+
+3. **Architecture Tests** (`ArchitectureTest.kt`):
+   - Validates all test screens use ID-based navigation
+   - Ensures no singleton mutable state exists
+   - Verifies all result screens have ViewModels
+
+4. **CI/CD Pipeline**:
+   - Runs lint checks (fails build on violations)
+   - Runs architecture tests (fails build on violations)
+   - No `continue-on-error` - violations block merges
+
+### **Standard Test Flow Pattern**
+
+Every test module MUST follow this exact flow:
+
+```
+User completes test
+    ↓
+TestScreen: submitTest()
+    ↓
+ViewModel: Creates OIRSubmission with result data
+    ↓
+Repository: Saves to Firestore (submitOIR)
+    ↓
+ViewModel: Updates UI state with submissionId
+    ↓
+TestScreen: onTestComplete(submissionId, subscriptionType)
+    ↓
+Navigation: TestResultHandler.handleTestSubmission()
+    ↓
+Navigate to: ResultScreen(submissionId)
+    ↓
+ResultViewModel: loadSubmission(submissionId)
+    ↓
+Repository: Fetches from Firestore (getSubmission)
+    ↓
+ResultViewModel: Parses and updates UI state
+    ↓
+ResultScreen: Displays result with loading/error/success states
+```
+
+### **Reference Implementation**
+
+See these files for correct patterns:
+- **Test Screen**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestScreen.kt`
+- **Test ViewModel**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt`
+- **Result Screen**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultScreen.kt`
+- **Result ViewModel**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModel.kt`
+- **Navigation**: `app/src/main/kotlin/com/ssbmax/navigation/SharedNavGraph.kt`
+
+All 7 test modules (TAT, WAT, SRT, OIR, PPDT, SDT, PIQ) follow this pattern.
+
 ## 📱 UI/UX EXCELLENCE
 
 ### Material Design 3 Implementation
@@ -419,9 +614,65 @@ fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
 
 ## 🔧 DEVELOPMENT WORKFLOW
 
+### Build System
+- **IMPORTANT**: Always use `./gradle.sh` wrapper script for all Gradle commands on macOS
+- This project uses a custom Gradle wrapper for consistency across development environments
+- Examples:
+  - `./gradle.sh build` instead of `./gradlew build`
+  - `./gradle.sh test` instead of `./gradlew test`
+  - `./gradle.sh assembleDebug` instead of `./gradlew assembleDebug`
+
+### Error Handling Standards
+
+**CRITICAL: Use ErrorLogger for all error logging**
+
+```kotlin
+// ❌ WRONG - Do NOT use
+try {
+    riskyOperation()
+} catch (e: Exception) {
+    e.printStackTrace()  // ERROR: Lint will fail the build
+    Log.e("Tag", "Error", e)  // Discouraged in ViewModels
+}
+
+// ✅ CORRECT - Use ErrorLogger
+try {
+    riskyOperation()
+} catch (e: Exception) {
+    ErrorLogger.log(e, "Failed to perform risky operation")
+}
+
+// ✅ BEST - With context
+try {
+    submitTest()
+} catch (e: Exception) {
+    ErrorLogger.logTestError(
+        throwable = e,
+        description = "Test submission failed",
+        testType = "TAT",
+        userId = currentUser?.id
+    )
+}
+```
+
+**Why ErrorLogger?**
+- ✅ Integrates with Firebase Crashlytics (production monitoring)
+- ✅ Logs to Android Logcat (visible in debugging)
+- ✅ Supports severity levels and structured context
+- ✅ Never throws exceptions itself (fail-safe)
+- ✅ Automatic tag inference from call site
+
+**Enforcement:**
+- `PrintStackTraceDetector` lint rule (ERROR severity - fails build)
+- Pre-commit hook blocks `printStackTrace()`
+- `ErrorHandlingArchitectureTest` validates codebase
+- CI/CD pipeline enforces standards
+
+See: `app/src/main/kotlin/com/ssbmax/utils/ErrorLogger.kt`
+
 ### Code Review Checklist
 - [ ] Follows MVVM architecture
-- [ ] Proper error handling
+- [ ] Uses ErrorLogger for error handling (no printStackTrace())
 - [ ] Memory leak prevention
 - [ ] Accessibility compliance
 - [ ] Performance optimization
