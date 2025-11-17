@@ -8,6 +8,17 @@ import com.ssbmax.core.domain.model.AppTheme
 import com.ssbmax.core.domain.model.NotificationPreferences
 import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.migration.ClearFirestoreCacheUseCase
+import com.ssbmax.core.domain.usecase.migration.ForceRefreshContentUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateConferenceUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateGTOUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateInterviewUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateMedicalsUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateOIRUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePIQFormUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePPDTUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePsychologyUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateSSBOverviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

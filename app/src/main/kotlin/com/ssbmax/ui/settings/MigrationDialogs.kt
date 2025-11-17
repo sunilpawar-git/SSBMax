@@ -12,6 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.core.data.health.FirebaseHealthCheck
+import com.ssbmax.core.domain.usecase.migration.MigrateConferenceUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateGTOUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateInterviewUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateMedicalsUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateOIRUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePIQFormUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePPDTUseCase
+import com.ssbmax.core.domain.usecase.migration.MigratePsychologyUseCase
+import com.ssbmax.core.domain.usecase.migration.MigrateSSBOverviewUseCase
 
 /**
  * Shared migration result dialogs to keep SettingsScreen.kt under 300 lines per section

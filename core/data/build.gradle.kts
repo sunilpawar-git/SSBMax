@@ -83,6 +83,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine) // For Flow testing
     
     // Android instrumented tests (integration tests with Firebase Emulator)
     androidTestImplementation(libs.androidx.junit)
