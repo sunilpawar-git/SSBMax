@@ -874,4 +874,24 @@
     <string name="grading_form_feedback_label">Detailed Feedback</string>
     <string name="grading_form_action_submit">Submit Grade</string>
 
+    <!-- ============================================ -->
+    <!-- SUBMISSIONS LIST SCREEN -->
+    <!-- ============================================ -->
+    <string name="submissions_list_title">My Submissions</string>
+    <string name="submissions_list_subtitle">SSB Preparation &gt; Test Results</string>
+    <string name="submissions_list_action_refresh">Refresh</string>
+    <string name="submissions_list_filter_test_type">Test Type</string>
+    <string name="submissions_list_filter_status">Status</string>
+    <string name="submissions_list_filter_all">All</string>
+    <string name="submissions_list_filter_pending">Pending</string>
+    <string name="submissions_list_filter_graded">Graded</string>
+    <string name="submissions_list_submitted">Submitted %1$s</string>
+    <string name="submissions_list_loading">Loading submissions...</string>
+    <string name="submissions_list_error">Error</string>
+    <string name="submissions_list_empty_title">No Submissions Yet</string>
+    <string name="submissions_list_empty_message">Complete tests to see your submissions here</string>
+    <string name="submissions_list_action_take_test">Take a Test</string>
+    <string name="submissions_list_view_details">View details</string>
+    <string name="submissions_list_score_format">Score: %1$d/100</string>
+
 </resources>
