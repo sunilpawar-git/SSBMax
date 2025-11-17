@@ -843,4 +843,21 @@
     <!-- Actions -->
     <string name="sdt_result_action_home">Back to Home</string>
 
+    <!-- ============================================ -->
+    <!-- PIQ REVIEW SCREEN -->
+    <!-- ============================================ -->
+    <string name="piq_review_title">Review Your Information</string>
+    <string name="piq_review_action_submit">Submit PIQ</string>
+    <string name="piq_review_section_personal_family">Personal &amp; Family Details</string>
+    <string name="piq_review_section_career">Career &amp; Additional Details</string>
+    <string name="piq_review_dialog_title">Submit PIQ?</string>
+    <string name="piq_review_dialog_message">Once submitted, you cannot edit this form. Continue?</string>
+    <string name="piq_review_field_siblings">Siblings</string>
+    <string name="piq_review_field_educational_record">Educational Record</string>
+    <string name="piq_review_field_10th">10th Standard</string>
+    <string name="piq_review_field_12th">12th Standard</string>
+    <string name="piq_review_field_graduation">Graduation</string>
+    <string name="piq_review_field_pg">Post-Graduation/Professional</string>
+    <string name="piq_review_yes">Yes</string>
+
 </resources>
