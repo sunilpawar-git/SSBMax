@@ -564,6 +564,81 @@ android {
 
 ## 📋 CODING STANDARDS
 
+### **CRITICAL: String Resources Policy**
+
+**ALL user-facing strings MUST be defined in XML string resources. NO EXCEPTIONS.**
+
+#### ✅ CORRECT Pattern (Required)
+```kotlin
+// ✅ In strings.xml
+<resources>
+    <string name="test_completed">Test Completed Successfully</string>
+    <string name="error_network">Network error occurred</string>
+    <string name="button_submit">Submit</string>
+</resources>
+
+// ✅ In Kotlin/Compose code
+Text(text = stringResource(R.string.test_completed))
+Toast.makeText(context, getString(R.string.error_network), Toast.LENGTH_SHORT).show()
+Button(onClick = {}) { Text(stringResource(R.string.button_submit)) }
+```
+
+#### ❌ WRONG - Anti-Pattern (DO NOT USE)
+```kotlin
+// ❌ FORBIDDEN: Hardcoded strings in code
+Text(text = "Test Completed Successfully")  // Build will fail
+Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show()  // Build will fail
+Button(onClick = {}) { Text("Submit") }  // Build will fail
+```
+
+**Why String Resources Are Mandatory:**
+1. **Consistency**: Ensures uniform language across the app
+2. **Maintainability**: Centralized location for all user-facing text
+3. **Future-Proofing**: Easy to add translations later if needed
+4. **Professional Standards**: Industry best practice for Android development
+5. **Content Management**: Non-developers can update text without code changes
+
+**Enforcement:**
+- `HardcodedTextDetector` lint rule (ERROR severity - fails build)
+- Pre-commit hook blocks hardcoded strings
+- CI/CD pipeline enforces string resource usage
+- All PRs reviewed for compliance
+
+**String Resource Naming Convention:**
+```xml
+<!-- Screen-specific strings -->
+<string name="home_welcome">Welcome to SSBMax</string>
+<string name="profile_edit_title">Edit Profile</string>
+
+<!-- Common UI elements -->
+<string name="button_continue">Continue</string>
+<string name="button_cancel">Cancel</string>
+<string name="label_email">Email Address</string>
+
+<!-- Error messages -->
+<string name="error_network">Network connection failed</string>
+<string name="error_invalid_input">Please enter valid information</string>
+
+<!-- Test-specific strings -->
+<string name="tat_instructions">Write a story based on the image</string>
+<string name="wat_timer_label">Time Remaining: %1$s</string>
+</xml>
+```
+
+**String Formatting:**
+```kotlin
+// For strings with placeholders
+<string name="test_score">Your score: %1$d out of %2$d</string>
+
+// Usage in code
+Text(text = stringResource(R.string.test_score, userScore, totalScore))
+```
+
+**Location:**
+- All strings: `app/src/main/res/values/strings.xml`
+- Organized by feature/screen with XML comments
+- Alphabetically sorted within each section
+
 ### Kotlin Best Practices
 ```kotlin
 // Use data classes for models
@@ -588,9 +663,12 @@ sealed class TestState {
 }
 
 // Use extension functions for utility operations
-fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
-    Toast.makeText(this, message, duration).show()
+fun Context.showToast(@StringRes messageResId: Int, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, getString(messageResId), duration).show()
 }
+
+// Usage
+context.showToast(R.string.error_network)
 ```
 
 ### Code Organization
@@ -598,7 +676,8 @@ fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
 - Meaningful naming conventions
 - Proper documentation for public APIs
 - Consistent formatting (ktlint)
-- No magic numbers or strings
+- No magic numbers
+- **NO hardcoded strings** - use string resources only
 
 ## 🎯 SSB-SPECIFIC FEATURES
 
@@ -681,6 +760,7 @@ See: `app/src/main/kotlin/com/ssbmax/utils/ErrorLogger.kt`
 ### Code Review Checklist
 - [ ] Follows MVVM architecture
 - [ ] Uses ErrorLogger for error handling (no printStackTrace())
+- [ ] **All user-facing strings use string resources (no hardcoded strings)**
 - [ ] Memory leak prevention
 - [ ] Accessibility compliance
 - [ ] Performance optimization
