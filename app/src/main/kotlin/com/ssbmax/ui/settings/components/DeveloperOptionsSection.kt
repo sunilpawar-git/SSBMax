@@ -11,8 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 @Composable
 fun DeveloperOptionsSection(
@@ -43,12 +45,12 @@ fun DeveloperOptionsSection(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Developer Options",
+                text = stringResource(R.string.dev_options_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
-            
+
             Text(
                 text = "Testing and debugging tools",
                 style = MaterialTheme.typography.bodySmall,
@@ -81,10 +83,10 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Run Firebase Health Check")
+                    Text(stringResource(R.string.dev_health_check))
                 }
             }
-            
+
             Text(
                 text = "Tests connectivity to Firestore and Cloud Storage",
                 style = MaterialTheme.typography.bodySmall,
@@ -118,10 +120,10 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate OIR to Firestore")
+                    Text(stringResource(R.string.dev_migrate_oir))
                 }
             }
-            
+
             Text(
                 text = "Uploads OIR topic + 7 study materials to Firestore",
                 style = MaterialTheme.typography.bodySmall,
@@ -155,10 +157,10 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate PPDT to Firestore")
+                    Text(stringResource(R.string.dev_migrate_ppdt))
                 }
             }
-            
+
             Text(
                 text = "Uploads PPDT topic + 6 study materials to Firestore",
                 style = MaterialTheme.typography.bodySmall,
@@ -192,7 +194,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate Psychology to Firestore")
+                    Text(stringResource(R.string.dev_migrate_psychology))
                 }
             }
             
@@ -229,7 +231,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate PIQ Form to Firestore")
+                    Text(stringResource(R.string.dev_migrate_piq))
                 }
             }
             
@@ -266,7 +268,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate GTO to Firestore")
+                    Text(stringResource(R.string.dev_migrate_gto))
                 }
             }
             
@@ -303,7 +305,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate Interview to Firestore")
+                    Text(stringResource(R.string.dev_migrate_interview))
                 }
             }
             
@@ -340,7 +342,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate SSB Overview to Firestore")
+                    Text(stringResource(R.string.dev_migrate_ssb_overview))
                 }
             }
             
@@ -377,7 +379,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate Medicals to Firestore")
+                    Text(stringResource(R.string.dev_migrate_medicals))
                 }
             }
             
@@ -414,7 +416,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrate Conference to Firestore 🎉")
+                    Text(stringResource(R.string.dev_migrate_conference))
                 }
             }
             
@@ -456,7 +458,7 @@ fun DeveloperOptionsSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Clear Cache & Refresh Content")
+                    Text(stringResource(R.string.dev_clear_cache))
                 }
             }
             
