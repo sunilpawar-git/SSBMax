@@ -809,4 +809,38 @@
     <string name="sdt_submit_warning">Some questions are skipped.</string>
     <string name="sdt_action_submit">Submit</string>
 
+    <!-- ============================================ -->
+    <!-- SDT SUBMISSION RESULT SCREEN -->
+    <!-- ============================================ -->
+    <string name="sdt_result_title">SDT Test Results</string>
+
+    <!-- Summary -->
+    <string name="sdt_result_summary_title">Test Summary</string>
+    <string name="sdt_result_completed">Completed: %1$d / 4 questions</string>
+    <string name="sdt_result_time_taken">Time Taken: %d minutes</string>
+    <string name="sdt_result_valid_responses">Valid Responses: %d</string>
+
+    <!-- AI Score -->
+    <string name="sdt_result_ai_score_title">AI Preliminary Score</string>
+    <string name="sdt_result_overall_score">Overall: %d/100</string>
+    <string name="sdt_result_score_format">%d/25</string>
+
+    <!-- Score Categories -->
+    <string name="sdt_result_self_awareness">Self-Awareness</string>
+    <string name="sdt_result_emotional_maturity">Emotional Maturity</string>
+    <string name="sdt_result_social_perception">Social Perception</string>
+    <string name="sdt_result_introspection">Introspection</string>
+
+    <!-- Feedback Sections -->
+    <string name="sdt_result_strengths_title">Strengths</string>
+    <string name="sdt_result_improvement_title">Areas for Improvement</string>
+    <string name="sdt_result_bullet">•</string>
+
+    <!-- Responses -->
+    <string name="sdt_result_word_count">%d words</string>
+    <string name="sdt_result_skipped">(Skipped)</string>
+
+    <!-- Actions -->
+    <string name="sdt_result_action_home">Back to Home</string>
+
 </resources>

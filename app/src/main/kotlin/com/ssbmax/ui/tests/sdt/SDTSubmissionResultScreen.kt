@@ -9,10 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +32,7 @@ fun SDTSubmissionResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SDT Test Results") }
+                title = { Text(stringResource(R.string.sdt_result_title)) }
             )
         }
     ) { padding ->
@@ -66,10 +68,10 @@ private fun ResultContent(
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Test Summary", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text("Completed: ${submission.totalResponses} / 4 questions")
-                    Text("Time Taken: ${submission.totalTimeTakenMinutes} minutes")
-                    Text("Valid Responses: ${submission.validResponses}")
+                    Text(stringResource(R.string.sdt_result_summary_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.sdt_result_completed, submission.totalResponses))
+                    Text(stringResource(R.string.sdt_result_time_taken, submission.totalTimeTakenMinutes))
+                    Text(stringResource(R.string.sdt_result_valid_responses, submission.validResponses))
                 }
             }
         }
@@ -78,13 +80,13 @@ private fun ResultContent(
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("AI Preliminary Score", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text("Overall: ${aiScore.overallScore}/100", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.sdt_result_ai_score_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.sdt_result_overall_score, aiScore.overallScore.toInt()), style = MaterialTheme.typography.titleLarge)
                         Divider()
-                        ScoreRow("Self-Awareness", aiScore.selfAwarenessScore)
-                        ScoreRow("Emotional Maturity", aiScore.emotionalMaturityScore)
-                        ScoreRow("Social Perception", aiScore.socialPerceptionScore)
-                        ScoreRow("Introspection", aiScore.introspectionScore)
+                        ScoreRow(stringResource(R.string.sdt_result_self_awareness), aiScore.selfAwarenessScore)
+                        ScoreRow(stringResource(R.string.sdt_result_emotional_maturity), aiScore.emotionalMaturityScore)
+                        ScoreRow(stringResource(R.string.sdt_result_social_perception), aiScore.socialPerceptionScore)
+                        ScoreRow(stringResource(R.string.sdt_result_introspection), aiScore.introspectionScore)
                         aiScore.feedback?.let {
                             Divider()
                             Text(it, style = MaterialTheme.typography.bodyMedium)
@@ -97,10 +99,10 @@ private fun ResultContent(
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Strengths", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.sdt_result_strengths_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             aiScore.strengths.forEach { strength ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("•")
+                                    Text(stringResource(R.string.sdt_result_bullet))
                                     Text(strength)
                                 }
                             }
@@ -113,10 +115,10 @@ private fun ResultContent(
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Areas for Improvement", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.sdt_result_improvement_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             aiScore.areasForImprovement.forEach { area ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("•")
+                                    Text(stringResource(R.string.sdt_result_bullet))
                                     Text(area)
                                 }
                             }
@@ -132,10 +134,10 @@ private fun ResultContent(
                     Text(response.question, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     if (!response.isSkipped) {
                         Text(response.answer, style = MaterialTheme.typography.bodyMedium)
-                        Text("${response.wordCount} words", style = MaterialTheme.typography.labelSmall,
+                        Text(stringResource(R.string.sdt_result_word_count, response.wordCount), style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary)
                     } else {
-                        Text("(Skipped)", style = MaterialTheme.typography.bodyMedium,
+                        Text(stringResource(R.string.sdt_result_skipped), style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -148,7 +150,7 @@ private fun ResultContent(
                 onClick = onNavigateHome,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Back to Home")
+                Text(stringResource(R.string.sdt_result_action_home))
             }
         }
     }
@@ -158,7 +160,7 @@ private fun ResultContent(
 private fun ScoreRow(label: String, score: Float) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label)
-        Text("${score.toInt()}/25", fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.sdt_result_score_format, score.toInt()), fontWeight = FontWeight.Bold)
     }
 }
 
