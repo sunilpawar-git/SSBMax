@@ -19,11 +19,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.BillingCycle
 import com.ssbmax.core.domain.model.SubscriptionTier
 
@@ -49,10 +51,10 @@ fun UpgradeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Choose Your Plan") },
+                title = { Text(stringResource(R.string.upgrade_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -75,14 +77,14 @@ fun UpgradeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "Unlock Your Potential",
+                        stringResource(R.string.upgrade_header),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Choose the perfect plan for your SSB journey",
+                        stringResource(R.string.upgrade_subtitle),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -151,20 +153,20 @@ private fun BillingCycleSelector(
                     label = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                when (cycle) {
-                                    BillingCycle.MONTHLY -> "Monthly"
-                                    BillingCycle.QUARTERLY -> "Quarterly"
-                                    BillingCycle.ANNUALLY -> "Annually"
-                                },
+                                stringResource(when (cycle) {
+                                    BillingCycle.MONTHLY -> R.string.billing_cycle_monthly
+                                    BillingCycle.QUARTERLY -> R.string.billing_cycle_quarterly
+                                    BillingCycle.ANNUALLY -> R.string.billing_cycle_annually
+                                }),
                                 style = MaterialTheme.typography.labelLarge
                             )
                             if (cycle != BillingCycle.MONTHLY) {
                                 Text(
-                                    when (cycle) {
-                                        BillingCycle.QUARTERLY -> "Save 13%"
-                                        BillingCycle.ANNUALLY -> "Save 25%"
-                                        else -> ""
-                                    },
+                                    stringResource(when (cycle) {
+                                        BillingCycle.QUARTERLY -> R.string.billing_save_quarterly
+                                        BillingCycle.ANNUALLY -> R.string.billing_save_annually
+                                        else -> R.string.billing_cycle_monthly
+                                    }),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -257,7 +259,7 @@ private fun AnimatedPlanCard(
                                 color = Color.White.copy(alpha = 0.3f)
                             ) {
                                 Text(
-                                    "POPULAR",
+                                    stringResource(R.string.plan_badge_popular),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -265,14 +267,14 @@ private fun AnimatedPlanCard(
                                 )
                             }
                         }
-                        
+
                         if (plan.tier == currentTier) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = Color.White.copy(alpha = 0.3f)
                             ) {
                                 Text(
-                                    "CURRENT",
+                                    stringResource(R.string.plan_badge_current),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -290,7 +292,7 @@ private fun AnimatedPlanCard(
                     ) {
                         if (plan.tier == SubscriptionTier.FREE) {
                             Text(
-                                "Free",
+                                stringResource(R.string.plan_price_free),
                                 style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -303,11 +305,11 @@ private fun AnimatedPlanCard(
                                 color = Color.White
                             )
                             Text(
-                                "/${when(selectedBillingCycle) {
-                                    BillingCycle.MONTHLY -> "month"
-                                    BillingCycle.QUARTERLY -> "quarter"
-                                    BillingCycle.ANNUALLY -> "year"
-                                }}",
+                                stringResource(when(selectedBillingCycle) {
+                                    BillingCycle.MONTHLY -> R.string.plan_period_month
+                                    BillingCycle.QUARTERLY -> R.string.plan_period_quarter
+                                    BillingCycle.ANNUALLY -> R.string.plan_period_year
+                                }),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.8f),
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -370,11 +372,11 @@ private fun AnimatedPlanCard(
                 )
             ) {
                 Text(
-                    when {
-                        plan.tier == currentTier -> "Current Plan"
-                        plan.tier < currentTier -> "Downgrade"
-                        else -> "Upgrade Now"
-                    },
+                    stringResource(when {
+                        plan.tier == currentTier -> R.string.plan_action_current
+                        plan.tier < currentTier -> R.string.plan_action_downgrade
+                        else -> R.string.plan_action_upgrade
+                    }),
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
@@ -399,23 +401,23 @@ private fun InfoSection(modifier: Modifier = Modifier) {
             ) {
                 Icon(Icons.Default.Security, contentDescription = null)
                 Spacer(Modifier.width(12.dp))
-                Text("Secure payment processing", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.upgrade_info_secure), style = MaterialTheme.typography.bodyMedium)
             }
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(Modifier.width(12.dp))
-                Text("Cancel anytime, no questions asked", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.upgrade_info_cancel), style = MaterialTheme.typography.bodyMedium)
             }
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.SupportAgent, contentDescription = null)
                 Spacer(Modifier.width(12.dp))
-                Text("24/7 customer support", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.upgrade_info_support), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -432,18 +434,17 @@ private fun ComingSoonDialog(
             Icon(Icons.Default.Construction, contentDescription = null, modifier = Modifier.size(48.dp))
         },
         title = {
-            Text("Coming Soon!", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.dialog_coming_soon_title), fontWeight = FontWeight.Bold)
         },
         text = {
             Text(
-                "Payment integration for the $planName plan is coming soon! " +
-                "We're working hard to bring you seamless subscription management.",
+                stringResource(R.string.dialog_coming_soon_message, planName),
                 textAlign = TextAlign.Center
             )
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Got it")
+                Text(stringResource(R.string.dialog_action_got_it))
             }
         }
     )

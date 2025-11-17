@@ -713,4 +713,43 @@
     <string name="action_skip">Skip</string>
     <string name="action_review">Review</string>
 
+    <!-- ============================================ -->
+    <!-- UPGRADE SCREEN - SUBSCRIPTION PLANS -->
+    <!-- ============================================ -->
+    <string name="upgrade_title">Choose Your Plan</string>
+    <string name="upgrade_header">Unlock Your Potential</string>
+    <string name="upgrade_subtitle">Choose the perfect plan for your SSB journey</string>
+
+    <!-- Billing Cycles -->
+    <string name="billing_cycle_monthly">Monthly</string>
+    <string name="billing_cycle_quarterly">Quarterly</string>
+    <string name="billing_cycle_annually">Annually</string>
+    <string name="billing_save_quarterly">Save 13%</string>
+    <string name="billing_save_annually">Save 25%</string>
+
+    <!-- Plan Badges -->
+    <string name="plan_badge_popular">POPULAR</string>
+    <string name="plan_badge_current">CURRENT</string>
+
+    <!-- Pricing -->
+    <string name="plan_price_free">Free</string>
+    <string name="plan_period_month">/month</string>
+    <string name="plan_period_quarter">/quarter</string>
+    <string name="plan_period_year">/year</string>
+
+    <!-- Actions -->
+    <string name="plan_action_current">Current Plan</string>
+    <string name="plan_action_downgrade">Downgrade</string>
+    <string name="plan_action_upgrade">Upgrade Now</string>
+
+    <!-- Info Section -->
+    <string name="upgrade_info_secure">Secure payment processing</string>
+    <string name="upgrade_info_cancel">Cancel anytime, no questions asked</string>
+    <string name="upgrade_info_support">24/7 customer support</string>
+
+    <!-- Coming Soon Dialog -->
+    <string name="dialog_coming_soon_title">Coming Soon!</string>
+    <string name="dialog_coming_soon_message">Payment integration for the %s plan is coming soon! We\'re working hard to bring you seamless subscription management.</string>
+    <string name="dialog_action_got_it">Got it</string>
+
 </resources>
