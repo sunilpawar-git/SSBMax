@@ -34,15 +34,13 @@ jobs:
         
       - name: Run unit tests
         run: ./gradlew test --stacktrace --no-daemon
-        continue-on-error: true
-        
+
       - name: Generate coverage report
         run: ./gradlew :app:jacocoTestReport --no-daemon
-        continue-on-error: true
-        
+        continue-on-error: true  # Coverage generation can fail without blocking the build
+
       - name: Run lint checks
         run: ./gradlew lintDebug --no-daemon
-        continue-on-error: true
         
       - name: Upload test reports on failure
         if: failure()
