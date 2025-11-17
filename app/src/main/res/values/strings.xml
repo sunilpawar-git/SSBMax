@@ -860,4 +860,18 @@
     <string name="piq_review_field_pg">Post-Graduation/Professional</string>
     <string name="piq_review_yes">Yes</string>
 
+    <!-- ============================================ -->
+    <!-- GRADING DETAIL SCREEN (INSTRUCTOR) -->
+    <!-- ============================================ -->
+    <string name="grading_detail_title">Grade Submission</string>
+    <string name="grading_detail_action_grade">Grade</string>
+    <string name="grading_dialog_title">Grade Submission</string>
+    <string name="grading_dialog_score_label">Score (0-100)</string>
+    <string name="grading_dialog_feedback_label">Feedback</string>
+    <string name="grading_dialog_action_submit">Submit Grade</string>
+    <string name="grading_form_title">Instructor Grading</string>
+    <string name="grading_form_score_label">Overall Score (0-100)</string>
+    <string name="grading_form_feedback_label">Detailed Feedback</string>
+    <string name="grading_form_action_submit">Submit Grade</string>
+
 </resources>
