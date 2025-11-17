@@ -21,10 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.ui.components.TestContentErrorState
@@ -33,22 +35,26 @@ import com.ssbmax.ui.tests.common.AnswerFeedbackEffect
 
 /**
  * OIR Test Screen - Main test interface
+ *
+ * Updated to follow the standard pattern used by TAT/WAT/SRT:
+ * - Passes submissionId and subscriptionType to navigation callback
+ * - Result screen fetches data from Firestore (no more OIRTestResultHolder)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OIRTestScreen(
-    onTestComplete: (com.ssbmax.core.domain.model.OIRTestResult) -> Unit = { },
+    onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: OIRTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
-    
-    // Handle test completion - Pass result object directly
+
+    // Handle test completion - Pass only submissionId and subscriptionType
     LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.testResult != null) {
-            onTestComplete(uiState.testResult!!)
+        if (uiState.isCompleted && uiState.sessionId != null && uiState.subscriptionType != null) {
+            onTestComplete(uiState.sessionId!!, uiState.subscriptionType!!)
         }
     }
     
@@ -97,7 +103,7 @@ fun OIRTestScreen(
             when {
                 uiState.isLoading -> {
                     TestContentLoadingState(
-                        message = "Loading OIR test questions from cloud...",
+                        message = stringResource(R.string.oir_loading),
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -128,8 +134,8 @@ fun OIRTestScreen(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            title = { Text("Exit Test?") },
-            text = { Text("Are you sure you want to exit? Your progress will be saved and you can resume later.") },
+            title = { Text(stringResource(R.string.oir_exit_title)) },
+            text = { Text(stringResource(R.string.oir_exit_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -137,12 +143,12 @@ fun OIRTestScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Exit")
+                    Text(stringResource(R.string.oir_exit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExitDialog = false }) {
-                    Text("Continue Test")
+                    Text(stringResource(R.string.oir_continue_test))
                 }
             }
         )
@@ -168,7 +174,7 @@ private fun OIRTestTopBar(
                 DifficultyBadge(difficulty = difficulty)
                 
                 Text(
-                    text = "Q $questionNumber/$totalQuestions",
+                    text = stringResource(R.string.oir_question_format, questionNumber, totalQuestions),
                     style = MaterialTheme.typography.titleMedium
                 )
                 
@@ -180,7 +186,7 @@ private fun OIRTestTopBar(
             IconButton(onClick = onExitClick) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Exit Test"
+                    contentDescription = stringResource(R.string.oir_exit_test)
                 )
             }
         },
@@ -415,7 +421,7 @@ private fun FeedbackCard(
                     }
                 )
                 Text(
-                    text = if (isCorrect) "Correct!" else "Incorrect",
+                    text = if (isCorrect) stringResource(R.string.oir_correct) else stringResource(R.string.oir_incorrect),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -459,12 +465,12 @@ private fun OIRTestBottomBar(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Previous")
+                Text(stringResource(R.string.oir_previous))
             }
             
             // Progress Indicator
             Text(
-                text = "${currentIndex + 1}/$totalQuestions",
+                text = stringResource(R.string.oir_progress_format, currentIndex + 1, totalQuestions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -475,7 +481,7 @@ private fun OIRTestBottomBar(
                     onClick = onNext,
                     enabled = isAnswered
                 ) {
-                    Text("Next")
+                    Text(stringResource(R.string.oir_next))
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -496,7 +502,7 @@ private fun OIRTestBottomBar(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Submit Test")
+                    Text(stringResource(R.string.oir_submit_test))
                 }
             }
         }
@@ -522,19 +528,19 @@ private fun ErrorView(
         )
         
         Text(
-            text = "Error Loading Test",
+            text = stringResource(R.string.oir_error_loading),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
-        
+
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Button(onClick = onRetry) {
             Icon(
                 imageVector = Icons.Default.Refresh,
@@ -542,7 +548,7 @@ private fun ErrorView(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Retry")
+            Text(stringResource(R.string.oir_retry))
         }
     }
 }
@@ -556,17 +562,17 @@ private fun DifficultyBadge(difficulty: String) {
         "EASY" -> Triple(
             Color(0xFF4CAF50), // Green
             Icons.Default.Done,
-            "Easy"
+            stringResource(R.string.oir_difficulty_easy)
         )
         "MEDIUM" -> Triple(
             Color(0xFFFFA726), // Orange
             Icons.Default.Star,
-            "Medium"
+            stringResource(R.string.oir_difficulty_medium)
         )
         "HARD" -> Triple(
             Color(0xFFEF5350), // Red
             Icons.Default.Warning,
-            "Hard"
+            stringResource(R.string.oir_difficulty_hard)
         )
         else -> Triple(
             MaterialTheme.colorScheme.secondary,

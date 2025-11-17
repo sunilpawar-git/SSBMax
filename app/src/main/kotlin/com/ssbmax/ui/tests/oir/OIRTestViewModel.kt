@@ -9,6 +9,7 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.validation.OIRQuestionValidator
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -378,11 +379,14 @@ class OIRTestViewModel @Inject constructor(
                     testResult = result
                 )
             } catch (e: Exception) {
-                android.util.Log.e("OIRTestViewModel", "❌ Test submission failed", e)
-                android.util.Log.e("OIRTestViewModel", "   Error type: ${e.javaClass.simpleName}")
-                android.util.Log.e("OIRTestViewModel", "   Error message: ${e.message}")
-                e.printStackTrace()
-                
+                // Use ErrorLogger instead of printStackTrace() for proper error tracking
+                ErrorLogger.logTestError(
+                    throwable = e,
+                    description = "OIR test submission failed",
+                    testType = "OIR",
+                    userId = observeCurrentUser().first()?.id
+                )
+
                 _uiState.value = _uiState.value.copy(
                     error = "Failed to submit: ${e.message}"
                 )
