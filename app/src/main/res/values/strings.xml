@@ -359,6 +359,26 @@
     <string name="analytics_no_data">No analytics data yet</string>
     <string name="analytics_take_tests">Take more tests to see your analytics</string>
 
+    <!-- Analytics Screen -->
+    <string name="analytics_screen_title">Performance Analytics</string>
+    <string name="analytics_error_unknown">Unknown error</string>
+    <string name="analytics_empty_state">No data yet</string>
+    <string name="analytics_empty_description">Complete some tests to see your analytics</string>
+    <string name="analytics_test_performance">Test Performance</string>
+    <string name="analytics_overall_performance">Overall Performance</string>
+    <string name="analytics_stat_tests">Tests</string>
+    <string name="analytics_stat_avg_score">Avg Score</string>
+    <string name="analytics_stat_study_time">Study Time</string>
+    <string name="analytics_stat_attempts">Attempts</string>
+    <string name="analytics_stat_best">Best</string>
+    <string name="analytics_difficulty_breakdown">Difficulty Breakdown</string>
+    <string name="analytics_difficulty_easy">Easy</string>
+    <string name="analytics_difficulty_medium">Medium</string>
+    <string name="analytics_difficulty_hard">Hard</string>
+    <string name="analytics_accuracy_format">%.1f%% accuracy</string>
+    <string name="analytics_progress_to">Progress to %1$s</string>
+    <string name="analytics_progression_needed" formatted="false">Need %1$d more attempts &amp; %.0f%% accuracy</string>
+
     <!-- ============================================ -->
     <!-- HELP & SUPPORT -->
     <!-- ============================================ -->
