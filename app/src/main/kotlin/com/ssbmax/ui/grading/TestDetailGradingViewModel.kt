@@ -8,6 +8,7 @@ import com.ssbmax.core.domain.model.SSBMaxNotification
 import com.ssbmax.core.domain.model.TestSubmission
 import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.repository.TestSubmissionRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,11 +22,13 @@ import javax.inject.Inject
 /**
  * ViewModel for Test Detail Grading Screen (Assessor)
  * Handles grading submission and sending notifications to students
+ * UPDATED: Now loads student name from UserProfileRepository
  */
 @HiltViewModel
 class TestDetailGradingViewModel @Inject constructor(
     private val testSubmissionRepository: TestSubmissionRepository,
     private val notificationRepository: NotificationRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
 
@@ -34,6 +37,7 @@ class TestDetailGradingViewModel @Inject constructor(
 
     /**
      * Load submission details for grading
+     * Also loads student name from UserProfileRepository
      */
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
@@ -41,13 +45,17 @@ class TestDetailGradingViewModel @Inject constructor(
 
             testSubmissionRepository.getSubmissionById(submissionId)
                 .onSuccess { submission ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    submission = submission,
-                    grade = submission.instructorScore ?: submission.aiPreliminaryScore ?: 0f,
-                    remarks = submission.instructorFeedback ?: "",
-                    error = null
-                )
+                    // Load student name from profile
+                    val studentName = loadStudentName(submission.userId)
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        submission = submission,
+                        studentName = studentName,
+                        grade = submission.instructorScore ?: submission.aiPreliminaryScore ?: 0f,
+                        remarks = submission.instructorFeedback ?: "",
+                        error = null
+                    )
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -56,6 +64,17 @@ class TestDetailGradingViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    /**
+     * Load student name from user profile
+     */
+    private suspend fun loadStudentName(userId: String): String {
+        return userProfileRepository.getUserProfile(userId)
+            .first()
+            .getOrNull()
+            ?.fullName
+            ?: "Unknown Student"
     }
 
     /**
@@ -182,6 +201,7 @@ data class GradingUiState(
     val isLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val submission: TestSubmission? = null,
+    val studentName: String = "",
     val grade: Float = 0f,
     val remarks: String = "",
     val gradingSubmitted: Boolean = false,

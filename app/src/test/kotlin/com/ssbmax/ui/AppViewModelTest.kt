@@ -5,7 +5,10 @@ import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.testing.TestDispatcherRule
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -19,7 +22,7 @@ import org.junit.Assert.*
 
 /**
  * Tests for AppViewModel
- * Tests global authentication state management
+ * Tests global authentication state management and sign out
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppViewModelTest {
@@ -29,6 +32,7 @@ class AppViewModelTest {
 
     private lateinit var viewModel: AppViewModel
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>()
+    private val mockSignOutUseCase = mockk<SignOutUseCase>()
     private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
 
     private val mockStudent = SSBMaxUser(
@@ -69,12 +73,15 @@ class AppViewModelTest {
 
         // Mock current user flow
         every { mockObserveCurrentUser() } returns mockCurrentUserFlow
+
+        // Mock sign out use case
+        coEvery { mockSignOutUseCase() } returns Result.success(Unit)
     }
 
     @Test
     fun `initial currentUser is null`() = runTest {
         // When
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         // Then
         viewModel.currentUser.test {
@@ -86,7 +93,7 @@ class AppViewModelTest {
     @Test
     fun `currentUser emits when user signs in`() = runTest {
         // Given
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             // Initial emission
@@ -109,7 +116,7 @@ class AppViewModelTest {
     fun `currentUser emits null when user signs out`() = runTest {
         // Given - user is already signed in
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             // Initial emission with user
@@ -128,7 +135,7 @@ class AppViewModelTest {
     fun `currentUser updates when user changes role`() = runTest {
         // Given - student is signed in
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             // Initial emission
@@ -151,7 +158,7 @@ class AppViewModelTest {
     fun `currentUser updates when user upgrades subscription`() = runTest {
         // Given - user with FREE tier
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             // Initial emission
@@ -172,7 +179,7 @@ class AppViewModelTest {
     @Test
     fun `currentUser switches between different users`() = runTest {
         // Given
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             // Initial emission
@@ -200,7 +207,7 @@ class AppViewModelTest {
     fun `currentUser StateFlow retains last value for new collectors`() = runTest {
         // Given - user already signed in before ViewModel creation
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         // When - new collector subscribes
         viewModel.currentUser.test {
@@ -217,7 +224,7 @@ class AppViewModelTest {
 
         // Given - user signed in before ViewModel creation
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         // When - collect using test collector
         viewModel.currentUser.test {
@@ -251,7 +258,7 @@ class AppViewModelTest {
             lastLoginAt = 9876543210L
         )
         mockCurrentUserFlow.value = completeUser
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         // When/Then
         viewModel.currentUser.test {
@@ -271,7 +278,7 @@ class AppViewModelTest {
     @Test
     fun `viewModel handles rapid user changes`() = runTest {
         // Given
-        viewModel = AppViewModel(mockObserveCurrentUser)
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
 
         viewModel.currentUser.test {
             assertNull("Initial should be null", awaitItem())
@@ -292,5 +299,20 @@ class AppViewModelTest {
             // Then - all transitions should be captured
             expectNoEvents()
         }
+    }
+
+    @Test
+    fun `signOut calls SignOutUseCase`() = runTest {
+        // Given
+        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+
+        // When
+        viewModel.signOut()
+
+        // Wait for async operation
+        kotlinx.coroutines.delay(100)
+
+        // Then
+        coVerify { mockSignOutUseCase() }
     }
 }

@@ -39,6 +39,7 @@ class TestDetailGradingViewModelTest {
     private lateinit var viewModel: TestDetailGradingViewModel
     private val mockTestSubmissionRepository = mockk<TestSubmissionRepository>()
     private val mockNotificationRepository = mockk<NotificationRepository>()
+    private val mockUserProfileRepository = mockk<com.ssbmax.core.domain.repository.UserProfileRepository>()
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>()
     private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
 
@@ -84,9 +85,28 @@ class TestDetailGradingViewModelTest {
         // Mock current user flow
         every { mockObserveCurrentUser() } returns mockCurrentUserFlow
 
+        // Mock user profile repository to return a test user profile
+        every { mockUserProfileRepository.getUserProfile(any()) } returns kotlinx.coroutines.flow.flowOf(
+            Result.success(
+                com.ssbmax.core.domain.model.UserProfile(
+                    userId = "student-456",
+                    fullName = "Test Student",
+                    age = 22,
+                    gender = com.ssbmax.core.domain.model.Gender.MALE,
+                    entryType = com.ssbmax.core.domain.model.EntryType.GRADUATE,
+                    profilePictureUrl = null,
+                    subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.FREE,
+                    currentStreak = 0,
+                    lastLoginDate = null,
+                    longestStreak = 0
+                )
+            )
+        )
+
         viewModel = TestDetailGradingViewModel(
             mockTestSubmissionRepository,
             mockNotificationRepository,
+            mockUserProfileRepository,
             mockObserveCurrentUser
         )
     }

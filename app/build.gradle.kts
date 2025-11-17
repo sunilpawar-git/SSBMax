@@ -67,6 +67,14 @@ android {
     }
     
     lint {
+        // Enforce string resources - fail build on hardcoded text
+        error += "HardcodedText"
+        lintConfig = file("lint.xml")
+
+        // Fail build on any errors (enforce quality)
+        abortOnError = true
+        warningsAsErrors = false // Can enable later for stricter enforcement
+
         disable += setOf(
             "ModifierParameter",
             "ModifierDeclaration",
@@ -90,6 +98,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+
+    // Custom lint rules
+    lintChecks(project(":lint"))
     
     // Core Android
     implementation(libs.androidx.core.ktx)

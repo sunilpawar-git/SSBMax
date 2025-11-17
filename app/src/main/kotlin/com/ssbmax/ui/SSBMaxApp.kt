@@ -47,7 +47,8 @@ fun SSBMaxApp(
     if (needsScaffold) {
         SSBMaxScaffold(
             navController = navController,
-            user = user
+            user = user,
+            onSignOut = viewModel::signOut
         ) { drawerState, onOpenDrawer ->
             SSBMaxNavGraph(
                 navController = navController,
