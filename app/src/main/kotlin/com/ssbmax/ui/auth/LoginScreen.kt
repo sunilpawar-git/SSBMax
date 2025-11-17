@@ -15,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 
 /**
  * Login screen with Google Sign-In authentication
@@ -81,33 +83,33 @@ fun LoginScreen(
             
             // Logo and Title
             Text(
-                text = "SSBMax",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "Your Path to SSB Success",
+                text = stringResource(R.string.app_tagline),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Spacer(modifier = Modifier.height(64.dp))
-            
+
             // Welcome message
             Text(
-                text = "Welcome!",
+                text = stringResource(R.string.login_welcome),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "Sign in to access study materials, practice tests, and track your progress",
+                text = stringResource(R.string.login_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -149,12 +151,12 @@ fun LoginScreen(
                 } else {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Login,
-                        contentDescription = "Login",
+                        contentDescription = stringResource(R.string.cd_login),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Continue with Google",
+                        text = stringResource(R.string.login_continue_google),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -181,10 +183,10 @@ fun LoginScreen(
             }
             
             Spacer(modifier = Modifier.weight(1f))
-            
+
             // Terms and Privacy
             Text(
-                text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+                text = stringResource(R.string.login_terms_privacy),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

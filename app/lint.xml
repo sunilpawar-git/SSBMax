@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Enforce string resources - prevent hardcoded text -->
+    <issue id="HardcodedText" severity="error">
+        <!-- Allow hardcoded text in test files -->
+        <ignore path="**/test/**" />
+        <ignore path="**/androidTest/**" />
+        <!-- Allow in debug/developer screens -->
+        <ignore path="**/components/DeveloperOptionsSection.kt" />
+    </issue>
+</lint>

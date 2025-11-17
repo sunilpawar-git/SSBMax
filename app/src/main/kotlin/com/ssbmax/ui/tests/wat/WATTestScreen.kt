@@ -13,12 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.WATPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -70,7 +72,7 @@ fun WATTestScreen(
     when {
         uiState.isLoading -> {
             TestContentLoadingState(
-                message = uiState.loadingMessage ?: "Loading WAT test words from cloud...",
+                message = uiState.loadingMessage ?: stringResource(R.string.wat_loading),
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -125,10 +127,10 @@ private fun InstructionsView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("WAT Test") },
+                title = { Text(stringResource(R.string.wat_test)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -158,12 +160,12 @@ private fun InstructionsView(
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
-                            "WAT - Word Association Test",
+                            stringResource(R.string.wat_full_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Write the first word that comes to mind",
+                            stringResource(R.string.wat_subtitle),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -177,30 +179,30 @@ private fun InstructionsView(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Instructions",
+                            stringResource(R.string.wat_instructions_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        
+
                         InstructionItem(
                             icon = Icons.Default.Numbers,
-                            text = "60 words will be shown one at a time"
+                            text = stringResource(R.string.wat_instruction_1)
                         )
                         InstructionItem(
                             icon = Icons.Default.Timer,
-                            text = "15 seconds per word"
+                            text = stringResource(R.string.wat_instruction_2)
                         )
                         InstructionItem(
                             icon = Icons.Default.Psychology,
-                            text = "Write the FIRST word/phrase that comes to mind"
+                            text = stringResource(R.string.wat_instruction_3)
                         )
                         InstructionItem(
                             icon = Icons.Default.Speed,
-                            text = "Auto-advances to next word after timeout"
+                            text = stringResource(R.string.wat_instruction_4)
                         )
                         InstructionItem(
                             icon = Icons.Default.Warning,
-                            text = "Don't overthink - be spontaneous!"
+                            text = stringResource(R.string.wat_instruction_5)
                         )
                     }
                 }
@@ -220,12 +222,12 @@ private fun InstructionsView(
                         Icon(Icons.Default.Info, null)
                         Column {
                             Text(
-                                "Important",
+                                stringResource(R.string.wat_important),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "Test cannot be paused once started. Total time: ~15 minutes",
+                                stringResource(R.string.wat_important_message),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -250,15 +252,15 @@ private fun InstructionsView(
                         ) {
                             Icon(Icons.Default.Lightbulb, null)
                             Text(
-                                "Tips for Success",
+                                stringResource(R.string.wat_tips_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Text("• Be honest and spontaneous")
-                        Text("• Positive associations are better")
-                        Text("• Don't repeat same words")
-                        Text("• One word or short phrase only")
+                        Text(stringResource(R.string.wat_tip_1))
+                        Text(stringResource(R.string.wat_tip_2))
+                        Text(stringResource(R.string.wat_tip_3))
+                        Text(stringResource(R.string.wat_tip_4))
                     }
                 }
             }
@@ -270,7 +272,7 @@ private fun InstructionsView(
                 ) {
                     Icon(Icons.Default.PlayArrow, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Start Test")
+                    Text(stringResource(R.string.wat_start_test))
                 }
             }
         }
@@ -319,15 +321,15 @@ private fun TestInProgressView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onShowExitDialog) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Exit")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.wat_exit))
                     }
-                    
+
                     Text(
-                        "$wordNumber / $totalWords",
+                        stringResource(R.string.wat_progress_format, wordNumber, totalWords),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     // Timer
                     Card(
                         colors = CardDefaults.cardColors(
@@ -339,7 +341,7 @@ private fun TestInProgressView(
                         )
                     ) {
                         Text(
-                            "${timeRemaining}s",
+                            stringResource(R.string.wat_timer_format, timeRemaining),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
@@ -380,15 +382,15 @@ private fun TestInProgressView(
                     value = response,
                     onValueChange = onResponseChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Your response...") },
+                    placeholder = { Text(stringResource(R.string.wat_response_placeholder)) },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.titleLarge.copy(
                         textAlign = TextAlign.Center
                     )
                 )
-                
+
                 Spacer(Modifier.height(16.dp))
-                
+
                 // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -398,15 +400,15 @@ private fun TestInProgressView(
                         onClick = onSkip,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Skip")
+                        Text(stringResource(R.string.wat_skip))
                     }
-                    
+
                     Button(
                         onClick = onSubmit,
                         modifier = Modifier.weight(1f),
                         enabled = response.isNotBlank()
                     ) {
-                        Text("Submit")
+                        Text(stringResource(R.string.wat_submit))
                     }
                 }
             }
@@ -417,21 +419,21 @@ private fun TestInProgressView(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = onDismissExitDialog,
-            title = { Text("Exit Test?") },
+            title = { Text(stringResource(R.string.wat_exit_title)) },
             text = {
                 Column {
-                    Text("Test is in progress and cannot be paused.")
-                    Text("All progress will be lost if you exit now.")
+                    Text(stringResource(R.string.wat_exit_message_1))
+                    Text(stringResource(R.string.wat_exit_message_2))
                 }
             },
             confirmButton = {
                 TextButton(onClick = onConfirmExit) {
-                    Text("Exit")
+                    Text(stringResource(R.string.wat_exit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissExitDialog) {
-                    Text("Continue Test")
+                    Text(stringResource(R.string.wat_continue_test))
                 }
             }
         )

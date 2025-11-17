@@ -9,10 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.ui.settings.components.DeveloperOptionsSection
 import com.ssbmax.ui.settings.components.NotificationSettingsSection
 import com.ssbmax.core.domain.usecase.*
@@ -44,10 +46,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -229,41 +231,41 @@ fun SettingsScreen(
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
-                    Text("Content Refreshed!")
+                    Text(stringResource(R.string.cache_content_refreshed))
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "✓ Content has been refreshed from Firestore server!",
+                        text = stringResource(R.string.cache_success_message),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     HorizontalDivider()
-                    
+
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Topics:",
+                            text = stringResource(R.string.cache_topics),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "${result.topicsRefreshed}/9",
+                            text = stringResource(R.string.cache_topics_count, result.topicsRefreshed),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Materials:",
+                            text = stringResource(R.string.cache_materials),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
@@ -272,11 +274,11 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     if (result.errors.isNotEmpty()) {
                         HorizontalDivider()
                         Text(
-                            text = "⚠️ Errors:",
+                            text = stringResource(R.string.cache_errors),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
@@ -290,11 +292,11 @@ fun SettingsScreen(
                             )
                         }
                     }
-                    
+
                     HorizontalDivider()
-                    
+
                     Text(
-                        text = "💡 Navigate to the content you edited - it should show your changes now!",
+                        text = stringResource(R.string.cache_navigate_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
@@ -303,7 +305,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = viewModel::clearCacheResult) {
-                    Text("Got it!")
+                    Text(stringResource(R.string.cache_got_it))
                 }
             }
             )
@@ -324,32 +326,32 @@ private fun AppInfoSection() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "About",
+                text = stringResource(R.string.about_section_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             SettingsInfoItem(
-                title = "Version",
-                value = "1.0.0 Beta",
+                title = stringResource(R.string.about_version),
+                value = stringResource(R.string.about_version_value),
                 icon = Icons.Default.Info
             )
 
             SettingsInfoItem(
-                title = "Support",
-                value = "support@ssbmax.com",
+                title = stringResource(R.string.about_support),
+                value = stringResource(R.string.about_support_email),
                 icon = Icons.Default.Email
             )
 
             SettingsInfoItem(
-                title = "Privacy Policy",
-                value = "View",
+                title = stringResource(R.string.about_privacy_policy),
+                value = stringResource(R.string.about_view),
                 icon = Icons.Default.Shield
             )
 
             SettingsInfoItem(
-                title = "Terms of Service",
-                value = "View",
+                title = stringResource(R.string.about_terms_of_service),
+                value = stringResource(R.string.about_view),
                 icon = Icons.Default.Description
             )
         }

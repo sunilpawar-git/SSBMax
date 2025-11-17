@@ -7,9 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.TATPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -64,10 +66,10 @@ fun TATTestScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("TAT Test")
+                        Text(stringResource(R.string.tat_test))
                         if (uiState.currentQuestion != null) {
                             Text(
-                                "Picture ${uiState.currentQuestionIndex + 1}/12",
+                                stringResource(R.string.tat_picture_number, uiState.currentQuestionIndex + 1),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -75,14 +77,14 @@ fun TATTestScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { showExitDialog = true }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Exit")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     if (uiState.phase != TATPhase.INSTRUCTIONS) {
                         // Progress indicator
                         Text(
-                            "${uiState.completedStories}/12",
+                            stringResource(R.string.tat_completed_stories, uiState.completedStories),
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.padding(end = 16.dp)
                         )
@@ -150,7 +152,7 @@ fun TATTestScreen(
             // Loading overlay
             if (uiState.isLoading) {
                 TestContentLoadingState(
-                    message = "Loading TAT test images from cloud...",
+                    message = stringResource(R.string.tat_loading),
                     modifier = Modifier.fillMaxSize()
                 )
             }

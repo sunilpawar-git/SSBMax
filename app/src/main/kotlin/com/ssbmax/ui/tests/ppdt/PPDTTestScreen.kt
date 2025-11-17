@@ -5,8 +5,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.PPDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -85,7 +87,7 @@ fun PPDTTestScreen(
             when {
                 uiState.isLoading -> {
                     TestContentLoadingState(
-                        message = "Loading PPDT test from cloud...",
+                        message = stringResource(R.string.ppdt_loading),
                         modifier = Modifier.fillMaxSize()
                     )
                 }

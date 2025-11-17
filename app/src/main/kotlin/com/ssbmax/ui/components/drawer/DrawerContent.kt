@@ -12,8 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 /**
  * Main content section of the navigation drawer.
@@ -41,7 +43,7 @@ fun DrawerContent(
         // Home Link - Always brightly colored for easy navigation
         DrawerMenuItem(
             icon = Icons.Default.Home,
-            title = "Home",
+            title = stringResource(R.string.nav_home),
             onClick = onNavigateToHome,
             isSelected = currentRoute.contains("home"),
             isHomeButton = true
@@ -50,22 +52,22 @@ fun DrawerContent(
         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         // SSB Tests Section
-        DrawerSectionHeader("SSB Tests")
+        DrawerSectionHeader(stringResource(R.string.drawer_ssb_tests))
 
         // Phase 1 - Screening Tests
         DrawerExpandableSection(
             icon = Icons.Default.CheckCircle,
-            title = "Phase 1 - Screening Tests (Day 1)",
+            title = stringResource(R.string.drawer_phase1_title),
             expanded = phase1Expanded,
             onToggle = onTogglePhase1
         ) {
             DrawerSubMenuItem(
-                title = "OIR Test",
+                title = stringResource(R.string.drawer_oir_test),
                 icon = "🎯",
                 onClick = { onNavigateToTopic("oir") }
             )
             DrawerSubMenuItem(
-                title = "PPDT",
+                title = stringResource(R.string.drawer_ppdt),
                 icon = "🖼️",
                 onClick = { onNavigateToTopic("ppdt") }
             )
@@ -74,32 +76,32 @@ fun DrawerContent(
         // Phase 2 - Assessments
         DrawerExpandableSection(
             icon = Icons.Default.Psychology,
-            title = "Phase 2 - Assessments (Day 2-5)",
+            title = stringResource(R.string.drawer_phase2_title),
             expanded = phase2Expanded,
             onToggle = onTogglePhase2
         ) {
             DrawerSubMenuItem(
-                title = "Filling PIQ Form",
+                title = stringResource(R.string.drawer_piq_form),
                 icon = "📝",
                 onClick = { onNavigateToTopic("piq_form") }
             )
             DrawerSubMenuItem(
-                title = "Psychology Tests",
+                title = stringResource(R.string.drawer_psychology_tests),
                 icon = "🧪",
                 onClick = { onNavigateToTopic("psychology") }
             )
             DrawerSubMenuItem(
-                title = "GTO Tests",
+                title = stringResource(R.string.drawer_gto_tests),
                 icon = "👥",
                 onClick = { onNavigateToTopic("gto") }
             )
             DrawerSubMenuItem(
-                title = "Interview",
+                title = stringResource(R.string.drawer_interview),
                 icon = "🎤",
                 onClick = { onNavigateToTopic("interview") }
             )
             DrawerSubMenuItem(
-                title = "Conference",
+                title = stringResource(R.string.drawer_conference),
                 icon = "🤝",
                 onClick = { onNavigateToTopic("conference") }
             )
@@ -108,49 +110,49 @@ fun DrawerContent(
         // Medicals
         DrawerMenuItem(
             icon = Icons.Default.MedicalServices,
-            title = "Medicals",
+            title = stringResource(R.string.drawer_medicals),
             onClick = { onNavigateToTopic("medicals") }
         )
 
         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Quick Access Section
-        DrawerSectionHeader("Quick Access")
+        DrawerSectionHeader(stringResource(R.string.drawer_quick_access))
 
         DrawerMenuItem(
             icon = Icons.Default.Info,
-            title = "Overview of SSB",
+            title = stringResource(R.string.drawer_ssb_overview),
             onClick = onNavigateToSSBOverview
         )
 
         DrawerMenuItem(
             icon = Icons.Default.Group,
-            title = "My Batches",
+            title = stringResource(R.string.drawer_my_batches),
             onClick = onNavigateToMyBatches
         )
 
         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Account Section
-        DrawerSectionHeader("Account")
+        DrawerSectionHeader(stringResource(R.string.drawer_account))
 
         DrawerMenuItem(
             icon = Icons.Default.Settings,
-            title = "Settings",
+            title = stringResource(R.string.drawer_settings),
             onClick = onNavigateToSettings,
             isSelected = currentRoute.contains("settings")
         )
 
         DrawerMenuItem(
             icon = Icons.Default.Logout,
-            title = "Sign Out",
+            title = stringResource(R.string.drawer_sign_out),
             onClick = onSignOut
         )
 
         // Version Footer
         Spacer(modifier = Modifier.weight(1f))
         Text(
-            text = "Version 1.0.0",
+            text = stringResource(R.string.version_footer),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             modifier = Modifier
@@ -258,13 +260,18 @@ private fun DrawerExpandableSection(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f)
                 )
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Icon(
                     imageVector = if (expanded) {
                         Icons.Default.ExpandLess
                     } else {
                         Icons.Default.ExpandMore
                     },
-                    contentDescription = if (expanded) "Collapse" else "Expand"
+                    contentDescription = if (expanded) {
+                        context.getString(R.string.cd_collapse)
+                    } else {
+                        context.getString(R.string.cd_expand)
+                    }
                 )
             }
         }

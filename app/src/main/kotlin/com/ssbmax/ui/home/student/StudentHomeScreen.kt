@@ -20,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
@@ -54,13 +56,13 @@ fun StudentHomeScreen(
                 title = {
                     Column {
                         Text(
-                            "Welcome, ${uiState.userName} 🎖️",
+                            stringResource(R.string.home_welcome, uiState.userName),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Your SSB journey starts here",
+                            stringResource(R.string.home_journey_starts),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -68,7 +70,7 @@ fun StudentHomeScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onOpenDrawer) {
-                        Icon(Icons.Default.Menu, "Menu")
+                        Icon(Icons.Default.Menu, stringResource(R.string.cd_menu))
                     }
                 },
                 actions = {
@@ -78,7 +80,7 @@ fun StudentHomeScreen(
                                 Text("${uiState.notificationCount}")
                             }
                         }
-                        Icon(Icons.Default.Notifications, "Notifications")
+                        Icon(Icons.Default.Notifications, stringResource(R.string.cd_notifications))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -101,20 +103,20 @@ fun StudentHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatsCard(
-                        title = "Study Streak",
+                        title = stringResource(R.string.stats_study_streak),
                         value = "${uiState.currentStreak}",
-                        subtitle = "days",
+                        subtitle = stringResource(R.string.stats_days),
                         icon = Icons.Default.LocalFireDepartment,
                         gradient = Brush.linearGradient(
                             colors = listOf(Color(0xFFFF6B6B), Color(0xFFFF8E53))
                         ),
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     StatsCard(
-                        title = "Tests Done",
+                        title = stringResource(R.string.stats_tests_done),
                         value = "${uiState.testsCompleted}",
-                        subtitle = "tests",
+                        subtitle = stringResource(R.string.stats_tests),
                         icon = Icons.Default.CheckCircle,
                         gradient = Brush.linearGradient(
                             colors = listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
@@ -133,7 +135,7 @@ fun StudentHomeScreen(
             item {
                 SectionHeader(
                     icon = "📊",
-                    title = "Your Progress",
+                    title = stringResource(R.string.section_your_progress),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -160,26 +162,26 @@ fun StudentHomeScreen(
             item {
                 SectionHeader(
                     icon = "⚡",
-                    title = "Quick Actions",
+                    title = stringResource(R.string.section_quick_actions),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-            
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickActionCard(
-                        title = "Self Preparation",
+                        title = stringResource(R.string.action_self_preparation),
                         icon = Icons.AutoMirrored.Filled.MenuBook,
                         color = Color(0xFF7B1FA2),
                         onClick = onOpenDrawer,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     QuickActionCard(
-                        title = "Join Batch",
+                        title = stringResource(R.string.action_join_batch),
                         icon = Icons.Default.GroupAdd,
                         color = Color(0xFF1976D2),
                         onClick = onNavigateToMarketplace,
@@ -187,22 +189,22 @@ fun StudentHomeScreen(
                     )
                 }
             }
-            
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickActionCard(
-                        title = "View Analytics",
+                        title = stringResource(R.string.action_view_analytics),
                         icon = Icons.Default.Analytics,
                         color = Color(0xFF00897B),
                         onClick = onNavigateToAnalytics,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     QuickActionCard(
-                        title = "Study Materials",
+                        title = stringResource(R.string.action_study_materials),
                         icon = Icons.Default.Book,
                         color = Color(0xFFD84315),
                         onClick = onNavigateToStudy,
