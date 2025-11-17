@@ -766,4 +766,47 @@
     <string name="faq_empty_no_results">No results found for \"%s\"</string>
     <string name="faq_empty_suggestion">Try a different search term or browse categories</string>
 
+    <!-- ============================================ -->
+    <!-- SDT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="sdt_test">SDT Test</string>
+    <string name="sdt_full_title">SDT - Self Description Test</string>
+    <string name="sdt_loading">Loading SDT questions...</string>
+
+    <!-- Instructions -->
+    <string name="sdt_instructions_title">Instructions</string>
+    <string name="sdt_instruction_1">You will be presented with 4 questions</string>
+    <string name="sdt_instruction_2">Describe how others perceive you and how you see yourself</string>
+    <string name="sdt_instruction_3">Total time: 15 minutes for all questions</string>
+    <string name="sdt_instruction_4">Maximum 1000 words per question</string>
+    <string name="sdt_instruction_5">You can skip and return to questions during the test</string>
+    <string name="sdt_instruction_6">Be honest and specific in your responses</string>
+    <string name="sdt_start_test">Start Test</string>
+
+    <!-- In Progress -->
+    <string name="sdt_question_header">Question %1$d/%2$d</string>
+    <string name="sdt_answer_label">Your Answer</string>
+    <string name="sdt_word_count">%1$d / %2$d words</string>
+    <string name="sdt_action_skip">Skip</string>
+    <string name="sdt_action_next">Next</string>
+    <string name="sdt_action_review">Review</string>
+
+    <!-- Exit Dialog -->
+    <string name="sdt_exit_title">Exit Test?</string>
+    <string name="sdt_exit_message">Your progress will be lost. Are you sure you want to exit?</string>
+    <string name="sdt_action_exit">Exit</string>
+
+    <!-- Review Screen -->
+    <string name="sdt_review_title">Review Your Answers</string>
+    <string name="sdt_review_question_number">Question %d</string>
+    <string name="sdt_review_word_count">%d words</string>
+    <string name="sdt_review_skipped">(Skipped)</string>
+    <string name="sdt_action_submit_test">Submit Test</string>
+
+    <!-- Submit Dialog -->
+    <string name="sdt_submit_title">Submit Test?</string>
+    <string name="sdt_submit_message">You have answered %1$d/%2$d questions.</string>
+    <string name="sdt_submit_warning">Some questions are skipped.</string>
+    <string name="sdt_action_submit">Submit</string>
+
 </resources>
