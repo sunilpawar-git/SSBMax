@@ -1,0 +1,435 @@
+package com.ssbmax.testing
+
+import org.junit.Test
+import org.junit.Assert.fail
+import java.io.File
+
+/**
+ * Architecture Tests for SSBMax
+ *
+ * These tests validate architectural patterns across the entire codebase:
+ * 1. No singleton objects with mutable state
+ * 2. All test screens follow ID-based navigation pattern
+ * 3. All result screens have dedicated ViewModels
+ * 4. No *Holder pattern files (anti-pattern)
+ *
+ * These tests run on every build to prevent architectural regressions.
+ */
+class ArchitectureTest {
+
+    companion object {
+        // Root directory of the project
+        private val PROJECT_ROOT = File(System.getProperty("user.dir"))
+
+        // Directories to scan
+        private val APP_SRC = File(PROJECT_ROOT, "app/src/main/kotlin")
+        private val CORE_SRC = File(PROJECT_ROOT, "core")
+    }
+
+    @Test
+    fun `no singleton objects with mutable state in codebase`() {
+        val violations = mutableListOf<String>()
+
+        // Scan all Kotlin files
+        scanKotlinFiles(APP_SRC) { file, content ->
+            // Skip test files
+            if (file.path.contains("/test/")) return@scanKotlinFiles
+
+            // Look for object declarations
+            if (content.contains("object ")) {
+                val lines = content.lines()
+                var inObject = false
+                var objectName = ""
+                var braceDepth = 0
+
+                for ((index, line) in lines.withIndex()) {
+                    // Detect object declaration
+                    if (line.trim().startsWith("object ") && !line.contains("companion")) {
+                        inObject = true
+                        objectName = line.substringAfter("object ").substringBefore(":").substringBefore("{").trim()
+                        braceDepth = 0
+                    }
+
+                    if (inObject) {
+                        // Track brace depth
+                        braceDepth += line.count { it == '{' }
+                        braceDepth -= line.count { it == '}' }
+
+                        // Check for mutable state (var, mutableStateOf, Mutable collections)
+                        val trimmed = line.trim()
+                        if ((trimmed.startsWith("var ") || trimmed.startsWith("private var ")) &&
+                            !isAllowedMutablePattern(line)
+                        ) {
+                            violations.add(
+                                "${file.relativePath()}: Singleton object `$objectName` has mutable state at line ${index + 1}\n" +
+                                        "  Line: ${line.trim()}\n" +
+                                        "  Use ViewModel or Repository instead."
+                            )
+                        }
+
+                        // End of object
+                        if (braceDepth == 0 && line.contains("}")) {
+                            inObject = false
+                        }
+                    }
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} singleton(s) with mutable state:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nSingletons should not contain mutable state. Use ViewModel or Repository pattern instead."
+            )
+        }
+    }
+
+    @Test
+    fun `all test screens follow ID-based navigation pattern`() {
+        val violations = mutableListOf<String>()
+
+        val testScreenFiles = findFiles(APP_SRC, "*TestScreen.kt")
+
+        for (file in testScreenFiles) {
+            val content = file.readText()
+
+            // Skip if not a Composable screen
+            if (!content.contains("@Composable")) continue
+
+            // Look for navigation callbacks
+            val callbackPattern = Regex("""onTestComplete\s*:\s*\(([^)]+)\)\s*->\s*Unit""")
+            val matches = callbackPattern.findAll(content)
+
+            for (match in matches) {
+                val params = match.groupValues[1]
+
+                // Check if passing complex objects instead of IDs
+                if (!isIDBasedNavigation(params)) {
+                    violations.add(
+                        "${file.relativePath()}: Test screen uses complex object navigation\n" +
+                                "  Found: onTestComplete: ($params) -> Unit\n" +
+                                "  Expected: onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit"
+                    )
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} test screen(s) not following ID-based navigation:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nAll test screens should pass IDs, not complex objects. " +
+                        "Result screens should fetch data using ViewModel + Repository."
+            )
+        }
+    }
+
+    @Test
+    fun `all result screens have dedicated ViewModels`() {
+        val violations = mutableListOf<String>()
+
+        val resultScreenFiles = findFiles(APP_SRC, "*ResultScreen.kt")
+
+        for (file in resultScreenFiles) {
+            val content = file.readText()
+
+            // Skip if not a Composable screen
+            if (!content.contains("@Composable")) continue
+
+            // Check if it uses a ViewModel
+            val hasViewModel = content.contains("hiltViewModel()") ||
+                    content.contains("viewModel:") ||
+                    content.contains("ViewModel =")
+
+            if (!hasViewModel) {
+                violations.add(
+                    "${file.relativePath()}: Result screen doesn't use ViewModel\n" +
+                            "  All result screens should fetch data via ViewModel, not receive it as parameters."
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} result screen(s) without ViewModels:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nResult screens should use dedicated ViewModels to fetch data from repositories."
+            )
+        }
+    }
+
+    @Test
+    fun `no Holder pattern files exist in codebase`() {
+        val holderFiles = mutableListOf<File>()
+
+        scanKotlinFiles(APP_SRC) { file, content ->
+            // Check filename
+            if (file.name.contains("Holder.kt") && !file.name.contains("Placeholder")) {
+                // Check if it's actually a holder pattern (object with mutable state)
+                if (content.contains("object ") && content.contains("var ")) {
+                    holderFiles.add(file)
+                }
+            }
+        }
+
+        if (holderFiles.isNotEmpty()) {
+            fail(
+                "Found ${holderFiles.size} *Holder anti-pattern file(s):\n\n" +
+                        holderFiles.joinToString("\n") { it.relativePath() } +
+                        "\n\nThe *Holder pattern (singleton state holders) is an anti-pattern. " +
+                        "Use ViewModel or Repository instead."
+            )
+        }
+    }
+
+    @Test
+    fun `all ViewModels extend androidx lifecycle ViewModel`() {
+        val violations = mutableListOf<String>()
+
+        val viewModelFiles = findFiles(APP_SRC, "*ViewModel.kt")
+
+        for (file in viewModelFiles) {
+            // Skip test files
+            if (file.path.contains("/test/")) continue
+
+            val content = file.readText()
+
+            // Check if it extends ViewModel
+            val extendsViewModel = content.contains(": ViewModel()") ||
+                    content.contains(": ViewModel {")
+
+            if (!extendsViewModel && !content.contains("interface ")) {
+                violations.add(
+                    "${file.relativePath()}: ViewModel class doesn't extend androidx.lifecycle.ViewModel"
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} ViewModel(s) not extending androidx.lifecycle.ViewModel:\n\n" +
+                        violations.joinToString("\n\n")
+            )
+        }
+    }
+
+    @Test
+    fun `all test result screens follow consistent naming`() {
+        val violations = mutableListOf<String>()
+
+        val resultScreenFiles = findFiles(APP_SRC, "*Result*Screen.kt")
+
+        for (file in resultScreenFiles) {
+            val fileName = file.nameWithoutExtension
+
+            // Expected pattern: *SubmissionResultScreen or *TestResultScreen
+            val followsPattern = fileName.endsWith("SubmissionResultScreen") ||
+                    fileName.endsWith("TestResultScreen")
+
+            if (!followsPattern) {
+                violations.add(
+                    "${file.relativePath()}: Non-standard result screen naming\n" +
+                            "  Expected: *SubmissionResultScreen or *TestResultScreen\n" +
+                            "  Found: $fileName"
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} result screen(s) with non-standard naming:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nUse consistent naming: *SubmissionResultScreen or *TestResultScreen"
+            )
+        }
+    }
+
+    @Test
+    fun `all use cases must be in domain layer not UI layer`() {
+        val violations = mutableListOf<String>()
+
+        // Scan app/src for any *UseCase.kt files (they should all be in core/domain)
+        scanKotlinFiles(APP_SRC) { file, content ->
+            // Skip test files
+            if (file.path.contains("/test/")) return@scanKotlinFiles
+
+            // Check if filename ends with UseCase.kt
+            if (file.name.endsWith("UseCase.kt")) {
+                violations.add(
+                    "${file.relativePath()}: Use case found in UI layer\n" +
+                            "  Use cases must be in: core/domain/src/main/kotlin/com/ssbmax/core/domain/usecase/\n" +
+                            "  Current location violates clean architecture principles."
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} use case(s) in wrong layer:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nAll use cases must be in the domain layer (core/domain module), " +
+                        "not in the UI layer (app module)."
+            )
+        }
+    }
+
+    @Test
+    fun `domain layer must not depend on UI layer`() {
+        val violations = mutableListOf<String>()
+
+        val coreDomainSrc = File(CORE_SRC, "domain/src/main/kotlin")
+
+        if (!coreDomainSrc.exists()) return
+
+        scanKotlinFiles(coreDomainSrc) { file, content ->
+            // Skip test files
+            if (file.path.contains("/test/")) return@scanKotlinFiles
+
+            // Check for UI layer imports
+            val uiImportPattern = Regex("""import\s+com\.ssbmax\.ui\.""")
+            val matches = uiImportPattern.findAll(content)
+
+            for (match in matches) {
+                val line = content.lines().find { it.contains(match.value) }
+                violations.add(
+                    "${file.relativePath()}: Domain layer imports UI layer\n" +
+                            "  Line: ${line?.trim()}\n" +
+                            "  Domain layer must not depend on UI layer (clean architecture violation)."
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} domain layer file(s) depending on UI layer:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nDomain layer must be independent of UI layer. " +
+                        "Use repository interfaces in domain layer, implement them in data/app layers."
+            )
+        }
+    }
+
+    @Test
+    fun `UI layer must not import Firebase classes directly`() {
+        val violations = mutableListOf<String>()
+
+        scanKotlinFiles(APP_SRC) { file, content ->
+            // Only check UI layer
+            if (!file.path.contains("/com/ssbmax/ui/")) return@scanKotlinFiles
+            if (file.path.contains("/test/")) return@scanKotlinFiles
+
+            // Check for Firebase imports
+            val firebaseImportPattern = Regex("""import\s+com\.google\.firebase\.""")
+            val matches = firebaseImportPattern.findAll(content)
+
+            for (match in matches) {
+                val line = content.lines().find { it.contains(match.value) }
+                val importPath = line?.substringAfter("import ")?.trim() ?: ""
+
+                val suggestion = when {
+                    importPath.contains("firebase.auth") ->
+                        "Use ObserveCurrentUserUseCase or AuthRepository instead"
+                    importPath.contains("firebase.firestore") ->
+                        "Create a repository in core/data and inject it"
+                    importPath.contains("firebase.storage") ->
+                        "Create a storage repository in core/data"
+                    else ->
+                        "Use domain layer abstractions (repositories, use cases)"
+                }
+
+                violations.add(
+                    "${file.relativePath()}: UI layer imports Firebase\n" +
+                            "  Line: ${line?.trim()}\n" +
+                            "  Solution: $suggestion"
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} UI layer file(s) importing Firebase:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nUI layer must not depend on Firebase. Use domain abstractions:\n" +
+                        "- For auth: ObserveCurrentUserUseCase, AuthRepository\n" +
+                        "- For data: Create repository in core/data module\n\n" +
+                        "This ensures Clean Architecture, testability, and flexibility."
+            )
+        }
+    }
+
+    // ==================== Helper Methods ====================
+
+    /**
+     * Scan all Kotlin files in a directory recursively
+     */
+    private fun scanKotlinFiles(dir: File, action: (File, String) -> Unit) {
+        if (!dir.exists()) return
+
+        dir.walkTopDown().forEach { file ->
+            if (file.isFile && file.extension == "kt") {
+                val content = file.readText()
+                action(file, content)
+            }
+        }
+    }
+
+    /**
+     * Find files matching a pattern
+     */
+    private fun findFiles(dir: File, pattern: String): List<File> {
+        if (!dir.exists()) return emptyList()
+
+        val regex = pattern.replace("*", ".*").toRegex()
+        return dir.walkTopDown()
+            .filter { it.isFile && it.name.matches(regex) }
+            .toList()
+    }
+
+    /**
+     * Check if navigation params are ID-based (simple types)
+     */
+    private fun isIDBasedNavigation(params: String): Boolean {
+        val cleanParams = params.trim()
+
+        // Empty or Unit is OK
+        if (cleanParams.isEmpty() || cleanParams == "Unit") return true
+
+        // Check each parameter
+        val paramList = cleanParams.split(",")
+        for (param in paramList) {
+            val type = param.substringAfter(":").trim()
+
+            // Simple types are OK
+            val simpleTypes = setOf("String", "Int", "Long", "Boolean", "SubscriptionType", "TestType")
+            if (simpleTypes.any { type.contains(it) }) continue
+
+            // Complex type found
+            return false
+        }
+
+        return true
+    }
+
+    /**
+     * Check if mutable pattern is allowed (e.g., WeakReference, ConcurrentHashMap)
+     */
+    private fun isAllowedMutablePattern(line: String): Boolean {
+        val allowedPatterns = setOf(
+            "WeakReference",
+            "ConcurrentHashMap",
+            "AtomicReference",
+            "AtomicInteger",
+            "AtomicBoolean"
+        )
+
+        return allowedPatterns.any { line.contains(it) }
+    }
+
+    /**
+     * Get relative path from project root
+     */
+    private fun File.relativePath(): String {
+        return this.relativeTo(PROJECT_ROOT).path
+    }
+}

@@ -8,8 +8,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,49 +29,51 @@ import javax.inject.Inject
 
 @HiltViewModel
 class OIRDebugViewModel @Inject constructor(
-    private val firebaseAuth: FirebaseAuth,
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val testContentRepository: TestContentRepository
 ) : ViewModel() {
-    
+
     private val _debugInfo = MutableStateFlow<DebugInfo>(DebugInfo())
     val debugInfo: StateFlow<DebugInfo> = _debugInfo.asStateFlow()
-    
+
     init {
         loadDebugInfo()
     }
-    
+
     fun loadDebugInfo() {
         viewModelScope.launch {
             try {
-                val user = firebaseAuth.currentUser
-                val cacheStatus = testContentRepository.getOIRCacheStatus()
-                
-                _debugInfo.value = DebugInfo(
-                    isAuthenticated = user != null,
-                    userId = user?.uid ?: "Not logged in",
-                    userEmail = user?.email ?: "N/A",
-                    cachedQuestions = cacheStatus.cachedQuestions,
-                    batchesDownloaded = cacheStatus.batchesDownloaded,
-                    verbalCount = cacheStatus.verbalCount,
-                    nonVerbalCount = cacheStatus.nonVerbalCount,
-                    numericalCount = cacheStatus.numericalCount,
-                    spatialCount = cacheStatus.spatialCount,
-                    lastSyncTime = cacheStatus.lastSyncTime,
-                    error = null
-                )
-                
-                // Try to get questions
-                val result = testContentRepository.getOIRTestQuestions(50)
-                if (result.isFailure) {
-                    _debugInfo.value = _debugInfo.value.copy(
-                        error = result.exceptionOrNull()?.message ?: "Unknown error"
+                // Collect current user state
+                observeCurrentUser().collect { user ->
+                    val cacheStatus = testContentRepository.getOIRCacheStatus()
+
+                    _debugInfo.value = DebugInfo(
+                        isAuthenticated = user != null,
+                        userId = user?.id ?: "Not logged in",
+                        userEmail = user?.email ?: "N/A",
+                        cachedQuestions = cacheStatus.cachedQuestions,
+                        batchesDownloaded = cacheStatus.batchesDownloaded,
+                        verbalCount = cacheStatus.verbalCount,
+                        nonVerbalCount = cacheStatus.nonVerbalCount,
+                        numericalCount = cacheStatus.numericalCount,
+                        spatialCount = cacheStatus.spatialCount,
+                        lastSyncTime = cacheStatus.lastSyncTime,
+                        error = null
                     )
-                } else {
-                    val questions = result.getOrNull() ?: emptyList()
-                    _debugInfo.value = _debugInfo.value.copy(
-                        questionsRetrieved = questions.size,
-                        usingMockData = questions.any { it.id.contains("mock") }
-                    )
+
+                    // Try to get questions
+                    val result = testContentRepository.getOIRTestQuestions(50)
+                    if (result.isFailure) {
+                        _debugInfo.value = _debugInfo.value.copy(
+                            error = result.exceptionOrNull()?.message ?: "Unknown error"
+                        )
+                    } else {
+                        val questions = result.getOrNull() ?: emptyList()
+                        _debugInfo.value = _debugInfo.value.copy(
+                            questionsRetrieved = questions.size,
+                            usingMockData = questions.any { it.id.contains("mock") }
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _debugInfo.value = _debugInfo.value.copy(
