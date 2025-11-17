@@ -13,12 +13,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.NotificationPreferences
-import com.ssbmax.ui.settings.SettingsViewModel
 
 @Composable
 fun NotificationSettingsSection(
     preferences: NotificationPreferences?,
-    viewModel: SettingsViewModel,
+    onTogglePushNotifications: (Boolean) -> Unit,
+    onToggleGradingComplete: (Boolean) -> Unit,
+    onToggleFeedbackAvailable: (Boolean) -> Unit,
+    onToggleBatchInvitation: (Boolean) -> Unit,
+    onToggleGeneralAnnouncement: (Boolean) -> Unit,
+    onToggleStudyReminders: (Boolean) -> Unit,
+    onToggleTestReminders: (Boolean) -> Unit,
+    onToggleMarketplaceUpdates: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -51,7 +57,7 @@ fun NotificationSettingsSection(
                 description = stringResource(R.string.notification_push_description),
                 icon = Icons.Default.Notifications,
                 checked = preferences?.enablePushNotifications ?: true,
-                onCheckedChange = { viewModel.togglePushNotifications(it) }
+                onCheckedChange = onTogglePushNotifications
             )
 
             if (preferences?.enablePushNotifications == true) {
@@ -61,7 +67,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_grading_complete_description),
                     icon = Icons.Default.CheckCircle,
                     checked = preferences.enableGradingNotifications,
-                    onCheckedChange = { viewModel.toggleGradingComplete(it) }
+                    onCheckedChange = onToggleGradingComplete
                 )
 
                 SettingsSwitchItem(
@@ -69,7 +75,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_feedback_description),
                     icon = Icons.Default.Comment,
                     checked = preferences.enableFeedbackNotifications,
-                    onCheckedChange = { viewModel.toggleFeedbackAvailable(it) }
+                    onCheckedChange = onToggleFeedbackAvailable
                 )
 
                 SettingsSwitchItem(
@@ -77,7 +83,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_batch_invitations_description),
                     icon = Icons.Default.Group,
                     checked = preferences.enableBatchInvitations,
-                    onCheckedChange = { viewModel.toggleBatchInvitation(it) }
+                    onCheckedChange = onToggleBatchInvitation
                 )
 
                 SettingsSwitchItem(
@@ -85,7 +91,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_announcements_description),
                     icon = Icons.Default.Campaign,
                     checked = preferences.enableGeneralAnnouncements,
-                    onCheckedChange = { viewModel.toggleGeneralAnnouncement(it) }
+                    onCheckedChange = onToggleGeneralAnnouncement
                 )
 
                 SettingsSwitchItem(
@@ -93,7 +99,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_study_reminders_description),
                     icon = Icons.Default.School,
                     checked = preferences.enableStudyReminders,
-                    onCheckedChange = { viewModel.toggleStudyReminders(it) }
+                    onCheckedChange = onToggleStudyReminders
                 )
 
                 SettingsSwitchItem(
@@ -101,7 +107,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_test_reminders_description),
                     icon = Icons.Default.Quiz,
                     checked = preferences.enableTestReminders,
-                    onCheckedChange = { viewModel.toggleTestReminders(it) }
+                    onCheckedChange = onToggleTestReminders
                 )
 
                 SettingsSwitchItem(
@@ -109,7 +115,7 @@ fun NotificationSettingsSection(
                     description = stringResource(R.string.notification_marketplace_updates_description),
                     icon = Icons.Default.ShoppingBag,
                     checked = preferences.enableMarketplaceUpdates,
-                    onCheckedChange = { viewModel.toggleMarketplaceUpdates(it) }
+                    onCheckedChange = onToggleMarketplaceUpdates
                 )
             }
         }

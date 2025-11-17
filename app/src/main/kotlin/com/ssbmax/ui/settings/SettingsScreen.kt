@@ -94,7 +94,14 @@ fun SettingsScreen(
                 item {
                     NotificationSettingsSection(
                         preferences = uiState.notificationPreferences,
-                        viewModel = viewModel
+                        onTogglePushNotifications = viewModel::togglePushNotifications,
+                        onToggleGradingComplete = viewModel::toggleGradingComplete,
+                        onToggleFeedbackAvailable = viewModel::toggleFeedbackAvailable,
+                        onToggleBatchInvitation = viewModel::toggleBatchInvitation,
+                        onToggleGeneralAnnouncement = viewModel::toggleGeneralAnnouncement,
+                        onToggleStudyReminders = viewModel::toggleStudyReminders,
+                        onToggleTestReminders = viewModel::toggleTestReminders,
+                        onToggleMarketplaceUpdates = viewModel::toggleMarketplaceUpdates
                     )
                 }
 
