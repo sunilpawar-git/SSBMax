@@ -930,4 +930,73 @@
     <string name="marketplace_institutes_found">%1$d institutes found</string>
     <string name="marketplace_success_rate">%1$d%% Success Rate</string>
 
+    <!-- ============================================ -->
+    <!-- NOTIFICATION SETTINGS SECTION -->
+    <!-- ============================================ -->
+    <string name="notification_settings_title">Notifications</string>
+    <string name="notification_settings_description">Manage your notification preferences</string>
+    <string name="notification_push_title">Push Notifications</string>
+    <string name="notification_push_description">Enable or disable all push notifications</string>
+    <string name="notification_grading_complete_title">Grading Complete</string>
+    <string name="notification_grading_complete_description">When your test is graded</string>
+    <string name="notification_feedback_title">Feedback Available</string>
+    <string name="notification_feedback_description">When new feedback is added</string>
+    <string name="notification_batch_invitations_title">Batch Invitations</string>
+    <string name="notification_batch_invitations_description">When you\'re invited to a batch</string>
+    <string name="notification_announcements_title">Announcements</string>
+    <string name="notification_announcements_description">General updates from SSBMax</string>
+    <string name="notification_study_reminders_title">Study Reminders</string>
+    <string name="notification_study_reminders_description">Daily study reminders</string>
+    <string name="notification_test_reminders_title">Test Reminders</string>
+    <string name="notification_test_reminders_description">Reminders to complete tests</string>
+    <string name="notification_marketplace_updates_title">Marketplace Updates</string>
+    <string name="notification_marketplace_updates_description">New classes and assessors</string>
+
+    <!-- ============================================ -->
+    <!-- THEME SECTION -->
+    <!-- ============================================ -->
+    <string name="theme_section_title">Appearance</string>
+    <string name="theme_section_description">Choose your preferred theme</string>
+    <string name="theme_light_description">Light theme</string>
+    <string name="theme_dark_description">Dark theme</string>
+    <string name="theme_system_description">Follow system setting</string>
+
+    <!-- ============================================ -->
+    <!-- SUBSCRIPTION SECTION -->
+    <!-- ============================================ -->
+    <string name="subscription_billing_title">Subscription &amp; Billing</string>
+    <string name="subscription_current_plan_label">Current Plan</string>
+
+    <!-- ============================================ -->
+    <!-- HELP SECTION -->
+    <!-- ============================================ -->
+    <string name="help_section_title">Help &amp; Support</string>
+    <string name="help_faq_title">Frequently Asked Questions</string>
+    <string name="help_contact_support_title">Contact Support</string>
+    <string name="help_contact_support_email">support@ssbmax.com</string>
+
+    <!-- ============================================ -->
+    <!-- DEVELOPER OPTIONS SECTION -->
+    <!-- ============================================ -->
+    <string name="dev_section_description">Testing and debugging tools</string>
+    <string name="dev_health_check_running">Checking...</string>
+    <string name="dev_migrate_running">Migrating...</string>
+    <string name="dev_clear_cache_running">Clearing...</string>
+    <string name="dev_health_check_description">Tests connectivity to Firestore and Cloud Storage</string>
+    <string name="dev_migrate_oir_description">Uploads OIR topic + 7 study materials to Firestore</string>
+    <string name="dev_migrate_ppdt_description">Uploads PPDT topic + 6 study materials to Firestore</string>
+    <string name="dev_migrate_psychology_description">Uploads Psychology topic + 8 study materials to Firestore</string>
+    <string name="dev_migrate_piq_description">Uploads PIQ Form topic + 3 study materials to Firestore</string>
+    <string name="dev_migrate_gto_description">Uploads GTO topic + 7 study materials to Firestore</string>
+    <string name="dev_migrate_interview_description">Uploads Interview topic + 7 study materials to Firestore</string>
+    <string name="dev_migrate_ssb_overview_description">Uploads SSB Overview topic + 4 study materials to Firestore</string>
+    <string name="dev_migrate_medicals_description">Uploads Medicals topic + 5 study materials to Firestore</string>
+    <string name="dev_migrate_conference_description">Uploads Conference topic + 4 study materials to Firestore (FINAL TOPIC - 100%%!)</string>
+    <string name="dev_clear_cache_warning">⚠️ Clears cached Firestore data. Next load fetches fresh content from server. Use after editing content in Firebase Console.</string>
+    <string name="dev_cloud_content_title">Cloud Content Configuration</string>
+    <string name="dev_enable_cloud_content">Enable Cloud Content</string>
+    <string name="dev_enable_oir_firestore">Enable OIR from Firestore</string>
+    <string name="dev_oir_cloud_enabled">✓ OIR will load from Firestore\n⚠ Restart app to apply changes</string>
+    <string name="dev_oir_local_enabled">OIR loads from local hardcoded data</string>
+
 </resources>

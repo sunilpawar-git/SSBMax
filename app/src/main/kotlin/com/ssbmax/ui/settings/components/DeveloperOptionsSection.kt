@@ -52,7 +52,7 @@ fun DeveloperOptionsSection(
             )
 
             Text(
-                text = "Testing and debugging tools",
+                text = stringResource(R.string.dev_section_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
             )
@@ -75,7 +75,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Checking...")
+                    Text(stringResource(R.string.dev_health_check_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.Favorite,
@@ -88,7 +88,7 @@ fun DeveloperOptionsSection(
             }
 
             Text(
-                text = "Tests connectivity to Firestore and Cloud Storage",
+                text = stringResource(R.string.dev_health_check_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -112,7 +112,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -125,7 +125,7 @@ fun DeveloperOptionsSection(
             }
 
             Text(
-                text = "Uploads OIR topic + 7 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_oir_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -149,7 +149,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -162,7 +162,7 @@ fun DeveloperOptionsSection(
             }
 
             Text(
-                text = "Uploads PPDT topic + 6 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_ppdt_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -186,7 +186,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -199,7 +199,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads Psychology topic + 8 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_psychology_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -223,7 +223,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -236,7 +236,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads PIQ Form topic + 3 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_piq_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -260,7 +260,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -273,7 +273,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads GTO topic + 7 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_gto_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -297,7 +297,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -310,7 +310,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads Interview topic + 7 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_interview_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -334,7 +334,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -347,7 +347,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads SSB Overview topic + 4 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_ssb_overview_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -371,7 +371,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onTertiary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -384,7 +384,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads Medicals topic + 5 study materials to Firestore",
+                text = stringResource(R.string.dev_migrate_medicals_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -408,7 +408,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Migrating...")
+                    Text(stringResource(R.string.dev_migrate_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
@@ -421,7 +421,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "Uploads Conference topic + 4 study materials to Firestore (FINAL TOPIC - 100%!)",
+                text = stringResource(R.string.dev_migrate_conference_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 fontWeight = FontWeight.Bold,
@@ -450,7 +450,7 @@ fun DeveloperOptionsSection(
                         color = MaterialTheme.colorScheme.onError
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Clearing...")
+                    Text(stringResource(R.string.dev_clear_cache_running))
                 } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -463,7 +463,7 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = "⚠️ Clears cached Firestore data. Next load fetches fresh content from server. Use after editing content in Firebase Console.",
+                text = stringResource(R.string.dev_clear_cache_warning),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                 modifier = Modifier.padding(start = 4.dp)
@@ -477,7 +477,7 @@ fun DeveloperOptionsSection(
             
             // Cloud Content Status
             Text(
-                text = "Cloud Content Configuration",
+                text = stringResource(R.string.dev_cloud_content_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -498,7 +498,7 @@ fun DeveloperOptionsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Enable Cloud Content",
+                    text = stringResource(R.string.dev_enable_cloud_content),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -519,7 +519,7 @@ fun DeveloperOptionsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Enable OIR from Firestore",
+                    text = stringResource(R.string.dev_enable_oir_firestore),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -541,10 +541,10 @@ fun DeveloperOptionsSection(
             }
             
             Text(
-                text = if (cloudEnabled && oirCloudEnabled) 
-                    "✓ OIR will load from Firestore\n⚠ Restart app to apply changes" 
-                else 
-                    "OIR loads from local hardcoded data",
+                text = if (cloudEnabled && oirCloudEnabled)
+                    stringResource(R.string.dev_oir_cloud_enabled)
+                else
+                    stringResource(R.string.dev_oir_local_enabled),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (cloudEnabled && oirCloudEnabled)
                     MaterialTheme.colorScheme.primary
