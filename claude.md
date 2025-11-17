@@ -503,10 +503,18 @@ class TATTestActivityTest {
 - Keyboard navigation support
 
 ### Internationalization
-- Multi-language support (Hindi, English)
-- RTL layout support
-- Cultural considerations for content
-- Regional test variations
+- **English-only** (SSB exam is conducted entirely in English)
+- All UI strings MUST use string resources from `app/src/main/res/values/strings.xml`
+- NO hardcoded strings in Kotlin/Compose code
+- String resources allow future language support via `values-{lang}/strings.xml` if needed
+- RTL layout support: Not required (English is LTR)
+
+**Rationale for English-Only:**
+- SSB (Services Selection Board) tests are conducted entirely in English
+- Officer candidates must demonstrate English proficiency for the armed forces
+- Study materials should match real exam conditions to prepare candidates effectively
+- Supporting Hindi UI could create dependency that hurts exam performance
+- All test content, instructions, and materials remain in English only
 
 ## 📈 ANALYTICS & MONITORING
 

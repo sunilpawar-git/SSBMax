@@ -894,4 +894,40 @@
     <string name="submissions_list_view_details">View details</string>
     <string name="submissions_list_score_format">Score: %1$d/100</string>
 
+    <!-- ============================================ -->
+    <!-- STUDENT PROFILE SCREEN -->
+    <!-- ============================================ -->
+    <string name="profile_stats_title">Your Statistics</string>
+    <string name="profile_stat_tests">Tests</string>
+    <string name="profile_stat_hours">Hours</string>
+    <string name="profile_stat_day_streak">Day Streak</string>
+    <string name="profile_stat_avg_score">Avg Score</string>
+    <string name="profile_phase_progress_title">Phase Progress</string>
+    <string name="profile_phase1_screening">Phase 1 - Screening</string>
+    <string name="profile_phase2_assessment">Phase 2 - Assessment</string>
+    <string name="profile_achievements_title">Recent Achievements</string>
+    <string name="profile_view_all">View All</string>
+    <string name="profile_tests_title">Recent Tests</string>
+    <string name="profile_account_actions">Account Actions</string>
+    <string name="profile_upgrade_premium">Upgrade to Premium</string>
+    <string name="profile_edit_profile">Edit Profile</string>
+    <string name="profile_view_badges">View All Badges</string>
+
+    <!-- ============================================ -->
+    <!-- MARKETPLACE SCREEN -->
+    <!-- ============================================ -->
+    <string name="marketplace_title">SSB Coaching Institutes</string>
+    <string name="marketplace_toggle_filters">Toggle Filters</string>
+    <string name="marketplace_search_hint">Search institutes, locations...</string>
+    <string name="marketplace_clear">Clear</string>
+    <string name="marketplace_filters_title">Filters</string>
+    <string name="marketplace_clear_all">Clear All</string>
+    <string name="marketplace_class_type">Class Type</string>
+    <string name="marketplace_all">All</string>
+    <string name="marketplace_price_range">Price Range</string>
+    <string name="marketplace_no_institutes">No institutes found</string>
+    <string name="marketplace_adjust_filters">Try adjusting your filters</string>
+    <string name="marketplace_institutes_found">%1$d institutes found</string>
+    <string name="marketplace_success_rate">%1$d%% Success Rate</string>
+
 </resources>
