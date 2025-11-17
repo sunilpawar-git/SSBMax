@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 
 /**
  * Student Profile Screen - Display user profile and stats
@@ -36,12 +38,12 @@ fun StudentProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profile") },
+                title = { Text(stringResource(R.string.profile_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = stringResource(R.string.profile_settings)
                         )
                     }
                 }
@@ -174,7 +176,7 @@ private fun ProfileHeader(
             if (isPremium) {
                 AssistChip(
                     onClick = { },
-                    label = { Text("Premium Member") },
+                    label = { Text(stringResource(R.string.profile_premium_member)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Star,
@@ -206,7 +208,7 @@ private fun QuickStatsCard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Your Statistics",
+                text = stringResource(R.string.profile_stats_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -218,22 +220,22 @@ private fun QuickStatsCard(
                 StatItem(
                     icon = Icons.AutoMirrored.Filled.Assignment,
                     value = totalTests.toString(),
-                    label = "Tests"
+                    label = stringResource(R.string.profile_stat_tests)
                 )
                 StatItem(
                     icon = Icons.Default.Schedule,
                     value = studyHours.toString(),
-                    label = "Hours"
+                    label = stringResource(R.string.profile_stat_hours)
                 )
                 StatItem(
                     icon = Icons.Default.LocalFireDepartment,
                     value = "$streakDays",
-                    label = "Day Streak"
+                    label = stringResource(R.string.profile_stat_day_streak)
                 )
                 StatItem(
                     icon = Icons.AutoMirrored.Filled.TrendingUp,
                     value = "${averageScore.toInt()}%",
-                    label = "Avg Score"
+                    label = stringResource(R.string.profile_stat_avg_score)
                 )
             }
         }
@@ -280,7 +282,7 @@ private fun PhaseProgressCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Phase Progress",
+                text = stringResource(R.string.profile_phase_progress_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -292,7 +294,7 @@ private fun PhaseProgressCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Phase 1 - Screening",
+                        text = stringResource(R.string.profile_phase1_screening),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
@@ -315,7 +317,7 @@ private fun PhaseProgressCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Phase 2 - Assessment",
+                        text = stringResource(R.string.profile_phase2_assessment),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
@@ -350,12 +352,12 @@ private fun AchievementsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Achievements",
+                    text = stringResource(R.string.profile_achievements_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 TextButton(onClick = onViewAll) {
-                    Text("View All")
+                    Text(stringResource(R.string.profile_view_all))
                 }
             }
             
@@ -396,12 +398,12 @@ private fun TestHistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Tests",
+                    text = stringResource(R.string.profile_tests_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 TextButton(onClick = onViewAll) {
-                    Text("View All")
+                    Text(stringResource(R.string.profile_view_all))
                 }
             }
             
@@ -458,7 +460,7 @@ private fun AccountActionsCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Account Actions",
+                text = stringResource(R.string.profile_account_actions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -475,10 +477,10 @@ private fun AccountActionsCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Upgrade to Premium")
+                    Text(stringResource(R.string.profile_upgrade_premium))
                 }
             }
-            
+
             OutlinedButton(
                 onClick = onEditProfile,
                 modifier = Modifier.fillMaxWidth()
@@ -489,9 +491,9 @@ private fun AccountActionsCard(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Edit Profile")
+                Text(stringResource(R.string.profile_edit_profile))
             }
-            
+
             OutlinedButton(
                 onClick = onViewBadges,
                 modifier = Modifier.fillMaxWidth()
@@ -502,7 +504,7 @@ private fun AccountActionsCard(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("View All Badges")
+                Text(stringResource(R.string.profile_view_badges))
             }
         }
     }
