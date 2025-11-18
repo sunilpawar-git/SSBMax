@@ -150,7 +150,13 @@ class AnalyticsRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getDifficultyStats(testType: String, difficulty: String): DifficultyStats? {
-        val perf = performanceDao.getPerformance(testType, difficulty) ?: return null
+        val perf = performanceDao.getPerformance(testType, difficulty)
+        
+        // For EASY difficulty, always return stats (even if null data) since it's always unlocked
+        // For MEDIUM/HARD, return null if no data exists (not unlocked yet)
+        if (perf == null && difficulty != "EASY") {
+            return null
+        }
         
         // Check if next level is unlocked
         val nextDifficulty = when (difficulty) {

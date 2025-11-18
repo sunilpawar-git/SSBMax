@@ -103,8 +103,8 @@ class AnalyticsRepositoryImplTest {
             assertNotNull(stats)
             assertEquals("WAT", stats!!.testType)
             assertEquals(26, stats.totalAttempts) // 15 + 8 + 3
-            // Weighted average: (15*85 + 8*75 + 3*60) / 26 = 77.88
-            assertEquals(77.88f, stats.averageScore, 0.01f)
+            // Weighted average: (15*85 + 8*75 + 3*60) / 26 = (1275 + 600 + 180) / 26 = 79.03846
+            assertEquals(79.03846f, stats.averageScore, 0.01f)
             assertEquals(85f, stats.bestScore)
             assertNotNull(stats.easyStats)
             assertNotNull(stats.mediumStats)
@@ -179,6 +179,7 @@ class AnalyticsRepositoryImplTest {
     fun `getDifficultyStats returns unlocked easy level with zero progress`() = runTest {
         // Given: No performance data
         coEvery { performanceDao.getPerformance("WAT", "EASY") } returns null
+        coEvery { performanceDao.getPerformance("WAT", "MEDIUM") } returns null // Mock next level check
 
         // When
         val stats = repository.getDifficultyStats("WAT", "EASY")
@@ -205,7 +206,7 @@ class AnalyticsRepositoryImplTest {
         // Then
         assertNotNull(stats)
         assertEquals(5, stats!!.attempts)
-        assertEquals(60f, stats.accuracy)
+        assertEquals(60f, stats.accuracy, 0.01f)
         assertTrue(stats.isUnlocked)
         // Progress = ((60/80 * 100) + (5/10 * 100)) / 2 = (75 + 50) / 2 = 62.5
         assertTrue(stats.progressToNext > 0f)
