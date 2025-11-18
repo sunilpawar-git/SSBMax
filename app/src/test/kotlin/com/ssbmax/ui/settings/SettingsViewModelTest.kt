@@ -1,13 +1,10 @@
 package com.ssbmax.ui.settings
 
 import com.ssbmax.core.data.health.FirebaseHealthCheck
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.model.AppTheme
 import com.ssbmax.core.domain.usecase.migration.*
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -20,9 +17,11 @@ import org.junit.Test
 
 /**
  * Baseline tests for SettingsViewModel
- * Tests core notification toggle, theme update, and health check functionality
+ * Tests core health check functionality
  *
- * This is a simplified test suite covering critical flows before God Class refactoring.
+ * This is a simplified test suite covering critical flows during God Class refactoring.
+ * Theme tests moved to ThemeSettingsViewModelTest.
+ * Notification tests moved to NotificationSettingsViewModelTest.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -31,7 +30,6 @@ class SettingsViewModelTest {
     private lateinit var viewModel: SettingsViewModel
 
     // Core dependencies
-    private val mockThemePreferenceManager = mockk<ThemePreferenceManager>(relaxed = true)
     private val mockFirebaseHealthCheck = mockk<FirebaseHealthCheck>(relaxed = true)
 
     // Migration use cases (mocked but not used in baseline tests)
@@ -47,8 +45,6 @@ class SettingsViewModelTest {
     private val mockClearCache = mockk<ClearFirestoreCacheUseCase>(relaxed = true)
     private val mockForceRefresh = mockk<ForceRefreshContentUseCase>(relaxed = true)
 
-    private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
-
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -59,50 +55,12 @@ class SettingsViewModelTest {
         every { android.util.Log.w(any<String>(), any<String>()) } returns 0
         every { android.util.Log.e(any<String>(), any<String>()) } returns 0
         every { android.util.Log.e(any<String>(), any<String>(), any()) } returns 0
-
-        // Setup default mocks
-        every { mockThemePreferenceManager.themeFlow } returns themeFlow
-        coEvery { mockThemePreferenceManager.setTheme(any()) } just runs
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
         unmockkStatic(android.util.Log::class)
-    }
-
-    // ==================== Theme Update Tests ====================
-
-    @Test
-    fun `updateTheme changes app theme correctly`() = runTest {
-        // Given
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // When
-        viewModel.updateTheme(AppTheme.DARK)
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertEquals(AppTheme.DARK, state.appTheme)
-        coVerify { mockThemePreferenceManager.setTheme(AppTheme.DARK) }
-    }
-
-    @Test
-    fun `updateTheme to LIGHT theme works correctly`() = runTest {
-        // Given
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // When
-        viewModel.updateTheme(AppTheme.LIGHT)
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertEquals(AppTheme.LIGHT, state.appTheme)
-        coVerify { mockThemePreferenceManager.setTheme(AppTheme.LIGHT) }
     }
 
     // ==================== Health Check Tests ====================
@@ -154,7 +112,6 @@ class SettingsViewModelTest {
 
     private fun createViewModel(): SettingsViewModel {
         return SettingsViewModel(
-            themePreferenceManager = mockThemePreferenceManager,
             firebaseHealthCheck = mockFirebaseHealthCheck,
             migrateOIRUseCase = mockMigrateOIR,
             migratePPDTUseCase = mockMigratePPDT,

@@ -3,8 +3,6 @@ package com.ssbmax.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.health.FirebaseHealthCheck
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.model.AppTheme
 import com.ssbmax.core.domain.usecase.migration.ClearFirestoreCacheUseCase
 import com.ssbmax.core.domain.usecase.migration.ForceRefreshContentUseCase
 import com.ssbmax.core.domain.usecase.migration.MigrateConferenceUseCase
@@ -26,7 +24,6 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val themePreferenceManager: ThemePreferenceManager,
     private val firebaseHealthCheck: FirebaseHealthCheck,
     private val migrateOIRUseCase: MigrateOIRUseCase,
     private val migratePPDTUseCase: MigratePPDTUseCase,
@@ -43,33 +40,6 @@ class SettingsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-
-    // Lifecycle-aware theme Flow - automatically starts/stops with collectors
-    private val themeFlow = themePreferenceManager.themeFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AppTheme.SYSTEM
-        )
-
-    init {
-        observeThemeChanges()
-    }
-
-    private fun observeThemeChanges() {
-        viewModelScope.launch {
-            themeFlow.collect { theme ->
-                _uiState.update { it.copy(appTheme = theme) }
-            }
-        }
-    }
-
-    fun updateTheme(theme: AppTheme) {
-        viewModelScope.launch {
-            themePreferenceManager.setTheme(theme)
-            _uiState.update { it.copy(appTheme = theme) }
-        }
-    }
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
@@ -505,7 +475,6 @@ class SettingsViewModel @Inject constructor(
 
 data class SettingsUiState(
     val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
-    val appTheme: AppTheme = AppTheme.SYSTEM,
     val error: String? = null,
     val isCheckingHealth: Boolean = false,
     val healthCheckResult: FirebaseHealthCheck.HealthStatus? = null,

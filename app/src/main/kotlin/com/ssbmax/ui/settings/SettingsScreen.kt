@@ -74,10 +74,7 @@ fun SettingsScreen(
 
                 // Theme Section
                 item {
-                    ThemeSection(
-                        currentTheme = uiState.appTheme,
-                        onThemeSelected = viewModel::updateTheme
-                    )
+                    ThemeSection()
                 }
 
                 // Notifications Section
