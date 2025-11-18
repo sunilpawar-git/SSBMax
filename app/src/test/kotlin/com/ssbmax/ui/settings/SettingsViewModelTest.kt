@@ -1,10 +1,13 @@
 package com.ssbmax.ui.settings
 
-import com.ssbmax.core.data.health.FirebaseHealthCheck
-import com.ssbmax.core.domain.usecase.migration.*
+import com.ssbmax.core.domain.model.SSBMaxUser
+import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -16,34 +19,16 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Baseline tests for SettingsViewModel
- * Tests core health check functionality
- *
- * This is a simplified test suite covering critical flows during God Class refactoring.
- * Theme tests moved to ThemeSettingsViewModelTest.
- * Notification tests moved to NotificationSettingsViewModelTest.
+ * Tests for SettingsViewModel
+ * Tests subscription tier observation and error handling
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
     private lateinit var viewModel: SettingsViewModel
-
-    // Core dependencies
-    private val mockFirebaseHealthCheck = mockk<FirebaseHealthCheck>(relaxed = true)
-
-    // Migration use cases (mocked but not used in baseline tests)
-    private val mockMigrateOIR = mockk<MigrateOIRUseCase>(relaxed = true)
-    private val mockMigratePPDT = mockk<MigratePPDTUseCase>(relaxed = true)
-    private val mockMigratePsychology = mockk<MigratePsychologyUseCase>(relaxed = true)
-    private val mockMigratePIQForm = mockk<MigratePIQFormUseCase>(relaxed = true)
-    private val mockMigrateGTO = mockk<MigrateGTOUseCase>(relaxed = true)
-    private val mockMigrateInterview = mockk<MigrateInterviewUseCase>(relaxed = true)
-    private val mockMigrateSSBOverview = mockk<MigrateSSBOverviewUseCase>(relaxed = true)
-    private val mockMigrateMedicals = mockk<MigrateMedicalsUseCase>(relaxed = true)
-    private val mockMigrateConference = mockk<MigrateConferenceUseCase>(relaxed = true)
-    private val mockClearCache = mockk<ClearFirestoreCacheUseCase>(relaxed = true)
-    private val mockForceRefresh = mockk<ForceRefreshContentUseCase>(relaxed = true)
+    private lateinit var userFlow: MutableStateFlow<SSBMaxUser?>
 
     @Before
     fun setup() {
@@ -55,6 +40,11 @@ class SettingsViewModelTest {
         every { android.util.Log.w(any<String>(), any<String>()) } returns 0
         every { android.util.Log.e(any<String>(), any<String>()) } returns 0
         every { android.util.Log.e(any<String>(), any<String>(), any()) } returns 0
+
+        // Setup mocks
+        observeCurrentUser = mockk()
+        userFlow = MutableStateFlow(null)
+        every { observeCurrentUser.invoke() } returns userFlow
     }
 
     @After
@@ -63,67 +53,89 @@ class SettingsViewModelTest {
         unmockkStatic(android.util.Log::class)
     }
 
-    // ==================== Health Check Tests ====================
-
     @Test
-    fun `runHealthCheck sets isCheckingHealth to true then false`() = runTest {
-        // Given
-        val healthStatus = FirebaseHealthCheck.HealthStatus(
-            isFirestoreHealthy = true,
-            isStorageHealthy = true,
-            firestoreError = null,
-            storageError = null
-        )
-        coEvery { mockFirebaseHealthCheck.checkHealth() } returns healthStatus
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
+    fun `viewModel initializes with FREE tier by default`() = runTest {
         // When
-        viewModel.runHealthCheck()
+        viewModel = SettingsViewModel(observeCurrentUser)
         advanceUntilIdle()
 
         // Then
         val state = viewModel.uiState.value
-        assertFalse(state.isCheckingHealth) // Should be false after completion
-        assertNotNull(state.healthCheckResult)
-        assertTrue(state.healthCheckResult!!.isFirestoreHealthy)
-        assertTrue(state.healthCheckResult!!.isStorageHealthy)
+        assertNotNull(state)
+        assertEquals(SubscriptionTier.FREE, state.subscriptionTier)
+        assertNull(state.error)
     }
 
     @Test
-    fun `runHealthCheck handles errors gracefully`() = runTest {
+    fun `subscription tier updates when user changes`() = runTest {
         // Given
-        coEvery { mockFirebaseHealthCheck.checkHealth() } throws Exception("Network error")
-        viewModel = createViewModel()
+        viewModel = SettingsViewModel(observeCurrentUser)
+        advanceUntilIdle()
+
+        // Initially FREE (no user)
+        assertEquals(SubscriptionTier.FREE, viewModel.uiState.value.subscriptionTier)
+
+        // When - user with PRO subscription logs in
+        val proUser = SSBMaxUser(
+            id = "user123",
+            email = "pro@ssbmax.com",
+            displayName = "Pro User",
+            role = UserRole.STUDENT,
+            subscriptionTier = SubscriptionTier.PRO,
+            subscription = null
+        )
+        userFlow.value = proUser
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SubscriptionTier.PRO, viewModel.uiState.value.subscriptionTier)
+
+        // When - user upgrades to PREMIUM
+        val premiumUser = proUser.copy(subscriptionTier = SubscriptionTier.PREMIUM)
+        userFlow.value = premiumUser
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(SubscriptionTier.PREMIUM, viewModel.uiState.value.subscriptionTier)
+    }
+
+    @Test
+    fun `subscription tier defaults to FREE when user is null`() = runTest {
+        // Given - start with a PRO user
+        val proUser = SSBMaxUser(
+            id = "user123",
+            email = "pro@ssbmax.com",
+            displayName = "Pro User",
+            role = UserRole.STUDENT,
+            subscriptionTier = SubscriptionTier.PRO,
+            subscription = null
+        )
+        userFlow.value = proUser
+        viewModel = SettingsViewModel(observeCurrentUser)
+        advanceUntilIdle()
+
+        assertEquals(SubscriptionTier.PRO, viewModel.uiState.value.subscriptionTier)
+
+        // When - user logs out (becomes null)
+        userFlow.value = null
+        advanceUntilIdle()
+
+        // Then - defaults back to FREE
+        assertEquals(SubscriptionTier.FREE, viewModel.uiState.value.subscriptionTier)
+    }
+
+    @Test
+    fun `clearError removes error from state`() = runTest {
+        // Given
+        viewModel = SettingsViewModel(observeCurrentUser)
         advanceUntilIdle()
 
         // When
-        viewModel.runHealthCheck()
+        viewModel.clearError()
         advanceUntilIdle()
 
         // Then
         val state = viewModel.uiState.value
-        assertFalse(state.isCheckingHealth)
-        assertNotNull(state.error)
-        assertTrue(state.error!!.contains("Health check failed"))
-    }
-
-    // ==================== Helper Methods ====================
-
-    private fun createViewModel(): SettingsViewModel {
-        return SettingsViewModel(
-            firebaseHealthCheck = mockFirebaseHealthCheck,
-            migrateOIRUseCase = mockMigrateOIR,
-            migratePPDTUseCase = mockMigratePPDT,
-            migratePsychologyUseCase = mockMigratePsychology,
-            migratePIQFormUseCase = mockMigratePIQForm,
-            migrateGTOUseCase = mockMigrateGTO,
-            migrateInterviewUseCase = mockMigrateInterview,
-            migrateSSBOverviewUseCase = mockMigrateSSBOverview,
-            migrateMedicalsUseCase = mockMigrateMedicals,
-            migrateConferenceUseCase = mockMigrateConference,
-            clearCacheUseCase = mockClearCache,
-            forceRefreshContentUseCase = mockForceRefresh
-        )
+        assertNull(state.error)
     }
 }
