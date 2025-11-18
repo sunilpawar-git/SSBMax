@@ -41,10 +41,14 @@ fun TATTestScreen(
         viewModel.loadTest(testId)
     }
 
-    // Handle completion
-    LaunchedEffect(uiState.isSubmitted) {
-        if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
-            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
+    // Handle navigation events (one-time events, consumed on collection)
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult -> {
+                    onTestComplete(event.submissionId, event.subscriptionType)
+                }
+            }
         }
     }
 

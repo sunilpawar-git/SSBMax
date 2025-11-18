@@ -553,4 +553,99 @@ class ArchitectureTest {
     private fun File.relativePath(): String {
         return this.relativeTo(PROJECT_ROOT).path
     }
+
+    @Test
+    fun `MainActivity must handle configuration changes to prevent process death`() {
+        val violations = mutableListOf<String>()
+        
+        // Path to AndroidManifest.xml - try multiple possible paths
+        val possiblePaths = listOf(
+            File(PROJECT_ROOT, "app/src/main/AndroidManifest.xml"),
+            File(System.getProperty("user.dir"), "app/src/main/AndroidManifest.xml"),
+            File(System.getProperty("user.dir"), "../app/src/main/AndroidManifest.xml"),
+            File(System.getProperty("user.dir"), "../../app/src/main/AndroidManifest.xml")
+        )
+        
+        val manifestFile = possiblePaths.firstOrNull { it.exists() }
+        
+        if (manifestFile == null) {
+            fail("AndroidManifest.xml not found at expected locations. Tried:\n${possiblePaths.joinToString("\n") { it.absolutePath }}")
+            return  // Never reached due to fail(), but satisfies compiler
+        }
+        
+        val manifestContent = manifestFile.readText()
+        
+        // Check if MainActivity is declared
+        if (!manifestContent.contains("android:name=\".MainActivity\"")) {
+            fail("MainActivity declaration not found in AndroidManifest.xml")
+        }
+        
+        // Required configuration changes to prevent process death during rotation
+        val requiredConfigChanges = setOf(
+            "orientation",      // Portrait ↔ Landscape rotation
+            "screenSize",       // Screen dimensions change (required for API 13+)
+            "screenLayout",     // Screen layout changes (size buckets)
+            "keyboardHidden"    // Physical keyboard shown/hidden
+        )
+        
+        // Extract MainActivity declaration block
+        val activityPattern = Regex(
+            """<activity[^>]*android:name="\.MainActivity"[^>]*>.*?</activity>""",
+            RegexOption.DOT_MATCHES_ALL
+        )
+        val activityMatch = activityPattern.find(manifestContent)
+        
+        if (activityMatch == null) {
+            fail("Could not parse MainActivity declaration in AndroidManifest.xml")
+            return  // Never reached due to fail(), but satisfies compiler
+        }
+        
+        val activityDeclaration = activityMatch.value
+        
+        // Check for android:configChanges attribute
+        val configChangesPattern = Regex("""android:configChanges="([^"]+)"""")
+        val configChangesMatch = configChangesPattern.find(activityDeclaration)
+        
+        if (configChangesMatch == null) {
+            violations.add(
+                "MainActivity is missing android:configChanges attribute\n" +
+                "  Location: app/src/main/AndroidManifest.xml\n" +
+                "  Problem: Without this, Android destroys MainActivity on rotation, causing process death\n" +
+                "  Required: android:configChanges=\"orientation|screenSize|screenLayout|keyboardHidden\"\n" +
+                "  Impact: Tests (TAT, WAT, SRT, PPDT) will stop and return to home screen on rotation"
+            )
+        } else {
+            val declaredConfigChanges = configChangesMatch.groupValues[1]
+                .split("|")
+                .map { it.trim() }
+                .toSet()
+            
+            // Check for missing required config changes
+            val missingConfigs = requiredConfigChanges - declaredConfigChanges
+            
+            if (missingConfigs.isNotEmpty()) {
+                violations.add(
+                    "MainActivity android:configChanges is incomplete\n" +
+                    "  Current: $declaredConfigChanges\n" +
+                    "  Missing: $missingConfigs\n" +
+                    "  Required: $requiredConfigChanges\n" +
+                    "  Problem: Incomplete config will not prevent process death on all rotation scenarios"
+                )
+            }
+        }
+        
+        if (violations.isNotEmpty()) {
+            fail(
+                "MainActivity configuration validation failed:\n\n" +
+                violations.joinToString("\n\n") +
+                "\n\nWhy this matters:\n" +
+                "- Without android:configChanges, MainActivity is destroyed on rotation\n" +
+                "- Under low memory, Android KILLS the entire process during recreation\n" +
+                "- Tests lose state, timers stop, and users are sent back to home screen\n\n" +
+                "Fix: Ensure MainActivity declaration includes:\n" +
+                "  android:configChanges=\"orientation|screenSize|screenLayout|keyboardHidden\"\n\n" +
+                "This test prevents regression of the process death bug fix."
+            )
+        }
+    }
 }

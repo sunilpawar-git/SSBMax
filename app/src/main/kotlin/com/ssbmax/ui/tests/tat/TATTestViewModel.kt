@@ -13,15 +13,18 @@ import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for TAT Test Screen
@@ -47,6 +50,10 @@ class TATTestViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
+    
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
 
     // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
@@ -392,6 +399,15 @@ class TATTestViewModel @Inject constructor(
                         submission = submission,  // Store locally to show results directly
                         phase = TATPhase.SUBMITTED
                     ) }
+                    
+                    // Emit navigation event (one-time, consumed by screen)
+                    android.util.Log.d("TATTestViewModel", "📍 Step 8: Emitting navigation event...")
+                    _navigationEvents.trySend(
+                        TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
                     
                     android.util.Log.d("TATTestViewModel", "✅ TAT test submission complete!")
                     android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")

@@ -7,13 +7,16 @@ import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for SRT Test Screen
@@ -32,6 +35,10 @@ class SRTTestViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(SRTTestUiState())
     val uiState: StateFlow<SRTTestUiState> = _uiState.asStateFlow()
+    
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
     
     /**
      * Check if user is eligible to take the test based on subscription tier
@@ -302,6 +309,14 @@ class SRTTestViewModel @Inject constructor(
                         subscriptionType = subscriptionType,
                         phase = SRTPhase.SUBMITTED
                     ) }
+                    
+                    // Emit navigation event (one-time, consumed by screen)
+                    _navigationEvents.trySend(
+                        TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
                 }.onFailure { error ->
                     _uiState.update { it.copy(
                         isLoading = false,

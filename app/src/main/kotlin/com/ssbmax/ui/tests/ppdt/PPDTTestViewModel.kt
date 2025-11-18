@@ -10,16 +10,19 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for PPDT Test Screen
@@ -45,6 +48,10 @@ class PPDTTestViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(PPDTTestUiState())
     val uiState: StateFlow<PPDTTestUiState> = _uiState.asStateFlow()
+    
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
     
     // PHASE 3: All state fully migrated to StateFlow (completed)
     // Timer managed via viewModelScope + isTimerActive flag (no Job reference needed)
@@ -340,6 +347,14 @@ class PPDTTestViewModel @Inject constructor(
                     subscriptionType = subscriptionType,
                     submission = submission
                 ) }
+                
+                // Emit navigation event (one-time, consumed by screen)
+                _navigationEvents.trySend(
+                    TestNavigationEvent.NavigateToResult(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType
+                    )
+                )
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"
