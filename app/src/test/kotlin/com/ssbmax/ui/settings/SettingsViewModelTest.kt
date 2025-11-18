@@ -3,17 +3,11 @@ package com.ssbmax.ui.settings
 import com.ssbmax.core.data.health.FirebaseHealthCheck
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.core.domain.model.AppTheme
-import com.ssbmax.core.domain.model.NotificationPreferences
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.migration.*
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -37,8 +31,6 @@ class SettingsViewModelTest {
     private lateinit var viewModel: SettingsViewModel
 
     // Core dependencies
-    private val mockNotificationRepository = mockk<NotificationRepository>(relaxed = true)
-    private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockThemePreferenceManager = mockk<ThemePreferenceManager>(relaxed = true)
     private val mockFirebaseHealthCheck = mockk<FirebaseHealthCheck>(relaxed = true)
 
@@ -57,25 +49,6 @@ class SettingsViewModelTest {
 
     private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
 
-    private val testUser = SSBMaxUser(
-        id = "test-user-123",
-        email = "test@example.com",
-        role = UserRole.STUDENT,
-        displayName = "Test User"
-    )
-
-    private val testPreferences = NotificationPreferences(
-        userId = testUser.id,
-        enablePushNotifications = true,
-        enableGradingNotifications = true,
-        enableFeedbackNotifications = true,
-        enableBatchInvitations = true,
-        enableGeneralAnnouncements = true,
-        enableStudyReminders = false,
-        enableTestReminders = false,
-        enableMarketplaceUpdates = false
-    )
-
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -90,69 +63,12 @@ class SettingsViewModelTest {
         // Setup default mocks
         every { mockThemePreferenceManager.themeFlow } returns themeFlow
         coEvery { mockThemePreferenceManager.setTheme(any()) } just runs
-        coEvery { mockObserveCurrentUser() } returns flowOf(testUser)
-        coEvery { mockNotificationRepository.getPreferences(testUser.id) } returns
-            Result.success(testPreferences)
-        coEvery { mockNotificationRepository.savePreferences(any()) } returns Result.success(Unit)
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
         unmockkStatic(android.util.Log::class)
-    }
-
-    // ==================== Notification Toggle Tests ====================
-
-    @Test
-    fun `togglePushNotifications updates preferences correctly`() = runTest {
-        // Given
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // When
-        viewModel.togglePushNotifications(false)
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertNotNull(state.notificationPreferences)
-        assertFalse(state.notificationPreferences!!.enablePushNotifications)
-        coVerify { mockNotificationRepository.savePreferences(any()) }
-    }
-
-    @Test
-    fun `toggleGradingComplete updates preferences correctly`() = runTest {
-        // Given
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // When
-        viewModel.toggleGradingComplete(false)
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertNotNull(state.notificationPreferences)
-        assertFalse(state.notificationPreferences!!.enableGradingNotifications)
-        coVerify { mockNotificationRepository.savePreferences(any()) }
-    }
-
-    @Test
-    fun `toggleStudyReminders updates preferences correctly`() = runTest {
-        // Given
-        viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // When
-        viewModel.toggleStudyReminders(true)
-        advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assertNotNull(state.notificationPreferences)
-        assertTrue(state.notificationPreferences!!.enableStudyReminders)
-        coVerify { mockNotificationRepository.savePreferences(any()) }
     }
 
     // ==================== Theme Update Tests ====================
@@ -238,8 +154,6 @@ class SettingsViewModelTest {
 
     private fun createViewModel(): SettingsViewModel {
         return SettingsViewModel(
-            notificationRepository = mockNotificationRepository,
-            observeCurrentUser = mockObserveCurrentUser,
             themePreferenceManager = mockThemePreferenceManager,
             firebaseHealthCheck = mockFirebaseHealthCheck,
             migrateOIRUseCase = mockMigrateOIR,

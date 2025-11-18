@@ -56,23 +56,13 @@ fun SettingsScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
                 // Subscription Section
                 item {
                     SubscriptionSection(
@@ -92,17 +82,7 @@ fun SettingsScreen(
 
                 // Notifications Section
                 item {
-                    NotificationSettingsSection(
-                        preferences = uiState.notificationPreferences,
-                        onTogglePushNotifications = viewModel::togglePushNotifications,
-                        onToggleGradingComplete = viewModel::toggleGradingComplete,
-                        onToggleFeedbackAvailable = viewModel::toggleFeedbackAvailable,
-                        onToggleBatchInvitation = viewModel::toggleBatchInvitation,
-                        onToggleGeneralAnnouncement = viewModel::toggleGeneralAnnouncement,
-                        onToggleStudyReminders = viewModel::toggleStudyReminders,
-                        onToggleTestReminders = viewModel::toggleTestReminders,
-                        onToggleMarketplaceUpdates = viewModel::toggleMarketplaceUpdates
-                    )
+                    NotificationSettingsSection()
                 }
 
                 // Help & Support Section
@@ -139,7 +119,6 @@ fun SettingsScreen(
                         isClearingCache = uiState.isClearingCache
                     )
                 }
-            }
         }
     }
     
