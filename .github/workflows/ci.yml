@@ -41,6 +41,10 @@ jobs:
 
       - name: Run lint checks
         run: ./gradlew lintDebug --no-daemon
+      
+      - name: Run architecture tests
+        run: ./gradlew test --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon
+        continue-on-error: false  # Architecture violations MUST block build
         
       - name: Upload test reports on failure
         if: failure()

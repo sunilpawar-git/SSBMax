@@ -48,7 +48,7 @@ class TATTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
 
-    private var timerJob: Job? = null
+    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
     init {
         // Register for memory leak tracking
@@ -70,18 +70,19 @@ class TATTestViewModel @Inject constructor(
             // Wait for initial state to be set
             val state = _uiState.value
             
+            // PHASE 2: Check isTimerActive instead of timerJob
             // Only restore if we're in an active phase (not loading or instructions)
             if (!state.isLoading && state.phase != TATPhase.INSTRUCTIONS && state.phase != TATPhase.SUBMITTED) {
                 android.util.Log.d("TATTestViewModel", "🔄 Restoring timer for phase: ${state.phase}")
                 
                 when (state.phase) {
                     TATPhase.IMAGE_VIEWING -> {
-                        if (state.viewingTimeRemaining > 0 && timerJob == null) {
+                        if (state.viewingTimeRemaining > 0 && !state.isTimerActive) {
                             startViewingTimer()
                         }
                     }
                     TATPhase.WRITING -> {
-                        if (state.writingTimeRemaining > 0 && timerJob == null) {
+                        if (state.writingTimeRemaining > 0 && !state.isTimerActive) {
                             startWritingTimer()
                         }
                     }
@@ -273,7 +274,8 @@ class TATTestViewModel @Inject constructor(
             startViewingTimer()
         } else {
             // All pictures shown, allow review or submit
-            stopTimer()
+            // PHASE 2: No manual stopTimer() needed - viewModelScope handles it
+            _uiState.update { it.copy(isTimerActive = false) }
         }
     }
     
@@ -281,7 +283,7 @@ class TATTestViewModel @Inject constructor(
         val state = _uiState.value
         
         if (state.currentQuestionIndex > 0) {
-            stopTimer()
+            // PHASE 2: No manual stopTimer() - timer replaced by new startWritingTimer()
             
             // Load previous story if exists
             val previousQuestionId = state.questions[state.currentQuestionIndex - 1].id
@@ -314,7 +316,8 @@ class TATTestViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                stopTimer()
+                // PHASE 2: No manual stopTimer() - viewModelScope cancels on completion
+                _uiState.update { it.copy(isTimerActive = false) }
                 
                 // Get current user
                 android.util.Log.d("TATTestViewModel", "📍 Step 1: Getting current user...")
@@ -412,13 +415,14 @@ class TATTestViewModel @Inject constructor(
     }
     
     private fun startViewingTimer() {
-        stopTimer()
-
+        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
         _uiState.update { it.copy(
-            viewingTimeRemaining = it.config?.viewingTimePerPictureSeconds ?: 30
+            viewingTimeRemaining = it.config?.viewingTimePerPictureSeconds ?: 30,
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
         ) }
 
-        timerJob = viewModelScope.launch {
+        viewModelScope.launch {
             android.util.Log.d("TATTestViewModel", "⏰ Starting viewing timer")
 
             try {
@@ -433,27 +437,27 @@ class TATTestViewModel @Inject constructor(
                 // Auto-transition to writing (only if not cancelled)
                 if (isActive) {
                     android.util.Log.d("TATTestViewModel", "⏰ Viewing timer completed, transitioning to writing")
-                    _uiState.update { it.copy(phase = TATPhase.WRITING) }
+                    _uiState.update { it.copy(phase = TATPhase.WRITING, isTimerActive = false) }
                     startWritingTimer()
                 }
             } catch (e: CancellationException) {
                 android.util.Log.d("TATTestViewModel", "⏰ Viewing timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
+            } finally {
+                _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.also { job ->
-            // Register AFTER job is created
-            job.trackMemoryLeaks("TATTestViewModel", "viewing-timer")
-        }
+        }.trackMemoryLeaks("TATTestViewModel", "viewing-timer")
     }
     
     private fun startWritingTimer() {
-        stopTimer()
-
+        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
         _uiState.update { it.copy(
-            writingTimeRemaining = (it.config?.writingTimePerPictureMinutes ?: 4) * 60
+            writingTimeRemaining = (it.config?.writingTimePerPictureMinutes ?: 4) * 60,
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
         ) }
 
-        timerJob = viewModelScope.launch {
+        viewModelScope.launch {
             android.util.Log.d("TATTestViewModel", "⏰ Starting writing timer")
 
             try {
@@ -473,22 +477,13 @@ class TATTestViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 android.util.Log.d("TATTestViewModel", "⏰ Writing timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
+            } finally {
+                _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.also { job ->
-            // Register AFTER job is created
-            job.trackMemoryLeaks("TATTestViewModel", "writing-timer")
-        }
+        }.trackMemoryLeaks("TATTestViewModel", "writing-timer")
     }
     
-    private fun stopTimer() {
-        timerJob?.let { job ->
-            if (job.isActive) {
-                android.util.Log.d("TATTestViewModel", "🛑 Cancelling active timer job")
-                job.cancel()
-            }
-        }
-        timerJob = null
-    }
+    // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
     
     // Removed: Mock question generation (tests now loaded from cloud)
     // Removed: AI score generation moved to GenerateTATAIScoreUseCase
@@ -496,12 +491,8 @@ class TATTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
 
-        // Critical: Stop all timers to prevent leaks
-        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
-        stopTimer()
-
-        // Cancel all jobs in viewModelScope (belt and suspenders approach)
-        android.util.Log.d("TATTestViewModel", "🧹 Cancelling viewModelScope")
+        // PHASE 2: Timers auto-cancelled by viewModelScope
+        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
         
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("TATTestViewModel")
@@ -539,7 +530,10 @@ data class TATTestUiState(
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    val isTimerActive: Boolean = false,  // Track if timer is running
+    val timerStartTime: Long = 0L        // When timer was started
 ) {
     val currentQuestion: TATQuestion?
         get() = questions.getOrNull(currentQuestionIndex)

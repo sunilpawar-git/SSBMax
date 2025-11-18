@@ -38,7 +38,7 @@ class SDTTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SDTTestUiState())
     val uiState: StateFlow<SDTTestUiState> = _uiState.asStateFlow()
 
-    private var timerJob: Job? = null
+    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
     companion object {
         private const val TAG = "SDTTestViewModel"
@@ -165,7 +165,8 @@ class SDTTestViewModel @Inject constructor(
                 currentAnswer = ""
             ) }
         } else {
-            stopTimer()
+            // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
+            _uiState.update { it.copy(isTimerActive = false) }
             Log.d(TAG, "✅ SDT Flow: All questions answered, moving to review phase")
             Log.d(TAG, "📊 SDT Flow: Total responses: ${updatedResponses.size}, Valid: ${updatedResponses.count { it.isValidResponse }}")
             _uiState.update { it.copy(phase = SDTPhase.REVIEW) }
@@ -196,8 +197,11 @@ class SDTTestViewModel @Inject constructor(
         if (state.currentQuestionIndex < state.questions.size - 1) {
             _uiState.update { it.copy(currentQuestionIndex = state.currentQuestionIndex + 1) }
         } else {
-            stopTimer()
-            _uiState.update { it.copy(phase = SDTPhase.REVIEW) }
+            // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
+            _uiState.update { it.copy(
+                isTimerActive = false,
+                phase = SDTPhase.REVIEW
+            ) }
         }
     }
 
@@ -218,7 +222,8 @@ class SDTTestViewModel @Inject constructor(
             Log.d(TAG, "📤 SDT Flow: Initiating test submission...")
             _uiState.update { it.copy(isLoading = true) }
             try {
-                stopTimer()
+                // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
+                _uiState.update { it.copy(isTimerActive = false) }
                 val currentUserId = observeCurrentUser().first()?.id ?: run {
                     Log.e(TAG, "❌ SDT Flow: Cannot submit - user not authenticated")
                     _uiState.update { it.copy(isLoading = false, error = "Please login to submit test") }
@@ -273,8 +278,13 @@ class SDTTestViewModel @Inject constructor(
     }
 
     private fun startTimer() {
-        stopTimer()
-        timerJob = viewModelScope.launch {
+        // PHASE 2: No need to call stopTimer(), launch directly in viewModelScope
+        _uiState.update { it.copy(
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
+        ) }
+        
+        viewModelScope.launch {
             try {
                 while (isActive && _uiState.value.totalTimeRemaining > 0) {
                     delay(1000)
@@ -286,18 +296,18 @@ class SDTTestViewModel @Inject constructor(
                 }
             } catch (e: CancellationException) {
                 throw e
+            } finally {
+                _uiState.update { it.copy(isTimerActive = false) }
             }
         }
     }
 
-    private fun stopTimer() {
-        timerJob?.cancel()
-        timerJob = null
-    }
+    // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
 
     override fun onCleared() {
         super.onCleared()
-        stopTimer()
+        // PHASE 2: Timer auto-cancelled by viewModelScope
+        Log.d(TAG, "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
     }
 }
 
@@ -321,7 +331,10 @@ data class SDTTestUiState(
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L
 ) {
     val currentQuestion: SDTQuestion?
         get() = questions.getOrNull(currentQuestionIndex)

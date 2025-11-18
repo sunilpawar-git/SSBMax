@@ -426,6 +426,127 @@ class ArchitectureTest {
         return allowedPatterns.any { line.contains(it) }
     }
 
+    @Test
+    fun `all ViewModels must not have nullable mutable vars`() {
+        val violations = mutableListOf<String>()
+
+        val viewModelFiles = findFiles(APP_SRC, "*ViewModel.kt")
+
+        for (file in viewModelFiles) {
+            // Skip test files
+            if (file.path.contains("/test/")) continue
+
+            val content = file.readText()
+
+            // Check if it's actually a ViewModel class
+            if (!content.contains(": ViewModel()") && !content.contains(": ViewModel {")) {
+                continue
+            }
+
+            val lines = content.lines()
+            for ((index, line) in lines.withIndex()) {
+                val trimmed = line.trim()
+
+                // Look for nullable var declarations
+                if ((trimmed.startsWith("private var ") || trimmed.startsWith("var ")) &&
+                    trimmed.contains("?") &&
+                    !isAllowedMutableState(trimmed)
+                ) {
+                    // Extract variable name
+                    val varName = trimmed.substringAfter("var ")
+                        .substringBefore(":")
+                        .substringBefore("=")
+                        .trim()
+
+                    violations.add(
+                        "${file.relativePath()}: Line ${index + 1}\n" +
+                                "  Variable: $varName\n" +
+                                "  Code: ${trimmed.take(80)}\n" +
+                                "  Problem: Nullable mutable var in ViewModel\n" +
+                                "  Solution: Move to StateFlow<UiState> for lifecycle safety"
+                    )
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} ViewModel(s) with nullable mutable vars:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nAll mutable state in ViewModels must be in StateFlow:\n" +
+                        "❌ BAD: private var timerJob: Job? = null\n" +
+                        "❌ BAD: private var sessionId: String? = null\n\n" +
+                        "✅ GOOD: data class UiState(val session: MySession? = null)\n" +
+                        "✅ GOOD: private val _uiState = MutableStateFlow(UiState())\n\n" +
+                        "Lint rule will catch these during build. Fix to proceed."
+            )
+        }
+    }
+
+    @Test
+    fun `ViewModels must not store Job references`() {
+        val violations = mutableListOf<String>()
+
+        val viewModelFiles = findFiles(APP_SRC, "*ViewModel.kt")
+
+        for (file in viewModelFiles) {
+            // Skip test files
+            if (file.path.contains("/test/")) continue
+
+            val content = file.readText()
+
+            // Check if it's actually a ViewModel class
+            if (!content.contains(": ViewModel()") && !content.contains(": ViewModel {")) {
+                continue
+            }
+
+            // Look for Job? field declarations
+            val jobPattern = Regex("""private\s+var\s+\w+\s*:\s*Job\?""")
+            val matches = jobPattern.findAll(content)
+
+            for (match in matches) {
+                val line = content.lines().find { it.contains(match.value) }
+                violations.add(
+                    "${file.relativePath()}: Stores Job? as field\n" +
+                            "  Code: ${line?.trim()?.take(80)}\n" +
+                            "  Problem: Memory leak risk if not cancelled properly\n" +
+                            "  Solution: Use viewModelScope.launch directly without storing Job"
+                )
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            fail(
+                "Found ${violations.size} ViewModel(s) storing Job references:\n\n" +
+                        violations.joinToString("\n\n") +
+                        "\n\nJob references create memory leak risk:\n" +
+                        "❌ BAD:\n" +
+                        "  private var timerJob: Job? = null\n" +
+                        "  fun startTimer() { timerJob = viewModelScope.launch { ... } }\n\n" +
+                        "✅ GOOD:\n" +
+                        "  fun startTimer() { viewModelScope.launch { ... } }\n" +
+                        "  // ViewModelScope auto-cancels all jobs in onCleared()"
+            )
+        }
+    }
+
+    /**
+     * Check if mutable state pattern is allowed in ViewModels
+     */
+    private fun isAllowedMutableState(line: String): Boolean {
+        val allowedPatterns = setOf(
+            "StateFlow",
+            "MutableStateFlow",
+            "LiveData",
+            "MutableLiveData",
+            "Flow<",
+            "// DEPRECATED",  // Marked for removal
+            "// PHASE"  // Migration in progress
+        )
+
+        return allowedPatterns.any { line.contains(it) }
+    }
+
     /**
      * Get relative path from project root
      */

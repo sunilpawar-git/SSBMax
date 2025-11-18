@@ -42,7 +42,7 @@ class StudyMaterialDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(StudyMaterialDetailUiState())
     val uiState: StateFlow<StudyMaterialDetailUiState> = _uiState.asStateFlow()
 
-    private var sessionId: String? = null
+    // PHASE 3: Nullable var removed - using StateFlow (uiState.activeSessionId)
 
     init {
         loadMaterial()
@@ -150,7 +150,10 @@ class StudyMaterialDetailViewModel @Inject constructor(
             val currentUser = observeCurrentUser().first()
             if (currentUser != null) {
                 val sessionResult = trackStudySession.startSession(currentUser.id, materialId)
-                sessionId = sessionResult.getOrNull()?.id
+                // PHASE 2: Use StateFlow instead of nullable var
+                _uiState.update { it.copy(
+                    activeSessionId = sessionResult.getOrNull()?.id
+                ) }
             }
         }
     }
@@ -185,7 +188,8 @@ class StudyMaterialDetailViewModel @Inject constructor(
 
     private fun endStudySession() {
         viewModelScope.launch {
-            sessionId?.let { id ->
+            // PHASE 2: Read from StateFlow instead of nullable var
+            _uiState.value.activeSessionId?.let { id ->
                 val progressIncrement = _uiState.value.readingProgress
                 trackStudySession.endSession(id, progressIncrement)
             }
@@ -204,7 +208,9 @@ data class StudyMaterialDetailUiState(
     val material: StudyMaterialContent? = null,
     val readingProgress: Float = 0f,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    // PHASE 1: New StateFlow field (replacing nullable var)
+    val activeSessionId: String? = null  // Track study session
 )
 
 /**

@@ -19,6 +19,7 @@ import com.android.tools.lint.detector.api.CURRENT_API
  * 5. PrintStackTraceDetector - Prevents printStackTrace() usage (use ErrorLogger instead)
  * 6. FirebaseInUILayerDetector - Prevents Firebase imports in UI layer (use domain abstractions)
  * 7. StateFlowValueAssignmentDetector - Enforces .update {} pattern for thread-safe StateFlow mutations
+ * 8. NullableViewModelVarDetector - Prevents nullable mutable vars in ViewModels (use StateFlow)
  */
 class SSBMaxIssueRegistry : IssueRegistry() {
 
@@ -29,7 +30,10 @@ class SSBMaxIssueRegistry : IssueRegistry() {
         ViewModelLifecycleDetector.ISSUE,
         PrintStackTraceDetector.ISSUE,
         FirebaseInUILayerDetector.ISSUE,
-        StateFlowValueAssignmentDetector.ISSUE
+        StateFlowValueAssignmentDetector.ISSUE,
+        // StateFlow Migration - Phase 4 enforcement
+        NullableViewModelVarDetector.NULLABLE_STATE_ISSUE,
+        NullableViewModelVarDetector.JOB_LEAK_ISSUE
     )
 
     override val api: Int = CURRENT_API

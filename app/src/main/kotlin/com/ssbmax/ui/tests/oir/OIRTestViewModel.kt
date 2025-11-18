@@ -42,8 +42,8 @@ class OIRTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(OIRTestUiState())
     val uiState: StateFlow<OIRTestUiState> = _uiState.asStateFlow()
     
-    private var timerJob: Job? = null
-    private var currentSession: OIRTestSession? = null
+    // PHASE 3: All state fully migrated to StateFlow (completed)
+    // Timer managed via viewModelScope + isTimerActive flag (no Job reference needed)
     
     init {
         // Register for memory leak tracking
@@ -69,7 +69,7 @@ class OIRTestViewModel @Inject constructor(
                 !state.isCompleted && 
                 state.timeRemainingSeconds > 0 && 
                 state.totalQuestions > 0 && 
-                timerJob == null) {
+                !state.isTimerActive) {
                 android.util.Log.d("OIRTestViewModel", "🔄 Restoring timer after configuration change")
                 startTimer()
             }
@@ -194,11 +194,11 @@ class OIRTestViewModel @Inject constructor(
                 
                 android.util.Log.d("OIRTestViewModel", "✅ Validation complete: ${validatedQuestions.size} valid questions")
                 
-                // Create test session
+                // PHASE 2: Create test session and store in StateFlow
                 val sessionId = UUID.randomUUID().toString()
                 val config = OIRTestConfig()
                 
-                currentSession = OIRTestSession(
+                val newSession = OIRTestSession(
                     sessionId = sessionId,
                     userId = userId,
                     testId = testId,
@@ -209,6 +209,7 @@ class OIRTestViewModel @Inject constructor(
                     timeRemainingSeconds = config.totalTimeMinutes * 60
                 )
                 
+                _uiState.update { it.copy(session = newSession) }
                 updateUiFromSession()
                 startTimer()
                 
@@ -228,8 +229,8 @@ class OIRTestViewModel @Inject constructor(
     fun selectOption(optionId: String) {
         android.util.Log.d("OIRTestViewModel", "🟢 selectOption() called: optionId=$optionId")
         
-        val session = currentSession ?: run {
-            android.util.Log.e("OIRTestViewModel", "❌ currentSession is null in selectOption!")
+        val session = _uiState.value.session ?: run {
+            android.util.Log.e("OIRTestViewModel", "❌ session is null in selectOption!")
             return
         }
         
@@ -257,34 +258,35 @@ class OIRTestViewModel @Inject constructor(
             skipped = false
         )
         
-        // Update session with answer
-        currentSession = session.copy(
-            answers = session.answers + (question.id to answer)
-        )
+        // Update session with answer using thread-safe .update {}
+        _uiState.update { state ->
+            state.copy(
+                session = session.copy(
+                    answers = session.answers + (question.id to answer)
+                ),
+                selectedOptionId = optionId,
+                showFeedback = true,
+                isCurrentAnswerCorrect = answer.isCorrect,
+                currentQuestionAnswered = true
+            )
+        }
         
-        android.util.Log.d("OIRTestViewModel", "   Total answers after: ${currentSession?.answers?.size}")
+        android.util.Log.d("OIRTestViewModel", "   Total answers after: ${_uiState.value.session?.answers?.size}")
         android.util.Log.d("OIRTestViewModel", "   Answer correct? ${answer.isCorrect}")
-        
-        // Show immediate feedback for OIR tests
-        _uiState.update { it.copy(
-            selectedOptionId = optionId,
-            showFeedback = true,
-            isCurrentAnswerCorrect = answer.isCorrect,
-            currentQuestionAnswered = true
-        ) }
-        
         android.util.Log.d("OIRTestViewModel", "✅ selectOption() complete")
     }
     
     fun nextQuestion() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         // Only navigate if not on the last question
         // currentQuestionIndex is 0-based, so last question is at index (size - 1)
         if (session.currentQuestionIndex < session.questions.size - 1) {
-            currentSession = session.copy(
-                currentQuestionIndex = session.currentQuestionIndex + 1
-            )
+            _uiState.update { it.copy(
+                session = session.copy(
+                    currentQuestionIndex = session.currentQuestionIndex + 1
+                )
+            ) }
             
             updateUiFromSession()
         } else {
@@ -295,12 +297,14 @@ class OIRTestViewModel @Inject constructor(
     }
     
     fun previousQuestion() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         if (session.currentQuestionIndex > 0) {
-            currentSession = session.copy(
-                currentQuestionIndex = session.currentQuestionIndex - 1
-            )
+            _uiState.update { it.copy(
+                session = session.copy(
+                    currentQuestionIndex = session.currentQuestionIndex - 1
+                )
+            ) }
             
             updateUiFromSession()
         }
@@ -308,10 +312,12 @@ class OIRTestViewModel @Inject constructor(
     
     fun submitTest() {
         android.util.Log.d("OIRTestViewModel", "🔵 submitTest() called")
-        timerJob?.cancel()
         
-        val session = currentSession ?: run {
-            android.util.Log.e("OIRTestViewModel", "❌ currentSession is null in submitTest!")
+        // PHASE 3: Signal timer to stop via isTimerActive flag
+        _uiState.update { it.copy(isTimerActive = false) }
+        
+        val session = _uiState.value.session ?: run {
+            android.util.Log.e("OIRTestViewModel", "❌ session is null in submitTest!")
             return
         }
         
@@ -371,9 +377,9 @@ class OIRTestViewModel @Inject constructor(
                 // Clear cached content
                 testContentRepository.clearCache()
                 
-                // Mark test as completed with submission ID
-                currentSession = session.copy(isCompleted = true)
+                // Mark test as completed with submission ID using thread-safe .update {}
                 _uiState.update { it.copy(
+                    session = session.copy(isCompleted = true),
                     isCompleted = true,
                     sessionId = submissionId, // Use submissionId for consistency with other tests
                     subscriptionType = subscriptionType,
@@ -396,45 +402,63 @@ class OIRTestViewModel @Inject constructor(
     }
     
     fun pauseTest() {
-        timerJob?.cancel()
+        val session = _uiState.value.session ?: return
         
-        val session = currentSession ?: return
-        currentSession = session.copy(isPaused = true)
+        // PHASE 3: Signal timer to stop via isTimerActive flag + update session
+        _uiState.update { it.copy(
+            isTimerActive = false,
+            session = session.copy(isPaused = true)
+        ) }
         
         // TODO: Save session state to repository
     }
     
     private fun startTimer() {
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
+        // PHASE 3: Stop any existing timer by setting flag, then start new one
+        _uiState.update { it.copy(
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
+        ) }
+        
+        viewModelScope.launch {
             android.util.Log.d("OIRTestViewModel", "⏰ Starting test timer")
             
             try {
-                while (isActive && _uiState.value.timeRemainingSeconds > 0 && !_uiState.value.isCompleted) {
+                while (isActive && 
+                       _uiState.value.isTimerActive && 
+                       _uiState.value.timeRemainingSeconds > 0 && 
+                       !_uiState.value.isCompleted) {
                     delay(1000)
-                    if (!isActive) break // Double-check after delay
+                    
+                    // Check if timer should still run (isTimerActive can be set false by submitTest/pauseTest)
+                    if (!isActive || !_uiState.value.isTimerActive) break
                     
                     val newTime = _uiState.value.timeRemainingSeconds - 1
-                    _uiState.update { it.copy(timeRemainingSeconds = newTime) }
                     
-                    currentSession = currentSession?.copy(timeRemainingSeconds = newTime)
+                    // Update both timer and session's time remaining using thread-safe .update {}
+                    _uiState.update { state ->
+                        state.copy(
+                            timeRemainingSeconds = newTime,
+                            session = state.session?.copy(timeRemainingSeconds = newTime)
+                        )
+                    }
                     
-                    if (newTime == 0 && isActive) {
+                    if (newTime == 0 && isActive && _uiState.value.isTimerActive) {
                         submitTest() // Auto-submit when time runs out
                     }
                 }
             } catch (e: CancellationException) {
                 android.util.Log.d("OIRTestViewModel", "⏰ Timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
+            } finally {
+                // Ensure timer flag is cleared when loop exits
+                _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.also { job ->
-            // Register AFTER job is created
-            job.trackMemoryLeaks("OIRTestViewModel", "test-timer")
-        }
+        }.trackMemoryLeaks("OIRTestViewModel", "test-timer")
     }
     
     private fun updateUiFromSession() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         // Detailed debug logging
         android.util.Log.d("OIRTestViewModel", "📍 updateUiFromSession: index=${session.currentQuestionIndex}, total=${session.questions.size}")
@@ -588,10 +612,8 @@ class OIRTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         
-        // Critical: Stop all timers to prevent leaks
-        android.util.Log.d("OIRTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
-        timerJob?.cancel()
-        timerJob = null
+        // PHASE 3: viewModelScope automatically cancels all child jobs
+        android.util.Log.d("OIRTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-canceling all jobs")
         
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("OIRTestViewModel")
@@ -628,6 +650,10 @@ data class OIRTestUiState(
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L,
+    val session: OIRTestSession? = null  // Move session to observable state
 )
 
