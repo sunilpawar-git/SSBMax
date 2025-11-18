@@ -439,25 +439,6 @@
     <string name="accessibility_high_contrast">High Contrast</string>
 
     <!-- ============================================ -->
-    <!-- DEVELOPER OPTIONS -->
-    <!-- (These are for internal testing, not user-facing, -->
-    <!-- but including for completeness) -->
-    <!-- ============================================ -->
-    <string name="dev_options_title">Developer Options</string>
-    <string name="dev_health_check">Run Firebase Health Check</string>
-    <string name="dev_migrate_oir">Migrate OIR to Firestore</string>
-    <string name="dev_migrate_ppdt">Migrate PPDT to Firestore</string>
-    <string name="dev_migrate_psychology">Migrate Psychology to Firestore</string>
-    <string name="dev_migrate_piq">Migrate PIQ Form to Firestore</string>
-    <string name="dev_migrate_gto">Migrate GTO to Firestore</string>
-    <string name="dev_migrate_interview">Migrate Interview to Firestore</string>
-    <string name="dev_migrate_ssb_overview">Migrate SSB Overview to Firestore</string>
-    <string name="dev_migrate_medicals">Migrate Medicals to Firestore</string>
-    <string name="dev_migrate_conference">Migrate Conference to Firestore</string>
-    <string name="dev_clear_cache">Clear Firestore Cache</string>
-    <string name="dev_force_gc">Force GC</string>
-
-    <!-- ============================================ -->
     <!-- MISCELLANEOUS -->
     <!-- ============================================ -->
     <string name="search">Search</string>
@@ -974,29 +955,5 @@
     <string name="help_faq_title">Frequently Asked Questions</string>
     <string name="help_contact_support_title">Contact Support</string>
     <string name="help_contact_support_email">support@ssbmax.com</string>
-
-    <!-- ============================================ -->
-    <!-- DEVELOPER OPTIONS SECTION -->
-    <!-- ============================================ -->
-    <string name="dev_section_description">Testing and debugging tools</string>
-    <string name="dev_health_check_running">Checking...</string>
-    <string name="dev_migrate_running">Migrating...</string>
-    <string name="dev_clear_cache_running">Clearing...</string>
-    <string name="dev_health_check_description">Tests connectivity to Firestore and Cloud Storage</string>
-    <string name="dev_migrate_oir_description">Uploads OIR topic + 7 study materials to Firestore</string>
-    <string name="dev_migrate_ppdt_description">Uploads PPDT topic + 6 study materials to Firestore</string>
-    <string name="dev_migrate_psychology_description">Uploads Psychology topic + 8 study materials to Firestore</string>
-    <string name="dev_migrate_piq_description">Uploads PIQ Form topic + 3 study materials to Firestore</string>
-    <string name="dev_migrate_gto_description">Uploads GTO topic + 7 study materials to Firestore</string>
-    <string name="dev_migrate_interview_description">Uploads Interview topic + 7 study materials to Firestore</string>
-    <string name="dev_migrate_ssb_overview_description">Uploads SSB Overview topic + 4 study materials to Firestore</string>
-    <string name="dev_migrate_medicals_description">Uploads Medicals topic + 5 study materials to Firestore</string>
-    <string name="dev_migrate_conference_description">Uploads Conference topic + 4 study materials to Firestore (FINAL TOPIC - 100%%!)</string>
-    <string name="dev_clear_cache_warning">⚠️ Clears cached Firestore data. Next load fetches fresh content from server. Use after editing content in Firebase Console.</string>
-    <string name="dev_cloud_content_title">Cloud Content Configuration</string>
-    <string name="dev_enable_cloud_content">Enable Cloud Content</string>
-    <string name="dev_enable_oir_firestore">Enable OIR from Firestore</string>
-    <string name="dev_oir_cloud_enabled">✓ OIR will load from Firestore\n⚠ Restart app to apply changes</string>
-    <string name="dev_oir_local_enabled">OIR loads from local hardcoded data</string>
 
 </resources>
