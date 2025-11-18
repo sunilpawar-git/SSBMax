@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,22 +65,22 @@ class OIRDebugViewModel @Inject constructor(
                     // Try to get questions
                     val result = testContentRepository.getOIRTestQuestions(50)
                     if (result.isFailure) {
-                        _debugInfo.value = _debugInfo.value.copy(
+                        _debugInfo.update { it.copy(
                             error = result.exceptionOrNull()?.message ?: "Unknown error"
-                        )
+                        ) }
                     } else {
                         val questions = result.getOrNull() ?: emptyList()
-                        _debugInfo.value = _debugInfo.value.copy(
+                        _debugInfo.update { it.copy(
                             questionsRetrieved = questions.size,
                             usingMockData = questions.any { it.id.contains("mock") }
-                        )
+                        ) }
                     }
                 }
             } catch (e: Exception) {
-                _debugInfo.value = _debugInfo.value.copy(
+                _debugInfo.update { it.copy(
                     error = e.message ?: "Unknown error",
                     isAuthenticated = false
-                )
+                ) }
             }
         }
     }

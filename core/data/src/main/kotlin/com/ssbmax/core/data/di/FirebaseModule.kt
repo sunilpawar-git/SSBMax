@@ -52,6 +52,7 @@ object FirebaseModule {
     
     @Provides
     @Singleton
+    @android.annotation.SuppressLint("MissingPermission")  // Permissions declared in app module's AndroidManifest.xml
     fun provideFirebaseAnalytics(@ApplicationContext context: Context): FirebaseAnalytics {
         return FirebaseAnalytics.getInstance(context)
     }
