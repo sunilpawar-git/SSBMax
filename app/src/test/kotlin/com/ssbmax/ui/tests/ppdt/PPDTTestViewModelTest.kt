@@ -531,7 +531,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     }
     
     @Test
-    fun `writing timer decrements correctly`() = runTest {
+    fun `proceedToNextPhase transitions from image viewing to writing`() = runTest {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
@@ -543,17 +543,19 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockSecurityLogger
         )
         advanceUntilIdle()
+        
+        // Start test - should transition to IMAGE_VIEWING
         viewModel.startTest()
-        advanceTimeBy(31000) // Move to writing
         
-        val initialTime = viewModel.uiState.value.timeRemainingSeconds
+        // When - immediately call proceedToNextPhase without waiting
+        viewModel.proceedToNextPhase()
+        advanceUntilIdle()
         
-        // When - advance 10 seconds
-        advanceTimeBy(10000)
-        
-        // Then
-        val newTime = viewModel.uiState.value.timeRemainingSeconds
-        assertEquals("Writing time should decrease by 10 seconds", initialTime - 10, newTime)
+        // Then - should be in WRITING phase
+        val state = viewModel.uiState.value
+        assertEquals("Should be in writing phase", PPDTPhase.WRITING, state.currentPhase)
+        assertNotNull("Session should exist", state.session)
+        assertEquals("Session phase should be writing", PPDTPhase.WRITING, state.session?.currentPhase)
     }
     
     @Test

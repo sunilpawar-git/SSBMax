@@ -217,15 +217,7 @@ class PPDTTestViewModel @Inject constructor(
         ) }
         
         updateUiFromSession()
-        startTimer(30) // 30 seconds for image viewing
-        
-        // Auto-proceed to writing after viewing
-        viewModelScope.launch {
-            delay(30000)
-            if (_uiState.value.currentPhase == PPDTPhase.IMAGE_VIEWING) {
-                proceedToNextPhase()
-            }
-        }
+        startTimer(30) // 30 seconds for image viewing - timer will auto-advance via startTimer()
     }
     
     fun proceedToNextPhase() {

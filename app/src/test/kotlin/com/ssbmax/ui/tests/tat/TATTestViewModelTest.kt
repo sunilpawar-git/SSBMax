@@ -453,6 +453,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
         // Write 2 stories
         repeat(2) { index ->
             advanceTimeBy(31000) // Viewing
+            advanceUntilIdle() // Ensure phase transition completes
             viewModel.updateStory("Story number ${index + 1}. ".repeat(20)) // Make it long enough
             viewModel.moveToNextQuestion()
         }

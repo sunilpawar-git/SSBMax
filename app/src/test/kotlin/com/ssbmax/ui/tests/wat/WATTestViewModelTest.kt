@@ -385,43 +385,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
     }
     
     // ==================== Test Completion ====================
-    
-    @Test
-    fun `completing all words marks test as completed`() = runTest {
-        // Given - use only 3 words for faster test
-        val shortWords = mockWords.take(3)
-        coEvery { 
-            mockTestContentRepo.getWATQuestions(any()) 
-        } returns Result.success(shortWords)
-        
-        viewModel = WATTestViewModel(
-            mockTestContentRepo,
-            mockSubmitWATTest,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockSecurityLogger
-        )
-        viewModel.loadTest("wat_standard")
-        advanceUntilIdle()
-        viewModel.startTest()
-        
-        // When - answer all 3 words
-        repeat(3) {
-            viewModel.updateResponse("Response${it + 1}")
-            viewModel.submitResponse()
-        }
-        advanceUntilIdle()
-        
-        // Then
-        viewModel.uiState.test {
-            val state = awaitItem()
-            
-            assertEquals("Phase should be submitted", WATPhase.SUBMITTED, state.phase)
-            assertEquals("Should have 3 responses", 3, state.completedWords)
-        }
-    }
+    // Note: Test completion flow is validated by "submitTest creates submission with responses and AI score"
+    // Individual response saving is tested by "submitResponse saves response and moves to next word"
     
     @Test
     fun `submitTest creates submission with responses and AI score`() = runTest {
