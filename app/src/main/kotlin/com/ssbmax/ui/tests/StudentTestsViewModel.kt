@@ -1,5 +1,4 @@
 package com.ssbmax.ui.tests
-
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,9 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for Student Tests Screen
  * Fetches test progress from TestProgressRepository
@@ -37,7 +36,7 @@ class StudentTestsViewModel @Inject constructor(
     
     private fun loadAllTests() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Get current user ID
@@ -45,10 +44,10 @@ class StudentTestsViewModel @Inject constructor(
                 val userId = currentUser?.id
                 
                 if (userId == null) {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = "Please login to view your tests"
-                    )
+                    ) }
                     return@launch
                 }
                 
@@ -226,10 +225,10 @@ class StudentTestsViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e("StudentTests", "Error loading tests", e)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load tests"
-                )
+                ) }
             }
         }
     }
@@ -244,4 +243,3 @@ data class StudentTestsUiState(
     val isLoading: Boolean = true,
     val error: String? = null
 )
-

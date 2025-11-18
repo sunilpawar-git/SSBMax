@@ -1,5 +1,4 @@
 package com.ssbmax.ui.home.instructor
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.StudentPerformance
@@ -10,9 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for Instructor Home Screen
  * Manages student list, batches, and grading queue
@@ -32,33 +31,30 @@ class InstructorHomeViewModel @Inject constructor(
     
     private fun loadInstructorData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-
+            _uiState.update { it.copy(isLoading = true) }
             // Get current instructor ID from authenticated user
             val currentUser = observeCurrentUser().first()
             val instructorId = currentUser?.id ?: run {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = "You must be logged in to view instructor dashboard"
-                )
+                ) }
                 return@launch
             }
-
             // Observe grading statistics
             launch {
                 gradingQueueRepository.observeGradingStats(instructorId).collect { stats ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         pendingGradingCount = stats.totalPending,
                         testsGradedToday = stats.todayGraded,
                         avgResponseTime = stats.averageGradingTimeMinutes / 60, // Convert to hours
                         isLoading = false
-                    )
+                    ) }
                 }
             }
-
             // TODO: Load batches and students from BatchRepository
             // For now, keep mock data for batches and students until BatchRepository is implemented
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 totalStudents = 24,
                 activeBatches = 3,
                 students = listOf(
@@ -123,7 +119,7 @@ class InstructorHomeViewModel @Inject constructor(
                         studentCount = 6
                     )
                 )
-            )
+            ) }
         }
     }
     
@@ -146,4 +142,3 @@ data class InstructorHomeUiState(
     val batches: List<BatchInfo> = emptyList(),
     val error: String? = null
 )
-

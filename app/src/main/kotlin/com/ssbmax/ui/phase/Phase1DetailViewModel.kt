@@ -1,5 +1,4 @@
 package com.ssbmax.ui.phase
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,9 +16,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for Phase 1 Detail Screen
  * Fetches Phase 1 progress from TestProgressRepository
@@ -39,7 +38,7 @@ class Phase1DetailViewModel @Inject constructor(
     
     private fun loadPhase1Tests() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Get current user ID
@@ -47,10 +46,10 @@ class Phase1DetailViewModel @Inject constructor(
                 val userId = currentUser?.id
                 
                 if (userId == null) {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = "Please login to view Phase 1 progress"
-                    )
+                    ) }
                     return@launch
                 }
                 
@@ -58,10 +57,10 @@ class Phase1DetailViewModel @Inject constructor(
                 testProgressRepository.getPhase1Progress(userId)
                     .catch { error ->
                         Log.e("Phase1Detail", "Error loading Phase 1 progress", error)
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             error = "Failed to load Phase 1 progress: ${error.message}"
-                        )
+                        ) }
                     }
                     .stateIn(
                         scope = viewModelScope,
@@ -113,10 +112,10 @@ class Phase1DetailViewModel @Inject constructor(
                     }
             } catch (e: Exception) {
                 Log.e("Phase1Detail", "Error in loadPhase1Tests", e)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Unknown error occurred"
-                )
+                ) }
             }
         }
     }
@@ -155,4 +154,3 @@ data class Phase1DetailUiState(
     val isLoading: Boolean = true,
     val error: String? = null
 )
-

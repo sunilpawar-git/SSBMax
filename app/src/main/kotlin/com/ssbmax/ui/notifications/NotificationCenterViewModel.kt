@@ -1,5 +1,4 @@
 package com.ssbmax.ui.notifications
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SSBMaxNotification
@@ -14,9 +13,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for the Notification Center screen.
  * Manages notification list, filtering, and actions.
@@ -26,35 +25,29 @@ class NotificationCenterViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(NotificationCenterUiState())
     val uiState: StateFlow<NotificationCenterUiState> = _uiState.asStateFlow()
-
     private val _selectedFilter = MutableStateFlow(NotificationFilter.ALL)
     val selectedFilter: StateFlow<NotificationFilter> = _selectedFilter.asStateFlow()
-
     init {
         loadNotifications()
         observeUnreadCount()
     }
-
     /**
      * Load notifications for the current user.
      */
     private fun loadNotifications() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
+            _uiState.update { it.copy(isLoading = true, error = null) }
             // Get current user ID
             val currentUser = observeCurrentUser().first()
             if (currentUser == null) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = "Please sign in to view notifications"
-                )
+                ) }
                 return@launch
             }
-
             combine(
                 notificationRepository.getNotifications(currentUser.id),
                 _selectedFilter
@@ -70,10 +63,10 @@ class NotificationCenterViewModel @Inject constructor(
                 }
             }
                 .catch { e: Throwable ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = e.message ?: "Failed to load notifications"
-                    )
+                    ) }
                 }
                 .stateIn(
                     scope = viewModelScope,
@@ -81,15 +74,14 @@ class NotificationCenterViewModel @Inject constructor(
                     initialValue = emptyList()
                 )
                 .collect { filteredNotifications: List<SSBMaxNotification> ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         notifications = groupNotificationsByDate(filteredNotifications),
                         error = null
-                    )
+                    ) }
                 }
         }
     }
-
     /**
      * Observe unread notification count.
      */
@@ -101,7 +93,6 @@ class NotificationCenterViewModel @Inject constructor(
                 // User not logged in, no unread count to display
                 return@launch
             }
-
             notificationRepository.getUnreadCount(currentUser.id)
                 .catch { e: Throwable ->
                     // Log error but don't update UI state
@@ -112,11 +103,10 @@ class NotificationCenterViewModel @Inject constructor(
                     initialValue = 0
                 )
                 .collect { count: Int ->
-                    _uiState.value = _uiState.value.copy(unreadCount = count)
+                    _uiState.update { it.copy(unreadCount = count) }
                 }
         }
     }
-
     /**
      * Group notifications by date for better organization.
      */
@@ -124,7 +114,6 @@ class NotificationCenterViewModel @Inject constructor(
         val now = System.currentTimeMillis()
         val today = now - (now % (24 * 60 * 60 * 1000))
         val yesterday = today - (24 * 60 * 60 * 1000)
-
         val grouped = notifications.groupBy { notification ->
             when {
                 notification.createdAt >= today -> "Today"
@@ -137,12 +126,10 @@ class NotificationCenterViewModel @Inject constructor(
                 }
             }
         }
-
         return grouped.map { (date: String, notificationList: List<SSBMaxNotification>) ->
             NotificationGroup(date, notificationList.sortedByDescending { it.createdAt })
         }
     }
-
     /**
      * Mark a notification as read.
      */
@@ -150,13 +137,12 @@ class NotificationCenterViewModel @Inject constructor(
         viewModelScope.launch {
             notificationRepository.markAsRead(notificationId)
                 .onFailure { e: Throwable ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         error = e.message ?: "Failed to mark notification as read"
-                    )
+                    ) }
                 }
         }
     }
-
     /**
      * Delete a notification.
      */
@@ -164,13 +150,12 @@ class NotificationCenterViewModel @Inject constructor(
         viewModelScope.launch {
             notificationRepository.deleteNotification(notificationId)
                 .onFailure { e: Throwable ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         error = e.message ?: "Failed to delete notification"
-                    )
+                    ) }
                 }
         }
     }
-
     /**
      * Archive a notification.
      * Note: Using deleteNotification for now as archiveNotification doesn't exist in repository
@@ -179,25 +164,23 @@ class NotificationCenterViewModel @Inject constructor(
         viewModelScope.launch {
             notificationRepository.deleteNotification(notificationId)
                 .onFailure { e: Throwable ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         error = e.message ?: "Failed to archive notification"
-                    )
+                    ) }
                 }
         }
     }
-
     /**
      * Update the selected filter.
      */
     fun updateFilter(filter: NotificationFilter) {
         _selectedFilter.value = filter
     }
-
     /**
      * Clear error state.
      */
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        _uiState.update { it.copy(error = null) }
     }
 }
 
@@ -210,7 +193,6 @@ data class NotificationCenterUiState(
     val unreadCount: Int = 0,
     val error: String? = null
 )
-
 /**
  * Represents a group of notifications by date.
  */
@@ -218,7 +200,6 @@ data class NotificationGroup(
     val date: String,
     val notifications: List<SSBMaxNotification>
 )
-
 /**
  * Filter options for notifications.
  */
@@ -229,4 +210,3 @@ enum class NotificationFilter(val displayName: String) {
     FEEDBACK("Feedback"),
     ANNOUNCEMENTS("Announcements")
 }
-

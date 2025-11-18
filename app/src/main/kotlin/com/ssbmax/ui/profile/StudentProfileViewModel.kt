@@ -1,5 +1,4 @@
 package com.ssbmax.ui.profile
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,9 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for Student Profile Screen
  * Fetches profile data from UserProfileRepository and progress from TestProgressRepository
@@ -35,16 +34,16 @@ class StudentProfileViewModel @Inject constructor(
     
     private fun loadUserProfile() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Get current user
                 val currentUser = observeCurrentUser().first()
                 if (currentUser == null) {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = "Please login to view your profile"
-                    )
+                    ) }
                     return@launch
                 }
                 
@@ -102,10 +101,10 @@ class StudentProfileViewModel @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e("StudentProfile", "Error loading profile", e)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load profile"
-                )
+                ) }
             }
         }
     }
@@ -130,4 +129,3 @@ data class StudentProfileUiState(
     val isLoading: Boolean = true,
     val error: String? = null
 )
-

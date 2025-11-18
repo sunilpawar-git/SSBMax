@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,21 +29,21 @@ class AnalyticsViewModel @Inject constructor(
     
     fun loadAnalytics() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Collect performance overview
                 analyticsRepository.getPerformanceOverview().collect { overview ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         overview = overview,
                         isLoading = false
-                    )
+                    ) }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = "Failed to load analytics: ${e.message}"
-                )
+                ) }
             }
         }
     }
@@ -51,9 +52,9 @@ class AnalyticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 analyticsRepository.getTestTypeStats(testType).collect { stats ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         selectedTestStats = stats
-                    )
+                    ) }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AnalyticsViewModel", "Failed to load test stats", e)
@@ -65,9 +66,9 @@ class AnalyticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 analyticsRepository.getAllTestTypeStats().collect { allStats ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         allTestStats = allStats
-                    )
+                    ) }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AnalyticsViewModel", "Failed to load all test stats", e)
@@ -79,9 +80,9 @@ class AnalyticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 analyticsRepository.getRecentProgress(limit).collect { progress ->
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         recentProgress = progress
-                    )
+                    ) }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AnalyticsViewModel", "Failed to load recent progress", e)
@@ -90,7 +91,7 @@ class AnalyticsViewModel @Inject constructor(
     }
     
     fun selectTestType(testType: String?) {
-        _uiState.value = _uiState.value.copy(selectedTestType = testType)
+        _uiState.update { it.copy(selectedTestType = testType) }
         if (testType != null) {
             loadTestTypeDetails(testType)
         }
@@ -109,4 +110,3 @@ data class AnalyticsUiState(
     val allTestStats: List<TestTypeStats> = emptyList(),
     val recentProgress: List<TestPerformancePoint> = emptyList()
 )
-

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -88,11 +89,11 @@ class PPDTTestViewModel @Inject constructor(
     
     fun loadTest(testId: String = "ppdt_standard") {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 isLoading = true,
                 loadingMessage = "Checking eligibility...",
                 error = null
-            )
+            ) }
             
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
@@ -105,11 +106,11 @@ class PPDTTestViewModel @Inject constructor(
                     context = "PPDTTestViewModel.loadTest"
                 )
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Authentication required. Please login to continue."
-                )
+                ) }
                 return@launch
             }
             
@@ -122,7 +123,7 @@ class PPDTTestViewModel @Inject constructor(
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
                         // Show limit reached state
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             loadingMessage = null,
                             error = null,
@@ -131,7 +132,7 @@ class PPDTTestViewModel @Inject constructor(
                             testsLimit = eligibility.limit,
                             testsUsed = eligibility.usedCount,
                             resetsAt = eligibility.resetsAt
-                        )
+                        ) }
                         android.util.Log.d("PPDTTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
                         return@launch
                     }
@@ -141,9 +142,9 @@ class PPDTTestViewModel @Inject constructor(
                     }
                 }
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     loadingMessage = "Fetching questions from cloud..."
-                )
+                ) }
                 
                 // Create test session
                 val sessionResult = testContentRepository.createTestSession(
@@ -194,11 +195,11 @@ class PPDTTestViewModel @Inject constructor(
                 updateUiFromSession()
                 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Cloud connection required. Please check your internet connection."
-                )
+                ) }
             }
         }
     }
@@ -257,11 +258,11 @@ class PPDTTestViewModel @Inject constructor(
     fun updateStory(newStory: String) {
         val session = currentSession ?: return
         currentSession = session.copy(story = newStory)
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             story = newStory,
             charactersCount = newStory.length,
             canProceedToNextPhase = newStory.length >= session.question.minCharacters
-        )
+        ) }
     }
     
     fun submitTest() {
@@ -329,16 +330,16 @@ class PPDTTestViewModel @Inject constructor(
                     isCompleted = true
                 )
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isSubmitted = true,
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
                     submission = submission
-                )
+                ) }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"
-                )
+                ) }
             }
         }
     }
@@ -352,7 +353,7 @@ class PPDTTestViewModel @Inject constructor(
     
     private fun startTimer(seconds: Int) {
         timerJob?.cancel()
-        _uiState.value = _uiState.value.copy(timeRemainingSeconds = seconds)
+        _uiState.update { it.copy(timeRemainingSeconds = seconds) }
         
         timerJob = viewModelScope.launch {
             android.util.Log.d("PPDTTestViewModel", "⏰ Starting timer for $seconds seconds")
@@ -363,7 +364,7 @@ class PPDTTestViewModel @Inject constructor(
                     if (!isActive) break // Double-check after delay
                     
                     val newTime = _uiState.value.timeRemainingSeconds - 1
-                    _uiState.value = _uiState.value.copy(timeRemainingSeconds = newTime)
+                    _uiState.update { it.copy(timeRemainingSeconds = newTime) }
                     
                     if (newTime == 0 && isActive) {
                         // Auto-proceed when time runs out
@@ -390,7 +391,7 @@ class PPDTTestViewModel @Inject constructor(
         android.util.Log.d("PPDTTestViewModel", "📸 Image URL from session: ${session.question.imageUrl}")
         android.util.Log.d("PPDTTestViewModel", "📸 Image ID: ${session.question.id}")
         
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             isLoading = false,
             loadingMessage = null,
             currentPhase = session.currentPhase,
@@ -400,7 +401,7 @@ class PPDTTestViewModel @Inject constructor(
             minCharacters = session.question.minCharacters,
             maxCharacters = session.question.maxCharacters,
             canProceedToNextPhase = session.story.length >= session.question.minCharacters
-        )
+        ) }
     }
     
     private fun generateMockQuestion(): PPDTQuestion {

@@ -1,5 +1,4 @@
 package com.ssbmax.ui.settings
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,11 +11,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
-
 /**
  * ViewModel for Subscription Management Screen
  * REFACTORED: Now uses use cases instead of direct Firebase dependencies
@@ -37,7 +36,7 @@ class SubscriptionManagementViewModel @Inject constructor(
     
     fun loadSubscriptionData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Get current user ID
@@ -82,10 +81,10 @@ class SubscriptionManagementViewModel @Inject constructor(
                 Log.d(TAG, "Loaded subscription data: tier=$uiTier, usage=${uiUsage.size} tests")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load subscription data", e)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     error = "Failed to load subscription data: ${e.message}"
-                )
+                ) }
             }
         }
     }
@@ -101,7 +100,6 @@ data class SubscriptionManagementUiState(
     val monthlyUsage: Map<String, UsageInfo> = emptyMap(),
     val subscriptionExpiresAt: String? = null
 )
-
 /**
  * UI model for subscription tier with display properties
  * Maps from domain SubscriptionTier to UI-specific display model
@@ -188,7 +186,6 @@ enum class SubscriptionTierModel(
             "Lifetime access to materials"
         )
     );
-
     companion object {
         fun from(tier: SubscriptionTier): SubscriptionTierModel {
             return when (tier) {
