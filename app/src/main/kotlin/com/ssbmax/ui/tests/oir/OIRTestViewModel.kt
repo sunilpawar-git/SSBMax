@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -84,11 +85,11 @@ class OIRTestViewModel @Inject constructor(
     
     fun loadTest(testId: String = "oir_standard") {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 isLoading = true,
                 loadingMessage = "Checking eligibility...",
                 error = null
-            )
+            ) }
             
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
@@ -101,11 +102,11 @@ class OIRTestViewModel @Inject constructor(
                     context = "OIRTestViewModel.loadTest"
                 )
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Authentication required. Please login to continue."
-                )
+                ) }
                 return@launch
             }
             
@@ -118,7 +119,7 @@ class OIRTestViewModel @Inject constructor(
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
                         // Show limit reached state
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             loadingMessage = null,
                             error = null,
@@ -127,7 +128,7 @@ class OIRTestViewModel @Inject constructor(
                             testsLimit = eligibility.limit,
                             testsUsed = eligibility.usedCount,
                             resetsAt = eligibility.resetsAt
-                        )
+                        ) }
                         android.util.Log.d("OIRTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
                         return@launch
                     }
@@ -141,25 +142,25 @@ class OIRTestViewModel @Inject constructor(
                 // Continue anyway in case of error
             }
             
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 loadingMessage = "Preparing test..."
-            )
+            ) }
             
             try {
                 // TODO: Check subscription eligibility when feature is implemented
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     loadingMessage = "Analyzing your level..."
-                )
+                ) }
                 
                 // Get recommended difficulty based on past performance
                 val difficulty = difficultyManager.getRecommendedDifficulty("OIR")
                 android.util.Log.d("OIRTestViewModel", "📊 Recommended difficulty: $difficulty")
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     loadingMessage = "Loading $difficulty questions...",
                     currentDifficulty = difficulty
-                )
+                ) }
                 
                 // Fetch questions using the new caching system with difficulty
                 val questionsResult = testContentRepository.getOIRTestQuestions(count = 50, difficulty = difficulty)
@@ -215,11 +216,11 @@ class OIRTestViewModel @Inject constructor(
                 throw e // Don't catch cancellation
             } catch (e: Exception) {
                 android.util.Log.e("OIRTestViewModel", "Failed to load test", e)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Failed to load test: ${e.message ?: "Unknown error"}"
-                )
+                ) }
             }
         }
     }
@@ -265,12 +266,12 @@ class OIRTestViewModel @Inject constructor(
         android.util.Log.d("OIRTestViewModel", "   Answer correct? ${answer.isCorrect}")
         
         // Show immediate feedback for OIR tests
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             selectedOptionId = optionId,
             showFeedback = true,
             isCurrentAnswerCorrect = answer.isCorrect,
             currentQuestionAnswered = true
-        )
+        ) }
         
         android.util.Log.d("OIRTestViewModel", "✅ selectOption() complete")
     }
@@ -372,12 +373,12 @@ class OIRTestViewModel @Inject constructor(
                 
                 // Mark test as completed with submission ID
                 currentSession = session.copy(isCompleted = true)
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isCompleted = true,
                     sessionId = submissionId, // Use submissionId for consistency with other tests
                     subscriptionType = subscriptionType,
                     testResult = result
-                )
+                ) }
             } catch (e: Exception) {
                 // Use ErrorLogger instead of printStackTrace() for proper error tracking
                 ErrorLogger.logTestError(
@@ -387,9 +388,9 @@ class OIRTestViewModel @Inject constructor(
                     userId = observeCurrentUser().first()?.id
                 )
 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"
-                )
+                ) }
             }
         }
     }
@@ -414,7 +415,7 @@ class OIRTestViewModel @Inject constructor(
                     if (!isActive) break // Double-check after delay
                     
                     val newTime = _uiState.value.timeRemainingSeconds - 1
-                    _uiState.value = _uiState.value.copy(timeRemainingSeconds = newTime)
+                    _uiState.update { it.copy(timeRemainingSeconds = newTime) }
                     
                     currentSession = currentSession?.copy(timeRemainingSeconds = newTime)
                     
@@ -454,11 +455,11 @@ class OIRTestViewModel @Inject constructor(
                 android.util.Log.d("OIRTestViewModel", "   Question[$index]: id=${q.id}")
             }
             
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 isLoading = false,
                 loadingMessage = null,
                 error = "Invalid question index (${session.currentQuestionIndex}/${session.questions.size}). Please click Submit Test button."
-            )
+            ) }
             return
         }
         
@@ -466,7 +467,7 @@ class OIRTestViewModel @Inject constructor(
         
         val existingAnswer = session.answers[currentQuestion.id]
         
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             isLoading = false,
             loadingMessage = null,
             error = null, // Clear any previous errors
@@ -478,7 +479,7 @@ class OIRTestViewModel @Inject constructor(
             showFeedback = existingAnswer != null,
             isCurrentAnswerCorrect = existingAnswer?.isCorrect ?: false,
             currentQuestionAnswered = existingAnswer != null
-        )
+        ) }
     }
     
     private fun calculateResults(session: OIRTestSession): OIRTestResult {
