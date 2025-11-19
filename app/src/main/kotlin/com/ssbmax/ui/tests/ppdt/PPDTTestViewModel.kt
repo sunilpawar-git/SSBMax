@@ -475,6 +475,9 @@ class PPDTTestViewModel @Inject constructor(
         // PHASE 3: viewModelScope automatically cancels all child jobs
         android.util.Log.d("PPDTTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-canceling all jobs")
         
+        // Cancel navigation events channel
+        _navigationEvents.close()
+        
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("PPDTTestViewModel")
         

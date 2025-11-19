@@ -397,6 +397,11 @@ class SRTTestViewModel @Inject constructor(
             )
         )
     }
+    
+    override fun onCleared() {
+        super.onCleared()
+        _navigationEvents.close()
+    }
 }
 
 /**

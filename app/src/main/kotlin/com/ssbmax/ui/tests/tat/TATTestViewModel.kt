@@ -510,6 +510,9 @@ class TATTestViewModel @Inject constructor(
         // PHASE 2: Timers auto-cancelled by viewModelScope
         android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
         
+        // Cancel navigation events channel
+        _navigationEvents.close()
+        
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("TATTestViewModel")
 

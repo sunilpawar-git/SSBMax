@@ -487,6 +487,9 @@ class WATTestViewModel @Inject constructor(
         // PHASE 2: Timers auto-cancelled by viewModelScope
         android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
         
+        // Cancel navigation events channel
+        _navigationEvents.close()
+        
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("WATTestViewModel")
 
