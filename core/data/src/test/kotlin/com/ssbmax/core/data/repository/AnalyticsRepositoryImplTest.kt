@@ -2,8 +2,10 @@ package com.ssbmax.core.data.repository
 
 import app.cash.turbine.test
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
+import com.ssbmax.core.domain.model.UserProfile
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import io.mockk.coEvery
 import io.mockk.every
@@ -24,14 +26,40 @@ class AnalyticsRepositoryImplTest {
     private lateinit var performanceDao: UserPerformanceDao
     private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firebaseUser: FirebaseUser
     private lateinit var repository: AnalyticsRepositoryImpl
+
+    private val testUserId = "test-user-123"
 
     @Before
     fun setup() {
         performanceDao = mockk()
         userProfileRepository = mockk()
         firebaseAuth = mockk()
+        firebaseUser = mockk()
+        
+        // Mock FirebaseAuth to return a user
+        every { firebaseAuth.currentUser } returns firebaseUser
+        every { firebaseUser.uid } returns testUserId
+        
+        // Mock UserProfileRepository to return a default profile
+        every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(
+            Result.success(createDefaultUserProfile())
+        )
+        
         repository = AnalyticsRepositoryImpl(performanceDao, userProfileRepository, firebaseAuth)
+    }
+    
+    private fun createDefaultUserProfile(): UserProfile {
+        return UserProfile(
+            userId = testUserId,
+            fullName = "Test User",
+            age = 25,
+            gender = com.ssbmax.core.domain.model.Gender.MALE,
+            entryType = com.ssbmax.core.domain.model.EntryType.GRADUATE,
+            subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.FREE,
+            currentStreak = 0
+        )
     }
 
     @Test

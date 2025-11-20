@@ -13,6 +13,11 @@ android {
 
         testInstrumentationRunner = "com.ssbmax.core.data.FirebaseTestRunner"
         consumerProguardFiles("consumer-rules.pro")
+        
+        // Room schema export configuration
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
     }
 
     buildTypes {
