@@ -1,8 +1,10 @@
 package com.ssbmax.core.data.repository
 
 import app.cash.turbine.test
+import com.google.firebase.auth.FirebaseAuth
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -20,12 +22,16 @@ import org.junit.Test
 class AnalyticsRepositoryImplTest {
 
     private lateinit var performanceDao: UserPerformanceDao
+    private lateinit var userProfileRepository: UserProfileRepository
+    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var repository: AnalyticsRepositoryImpl
 
     @Before
     fun setup() {
         performanceDao = mockk()
-        repository = AnalyticsRepositoryImpl(performanceDao)
+        userProfileRepository = mockk()
+        firebaseAuth = mockk()
+        repository = AnalyticsRepositoryImpl(performanceDao, userProfileRepository, firebaseAuth)
     }
 
     @Test
