@@ -20,10 +20,14 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "com.ssbmax.testing.HiltTestRunner"
-        
+
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Gemini API Key for AI Interview Feature
+        val geminiApiKey: String = project.findProperty("GEMINI_API_KEY") as? String ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {

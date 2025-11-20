@@ -79,7 +79,7 @@ enum class TestType {
     GTO_LECTURETTE, // Lecturette
     GTO_IO,     // Individual Obstacles
     GTO_CT,     // Command Task
-    IO;         // Interview Officer - TODO: Implement ViewModel with security measures above
+    IO;         // Interview Test - AI-powered SSB interview simulation
     
     val phase: TestPhase
         get() = when (this) {
