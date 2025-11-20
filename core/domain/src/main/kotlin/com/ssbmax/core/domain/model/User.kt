@@ -1,8 +1,40 @@
 package com.ssbmax.core.domain.model
 
 /**
- * Legacy user model - kept for backward compatibility
- * Use SSBMaxUser for new implementations
+ * Legacy user model - kept for backward compatibility.
+ *
+ * @deprecated Use [SSBMaxUser] instead for full feature support
+ *
+ * **Migration Timeline:**
+ * - Deprecated: Phase 3 (2024-Q3)
+ * - Removal Target: Phase 6 (2025-Q2)
+ *
+ * **Migration Guide:**
+ * ```kotlin
+ * // OLD (deprecated)
+ * val user = User(
+ *     id = "123",
+ *     email = "user@example.com",
+ *     displayName = "John Doe",
+ *     isPremium = true
+ * )
+ *
+ * // NEW (recommended)
+ * val user = SSBMaxUser(
+ *     id = "123",
+ *     email = "user@example.com",
+ *     displayName = "John Doe",
+ *     subscriptionType = SubscriptionType.PRO,
+ *     userRole = UserRole.CANDIDATE
+ * )
+ * ```
+ *
+ * **Breaking Changes:**
+ * - `isPremium` replaced with `subscriptionType` (FREE/PRO/PREMIUM)
+ * - Added `userRole` (CANDIDATE/COACH/ADMIN)
+ * - Added profile fields (photoUrl, phone, registrationDate)
+ *
+ * @see SSBMaxUser
  */
 @Deprecated("Use SSBMaxUser instead", ReplaceWith("SSBMaxUser"))
 data class User(

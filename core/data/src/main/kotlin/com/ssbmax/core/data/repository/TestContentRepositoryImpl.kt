@@ -39,6 +39,34 @@ class TestContentRepositoryImpl @Inject constructor(
     private val testsCollection = firestore.collection("tests")
     private val sessionsCollection = firestore.collection("test_sessions")
 
+    /**
+     * Legacy method for OIR question fetching.
+     *
+     * @deprecated Use [getOIRTestQuestions] instead for cached implementation with difficulty support
+     *
+     * **Migration Timeline:**
+     * - Deprecated: Phase 4 (2024-Q4)
+     * - Removal Target: Phase 6 (2025-Q2)
+     *
+     * **Migration Guide:**
+     * ```kotlin
+     * // OLD (deprecated)
+     * val questions = repository.getOIRQuestions(testId)
+     *
+     * // NEW (recommended)
+     * val questions = repository.getOIRTestQuestions(
+     *     count = 50,
+     *     difficulty = "MEDIUM" // optional
+     * )
+     * ```
+     *
+     * **Breaking Changes:**
+     * - testId parameter removed (questions now managed by cache)
+     * - Returns fixed count instead of all questions for testId
+     * - Supports difficulty filtering
+     *
+     * @see getOIRTestQuestions
+     */
     @Deprecated("Use getOIRTestQuestions() for cached implementation")
     override suspend fun getOIRQuestions(testId: String): Result<List<OIRQuestion>> {
         // Fallback to new cached method

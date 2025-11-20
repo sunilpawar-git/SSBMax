@@ -44,8 +44,40 @@ fun NotificationSettingsSection(
 }
 
 /**
- * Legacy version for backward compatibility during transition
- * DEPRECATED: Use NotificationSettingsSection() without parameters instead
+ * Legacy version for backward compatibility during transition.
+ *
+ * @deprecated Use NotificationSettingsSection() without parameters - it now manages its own ViewModel
+ *
+ * **Migration Timeline:**
+ * - Deprecated: Phase 3 (2024-Q3)
+ * - Removal Target: Phase 5 (2025-Q1)
+ *
+ * **Migration Guide:**
+ * ```kotlin
+ * // OLD (deprecated - manual state passing)
+ * NotificationSettingsSection(
+ *     preferences = viewModel.preferences,
+ *     onTogglePushNotifications = { enabled -> viewModel.toggle(enabled) },
+ *     onToggleGradingComplete = { ... },
+ *     // ... 8 more parameters
+ * )
+ *
+ * // NEW (recommended - self-managed state)
+ * NotificationSettingsSection(modifier = Modifier.fillMaxWidth())
+ * // ViewModel injected automatically via Hilt
+ * ```
+ *
+ * **Breaking Changes:**
+ * - All state management parameters removed
+ * - ViewModel now injected via `hiltViewModel()` internally
+ * - Simpler API with single modifier parameter
+ *
+ * **Why This Change:**
+ * - Follows Compose best practices (components manage own state)
+ * - Reduces boilerplate (8 callback parameters eliminated)
+ * - Better testability with dedicated ViewModel
+ *
+ * @see NotificationSettingsSection
  */
 @Deprecated(
     message = "Use NotificationSettingsSection() without parameters - it now manages its own ViewModel",

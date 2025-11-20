@@ -26,11 +26,13 @@ class UpgradeViewModel @Inject constructor() : ViewModel() {
     }
     
     private fun loadPlans() {
+        // Note: Prices sourced from SubscriptionTier domain model (single source of truth)
+        // TODO: Migrate to Google Play Billing Library for production
         val plans = listOf(
             SubscriptionPlan(
                 tier = SubscriptionTier.PRO,
                 name = "Pro",
-                price = 299,
+                price = SubscriptionTier.PRO.monthlyPriceInt,
                 billingPeriod = BillingPeriod.MONTHLY,
                 features = listOf(
                     "All study materials",
@@ -42,7 +44,7 @@ class UpgradeViewModel @Inject constructor() : ViewModel() {
             SubscriptionPlan(
                 tier = SubscriptionTier.PREMIUM,
                 name = "AI Premium",
-                price = 599,
+                price = SubscriptionTier.PREMIUM.monthlyPriceInt,
                 billingPeriod = BillingPeriod.MONTHLY,
                 features = listOf(
                     "Everything in Pro",
@@ -56,7 +58,7 @@ class UpgradeViewModel @Inject constructor() : ViewModel() {
             SubscriptionPlan(
                 tier = SubscriptionTier.PREMIUM,
                 name = "Premium",
-                price = 999,
+                price = SubscriptionTier.PREMIUM.monthlyPriceInt,
                 billingPeriod = BillingPeriod.MONTHLY,
                 features = listOf(
                     "Everything in AI Premium",
