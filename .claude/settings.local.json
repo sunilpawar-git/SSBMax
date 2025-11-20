@@ -7,7 +7,8 @@
       "Bash(./gradle.sh:*)",
       "Bash(cat:*)",
       "Bash(git add:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []

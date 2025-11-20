@@ -449,6 +449,84 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             Result.failure(Exception("Failed to delete submission: ${e.message}", e))
         }
     }
+
+    /**
+     * Get latest PIQ submission for user
+     * TODO: Full implementation in Phase 3
+     */
+    override suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "PIQ")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                // TODO: Implement proper PIQSubmission deserialization in Phase 3
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest PIQ submission", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get latest OIR submission for user
+     * TODO: Full implementation in Phase 3
+     */
+    override suspend fun getLatestOIRSubmission(userId: String): Result<OIRSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "OIR")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                // TODO: Implement proper OIRSubmission deserialization in Phase 3
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest OIR submission", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get latest PPDT submission for user
+     * TODO: Full implementation in Phase 3
+     */
+    override suspend fun getLatestPPDTSubmission(userId: String): Result<PPDTSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "PPDT")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                // TODO: Implement proper PPDTSubmission deserialization in Phase 3
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest PPDT submission", e)
+            Result.failure(e)
+        }
+    }
 }
 
 /**

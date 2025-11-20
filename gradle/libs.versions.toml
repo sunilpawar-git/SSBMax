@@ -33,6 +33,9 @@ coil = "2.5.0"
 # Memory Leak Detection
 leakcanary = "2.14"
 
+# AI/ML
+generativeai = "0.9.0"
+
 # Testing
 junit = "4.13.2"
 junitAndroidx = "1.2.1"
@@ -106,6 +109,9 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 # Play Services for Google Sign-In
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "1.9.0" }
+
+# Gemini AI (Google Generative AI SDK)
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 
 # Billing
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version = "7.1.1" }

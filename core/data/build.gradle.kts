@@ -85,7 +85,10 @@ dependencies {
     // Google Sign-In
     implementation(libs.play.services.auth)
     implementation(libs.kotlinx.coroutines.play.services)
-    
+
+    // Gemini AI
+    implementation(libs.generativeai)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
