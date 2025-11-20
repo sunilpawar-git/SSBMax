@@ -1,7 +1,9 @@
 package com.ssbmax.core.data.util
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
+import com.ssbmax.core.data.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -19,11 +21,25 @@ import kotlinx.coroutines.launch
  * 3. Rotate device or navigate away to trigger ViewModel destruction
  * 4. Verify no leaks are reported
  *
- * Note: Uses GlobalScope for testing - in production code, always use viewModelScope!
+ * ⚠️ WARNING: Uses GlobalScope intentionally for leak simulation.
+ * NEVER use GlobalScope in production code - always use viewModelScope!
+ *
+ * This helper is for development/debugging ONLY and will fail in release builds.
+ *
+ * @see [ADR-003](docs/architecture/ADR-003-GlobalScope-Usage.md)
  */
+@VisibleForTesting
 object LeakVerificationHelper {
 
     private const val TAG = "LeakVerification"
+
+    init {
+        // Prevent usage in production/release builds
+        check(BuildConfig.DEBUG) {
+            "LeakVerificationHelper is DEBUG-only and must not be used in production builds. " +
+            "Remove all references before creating release APK."
+        }
+    }
 
     /**
      * Creates a test scenario that simulates potential memory leaks

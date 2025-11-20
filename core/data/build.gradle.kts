@@ -16,13 +16,22 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Enable BuildConfig for DEBUG flag checks
+            buildConfigField("boolean", "DEBUG", "true")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "DEBUG", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
     
     compileOptions {
