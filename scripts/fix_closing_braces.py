@@ -77,3 +77,4 @@ if __name__ == "__main__":
         print(f"\nProcessing: {file_path}")
         fix_closing_braces(file_path)
 
+

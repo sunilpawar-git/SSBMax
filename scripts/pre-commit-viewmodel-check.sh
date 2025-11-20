@@ -99,3 +99,4 @@ fi
 echo "✅ ViewModel architecture checks passed"
 exit 0
 
+

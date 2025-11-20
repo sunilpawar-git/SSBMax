@@ -1,4 +1,4 @@
-we just completed phase 0 of SettingsViewModel God Class Refactoring Plan.
+we completed phase 0 of SettingsViewModel God Class Refactoring Plan.
 
 ## **PHASE 0: FOUNDATION & PREPARATION** ⚠️ CRITICAL PREREQUISITE
 **Goal:** Fix violations and establish baseline before refactoring
@@ -6,3 +6,59 @@ Step 0.1: Extract Hardcoded Strings to XML (35–40 strings)
 Step 0.2: Fix NotificationSettingsSection Anti-Pattern
 Step 0.3: Write Baseline Tests for Current SettingsViewModel
 Step 0.4: Commit Foundation Work
+
+---
+
+thereafter, we completed Phase 1 ie PHASE 1: NOTIFICATION SETTINGS EXTRACTION**
+**Goal:** Extract notification logic to separate ViewModel (smallest, safest first)
+### Step 1.1: Create NotificationSettingsViewModel
+### Step 1.2: Write Tests for NotificationSettingsViewModel
+### Step 1.3: Update NotificationSettingsSection to Use New ViewModel
+### Step 1.4: Remove Notification Code from SettingsViewModel
+### Step 1.5: Commit Phase 1
+
+---
+
+now we need to complete Phase 2, with details given as under:
+
+## **PHASE 2: THEME SETTINGS EXTRACTION**
+
+**Goal:** Extract theme logic to separate ViewModel (simplest domain)
+
+### Step 2.1: Create ThemeSettingsViewModel
+
+- Create `ui/settings/theme/ThemeSettingsViewModel.kt`
+- Create `ui/settings/theme/ThemeSettingsUiState.kt`
+- Extract 1 dependency: ThemePreferenceManager
+- Extract 2 methods (updateTheme, observeThemeChanges)
+- Extract 1 state property (appTheme)
+- **Build:** `./gradle.sh assembleDebug` (MUST PASS)
+
+### Step 2.2: Write Tests for ThemeSettingsViewModel
+
+- Create `ThemeSettingsViewModelTest.kt`
+- Test theme observation (3 tests: system/light/dark)
+- Test theme update (3 tests: each theme type)
+- Test persistence (2 tests)
+- **Build & Test:** `./gradle.sh test` (MUST PASS — 8 new tests)
+
+### Step 2.3: Update ThemeSection to Use New ViewModel
+
+- Update section to use `hiltViewModel&lt;ThemeSettingsViewModel&gt;()`
+- Update SettingsScreen composition
+- Keep old ViewModel code temporarily
+- **Build:** `./gradle.sh assembleDebug` (MUST PASS)
+- **Manual Test:** Theme switching still works
+
+### Step 2.4: Remove Theme Code from SettingsViewModel
+
+- Remove 2 theme methods
+- Remove 1 theme dependency
+- Remove 1 theme state property
+- Update baseline tests
+- **Build & Test:** `./gradle.sh test` (MUST PASS)
+
+### Step 2.5: Commit Phase 2
+
+- **Commit:** "refactor(settings): extract ThemeSettingsViewModel"
+- **Push:** Push to remote
