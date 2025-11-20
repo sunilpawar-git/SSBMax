@@ -1,11 +1,5 @@
 package com.ssbmax.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -48,8 +42,12 @@ fun NavGraphBuilder.instructorNavGraph(
     
     // Instructor Students
     composable(SSBMaxDestinations.InstructorStudents.route) {
-        // TODO: Implement InstructorStudentsScreen
-        InstructorPlaceholderScreen(title = "Instructor Students")
+        com.ssbmax.ui.instructor.InstructorStudentsScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onStudentClick = { studentId ->
+                navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+            }
+        )
     }
     
     // Instructor Grading Queue
@@ -64,14 +62,21 @@ fun NavGraphBuilder.instructorNavGraph(
     
     // Instructor Analytics
     composable(SSBMaxDestinations.InstructorAnalytics.route) {
-        // TODO: Implement InstructorAnalyticsScreen
-        InstructorPlaceholderScreen(title = "Instructor Analytics")
+        com.ssbmax.ui.instructor.InstructorAnalyticsScreen(
+            onNavigateBack = { navController.navigateUp() }
+        )
     }
     
     // Create Batch
     composable(SSBMaxDestinations.CreateBatch.route) {
-        // TODO: Implement CreateBatchScreen
-        InstructorPlaceholderScreen(title = "Create Batch")
+        com.ssbmax.ui.instructor.CreateBatchScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onBatchCreated = { batchId ->
+                navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId)) {
+                    popUpTo(SSBMaxDestinations.CreateBatch.route) { inclusive = true }
+                }
+            }
+        )
     }
     
     // Batch Detail
@@ -80,8 +85,13 @@ fun NavGraphBuilder.instructorNavGraph(
         arguments = listOf(navArgument("batchId") { type = NavType.StringType })
     ) { backStackEntry ->
         val batchId = backStackEntry.arguments?.getString("batchId") ?: ""
-        // TODO: Implement BatchDetailScreen
-        InstructorPlaceholderScreen(title = "Batch: $batchId")
+        com.ssbmax.ui.instructor.BatchDetailScreen(
+            batchId = batchId,
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToStudent = { studentId ->
+                navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+            }
+        )
     }
     
     // Student Detail (for instructors)
@@ -90,8 +100,13 @@ fun NavGraphBuilder.instructorNavGraph(
         arguments = listOf(navArgument("studentId") { type = NavType.StringType })
     ) { backStackEntry ->
         val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
-        // TODO: Implement StudentDetailScreen
-        InstructorPlaceholderScreen(title = "Student Details: $studentId")
+        com.ssbmax.ui.instructor.StudentDetailScreen(
+            studentId = studentId,
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToSubmission = { submissionId ->
+                navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
+            }
+        )
     }
     
     // Instructor Grading Detail (View & Grade Submission)
@@ -104,19 +119,6 @@ fun NavGraphBuilder.instructorNavGraph(
             submissionId = submissionId,
             onNavigateBack = { navController.navigateUp() }
         )
-    }
-}
-
-/**
- * Temporary placeholder for instructor screens not yet implemented
- */
-@Composable
-private fun InstructorPlaceholderScreen(title: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = title)
     }
 }
 

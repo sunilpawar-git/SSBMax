@@ -99,13 +99,13 @@ fun NavGraphBuilder.studentNavGraph(
     composable(SSBMaxDestinations.StudentProfile.route) {
         com.ssbmax.ui.profile.StudentProfileScreen(
             onNavigateToSettings = {
-                // TODO: Navigate to settings
+                navController.navigate(SSBMaxDestinations.Settings.route)
             },
             onNavigateToAchievements = {
-                // TODO: Navigate to achievements
+                // TODO: Achievements screen (future feature)
             },
             onNavigateToHistory = {
-                // TODO: Navigate to test history
+                navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
             }
         )
     }

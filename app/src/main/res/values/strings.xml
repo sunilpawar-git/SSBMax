@@ -956,4 +956,43 @@
     <string name="help_contact_support_title">Contact Support</string>
     <string name="help_contact_support_email">support@ssbmax.com</string>
 
+    <!-- ============================================ -->
+    <!-- INSTRUCTOR SCREENS (PLACEHOLDERS) -->
+    <!-- ============================================ -->
+    
+    <!-- Instructor Students Screen -->
+    <string name="instructor_students_title">My Students</string>
+    <string name="instructor_students_placeholder_title">Student Management</string>
+    <string name="instructor_students_placeholder_description">View and manage all your students in one place</string>
+    <string name="instructor_students_features_title">Coming Soon</string>
+    <string name="instructor_students_features_list">• View all students in your batches\n• Search and filter students\n• Track individual progress\n• View test submissions\n• Add notes and feedback</string>
+    
+    <!-- Instructor Analytics Screen -->
+    <string name="instructor_analytics_title">Batch Analytics</string>
+    <string name="instructor_analytics_placeholder_title">Performance Analytics</string>
+    <string name="instructor_analytics_placeholder_description">Comprehensive analytics for your batches and students</string>
+    <string name="instructor_analytics_features_title">Coming Soon</string>
+    <string name="instructor_analytics_features_list">• Batch-wide performance overview\n• Individual student trends\n• Test-wise analytics\n• Progress charts and graphs\n• Compare across batches</string>
+    
+    <!-- Create Batch Screen -->
+    <string name="create_batch_title">Create New Batch</string>
+    <string name="create_batch_placeholder_title">Batch Creation</string>
+    <string name="create_batch_placeholder_description">Create and manage student batches for organized teaching</string>
+    <string name="create_batch_features_title">Coming Soon</string>
+    <string name="create_batch_features_list">• Create batch with name and details\n• Add students via invite codes\n• Set batch capacity and duration\n• Assign default tests\n• Track batch progress</string>
+    
+    <!-- Batch Detail Screen -->
+    <string name="batch_detail_title">Batch: %1$s</string>
+    <string name="batch_detail_placeholder_title">Batch Details</string>
+    <string name="batch_detail_placeholder_description">Viewing details for batch: %1$s</string>
+    <string name="batch_detail_features_title">Coming Soon</string>
+    <string name="batch_detail_features_list">• View all batch members\n• Batch performance summary\n• Assign tests to batch\n• Edit batch details\n• Add/remove students\n• Archive batch</string>
+    
+    <!-- Student Detail Screen -->
+    <string name="student_detail_title">Student: %1$s</string>
+    <string name="student_detail_placeholder_title">Student Performance</string>
+    <string name="student_detail_placeholder_description">Viewing performance for student: %1$s</string>
+    <string name="student_detail_features_title">Coming Soon</string>
+    <string name="student_detail_features_list">• Complete test history\n• Performance trends and charts\n• All submissions with scores\n• Instructor notes and feedback\n• Compare with batch average\n• Track engagement</string>
+
 </resources>

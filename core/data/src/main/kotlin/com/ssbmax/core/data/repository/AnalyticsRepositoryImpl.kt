@@ -1,9 +1,12 @@
 package com.ssbmax.core.data.repository
 
+import com.google.firebase.auth.FirebaseAuth
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.AnalyticsRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.*
@@ -13,10 +16,13 @@ import javax.inject.Singleton
 /**
  * Implementation of AnalyticsRepository
  * Aggregates performance data from UserPerformanceDao
+ * Combines with UserProfile for streak information
  */
 @Singleton
 class AnalyticsRepositoryImpl @Inject constructor(
-    private val performanceDao: UserPerformanceDao
+    private val performanceDao: UserPerformanceDao,
+    private val userProfileRepository: UserProfileRepository,
+    private val firebaseAuth: FirebaseAuth
 ) : AnalyticsRepository {
     
     companion object {
@@ -24,8 +30,17 @@ class AnalyticsRepositoryImpl @Inject constructor(
     }
     
     override fun getPerformanceOverview(): Flow<PerformanceOverview?> {
-        return performanceDao.getAllPerformance().map { performances ->
-            if (performances.isEmpty()) return@map null
+        val userId = firebaseAuth.currentUser?.uid
+        if (userId == null) {
+            return kotlinx.coroutines.flow.flowOf(null)
+        }
+        
+        // Combine performance data with user profile to get streak
+        return combine(
+            performanceDao.getAllPerformance(),
+            userProfileRepository.getUserProfile(userId)
+        ) { performances, profileResult ->
+            if (performances.isEmpty()) return@combine null
             
             val totalTests = performances.sumOf { it.totalAttempts }
             val averageScore = if (totalTests > 0) {
@@ -50,11 +65,14 @@ class AnalyticsRepositoryImpl @Inject constructor(
                     )
                 }
             
+            // Get current streak from user profile
+            val currentStreak = profileResult.getOrNull()?.currentStreak ?: 0
+            
             PerformanceOverview(
                 totalTests = totalTests,
                 averageScore = averageScore,
                 totalStudyTimeMinutes = (performances.sumOf { (it.totalAttempts * it.averageTimeSeconds).toInt() } / 60),
-                currentStreak = 0, // TODO: Calculate streak from timestamps
+                currentStreak = currentStreak,
                 testsByType = testsByType,
                 recentProgress = recentProgress
             )
