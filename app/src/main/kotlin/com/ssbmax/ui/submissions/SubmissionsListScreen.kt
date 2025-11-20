@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.SubmissionStatus
 import com.ssbmax.core.domain.model.TestType
 
@@ -45,12 +47,12 @@ fun SubmissionsListScreen(
                 title = {
                     Column {
                         Text(
-                            text = "My Submissions",
+                            text = stringResource(R.string.submissions_list_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "SSB Preparation > Test Results",
+                            text = stringResource(R.string.submissions_list_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -58,12 +60,12 @@ fun SubmissionsListScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Default.Refresh, "Refresh")
+                        Icon(Icons.Default.Refresh, stringResource(R.string.submissions_list_action_refresh))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -128,7 +130,7 @@ private fun FilterSection(
     Column(modifier = modifier) {
         // Test Type Filters
         Text(
-            "Test Type",
+            stringResource(R.string.submissions_list_filter_test_type),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -139,7 +141,7 @@ private fun FilterSection(
             FilterChip(
                 selected = selectedTestType == null,
                 onClick = { onTestTypeSelected(null) },
-                label = { Text("All") }
+                label = { Text(stringResource(R.string.submissions_list_filter_all)) }
             )
             FilterChip(
                 selected = selectedTestType == TestType.TAT,
@@ -157,10 +159,10 @@ private fun FilterSection(
                 label = { Text("SRT") }
             )
         }
-        
+
         // Status Filters
         Text(
-            "Status",
+            stringResource(R.string.submissions_list_filter_status),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -170,17 +172,17 @@ private fun FilterSection(
             FilterChip(
                 selected = selectedStatus == null,
                 onClick = { onStatusSelected(null) },
-                label = { Text("All") }
+                label = { Text(stringResource(R.string.submissions_list_filter_all)) }
             )
             FilterChip(
                 selected = selectedStatus == SubmissionStatus.SUBMITTED_PENDING_REVIEW,
                 onClick = { onStatusSelected(SubmissionStatus.SUBMITTED_PENDING_REVIEW) },
-                label = { Text("Pending") }
+                label = { Text(stringResource(R.string.submissions_list_filter_pending)) }
             )
             FilterChip(
                 selected = selectedStatus == SubmissionStatus.GRADED,
                 onClick = { onStatusSelected(SubmissionStatus.GRADED) },
-                label = { Text("Graded") }
+                label = { Text(stringResource(R.string.submissions_list_filter_graded)) }
             )
         }
     }
@@ -231,11 +233,11 @@ private fun SubmissionCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
-                    text = "Submitted ${submission.timeAgo}",
+                    text = stringResource(R.string.submissions_list_submitted, submission.timeAgo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -252,7 +254,7 @@ private fun SubmissionCard(
                     // Score if available
                     submission.score?.let { score ->
                         Text(
-                            text = "• Score: ${score.toInt()}/100",
+                            text = stringResource(R.string.submissions_list_score_format, score.toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary
@@ -260,10 +262,10 @@ private fun SubmissionCard(
                     }
                 }
             }
-            
+
             Icon(
                 imageVector = Icons.Default.ChevronRight,
-                contentDescription = "View details",
+                contentDescription = stringResource(R.string.submissions_list_view_details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -321,7 +323,7 @@ private fun LoadingState(modifier: Modifier = Modifier) {
         ) {
             CircularProgressIndicator()
             Text(
-                "Loading submissions...",
+                stringResource(R.string.submissions_list_loading),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -351,7 +353,7 @@ private fun ErrorState(
                 modifier = Modifier.size(48.dp)
             )
             Text(
-                text = "Error",
+                text = stringResource(R.string.submissions_list_error),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -363,7 +365,7 @@ private fun ErrorState(
             Button(onClick = onRetry) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Retry")
+                Text(stringResource(R.string.action_retry))
             }
         }
     }
@@ -390,26 +392,26 @@ private fun EmptyState(
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                text = "No Submissions Yet",
+                text = stringResource(R.string.submissions_list_empty_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Complete tests to see your submissions here",
+                text = stringResource(R.string.submissions_list_empty_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Button(
                 onClick = onTakeTest,
                 modifier = Modifier.padding(top = 8.dp)
             ) {
                 Icon(Icons.Default.Edit, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Take a Test")
+                Text(stringResource(R.string.submissions_list_action_take_test))
             }
         }
     }

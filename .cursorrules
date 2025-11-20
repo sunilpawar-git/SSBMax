@@ -759,6 +759,53 @@ viewModelScope.launch {
 }
 ```
 
+### StateFlow/MutableStateFlow Update Pattern
+
+**CRITICAL: Always use .update {} for thread-safe state mutations**
+
+StateFlow updates must use the `.update {}` function for atomic, thread-safe mutations. Never use direct `.value =` assignment when reading and modifying the current state.
+
+**Why this matters:**
+- `.value = _state.value.copy()` creates a race condition (read-modify-write)
+- Multiple coroutines can read the same old value simultaneously
+- One update can overwrite another, causing lost state changes
+- `.update {}` uses internal locking for atomic updates
+
+```kotlin
+// ❌ WRONG - Race condition risk (NOT thread-safe)
+_uiState.value = _uiState.value.copy(isLoading = true)
+_state.value = _state.value.copy(count = _state.value.count + 1)
+
+// ✅ CORRECT - Thread-safe with .update {}
+_uiState.update { it.copy(isLoading = true) }
+_state.update { it.copy(count = it.count + 1) }
+
+// Real-world race condition example:
+// User taps button twice quickly, both coroutines read count = 0
+viewModelScope.launch {
+    _uiState.value = _uiState.value.copy(count = _uiState.value.count + 1)
+}
+viewModelScope.launch {
+    _uiState.value = _uiState.value.copy(count = _uiState.value.count + 1)
+}
+// Result with .value =: count = 1 (lost one update!)
+// Result with .update {}: count = 2 (correct)
+```
+
+**Exception:** Direct assignment is OK when NOT reading current state:
+```kotlin
+// ✅ OK - Not reading current state, just replacing entirely
+_uiState.value = UiState.Loading
+_uiState.value = UiState.Success(data)
+```
+
+**Enforcement:**
+- Custom lint rule `StateFlowValueAssignmentDetector` (ERROR severity)
+- Build fails if `.value = .value.copy()` pattern detected
+- CI pipeline validates pattern compliance
+
+**Documentation:** https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/update.html
+
 ### File Size Limit
 **CRITICAL**: No file should exceed **300 lines of code**. If approaching this limit:
 1. Extract utility functions to separate files

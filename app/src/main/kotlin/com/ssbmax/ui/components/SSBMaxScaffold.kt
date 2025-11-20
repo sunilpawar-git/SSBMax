@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 fun SSBMaxScaffold(
     navController: NavHostController,
     user: SSBMaxUser,
+    onSignOut: () -> Unit,
     content: @Composable (drawerState: DrawerState, onOpenDrawer: () -> Unit) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -101,10 +102,12 @@ fun SSBMaxScaffold(
                             phase2Expanded = !phase2Expanded
                         },
                         onSignOut = {
-                            scope.launch { drawerState.close() }
-                            // TODO: Sign out via AuthRepository
-                            navController.navigate(SSBMaxDestinations.Login.route) {
-                                popUpTo(0) { inclusive = true }
+                            scope.launch {
+                                drawerState.close()
+                                onSignOut()
+                                navController.navigate(SSBMaxDestinations.Login.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             }
                         }
                     )

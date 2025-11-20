@@ -6,6 +6,7 @@ import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
+import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,8 +33,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
     private val mockSubmitTATTest = mockk<SubmitTATTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
-    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
+    private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
+    private val mockGenerateTATAIScore = mockk<GenerateTATAIScoreUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
@@ -106,8 +108,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -141,8 +144,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -171,8 +175,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -200,8 +205,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -228,8 +234,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -260,8 +267,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -288,8 +296,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -323,8 +332,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -358,8 +368,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -393,8 +404,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -429,8 +441,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -440,6 +453,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
         // Write 2 stories
         repeat(2) { index ->
             advanceTimeBy(31000) // Viewing
+            advanceUntilIdle() // Ensure phase transition completes
             viewModel.updateStory("Story number ${index + 1}. ".repeat(20)) // Make it long enough
             viewModel.moveToNextQuestion()
         }
@@ -474,8 +488,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -503,8 +518,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -538,8 +554,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -569,8 +586,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -597,8 +615,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -636,8 +655,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -669,8 +689,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -692,8 +713,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")
@@ -715,8 +737,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
-            mockDifficultyManager,
             mockSubscriptionManager,
+            mockDifficultyManager,
+            mockGenerateTATAIScore,
             mockSecurityLogger
         )
         viewModel.loadTest("tat_standard")

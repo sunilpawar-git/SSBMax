@@ -10,12 +10,18 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.ui.settings.theme.ThemeSettingsViewModel
 import com.ssbmax.ui.theme.LocalThemeState
 
 /**
@@ -23,10 +29,10 @@ import com.ssbmax.ui.theme.LocalThemeState
  */
 @Composable
 fun ThemeSection(
-    currentTheme: AppTheme,
-    onThemeSelected: (AppTheme) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ThemeSettingsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val themeState = LocalThemeState.current
     
     Card(
@@ -49,14 +55,14 @@ fun ThemeSection(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Appearance",
+                    text = stringResource(R.string.theme_section_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Text(
-                text = "Choose your preferred theme",
+                text = stringResource(R.string.theme_section_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -70,9 +76,9 @@ fun ThemeSection(
                 listOf(AppTheme.SYSTEM, AppTheme.LIGHT, AppTheme.DARK).forEach { theme ->
                     ThemeOption(
                         theme = theme,
-                        isSelected = currentTheme == theme,
+                        isSelected = uiState.appTheme == theme,
                         onSelected = {
-                            onThemeSelected(theme)
+                            viewModel.updateTheme(theme)
                             themeState.updateTheme(theme) // Immediate UI update
                         }
                     )
@@ -114,7 +120,7 @@ private fun ThemeOption(
                     fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
                 )
                 Text(
-                    text = theme.description,
+                    text = theme.getDescription(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -137,10 +143,10 @@ val AppTheme.icon: ImageVector
         AppTheme.SYSTEM -> Icons.Default.BrightnessAuto
     }
 
-val AppTheme.description: String
-    get() = when (this) {
-        AppTheme.LIGHT -> "Light theme"
-        AppTheme.DARK -> "Dark theme"
-        AppTheme.SYSTEM -> "Follow system setting"
-    }
+@Composable
+fun AppTheme.getDescription(): String = when (this) {
+    AppTheme.LIGHT -> stringResource(R.string.theme_light_description)
+    AppTheme.DARK -> stringResource(R.string.theme_dark_description)
+    AppTheme.SYSTEM -> stringResource(R.string.theme_system_description)
+}
 

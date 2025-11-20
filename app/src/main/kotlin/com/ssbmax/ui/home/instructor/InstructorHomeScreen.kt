@@ -19,9 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.StudentPerformance
 
 /**
@@ -48,12 +50,12 @@ fun InstructorHomeScreen(
                 title = {
                     Column {
                         Text(
-                            "Instructor Dashboard",
+                            stringResource(R.string.instructor_dashboard),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "${uiState.totalStudents} Students • ${uiState.activeBatches} Batches",
+                            stringResource(R.string.instructor_stats_summary, uiState.totalStudents, uiState.activeBatches),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -61,7 +63,7 @@ fun InstructorHomeScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onOpenDrawer) {
-                        Icon(Icons.Default.Menu, "Menu")
+                        Icon(Icons.Default.Menu, stringResource(R.string.cd_menu))
                     }
                 },
                 actions = {
@@ -72,7 +74,7 @@ fun InstructorHomeScreen(
                         ) {
                             Text("${uiState.pendingGradingCount}")
                         }
-                        Icon(Icons.Default.AssignmentLate, "Pending Grading")
+                        Icon(Icons.Default.AssignmentLate, stringResource(R.string.cd_pending_grading))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -83,8 +85,8 @@ fun InstructorHomeScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onNavigateToCreateBatch,
-                icon = { Icon(Icons.Default.Add, "Create Batch") },
-                text = { Text("Create Batch") }
+                icon = { Icon(Icons.Default.Add, stringResource(R.string.cd_create_batch)) },
+                text = { Text(stringResource(R.string.action_create_batch)) }
             )
         }
     ) { paddingValues ->
@@ -101,28 +103,28 @@ fun InstructorHomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    title = "Tests Graded",
+                    title = stringResource(R.string.stat_tests_graded),
                     value = "${uiState.testsGradedToday}",
-                    subtitle = "today",
+                    subtitle = stringResource(R.string.stat_today),
                     icon = Icons.Default.Check,
                     color = Color(0xFF4CAF50),
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 StatCard(
-                    title = "Pending",
+                    title = stringResource(R.string.stat_pending),
                     value = "${uiState.pendingGradingCount}",
-                    subtitle = "to grade",
+                    subtitle = stringResource(R.string.stat_to_grade),
                     icon = Icons.Default.Schedule,
                     color = Color(0xFFFFA726),
                     onClick = onNavigateToGrading,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 StatCard(
-                    title = "Avg Response",
+                    title = stringResource(R.string.stat_avg_response),
                     value = "${uiState.avgResponseTime}h",
-                    subtitle = "time",
+                    subtitle = stringResource(R.string.stat_time),
                     icon = Icons.Default.Speed,
                     color = Color(0xFF2196F3),
                     modifier = Modifier.weight(1f)
@@ -134,12 +136,12 @@ fun InstructorHomeScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Students") }
+                    text = { Text(stringResource(R.string.tab_students)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Batches") }
+                    text = { Text(stringResource(R.string.tab_batches)) }
                 )
             }
             
@@ -234,13 +236,13 @@ private fun StudentsTab(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "No students yet",
+                    stringResource(R.string.empty_no_students),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "Create a batch and share the invite code with students",
+                    stringResource(R.string.empty_create_batch_prompt),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -316,12 +318,12 @@ private fun StudentCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "${student.testsCompleted} tests",
+                            stringResource(R.string.student_tests_count, student.testsCompleted),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.AutoMirrored.Filled.TrendingUp,
@@ -331,7 +333,7 @@ private fun StudentCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "${student.averageScore.toInt()}% avg",
+                            stringResource(R.string.student_avg_score, student.averageScore.toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -370,7 +372,7 @@ private fun BatchesTab(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "No batches created yet",
+                    stringResource(R.string.empty_no_batches),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -436,9 +438,9 @@ private fun BatchCard(
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
-                    "Code: ${batch.inviteCode}",
+                    stringResource(R.string.batch_code, batch.inviteCode),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )

@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.ui.submissions.SubmissionDetailScreen
 
 /**
@@ -31,10 +33,10 @@ fun GradingDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Grade Submission") },
+                title = { Text(stringResource(R.string.grading_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
@@ -44,7 +46,7 @@ fun GradingDetailScreen(
                     ) {
                         Icon(Icons.Default.Grade, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Grade")
+                        Text(stringResource(R.string.grading_detail_action_grade))
                     }
                 }
             )
@@ -77,10 +79,10 @@ private fun GradingDialog(
 ) {
     var score by remember { mutableStateOf("") }
     var feedback by remember { mutableStateOf("") }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Grade Submission") },
+        title = { Text(stringResource(R.string.grading_dialog_title)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -88,21 +90,21 @@ private fun GradingDialog(
                 // Score Input
                 OutlinedTextField(
                     value = score,
-                    onValueChange = { 
+                    onValueChange = {
                         if (it.isEmpty() || it.toFloatOrNull() != null) {
                             score = it
                         }
                     },
-                    label = { Text("Score (0-100)") },
+                    label = { Text(stringResource(R.string.grading_dialog_score_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                
+
                 // Feedback Input
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    label = { Text("Feedback") },
+                    label = { Text(stringResource(R.string.grading_dialog_feedback_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
@@ -120,12 +122,12 @@ private fun GradingDialog(
                 },
                 enabled = score.toFloatOrNull()?.let { it in 0f..100f } == true && feedback.isNotBlank()
             ) {
-                Text("Submit Grade")
+                Text(stringResource(R.string.grading_dialog_action_submit))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -151,33 +153,33 @@ fun InstructorGradingForm(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Instructor Grading",
+                text = stringResource(R.string.grading_form_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            
+
             OutlinedTextField(
                 value = overallScore,
-                onValueChange = { 
+                onValueChange = {
                     if (it.isEmpty() || it.toFloatOrNull() != null) {
                         overallScore = it
                     }
                 },
-                label = { Text("Overall Score (0-100)") },
+                label = { Text(stringResource(R.string.grading_form_score_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+
             OutlinedTextField(
                 value = feedback,
                 onValueChange = { feedback = it },
-                label = { Text("Detailed Feedback") },
+                label = { Text(stringResource(R.string.grading_form_feedback_label)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
                 maxLines = 8
             )
-            
+
             Button(
                 onClick = {
                     val score = overallScore.toFloatOrNull()
@@ -190,7 +192,7 @@ fun InstructorGradingForm(
             ) {
                 Icon(Icons.Default.Send, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Submit Grade")
+                Text(stringResource(R.string.grading_form_action_submit))
             }
         }
     }

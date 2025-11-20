@@ -11,15 +11,18 @@ import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for WAT Test Screen
@@ -44,8 +47,12 @@ class WATTestViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(WATTestUiState())
     val uiState: StateFlow<WATTestUiState> = _uiState.asStateFlow()
+    
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
 
-    private var timerJob: Job? = null
+    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
     init {
         // Register for memory leak tracking
@@ -64,11 +71,12 @@ class WATTestViewModel @Inject constructor(
         viewModelScope.launch {
             val state = _uiState.value
             
+            // PHASE 2: Check isTimerActive instead of timerJob
             // Only restore if we're in active phase with time remaining
             if (!state.isLoading && 
                 state.phase == WATPhase.IN_PROGRESS && 
                 state.timeRemaining > 0 && 
-                timerJob == null) {
+                !state.isTimerActive) {
                 android.util.Log.d("WATTestViewModel", "🔄 Restoring word timer after configuration change")
                 startWordTimer()
             }
@@ -262,8 +270,11 @@ class WATTestViewModel @Inject constructor(
     }
     
     private fun completeTest() {
-        stopTimer()
-        _uiState.update { it.copy(phase = WATPhase.COMPLETED) }
+        // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
+        _uiState.update { it.copy(
+            isTimerActive = false,
+            phase = WATPhase.COMPLETED
+        ) }
         submitTest()
     }
     
@@ -331,16 +342,33 @@ class WATTestViewModel @Inject constructor(
                         submission = submission,  // Store locally to show results directly
                         phase = WATPhase.SUBMITTED
                     ) }
+                    
+                    // Emit navigation event (one-time, consumed by screen)
+                    _navigationEvents.trySend(
+                        TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
                 }.onFailure { error ->
                     // Even if Firestore fails, store locally and show results
+                    val submissionId = submission.id
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
-                        submissionId = submission.id,
+                        submissionId = submissionId,
                         subscriptionType = subscriptionType,
                         submission = submission,  // Store locally to show results directly
                         phase = WATPhase.SUBMITTED
                     ) }
+                    
+                    // Emit navigation event even on partial failure
+                    _navigationEvents.trySend(
+                        TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
@@ -352,12 +380,17 @@ class WATTestViewModel @Inject constructor(
     }
     
     private fun startWordTimer() {
-        stopTimer()
-
+        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
         val timePerWord = _uiState.value.config?.timePerWordSeconds ?: 15
-        _uiState.update { it.copy(timeRemaining = timePerWord) }
+        
+        _uiState.update { it.copy(
+            timeRemaining = timePerWord,
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
+        ) }
 
-        timerJob = viewModelScope.launch {
+        // PHASE 2: Launch directly without storing Job reference
+        viewModelScope.launch {
             android.util.Log.d("WATTestViewModel", "⏰ Starting word timer")
 
             try {
@@ -377,22 +410,13 @@ class WATTestViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 android.util.Log.d("WATTestViewModel", "⏰ Word timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
+            } finally {
+                _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.also { job ->
-            // Register AFTER job is created
-            job.trackMemoryLeaks("WATTestViewModel", "word-timer")
-        }
+        }.trackMemoryLeaks("WATTestViewModel", "word-timer")
     }
     
-    private fun stopTimer() {
-        timerJob?.let { job ->
-            if (job.isActive) {
-                android.util.Log.d("WATTestViewModel", "🛑 Cancelling active timer job")
-                job.cancel()
-            }
-        }
-        timerJob = null
-    }
+    // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
     
     private fun generateMockWords(): List<WATWord> {
         val commonWords = listOf(
@@ -460,12 +484,11 @@ class WATTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
 
-        // Critical: Stop all timers to prevent leaks
-        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
-        stopTimer()
-
-        // Cancel all jobs in viewModelScope (belt and suspenders approach)
-        android.util.Log.d("WATTestViewModel", "🧹 Cancelling viewModelScope")
+        // PHASE 2: Timers auto-cancelled by viewModelScope
+        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
+        
+        // Cancel navigation events channel
+        _navigationEvents.close()
         
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("WATTestViewModel")
@@ -502,7 +525,10 @@ data class WATTestUiState(
     val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L
 ) {
     val currentWord: WATWord?
         get() = words.getOrNull(currentWordIndex)

@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.SubscriptionTier
 
 /**
@@ -42,7 +44,7 @@ fun SubscriptionSection(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Subscription & Billing",
+                    text = stringResource(R.string.subscription_billing_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -58,7 +60,7 @@ fun SubscriptionSection(
             ) {
                 Column {
                     Text(
-                        text = "Current Plan",
+                        text = stringResource(R.string.subscription_current_plan_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -89,7 +91,7 @@ fun SubscriptionSection(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 
                 Text(
-                    text = "Upgrade Options",
+                    text = stringResource(R.string.action_upgrade_options),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -112,7 +114,7 @@ fun SubscriptionSection(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Manage Subscription")
+                Text(stringResource(R.string.action_manage_subscription))
             }
         }
     }

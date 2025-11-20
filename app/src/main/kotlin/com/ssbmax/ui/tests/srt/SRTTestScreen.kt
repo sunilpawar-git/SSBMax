@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.SRTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -42,10 +44,14 @@ fun SRTTestScreen(
         viewModel.loadTest(testId)
     }
     
-    // Handle completion
-    LaunchedEffect(uiState.isSubmitted) {
-        if (uiState.isSubmitted && uiState.submissionId != null && uiState.subscriptionType != null) {
-            onTestComplete(uiState.submissionId!!, uiState.subscriptionType!!)
+    // Handle navigation events (one-time events, consumed on collection)
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult -> {
+                    onTestComplete(event.submissionId, event.subscriptionType)
+                }
+            }
         }
     }
     
@@ -68,7 +74,7 @@ fun SRTTestScreen(
     when {
         uiState.isLoading -> {
             TestContentLoadingState(
-                message = uiState.loadingMessage ?: "Loading SRT test situations from cloud...",
+                message = uiState.loadingMessage ?: stringResource(R.string.srt_loading),
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -124,13 +130,13 @@ fun SRTTestScreen(
     if (showSubmitDialog) {
         AlertDialog(
             onDismissRequest = { showSubmitDialog = false },
-            title = { Text("Submit Test?") },
+            title = { Text(stringResource(R.string.srt_submit_title)) },
             text = {
                 Column {
-                    Text("You have completed ${uiState.validResponseCount}/${uiState.situations.size} situations.")
+                    Text(stringResource(R.string.srt_submit_message, uiState.validResponseCount, uiState.situations.size))
                     if (uiState.validResponseCount < 60) {
                         Text(
-                            "Some situations are skipped or incomplete.",
+                            stringResource(R.string.srt_submit_incomplete),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -142,12 +148,12 @@ fun SRTTestScreen(
                     showSubmitDialog = false
                     viewModel.submitTest()
                 }) {
-                    Text("Submit")
+                    Text(stringResource(R.string.srt_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSubmitDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.srt_cancel))
                 }
             }
         )
@@ -163,10 +169,10 @@ private fun InstructionsView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SRT Test") },
+                title = { Text(stringResource(R.string.srt_test)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -196,12 +202,12 @@ private fun InstructionsView(
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
-                            "SRT - Situation Reaction Test",
+                            stringResource(R.string.srt_full_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Describe how you would react in practical situations",
+                            stringResource(R.string.srt_subtitle),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -215,26 +221,26 @@ private fun InstructionsView(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            "Instructions",
+                            stringResource(R.string.srt_instructions_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
-                        
+
                         InstructionItem(
                             icon = Icons.Default.FormatListNumbered,
-                            text = "60 practical situations will be presented"
+                            text = stringResource(R.string.srt_instruction_1)
                         )
                         InstructionItem(
                             icon = Icons.Default.Edit,
-                            text = "Describe YOUR reaction in 20-200 characters"
+                            text = stringResource(R.string.srt_instruction_2)
                         )
                         InstructionItem(
                             icon = Icons.Default.Timer,
-                            text = "Total time: 30 minutes (~30 sec per situation)"
+                            text = stringResource(R.string.srt_instruction_3)
                         )
                         InstructionItem(
                             icon = Icons.Default.CheckCircle,
-                            text = "You can review and edit responses before submitting"
+                            text = stringResource(R.string.srt_instruction_4)
                         )
                     }
                 }
@@ -257,16 +263,16 @@ private fun InstructionsView(
                         ) {
                             Icon(Icons.Default.Lightbulb, null)
                             Text(
-                                "Tips for Success",
+                                stringResource(R.string.srt_tips_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                        Text("• Be practical and realistic")
-                        Text("• Show initiative and leadership")
-                        Text("• Focus on action, not just thinking")
-                        Text("• Consider others' wellbeing")
-                        Text("• Demonstrate responsibility")
+                        Text(stringResource(R.string.srt_tip_1))
+                        Text(stringResource(R.string.srt_tip_2))
+                        Text(stringResource(R.string.srt_tip_3))
+                        Text(stringResource(R.string.srt_tip_4))
+                        Text(stringResource(R.string.srt_tip_5))
                     }
                 }
             }
@@ -278,7 +284,7 @@ private fun InstructionsView(
                 ) {
                     Icon(Icons.Default.PlayArrow, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Start Test")
+                    Text(stringResource(R.string.action_start_test))
                 }
             }
         }
@@ -308,16 +314,16 @@ private fun TestInProgressView(
             TopAppBar(
                 title = {
                     Column {
-                        Text("SRT Test")
+                        Text(stringResource(R.string.srt_test))
                         Text(
-                            "Situation $situationNumber / $totalSituations",
+                            stringResource(R.string.srt_situation_number, situationNumber, totalSituations),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onShowExitDialog) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Exit")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.srt_exit))
                     }
                 }
             )
@@ -334,15 +340,15 @@ private fun TestInProgressView(
                         onClick = onSkip,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Skip")
+                        Text(stringResource(R.string.srt_skip))
                     }
-                    
+
                     Button(
                         onClick = onNext,
                         enabled = canMoveNext,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Next")
+                        Text(stringResource(R.string.srt_next))
                         Spacer(Modifier.width(4.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                     }
@@ -369,7 +375,7 @@ private fun TestInProgressView(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Situation",
+                        stringResource(R.string.srt_situation),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -387,11 +393,11 @@ private fun TestInProgressView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                label = { Text("Your Response") },
-                placeholder = { Text("Describe what YOU would do in this situation...") },
+                label = { Text(stringResource(R.string.srt_your_response)) },
+                placeholder = { Text(stringResource(R.string.srt_response_placeholder)) },
                 supportingText = {
                     Text(
-                        "${response.length} / $maxChars characters",
+                        stringResource(R.string.srt_char_count, response.length, maxChars),
                         color = when {
                             response.length < minChars -> MaterialTheme.colorScheme.error
                             response.length > maxChars -> MaterialTheme.colorScheme.error
@@ -409,16 +415,16 @@ private fun TestInProgressView(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = onDismissExitDialog,
-            title = { Text("Exit Test?") },
-            text = { Text("Your progress will be lost. Are you sure?") },
+            title = { Text(stringResource(R.string.srt_exit_title)) },
+            text = { Text(stringResource(R.string.srt_exit_message)) },
             confirmButton = {
                 TextButton(onClick = onConfirmExit) {
-                    Text("Exit")
+                    Text(stringResource(R.string.srt_exit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissExitDialog) {
-                    Text("Continue")
+                    Text(stringResource(R.string.srt_continue))
                 }
             }
         )
@@ -441,7 +447,7 @@ private fun ReviewScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    Text("Submit Test")
+                    Text(stringResource(R.string.srt_submit_test))
                 }
             }
         }
@@ -464,11 +470,11 @@ private fun ReviewScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            "Review Your Responses",
+                            stringResource(R.string.srt_review_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
-                        Text("${responses.filter { it.isValidResponse }.size}/$totalSituations completed")
+                        Text(stringResource(R.string.srt_review_completed, responses.filter { it.isValidResponse }.size, totalSituations))
                     }
                 }
             }
@@ -506,7 +512,7 @@ private fun ResponseReviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Situation $number",
+                    stringResource(R.string.srt_situation_prefix, number),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -514,7 +520,7 @@ private fun ResponseReviewCard(
                 if (isSkipped) {
                     AssistChip(
                         onClick = { },
-                        label = { Text("Skipped") },
+                        label = { Text(stringResource(R.string.srt_skipped)) },
                         leadingIcon = {
                             Icon(Icons.Default.Warning, null, modifier = Modifier.size(18.dp))
                         },
@@ -545,7 +551,7 @@ private fun ResponseReviewCard(
             ) {
                 Icon(Icons.Default.Edit, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Edit")
+                Text(stringResource(R.string.srt_edit))
             }
         }
     }

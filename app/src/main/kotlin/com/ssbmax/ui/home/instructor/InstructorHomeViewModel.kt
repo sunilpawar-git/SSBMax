@@ -1,24 +1,25 @@
 package com.ssbmax.ui.home.instructor
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.StudentPerformance
+import com.ssbmax.core.domain.repository.GradingQueueRepository
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 /**
  * ViewModel for Instructor Home Screen
  * Manages student list, batches, and grading queue
  */
 @HiltViewModel
 class InstructorHomeViewModel @Inject constructor(
-    // TODO: Inject repositories
-    // private val batchRepository: BatchRepository,
-    // private val gradingRepository: GradingRepository
+    private val gradingQueueRepository: GradingQueueRepository,
+    private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(InstructorHomeUiState())
@@ -30,14 +31,32 @@ class InstructorHomeViewModel @Inject constructor(
     
     private fun loadInstructorData() {
         viewModelScope.launch {
-            // TODO: Load from repository
-            // For now, use mock data
-            _uiState.value = InstructorHomeUiState(
+            _uiState.update { it.copy(isLoading = true) }
+            // Get current instructor ID from authenticated user
+            val currentUser = observeCurrentUser().first()
+            val instructorId = currentUser?.id ?: run {
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "You must be logged in to view instructor dashboard"
+                ) }
+                return@launch
+            }
+            // Observe grading statistics
+            launch {
+                gradingQueueRepository.observeGradingStats(instructorId).collect { stats ->
+                    _uiState.update { it.copy(
+                        pendingGradingCount = stats.totalPending,
+                        testsGradedToday = stats.todayGraded,
+                        avgResponseTime = stats.averageGradingTimeMinutes / 60, // Convert to hours
+                        isLoading = false
+                    ) }
+                }
+            }
+            // TODO: Load batches and students from BatchRepository
+            // For now, keep mock data for batches and students until BatchRepository is implemented
+            _uiState.update { it.copy(
                 totalStudents = 24,
                 activeBatches = 3,
-                pendingGradingCount = 12,
-                testsGradedToday = 5,
-                avgResponseTime = 2,
                 students = listOf(
                     StudentPerformance(
                         studentId = "1",
@@ -100,7 +119,7 @@ class InstructorHomeViewModel @Inject constructor(
                         studentCount = 6
                     )
                 )
-            )
+            ) }
         }
     }
     
@@ -123,4 +142,3 @@ data class InstructorHomeUiState(
     val batches: List<BatchInfo> = emptyList(),
     val error: String? = null
 )
-

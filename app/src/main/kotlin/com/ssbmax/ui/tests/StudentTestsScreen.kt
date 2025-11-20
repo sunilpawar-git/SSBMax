@@ -11,10 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
@@ -36,7 +38,7 @@ fun StudentTestsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("All Tests") },
+                title = { Text(stringResource(R.string.student_tests_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -56,7 +58,7 @@ fun StudentTestsScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Phase 1") },
+                    text = { Text(stringResource(R.string.student_tests_tab_phase1)) },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.CheckCircleOutline,
@@ -67,7 +69,7 @@ fun StudentTestsScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Phase 2") },
+                    text = { Text(stringResource(R.string.student_tests_tab_phase2)) },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Psychology,
@@ -106,9 +108,8 @@ private fun Phase1TestsList(
     ) {
         item {
             PhaseOverviewBanner(
-                phaseTitle = "Phase 1 - Screening",
-                phaseDescription = "The screening phase consists of OIR and PPDT tests. " +
-                        "Your performance determines eligibility for Phase 2.",
+                phaseTitle = stringResource(R.string.student_tests_phase1_title),
+                phaseDescription = stringResource(R.string.student_tests_phase1_description),
                 completedTests = tests.count { it.status == TestStatus.COMPLETED },
                 totalTests = tests.size,
                 onViewDetail = onViewPhaseDetail
@@ -136,9 +137,8 @@ private fun Phase2TestsList(
     ) {
         item {
             PhaseOverviewBanner(
-                phaseTitle = "Phase 2 - Assessment",
-                phaseDescription = "Phase 2 includes Psychology Tests, GTO Tasks, and Personal Interview. " +
-                        "These comprehensively evaluate your officer-like qualities.",
+                phaseTitle = stringResource(R.string.student_tests_phase2_title),
+                phaseDescription = stringResource(R.string.student_tests_phase2_description),
                 completedTests = tests.count { it.status == TestStatus.COMPLETED },
                 totalTests = tests.size,
                 onViewDetail = onViewPhaseDetail
@@ -148,45 +148,45 @@ private fun Phase2TestsList(
         // Group tests by category
         item {
             Text(
-                text = "Psychology Tests",
+                text = stringResource(R.string.student_tests_category_psychology),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
-        
+
         items(tests.filter { it.category == "Psychology" }) { test ->
             TestOverviewCard(
                 test = test,
                 onStartTest = { onNavigateToTest(test.type) }
             )
         }
-        
+
         item {
             Text(
-                text = "GTO Tasks",
+                text = stringResource(R.string.student_tests_category_gto),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
-        
+
         items(tests.filter { it.category == "GTO" }) { test ->
             TestOverviewCard(
                 test = test,
                 onStartTest = { onNavigateToTest(test.type) }
             )
         }
-        
+
         item {
             Text(
-                text = "Interview",
+                text = stringResource(R.string.student_tests_category_interview),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
-        
+
         items(tests.filter { it.category == "Interview" }) { test ->
             TestOverviewCard(
                 test = test,
@@ -235,20 +235,20 @@ private fun PhaseOverviewBanner(
             ) {
                 Column {
                     Text(
-                        text = "Progress",
+                        text = stringResource(R.string.student_tests_progress_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "$completedTests of $totalTests tests completed",
+                        text = stringResource(R.string.student_tests_progress_format, completedTests, totalTests),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-                
+
                 TextButton(onClick = onViewDetail) {
-                    Text("View Details")
+                    Text(stringResource(R.string.student_tests_view_details))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
@@ -299,7 +299,7 @@ private fun TestOverviewCard(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "${test.durationMinutes} min",
+                            text = stringResource(R.string.student_tests_duration_format, test.durationMinutes),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -309,7 +309,7 @@ private fun TestOverviewCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${test.questionCount} ${if (test.questionCount == 1) "question" else "questions"}",
+                            text = "${test.questionCount} ${if (test.questionCount == 1) stringResource(R.string.student_tests_question_single) else stringResource(R.string.student_tests_question_plural)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -318,7 +318,7 @@ private fun TestOverviewCard(
                     if (test.status == TestStatus.COMPLETED && test.latestScore != null) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Latest: ${test.latestScore.toInt()}%",
+                            text = stringResource(R.string.student_tests_latest_score, test.latestScore.toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
@@ -333,11 +333,11 @@ private fun TestOverviewCard(
             ) {
                 Text(
                     when (test.status) {
-                        TestStatus.NOT_ATTEMPTED -> "Start"
-                        TestStatus.IN_PROGRESS -> "Resume"
-                        TestStatus.SUBMITTED_PENDING_REVIEW -> "View"
-                        TestStatus.GRADED -> "Results"
-                        TestStatus.COMPLETED -> "Retake"
+                        TestStatus.NOT_ATTEMPTED -> stringResource(R.string.student_tests_action_start)
+                        TestStatus.IN_PROGRESS -> stringResource(R.string.student_tests_action_resume)
+                        TestStatus.SUBMITTED_PENDING_REVIEW -> stringResource(R.string.student_tests_action_view)
+                        TestStatus.GRADED -> stringResource(R.string.student_tests_action_results)
+                        TestStatus.COMPLETED -> stringResource(R.string.student_tests_action_retake)
                     }
                 )
             }

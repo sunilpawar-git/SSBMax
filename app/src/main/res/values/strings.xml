@@ -1,4 +1,998 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- ============================================ -->
+    <!-- APP IDENTITY -->
+    <!-- ============================================ -->
     <string name="app_name">SSBMax</string>
+    <string name="app_tagline">Your Path to SSB Success</string>
+
+    <!-- ============================================ -->
+    <!-- NAVIGATION - BOTTOM BAR -->
+    <!-- ============================================ -->
+    <!-- Student Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_tests">Tests</string>
+    <string name="nav_results">Results</string>
+    <string name="nav_study">Study</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Instructor Navigation -->
+    <string name="nav_students">Students</string>
+    <string name="nav_grading">Grading</string>
+    <string name="nav_analytics">Analytics</string>
+
+    <!-- ============================================ -->
+    <!-- NAVIGATION - DRAWER MENU -->
+    <!-- ============================================ -->
+    <string name="drawer_ssb_tests">SSB Tests</string>
+    <string name="drawer_quick_access">Quick Access</string>
+    <string name="drawer_account">Account</string>
+    <string name="drawer_sign_out">Sign Out</string>
+
+    <!-- Phase 1 -->
+    <string name="drawer_phase1_title">Phase 1 - Screening Tests (Day 1)</string>
+    <string name="drawer_oir_test">OIR Test</string>
+    <string name="drawer_ppdt">PPDT</string>
+
+    <!-- Phase 2 -->
+    <string name="drawer_phase2_title">Phase 2 - Assessments (Day 2-5)</string>
+    <string name="drawer_piq_form">Filling PIQ Form</string>
+    <string name="drawer_psychology_tests">Psychology Tests</string>
+    <string name="drawer_gto_tests">GTO Tests</string>
+    <string name="drawer_interview">Interview</string>
+    <string name="drawer_conference">Conference</string>
+    <string name="drawer_medicals">Medicals</string>
+
+    <!-- Quick Access -->
+    <string name="drawer_ssb_overview">Overview of SSB</string>
+    <string name="drawer_my_batches">My Batches</string>
+    <string name="drawer_settings">Settings</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_menu">Menu</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_login">Login</string>
+    <string name="cd_create_batch">Create Batch</string>
+    <string name="cd_pending_grading">Pending Grading</string>
+
+    <!-- ============================================ -->
+    <!-- LOGIN / AUTHENTICATION -->
+    <!-- ============================================ -->
+    <string name="login_welcome">Welcome!</string>
+    <string name="login_description">Sign in to access study materials, practice tests, and track your progress</string>
+    <string name="login_continue_google">Continue with Google</string>
+    <string name="login_terms_privacy">By continuing, you agree to our Terms of Service and Privacy Policy</string>
+
+    <!-- ============================================ -->
+    <!-- STUDENT HOME SCREEN -->
+    <!-- ============================================ -->
+    <string name="home_welcome">Welcome, %1$s 🎖️</string>
+    <string name="home_journey_starts">Your SSB journey starts here</string>
+
+    <!-- Stats -->
+    <string name="stats_study_streak">Study Streak</string>
+    <string name="stats_tests_done">Tests Done</string>
+    <string name="stats_days">days</string>
+    <string name="stats_tests">tests</string>
+
+    <!-- Sections -->
+    <string name="section_your_progress">Your Progress</string>
+    <string name="section_quick_actions">Quick Actions</string>
+
+    <!-- Quick Actions -->
+    <string name="action_self_preparation">Self Preparation</string>
+    <string name="action_join_batch">Join Batch</string>
+    <string name="action_view_analytics">View Analytics</string>
+    <string name="action_study_materials">Study Materials</string>
+
+    <!-- ============================================ -->
+    <!-- INSTRUCTOR HOME SCREEN -->
+    <!-- ============================================ -->
+    <string name="instructor_dashboard">Instructor Dashboard</string>
+    <string name="instructor_stats_summary">%1$d Students • %2$d Batches</string>
+
+    <!-- Stats -->
+    <string name="stat_tests_graded">Tests Graded</string>
+    <string name="stat_pending">Pending</string>
+    <string name="stat_avg_response">Avg Response</string>
+    <string name="stat_today">today</string>
+    <string name="stat_to_grade">to grade</string>
+    <string name="stat_time">time</string>
+
+    <!-- Tabs -->
+    <string name="tab_students">Students</string>
+    <string name="tab_batches">Batches</string>
+
+    <!-- Empty States -->
+    <string name="empty_no_students">No students yet</string>
+    <string name="empty_create_batch_prompt">Create a batch and share the invite code with students</string>
+    <string name="empty_no_batches">No batches created yet</string>
+
+    <!-- Student Card -->
+    <string name="student_tests_count">%1$d tests</string>
+    <string name="student_avg_score">%1$d%% avg</string>
+
+    <!-- Student Tests Screen -->
+    <string name="student_tests_title">All Tests</string>
+    <string name="student_tests_tab_phase1">Phase 1</string>
+    <string name="student_tests_tab_phase2">Phase 2</string>
+    <string name="student_tests_phase1_title">Phase 1 - Screening</string>
+    <string name="student_tests_phase1_description">The screening phase consists of OIR and PPDT tests. Your performance determines eligibility for Phase 2.</string>
+    <string name="student_tests_phase2_title">Phase 2 - Assessment</string>
+    <string name="student_tests_phase2_description">Phase 2 includes Psychology Tests, GTO Tasks, and Personal Interview. These comprehensively evaluate your officer-like qualities.</string>
+    <string name="student_tests_progress_label">Progress</string>
+    <string name="student_tests_progress_format">%1$d of %2$d tests completed</string>
+    <string name="student_tests_view_details">View Details</string>
+    <string name="student_tests_category_psychology">Psychology Tests</string>
+    <string name="student_tests_category_gto">GTO Tasks</string>
+    <string name="student_tests_category_interview">Interview</string>
+    <string name="student_tests_duration_format">%1$d min</string>
+    <string name="student_tests_question_single">question</string>
+    <string name="student_tests_question_plural">questions</string>
+    <string name="student_tests_latest_score">Latest: %1$d%%</string>
+    <string name="student_tests_action_start">Start</string>
+    <string name="student_tests_action_resume">Resume</string>
+    <string name="student_tests_action_view">View</string>
+    <string name="student_tests_action_results">Results</string>
+    <string name="student_tests_action_retake">Retake</string>
+
+    <!-- Batch Card -->
+    <string name="batch_code">Code: %1$s</string>
+
+    <!-- Action -->
+    <string name="action_create_batch">Create Batch</string>
+
+    <!-- ============================================ -->
+    <!-- SETTINGS SCREEN -->
+    <!-- ============================================ -->
+    <string name="settings_title">Settings</string>
+
+    <!-- About Section -->
+    <string name="about_section_title">About</string>
+    <string name="about_version">Version</string>
+    <string name="about_version_value">1.0.0 Beta</string>
+    <string name="about_support">Support</string>
+    <string name="about_support_email">support@ssbmax.com</string>
+    <string name="about_privacy_policy">Privacy Policy</string>
+    <string name="about_terms_of_service">Terms of Service</string>
+    <string name="about_view">View</string>
+
+    <!-- Cache/Refresh Dialog -->
+    <string name="cache_content_refreshed">Content Refreshed!</string>
+    <string name="cache_success_message">✓ Content has been refreshed from Firestore server!</string>
+    <string name="cache_topics">Topics:</string>
+    <string name="cache_materials">Materials:</string>
+    <string name="cache_errors">⚠️ Errors:</string>
+    <string name="cache_topics_count">%1$d/9</string>
+    <string name="cache_navigate_hint">💡 Navigate to the content you edited - it should show your changes now!</string>
+    <string name="cache_got_it">Got it!</string>
+
+    <!-- ============================================ -->
+    <!-- PROFILE SCREEN -->
+    <!-- ============================================ -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_premium_member">Premium Member</string>
+    <string name="profile_settings">Settings</string>
+
+    <!-- ============================================ -->
+    <!-- COMMON ACTIONS -->
+    <!-- ============================================ -->
+    <string name="action_start_test">Start Test</string>
+    <string name="action_submit">Submit</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_next">Next</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_finish">Finish</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_close">Close</string>
+    <string name="action_share">Share</string>
+    <string name="action_upgrade">Upgrade</string>
+    <string name="action_manage_subscription">Manage Subscription</string>
+    <string name="action_upgrade_options">Upgrade Options</string>
+
+    <!-- ============================================ -->
+    <!-- STATUS MESSAGES -->
+    <!-- ============================================ -->
+    <string name="status_loading">Loading…</string>
+    <string name="status_processing">Processing…</string>
+    <string name="status_saving">Saving…</string>
+    <string name="status_submitting">Submitting…</string>
+    <string name="status_syncing">Syncing…</string>
+
+    <!-- ============================================ -->
+    <!-- SUCCESS MESSAGES -->
+    <!-- ============================================ -->
+    <string name="success_test_submitted">Test submitted successfully!</string>
+    <string name="success_saved">Saved successfully!</string>
+    <string name="success_grading_submitted">Grading submitted! Student notified.</string>
+
+    <!-- ============================================ -->
+    <!-- ERROR MESSAGES -->
+    <!-- ============================================ -->
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_load_failed">Failed to load data.</string>
+    <string name="error_load_materials">Failed to load study materials</string>
+    <string name="error_auth_failed">Authentication failed</string>
+    <string name="error_permission_denied">Permission denied</string>
+
+    <!-- ============================================ -->
+    <!-- VALIDATION MESSAGES -->
+    <!-- ============================================ -->
+    <string name="validation_required_field">This field is required</string>
+    <string name="validation_email_required">Email is required</string>
+    <string name="validation_email_invalid">Please enter a valid email</string>
+    <string name="validation_password_required">Password is required</string>
+    <string name="validation_password_min_length">Password must be at least 6 characters</string>
+
+    <!-- ============================================ -->
+    <!-- TEST SCREENS - UI LABELS ONLY -->
+    <!-- (Test content from Firestore remains dynamic) -->
+    <!-- ============================================ -->
+
+    <!-- Common Test UI -->
+    <string name="test_instructions">Instructions</string>
+    <string name="test_question_number">Question %1$d of %2$d</string>
+    <string name="test_time_remaining">Time Remaining: %1$s</string>
+    <string name="test_time_up">Time\'s Up!</string>
+    <string name="test_score">Score: %1$d%%</string>
+    <string name="test_correct_answers">Correct: %1$d/%2$d</string>
+
+    <!-- WAT Test Screen -->
+    <string name="wat_title">Word Association Test</string>
+    <string name="wat_word_number">Word %1$d of %2$d</string>
+    <string name="wat_enter_response">Enter your response</string>
+
+    <!-- SRT Test Screen -->
+    <string name="srt_title">Situation Reaction Test</string>
+    <string name="srt_situation_number">Situation %1$d of %2$d</string>
+    <string name="srt_enter_reaction">Enter your reaction</string>
+
+    <!-- TAT Test Screen -->
+    <string name="tat_title">Thematic Apperception Test</string>
+    <string name="tat_image_number">Image %1$d of %2$d</string>
+    <string name="tat_write_story">Write your story here…</string>
+    <string name="tat_character_count">%1$d characters</string>
+
+    <!-- OIR Test Screen -->
+    <string name="oir_title">Officer Intelligence Rating</string>
+    <string name="oir_select_answer">Select your answer</string>
+
+    <!-- PPDT Test Screen -->
+    <string name="ppdt_title">Picture Perception &amp; Description Test</string>
+    <string name="ppdt_write_story">Write your story…</string>
+
+    <!-- PIQ Test Screen -->
+    <string name="piq_title">Personal Information Questionnaire</string>
+    <string name="piq_enter_details">Enter your details</string>
+
+    <!-- SDT Test Screen -->
+    <string name="sdt_title">Self Description Test</string>
+    <string name="sdt_enter_description">Describe yourself…</string>
+
+    <!-- Test Grading Screen -->
+    <string name="grading_title">Grade Submission</string>
+    <string name="grading_submit_notify">Submit Grading &amp; Notify Student</string>
+    <string name="grading_submission_not_found">Submission not found</string>
+    <string name="grading_submission_content">Submission Content</string>
+    <string name="grading_time_spent">Time Spent: %1$d minutes</string>
+    <string name="grading_responses_count">Responses: %1$d questions</string>
+    <string name="grading_student_label">Student: %1$s</string>
+    <string name="grading_grade_label">Grade</string>
+    <string name="grading_grade_value">%1$d/100</string>
+    <string name="grading_remarks_title">Remarks &amp; Feedback</string>
+    <string name="grading_remarks_hint">Enter detailed feedback for the student…</string>
+
+    <!-- ============================================ -->
+    <!-- STUDY MATERIALS -->
+    <!-- ============================================ -->
+    <string name="study_materials_title">Study Materials</string>
+    <string name="study_read_time">%1$s min read</string>
+    <string name="study_by_author">By %1$s</string>
+    <string name="study_no_materials">No study materials available</string>
+    <string name="study_material_detail_title">Study Material</string>
+    <string name="study_material_share">Share</string>
+    <string name="study_material_back">Back</string>
+    <string name="study_material_share_text">Check out this SSB study material: %1$s\n\nStudy with SSBMax - Your complete SSB preparation companion</string>
+    <string name="study_material_share_subject">SSB Study Material</string>
+    <string name="study_material_share_via">Share via</string>
+    <string name="study_material_error_loading">Error loading material</string>
+    <string name="study_material_breadcrumb_root">Study Materials</string>
+    <string name="study_material_related">Related Materials</string>
+    <string name="study_material_tags">Tags</string>
+    <string name="study_material_open">Open</string>
+
+    <!-- ============================================ -->
+    <!-- SUBMISSIONS / RESULTS -->
+    <!-- ============================================ -->
+    <string name="submissions_title">My Submissions</string>
+    <string name="submissions_no_results">No test results yet</string>
+    <string name="submissions_start_tests">Start taking tests to see your results</string>
+    <string name="submissions_grade_pending">Grading Pending</string>
+    <string name="submissions_graded">Graded</string>
+
+    <!-- ============================================ -->
+    <!-- NOTIFICATIONS -->
+    <!-- ============================================ -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_no_new">No new notifications</string>
+    <string name="notifications_mark_read">Mark as Read</string>
+    <string name="notifications_mark_all_read">Mark All as Read</string>
+
+    <!-- ============================================ -->
+    <!-- SUBSCRIPTION / PREMIUM -->
+    <!-- ============================================ -->
+    <string name="subscription_current_plan">Current Plan</string>
+    <string name="subscription_free">Free</string>
+    <string name="subscription_premium">Premium</string>
+    <string name="subscription_pro">Pro</string>
+    <string name="subscription_upgrade_prompt">Upgrade to access premium features</string>
+    <string name="subscription_price">Pay ₹%1$s (MOCK)</string>
+
+    <!-- ============================================ -->
+    <!-- BATCH MANAGEMENT -->
+    <!-- ============================================ -->
+    <string name="batch_title">Batch</string>
+    <string name="batch_invite_code">Invite Code</string>
+    <string name="batch_student_count">%1$d students</string>
+    <string name="batch_join_prompt">Join a batch to learn with others</string>
+    <string name="batch_enter_code">Enter batch code</string>
+    <string name="batch_join">Join Batch</string>
+    <string name="batch_leave">Leave Batch</string>
+    <string name="batch_create_new">Create New Batch</string>
+
+    <!-- ============================================ -->
+    <!-- ANALYTICS -->
+    <!-- ============================================ -->
+    <string name="analytics_title">Your Analytics</string>
+    <string name="analytics_performance">Performance</string>
+    <string name="analytics_progress">Progress</string>
+    <string name="analytics_strengths">Strengths</string>
+    <string name="analytics_weaknesses">Areas for Improvement</string>
+    <string name="analytics_no_data">No analytics data yet</string>
+    <string name="analytics_take_tests">Take more tests to see your analytics</string>
+
+    <!-- Analytics Screen -->
+    <string name="analytics_screen_title">Performance Analytics</string>
+    <string name="analytics_error_unknown">Unknown error</string>
+    <string name="analytics_empty_state">No data yet</string>
+    <string name="analytics_empty_description">Complete some tests to see your analytics</string>
+    <string name="analytics_test_performance">Test Performance</string>
+    <string name="analytics_overall_performance">Overall Performance</string>
+    <string name="analytics_stat_tests">Tests</string>
+    <string name="analytics_stat_avg_score">Avg Score</string>
+    <string name="analytics_stat_study_time">Study Time</string>
+    <string name="analytics_stat_attempts">Attempts</string>
+    <string name="analytics_stat_best">Best</string>
+    <string name="analytics_difficulty_breakdown">Difficulty Breakdown</string>
+    <string name="analytics_difficulty_easy">Easy</string>
+    <string name="analytics_difficulty_medium">Medium</string>
+    <string name="analytics_difficulty_hard">Hard</string>
+    <string name="analytics_accuracy_format">%.1f%% accuracy</string>
+    <string name="analytics_progress_to">Progress to %1$s</string>
+    <string name="analytics_progression_needed" formatted="false">Need %1$d more attempts &amp; %.0f%% accuracy</string>
+
+    <!-- ============================================ -->
+    <!-- HELP & SUPPORT -->
+    <!-- ============================================ -->
+    <string name="help_title">Help &amp; Support</string>
+    <string name="help_faq">FAQ</string>
+    <string name="help_contact_support">Contact Support</string>
+    <string name="help_feedback">Send Feedback</string>
+    <string name="help_report_bug">Report a Bug</string>
+
+    <!-- ============================================ -->
+    <!-- THEME / APPEARANCE -->
+    <!-- ============================================ -->
+    <string name="theme_title">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System Default</string>
+
+    <!-- ============================================ -->
+    <!-- VERSION & APP INFO -->
+    <!-- ============================================ -->
+    <string name="version">Version %1$s</string>
+    <string name="version_footer">Version 1.0.0</string>
+
+    <!-- ============================================ -->
+    <!-- EMPTY STATES -->
+    <!-- ============================================ -->
+    <string name="empty_state_generic">Nothing here yet</string>
+    <string name="empty_state_no_tests">No tests available</string>
+    <string name="empty_state_journey_prompt">Start your SSB journey today</string>
+    <string name="empty_state_no_data">No data available</string>
+
+    <!-- ============================================ -->
+    <!-- TIMER / TIME -->
+    <!-- ============================================ -->
+    <string name="time_seconds">%1$d seconds</string>
+    <string name="time_minutes">%1$d minutes</string>
+    <string name="time_hours">%1$d hours</string>
+    <string name="time_days">%1$d days</string>
+
+    <!-- ============================================ -->
+    <!-- CONFIRMATION DIALOGS -->
+    <!-- ============================================ -->
+    <string name="dialog_confirm">Confirm</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_are_you_sure">Are you sure?</string>
+    <string name="dialog_exit_test">Exit Test?</string>
+    <string name="dialog_exit_test_message">Your progress will be lost if you exit now.</string>
+    <string name="dialog_submit_test">Submit Test?</string>
+    <string name="dialog_submit_test_message">You cannot change your answers after submission.</string>
+
+    <!-- ============================================ -->
+    <!-- ACCESSIBILITY -->
+    <!-- ============================================ -->
+    <string name="accessibility_settings">Accessibility Settings</string>
+    <string name="accessibility_font_size">Font Size</string>
+    <string name="accessibility_high_contrast">High Contrast</string>
+
+    <!-- ============================================ -->
+    <!-- MISCELLANEOUS -->
+    <!-- ============================================ -->
+    <string name="search">Search</string>
+    <string name="filter">Filter</string>
+    <string name="sort">Sort</string>
+    <string name="all">All</string>
+    <string name="none">None</string>
+    <string name="more">More</string>
+    <string name="less">Less</string>
+    <string name="show_more">Show More</string>
+    <string name="show_less">Show Less</string>
+    <string name="new_badge">New</string>
+    <string name="premium_badge">Premium</string>
+    <string name="free_badge">Free</string>
+    <string name="optional">Optional</string>
+    <string name="required">Required</string>
+
+    <!-- ============================================ -->
+    <!-- WAT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="wat_test">WAT Test</string>
+    <string name="wat_full_title">WAT - Word Association Test</string>
+    <string name="wat_subtitle">Write the first word that comes to mind</string>
+    <string name="wat_loading">Loading WAT test words from cloud...</string>
+    <string name="wat_instructions_title">Instructions</string>
+    <string name="wat_instruction_1">60 words will be shown one at a time</string>
+    <string name="wat_instruction_2">15 seconds per word</string>
+    <string name="wat_instruction_3">Write the FIRST word/phrase that comes to mind</string>
+    <string name="wat_instruction_4">Auto-advances to next word after timeout</string>
+    <string name="wat_instruction_5">Don\'t overthink - be spontaneous!</string>
+    <string name="wat_important">Important</string>
+    <string name="wat_important_message">Test cannot be paused once started. Total time: ~15 minutes</string>
+    <string name="wat_tips_title">Tips for Success</string>
+    <string name="wat_tip_1">• Be honest and spontaneous</string>
+    <string name="wat_tip_2">• Positive associations are better</string>
+    <string name="wat_tip_3">• Don\'t repeat same words</string>
+    <string name="wat_tip_4">• One word or short phrase only</string>
+    <string name="wat_start_test">Start Test</string>
+    <string name="wat_response_placeholder">Your response...</string>
+    <string name="wat_skip">Skip</string>
+    <string name="wat_submit">Submit</string>
+    <string name="wat_exit_title">Exit Test?</string>
+    <string name="wat_exit_message_1">Test is in progress and cannot be paused.</string>
+    <string name="wat_exit_message_2">All progress will be lost if you exit now.</string>
+    <string name="wat_continue_test">Continue Test</string>
+    <string name="wat_exit">Exit</string>
+    <string name="wat_progress_format">%1$d / %2$d</string>
+    <string name="wat_timer_format">%1$ds</string>
+
+    <!-- ============================================ -->
+    <!-- SRT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="srt_test">SRT Test</string>
+    <string name="srt_full_title">SRT - Situation Reaction Test</string>
+    <string name="srt_subtitle">Describe how you would react in practical situations</string>
+    <string name="srt_loading">Loading SRT test situations from cloud...</string>
+    <string name="srt_instructions_title">Instructions</string>
+    <string name="srt_instruction_1">60 practical situations will be presented</string>
+    <string name="srt_instruction_2">Describe YOUR reaction in 20-200 characters</string>
+    <string name="srt_instruction_3">Total time: 30 minutes (~30 sec per situation)</string>
+    <string name="srt_instruction_4">You can review and edit responses before submitting</string>
+    <string name="srt_tips_title">Tips for Success</string>
+    <string name="srt_tip_1">• Be practical and realistic</string>
+    <string name="srt_tip_2">• Show initiative and leadership</string>
+    <string name="srt_tip_3">• Focus on action, not just thinking</string>
+    <string name="srt_tip_4">• Consider others\' wellbeing</string>
+    <string name="srt_tip_5">• Demonstrate responsibility</string>
+    <string name="srt_situation">Situation</string>
+    <string name="srt_your_response">Your Response</string>
+    <string name="srt_response_placeholder">Describe what YOU would do in this situation...</string>
+    <string name="srt_char_count">%1$d / %2$d characters</string>
+    <string name="srt_skip">Skip</string>
+    <string name="srt_next">Next</string>
+    <string name="srt_exit_title">Exit Test?</string>
+    <string name="srt_exit_message">Your progress will be lost. Are you sure?</string>
+    <string name="srt_continue">Continue</string>
+    <string name="srt_exit">Exit</string>
+    <string name="srt_submit_title">Submit Test?</string>
+    <string name="srt_submit_message">You have completed %1$d/%2$d situations.</string>
+    <string name="srt_submit_incomplete">Some situations are skipped or incomplete.</string>
+    <string name="srt_submit">Submit</string>
+    <string name="srt_cancel">Cancel</string>
+    <string name="srt_review_title">Review Your Responses</string>
+    <string name="srt_review_completed">%1$d/%2$d completed</string>
+    <string name="srt_submit_test">Submit Test</string>
+    <string name="srt_situation_prefix">Situation %1$d</string>
+    <string name="srt_skipped">Skipped</string>
+    <string name="srt_edit">Edit</string>
+
+    <!-- ============================================ -->
+    <!-- TAT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="tat_test">TAT Test</string>
+    <string name="tat_picture_number">Picture %1$d/12</string>
+    <string name="tat_completed_stories">%1$d/12</string>
+    <string name="tat_loading">Loading TAT test images from cloud...</string>
+
+    <!-- ============================================ -->
+    <!-- OIR TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="oir_test">OIR Test</string>
+    <string name="oir_loading">Loading OIR test questions from cloud...</string>
+    <string name="oir_question_format">Q %1$d/%2$d</string>
+    <string name="oir_exit_test">Exit Test</string>
+    <string name="oir_exit_title">Exit Test?</string>
+    <string name="oir_exit_message">Are you sure you want to exit? Your progress will be saved and you can resume later.</string>
+    <string name="oir_exit">Exit</string>
+    <string name="oir_continue_test">Continue Test</string>
+    <string name="oir_previous">Previous</string>
+    <string name="oir_next">Next</string>
+    <string name="oir_submit_test">Submit Test</string>
+    <string name="oir_progress_format">%1$d/%2$d</string>
+    <string name="oir_correct">Correct!</string>
+    <string name="oir_incorrect">Incorrect</string>
+    <string name="oir_error_loading">Error Loading Test</string>
+    <string name="oir_retry">Retry</string>
+    <string name="oir_difficulty_easy">Easy</string>
+    <string name="oir_difficulty_medium">Medium</string>
+    <string name="oir_difficulty_hard">Hard</string>
+
+    <!-- ============================================ -->
+    <!-- PPDT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="ppdt_test">PPDT Test</string>
+    <string name="ppdt_loading">Loading PPDT test from cloud...</string>
+
+    <!-- ============================================ -->
+    <!-- PIQ TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="piq_test">PIQ Test</string>
+    <string name="piq_page_1">PIQ - Personal &amp; Family Details</string>
+    <string name="piq_page_2">PIQ - Career &amp; Additional Details</string>
+    <string name="piq_saved">✓ Saved</string>
+    <string name="piq_error">Error</string>
+    <string name="piq_ok">OK</string>
+    <string name="piq_back">Back</string>
+    <string name="piq_personal_family_title">Personal &amp; Family Details</string>
+    <string name="piq_career_additional_title">Career &amp; Additional Details</string>
+    <string name="piq_privacy_warning">Privacy Warning Banner</string>
+    <string name="piq_header_section">Header Information</string>
+    <string name="piq_oir_number">OIR Number</string>
+    <string name="piq_oir_placeholder">To be filled from OIR Test Result</string>
+    <string name="piq_selection_board">Selection Board</string>
+    <string name="piq_batch_number">Batch No</string>
+    <string name="piq_batch_placeholder">To be filled at SSB</string>
+    <string name="piq_batch_supporting">To be filled at SSB</string>
+    <string name="piq_chest_number">Chest Number</string>
+    <string name="piq_upsc_roll">UPSC Roll No</string>
+    <string name="piq_full_name">Full Name (in CAPITALS)</string>
+    <string name="piq_residence_section">Residence Information</string>
+    <string name="piq_max_residence">Maximum Residence</string>
+    <string name="piq_max_residence_pop">Maximum Residence Population</string>
+    <string name="piq_present_address">Present Address</string>
+    <string name="piq_present_pop">Present Residence Population</string>
+    <string name="piq_permanent_address">Permanent Address</string>
+    <string name="piq_permanent_pop">Permanent Residence Population</string>
+    <string name="piq_is_district_hq">Is District HQ?</string>
+    <string name="piq_personal_details">Personal Details</string>
+    <string name="piq_state">State</string>
+    <string name="piq_district">District</string>
+    <string name="piq_religion">Religion</string>
+    <string name="piq_sc_st_obc">SC/ST/OBC Status</string>
+    <string name="piq_mother_tongue">Mother Tongue</string>
+    <string name="piq_date_of_birth">Date of Birth</string>
+    <string name="piq_dob_placeholder">DD/MM/YYYY</string>
+    <string name="piq_marital_status">Marital Status</string>
+    <string name="piq_family_enhancement">Family Enhancement</string>
+    <string name="piq_parents_alive">Parents Alive</string>
+    <string name="piq_age_father_death">Age at Father\'s Death</string>
+    <string name="piq_age_mother_death">Age at Mother\'s Death</string>
+    <string name="piq_guardian_section">Guardian Information</string>
+    <string name="piq_guardian_name">Guardian Name</string>
+    <string name="piq_guardian_occupation">Guardian Occupation</string>
+    <string name="piq_guardian_education">Guardian Education</string>
+    <string name="piq_guardian_income">Guardian Income</string>
+    <string name="piq_father_section">Father\'s Information</string>
+    <string name="piq_father_name">Father\'s Name</string>
+    <string name="piq_father_occupation">Father\'s Occupation</string>
+    <string name="piq_father_education">Father\'s Education</string>
+    <string name="piq_father_income">Father\'s Annual Income</string>
+    <string name="piq_mother_section">Mother\'s Information</string>
+    <string name="piq_mother_name">Mother\'s Name</string>
+    <string name="piq_mother_occupation">Mother\'s Occupation</string>
+    <string name="piq_mother_education">Mother\'s Education</string>
+    <string name="piq_siblings_section">Siblings Information</string>
+    <string name="piq_elder_sibling">Elder Brother/Sister</string>
+    <string name="piq_younger_sibling">Younger Brother/Sister</string>
+    <string name="piq_sibling_name">Elder Sibling %1$d - Name</string>
+    <string name="piq_sibling_name_younger">Younger Sibling %1$d - Name</string>
+    <string name="piq_age">Age</string>
+    <string name="piq_education">Education</string>
+    <string name="piq_occupation">Occupation</string>
+    <string name="piq_income">Income</string>
+    <string name="piq_educational_record">Educational Record</string>
+    <string name="piq_10th_standard">10th Standard</string>
+    <string name="piq_12th_standard">12th Standard</string>
+    <string name="piq_graduation">Graduation</string>
+    <string name="piq_post_graduation">Post-Graduation/Professional</string>
+    <string name="piq_school_name">School Name</string>
+    <string name="piq_board">Board</string>
+    <string name="piq_year_passing">Year of Passing</string>
+    <string name="piq_percentage">Percentage</string>
+    <string name="piq_medium">Medium of Instruction</string>
+    <string name="piq_boarder">Boarder/Day Scholar</string>
+    <string name="piq_achievement">Outstanding Achievement</string>
+    <string name="piq_stream">Stream</string>
+    <string name="piq_college_name">College Name</string>
+    <string name="piq_university">University</string>
+    <string name="piq_degree">Degree</string>
+    <string name="piq_cgpa">CGPA/Percentage</string>
+    <string name="piq_institution_name">Institution Name</string>
+    <string name="piq_degree_diploma">Degree/Diploma</string>
+    <string name="piq_physical_details">Physical Details</string>
+    <string name="piq_age_years_months">Age (Years &amp; Months)</string>
+    <string name="piq_height">Height (metres)</string>
+    <string name="piq_weight">Weight (kilograms)</string>
+    <string name="piq_occupation_section">Occupation</string>
+    <string name="piq_present_occupation">Present Occupation</string>
+    <string name="piq_monthly_income">Personal Monthly Income</string>
+    <string name="piq_ncc_section">NCC Training</string>
+    <string name="piq_has_ncc">Have NCC Training?</string>
+    <string name="piq_ncc_total">Total Training</string>
+    <string name="piq_ncc_wing">Wing</string>
+    <string name="piq_ncc_division">Division</string>
+    <string name="piq_ncc_certificate">Certificate Obtained</string>
+    <string name="piq_sports_section">Sports Participation</string>
+    <string name="piq_sports">Sports Played</string>
+    <string name="piq_sports_placeholder">Sports you play or have played</string>
+    <string name="piq_interests_section">Interests</string>
+    <string name="piq_hobbies">Hobbies &amp; Interests</string>
+    <string name="piq_hobbies_placeholder">List your hobbies and interests</string>
+    <string name="piq_responsibility_section">Positions of Responsibility</string>
+    <string name="piq_positions">Positions Held</string>
+    <string name="piq_positions_placeholder">List positions of responsibility held</string>
+    <string name="piq_service_section">Service Selection</string>
+    <string name="piq_commission_nature">Nature of Commission</string>
+    <string name="piq_choice_service">Choice of Service</string>
+    <string name="piq_chances_availed">Number of Chances Availed</string>
+    <string name="piq_previous">Previous</string>
+    <string name="piq_next">Next</string>
+    <string name="piq_review">Review</string>
+
+    <!-- ============================================ -->
+    <!-- TEST GRADING SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="grading_back">Back</string>
+
+    <!-- ============================================ -->
+    <!-- ADDITIONAL COMMON ACTIONS (Not in existing section) -->
+    <!-- ============================================ -->
+    <string name="action_submit_test">Submit Test</string>
+    <string name="action_exit_test">Exit Test</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_review">Review</string>
+
+    <!-- ============================================ -->
+    <!-- UPGRADE SCREEN - SUBSCRIPTION PLANS -->
+    <!-- ============================================ -->
+    <string name="upgrade_title">Choose Your Plan</string>
+    <string name="upgrade_header">Unlock Your Potential</string>
+    <string name="upgrade_subtitle">Choose the perfect plan for your SSB journey</string>
+
+    <!-- Billing Cycles -->
+    <string name="billing_cycle_monthly">Monthly</string>
+    <string name="billing_cycle_quarterly">Quarterly</string>
+    <string name="billing_cycle_annually">Annually</string>
+    <string name="billing_save_quarterly">Save 13%</string>
+    <string name="billing_save_annually">Save 25%</string>
+
+    <!-- Plan Badges -->
+    <string name="plan_badge_popular">POPULAR</string>
+    <string name="plan_badge_current">CURRENT</string>
+
+    <!-- Pricing -->
+    <string name="plan_price_free">Free</string>
+    <string name="plan_period_month">/month</string>
+    <string name="plan_period_quarter">/quarter</string>
+    <string name="plan_period_year">/year</string>
+
+    <!-- Actions -->
+    <string name="plan_action_current">Current Plan</string>
+    <string name="plan_action_downgrade">Downgrade</string>
+    <string name="plan_action_upgrade">Upgrade Now</string>
+
+    <!-- Info Section -->
+    <string name="upgrade_info_secure">Secure payment processing</string>
+    <string name="upgrade_info_cancel">Cancel anytime, no questions asked</string>
+    <string name="upgrade_info_support">24/7 customer support</string>
+
+    <!-- Coming Soon Dialog -->
+    <string name="dialog_coming_soon_title">Coming Soon!</string>
+    <string name="dialog_coming_soon_message">Payment integration for the %s plan is coming soon! We\'re working hard to bring you seamless subscription management.</string>
+    <string name="dialog_action_got_it">Got it</string>
+
+    <!-- ============================================ -->
+    <!-- FAQ SCREEN -->
+    <!-- ============================================ -->
+    <string name="faq_title">Frequently Asked Questions</string>
+    <string name="faq_search_label">Search FAQs</string>
+    <string name="faq_search_placeholder">Ask a question...</string>
+    <string name="faq_filter_all">All</string>
+    <string name="faq_action_collapse">Collapse</string>
+    <string name="faq_action_expand">Expand</string>
+    <string name="faq_footer_contact">Can\'t find what you\'re looking for? Contact our support team.</string>
+    <string name="faq_empty_no_faqs">No FAQs available</string>
+    <string name="faq_empty_no_results">No results found for \"%s\"</string>
+    <string name="faq_empty_suggestion">Try a different search term or browse categories</string>
+
+    <!-- ============================================ -->
+    <!-- SDT TEST SCREEN - DETAILED STRINGS -->
+    <!-- ============================================ -->
+    <string name="sdt_test">SDT Test</string>
+    <string name="sdt_full_title">SDT - Self Description Test</string>
+    <string name="sdt_loading">Loading SDT questions...</string>
+
+    <!-- Instructions -->
+    <string name="sdt_instructions_title">Instructions</string>
+    <string name="sdt_instruction_1">You will be presented with 4 questions</string>
+    <string name="sdt_instruction_2">Describe how others perceive you and how you see yourself</string>
+    <string name="sdt_instruction_3">Total time: 15 minutes for all questions</string>
+    <string name="sdt_instruction_4">Maximum 1000 words per question</string>
+    <string name="sdt_instruction_5">You can skip and return to questions during the test</string>
+    <string name="sdt_instruction_6">Be honest and specific in your responses</string>
+    <string name="sdt_start_test">Start Test</string>
+
+    <!-- In Progress -->
+    <string name="sdt_question_header">Question %1$d/%2$d</string>
+    <string name="sdt_answer_label">Your Answer</string>
+    <string name="sdt_word_count">%1$d / %2$d words</string>
+    <string name="sdt_action_skip">Skip</string>
+    <string name="sdt_action_next">Next</string>
+    <string name="sdt_action_review">Review</string>
+
+    <!-- Exit Dialog -->
+    <string name="sdt_exit_title">Exit Test?</string>
+    <string name="sdt_exit_message">Your progress will be lost. Are you sure you want to exit?</string>
+    <string name="sdt_action_exit">Exit</string>
+
+    <!-- Review Screen -->
+    <string name="sdt_review_title">Review Your Answers</string>
+    <string name="sdt_review_question_number">Question %d</string>
+    <string name="sdt_review_word_count">%d words</string>
+    <string name="sdt_review_skipped">(Skipped)</string>
+    <string name="sdt_action_submit_test">Submit Test</string>
+
+    <!-- Submit Dialog -->
+    <string name="sdt_submit_title">Submit Test?</string>
+    <string name="sdt_submit_message">You have answered %1$d/%2$d questions.</string>
+    <string name="sdt_submit_warning">Some questions are skipped.</string>
+    <string name="sdt_action_submit">Submit</string>
+
+    <!-- ============================================ -->
+    <!-- SDT SUBMISSION RESULT SCREEN -->
+    <!-- ============================================ -->
+    <string name="sdt_result_title">SDT Test Results</string>
+
+    <!-- Summary -->
+    <string name="sdt_result_summary_title">Test Summary</string>
+    <string name="sdt_result_completed">Completed: %1$d / 4 questions</string>
+    <string name="sdt_result_time_taken">Time Taken: %d minutes</string>
+    <string name="sdt_result_valid_responses">Valid Responses: %d</string>
+
+    <!-- AI Score -->
+    <string name="sdt_result_ai_score_title">AI Preliminary Score</string>
+    <string name="sdt_result_overall_score">Overall: %d/100</string>
+    <string name="sdt_result_score_format">%d/25</string>
+
+    <!-- Score Categories -->
+    <string name="sdt_result_self_awareness">Self-Awareness</string>
+    <string name="sdt_result_emotional_maturity">Emotional Maturity</string>
+    <string name="sdt_result_social_perception">Social Perception</string>
+    <string name="sdt_result_introspection">Introspection</string>
+
+    <!-- Feedback Sections -->
+    <string name="sdt_result_strengths_title">Strengths</string>
+    <string name="sdt_result_improvement_title">Areas for Improvement</string>
+    <string name="sdt_result_bullet">•</string>
+
+    <!-- Responses -->
+    <string name="sdt_result_word_count">%d words</string>
+    <string name="sdt_result_skipped">(Skipped)</string>
+
+    <!-- Actions -->
+    <string name="sdt_result_action_home">Back to Home</string>
+
+    <!-- ============================================ -->
+    <!-- PIQ REVIEW SCREEN -->
+    <!-- ============================================ -->
+    <string name="piq_review_title">Review Your Information</string>
+    <string name="piq_review_action_submit">Submit PIQ</string>
+    <string name="piq_review_section_personal_family">Personal &amp; Family Details</string>
+    <string name="piq_review_section_career">Career &amp; Additional Details</string>
+    <string name="piq_review_dialog_title">Submit PIQ?</string>
+    <string name="piq_review_dialog_message">Once submitted, you cannot edit this form. Continue?</string>
+    <string name="piq_review_field_siblings">Siblings</string>
+    <string name="piq_review_field_educational_record">Educational Record</string>
+    <string name="piq_review_field_10th">10th Standard</string>
+    <string name="piq_review_field_12th">12th Standard</string>
+    <string name="piq_review_field_graduation">Graduation</string>
+    <string name="piq_review_field_pg">Post-Graduation/Professional</string>
+    <string name="piq_review_yes">Yes</string>
+
+    <!-- ============================================ -->
+    <!-- GRADING DETAIL SCREEN (INSTRUCTOR) -->
+    <!-- ============================================ -->
+    <string name="grading_detail_title">Grade Submission</string>
+    <string name="grading_detail_action_grade">Grade</string>
+    <string name="grading_dialog_title">Grade Submission</string>
+    <string name="grading_dialog_score_label">Score (0-100)</string>
+    <string name="grading_dialog_feedback_label">Feedback</string>
+    <string name="grading_dialog_action_submit">Submit Grade</string>
+    <string name="grading_form_title">Instructor Grading</string>
+    <string name="grading_form_score_label">Overall Score (0-100)</string>
+    <string name="grading_form_feedback_label">Detailed Feedback</string>
+    <string name="grading_form_action_submit">Submit Grade</string>
+
+    <!-- ============================================ -->
+    <!-- SUBMISSIONS LIST SCREEN -->
+    <!-- ============================================ -->
+    <string name="submissions_list_title">My Submissions</string>
+    <string name="submissions_list_subtitle">SSB Preparation &gt; Test Results</string>
+    <string name="submissions_list_action_refresh">Refresh</string>
+    <string name="submissions_list_filter_test_type">Test Type</string>
+    <string name="submissions_list_filter_status">Status</string>
+    <string name="submissions_list_filter_all">All</string>
+    <string name="submissions_list_filter_pending">Pending</string>
+    <string name="submissions_list_filter_graded">Graded</string>
+    <string name="submissions_list_submitted">Submitted %1$s</string>
+    <string name="submissions_list_loading">Loading submissions...</string>
+    <string name="submissions_list_error">Error</string>
+    <string name="submissions_list_empty_title">No Submissions Yet</string>
+    <string name="submissions_list_empty_message">Complete tests to see your submissions here</string>
+    <string name="submissions_list_action_take_test">Take a Test</string>
+    <string name="submissions_list_view_details">View details</string>
+    <string name="submissions_list_score_format">Score: %1$d/100</string>
+
+    <!-- ============================================ -->
+    <!-- STUDENT PROFILE SCREEN -->
+    <!-- ============================================ -->
+    <string name="profile_stats_title">Your Statistics</string>
+    <string name="profile_stat_tests">Tests</string>
+    <string name="profile_stat_hours">Hours</string>
+    <string name="profile_stat_day_streak">Day Streak</string>
+    <string name="profile_stat_avg_score">Avg Score</string>
+    <string name="profile_phase_progress_title">Phase Progress</string>
+    <string name="profile_phase1_screening">Phase 1 - Screening</string>
+    <string name="profile_phase2_assessment">Phase 2 - Assessment</string>
+    <string name="profile_achievements_title">Recent Achievements</string>
+    <string name="profile_view_all">View All</string>
+    <string name="profile_tests_title">Recent Tests</string>
+    <string name="profile_account_actions">Account Actions</string>
+    <string name="profile_upgrade_premium">Upgrade to Premium</string>
+    <string name="profile_edit_profile">Edit Profile</string>
+    <string name="profile_view_badges">View All Badges</string>
+
+    <!-- ============================================ -->
+    <!-- MARKETPLACE SCREEN -->
+    <!-- ============================================ -->
+    <string name="marketplace_title">SSB Coaching Institutes</string>
+    <string name="marketplace_toggle_filters">Toggle Filters</string>
+    <string name="marketplace_search_hint">Search institutes, locations...</string>
+    <string name="marketplace_clear">Clear</string>
+    <string name="marketplace_filters_title">Filters</string>
+    <string name="marketplace_clear_all">Clear All</string>
+    <string name="marketplace_class_type">Class Type</string>
+    <string name="marketplace_all">All</string>
+    <string name="marketplace_price_range">Price Range</string>
+    <string name="marketplace_no_institutes">No institutes found</string>
+    <string name="marketplace_adjust_filters">Try adjusting your filters</string>
+    <string name="marketplace_institutes_found">%1$d institutes found</string>
+    <string name="marketplace_success_rate">%1$d%% Success Rate</string>
+
+    <!-- ============================================ -->
+    <!-- NOTIFICATION SETTINGS SECTION -->
+    <!-- ============================================ -->
+    <string name="notification_settings_title">Notifications</string>
+    <string name="notification_settings_description">Manage your notification preferences</string>
+    <string name="notification_push_title">Push Notifications</string>
+    <string name="notification_push_description">Enable or disable all push notifications</string>
+    <string name="notification_grading_complete_title">Grading Complete</string>
+    <string name="notification_grading_complete_description">When your test is graded</string>
+    <string name="notification_feedback_title">Feedback Available</string>
+    <string name="notification_feedback_description">When new feedback is added</string>
+    <string name="notification_batch_invitations_title">Batch Invitations</string>
+    <string name="notification_batch_invitations_description">When you\'re invited to a batch</string>
+    <string name="notification_announcements_title">Announcements</string>
+    <string name="notification_announcements_description">General updates from SSBMax</string>
+    <string name="notification_study_reminders_title">Study Reminders</string>
+    <string name="notification_study_reminders_description">Daily study reminders</string>
+    <string name="notification_test_reminders_title">Test Reminders</string>
+    <string name="notification_test_reminders_description">Reminders to complete tests</string>
+    <string name="notification_marketplace_updates_title">Marketplace Updates</string>
+    <string name="notification_marketplace_updates_description">New classes and assessors</string>
+
+    <!-- ============================================ -->
+    <!-- THEME SECTION -->
+    <!-- ============================================ -->
+    <string name="theme_section_title">Appearance</string>
+    <string name="theme_section_description">Choose your preferred theme</string>
+    <string name="theme_light_description">Light theme</string>
+    <string name="theme_dark_description">Dark theme</string>
+    <string name="theme_system_description">Follow system setting</string>
+
+    <!-- ============================================ -->
+    <!-- SUBSCRIPTION SECTION -->
+    <!-- ============================================ -->
+    <string name="subscription_billing_title">Subscription &amp; Billing</string>
+    <string name="subscription_current_plan_label">Current Plan</string>
+
+    <!-- ============================================ -->
+    <!-- HELP SECTION -->
+    <!-- ============================================ -->
+    <string name="help_section_title">Help &amp; Support</string>
+    <string name="help_faq_title">Frequently Asked Questions</string>
+    <string name="help_contact_support_title">Contact Support</string>
+    <string name="help_contact_support_email">support@ssbmax.com</string>
+
+    <!-- ============================================ -->
+    <!-- INSTRUCTOR SCREENS (PLACEHOLDERS) -->
+    <!-- ============================================ -->
+    
+    <!-- Instructor Students Screen -->
+    <string name="instructor_students_title">My Students</string>
+    <string name="instructor_students_placeholder_title">Student Management</string>
+    <string name="instructor_students_placeholder_description">View and manage all your students in one place</string>
+    <string name="instructor_students_features_title">Coming Soon</string>
+    <string name="instructor_students_features_list">• View all students in your batches\n• Search and filter students\n• Track individual progress\n• View test submissions\n• Add notes and feedback</string>
+    
+    <!-- Instructor Analytics Screen -->
+    <string name="instructor_analytics_title">Batch Analytics</string>
+    <string name="instructor_analytics_placeholder_title">Performance Analytics</string>
+    <string name="instructor_analytics_placeholder_description">Comprehensive analytics for your batches and students</string>
+    <string name="instructor_analytics_features_title">Coming Soon</string>
+    <string name="instructor_analytics_features_list">• Batch-wide performance overview\n• Individual student trends\n• Test-wise analytics\n• Progress charts and graphs\n• Compare across batches</string>
+    
+    <!-- Create Batch Screen -->
+    <string name="create_batch_title">Create New Batch</string>
+    <string name="create_batch_placeholder_title">Batch Creation</string>
+    <string name="create_batch_placeholder_description">Create and manage student batches for organized teaching</string>
+    <string name="create_batch_features_title">Coming Soon</string>
+    <string name="create_batch_features_list">• Create batch with name and details\n• Add students via invite codes\n• Set batch capacity and duration\n• Assign default tests\n• Track batch progress</string>
+    
+    <!-- Batch Detail Screen -->
+    <string name="batch_detail_title">Batch: %1$s</string>
+    <string name="batch_detail_placeholder_title">Batch Details</string>
+    <string name="batch_detail_placeholder_description">Viewing details for batch: %1$s</string>
+    <string name="batch_detail_features_title">Coming Soon</string>
+    <string name="batch_detail_features_list">• View all batch members\n• Batch performance summary\n• Assign tests to batch\n• Edit batch details\n• Add/remove students\n• Archive batch</string>
+    
+    <!-- Student Detail Screen -->
+    <string name="student_detail_title">Student: %1$s</string>
+    <string name="student_detail_placeholder_title">Student Performance</string>
+    <string name="student_detail_placeholder_description">Viewing performance for student: %1$s</string>
+    <string name="student_detail_features_title">Coming Soon</string>
+    <string name="student_detail_features_list">• Complete test history\n• Performance trends and charts\n• All submissions with scores\n• Instructor notes and feedback\n• Compare with batch average\n• Track engagement</string>
+
 </resources>

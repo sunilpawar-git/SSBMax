@@ -53,7 +53,21 @@ enum class SubscriptionTier {
             PRO -> 999
             PREMIUM -> 9999
         }
-    
+
+    val quarterlyPrice: String?
+        get() = when (this) {
+            FREE -> null
+            PRO -> "₹249/quarter"  // ~16% savings
+            PREMIUM -> "₹2,699/quarter" // ~10% savings
+        }
+
+    val quarterlyPriceInt: Int?
+        get() = when (this) {
+            FREE -> null
+            PRO -> 249
+            PREMIUM -> 2699
+        }
+
     /**
      * Check if this tier has access to overview sections
      */

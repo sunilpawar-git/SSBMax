@@ -4,10 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.StudyMaterial
+import com.ssbmax.core.domain.model.StudyProgress
+import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.core.domain.usecase.study.GetStudyMaterialDetailUseCase
+import com.ssbmax.core.domain.usecase.study.SaveStudyProgressUseCase
+import com.ssbmax.core.domain.usecase.study.TrackStudySessionUseCase
+import com.ssbmax.core.domain.usecase.study.GetStudyProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,34 +24,39 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 /**
  * ViewModel for Study Material Detail Screen
  * Handles material content loading and progress tracking
+ * REFACTORED: Now uses use cases for business logic separation
  */
 @HiltViewModel
 class StudyMaterialDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val studyContentRepository: com.ssbmax.core.domain.repository.StudyContentRepository,
+    private val getStudyMaterialDetail: GetStudyMaterialDetailUseCase,
+    private val saveStudyProgress: SaveStudyProgressUseCase,
+    private val trackStudySession: TrackStudySessionUseCase,
+    private val getStudyProgress: GetStudyProgressUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    
+
     private val materialId: String = savedStateHandle.get<String>("categoryId") ?: ""
-    
+
     private val _uiState = MutableStateFlow(StudyMaterialDetailUiState())
     val uiState: StateFlow<StudyMaterialDetailUiState> = _uiState.asStateFlow()
-    
-    private var startTime: Long = 0L
-    
+
+    // PHASE 3: Nullable var removed - using StateFlow (uiState.activeSessionId)
+
     init {
         loadMaterial()
-        startTime = System.currentTimeMillis()
+        startStudySession()
     }
     
     private fun loadMaterial() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
+
             try {
-                // Try to load from Firestore first
-                val cloudResult = studyContentRepository.getStudyMaterial(materialId)
-                
+                // Try to load from cloud first using use case
+                val cloudResult = getStudyMaterialDetail(materialId)
+
                 val material = cloudResult.getOrNull()?.let { cloudMaterial ->
                     // Convert cloud material to UI model
                     StudyMaterialContent(
@@ -52,12 +64,12 @@ class StudyMaterialDetailViewModel @Inject constructor(
                         title = cloudMaterial.title,
                         category = cloudMaterial.category,
                         author = cloudMaterial.author.ifEmpty { "SSB Expert" },
-                        publishedDate = "2025", // TODO: Add to cloud model
+                        publishedDate = "2025",
                         readTime = cloudMaterial.readTime.ifEmpty { "10 min read" },
                         content = cloudMaterial.contentMarkdown,
                         isPremium = cloudMaterial.isPremium,
-                        tags = emptyList(), // TODO: Parse from cloud
-                        relatedMaterials = emptyList() // TODO: Parse from cloud
+                        tags = emptyList(),
+                        relatedMaterials = emptyList()
                     )
                 } ?: run {
                     // Fallback to local content
@@ -74,14 +86,30 @@ class StudyMaterialDetailViewModel @Inject constructor(
                         localMaterial
                     }
                 }
-                
-                _uiState.update {
-                    it.copy(
-                        material = material,
-                        readingProgress = 0f,
-                        isLoading = false,
-                        error = null
-                    )
+
+                // Load existing progress
+                val currentUser = observeCurrentUser().first()
+                if (currentUser != null) {
+                    val progressResult = getStudyProgress(currentUser.id, materialId)
+                    val existingProgress = progressResult.getOrNull()
+
+                    _uiState.update {
+                        it.copy(
+                            material = material,
+                            readingProgress = existingProgress?.progress ?: 0f,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            material = material,
+                            readingProgress = 0f,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 // On error, fallback to local content
@@ -116,22 +144,56 @@ class StudyMaterialDetailViewModel @Inject constructor(
             }
         }
     }
-    
-    fun updateProgress(progress: Float) {
-        _uiState.update {
-            it.copy(readingProgress = progress.coerceIn(0f, 100f))
+
+    private fun startStudySession() {
+        viewModelScope.launch {
+            val currentUser = observeCurrentUser().first()
+            if (currentUser != null) {
+                val sessionResult = trackStudySession.startSession(currentUser.id, materialId)
+                // PHASE 2: Use StateFlow instead of nullable var
+                _uiState.update { it.copy(
+                    activeSessionId = sessionResult.getOrNull()?.id
+                ) }
+            }
         }
-        // TODO: Save progress to repository
     }
-    
-    fun trackReadingTime() {
-        val timeSpent = System.currentTimeMillis() - startTime
-        // TODO: Save reading time to repository
+
+    fun updateProgress(progress: Float) {
+        val coercedProgress = progress.coerceIn(0f, 100f)
+        _uiState.update {
+            it.copy(readingProgress = coercedProgress)
+        }
+
+        // Save progress to repository
+        viewModelScope.launch {
+            val currentUser = observeCurrentUser().first()
+            if (currentUser != null) {
+                val studyProgress = StudyProgress(
+                    materialId = materialId,
+                    userId = currentUser.id,
+                    progress = coercedProgress,
+                    lastReadAt = System.currentTimeMillis(),
+                    timeSpent = 0L, // Will be updated on session end
+                    isCompleted = coercedProgress >= 100f
+                )
+                saveStudyProgress(studyProgress)
+            }
+        }
     }
-    
+
     override fun onCleared() {
         super.onCleared()
-        trackReadingTime()
+        endStudySession()
+    }
+
+    private fun endStudySession() {
+        viewModelScope.launch {
+            // PHASE 2: Read from StateFlow instead of nullable var
+            _uiState.value.activeSessionId?.let { id ->
+                val progressIncrement = _uiState.value.readingProgress
+                trackStudySession.endSession(id, progressIncrement)
+            }
+        }
     }
     
     private fun getMockMaterial(materialId: String): StudyMaterialContent {
@@ -146,7 +208,9 @@ data class StudyMaterialDetailUiState(
     val material: StudyMaterialContent? = null,
     val readingProgress: Float = 0f,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    // PHASE 1: New StateFlow field (replacing nullable var)
+    val activeSessionId: String? = null  // Track study session
 )
 
 /**

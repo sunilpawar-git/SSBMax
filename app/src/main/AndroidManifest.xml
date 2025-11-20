@@ -5,6 +5,12 @@
     <!-- Internet permission for Firebase and API calls -->
     <uses-permission android:name="android.permission.INTERNET" />
     
+    <!-- Network state permission for Firebase Analytics -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Wake lock permission for Firebase Analytics -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
     <!-- Notification permission for Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -22,6 +28,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/Theme.SSBMax">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

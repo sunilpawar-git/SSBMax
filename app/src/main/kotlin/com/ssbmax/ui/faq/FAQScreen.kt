@@ -19,10 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.FAQCategory
 import com.ssbmax.core.domain.model.FAQItem
 
@@ -41,10 +43,10 @@ fun FAQScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Frequently Asked Questions") },
+                title = { Text(stringResource(R.string.faq_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -59,10 +61,10 @@ fun FAQScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = viewModel::searchFAQs,
-                label = { Text("Search FAQs") },
-                placeholder = { Text("Ask a question...") },
-                leadingIcon = { 
-                    Icon(Icons.Default.Search, contentDescription = null) 
+                label = { Text(stringResource(R.string.faq_search_label)) },
+                placeholder = { Text(stringResource(R.string.faq_search_placeholder)) },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,7 +105,7 @@ fun FAQScreen(
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Can't find what you're looking for? Contact our support team.",
+                            text = stringResource(R.string.faq_footer_contact),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth()
@@ -131,7 +133,7 @@ private fun CategoryFilterRow(
             FilterChip(
                 selected = selectedCategory == null,
                 onClick = { onCategorySelected(null) },
-                label = { Text("All") }
+                label = { Text(stringResource(R.string.faq_filter_all)) }
             )
         }
         
@@ -191,7 +193,10 @@ private fun FAQItemCard(
                 // Expand/collapse icon
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded)
+                        stringResource(R.string.faq_action_collapse)
+                    else
+                        stringResource(R.string.faq_action_expand),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -228,16 +233,16 @@ private fun EmptyState(
         ) {
             Text(
                 text = if (query.isBlank()) {
-                    "No FAQs available"
+                    stringResource(R.string.faq_empty_no_faqs)
                 } else {
-                    "No results found for \"$query\""
+                    stringResource(R.string.faq_empty_no_results, query)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Try a different search term or browse categories",
+                text = stringResource(R.string.faq_empty_suggestion),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

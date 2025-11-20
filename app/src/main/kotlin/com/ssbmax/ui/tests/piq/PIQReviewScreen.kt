@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.PIQPage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,10 +28,10 @@ fun PIQReviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Review Your Information") },
+                title = { Text(stringResource(R.string.piq_review_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -49,7 +51,7 @@ fun PIQReviewScreen(
                         onClick = { showSubmitDialog = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Submit PIQ")
+                        Text(stringResource(R.string.piq_review_action_submit))
                     }
                 }
             }
@@ -68,7 +70,7 @@ fun PIQReviewScreen(
 
             // Page 1 Summary - Exact sequence matching SSB PIQ form
             ReviewSection(
-                title = "Personal & Family Details",
+                title = stringResource(R.string.piq_review_section_personal_family),
                 onEdit = { onEdit(PIQPage.PAGE_1) }
             ) {
                 // Header Information (Top of form)
@@ -104,7 +106,7 @@ fun PIQReviewScreen(
                 ReviewField("Present Residence Population", answers["presentResidencePopulation"])
                 ReviewField("Permanent Residence Population", answers["permanentResidencePopulation"])
                 if (answers["isDistrictHQ"]?.toBoolean() == true) {
-                    ReviewField("Is District HQ", "Yes")
+                    ReviewField("Is District HQ", stringResource(R.string.piq_review_yes))
                 }
                 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -123,9 +125,9 @@ fun PIQReviewScreen(
                 ReviewField("Mother's Education", answers["motherEducation"])
                 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 // Siblings Information
-                Text("Siblings", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.piq_review_field_siblings), style = MaterialTheme.typography.titleSmall)
                 repeat(2) { index ->
                     val prefix = "elderSibling${index + 1}_"
                     val name = answers["${prefix}name"]
@@ -163,11 +165,11 @@ fun PIQReviewScreen(
                 }
                 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
+
                 // Educational Record - moved from Page 2 to Page 1
-                Text("Educational Record", style = MaterialTheme.typography.titleSmall)
-                
-                Text("10th Standard", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.piq_review_field_educational_record), style = MaterialTheme.typography.titleSmall)
+
+                Text(stringResource(R.string.piq_review_field_10th), style = MaterialTheme.typography.titleSmall)
                 ReviewField("School Name", answers["education10th_institution"])
                 ReviewField("Board", answers["education10th_board"])
                 ReviewField("Year", answers["education10th_year"])
@@ -175,10 +177,10 @@ fun PIQReviewScreen(
                 ReviewField("Medium of Instruction", answers["education10th_medium"])
                 ReviewField("Boarder/Day Scholar", answers["education10th_boarder"])
                 ReviewField("Outstanding Achievement", answers["education10th_achievement"])
-                
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                Text("12th Standard", style = MaterialTheme.typography.titleSmall)
+
+                Text(stringResource(R.string.piq_review_field_12th), style = MaterialTheme.typography.titleSmall)
                 ReviewField("School Name", answers["education12th_institution"])
                 ReviewField("Board", answers["education12th_board"])
                 ReviewField("Stream", answers["education12th_stream"])
@@ -187,10 +189,10 @@ fun PIQReviewScreen(
                 ReviewField("Medium of Instruction", answers["education12th_medium"])
                 ReviewField("Boarder/Day Scholar", answers["education12th_boarder"])
                 ReviewField("Outstanding Achievement", answers["education12th_achievement"])
-                
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                Text("Graduation", style = MaterialTheme.typography.titleSmall)
+
+                Text(stringResource(R.string.piq_review_field_graduation), style = MaterialTheme.typography.titleSmall)
                 ReviewField("College Name", answers["educationGrad_institution"])
                 ReviewField("University", answers["educationGrad_university"])
                 ReviewField("Degree", answers["educationGrad_degree"])
@@ -199,10 +201,10 @@ fun PIQReviewScreen(
                 ReviewField("Medium of Instruction", answers["educationGrad_medium"])
                 ReviewField("Boarder/Day Scholar", answers["educationGrad_boarder"])
                 ReviewField("Outstanding Achievement", answers["educationGrad_achievement"])
-                
+
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                
-                Text("Post-Graduation/Professional", style = MaterialTheme.typography.titleSmall)
+
+                Text(stringResource(R.string.piq_review_field_pg), style = MaterialTheme.typography.titleSmall)
                 ReviewField("Institution Name", answers["educationPG_institution"])
                 ReviewField("University", answers["educationPG_university"])
                 ReviewField("Degree/Diploma", answers["educationPG_degree"])
@@ -215,7 +217,7 @@ fun PIQReviewScreen(
 
             // Page 2 Summary - Exact sequence matching SSB PIQ form
             ReviewSection(
-                title = "Career & Additional Details",
+                title = stringResource(R.string.piq_review_section_career),
                 onEdit = { onEdit(PIQPage.PAGE_2) }
             ) {
                 // Physical Details - moved from Page 1 to Page 2
@@ -264,23 +266,21 @@ fun PIQReviewScreen(
         if (showSubmitDialog) {
             AlertDialog(
                 onDismissRequest = { showSubmitDialog = false },
-                title = { Text("Submit PIQ?") },
+                title = { Text(stringResource(R.string.piq_review_dialog_title)) },
                 text = {
-                    Text(
-                        "Once submitted, you cannot edit this form. Continue?"
-                    )
+                    Text(stringResource(R.string.piq_review_dialog_message))
                 },
                 confirmButton = {
                     Button(onClick = {
                         showSubmitDialog = false
                         onSubmit()
                     }) {
-                        Text("Submit")
+                        Text(stringResource(R.string.action_submit))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showSubmitDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
                 }
             )
@@ -309,7 +309,7 @@ private fun ReviewSection(
                     color = MaterialTheme.colorScheme.primary
                 )
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, "Edit")
+                    Icon(Icons.Default.Edit, stringResource(R.string.action_edit))
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))

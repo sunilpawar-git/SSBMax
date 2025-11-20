@@ -12,10 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.ui.components.BreadcrumbBar
 import com.ssbmax.ui.components.BreadcrumbItem
 import com.ssbmax.ui.components.MarkdownText
@@ -48,27 +50,29 @@ fun StudyMaterialDetailScreen(
         }
     }
     
+    val shareText = stringResource(R.string.study_material_share_text, uiState.material?.title ?: "")
+    val shareSubject = stringResource(R.string.study_material_share_subject)
+    val shareVia = stringResource(R.string.study_material_share_via)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study Material") },
+                title = { Text(stringResource(R.string.study_material_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.study_material_back))
                     }
                 },
                 actions = {
-                    IconButton(onClick = { 
-                        val shareText = "Check out this SSB study material: ${uiState.material?.title}\n\n" +
-                            "Study with SSBMax - Your complete SSB preparation companion"
+                    IconButton(onClick = {
                         val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(android.content.Intent.EXTRA_SUBJECT, "SSB Study Material")
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, shareSubject)
                             putExtra(android.content.Intent.EXTRA_TEXT, shareText)
                         }
-                        context.startActivity(android.content.Intent.createChooser(intent, "Share via"))
+                        context.startActivity(android.content.Intent.createChooser(intent, shareVia))
                     }) {
-                        Icon(Icons.Default.Share, "Share")
+                        Icon(Icons.Default.Share, stringResource(R.string.study_material_share))
                     }
                 }
             )
@@ -91,7 +95,7 @@ fun StudyMaterialDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = uiState.error ?: "Error loading material",
+                    text = uiState.error ?: stringResource(R.string.study_material_error_loading),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -108,14 +112,15 @@ fun StudyMaterialDetailScreen(
                 ) {
                     // Breadcrumb Navigation
                     item {
+                        val breadcrumbRoot = stringResource(R.string.study_material_breadcrumb_root)
                         BreadcrumbBar(
                             items = listOf(
-                                BreadcrumbItem("Study Materials", null, isClickable = true),
+                                BreadcrumbItem(breadcrumbRoot, null, isClickable = true),
                                 BreadcrumbItem(material.category, null, isClickable = false),
                                 BreadcrumbItem(material.title, null, isClickable = false)
                             ),
                             onItemClick = { item ->
-                                if (item.title == "Study Materials") {
+                                if (item.title == breadcrumbRoot) {
                                     onNavigateBack()
                                 }
                             }
@@ -172,7 +177,7 @@ fun StudyMaterialDetailScreen(
                     if (material.relatedMaterials.isNotEmpty()) {
                         item {
                             Text(
-                                "Related Materials",
+                                stringResource(R.string.study_material_related),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(top = 8.dp)
@@ -282,7 +287,7 @@ private fun TagsSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            "Tags",
+            stringResource(R.string.study_material_tags),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -342,10 +347,10 @@ private fun RelatedMaterialCard(
                     fontWeight = FontWeight.Medium
                 )
             }
-            
+
             Icon(
                 Icons.Default.ChevronRight,
-                contentDescription = "Open",
+                contentDescription = stringResource(R.string.study_material_open),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.SDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
@@ -55,7 +57,7 @@ fun SDTTestScreen(
 
     when {
         uiState.isLoading -> TestContentLoadingState(
-            message = uiState.loadingMessage ?: "Loading SDT questions...",
+            message = uiState.loadingMessage ?: stringResource(R.string.sdt_loading),
             modifier = Modifier.fillMaxSize()
         )
         uiState.error != null -> TestContentErrorState(
@@ -100,12 +102,12 @@ fun SDTTestScreen(
     if (showSubmitDialog) {
         AlertDialog(
             onDismissRequest = { showSubmitDialog = false },
-            title = { Text("Submit Test?") },
+            title = { Text(stringResource(R.string.sdt_submit_title)) },
             text = {
                 Column {
-                    Text("You have answered ${uiState.validResponseCount}/${uiState.questions.size} questions.")
+                    Text(stringResource(R.string.sdt_submit_message, uiState.validResponseCount, uiState.questions.size))
                     if (uiState.validResponseCount < 4) {
-                        Text("Some questions are skipped.", style = MaterialTheme.typography.bodySmall,
+                        Text(stringResource(R.string.sdt_submit_warning), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -114,10 +116,10 @@ fun SDTTestScreen(
                 Button(onClick = {
                     showSubmitDialog = false
                     viewModel.submitTest()
-                }) { Text("Submit") }
+                }) { Text(stringResource(R.string.sdt_action_submit)) }
             },
             dismissButton = {
-                TextButton(onClick = { showSubmitDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showSubmitDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -132,10 +134,10 @@ private fun InstructionsView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SDT - Self Description Test") },
+                title = { Text(stringResource(R.string.sdt_full_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -148,23 +150,23 @@ private fun InstructionsView(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Instructions", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            
+            Text(stringResource(R.string.sdt_instructions_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    InstructionItem("You will be presented with 4 questions")
-                    InstructionItem("Describe how others perceive you and how you see yourself")
-                    InstructionItem("Total time: 15 minutes for all questions")
-                    InstructionItem("Maximum 1000 words per question")
-                    InstructionItem("You can skip and return to questions during the test")
-                    InstructionItem("Be honest and specific in your responses")
+                    InstructionItem(stringResource(R.string.sdt_instruction_1))
+                    InstructionItem(stringResource(R.string.sdt_instruction_2))
+                    InstructionItem(stringResource(R.string.sdt_instruction_3))
+                    InstructionItem(stringResource(R.string.sdt_instruction_4))
+                    InstructionItem(stringResource(R.string.sdt_instruction_5))
+                    InstructionItem(stringResource(R.string.sdt_instruction_6))
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
-                Text("Start Test")
+                Text(stringResource(R.string.sdt_start_test))
             }
         }
     }
@@ -200,10 +202,10 @@ private fun QuestionInProgressView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Question $questionNumber/$totalQuestions") },
+                title = { Text(stringResource(R.string.sdt_question_header, questionNumber, totalQuestions)) },
                 navigationIcon = {
                     IconButton(onClick = onShowExitDialog) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Exit")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.sdt_action_exit))
                     }
                 },
                 actions = {
@@ -236,11 +238,11 @@ private fun QuestionInProgressView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                label = { Text("Your Answer") },
+                label = { Text(stringResource(R.string.sdt_answer_label)) },
                 supportingText = {
                     val color = if (wordCount > maxWords) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primary
-                    Text("$wordCount / $maxWords words", color = color)
+                    Text(stringResource(R.string.sdt_word_count, wordCount, maxWords), color = color)
                 },
                 isError = wordCount > maxWords,
                 maxLines = 20
@@ -248,7 +250,7 @@ private fun QuestionInProgressView(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) {
-                    Text("Skip")
+                    Text(stringResource(R.string.sdt_action_skip))
                 }
                 Button(
                     onClick = onNext,
@@ -257,7 +259,7 @@ private fun QuestionInProgressView(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (questionNumber < totalQuestions) "Next" else "Review")
+                    Text(stringResource(if (questionNumber < totalQuestions) R.string.sdt_action_next else R.string.sdt_action_review))
                 }
             }
         }
@@ -266,15 +268,15 @@ private fun QuestionInProgressView(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = onDismissExitDialog,
-            title = { Text("Exit Test?") },
-            text = { Text("Your progress will be lost. Are you sure you want to exit?") },
+            title = { Text(stringResource(R.string.sdt_exit_title)) },
+            text = { Text(stringResource(R.string.sdt_exit_message)) },
             confirmButton = {
                 Button(onClick = onConfirmExit, colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error
-                )) { Text("Exit") }
+                )) { Text(stringResource(R.string.sdt_action_exit)) }
             },
             dismissButton = {
-                TextButton(onClick = onDismissExitDialog) { Text("Cancel") }
+                TextButton(onClick = onDismissExitDialog) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -302,7 +304,7 @@ private fun ReviewScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Review Your Answers") })
+            TopAppBar(title = { Text(stringResource(R.string.sdt_review_title)) })
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -315,20 +317,20 @@ private fun ReviewScreen(
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Question ${index + 1}", style = MaterialTheme.typography.titleMedium,
+                                Text(stringResource(R.string.sdt_review_question_number, index + 1), style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                                 IconButton(onClick = { onEdit(index) }) {
-                                    Icon(Icons.Default.Edit, "Edit")
+                                    Icon(Icons.Default.Edit, stringResource(R.string.action_edit))
                                 }
                             }
                             Text(question.question, style = MaterialTheme.typography.bodyMedium)
                             Divider()
                             if (response != null && !response.isSkipped) {
                                 Text(response.answer, style = MaterialTheme.typography.bodySmall)
-                                Text("${response.wordCount} words", style = MaterialTheme.typography.labelSmall,
+                                Text(stringResource(R.string.sdt_review_word_count, response.wordCount), style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary)
                             } else {
-                                Text("(Skipped)", style = MaterialTheme.typography.bodySmall,
+                                Text(stringResource(R.string.sdt_review_skipped), style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                             }
                         }
@@ -340,7 +342,7 @@ private fun ReviewScreen(
                 onClick = onSubmit,
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
-                Text("Submit Test")
+                Text(stringResource(R.string.sdt_action_submit_test))
             }
         }
     }

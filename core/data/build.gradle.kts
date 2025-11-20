@@ -13,16 +13,30 @@ android {
 
         testInstrumentationRunner = "com.ssbmax.core.data.FirebaseTestRunner"
         consumerProguardFiles("consumer-rules.pro")
+        
+        // Room schema export configuration
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
     }
 
     buildTypes {
+        debug {
+            // Enable BuildConfig for DEBUG flag checks
+            buildConfigField("boolean", "DEBUG", "true")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "DEBUG", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
     
     compileOptions {
@@ -83,6 +97,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine) // For Flow testing
     
     // Android instrumented tests (integration tests with Firebase Emulator)
     androidTestImplementation(libs.androidx.junit)

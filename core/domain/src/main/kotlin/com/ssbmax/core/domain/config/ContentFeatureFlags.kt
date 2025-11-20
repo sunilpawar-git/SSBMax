@@ -2,24 +2,23 @@ package com.ssbmax.core.domain.config
 
 /**
  * Feature flags for content delivery
- * Allows instant rollback without app updates
  * 
- * Usage:
- * - Set useCloudContent = true to enable cloud content globally
- * - Use enableTopicCloud() to enable specific topics gradually
- * - Set fallbackToLocalOnError = true for safety (default)
+ * Migration complete - all 9 topics migrated to Firestore and flags permanently enabled.
+ * Query methods retained as they are used by content loading logic throughout the app.
+ * 
+ * All properties are immutable (val) since migration is complete and flags are permanent.
  */
 object ContentFeatureFlags {
     // Master switch: Enable/disable cloud content
-    // TEMPORARY: Hardcoded to true for testing (normally loaded from SharedPreferences)
-    var useCloudContent: Boolean = true
+    // Migration complete - flags permanently enabled
+    val useCloudContent: Boolean = true
     
     // Always fallback to local on errors (safety net)
-    var fallbackToLocalOnError: Boolean = true
+    val fallbackToLocalOnError: Boolean = true
     
-    // Per-topic rollout flags (for gradual migration)
+    // Per-topic rollout flags
     // ALL 9 TOPICS ENABLED - 100% FIRESTORE MIGRATION COMPLETE! 🎉
-    private val topicFlags = mutableMapOf<String, Boolean>(
+    private val topicFlags = mapOf<String, Boolean>(
         "OIR" to true,
         "PPDT" to true,
         "PSYCHOLOGY" to true,
@@ -34,6 +33,8 @@ object ContentFeatureFlags {
     /**
      * Check if cloud content is enabled for a specific topic
      * Case-insensitive to handle navigation inconsistencies
+     * 
+     * Note: All topics permanently enabled after migration completion
      */
     fun isTopicCloudEnabled(topicType: String): Boolean {
         if (!useCloudContent) return false
@@ -41,44 +42,9 @@ object ContentFeatureFlags {
         return topicFlags[topicType.uppercase()] ?: false
     }
     
-    /**
-     * Enable cloud content for a specific topic
-     * Stores in uppercase for consistency
-     */
-    fun enableTopicCloud(topicType: String) {
-        topicFlags[topicType.uppercase()] = true
-    }
-    
-    /**
-     * Disable cloud content for a specific topic
-     * Uses uppercase for consistency
-     */
-    fun disableTopicCloud(topicType: String) {
-        topicFlags[topicType.uppercase()] = false
-    }
-    
-    /**
-     * Emergency kill switch - disable all cloud content instantly
-     */
-    fun disableAllCloud() {
-        useCloudContent = false
-        topicFlags.clear()
-    }
-    
-    /**
-     * Enable all topics at once (use after successful pilot)
-     */
-    fun enableAllTopics() {
-        val allTopics = listOf(
-            "OIR", "PPDT", "PIQ_FORM", "PSYCHOLOGY", 
-            "GTO", "INTERVIEW", "CONFERENCE", "MEDICALS", "SSB_OVERVIEW"
-        )
-        allTopics.forEach { enableTopicCloud(it) }
-    }
-    
     // Query optimization flags
-    var enableOfflinePersistence: Boolean = true
-    var cacheExpiryDays: Int = 7
+    val enableOfflinePersistence: Boolean = true
+    val cacheExpiryDays: Int = 7
     
     /**
      * Get current configuration as string (for debugging)

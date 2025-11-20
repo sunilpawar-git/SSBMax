@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -28,10 +29,10 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            // TODO: Add applicationIdSuffix = ".debug" after updating Firebase console with debug app
+            // TODO: Enable after adding com.ssbmax.debug to Firebase Console
             // applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            
+
             // Debug bypass for subscription limits during development
             // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
             // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
@@ -39,12 +40,13 @@ android {
         }
         
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            
+
             // Production: Subscription limits enforced
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
         }
@@ -65,6 +67,14 @@ android {
     }
     
     lint {
+        // Enforce string resources - fail build on hardcoded text
+        error += "HardcodedText"
+        lintConfig = file("lint.xml")
+
+        // Fail build on any errors (enforce quality)
+        abortOnError = true
+        warningsAsErrors = false // Can enable later for stricter enforcement
+
         disable += setOf(
             "ModifierParameter",
             "ModifierDeclaration",
@@ -88,6 +98,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+
+    // Custom lint rules
+    lintChecks(project(":lint"))
     
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -128,6 +141,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
     
     // Google Sign-In
     implementation(libs.play.services.auth)
@@ -135,10 +149,10 @@ dependencies {
     
     // Image Loading
     implementation(libs.coil.compose)
-    
-    // TODO: Add real billing later
-    // implementation(libs.billing.ktx)
-    
+
+    // Google Play Billing
+    implementation(libs.billing.ktx)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
@@ -179,27 +193,41 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     
     val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
         exclude(
+            // Android generated
             "**/R.class",
             "**/R$*.class",
             "**/BuildConfig.*",
             "**/Manifest*.*",
             "**/*Test*.*",
             "android/**/*.*",
-            "**/*\$ViewInjector*.*",
-            "**/*\$ViewBinder*.*",
-            "**/Lambda$*.class",
-            "**/Lambda.class",
-            "**/*Lambda.class",
-            "**/*Lambda*.class",
+
+            // Hilt/Dagger generated
             "**/*_MembersInjector.class",
             "**/Dagger*Component*.*",
             "**/*Module_*Factory.class",
             "**/di/**",
             "**/*_Factory*.*",
             "**/*_Impl*.*",
-            "**/*Application*.*",
             "**/HiltWrapper*.*",
-            "**/*_Hilt*.*"
+            "**/*_Hilt*.*",
+
+            // Navigation generated
+            "**/*Navigation*.*",
+            "**/*Destinations*.*",
+            "**/*NavGraph*.*",
+
+            // Application class
+            "**/*Application*.*",
+
+            // Theme/Design system (UI only, no logic)
+            "**/ui/theme/**",
+            "**/designsystem/**",
+
+            // Lambda classes
+            "**/Lambda$*.class",
+            "**/Lambda.class",
+            "**/*Lambda.class",
+            "**/*Lambda*.class"
         )
     }
     

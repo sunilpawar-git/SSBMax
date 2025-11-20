@@ -10,13 +10,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.PIQPage
 import com.ssbmax.ui.tests.piq.SELECTION_BOARD_OPTIONS
+import com.ssbmax.ui.tests.piq.components.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +55,7 @@ fun PIQTestScreen(
                     title = { Text("PIQ - ${uiState.currentPage.displayName}") },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, "Back")
+                            Icon(Icons.Default.ArrowBack, stringResource(R.string.piq_back))
                         }
                     },
                     actions = {
@@ -64,7 +67,7 @@ fun PIQTestScreen(
                             )
                         } else if (uiState.lastSavedAt != null) {
                             Text(
-                                "✓ Saved",
+                                stringResource(R.string.piq_saved),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(end = 16.dp)
@@ -89,7 +92,7 @@ fun PIQTestScreen(
                         }
                     },
                     canGoBack = uiState.currentPage == PIQPage.PAGE_2,
-                    nextButtonText = if (uiState.currentPage == PIQPage.PAGE_2) "Review" else "Next"
+                    nextButtonText = if (uiState.currentPage == PIQPage.PAGE_2) stringResource(R.string.piq_review) else stringResource(R.string.piq_next)
                 )
             }
         ) { padding ->
@@ -123,11 +126,11 @@ fun PIQTestScreen(
             uiState.error?.let { error ->
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
-                    title = { Text("Error") },
+                    title = { Text(stringResource(R.string.piq_error)) },
                     text = { Text(error) },
                     confirmButton = {
                         TextButton(onClick = { viewModel.clearError() }) {
-                            Text("OK")
+                            Text(stringResource(R.string.piq_ok))
                         }
                     }
                 )
@@ -150,95 +153,95 @@ private fun Page1Content(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Privacy Warning Banner
-        PrivacyWarningBanner()
-        
+        PIQPrivacyWarningBanner()
+
         Text(
-            "Personal & Family Details",
+            stringResource(R.string.piq_personal_family_title),
             style = MaterialTheme.typography.headlineSmall
         )
-        
+
         // Header Section (Exact SSB PIQ sequence)
-        SectionHeader("Header Information")
+        PIQSectionHeader(stringResource(R.string.piq_header_section))
         PIQTextField(
-            label = "OIR Number",
+            label = stringResource(R.string.piq_oir_number),
             value = answers["oirNumber"] ?: "",
             onValueChange = { onFieldChange("oirNumber", it) },
-            placeholder = "To be filled from OIR Test Result",
+            placeholder = stringResource(R.string.piq_oir_placeholder),
             enabled = false // Auto-filled, read-only
         )
         PIQDropdownField(
-            label = "Selection Board",
+            label = stringResource(R.string.piq_selection_board),
             value = answers["selectionBoard"] ?: "",
             options = SELECTION_BOARD_OPTIONS,
             onValueChange = { onFieldChange("selectionBoard", it) }
         )
         PIQTextField(
-            label = "Batch No",
+            label = stringResource(R.string.piq_batch_number),
             value = answers["batchNumber"] ?: "",
             onValueChange = { onFieldChange("batchNumber", it) },
-            placeholder = "To be filled at SSB",
+            placeholder = stringResource(R.string.piq_batch_placeholder),
             enabled = false,
-            supportingText = "To be filled at SSB"
+            supportingText = stringResource(R.string.piq_batch_supporting)
         )
         PIQTextField(
-            label = "Chest Number",
+            label = stringResource(R.string.piq_chest_number),
             value = answers["chestNumber"] ?: "",
             onValueChange = { onFieldChange("chestNumber", it) },
-            placeholder = "To be filled at SSB",
+            placeholder = stringResource(R.string.piq_batch_placeholder),
             enabled = false,
-            supportingText = "To be filled at SSB"
+            supportingText = stringResource(R.string.piq_batch_supporting)
         )
         PIQTextField(
-            label = "UPSC Roll No",
+            label = stringResource(R.string.piq_upsc_roll),
             value = answers["upscRollNumber"] ?: "",
             onValueChange = { onFieldChange("upscRollNumber", it) },
-            placeholder = "To be filled at SSB",
+            placeholder = stringResource(R.string.piq_batch_placeholder),
             enabled = false,
-            supportingText = "To be filled at SSB"
+            supportingText = stringResource(R.string.piq_batch_supporting)
         )
 
         // Name (in CAPITALS) - comes right after header as per SSB PIQ
         PIQTextField(
-            label = "Full Name (in CAPITALS)",
+            label = stringResource(R.string.piq_full_name),
             value = answers["fullName"] ?: "",
             onValueChange = { onFieldChange("fullName", it) }
         )
-        
+
         // Residence Information - comes after Name as per SSB PIQ
-        SectionHeader("Residence Information")
+        PIQSectionHeader(stringResource(R.string.piq_residence_section))
         PIQTextField(
-            label = "Maximum Residence",
+            label = stringResource(R.string.piq_max_residence),
             value = answers["maximumResidence"] ?: "",
             onValueChange = { onFieldChange("maximumResidence", it) }
         )
         PIQTextField(
-            label = "Maximum Residence Population",
+            label = stringResource(R.string.piq_max_residence_pop),
             value = answers["maximumResidencePopulation"] ?: "",
             onValueChange = { onFieldChange("maximumResidencePopulation", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "Present Address",
+            label = stringResource(R.string.piq_present_address),
             value = answers["presentAddress"] ?: "",
             onValueChange = { onFieldChange("presentAddress", it) },
             multiline = true,
             minLines = 3
         )
         PIQTextField(
-            label = "Present Residence Population",
+            label = stringResource(R.string.piq_present_pop),
             value = answers["presentResidencePopulation"] ?: "",
             onValueChange = { onFieldChange("presentResidencePopulation", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "Permanent Address",
+            label = stringResource(R.string.piq_permanent_address),
             value = answers["permanentAddress"] ?: "",
             onValueChange = { onFieldChange("permanentAddress", it) },
             multiline = true,
             minLines = 3
         )
         PIQTextField(
-            label = "Permanent Residence Population",
+            label = stringResource(R.string.piq_permanent_pop),
             value = answers["permanentResidencePopulation"] ?: "",
             onValueChange = { onFieldChange("permanentResidencePopulation", it) },
             keyboardType = KeyboardType.Number
@@ -252,63 +255,63 @@ private fun Page1Content(
                 onCheckedChange = { onFieldChange("isDistrictHQ", it.toString()) }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Is District HQ?")
+            Text(stringResource(R.string.piq_is_district_hq))
         }
         
         // Personal Details Table - comes after Residence as per SSB PIQ
-        SectionHeader("Personal Details")
+        PIQSectionHeader(stringResource(R.string.piq_personal_details))
         PIQTextField(
-            label = "State",
+            label = stringResource(R.string.piq_state),
             value = answers["state"] ?: "",
             onValueChange = { onFieldChange("state", it) }
         )
         PIQTextField(
-            label = "District",
+            label = stringResource(R.string.piq_district),
             value = answers["district"] ?: "",
             onValueChange = { onFieldChange("district", it) }
         )
         PIQTextField(
-            label = "Religion",
+            label = stringResource(R.string.piq_religion),
             value = answers["religion"] ?: "",
             onValueChange = { onFieldChange("religion", it) }
         )
         PIQDropdownField(
-            label = "SC/ST/OBC Status",
+            label = stringResource(R.string.piq_sc_st_obc),
             value = answers["scStObcStatus"] ?: "",
             options = listOf("", "SC", "ST", "OBC"),
             onValueChange = { onFieldChange("scStObcStatus", it) }
         )
         PIQTextField(
-            label = "Mother Tongue",
+            label = stringResource(R.string.piq_mother_tongue),
             value = answers["motherTongue"] ?: "",
             onValueChange = { onFieldChange("motherTongue", it) }
         )
         PIQTextField(
-            label = "Date of Birth",
+            label = stringResource(R.string.piq_date_of_birth),
             value = answers["dateOfBirth"] ?: "",
             onValueChange = { onFieldChange("dateOfBirth", it) },
-            placeholder = "DD/MM/YYYY"
+            placeholder = stringResource(R.string.piq_dob_placeholder)
         )
         PIQDropdownField(
-            label = "Marital Status",
+            label = stringResource(R.string.piq_marital_status),
             value = answers["maritalStatus"] ?: "",
             options = listOf("", "Single", "Married", "Widower"),
             onValueChange = { onFieldChange("maritalStatus", it) }
         )
         
         // Parents Alive - comes after Personal Details Table as per SSB PIQ
-        SectionHeader("Family Enhancement")
+        PIQSectionHeader(stringResource(R.string.piq_family_enhancement))
         PIQDropdownField(
-            label = "Parents Alive",
+            label = stringResource(R.string.piq_parents_alive),
             value = answers["parentsAlive"] ?: "",
             options = listOf("", "Both", "Father Only", "Mother Only", "None"),
             onValueChange = { onFieldChange("parentsAlive", it) }
         )
-        
+
         // Conditional fields based on parentsAlive
         if (answers["parentsAlive"] == "Mother Only" || answers["parentsAlive"] == "None") {
             PIQTextField(
-                label = "Age at Father's Death",
+                label = stringResource(R.string.piq_age_father_death),
                 value = answers["ageAtFatherDeath"] ?: "",
                 onValueChange = { onFieldChange("ageAtFatherDeath", it) },
                 keyboardType = KeyboardType.Number
@@ -316,31 +319,31 @@ private fun Page1Content(
         }
         if (answers["parentsAlive"] == "Father Only" || answers["parentsAlive"] == "None") {
             PIQTextField(
-                label = "Age at Mother's Death",
+                label = stringResource(R.string.piq_age_mother_death),
                 value = answers["ageAtMotherDeath"] ?: "",
                 onValueChange = { onFieldChange("ageAtMotherDeath", it) },
                 keyboardType = KeyboardType.Number
             )
         }
         if (answers["parentsAlive"] == "None") {
-            SectionHeader("Guardian Information")
+            PIQSectionHeader(stringResource(R.string.piq_guardian_section))
             PIQTextField(
-                label = "Guardian Name",
+                label = stringResource(R.string.piq_guardian_name),
                 value = answers["guardianName"] ?: "",
                 onValueChange = { onFieldChange("guardianName", it) }
             )
             PIQTextField(
-                label = "Guardian Occupation",
+                label = stringResource(R.string.piq_guardian_occupation),
                 value = answers["guardianOccupation"] ?: "",
                 onValueChange = { onFieldChange("guardianOccupation", it) }
             )
             PIQTextField(
-                label = "Guardian Education",
+                label = stringResource(R.string.piq_guardian_education),
                 value = answers["guardianEducation"] ?: "",
                 onValueChange = { onFieldChange("guardianEducation", it) }
             )
             PIQTextField(
-                label = "Guardian Income",
+                label = stringResource(R.string.piq_guardian_income),
                 value = answers["guardianIncome"] ?: "",
                 onValueChange = { onFieldChange("guardianIncome", it) }
             )
@@ -348,50 +351,50 @@ private fun Page1Content(
         
         // Parents/Guardian/Siblings table (Education, Occupation, Income)
         // Father's Information
-        SectionHeader("Father's Information")
+        PIQSectionHeader(stringResource(R.string.piq_father_section))
         PIQTextField(
-            label = "Father's Name",
+            label = stringResource(R.string.piq_father_name),
             value = answers["fatherName"] ?: "",
             onValueChange = { onFieldChange("fatherName", it) }
         )
         PIQTextField(
-            label = "Father's Occupation",
+            label = stringResource(R.string.piq_father_occupation),
             value = answers["fatherOccupation"] ?: "",
             onValueChange = { onFieldChange("fatherOccupation", it) }
         )
         PIQTextField(
-            label = "Father's Education",
+            label = stringResource(R.string.piq_father_education),
             value = answers["fatherEducation"] ?: "",
             onValueChange = { onFieldChange("fatherEducation", it) }
         )
         PIQTextField(
-            label = "Father's Annual Income",
+            label = stringResource(R.string.piq_father_income),
             value = answers["fatherIncome"] ?: "",
             onValueChange = { onFieldChange("fatherIncome", it) }
         )
 
         // Mother's Information
-        SectionHeader("Mother's Information")
+        PIQSectionHeader(stringResource(R.string.piq_mother_section))
         PIQTextField(
-            label = "Mother's Name",
+            label = stringResource(R.string.piq_mother_name),
             value = answers["motherName"] ?: "",
             onValueChange = { onFieldChange("motherName", it) }
         )
         PIQTextField(
-            label = "Mother's Occupation",
+            label = stringResource(R.string.piq_mother_occupation),
             value = answers["motherOccupation"] ?: "",
             onValueChange = { onFieldChange("motherOccupation", it) }
         )
         PIQTextField(
-            label = "Mother's Education",
+            label = stringResource(R.string.piq_mother_education),
             value = answers["motherEducation"] ?: "",
             onValueChange = { onFieldChange("motherEducation", it) }
         )
         
         // Siblings Information - comes after Mother's Information as per SSB PIQ
-        SectionHeader("Siblings Information")
+        PIQSectionHeader(stringResource(R.string.piq_siblings_section))
         Text(
-            "Elder Brother/Sister",
+            stringResource(R.string.piq_elder_sibling),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 8.dp)
         )
@@ -400,7 +403,7 @@ private fun Page1Content(
         repeat(2) { index ->
             val prefix = "elderSibling${index + 1}_"
             PIQTextField(
-                label = "Elder Sibling ${index + 1} - Name",
+                label = stringResource(R.string.piq_sibling_name, index + 1),
                 value = answers["${prefix}name"] ?: "",
                 onValueChange = { onFieldChange("${prefix}name", it) }
             )
@@ -409,14 +412,14 @@ private fun Page1Content(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PIQTextField(
-                    label = "Age",
+                    label = stringResource(R.string.piq_age),
                     value = answers["${prefix}age"] ?: "",
                     onValueChange = { onFieldChange("${prefix}age", it) },
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.weight(1f)
                 )
                 PIQTextField(
-                    label = "Education",
+                    label = stringResource(R.string.piq_education),
                     value = answers["${prefix}education"] ?: "",
                     onValueChange = { onFieldChange("${prefix}education", it) },
                     modifier = Modifier.weight(1f)
@@ -427,13 +430,13 @@ private fun Page1Content(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PIQTextField(
-                    label = "Occupation",
+                    label = stringResource(R.string.piq_occupation),
                     value = answers["${prefix}occupation"] ?: "",
                     onValueChange = { onFieldChange("${prefix}occupation", it) },
                     modifier = Modifier.weight(1f)
                 )
                 PIQTextField(
-                    label = "Income",
+                    label = stringResource(R.string.piq_income),
                     value = answers["${prefix}income"] ?: "",
                     onValueChange = { onFieldChange("${prefix}income", it) },
                     keyboardType = KeyboardType.Number,
@@ -443,7 +446,7 @@ private fun Page1Content(
         }
         
         Text(
-            "Younger Brother/Sister",
+            stringResource(R.string.piq_younger_sibling),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 8.dp)
         )
@@ -451,7 +454,7 @@ private fun Page1Content(
         repeat(2) { index ->
             val prefix = "youngerSibling${index + 1}_"
             PIQTextField(
-                label = "Younger Sibling ${index + 1} - Name",
+                label = stringResource(R.string.piq_sibling_name_younger, index + 1),
                 value = answers["${prefix}name"] ?: "",
                 onValueChange = { onFieldChange("${prefix}name", it) }
             )
@@ -460,14 +463,14 @@ private fun Page1Content(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PIQTextField(
-                    label = "Age",
+                    label = stringResource(R.string.piq_age),
                     value = answers["${prefix}age"] ?: "",
                     onValueChange = { onFieldChange("${prefix}age", it) },
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.weight(1f)
                 )
                 PIQTextField(
-                    label = "Education",
+                    label = stringResource(R.string.piq_education),
                     value = answers["${prefix}education"] ?: "",
                     onValueChange = { onFieldChange("${prefix}education", it) },
                     modifier = Modifier.weight(1f)
@@ -478,13 +481,13 @@ private fun Page1Content(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PIQTextField(
-                    label = "Occupation",
+                    label = stringResource(R.string.piq_occupation),
                     value = answers["${prefix}occupation"] ?: "",
                     onValueChange = { onFieldChange("${prefix}occupation", it) },
                     modifier = Modifier.weight(1f)
                 )
                 PIQTextField(
-                    label = "Income",
+                    label = stringResource(R.string.piq_income),
                     value = answers["${prefix}income"] ?: "",
                     onValueChange = { onFieldChange("${prefix}income", it) },
                     keyboardType = KeyboardType.Number,
@@ -494,45 +497,45 @@ private fun Page1Content(
         }
 
         // Educational Record - moved from Page 2 to end of Page 1
-        SectionHeader("Educational Record")
-        
+        PIQSectionHeader(stringResource(R.string.piq_educational_record))
+
         // 10th Standard Education
-        Text("10th Standard", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.piq_10th_standard), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
         PIQTextField(
-            label = "School Name",
+            label = stringResource(R.string.piq_school_name),
             value = answers["education10th_institution"] ?: "",
             onValueChange = { onFieldChange("education10th_institution", it) }
         )
         PIQTextField(
-            label = "Board",
+            label = stringResource(R.string.piq_board),
             value = answers["education10th_board"] ?: "",
             onValueChange = { onFieldChange("education10th_board", it) }
         )
         PIQTextField(
-            label = "Year of Passing",
+            label = stringResource(R.string.piq_year_passing),
             value = answers["education10th_year"] ?: "",
             onValueChange = { onFieldChange("education10th_year", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "Percentage",
+            label = stringResource(R.string.piq_percentage),
             value = answers["education10th_percentage"] ?: "",
             onValueChange = { onFieldChange("education10th_percentage", it) },
             keyboardType = KeyboardType.Decimal
         )
         PIQTextField(
-            label = "Medium of Instruction",
+            label = stringResource(R.string.piq_medium),
             value = answers["education10th_medium"] ?: "",
             onValueChange = { onFieldChange("education10th_medium", it) }
         )
         PIQDropdownField(
-            label = "Boarder/Day Scholar",
+            label = stringResource(R.string.piq_boarder),
             value = answers["education10th_boarder"] ?: "",
             options = listOf("", "Boarder", "Day Scholar"),
             onValueChange = { onFieldChange("education10th_boarder", it) }
         )
         PIQTextField(
-            label = "Outstanding Achievement",
+            label = stringResource(R.string.piq_achievement),
             value = answers["education10th_achievement"] ?: "",
             onValueChange = { onFieldChange("education10th_achievement", it) },
             multiline = true,
@@ -540,48 +543,48 @@ private fun Page1Content(
         )
         
         // 12th Standard Education
-        Text("12th Standard", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.piq_12th_standard), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
         PIQTextField(
-            label = "School Name",
+            label = stringResource(R.string.piq_school_name),
             value = answers["education12th_institution"] ?: "",
             onValueChange = { onFieldChange("education12th_institution", it) }
         )
         PIQTextField(
-            label = "Board",
+            label = stringResource(R.string.piq_board),
             value = answers["education12th_board"] ?: "",
             onValueChange = { onFieldChange("education12th_board", it) }
         )
         PIQDropdownField(
-            label = "Stream",
+            label = stringResource(R.string.piq_stream),
             value = answers["education12th_stream"] ?: "",
             options = listOf("", "Science", "Commerce", "Arts"),
             onValueChange = { onFieldChange("education12th_stream", it) }
         )
         PIQTextField(
-            label = "Year of Passing",
+            label = stringResource(R.string.piq_year_passing),
             value = answers["education12th_year"] ?: "",
             onValueChange = { onFieldChange("education12th_year", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "Percentage",
+            label = stringResource(R.string.piq_percentage),
             value = answers["education12th_percentage"] ?: "",
             onValueChange = { onFieldChange("education12th_percentage", it) },
             keyboardType = KeyboardType.Decimal
         )
         PIQTextField(
-            label = "Medium of Instruction",
+            label = stringResource(R.string.piq_medium),
             value = answers["education12th_medium"] ?: "",
             onValueChange = { onFieldChange("education12th_medium", it) }
         )
         PIQDropdownField(
-            label = "Boarder/Day Scholar",
+            label = stringResource(R.string.piq_boarder),
             value = answers["education12th_boarder"] ?: "",
             options = listOf("", "Boarder", "Day Scholar"),
             onValueChange = { onFieldChange("education12th_boarder", it) }
         )
         PIQTextField(
-            label = "Outstanding Achievement",
+            label = stringResource(R.string.piq_achievement),
             value = answers["education12th_achievement"] ?: "",
             onValueChange = { onFieldChange("education12th_achievement", it) },
             multiline = true,
@@ -589,47 +592,47 @@ private fun Page1Content(
         )
         
         // Graduation Education
-        Text("Graduation", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.piq_graduation), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
         PIQTextField(
-            label = "College Name",
+            label = stringResource(R.string.piq_college_name),
             value = answers["educationGrad_institution"] ?: "",
             onValueChange = { onFieldChange("educationGrad_institution", it) }
         )
         PIQTextField(
-            label = "University",
+            label = stringResource(R.string.piq_university),
             value = answers["educationGrad_university"] ?: "",
             onValueChange = { onFieldChange("educationGrad_university", it) }
         )
         PIQTextField(
-            label = "Degree",
+            label = stringResource(R.string.piq_degree),
             value = answers["educationGrad_degree"] ?: "",
             onValueChange = { onFieldChange("educationGrad_degree", it) }
         )
         PIQTextField(
-            label = "Year of Passing",
+            label = stringResource(R.string.piq_year_passing),
             value = answers["educationGrad_year"] ?: "",
             onValueChange = { onFieldChange("educationGrad_year", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "CGPA/Percentage",
+            label = stringResource(R.string.piq_cgpa),
             value = answers["educationGrad_cgpa"] ?: "",
             onValueChange = { onFieldChange("educationGrad_cgpa", it) },
             keyboardType = KeyboardType.Decimal
         )
         PIQTextField(
-            label = "Medium of Instruction",
+            label = stringResource(R.string.piq_medium),
             value = answers["educationGrad_medium"] ?: "",
             onValueChange = { onFieldChange("educationGrad_medium", it) }
         )
         PIQDropdownField(
-            label = "Boarder/Day Scholar",
+            label = stringResource(R.string.piq_boarder),
             value = answers["educationGrad_boarder"] ?: "",
             options = listOf("", "Boarder", "Day Scholar"),
             onValueChange = { onFieldChange("educationGrad_boarder", it) }
         )
         PIQTextField(
-            label = "Outstanding Achievement",
+            label = stringResource(R.string.piq_achievement),
             value = answers["educationGrad_achievement"] ?: "",
             onValueChange = { onFieldChange("educationGrad_achievement", it) },
             multiline = true,
@@ -637,47 +640,47 @@ private fun Page1Content(
         )
         
         // Post-Graduation Education
-        Text("Post-Graduation/Professional", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        Text(stringResource(R.string.piq_post_graduation), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
         PIQTextField(
-            label = "Institution Name",
+            label = stringResource(R.string.piq_institution_name),
             value = answers["educationPG_institution"] ?: "",
             onValueChange = { onFieldChange("educationPG_institution", it) }
         )
         PIQTextField(
-            label = "University",
+            label = stringResource(R.string.piq_university),
             value = answers["educationPG_university"] ?: "",
             onValueChange = { onFieldChange("educationPG_university", it) }
         )
         PIQTextField(
-            label = "Degree/Diploma",
+            label = stringResource(R.string.piq_degree_diploma),
             value = answers["educationPG_degree"] ?: "",
             onValueChange = { onFieldChange("educationPG_degree", it) }
         )
         PIQTextField(
-            label = "Year of Passing",
+            label = stringResource(R.string.piq_year_passing),
             value = answers["educationPG_year"] ?: "",
             onValueChange = { onFieldChange("educationPG_year", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "CGPA/Percentage",
+            label = stringResource(R.string.piq_cgpa),
             value = answers["educationPG_cgpa"] ?: "",
             onValueChange = { onFieldChange("educationPG_cgpa", it) },
             keyboardType = KeyboardType.Decimal
         )
         PIQTextField(
-            label = "Medium of Instruction",
+            label = stringResource(R.string.piq_medium),
             value = answers["educationPG_medium"] ?: "",
             onValueChange = { onFieldChange("educationPG_medium", it) }
         )
         PIQDropdownField(
-            label = "Boarder/Day Scholar",
+            label = stringResource(R.string.piq_boarder),
             value = answers["educationPG_boarder"] ?: "",
             options = listOf("", "Boarder", "Day Scholar"),
             onValueChange = { onFieldChange("educationPG_boarder", it) }
         )
         PIQTextField(
-            label = "Outstanding Achievement",
+            label = stringResource(R.string.piq_achievement),
             value = answers["educationPG_achievement"] ?: "",
             onValueChange = { onFieldChange("educationPG_achievement", it) },
             multiline = true,
@@ -702,47 +705,47 @@ private fun Page2Content(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            "Career & Additional Details",
+            stringResource(R.string.piq_career_additional_title),
             style = MaterialTheme.typography.headlineSmall
         )
 
         // Physical Details - moved from Page 1 to start of Page 2
-        SectionHeader("Physical Details")
+        PIQSectionHeader(stringResource(R.string.piq_physical_details))
         PIQTextField(
-            label = "Age (Years & Months)",
+            label = stringResource(R.string.piq_age_years_months),
             value = answers["age"] ?: "",
             onValueChange = { onFieldChange("age", it) },
             keyboardType = KeyboardType.Number
         )
         PIQTextField(
-            label = "Height (metres)",
+            label = stringResource(R.string.piq_height),
             value = answers["height"] ?: "",
             onValueChange = { onFieldChange("height", it) },
             keyboardType = KeyboardType.Decimal
         )
         PIQTextField(
-            label = "Weight (kilograms)",
+            label = stringResource(R.string.piq_weight),
             value = answers["weight"] ?: "",
             onValueChange = { onFieldChange("weight", it) },
             keyboardType = KeyboardType.Decimal
         )
-        
+
         // Occupation - moved from Page 1 to Page 2
-        SectionHeader("Occupation")
+        PIQSectionHeader(stringResource(R.string.piq_occupation_section))
         PIQTextField(
-            label = "Present Occupation",
+            label = stringResource(R.string.piq_present_occupation),
             value = answers["presentOccupation"] ?: "",
             onValueChange = { onFieldChange("presentOccupation", it) }
         )
         PIQTextField(
-            label = "Personal Monthly Income",
+            label = stringResource(R.string.piq_monthly_income),
             value = answers["personalMonthlyIncome"] ?: "",
             onValueChange = { onFieldChange("personalMonthlyIncome", it) },
             keyboardType = KeyboardType.Number
         )
 
         // NCC Training - comes after Occupation as per SSB PIQ
-        SectionHeader("NCC Training")
+        PIQSectionHeader(stringResource(R.string.piq_ncc_section))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -752,83 +755,83 @@ private fun Page2Content(
                 onCheckedChange = { onFieldChange("ncc_hasTraining", it.toString()) }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Have NCC Training?")
+            Text(stringResource(R.string.piq_has_ncc))
         }
         if (answers["ncc_hasTraining"]?.toBoolean() == true) {
             PIQTextField(
-                label = "Total Training",
+                label = stringResource(R.string.piq_ncc_total),
                 value = answers["ncc_totalTraining"] ?: "",
                 onValueChange = { onFieldChange("ncc_totalTraining", it) }
             )
             PIQDropdownField(
-                label = "Wing",
+                label = stringResource(R.string.piq_ncc_wing),
                 value = answers["ncc_wing"] ?: "",
                 options = listOf("", "Army", "Navy", "Air Force"),
                 onValueChange = { onFieldChange("ncc_wing", it) }
             )
             PIQTextField(
-                label = "Division",
+                label = stringResource(R.string.piq_ncc_division),
                 value = answers["ncc_division"] ?: "",
                 onValueChange = { onFieldChange("ncc_division", it) }
             )
             PIQTextField(
-                label = "Certificate Obtained",
+                label = stringResource(R.string.piq_ncc_certificate),
                 value = answers["ncc_certificate"] ?: "",
                 onValueChange = { onFieldChange("ncc_certificate", it) }
             )
         }
         
         // Participation in games & sports - comes after NCC Training as per SSB PIQ
-        SectionHeader("Sports Participation")
+        PIQSectionHeader(stringResource(R.string.piq_sports_section))
         PIQTextField(
-            label = "Sports Played",
+            label = stringResource(R.string.piq_sports),
             value = answers["sports"] ?: "",
             onValueChange = { onFieldChange("sports", it) },
             multiline = true,
             minLines = 2,
-            placeholder = "Sports you play or have played"
+            placeholder = stringResource(R.string.piq_sports_placeholder)
         )
-        
+
         // Hobbies/Interest - comes after Sports as per SSB PIQ
-        SectionHeader("Interests")
+        PIQSectionHeader(stringResource(R.string.piq_interests_section))
         PIQTextField(
-            label = "Hobbies & Interests",
+            label = stringResource(R.string.piq_hobbies),
             value = answers["hobbies"] ?: "",
             onValueChange = { onFieldChange("hobbies", it) },
             multiline = true,
             minLines = 3,
-            placeholder = "List your hobbies and interests"
+            placeholder = stringResource(R.string.piq_hobbies_placeholder)
         )
-        
+
         // Participation in extra-curricular activities - comes after Hobbies as per SSB PIQ
         // Note: Currently using simple text field. Dynamic list can be added later.
-        
+
         // Position of responsibility/offices held - comes after Activities as per SSB PIQ
-        SectionHeader("Positions of Responsibility")
+        PIQSectionHeader(stringResource(R.string.piq_responsibility_section))
         PIQTextField(
-            label = "Positions Held",
+            label = stringResource(R.string.piq_positions),
             value = answers["positionsOfResponsibility"] ?: "",
             onValueChange = { onFieldChange("positionsOfResponsibility", it) },
             multiline = true,
             minLines = 3,
-            placeholder = "List positions of responsibility held"
+            placeholder = stringResource(R.string.piq_positions_placeholder)
         )
-        
+
         // Service Selection - comes after Positions as per SSB PIQ
-        SectionHeader("Service Selection")
+        PIQSectionHeader(stringResource(R.string.piq_service_section))
         PIQTextField(
-            label = "Nature of Commission",
+            label = stringResource(R.string.piq_commission_nature),
             value = answers["natureOfCommission"] ?: "",
             onValueChange = { onFieldChange("natureOfCommission", it) }
         )
         PIQDropdownField(
-            label = "Choice of Service",
+            label = stringResource(R.string.piq_choice_service),
             value = answers["choiceOfService"] ?: "",
             options = listOf("", "Army", "Navy", "Air Force", "Coast Guard", "Any"),
             onValueChange = { onFieldChange("choiceOfService", it) }
         )
         PIQTextField(
-            label = "Number of Chances Availed",
+            label = stringResource(R.string.piq_chances_availed),
             value = answers["chancesAvailed"] ?: "",
             onValueChange = { onFieldChange("chancesAvailed", it) },
             keyboardType = KeyboardType.Number
@@ -840,158 +843,3 @@ private fun Page2Content(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun PIQTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    placeholder: String = "",
-    multiline: Boolean = false,
-    minLines: Int = 1,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    isRequired: Boolean = false,
-    enabled: Boolean = true,
-    supportingText: String? = null
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        placeholder = if (placeholder.isNotEmpty()) {
-            { Text(placeholder) }
-        } else null,
-        modifier = modifier.fillMaxWidth(),
-        singleLine = !multiline,
-        minLines = if (multiline) minLines else 1,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
-        supportingText = supportingText?.let { { Text(it) } },
-        isError = false,
-        enabled = enabled
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PIQDropdownField(
-    label: String,
-    value: String,
-    options: List<String>,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor()
-        )
-        
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PrivacyWarningBanner() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Privacy Notice",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "All information entered in this form is stored securely in the cloud. " +
-                            "This is a practice form to help you familiarize yourself with the actual PIQ format. " +
-                            "Please use generic or sample information only. Do not enter sensitive personal details.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PIQNavigationBar(
-    currentPage: PIQPage,
-    onPreviousPage: () -> Unit,
-    onNextPage: () -> Unit,
-    canGoBack: Boolean,
-    nextButtonText: String
-) {
-    Surface(
-        shadowElevation = 8.dp,
-        tonalElevation = 3.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (canGoBack) {
-                OutlinedButton(onClick = onPreviousPage) {
-                    Text("Previous")
-                }
-            } else {
-                Spacer(modifier = Modifier.width(1.dp))
-            }
-
-            Button(onClick = onNextPage) {
-                Text(nextButtonText)
-            }
-        }
-    }
-}
-

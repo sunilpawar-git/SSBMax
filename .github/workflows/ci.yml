@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, feature/** ]
+    branches: [ main, feature/**, tech-debt/** ]
   pull_request:
     branches: [ main ]
 
@@ -23,26 +23,28 @@ jobs:
           distribution: 'temurin'
           cache: gradle
           
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Grant execute permission for gradle.sh
+        run: chmod +x ./gradle.sh
         
       - name: Create google-services.json from secret
         run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
         
       - name: Build project
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: ./gradle.sh assembleDebug --stacktrace --no-daemon
         
       - name: Run unit tests
-        run: ./gradlew test --stacktrace --no-daemon
-        continue-on-error: true
-        
+        run: ./gradle.sh test --stacktrace --no-daemon
+
       - name: Generate coverage report
-        run: ./gradlew :app:jacocoTestReport --no-daemon
-        continue-on-error: true
-        
+        run: ./gradle.sh :app:jacocoTestReport --no-daemon
+        continue-on-error: true  # Coverage generation can fail without blocking the build
+
       - name: Run lint checks
-        run: ./gradlew lintDebug --no-daemon
-        continue-on-error: true
+        run: ./gradle.sh lintDebug --no-daemon
+      
+      - name: Run architecture tests
+        run: ./gradle.sh :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon --stacktrace
+        continue-on-error: false  # Architecture violations MUST block build
         
       - name: Upload test reports on failure
         if: failure()

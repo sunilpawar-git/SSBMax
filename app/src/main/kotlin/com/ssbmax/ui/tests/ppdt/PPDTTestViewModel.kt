@@ -10,15 +10,19 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for PPDT Test Screen
@@ -26,7 +30,8 @@ import javax.inject.Inject
  * 
  * MEMORY LEAK PREVENTION:
  * - Registers with MemoryLeakTracker for profiler verification
- * - Properly cancels timerJob in onCleared()
+ * - viewModelScope automatically cancels all jobs in onCleared()
+ * - Uses isTimerActive flag for timer lifecycle management
  * - Uses viewModelScope with isActive checks for cooperative cancellation
  * - No static references or context leaks
  */
@@ -44,8 +49,12 @@ class PPDTTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PPDTTestUiState())
     val uiState: StateFlow<PPDTTestUiState> = _uiState.asStateFlow()
     
-    private var timerJob: Job? = null
-    private var currentSession: PPDTTestSession? = null
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
+    
+    // PHASE 3: All state fully migrated to StateFlow (completed)
+    // Timer managed via viewModelScope + isTimerActive flag (no Job reference needed)
     
     init {
         // Register for memory leak tracking
@@ -79,7 +88,7 @@ class PPDTTestViewModel @Inject constructor(
                 !state.isSubmitted && 
                 state.timeRemainingSeconds > 0 && 
                 (state.currentPhase == PPDTPhase.IMAGE_VIEWING || state.currentPhase == PPDTPhase.WRITING) &&
-                timerJob == null) {
+                !state.isTimerActive) {
                 android.util.Log.d("PPDTTestViewModel", "🔄 Restoring timer after configuration change")
                 startTimer(state.timeRemainingSeconds)
             }
@@ -88,11 +97,11 @@ class PPDTTestViewModel @Inject constructor(
     
     fun loadTest(testId: String = "ppdt_standard") {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
+            _uiState.update { it.copy(
                 isLoading = true,
                 loadingMessage = "Checking eligibility...",
                 error = null
-            )
+            ) }
             
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
@@ -105,11 +114,11 @@ class PPDTTestViewModel @Inject constructor(
                     context = "PPDTTestViewModel.loadTest"
                 )
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Authentication required. Please login to continue."
-                )
+                ) }
                 return@launch
             }
             
@@ -122,7 +131,7 @@ class PPDTTestViewModel @Inject constructor(
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
                         // Show limit reached state
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             loadingMessage = null,
                             error = null,
@@ -131,7 +140,7 @@ class PPDTTestViewModel @Inject constructor(
                             testsLimit = eligibility.limit,
                             testsUsed = eligibility.usedCount,
                             resetsAt = eligibility.resetsAt
-                        )
+                        ) }
                         android.util.Log.d("PPDTTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
                         return@launch
                     }
@@ -141,9 +150,9 @@ class PPDTTestViewModel @Inject constructor(
                     }
                 }
                 
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     loadingMessage = "Fetching questions from cloud..."
-                )
+                ) }
                 
                 // Create test session
                 val sessionResult = testContentRepository.createTestSession(
@@ -177,7 +186,7 @@ class PPDTTestViewModel @Inject constructor(
                 
                 val config = PPDTTestConfig()
                 
-                currentSession = PPDTTestSession(
+                val newSession = PPDTTestSession(
                     sessionId = sessionResult.getOrNull()!!,
                     userId = userId,
                     questionId = question.id,
@@ -191,55 +200,56 @@ class PPDTTestViewModel @Inject constructor(
                     isPaused = false
                 )
                 
+                _uiState.update { it.copy(session = newSession) }
                 updateUiFromSession()
                 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
                     error = "Cloud connection required. Please check your internet connection."
-                )
+                ) }
             }
         }
     }
     
     fun startTest() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
-        currentSession = session.copy(
-            currentPhase = PPDTPhase.IMAGE_VIEWING,
-            imageViewingStartTime = System.currentTimeMillis()
-        )
+        _uiState.update { it.copy(
+            session = session.copy(
+                currentPhase = PPDTPhase.IMAGE_VIEWING,
+                imageViewingStartTime = System.currentTimeMillis()
+            )
+        ) }
         
         updateUiFromSession()
-        startTimer(30) // 30 seconds for image viewing
-        
-        // Auto-proceed to writing after viewing
-        viewModelScope.launch {
-            delay(30000)
-            if (_uiState.value.currentPhase == PPDTPhase.IMAGE_VIEWING) {
-                proceedToNextPhase()
-            }
-        }
+        startTimer(30) // 30 seconds for image viewing - timer will auto-advance via startTimer()
     }
     
     fun proceedToNextPhase() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         when (session.currentPhase) {
             PPDTPhase.IMAGE_VIEWING -> {
-                timerJob?.cancel()
-                currentSession = session.copy(
-                    currentPhase = PPDTPhase.WRITING,
-                    writingStartTime = System.currentTimeMillis()
-                )
+                // PHASE 3: Signal timer to stop via isTimerActive flag
+                _uiState.update { it.copy(
+                    isTimerActive = false,
+                    session = session.copy(
+                        currentPhase = PPDTPhase.WRITING,
+                        writingStartTime = System.currentTimeMillis()
+                    )
+                ) }
                 updateUiFromSession()
                 startTimer(session.question.writingTimeMinutes * 60)
             }
             PPDTPhase.WRITING -> {
                 if (_uiState.value.story.length >= session.question.minCharacters) {
-                    timerJob?.cancel()
-                    currentSession = session.copy(currentPhase = PPDTPhase.REVIEW)
+                    // PHASE 3: Signal timer to stop via isTimerActive flag
+                    _uiState.update { it.copy(
+                        isTimerActive = false,
+                        session = session.copy(currentPhase = PPDTPhase.REVIEW)
+                    ) }
                     updateUiFromSession()
                 }
             }
@@ -248,26 +258,29 @@ class PPDTTestViewModel @Inject constructor(
     }
     
     fun returnToWriting() {
-        val session = currentSession ?: return
-        currentSession = session.copy(currentPhase = PPDTPhase.WRITING)
+        val session = _uiState.value.session ?: return
+        _uiState.update { it.copy(
+            session = session.copy(currentPhase = PPDTPhase.WRITING)
+        ) }
         updateUiFromSession()
         startTimer(session.question.writingTimeMinutes * 60)
     }
     
     fun updateStory(newStory: String) {
-        val session = currentSession ?: return
-        currentSession = session.copy(story = newStory)
-        _uiState.value = _uiState.value.copy(
+        val session = _uiState.value.session ?: return
+        _uiState.update { it.copy(
+            session = session.copy(story = newStory),
             story = newStory,
             charactersCount = newStory.length,
             canProceedToNextPhase = newStory.length >= session.question.minCharacters
-        )
+        ) }
     }
     
     fun submitTest() {
-        timerJob?.cancel()
+        // PHASE 3: Signal timer to stop via isTimerActive flag
+        _uiState.update { it.copy(isTimerActive = false) }
         
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         viewModelScope.launch {
             try {
@@ -323,49 +336,68 @@ class PPDTTestViewModel @Inject constructor(
                 subscriptionManager.recordTestUsage(TestType.PPDT, session.userId)
                 android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
                 
-                // Mark as submitted
-                currentSession = session.copy(
-                    currentPhase = PPDTPhase.SUBMITTED,
-                    isCompleted = true
-                )
-                
-                _uiState.value = _uiState.value.copy(
+                // Mark as submitted using thread-safe .update {}
+                _uiState.update { it.copy(
+                    session = session.copy(
+                        currentPhase = PPDTPhase.SUBMITTED,
+                        isCompleted = true
+                    ),
                     isSubmitted = true,
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
                     submission = submission
+                ) }
+                
+                // Emit navigation event (one-time, consumed by screen)
+                _navigationEvents.trySend(
+                    TestNavigationEvent.NavigateToResult(
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType
+                    )
                 )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"
-                )
+                ) }
             }
         }
     }
     
     fun pauseTest() {
-        timerJob?.cancel()
-        val session = currentSession ?: return
-        currentSession = session.copy(isPaused = true)
+        val session = _uiState.value.session ?: return
+        
+        // PHASE 3: Signal timer to stop via isTimerActive flag
+        _uiState.update { it.copy(
+            isTimerActive = false,
+            session = session.copy(isPaused = true)
+        ) }
         // TODO: Save session state
     }
     
     private fun startTimer(seconds: Int) {
-        timerJob?.cancel()
-        _uiState.value = _uiState.value.copy(timeRemainingSeconds = seconds)
+        // PHASE 3: Stop any existing timer by setting flag, then start new one
+        _uiState.update { it.copy(
+            timeRemainingSeconds = seconds,
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
+        ) }
         
-        timerJob = viewModelScope.launch {
+        viewModelScope.launch {
             android.util.Log.d("PPDTTestViewModel", "⏰ Starting timer for $seconds seconds")
             
             try {
-                while (isActive && _uiState.value.timeRemainingSeconds > 0) {
+                while (isActive && 
+                       _uiState.value.isTimerActive && 
+                       _uiState.value.timeRemainingSeconds > 0) {
                     delay(1000)
-                    if (!isActive) break // Double-check after delay
+                    
+                    // Check if timer should still run (isTimerActive can be set false by submitTest/pauseTest)
+                    if (!isActive || !_uiState.value.isTimerActive) break
                     
                     val newTime = _uiState.value.timeRemainingSeconds - 1
-                    _uiState.value = _uiState.value.copy(timeRemainingSeconds = newTime)
+                    _uiState.update { it.copy(timeRemainingSeconds = newTime) }
                     
-                    if (newTime == 0 && isActive) {
+                    if (newTime == 0 && isActive && _uiState.value.isTimerActive) {
                         // Auto-proceed when time runs out
                         when (_uiState.value.currentPhase) {
                             PPDTPhase.IMAGE_VIEWING -> proceedToNextPhase()
@@ -377,20 +409,20 @@ class PPDTTestViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 android.util.Log.d("PPDTTestViewModel", "⏰ Timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
+            } finally {
+                // Ensure timer flag is cleared when loop exits
+                _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.also { job ->
-            // Register AFTER job is created
-            job.trackMemoryLeaks("PPDTTestViewModel", "phase-timer")
-        }
+        }.trackMemoryLeaks("PPDTTestViewModel", "phase-timer")
     }
     
     private fun updateUiFromSession() {
-        val session = currentSession ?: return
+        val session = _uiState.value.session ?: return
         
         android.util.Log.d("PPDTTestViewModel", "📸 Image URL from session: ${session.question.imageUrl}")
         android.util.Log.d("PPDTTestViewModel", "📸 Image ID: ${session.question.id}")
         
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             isLoading = false,
             loadingMessage = null,
             currentPhase = session.currentPhase,
@@ -400,7 +432,7 @@ class PPDTTestViewModel @Inject constructor(
             minCharacters = session.question.minCharacters,
             maxCharacters = session.question.maxCharacters,
             canProceedToNextPhase = session.story.length >= session.question.minCharacters
-        )
+        ) }
     }
     
     private fun generateMockQuestion(): PPDTQuestion {
@@ -440,10 +472,11 @@ class PPDTTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         
-        // Critical: Stop all timers to prevent leaks
-        android.util.Log.d("PPDTTestViewModel", "🧹 ViewModel onCleared() - stopping timers")
-        timerJob?.cancel()
-        timerJob = null
+        // PHASE 3: viewModelScope automatically cancels all child jobs
+        android.util.Log.d("PPDTTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-canceling all jobs")
+        
+        // Cancel navigation events channel
+        _navigationEvents.close()
         
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("PPDTTestViewModel")
@@ -479,7 +512,11 @@ data class PPDTTestUiState(
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L,
+    val session: PPDTTestSession? = null
 )
 
 /**

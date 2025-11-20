@@ -40,9 +40,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ssbmax.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,10 +76,12 @@ fun TestDetailGradingScreen(
         }
     }
 
+    val gradingSubmittedMessage = stringResource(R.string.success_grading_submitted)
+
     // Navigate back on successful submission
     LaunchedEffect(uiState.gradingSubmitted) {
         if (uiState.gradingSubmitted) {
-            snackbarHostState.showSnackbar("Grading submitted! Student notified.")
+            snackbarHostState.showSnackbar(gradingSubmittedMessage)
             viewModel.resetSubmittedState()
             onNavigateBack()
         }
@@ -86,10 +90,10 @@ fun TestDetailGradingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Grade Submission") },
+                title = { Text(stringResource(R.string.grading_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.grading_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -114,7 +118,7 @@ fun TestDetailGradingScreen(
             }
             else -> {
                 ErrorState(
-                    message = "Submission not found",
+                    message = stringResource(R.string.grading_submission_not_found),
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -142,7 +146,7 @@ private fun GradingContent(
         // Submission Info Card
         SubmissionInfoCard(
             testType = submission.testType.displayName,
-            studentName = "Student", // TODO: Load from user repository
+            studentName = uiState.studentName,
             submittedAt = submission.submittedAt
         )
 
@@ -180,7 +184,7 @@ private fun GradingContent(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("Submit Grading & Notify Student")
+                Text(stringResource(R.string.grading_submit_notify))
             }
         }
     }
@@ -215,7 +219,7 @@ private fun SubmissionInfoCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Student: $studentName",
+                    text = stringResource(R.string.grading_student_label, studentName),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -245,18 +249,18 @@ private fun SubmissionContentCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Submission Content",
+                text = stringResource(R.string.grading_submission_content),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Time Spent: ${submission.timeSpent / 1000 / 60} minutes",
+                text = stringResource(R.string.grading_time_spent, submission.timeSpent / 1000 / 60),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Responses: ${submission.responses.size} questions",
+                text = stringResource(R.string.grading_responses_count, submission.responses.size),
                 style = MaterialTheme.typography.bodyMedium
             )
             // TODO: Display actual submission content based on test type
@@ -286,12 +290,12 @@ private fun GradeInputSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Grade",
+                    text = stringResource(R.string.grading_grade_label),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${grade.toInt()}/100",
+                    text = stringResource(R.string.grading_grade_value, grade.toInt()),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -324,7 +328,7 @@ private fun RemarksInputSection(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Remarks & Feedback",
+                text = stringResource(R.string.grading_remarks_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -332,7 +336,7 @@ private fun RemarksInputSection(
             OutlinedTextField(
                 value = remarks,
                 onValueChange = onRemarksChange,
-                placeholder = { Text("Enter detailed feedback for the student...") },
+                placeholder = { Text(stringResource(R.string.grading_remarks_hint)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),

@@ -619,6 +619,12 @@ class PIQTestViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        autoSaveChannel.close()  // Close channel to prevent memory leaks
+        Log.d(TAG, "🧹 PIQ: ViewModel cleared, autoSaveChannel closed")
+    }
 }
 
 /**

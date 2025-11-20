@@ -1,8 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(cat:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(./gradle.sh test:*)",
+      "Bash(./gradle.sh:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

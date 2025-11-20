@@ -20,22 +20,28 @@ import com.ssbmax.core.domain.model.*
 
 /**
  * OIR Test Result Screen - Shows detailed breakdown after test completion
- * 
- * IMPORTANT: This screen now accepts OIRTestResult directly from the test screen
- * instead of fetching from Firestore (to avoid PERMISSION_DENIED issues when
- * submission data isn't saved yet)
+ *
+ * This screen follows the standard pattern used by TAT/WAT/SRT:
+ * - Accepts submissionId as parameter
+ * - Uses ViewModel to fetch result from Firestore
+ * - Handles loading and error states properly
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OIRTestResultScreen(
-    result: OIRTestResult,
+    submissionId: String,
     onNavigateHome: () -> Unit = {},
     onRetakeTest: () -> Unit = {},
     onReviewAnswers: () -> Unit = {},
+    viewModel: OIRSubmissionResultViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    // No ViewModel needed - result is passed directly
-    
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(submissionId) {
+        viewModel.loadSubmission(submissionId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,60 +57,140 @@ fun OIRTestResultScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Score Header
-            item {
-                ScoreHeaderCard(result = result)
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "Loading your results...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            
-            // Quick Stats
-            item {
-                QuickStatsCard(result = result)
+
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Failed to Load Results",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = uiState.error!!,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(onClick = { viewModel.retry(submissionId) }) {
+                                    Icon(Icons.Default.Refresh, null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Retry")
+                                }
+                                Button(onClick = onNavigateHome) {
+                                    Text("Go Home")
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            
-            // Category Performance
-            item {
-                Text(
-                    text = "Performance by Category",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            items(result.categoryScores.values.toList()) { categoryScore ->
-                CategoryPerformanceCard(categoryScore = categoryScore)
-            }
-            
-            // Difficulty Breakdown
-            item {
-                Text(
-                    text = "Difficulty Breakdown",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            item {
-                DifficultyBreakdownCard(
-                    difficultyScores = result.difficultyBreakdown
-                )
-            }
-            
-            // Action Buttons
-            item {
-                ActionButtonsCard(
-                    onRetakeTest = onRetakeTest,
-                    onReviewAnswers = onReviewAnswers,
-                    onBackToHome = onNavigateHome
-                )
+
+            uiState.result != null -> {
+                val result = uiState.result!!
+                LazyColumn(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Score Header
+                    item {
+                        ScoreHeaderCard(result = result)
+                    }
+
+                    // Quick Stats
+                    item {
+                        QuickStatsCard(result = result)
+                    }
+
+                    // Category Performance
+                    item {
+                        Text(
+                            text = "Performance by Category",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    items(result.categoryScores.values.toList()) { categoryScore ->
+                        CategoryPerformanceCard(categoryScore = categoryScore)
+                    }
+
+                    // Difficulty Breakdown
+                    item {
+                        Text(
+                            text = "Difficulty Breakdown",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+
+                    item {
+                        DifficultyBreakdownCard(
+                            difficultyScores = result.difficultyBreakdown
+                        )
+                    }
+
+                    // Action Buttons
+                    item {
+                        ActionButtonsCard(
+                            onRetakeTest = onRetakeTest,
+                            onReviewAnswers = onReviewAnswers,
+                            onBackToHome = onNavigateHome
+                        )
+                    }
+                }
             }
         }
     }

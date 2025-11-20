@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 /**
  * Help & Support section for Settings
@@ -43,7 +45,7 @@ fun HelpSection(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Help & Support",
+                    text = stringResource(R.string.help_section_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -52,14 +54,14 @@ fun HelpSection(
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             HelpMenuItem(
-                title = "Frequently Asked Questions",
+                title = stringResource(R.string.help_faq_title),
                 icon = Icons.Default.QuestionAnswer,
                 onClick = onFAQClick
             )
 
             HelpMenuItem(
-                title = "Contact Support",
-                subtitle = "support@ssbmax.com",
+                title = stringResource(R.string.help_contact_support_title),
+                subtitle = stringResource(R.string.help_contact_support_email),
                 icon = Icons.Default.Email,
                 onClick = onContactSupportClick
             )

@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,38 +27,38 @@ class OIRTestResultViewModel @Inject constructor(
     
     fun loadResult(sessionId: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.update { it.copy(isLoading = true) }
             
             submissionRepository.getSubmission(sessionId)
                 .onSuccess { data ->
                     if (data == null) {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             error = "Test result not found"
-                        )
+                        ) }
                         return@onSuccess
                     }
 
                     // Parse OIR test result from map
                     val result = parseOIRTestResult(data, sessionId)
                     if (result != null) {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             result = result
-                        )
+                        ) }
                     } else {
-                        _uiState.value = _uiState.value.copy(
+                        _uiState.update { it.copy(
                             isLoading = false,
                             error = "Failed to parse test result data"
-                        )
+                        ) }
                     }
                 }
                 .onFailure { error ->
                     Log.e("OIRTestResult", "Error loading result", error)
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load test result"
-                    )
+                    ) }
                 }
         }
     }

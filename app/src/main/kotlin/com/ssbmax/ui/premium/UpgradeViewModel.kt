@@ -114,14 +114,16 @@ class UpgradeViewModel @Inject constructor(
     }
     
     private fun loadAvailablePlans() {
+        // Note: Prices are now sourced from SubscriptionTier domain model (single source of truth)
+        // TODO: Migrate to Google Play Billing Library for production - prices will be fetched from Play Console
         val plans = listOf(
             SubscriptionPlan(
                 tier = SubscriptionTier.FREE,
                 name = "Basic",
                 tagline = "Get Started with SSB Prep",
-                priceMonthly = 0.0,
-                priceQuarterly = 0.0,
-                priceAnnually = 0.0,
+                priceMonthly = SubscriptionTier.FREE.monthlyPriceInt.toDouble(),
+                priceQuarterly = SubscriptionTier.FREE.quarterlyPriceInt?.toDouble() ?: 0.0,
+                priceAnnually = SubscriptionTier.FREE.yearlyPriceInt?.toDouble() ?: 0.0,
                 features = listOf(
                     PlanFeature("Overview of SSB process", true),
                     PlanFeature("Full access to all study materials", true),
@@ -138,9 +140,9 @@ class UpgradeViewModel @Inject constructor(
                 tier = SubscriptionTier.PRO,
                 name = "Pro",
                 tagline = "Accelerate Your Preparation",
-                priceMonthly = 99.0,
-                priceQuarterly = 249.0,
-                priceAnnually = 999.0,
+                priceMonthly = SubscriptionTier.PRO.monthlyPriceInt.toDouble(),
+                priceQuarterly = SubscriptionTier.PRO.quarterlyPriceInt?.toDouble() ?: 0.0,
+                priceAnnually = SubscriptionTier.PRO.yearlyPriceInt?.toDouble() ?: 0.0,
                 features = listOf(
                     PlanFeature("Everything in Basic", true),
                     PlanFeature("Unlimited practice tests", true),
@@ -157,9 +159,9 @@ class UpgradeViewModel @Inject constructor(
                 tier = SubscriptionTier.PREMIUM,
                 name = "Premium (AI)",
                 tagline = "AI-Powered Excellence",
-                priceMonthly = 999.0,
-                priceQuarterly = 2699.0,
-                priceAnnually = 8999.0,
+                priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
+                priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
+                priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
                 features = listOf(
                     PlanFeature("Everything in Pro", true),
                     PlanFeature("AI-based test result analysis", true),
@@ -176,9 +178,9 @@ class UpgradeViewModel @Inject constructor(
                 tier = SubscriptionTier.PREMIUM,
                 name = "Premium",
                 tagline = "Complete SSB Solution",
-                priceMonthly = 1499.0,
-                priceQuarterly = 3999.0,
-                priceAnnually = 13999.0,
+                priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
+                priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
+                priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
                 features = listOf(
                     PlanFeature("Everything in Pro", true),
                     PlanFeature("SSB Marketplace access", true),
