@@ -757,10 +757,160 @@ try {
 
 See: `app/src/main/kotlin/com/ssbmax/utils/ErrorLogger.kt`
 
+### **Domain Layer Architectural Exceptions**
+
+**The domain layer (core/domain module) has different rules to maintain platform independence.**
+
+#### ❌ Domain Layer Must NOT Use ErrorLogger
+
+The domain layer must remain Android-independent. ErrorLogger is an Android utility that depends on the Android SDK.
+
+```kotlin
+// ❌ WRONG - Domain layer using ErrorLogger
+package com.ssbmax.core.domain.usecase
+
+import com.ssbmax.utils.ErrorLogger  // ❌ Android dependency!
+
+class MyUseCase {
+    suspend operator fun invoke(): Result<Data> {
+        return try {
+            performOperation()
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Operation failed")  // ❌ FORBIDDEN in domain layer
+            Result.failure(e)
+        }
+    }
+}
+```
+
+```kotlin
+// ✅ CORRECT - Domain layer using Result<T>
+package com.ssbmax.core.domain.usecase
+
+class MyUseCase {
+    suspend operator fun invoke(): Result<Data> {
+        return try {
+            val data = performOperation()
+            Result.success(data)
+        } catch (e: Exception) {
+            Result.failure(e)  // ✅ Let caller handle logging
+        }
+    }
+}
+```
+
+**Why this is important:**
+- ✅ Domain layer can be reused in other platforms (Desktop, iOS via KMP)
+- ✅ Domain layer can be tested without Android dependencies
+- ✅ Follows Clean Architecture dependency rules
+- ✅ ViewModels/Repositories handle Android-specific logging
+
+#### ✅ Domain Layer Exception for Hardcoded Strings
+
+**Domain layer business logic messages are EXEMPT from the string resources rule.**
+
+```kotlin
+// ✅ CORRECT - Domain layer validation messages
+package com.ssbmax.core.domain.model
+
+data class InterviewUsageInfo(
+    val used: Int,
+    val limit: Int,
+    val remaining: Int
+) {
+    init {
+        require(used >= 0) { "Used count cannot be negative" }  // ✅ Business logic message
+        require(limit >= 0) { "Limit cannot be negative" }      // ✅ Not shown to users
+        require(remaining >= 0) { "Remaining count cannot be negative" }
+        require(used + remaining == limit) { "Used + remaining must equal limit" }
+    }
+}
+```
+
+**Why hardcoded strings are acceptable in domain layer:**
+
+1. **Platform Independence**: Domain layer cannot use `R.string` (Android dependency)
+2. **Not User-Facing**: These are business logic messages for developers, not UI text
+3. **Presentation Layer Translation**: ViewModels map domain errors to string resources
+4. **Proper Architecture**: Maintains clean separation of concerns
+
+**The correct pattern:**
+
+```kotlin
+// ✅ Domain layer - business logic with descriptive error messages
+package com.ssbmax.core.domain.usecase
+
+class CheckInterviewLimitsUseCase {
+    suspend operator fun invoke(userId: String, mode: InterviewMode): Result<Boolean> {
+        return try {
+            val tier = getTier(userId) ?: return Result.failure(
+                IllegalStateException("Subscription tier not found")  // ✅ Business error
+            )
+
+            if (tier.displayName.uppercase() == "FREE") {
+                return Result.failure(
+                    IllegalAccessException("Free tier has no interview access")  // ✅ OK
+                )
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)  // ✅ No ErrorLogger, no printStackTrace()
+        }
+    }
+}
+```
+
+```kotlin
+// ✅ ViewModel - maps domain errors to UI strings and uses ErrorLogger
+package com.ssbmax.ui.interview
+
+@HiltViewModel
+class InterviewViewModel @Inject constructor(
+    private val checkLimitsUseCase: CheckInterviewLimitsUseCase
+) : ViewModel() {
+
+    fun checkAccess(mode: InterviewMode) {
+        viewModelScope.launch {
+            checkLimitsUseCase(userId, mode)
+                .onSuccess { hasAccess ->
+                    // Handle success
+                }
+                .onFailure { error ->
+                    // ✅ Log to Crashlytics via ErrorLogger
+                    ErrorLogger.log(error, "Interview limit check failed")
+
+                    // ✅ Map to user-facing string resource
+                    _errorMessage.value = when (error) {
+                        is IllegalAccessException -> R.string.error_free_tier_no_access
+                        is IllegalStateException -> R.string.error_subscription_not_found
+                        else -> R.string.error_generic
+                    }
+                }
+        }
+    }
+}
+```
+
+#### Summary: Layer-Specific Rules
+
+| Layer | ErrorLogger | Hardcoded Strings | String Resources |
+|-------|-------------|-------------------|------------------|
+| **Domain** (`core/domain`) | ❌ Forbidden | ✅ Allowed (business logic) | ❌ Forbidden (Android dependency) |
+| **Data** (`core/data`, `app/data`) | ✅ Allowed | ❌ Forbidden (user-facing) | ✅ Required (user-facing) |
+| **Presentation** (`app/ui`) | ✅ Required | ❌ Forbidden (user-facing) | ✅ Required (user-facing) |
+
+**Key Principles:**
+- Domain layer uses `Result<T>` for error handling
+- Presentation layer uses ErrorLogger for Android logging
+- Only presentation layer shows user-facing strings from resources
+- Domain layer messages are for developers (stack traces, logs)
+
 ### Code Review Checklist
 - [ ] Follows MVVM architecture
-- [ ] Uses ErrorLogger for error handling (no printStackTrace())
-- [ ] **All user-facing strings use string resources (no hardcoded strings)**
+- [ ] Uses ErrorLogger for error handling in presentation/data layers (no printStackTrace())
+- [ ] Domain layer uses Result<T> pattern (no ErrorLogger, no Android dependencies)
+- [ ] **All user-facing strings use string resources (domain layer business logic messages exempt)**
 - [ ] Memory leak prevention
 - [ ] Accessibility compliance
 - [ ] Performance optimization
