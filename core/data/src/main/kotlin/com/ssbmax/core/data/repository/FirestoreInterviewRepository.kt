@@ -3,6 +3,7 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.ssbmax.core.domain.model.interview.InterviewLimits
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewResponse
@@ -17,6 +18,7 @@ import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.core.domain.model.interview.QuestionSource
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.repository.SubscriptionRepository
 import com.ssbmax.core.domain.service.AIService
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +48,8 @@ class FirestoreInterviewRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val questionCacheRepository: QuestionCacheRepository,
     private val aiService: AIService,
-    private val submissionRepository: SubmissionRepository
+    private val submissionRepository: SubmissionRepository,
+    private val subscriptionRepository: SubscriptionRepository
 ) : InterviewRepository {
 
     companion object {
@@ -199,7 +202,9 @@ class FirestoreInterviewRepository @Inject constructor(
                 return Result.failure(sessionResult.exceptionOrNull() ?: Exception("Session not found"))
             }
 
-            val session = sessionResult.getOrNull()!!
+            val session = sessionResult.getOrNull()
+                ?: return Result.failure(IllegalStateException("Session is null despite successful result"))
+
             val abandonedSession = session.copy(
                 status = InterviewStatus.ABANDONED,
                 completedAt = Instant.now()
@@ -282,8 +287,11 @@ class FirestoreInterviewRepository @Inject constructor(
         questions: List<InterviewQuestion>
     ): Result<Unit> {
         // Delegate to question cache repository
-        // This is handled by GenerateInterviewQuestionsUseCase automatically
-        return Result.success(Unit)
+        return questionCacheRepository.cachePIQQuestions(
+            piqSnapshotId = piqSnapshotId,
+            questions = questions,
+            expirationDays = 30
+        )
     }
 
     override suspend fun getCachedQuestions(
@@ -291,8 +299,11 @@ class FirestoreInterviewRepository @Inject constructor(
         limit: Int
     ): Result<List<InterviewQuestion>> {
         // Delegate to question cache repository
-        // This is handled by GenerateInterviewQuestionsUseCase automatically
-        return Result.success(emptyList())
+        return questionCacheRepository.getPIQQuestions(
+            piqSnapshotId = piqSnapshotId,
+            limit = limit,
+            excludeUsed = true
+        )
     }
 
     // Response management
@@ -358,7 +369,8 @@ class FirestoreInterviewRepository @Inject constructor(
             if (sessionResult.isFailure) {
                 return Result.failure(sessionResult.exceptionOrNull() ?: Exception("Session not found"))
             }
-            val session = sessionResult.getOrNull()!!
+            val session = sessionResult.getOrNull()
+                ?: return Result.failure(IllegalStateException("Session is null despite successful result"))
 
             // Get all responses
             val responsesResult = getResponses(sessionId)
@@ -525,14 +537,28 @@ class FirestoreInterviewRepository @Inject constructor(
     }
 
     override suspend fun getRemainingInterviews(userId: String, mode: InterviewMode): Result<Int> {
-        // This method is implemented by CheckInterviewLimitsUseCase to avoid circular dependencies
-        // For now, return a simple count based on completed sessions
+        // This method provides basic remaining count calculation
+        // CheckInterviewLimitsUseCase handles full tier-based validation
         return try {
+            // Get tier from subscription repository
+            val tierResult = subscriptionRepository.getSubscriptionTier(userId)
+            if (tierResult.isFailure) {
+                return Result.success(0)
+            }
+
+            val tier = tierResult.getOrNull()?.displayName
+            if (tier == null) {
+                return Result.success(0)
+            }
+
+            // Get limit from centralized constants
+            val limit = InterviewLimits.getLimit(tier, mode)
+
+            // Get completed interviews
             val stats = getInterviewStats(userId).getOrDefault(emptyMap())
             val completed = stats[mode] ?: 0
 
-            // Basic limits: Pro = 2 text, Premium = 2 text + 2 voice
-            val limit = if (mode == InterviewMode.TEXT_BASED) 2 else 2
+            // Calculate remaining
             val remaining = (limit - completed).coerceAtLeast(0)
 
             Result.success(remaining)

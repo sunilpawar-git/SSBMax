@@ -1,5 +1,6 @@
 package com.ssbmax.core.domain.usecase
 
+import com.ssbmax.core.domain.model.interview.InterviewLimits
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
@@ -123,16 +124,8 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 
             val tier = tierResult.getOrNull() ?: return Result.success(0)
 
-            // Determine limit based on tier and mode
-            val tierName = tier.displayName.uppercase()
-            val limit = when {
-                tierName == "FREE" -> 0
-                tierName == "PRO" && mode == InterviewMode.TEXT_BASED -> 2
-                tierName == "PRO" && mode == InterviewMode.VOICE_BASED -> 0
-                tierName == "PREMIUM" && mode == InterviewMode.TEXT_BASED -> 2
-                tierName == "PREMIUM" && mode == InterviewMode.VOICE_BASED -> 2
-                else -> 0
-            }
+            // Get limit from centralized constants
+            val limit = InterviewLimits.getLimit(tier.displayName, mode)
 
             Result.success(limit)
         } catch (e: Exception) {

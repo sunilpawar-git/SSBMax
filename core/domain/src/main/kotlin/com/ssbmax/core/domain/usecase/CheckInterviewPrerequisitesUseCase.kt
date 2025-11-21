@@ -1,5 +1,6 @@
 package com.ssbmax.core.domain.usecase
 
+import com.ssbmax.core.domain.model.interview.InterviewLimits
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.OIRStatus
 import com.ssbmax.core.domain.model.interview.PIQStatus
@@ -193,18 +194,12 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
 
         val remaining = remainingResult.getOrNull() ?: 0
 
-        // Get usage stats to determine limit
+        // Get usage stats to determine used count
         val statsResult = interviewRepository.getInterviewStats(userId)
         val used = statsResult.getOrNull()?.get(desiredMode) ?: 0
 
-        // Determine limit based on tier
-        val tierName = tier.displayName.uppercase()
-        val limit = when {
-            tierName == "PRO" && desiredMode == InterviewMode.TEXT_BASED -> 2
-            tierName == "PREMIUM" && desiredMode == InterviewMode.TEXT_BASED -> 2
-            tierName == "PREMIUM" && desiredMode == InterviewMode.VOICE_BASED -> 2
-            else -> 0
-        }
+        // Get limit from centralized constants
+        val limit = InterviewLimits.getLimit(tier.displayName, desiredMode)
 
         return if (remaining > 0) {
             SubscriptionStatus.Available(
