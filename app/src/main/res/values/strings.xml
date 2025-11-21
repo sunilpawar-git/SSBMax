@@ -995,4 +995,49 @@
     <string name="student_detail_features_title">Coming Soon</string>
     <string name="student_detail_features_list">• Complete test history\n• Performance trends and charts\n• All submissions with scores\n• Instructor notes and feedback\n• Compare with batch average\n• Track engagement</string>
 
+    <!-- ============================================ -->
+    <!-- INTERVIEW FEATURE -->
+    <!-- ============================================ -->
+
+    <!-- Start Interview Screen -->
+    <string name="interview_start_title">Start Interview</string>
+    <string name="interview_mode_text">Text-Based Interview</string>
+    <string name="interview_mode_voice">Voice-Based Interview</string>
+    <string name="interview_select_mode">Select Interview Mode</string>
+    <string name="interview_checking_eligibility">Checking eligibility…</string>
+    <string name="interview_prerequisites_title">Prerequisites</string>
+    <string name="interview_consent_title">Consent for Transcript Storage</string>
+    <string name="interview_consent_message">I consent to storing my interview transcript for analysis and feedback</string>
+    <string name="interview_button_start">Start Interview</string>
+    <string name="interview_error_auth">Authentication required</string>
+    <string name="interview_error_generic">An error occurred</string>
+
+    <!-- Interview Session Screen -->
+    <string name="interview_session_title">Interview</string>
+    <string name="interview_question_number">Question %1$d of %2$d</string>
+    <string name="interview_response_hint">Type your response here…</string>
+    <string name="interview_button_submit">Submit Response</string>
+    <string name="interview_button_next">Next Question</string>
+    <string name="interview_button_complete">Complete Interview</string>
+    <string name="interview_progress_label">Progress: %1$d%%</string>
+    <string name="interview_loading_session">Loading interview session…</string>
+    <string name="interview_loading_question">Loading question…</string>
+    <string name="interview_submitting_response">Submitting response…</string>
+    <string name="interview_generating_results">Generating results…</string>
+
+    <!-- Interview Result Screen -->
+    <string name="interview_result_title">Interview Results</string>
+    <string name="interview_result_overall_rating">Overall Rating</string>
+    <string name="interview_result_performance_level">Performance Level</string>
+    <string name="interview_result_average_score">Average Score: %.1f / 5.0</string>
+    <string name="interview_result_duration">Duration: %1$d minutes</string>
+    <string name="interview_result_completion">Completion: %.0f%%</string>
+    <string name="interview_result_strengths_title">Strengths</string>
+    <string name="interview_result_weaknesses_title">Areas for Improvement</string>
+    <string name="interview_result_olq_scores_title">OLQ Scores</string>
+    <string name="interview_result_category_scores_title">Category Scores</string>
+    <string name="interview_result_feedback_title">Feedback</string>
+    <string name="interview_result_button_done">Done</string>
+    <string name="interview_result_loading">Loading results…</string>
+
 </resources>
