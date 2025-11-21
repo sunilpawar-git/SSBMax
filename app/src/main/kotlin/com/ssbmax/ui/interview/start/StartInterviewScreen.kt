@@ -171,11 +171,7 @@ fun StartInterviewScreen(
                         if (uiState.isEligible) {
                             Button(
                                 onClick = {
-                                    // Get latest PIQ submission ID
-                                    viewModel.createSession(
-                                        piqSnapshotId = "latest", // Will be fetched by repository
-                                        consentGiven = consentGiven
-                                    )
+                                    viewModel.createSession(consentGiven = consentGiven)
                                 },
                                 enabled = consentGiven && !uiState.isLoading,
                                 modifier = Modifier.fillMaxWidth()

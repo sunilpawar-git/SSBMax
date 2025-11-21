@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
@@ -34,6 +35,7 @@ import javax.inject.Inject
 class StartInterviewViewModel @Inject constructor(
     private val checkPrerequisites: CheckInterviewPrerequisitesUseCase,
     private val interviewRepository: InterviewRepository,
+    private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
 
@@ -133,9 +135,10 @@ class StartInterviewViewModel @Inject constructor(
     /**
      * Create interview session
      *
-     * Prerequisites must be met before calling this
+     * Prerequisites must be met before calling this.
+     * Fetches latest PIQ submission ID automatically.
      */
-    fun createSession(piqSnapshotId: String, consentGiven: Boolean) {
+    fun createSession(consentGiven: Boolean) {
         if (!_uiState.value.canStartInterview()) {
             _uiState.update { it.copy(error = "Prerequisites not met") }
             return
@@ -159,6 +162,35 @@ class StartInterviewViewModel @Inject constructor(
                             isLoading = false,
                             loadingMessage = null,
                             error = "Authentication required"
+                        )
+                    }
+                    return@launch
+                }
+
+                // Fetch latest PIQ submission ID
+                val piqResult = submissionRepository.getLatestPIQSubmission(userId)
+                if (piqResult.isFailure) {
+                    ErrorLogger.log(
+                        throwable = piqResult.exceptionOrNull() ?: Exception("Unknown error"),
+                        description = "Failed to fetch latest PIQ submission"
+                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = "Failed to fetch PIQ data"
+                        )
+                    }
+                    return@launch
+                }
+
+                val piqSubmission = piqResult.getOrNull()
+                val piqSnapshotId = piqSubmission?.id ?: run {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = null,
+                            error = "No PIQ submission found"
                         )
                     }
                     return@launch
