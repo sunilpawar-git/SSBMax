@@ -173,16 +173,16 @@ class CheckInterviewLimitsUseCase @Inject constructor(
      * @param userId User to check
      * @return Map of mode to usage info (used, limit, remaining)
      */
-    suspend fun getUsageSummary(userId: String): Result<Map<InterviewMode, UsageInfo>> {
+    suspend fun getUsageSummary(userId: String): Result<Map<InterviewMode, InterviewUsageInfo>> {
         return try {
-            val summary = mutableMapOf<InterviewMode, UsageInfo>()
+            val summary = mutableMapOf<InterviewMode, InterviewUsageInfo>()
 
             for (mode in InterviewMode.entries) {
                 val maxLimit = getMaxLimit(userId, mode).getOrNull() ?: 0
                 val used = getUsedCount(userId, mode).getOrNull() ?: 0
                 val remaining = getRemainingCount(userId, mode).getOrNull() ?: 0
 
-                summary[mode] = UsageInfo(
+                summary[mode] = InterviewUsageInfo(
                     used = used,
                     limit = maxLimit,
                     remaining = remaining
@@ -199,7 +199,7 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 /**
  * Interview usage information
  */
-data class UsageInfo(
+data class InterviewUsageInfo(
     val used: Int,
     val limit: Int,
     val remaining: Int
@@ -208,7 +208,7 @@ data class UsageInfo(
         require(used >= 0) { "Used count cannot be negative" }
         require(limit >= 0) { "Limit cannot be negative" }
         require(remaining >= 0) { "Remaining count cannot be negative" }
-        require(used + remaining <= limit) { "Used + remaining cannot exceed limit" }
+        require(used + remaining == limit) { "Used + remaining must equal limit" }
     }
 
     /**
