@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -26,7 +28,15 @@ android {
         }
 
         // Gemini API Key for AI Interview Feature
-        val geminiApiKey: String = project.findProperty("GEMINI_API_KEY") as? String ?: ""
+        // Read from local.properties (fallback to project property, then empty string)
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY")
+            ?: project.findProperty("GEMINI_API_KEY") as? String
+            ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
