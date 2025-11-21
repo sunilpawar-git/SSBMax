@@ -203,5 +203,11 @@ abstract class RepositoryModule {
     abstract fun bindStudyProgressRepository(
         impl: com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
     ): com.ssbmax.core.domain.repository.StudyProgressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindQuestionCacheRepository(
+        impl: com.ssbmax.core.data.repository.FirestoreQuestionCacheRepository
+    ): com.ssbmax.core.domain.model.interview.QuestionCacheRepository
 }
 
