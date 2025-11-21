@@ -1040,4 +1040,22 @@
     <string name="interview_result_button_done">Done</string>
     <string name="interview_result_loading">Loading results…</string>
 
+    <!-- Voice Interview Session Screen -->
+    <string name="voice_interview_session_title">Voice Interview</string>
+    <string name="voice_interview_record_hint">Tap the microphone to record your response</string>
+    <string name="voice_interview_recording">Recording…</string>
+    <string name="voice_interview_recorded">Recording complete</string>
+    <string name="voice_interview_duration">Duration: %1$s</string>
+    <string name="voice_interview_button_start_recording">Start Recording</string>
+    <string name="voice_interview_button_stop_recording">Stop Recording</string>
+    <string name="voice_interview_button_play">Play Recording</string>
+    <string name="voice_interview_button_re_record">Re-record</string>
+    <string name="voice_interview_transcription_label">Transcription (review and edit if needed)</string>
+    <string name="voice_interview_transcription_hint">Transcribed text will appear here…</string>
+    <string name="voice_interview_permission_required">Microphone permission required to record audio</string>
+    <string name="voice_interview_permission_button">Grant Permission</string>
+    <string name="cd_microphone">Microphone</string>
+    <string name="cd_play">Play audio</string>
+    <string name="cd_stop">Stop</string>
+
 </resources>
