@@ -38,14 +38,13 @@ object AIModule {
     @Singleton
     @GeminiApiKey
     fun provideGeminiApiKey(): String {
-        // API key will be provided by BuildConfig
-        // This is a placeholder - actual implementation will use BuildConfig.GEMINI_API_KEY
-        val apiKey = System.getenv("GEMINI_API_KEY") ?: ""
+        val apiKey = com.ssbmax.core.data.BuildConfig.GEMINI_API_KEY
 
-        if (apiKey.isBlank()) {
+        if (apiKey.isBlank() || apiKey == "your_api_key_here") {
             throw IllegalStateException(
-                "Gemini API key not configured. Please set GEMINI_API_KEY in environment " +
-                "or add it to local.properties: GEMINI_API_KEY=your_key_here"
+                "Gemini API key not configured. Please add it to local.properties:\n" +
+                "GEMINI_API_KEY=your_actual_key_here\n\n" +
+                "Get your key from: https://makersuite.google.com/app/apikey"
             )
         }
 

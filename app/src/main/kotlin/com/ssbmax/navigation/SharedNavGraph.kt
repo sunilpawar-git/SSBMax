@@ -348,10 +348,16 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(
         route = SSBMaxDestinations.IOTest.route,
         arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.getString("testId") ?: ""
-        // TODO: Implement IOTestScreen
-        SharedPlaceholderScreen(title = "IO Test: $testId")
+    ) {
+        // IO Test (Interview Officer) - Navigate to interview feature
+        com.ssbmax.ui.interview.start.StartInterviewScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToSession = { sessionId ->
+                navController.navigate(
+                    SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
+                )
+            }
+        )
     }
 
     // ========================

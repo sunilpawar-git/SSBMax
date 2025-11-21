@@ -13,7 +13,11 @@ android {
 
         testInstrumentationRunner = "com.ssbmax.core.data.FirebaseTestRunner"
         consumerProguardFiles("consumer-rules.pro")
-        
+
+        // Gemini API Key for AI Interview Feature
+        val geminiApiKey: String = project.findProperty("GEMINI_API_KEY") as? String ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+
         // Room schema export configuration
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
