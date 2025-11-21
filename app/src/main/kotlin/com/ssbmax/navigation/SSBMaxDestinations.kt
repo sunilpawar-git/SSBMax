@@ -85,7 +85,19 @@ sealed class SSBMaxDestinations(val route: String) {
     data object IOTest : SSBMaxDestinations("test/io/{testId}") {
         fun createRoute(testId: String) = "test/io/$testId"
     }
-    
+
+    // Interview Screens - Stage 4 (Personal Interview)
+    data object StartInterview : SSBMaxDestinations("interview/start")
+    data object TextInterviewSession : SSBMaxDestinations("interview/text/{sessionId}") {
+        fun createRoute(sessionId: String) = "interview/text/$sessionId"
+    }
+    data object VoiceInterviewSession : SSBMaxDestinations("interview/voice/{sessionId}") {
+        fun createRoute(sessionId: String) = "interview/voice/$sessionId"
+    }
+    data object InterviewResult : SSBMaxDestinations("interview/result/{resultId}") {
+        fun createRoute(resultId: String) = "interview/result/$resultId"
+    }
+
     // Study Materials
     data object StudyMaterialsList : SSBMaxDestinations("study/materials")
     data object StudyMaterialDetail : SSBMaxDestinations("study/material/{categoryId}") {

@@ -37,6 +37,16 @@ class AudioRecorder(private val context: Context) {
                 interviewDir
             )
 
+            // Verify output file exists
+            val filePath = outputFile?.absolutePath
+            if (filePath == null) {
+                ErrorLogger.log(
+                    Exception("Output file is null"),
+                    "Failed to create audio file"
+                )
+                return null
+            }
+
             // Initialize MediaRecorder
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MediaRecorder(context)
@@ -49,7 +59,7 @@ class AudioRecorder(private val context: Context) {
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setAudioEncodingBitRate(128000)
                 setAudioSamplingRate(44100)
-                setOutputFile(outputFile!!.absolutePath)
+                setOutputFile(filePath)
 
                 try {
                     prepare()
@@ -79,8 +89,13 @@ class AudioRecorder(private val context: Context) {
         return try {
             val duration = System.currentTimeMillis() - recordingStartTime
 
+            // Safely stop recording
             mediaRecorder?.apply {
-                stop()
+                try {
+                    stop()
+                } catch (e: IllegalStateException) {
+                    ErrorLogger.log(e, "MediaRecorder not in recording state")
+                }
                 release()
             }
             mediaRecorder = null
@@ -104,7 +119,12 @@ class AudioRecorder(private val context: Context) {
     fun cancelRecording() {
         try {
             mediaRecorder?.apply {
-                stop()
+                try {
+                    stop()
+                } catch (e: IllegalStateException) {
+                    // Recorder not in recording state - safe to ignore
+                    ErrorLogger.log(e, "MediaRecorder not in recording state during cancel")
+                }
                 release()
             }
             mediaRecorder = null

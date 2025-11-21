@@ -353,7 +353,74 @@ fun NavGraphBuilder.sharedNavGraph(
         // TODO: Implement IOTestScreen
         SharedPlaceholderScreen(title = "IO Test: $testId")
     }
-    
+
+    // ========================
+    // INTERVIEW SCREENS (Stage 4)
+    // ========================
+
+    // Start Interview - Mode selection and prerequisite check
+    composable(SSBMaxDestinations.StartInterview.route) {
+        com.ssbmax.ui.interview.start.StartInterviewScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToSession = { sessionId ->
+                // Check interview mode from session to route appropriately
+                // For now, route based on mode stored in session
+                // TODO: Fetch session mode to determine routing
+                navController.navigate(SSBMaxDestinations.TextInterviewSession.createRoute(sessionId))
+            }
+        )
+    }
+
+    // Text Interview Session
+    composable(
+        route = SSBMaxDestinations.TextInterviewSession.route,
+        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+        com.ssbmax.ui.interview.session.InterviewSessionScreen(
+            sessionId = sessionId,
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
+                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
+    // Voice Interview Session
+    composable(
+        route = SSBMaxDestinations.VoiceInterviewSession.route,
+        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+        com.ssbmax.ui.interview.voice.VoiceInterviewSessionScreen(
+            sessionId = sessionId,
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
+                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
+    // Interview Result
+    composable(
+        route = SSBMaxDestinations.InterviewResult.route,
+        arguments = listOf(navArgument("resultId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val resultId = backStackEntry.arguments?.getString("resultId") ?: ""
+        com.ssbmax.ui.interview.result.InterviewResultScreen(
+            resultId = resultId,
+            onNavigateBack = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
     // ========================
     // STUDY MATERIALS
     // ========================
