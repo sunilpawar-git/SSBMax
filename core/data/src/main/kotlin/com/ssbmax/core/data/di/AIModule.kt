@@ -40,7 +40,16 @@ object AIModule {
     fun provideGeminiApiKey(): String {
         // API key will be provided by BuildConfig
         // This is a placeholder - actual implementation will use BuildConfig.GEMINI_API_KEY
-        return System.getenv("GEMINI_API_KEY") ?: ""
+        val apiKey = System.getenv("GEMINI_API_KEY") ?: ""
+
+        if (apiKey.isBlank()) {
+            throw IllegalStateException(
+                "Gemini API key not configured. Please set GEMINI_API_KEY in environment " +
+                "or add it to local.properties: GEMINI_API_KEY=your_key_here"
+            )
+        }
+
+        return apiKey
     }
 }
 

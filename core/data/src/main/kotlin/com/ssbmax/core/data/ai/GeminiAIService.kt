@@ -173,9 +173,6 @@ $piqData
     "id": "unique-id",
     "questionText": "The interview question",
     "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
-    "difficulty": 3,
-    "expectedDuration": 120,
-    "hints": ["What to listen for in response"],
     "reasoning": "Why this question is relevant to candidate"
   }
 ]
@@ -220,9 +217,6 @@ $qaHistory
     "id": "unique-id",
     "questionText": "The follow-up question",
     "targetOLQs": ["COURAGE", "DETERMINATION"],
-    "difficulty": 4,
-    "expectedDuration": 150,
-    "hints": ["What to assess"],
     "reasoning": "Why this follow-up is needed"
   }
 ]
