@@ -2,6 +2,7 @@ package com.ssbmax.ui.interview.start
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.BuildConfig
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.repository.InterviewRepository
@@ -81,8 +82,12 @@ class StartInterviewViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Check prerequisites
-                val result = checkPrerequisites(userId, _uiState.value.selectedMode)
+                // Check prerequisites (bypass subscription check in debug builds)
+                val result = checkPrerequisites(
+                    userId = userId,
+                    desiredMode = _uiState.value.selectedMode,
+                    bypassSubscriptionCheck = BuildConfig.DEBUG
+                )
 
                 if (result.isFailure) {
                     ErrorLogger.log(
@@ -197,9 +202,10 @@ class StartInterviewViewModel @Inject constructor(
                 }
 
                 // Create session
+                // NOTE: Force TEXT_BASED mode until voice recording UI is implemented
                 val result = interviewRepository.createSession(
                     userId = userId,
-                    mode = _uiState.value.selectedMode,
+                    mode = InterviewMode.TEXT_BASED,  // Force TEXT mode for now
                     piqSnapshotId = piqSnapshotId,
                     consentGiven = consentGiven
                 )

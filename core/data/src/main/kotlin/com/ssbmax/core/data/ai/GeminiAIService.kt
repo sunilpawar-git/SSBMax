@@ -32,7 +32,7 @@ class GeminiAIService @Inject constructor(
 
     companion object {
         private const val TAG = "GeminiAIService"
-        private const val MODEL_NAME = "gemini-1.5-flash"
+        private const val MODEL_NAME = "gemini-pro"  // Original model for v1beta API (most compatible)
         private const val TEMPERATURE = 0.7f
         private const val MAX_TOKENS = 2048
         private const val TIMEOUT_SECONDS = 30L
@@ -260,8 +260,8 @@ $response
   "olqScores": [
     {
       "olq": "EFFECTIVE_INTELLIGENCE",
-      "score": 3.5,
-      "reasoning": "Why this score",
+      "score": 5.5,
+      "reasoning": "Why this score (lower is better in SSB scale)",
       "evidence": ["Specific phrases from response"]
     }
   ],
@@ -270,12 +270,16 @@ $response
   "suggestedFollowUp": "Optional follow-up question"
 }
 
-**SCORING SCALE**:
-1 = Poor (lacks quality)
-2 = Below Average (shows minimal signs)
-3 = Average (meets basic expectations)
-4 = Good (demonstrates quality well)
-5 = Excellent (exceptional demonstration)
+**SCORING SCALE (SSB Convention - LOWER is BETTER)**:
+1-3 = Exceptional (rare, outstanding performance)
+4 = Excellent (top tier)
+5 = Very Good (best common score - aim for this)
+6 = Good (above average)
+7 = Average (typical performance)
+8 = Below Average (lowest acceptable)
+9-10 = Poor (usually rejected)
+
+Note: Use decimal scores (e.g., 5.5) for precision. Bell curve distribution: most scores 5-7.
 
 Provide analysis as a valid JSON object.
         """.trimIndent()

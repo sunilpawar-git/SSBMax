@@ -202,7 +202,7 @@ fun InterviewResultScreen(
                                         )
                                     }
                                     Text(
-                                        text = "${score.score}/5",
+                                        text = "${score.score}/10",
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                 }

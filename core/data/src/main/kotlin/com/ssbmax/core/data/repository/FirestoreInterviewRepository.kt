@@ -229,6 +229,12 @@ class FirestoreInterviewRepository @Inject constructor(
 
     /**
      * Internal method to generate questions using the hybrid caching strategy
+     *
+     * Strategy:
+     * 1. Try to get questions from cache (fast, no API cost)
+     * 2. If cache empty, use AI to generate personalized questions from PIQ
+     * 3. Cache the AI-generated questions for future use
+     * 4. Fall back to mock questions only if AI fails
      */
     private suspend fun internalGenerateQuestions(
         piqSnapshotId: String,
@@ -239,14 +245,13 @@ class FirestoreInterviewRepository @Inject constructor(
             val piqCount = (count * 0.4f).toInt()
             val genericCount = (count * 0.4f).toInt()
 
-            // Get PIQ-based questions from cache
+            // STEP 1: Try to get questions from cache
             val piqQuestions = questionCacheRepository.getPIQQuestions(
                 piqSnapshotId = piqSnapshotId,
                 limit = piqCount,
                 excludeUsed = true
             ).getOrDefault(emptyList())
 
-            // Get generic questions from cache
             val genericQuestions = questionCacheRepository.getGenericQuestions(
                 targetOLQs = null,
                 difficulty = 3,
@@ -254,14 +259,218 @@ class FirestoreInterviewRepository @Inject constructor(
                 excludeUsed = true
             ).getOrDefault(emptyList())
 
-            // Combine and shuffle
-            val allQuestions = (piqQuestions + genericQuestions).shuffled()
+            // Combine and shuffle cached questions
+            var allQuestions = (piqQuestions + genericQuestions).shuffled()
+
+            // STEP 2: If cache is empty, use AI to generate personalized questions
+            if (allQuestions.isEmpty()) {
+                Log.i(TAG, "📝 Question cache empty. Generating $count AI-powered questions from PIQ data...")
+
+                // Get PIQ submission data
+                val piqResult = submissionRepository.getSubmission(piqSnapshotId)
+
+                if (piqResult.isSuccess) {
+                    val piqSubmission = piqResult.getOrNull()
+
+                    if (piqSubmission != null) {
+                        // Convert PIQ to JSON for AI
+                        val piqJson = convertPIQToJson(piqSubmission)
+
+                        // Generate AI questions
+                        val aiQuestionsResult = aiService.generatePIQBasedQuestions(
+                            piqData = piqJson,
+                            targetOLQs = null, // Generate balanced set
+                            count = count,
+                            difficulty = 3
+                        )
+
+                        if (aiQuestionsResult.isSuccess) {
+                            val aiQuestions = aiQuestionsResult.getOrNull() ?: emptyList()
+
+                            if (aiQuestions.isNotEmpty()) {
+                                Log.i(TAG, "✅ AI generated ${aiQuestions.size} personalized questions!")
+
+                                // Cache the AI-generated questions for future use
+                                questionCacheRepository.cachePIQQuestions(
+                                    piqSnapshotId = piqSnapshotId,
+                                    questions = aiQuestions,
+                                    expirationDays = 30
+                                )
+
+                                allQuestions = aiQuestions
+                            } else {
+                                Log.w(TAG, "⚠️ AI returned empty questions list")
+                            }
+                        } else {
+                            Log.e(TAG, "❌ AI question generation failed", aiQuestionsResult.exceptionOrNull())
+                        }
+                    } else {
+                        Log.w(TAG, "⚠️ PIQ submission is null despite successful result")
+                    }
+                } else {
+                    Log.w(TAG, "⚠️ Could not fetch PIQ submission: ${piqResult.exceptionOrNull()?.message}")
+                }
+            }
+
+            // STEP 3: Final fallback to mock questions if AI failed
+            if (allQuestions.isEmpty()) {
+                Log.w(TAG, "⚠️ AI generation failed. Using ${count} mock questions for development")
+                allQuestions = generateMockQuestions(count)
+            }
 
             Result.success(allQuestions.take(count))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate questions", e)
             Result.failure(e)
         }
+    }
+
+    /**
+     * Convert PIQ submission to JSON string for AI processing
+     */
+    private fun convertPIQToJson(piqSubmission: Any): String {
+        // Convert PIQSubmission to a structured JSON string
+        // that the AI can analyze to generate personalized questions
+
+        return try {
+            // Use Gson or similar to serialize the PIQ data
+            // For now, create a simplified JSON representation
+            """
+            {
+                "candidateInfo": {
+                    "name": "${extractField(piqSubmission, "fullName")}",
+                    "age": "${extractField(piqSubmission, "age")}",
+                    "education": "${extractField(piqSubmission, "educationGraduation")}",
+                    "occupation": "${extractField(piqSubmission, "presentOccupation")}"
+                },
+                "family": {
+                    "fatherOccupation": "${extractField(piqSubmission, "fatherOccupation")}",
+                    "motherOccupation": "${extractField(piqSubmission, "motherOccupation")}",
+                    "siblings": ${extractField(piqSubmission, "siblings")}
+                },
+                "interests": {
+                    "hobbies": "${extractField(piqSubmission, "hobbies")}",
+                    "sports": "${extractField(piqSubmission, "sports")}",
+                    "extraCurricular": "${extractField(piqSubmission, "extraCurricularActivities")}"
+                },
+                "aspirations": {
+                    "whyDefense": "${extractField(piqSubmission, "whyDefenseForces")}",
+                    "serviceChoice": "${extractField(piqSubmission, "choiceOfService")}",
+                    "strengths": "${extractField(piqSubmission, "strengths")}",
+                    "weaknesses": "${extractField(piqSubmission, "weaknesses")}"
+                },
+                "experience": {
+                    "nccTraining": ${extractField(piqSubmission, "nccTraining")},
+                    "workExperience": "${extractField(piqSubmission, "workExperience")}",
+                    "previousInterviews": "${extractField(piqSubmission, "previousInterviews")}"
+                }
+            }
+            """.trimIndent()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error converting PIQ to JSON", e)
+            "{}" // Return empty JSON on error
+        }
+    }
+
+    /**
+     * Extract field from PIQ submission using reflection
+     */
+    private fun extractField(obj: Any, fieldName: String): String {
+        return try {
+            val field = obj::class.java.getDeclaredField(fieldName)
+            field.isAccessible = true
+            val value = field.get(obj)
+            value?.toString() ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * Generate mock questions for development when cache is empty
+     *
+     * **DEVELOPMENT ONLY**: This fallback ensures interview can be tested
+     * even when question cache is not populated.
+     *
+     * In production, questions should come from:
+     * 1. Pre-populated Firestore cache (generic questions)
+     * 2. AI-generated PIQ-based questions (cached after generation)
+     */
+    private fun generateMockQuestions(count: Int): List<InterviewQuestion> {
+        val mockQuestions = listOf(
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "Tell me about yourself and your background.",
+                expectedOLQs = listOf(OLQ.SELF_CONFIDENCE, OLQ.POWER_OF_EXPRESSION),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "Why do you want to join the armed forces?",
+                expectedOLQs = listOf(OLQ.DETERMINATION, OLQ.SENSE_OF_RESPONSIBILITY),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "Describe a challenging situation you faced and how you handled it.",
+                expectedOLQs = listOf(OLQ.REASONING_ABILITY, OLQ.SPEED_OF_DECISION, OLQ.COURAGE),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "What are your strengths and weaknesses?",
+                expectedOLQs = listOf(OLQ.SELF_CONFIDENCE, OLQ.POWER_OF_EXPRESSION),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "How do you handle working in a team?",
+                expectedOLQs = listOf(OLQ.COOPERATION, OLQ.SOCIAL_ADJUSTMENT, OLQ.INFLUENCE_GROUP),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "Describe a time when you demonstrated leadership.",
+                expectedOLQs = listOf(OLQ.ORGANIZING_ABILITY, OLQ.INITIATIVE, OLQ.EFFECTIVE_INTELLIGENCE),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "What are your hobbies and interests?",
+                expectedOLQs = listOf(OLQ.LIVELINESS, OLQ.SOCIAL_ADJUSTMENT),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "How do you handle stress and pressure?",
+                expectedOLQs = listOf(OLQ.STAMINA, OLQ.COURAGE, OLQ.SELF_CONFIDENCE),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "What do you know about the role you are applying for?",
+                expectedOLQs = listOf(OLQ.EFFECTIVE_INTELLIGENCE, OLQ.SENSE_OF_RESPONSIBILITY),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            ),
+            InterviewQuestion(
+                id = UUID.randomUUID().toString(),
+                questionText = "Where do you see yourself in 5 years?",
+                expectedOLQs = listOf(OLQ.DETERMINATION, OLQ.ORGANIZING_ABILITY),
+                context = "Mock question for development",
+                source = QuestionSource.GENERIC_POOL
+            )
+        )
+
+        return mockQuestions.take(count)
     }
 
     override suspend fun getQuestion(questionId: String): Result<InterviewQuestion> {
@@ -310,9 +519,24 @@ class FirestoreInterviewRepository @Inject constructor(
 
     override suspend fun submitResponse(response: InterviewResponse): Result<InterviewResponse> {
         return try {
+            // Get session to extract userId
+            val sessionResult = getSession(response.sessionId)
+            if (sessionResult.isFailure) {
+                return Result.failure(
+                    sessionResult.exceptionOrNull() ?: Exception("Failed to get session")
+                )
+            }
+            val session = sessionResult.getOrNull() ?: return Result.failure(
+                Exception("Session not found")
+            )
+
+            // Add userId to response map
+            val responseMap = responseToMap(response).toMutableMap()
+            responseMap["userId"] = session.userId
+
             firestore.collection(COLLECTION_RESPONSES)
                 .document(response.id)
-                .set(responseToMap(response))
+                .set(responseMap)
                 .await()
 
             Log.d(TAG, "Submitted response: ${response.id}")
@@ -325,8 +549,21 @@ class FirestoreInterviewRepository @Inject constructor(
 
     override suspend fun getResponses(sessionId: String): Result<List<InterviewResponse>> {
         return try {
+            // Get session to extract userId (required for Firestore security rule)
+            val sessionResult = getSession(sessionId)
+            if (sessionResult.isFailure) {
+                return Result.failure(
+                    sessionResult.exceptionOrNull() ?: Exception("Failed to get session")
+                )
+            }
+            val session = sessionResult.getOrNull() ?: return Result.failure(
+                Exception("Session not found")
+            )
+
+            // Query with both sessionId AND userId to satisfy security rule
             val snapshot = firestore.collection(COLLECTION_RESPONSES)
                 .whereEqualTo(FIELD_SESSION_ID, sessionId)
+                .whereEqualTo(FIELD_USER_ID, session.userId)  // CRITICAL: Added for Firestore rules
                 .orderBy(FIELD_RESPONDED_AT, Query.Direction.ASCENDING)
                 .get()
                 .await()
@@ -335,6 +572,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 mapToResponse(doc.data ?: return@mapNotNull null)
             }
 
+            Log.d(TAG, "Retrieved ${responses.size} responses for session: $sessionId")
             Result.success(responses)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get responses for session: $sessionId", e)
@@ -387,9 +625,9 @@ class FirestoreInterviewRepository @Inject constructor(
                 }
             }
 
-            // Calculate average scores per OLQ
+            // Calculate average scores per OLQ (SSB 1-10 scale, lower is better)
             val overallOLQScores = olqScoresMap.mapValues { (_, scores) ->
-                val avgScore = scores.map { it.score }.average().toInt().coerceIn(1, 5)
+                val avgScore = scores.map { it.score }.average().toInt().coerceIn(1, 10)
                 val avgConfidence = scores.map { it.confidence }.average().toInt()
                 OLQScore(
                     score = avgScore,
@@ -405,15 +643,15 @@ class FirestoreInterviewRepository @Inject constructor(
                 if (categoryScoresList.isEmpty()) 0f else categoryScoresList.average().toFloat()
             }
 
-            // Identify strengths and weaknesses
-            val sortedOLQs = overallOLQScores.entries.sortedByDescending { it.value.score }
-            val strengths = sortedOLQs.take(3).map { it.key }
-            val weaknesses = sortedOLQs.takeLast(3).map { it.key }
+            // Identify strengths and weaknesses (SSB: lower scores = better performance)
+            val sortedOLQs = overallOLQScores.entries.sortedBy { it.value.score }  // Ascending: lowest = best
+            val strengths = sortedOLQs.take(3).map { it.key }      // Top 3 (lowest scores)
+            val weaknesses = sortedOLQs.takeLast(3).map { it.key }  // Bottom 3 (highest scores)
 
-            // Calculate overall metrics
+            // Calculate overall metrics (SSB scale: 1-10, lower is better)
             val overallConfidence = responses.map { it.confidenceScore }.average().toInt()
             val avgScore = overallOLQScores.values.map { it.score }.average().toFloat()
-            val overallRating = avgScore.toInt().coerceIn(1, 5)
+            val overallRating = avgScore.toInt().coerceIn(1, 10)
 
             // Create result
             val result = InterviewResult(

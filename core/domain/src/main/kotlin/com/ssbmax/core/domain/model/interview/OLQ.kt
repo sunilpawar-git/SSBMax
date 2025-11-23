@@ -54,9 +54,12 @@ enum class OLQCategory(val displayName: String) {
 }
 
 /**
- * OLQ Score with confidence level
+ * OLQ Score with confidence level (SSB Convention)
  *
- * @param score Score from 1-5 (1 = Poor, 5 = Excellent)
+ * SSB uses 1-10 scale with LOWER numbers indicating BETTER performance (bell curve distribution)
+ * Typical distribution: 1-4 (Exceptional, rare), 5-6 (Good, common), 7 (Average), 8+ (Below Average/Poor)
+ *
+ * @param score Score from 1-10 (1 = Exceptional, 5 = Very Good, 8 = Below Average, 10 = Poor)
  * @param confidence AI confidence in this assessment (0-100%)
  * @param reasoning Brief explanation for the score
  */
@@ -66,17 +69,19 @@ data class OLQScore(
     val reasoning: String
 ) {
     init {
-        require(score in 1..5) { "OLQ score must be between 1 and 5" }
+        require(score in 1..10) { "OLQ score must be between 1 and 10" }
         require(confidence in 0..100) { "Confidence must be between 0 and 100" }
     }
 
     val rating: String
         get() = when (score) {
-            1 -> "Poor"
-            2 -> "Below Average"
-            3 -> "Average"
-            4 -> "Good"
-            5 -> "Excellent"
+            1, 2, 3 -> "Exceptional"  // SSB: Rare, outstanding performance
+            4 -> "Excellent"          // SSB: Top tier
+            5 -> "Very Good"          // SSB: Best common score
+            6 -> "Good"               // SSB: Above average
+            7 -> "Average"            // SSB: Typical performance
+            8 -> "Below Average"      // SSB: Lowest acceptable
+            9, 10 -> "Poor"           // SSB: Usually rejected
             else -> "Unknown"
         }
 }

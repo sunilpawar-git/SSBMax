@@ -1029,7 +1029,7 @@
     <string name="interview_result_title">Interview Results</string>
     <string name="interview_result_overall_rating">Overall Rating</string>
     <string name="interview_result_performance_level">Performance Level</string>
-    <string name="interview_result_average_score">Average Score: %.1f / 5.0</string>
+    <string name="interview_result_average_score">Average Score: %.1f / 10.0</string>
     <string name="interview_result_duration">Duration: %1$d minutes</string>
     <string name="interview_result_completion">Completion: %.0f%%</string>
     <string name="interview_result_strengths_title">Strengths</string>

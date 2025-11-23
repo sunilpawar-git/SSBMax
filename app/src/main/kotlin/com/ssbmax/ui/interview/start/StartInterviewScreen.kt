@@ -110,8 +110,9 @@ fun StartInterviewScreen(
                             )
                             FilterChip(
                                 selected = uiState.selectedMode == InterviewMode.VOICE_BASED,
-                                onClick = { viewModel.selectMode(InterviewMode.VOICE_BASED) },
+                                onClick = { /* Disabled until voice UI implemented */ },
                                 label = { Text(stringResource(R.string.interview_mode_voice)) },
+                                enabled = false,  // Disable voice mode until UI is implemented
                                 modifier = Modifier.weight(1f)
                             )
                         }

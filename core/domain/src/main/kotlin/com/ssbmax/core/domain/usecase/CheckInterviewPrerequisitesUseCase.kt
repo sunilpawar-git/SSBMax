@@ -32,11 +32,13 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
      *
      * @param userId User to check
      * @param desiredMode Desired interview mode (text or voice)
+     * @param bypassSubscriptionCheck If true, skip subscription validation (for debug builds)
      * @return Prerequisite check result with detailed status
      */
     suspend operator fun invoke(
         userId: String,
-        desiredMode: InterviewMode
+        desiredMode: InterviewMode,
+        bypassSubscriptionCheck: Boolean = false
     ): Result<PrerequisiteCheckResult> {
         return try {
             // 1. Check PIQ status
@@ -48,8 +50,17 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
             // 3. Check PPDT status
             val ppdtStatus = checkPPDTStatus(userId)
 
-            // 4. Check subscription and limits
-            val subscriptionStatus = checkSubscriptionStatus(userId, desiredMode)
+            // 4. Check subscription and limits (bypass in debug mode)
+            val subscriptionStatus = if (bypassSubscriptionCheck) {
+                // Debug mode: Mock as available with unlimited interviews
+                SubscriptionStatus.Available(
+                    tier = "DEBUG",
+                    remaining = Int.MAX_VALUE,
+                    mode = desiredMode
+                )
+            } else {
+                checkSubscriptionStatus(userId, desiredMode)
+            }
 
             // Collect failure reasons
             val failureReasons = mutableListOf<String>()
@@ -71,10 +82,13 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
                 is PPDTStatus.Completed -> {} // Valid
             }
 
-            when (subscriptionStatus) {
-                is SubscriptionStatus.FreeTier -> failureReasons.add("Upgrade to Pro or Premium subscription")
-                is SubscriptionStatus.LimitReached -> failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")
-                is SubscriptionStatus.Available -> {} // Valid
+            // Only add subscription failure if not bypassed
+            if (!bypassSubscriptionCheck) {
+                when (subscriptionStatus) {
+                    is SubscriptionStatus.FreeTier -> failureReasons.add("Upgrade to Pro or Premium subscription")
+                    is SubscriptionStatus.LimitReached -> failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")
+                    is SubscriptionStatus.Available -> {} // Valid
+                }
             }
 
             val isEligible = failureReasons.isEmpty()
