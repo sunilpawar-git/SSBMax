@@ -1,0 +1,59 @@
+# Google Services JSON Setup for CI/CD
+
+PROBLEM:
+The CI lint check failed because google-services.json is missing. This file is required by the Google Services Plugin for Android builds using Firebase.
+
+SOLUTION: GitHub Secrets (Recommended)
+
+Instead of committing sensitive files to your repository, use GitHub Secrets to securely provide the google-services.json during CI builds.
+
+STEP 1: Obtain google-services.json
+
+1. Go to Firebase Console (https://console.firebase.google.com/)
+2. Select your SSBMax project
+3. Click "Project Settings" (gear icon)
+4. Under "Your apps", select your Android app
+5. Click "Download google-services.json"
+
+STEP 2: Create GitHub Secret
+
+1. Go to your GitHub repository
+2. Click "Settings" tab
+3. Click "Secrets and variables" -> "Actions" in the left sidebar
+4. Click "New repository secret"
+5. Name: GOOGLE_SERVICES_JSON
+6. Value: Copy and paste the ENTIRE contents of your google-services.json file
+7. Click "Add secret"
+
+STEP 3: Verify CI Configuration
+
+The CI workflow (.github/workflows/android-ci.yml) has been updated to include:
+
+- name: Setup google-services.json
+  run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+  if: env.GOOGLE_SERVICES_JSON != ''
+
+This step will:
+- Create app/google-services.json from the secret during CI builds
+- Only run if the secret is available
+- Keep sensitive Firebase configuration secure
+
+SECURITY BENEFITS:
+✅ No sensitive data in repository
+✅ Secure secret management through GitHub
+✅ Automatic injection during CI builds only
+✅ No risk of accidental commits
+
+NEXT STEPS:
+1. Follow steps 1-2 above to set up the GitHub secret
+2. Push this CI workflow update
+3. Your next CI run should succeed
+
+TROUBLESHOOTING:
+If CI still fails:
+- Verify the GOOGLE_SERVICES_JSON secret is set correctly
+- Ensure the secret contains the complete JSON content (no formatting issues)
+- Check that your Firebase project configuration matches your app's package name
+
+ALTERNATIVE: Local Development
+For local development, you still need to place google-services.json in app/google-services.json. This file is already in .gitignore to prevent accidental commits.
