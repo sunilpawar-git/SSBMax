@@ -1,0 +1,47 @@
+#!/bin/bash
+# Commit-msg hook to prevent committing API keys in commit messages
+# This hook is triggered after the commit message is written
+
+set -e
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo "🔍 Checking commit message for secrets..."
+
+# Check for Gemini API key pattern
+if echo "$COMMIT_MSG" | grep -q "AIza[A-Za-z0-9_-]\{35\}"; then
+    echo -e "${RED}❌ ERROR: API key detected in commit message!${NC}"
+    echo ""
+    echo "Your commit message contains what appears to be a Gemini API key."
+    echo "Please remove the API key from your commit message."
+    echo ""
+    exit 1
+fi
+
+# Check for common secret patterns
+SECRET_PATTERNS=(
+    "password\s*[:=]\s*['\"][^'\"]+['\"]"
+    "secret\s*[:=]\s*['\"][^'\"]+['\"]"
+    "token\s*[:=]\s*['\"][^'\"]+['\"]"
+)
+
+for pattern in "${SECRET_PATTERNS[@]}"; do
+    if echo "$COMMIT_MSG" | grep -iE "$pattern" > /dev/null; then
+        echo -e "${RED}⚠️  WARNING: Potential secret detected in commit message${NC}"
+        echo "Pattern matched: $pattern"
+        echo ""
+        echo "If this is a false positive, you can proceed."
+        echo "Otherwise, please remove the secret from your commit message."
+        echo ""
+        # Don't exit, just warn
+    fi
+done
+
+echo -e "${GREEN}✅ Commit message is clean${NC}"
+exit 0

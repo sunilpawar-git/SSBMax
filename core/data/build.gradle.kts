@@ -38,10 +38,14 @@ android {
         debug {
             // Enable BuildConfig for DEBUG flag checks
             buildConfigField("boolean", "DEBUG", "true")
+            // Development: Use direct Gemini API calls (faster iteration)
+            buildConfigField("boolean", "USE_CLOUD_AI", "false")
         }
         release {
             isMinifyEnabled = false
             buildConfigField("boolean", "DEBUG", "false")
+            // Production: Use Firebase Cloud Functions (secure, no exposed API key)
+            buildConfigField("boolean", "USE_CLOUD_AI", "true")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -95,6 +99,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.functions)
     
     // Google Sign-In
     implementation(libs.play.services.auth)

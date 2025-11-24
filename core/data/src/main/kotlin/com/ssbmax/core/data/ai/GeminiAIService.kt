@@ -11,6 +11,7 @@ import com.ssbmax.core.domain.service.OLQScoreWithReasoning
 import com.ssbmax.core.domain.service.ResponseAnalysis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -20,8 +21,17 @@ import javax.inject.Singleton
 /**
  * Gemini AI service implementation
  *
- * Uses Google's Gemini 1.5 Flash model for interview question generation
- * and response analysis with structured JSON output
+ * Uses Google's Gemini 2.5 Flash model for interview question generation
+ * and response analysis
+ *
+ * Model: gemini-2.5-flash
+ * - Best price-performance for large-scale processing
+ * - Low latency, high volume task support
+ * - Thinking capability for complex reasoning
+ * - 1M token context window
+ *
+ * Note: Using Google AI Client SDK (generativeai:0.9.0).
+ * For structured outputs with JSON Schema, consider migrating to Firebase AI Logic SDK.
  *
  * @param apiKey Gemini API key (injected from BuildConfig)
  */
@@ -32,10 +42,15 @@ class GeminiAIService @Inject constructor(
 
     companion object {
         private const val TAG = "GeminiAIService"
-        private const val MODEL_NAME = "gemini-pro"  // Original model for v1beta API (most compatible)
+        private const val MODEL_NAME = "gemini-2.5-flash"
         private const val TEMPERATURE = 0.7f
         private const val MAX_TOKENS = 2048
-        private const val TIMEOUT_SECONDS = 30L
+
+        // Timeout values (milliseconds) per guidelines
+        private const val QUESTION_GENERATION_TIMEOUT = 10_000L
+        private const val RESPONSE_ANALYSIS_TIMEOUT = 5_000L
+        private const val FEEDBACK_GENERATION_TIMEOUT = 15_000L
+        private const val HEALTH_CHECK_TIMEOUT = 3_000L
     }
 
     private val model: GenerativeModel by lazy {
@@ -56,10 +71,12 @@ class GeminiAIService @Inject constructor(
         difficulty: Int
     ): Result<List<InterviewQuestion>> = withContext(Dispatchers.IO) {
         try {
-            val prompt = buildPIQQuestionPrompt(piqData, targetOLQs, count, difficulty)
-            val response = model.generateContent(prompt)
+            withTimeout(QUESTION_GENERATION_TIMEOUT) {
+                val prompt = buildPIQQuestionPrompt(piqData, targetOLQs, count, difficulty)
+                val response = model.generateContent(prompt)
 
-            parseQuestionResponse(response)
+                parseQuestionResponse(response)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate PIQ-based questions", e)
             Result.failure(e)
@@ -73,15 +90,17 @@ class GeminiAIService @Inject constructor(
         count: Int
     ): Result<List<InterviewQuestion>> = withContext(Dispatchers.IO) {
         try {
-            val prompt = buildAdaptiveQuestionPrompt(
-                previousQuestions,
-                previousResponses,
-                weakOLQs,
-                count
-            )
-            val response = model.generateContent(prompt)
+            withTimeout(QUESTION_GENERATION_TIMEOUT) {
+                val prompt = buildAdaptiveQuestionPrompt(
+                    previousQuestions,
+                    previousResponses,
+                    weakOLQs,
+                    count
+                )
+                val response = model.generateContent(prompt)
 
-            parseQuestionResponse(response)
+                parseQuestionResponse(response)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate adaptive questions", e)
             Result.failure(e)
@@ -94,10 +113,12 @@ class GeminiAIService @Inject constructor(
         responseMode: String
     ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
         try {
-            val prompt = buildResponseAnalysisPrompt(question, response, responseMode)
-            val aiResponse = model.generateContent(prompt)
+            withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                val prompt = buildResponseAnalysisPrompt(question, response, responseMode)
+                val aiResponse = model.generateContent(prompt)
 
-            parseAnalysisResponse(aiResponse)
+                parseAnalysisResponse(aiResponse)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to analyze response", e)
             Result.failure(e)
@@ -110,14 +131,16 @@ class GeminiAIService @Inject constructor(
         olqScores: Map<OLQ, Float>
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val prompt = buildFeedbackPrompt(questions, responses, olqScores)
-            val response = model.generateContent(prompt)
+            withTimeout(FEEDBACK_GENERATION_TIMEOUT) {
+                val prompt = buildFeedbackPrompt(questions, responses, olqScores)
+                val response = model.generateContent(prompt)
 
-            val feedbackText = response.text ?: return@withContext Result.failure(
-                IllegalStateException("No feedback generated")
-            )
+                val feedbackText = response.text ?: return@withTimeout Result.failure(
+                    IllegalStateException("No feedback generated")
+                )
 
-            Result.success(feedbackText.trim())
+                Result.success(feedbackText.trim())
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate feedback", e)
             Result.failure(e)
@@ -126,9 +149,11 @@ class GeminiAIService @Inject constructor(
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {
-            // Simple health check with minimal prompt
-            val response = model.generateContent("Reply with OK")
-            response.text?.isNotEmpty() == true
+            withTimeout(HEALTH_CHECK_TIMEOUT) {
+                // Simple health check with minimal prompt
+                val response = model.generateContent("Reply with OK")
+                response.text?.isNotEmpty() == true
+            }
         } catch (e: Exception) {
             Log.e(TAG, "AI service health check failed", e)
             false
@@ -331,6 +356,7 @@ Write the feedback directly (not as JSON).
 
     /**
      * Parse question generation response
+     * Handles both clean JSON and markdown-wrapped JSON
      */
     private fun parseQuestionResponse(response: GenerateContentResponse): Result<List<InterviewQuestion>> {
         return try {
@@ -383,6 +409,7 @@ Write the feedback directly (not as JSON).
 
     /**
      * Parse response analysis
+     * Handles both clean JSON and markdown-wrapped JSON
      */
     private fun parseAnalysisResponse(response: GenerateContentResponse): Result<ResponseAnalysis> {
         return try {

@@ -1,8 +1,12 @@
 package com.ssbmax.core.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.ssbmax.core.domain.model.interview.InterviewLimits
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
@@ -16,6 +20,7 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.interview.PrerequisiteCheckResult
 import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.core.domain.model.interview.QuestionSource
+import com.ssbmax.core.domain.model.PIQSubmission
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
@@ -45,12 +50,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class FirestoreInterviewRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val firestore: FirebaseFirestore,
     private val questionCacheRepository: QuestionCacheRepository,
     private val aiService: AIService,
     private val submissionRepository: SubmissionRepository,
     private val subscriptionRepository: SubscriptionRepository
 ) : InterviewRepository {
+
+    private val gson = Gson()
 
     companion object {
         private const val TAG = "InterviewRepository"
@@ -157,7 +165,7 @@ class FirestoreInterviewRepository @Inject constructor(
 
             Result.success(session)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get active session", e)
+            Log.e(TAG, "Failed to get active session for user: $userId", e)
             Result.failure(e)
         }
     }
@@ -299,92 +307,144 @@ class FirestoreInterviewRepository @Inject constructor(
 
                                 allQuestions = aiQuestions
                             } else {
-                                Log.w(TAG, "⚠️ AI returned empty questions list")
+                                Log.e(TAG, "AI question generation returned empty list for PIQ: $piqSnapshotId",
+                                    Exception("AI returned empty questions list"))
                             }
                         } else {
-                            Log.e(TAG, "❌ AI question generation failed", aiQuestionsResult.exceptionOrNull())
+                            Log.e(TAG, "AI question generation failed for PIQ: $piqSnapshotId",
+                                aiQuestionsResult.exceptionOrNull() ?: Exception("Unknown AI error"))
                         }
                     } else {
-                        Log.w(TAG, "⚠️ PIQ submission is null despite successful result")
+                        Log.e(TAG, "PIQ submission is null despite successful fetch for ID: $piqSnapshotId",
+                            Exception("PIQ submission is null"))
                     }
                 } else {
-                    Log.w(TAG, "⚠️ Could not fetch PIQ submission: ${piqResult.exceptionOrNull()?.message}")
+                    Log.e(TAG, 
+                        // piqResult.exceptionOrNull() ?: Exception("Unknown error"),
+                        "Could not fetch PIQ submission: $piqSnapshotId"
+                    )
                 }
             }
 
             // STEP 3: Final fallback to mock questions if AI failed
             if (allQuestions.isEmpty()) {
-                Log.w(TAG, "⚠️ AI generation failed. Using ${count} mock questions for development")
+                Log.w(TAG, "⚠️ AI generation failed. Using $count mock questions for development")
                 allQuestions = generateMockQuestions(count)
             }
 
             Result.success(allQuestions.take(count))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to generate questions", e)
+            Log.e(TAG, "Failed to generate interview questions", e)
             Result.failure(e)
         }
     }
 
     /**
      * Convert PIQ submission to JSON string for AI processing
+     *
+     * FIXED: Replaced reflection-based field extraction with type-safe data class
+     * Uses Gson for proper JSON serialization
      */
     private fun convertPIQToJson(piqSubmission: Any): String {
-        // Convert PIQSubmission to a structured JSON string
-        // that the AI can analyze to generate personalized questions
-
         return try {
-            // Use Gson or similar to serialize the PIQ data
-            // For now, create a simplified JSON representation
-            """
-            {
-                "candidateInfo": {
-                    "name": "${extractField(piqSubmission, "fullName")}",
-                    "age": "${extractField(piqSubmission, "age")}",
-                    "education": "${extractField(piqSubmission, "educationGraduation")}",
-                    "occupation": "${extractField(piqSubmission, "presentOccupation")}"
-                },
-                "family": {
-                    "fatherOccupation": "${extractField(piqSubmission, "fatherOccupation")}",
-                    "motherOccupation": "${extractField(piqSubmission, "motherOccupation")}",
-                    "siblings": ${extractField(piqSubmission, "siblings")}
-                },
-                "interests": {
-                    "hobbies": "${extractField(piqSubmission, "hobbies")}",
-                    "sports": "${extractField(piqSubmission, "sports")}",
-                    "extraCurricular": "${extractField(piqSubmission, "extraCurricularActivities")}"
-                },
-                "aspirations": {
-                    "whyDefense": "${extractField(piqSubmission, "whyDefenseForces")}",
-                    "serviceChoice": "${extractField(piqSubmission, "choiceOfService")}",
-                    "strengths": "${extractField(piqSubmission, "strengths")}",
-                    "weaknesses": "${extractField(piqSubmission, "weaknesses")}"
-                },
-                "experience": {
-                    "nccTraining": ${extractField(piqSubmission, "nccTraining")},
-                    "workExperience": "${extractField(piqSubmission, "workExperience")}",
-                    "previousInterviews": "${extractField(piqSubmission, "previousInterviews")}"
-                }
+            // Type-safe cast with validation
+            if (piqSubmission !is PIQSubmission) {
+                Log.e(TAG, 
+                    // IllegalArgumentException("Invalid PIQ submission type: ${piqSubmission::class.java.name}"),
+                    "PIQ submission is not of expected type"
+                )
+                return "{}"
             }
-            """.trimIndent()
+
+            // Create a structured DTO for AI processing
+            val piqForAI = PIQForAI(
+                candidateInfo = CandidateInfo(
+                    name = piqSubmission.fullName,
+                    age = piqSubmission.age.toIntOrNull() ?: 0,
+                    education = "${piqSubmission.educationGraduation.level} - ${piqSubmission.educationGraduation.institution}".trim(),
+                    occupation = piqSubmission.presentOccupation
+                ),
+                family = FamilyInfo(
+                    fatherOccupation = piqSubmission.fatherOccupation,
+                    motherOccupation = piqSubmission.motherOccupation,
+                    siblings = piqSubmission.siblings.map { "${it.name} (${it.age}) - ${it.occupation}" }
+                ),
+                interests = InterestsInfo(
+                    hobbies = piqSubmission.hobbies,
+                    sports = piqSubmission.sportsParticipation.map { it.sport }.joinToString(", ").ifBlank { piqSubmission.sports },
+                    extraCurricular = piqSubmission.extraCurricularActivities.map { it.activityName }.joinToString(", ")
+                ),
+                aspirations = AspirationsInfo(
+                    whyDefense = piqSubmission.whyDefenseForces,
+                    serviceChoice = piqSubmission.choiceOfService,
+                    strengths = piqSubmission.strengths,
+                    weaknesses = piqSubmission.weaknesses
+                ),
+                experience = ExperienceInfo(
+                    hasNccTraining = piqSubmission.nccTraining.hasTraining,
+                    nccDetails = if (piqSubmission.nccTraining.hasTraining) {
+                        "${piqSubmission.nccTraining.wing} - ${piqSubmission.nccTraining.certificateObtained}"
+                    } else "",
+                    workExperience = piqSubmission.workExperience.map { "${it.role} at ${it.company} (${it.duration})" },
+                    previousInterviews = piqSubmission.previousInterviews.size
+                )
+            )
+
+            // Serialize to JSON using Gson
+            gson.toJson(piqForAI)
         } catch (e: Exception) {
-            Log.e(TAG, "Error converting PIQ to JSON", e)
+            Log.e(TAG, 
+                // e,
+                "Error converting PIQ to JSON for AI processing"
+            )
             "{}" // Return empty JSON on error
         }
     }
 
     /**
-     * Extract field from PIQ submission using reflection
+     * Data classes for AI-optimized PIQ representation
+     * Structured for interview question generation
      */
-    private fun extractField(obj: Any, fieldName: String): String {
-        return try {
-            val field = obj::class.java.getDeclaredField(fieldName)
-            field.isAccessible = true
-            val value = field.get(obj)
-            value?.toString() ?: ""
-        } catch (e: Exception) {
-            ""
-        }
-    }
+    private data class PIQForAI(
+        val candidateInfo: CandidateInfo,
+        val family: FamilyInfo,
+        val interests: InterestsInfo,
+        val aspirations: AspirationsInfo,
+        val experience: ExperienceInfo
+    )
+
+    private data class CandidateInfo(
+        val name: String,
+        val age: Int,
+        val education: String,
+        val occupation: String
+    )
+
+    private data class FamilyInfo(
+        val fatherOccupation: String,
+        val motherOccupation: String,
+        val siblings: List<String>
+    )
+
+    private data class InterestsInfo(
+        val hobbies: String,
+        val sports: String,
+        val extraCurricular: String
+    )
+
+    private data class AspirationsInfo(
+        val whyDefense: String,
+        val serviceChoice: String,
+        val strengths: String,
+        val weaknesses: String
+    )
+
+    private data class ExperienceInfo(
+        val hasNccTraining: Boolean,
+        val nccDetails: String,
+        val workExperience: List<String>,
+        val previousInterviews: Int
+    )
 
     /**
      * Generate mock questions for development when cache is empty
@@ -395,83 +455,84 @@ class FirestoreInterviewRepository @Inject constructor(
      * In production, questions should come from:
      * 1. Pre-populated Firestore cache (generic questions)
      * 2. AI-generated PIQ-based questions (cached after generation)
+     *
+     * FIXED: Now reads from JSON asset file instead of hardcoded list
      */
     private fun generateMockQuestions(count: Int): List<InterviewQuestion> {
-        val mockQuestions = listOf(
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "Tell me about yourself and your background.",
-                expectedOLQs = listOf(OLQ.SELF_CONFIDENCE, OLQ.POWER_OF_EXPRESSION),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "Why do you want to join the armed forces?",
-                expectedOLQs = listOf(OLQ.DETERMINATION, OLQ.SENSE_OF_RESPONSIBILITY),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "Describe a challenging situation you faced and how you handled it.",
-                expectedOLQs = listOf(OLQ.REASONING_ABILITY, OLQ.SPEED_OF_DECISION, OLQ.COURAGE),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "What are your strengths and weaknesses?",
-                expectedOLQs = listOf(OLQ.SELF_CONFIDENCE, OLQ.POWER_OF_EXPRESSION),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "How do you handle working in a team?",
-                expectedOLQs = listOf(OLQ.COOPERATION, OLQ.SOCIAL_ADJUSTMENT, OLQ.INFLUENCE_GROUP),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "Describe a time when you demonstrated leadership.",
-                expectedOLQs = listOf(OLQ.ORGANIZING_ABILITY, OLQ.INITIATIVE, OLQ.EFFECTIVE_INTELLIGENCE),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "What are your hobbies and interests?",
-                expectedOLQs = listOf(OLQ.LIVELINESS, OLQ.SOCIAL_ADJUSTMENT),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "How do you handle stress and pressure?",
-                expectedOLQs = listOf(OLQ.STAMINA, OLQ.COURAGE, OLQ.SELF_CONFIDENCE),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "What do you know about the role you are applying for?",
-                expectedOLQs = listOf(OLQ.EFFECTIVE_INTELLIGENCE, OLQ.SENSE_OF_RESPONSIBILITY),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            ),
-            InterviewQuestion(
-                id = UUID.randomUUID().toString(),
-                questionText = "Where do you see yourself in 5 years?",
-                expectedOLQs = listOf(OLQ.DETERMINATION, OLQ.ORGANIZING_ABILITY),
-                context = "Mock question for development",
-                source = QuestionSource.GENERIC_POOL
-            )
-        )
+        return try {
+            // Read JSON from assets
+            val jsonString = context.assets.open("fallback_interview_questions.json")
+                .bufferedReader()
+                .use { it.readText() }
 
-        return mockQuestions.take(count)
+            // Parse JSON
+            val type = object : TypeToken<FallbackQuestionsFile>() {}.type
+            val questionsFile: FallbackQuestionsFile = gson.fromJson(jsonString, type)
+
+            // Convert to InterviewQuestion objects
+            val questions = questionsFile.questions.map { dto ->
+                InterviewQuestion(
+                    id = UUID.randomUUID().toString(),
+                    questionText = dto.questionText,
+                    expectedOLQs = dto.expectedOLQs.mapNotNull { olqName ->
+                        try {
+                            OLQ.valueOf(olqName)
+                        } catch (e: IllegalArgumentException) {
+                            Log.e(TAG, 
+                                // e,
+                                "Invalid OLQ name in fallback questions: $olqName"
+                            )
+                            null
+                        }
+                    },
+                    context = dto.context,
+                    source = QuestionSource.GENERIC_POOL
+                )
+            }
+
+            Log.i(TAG, "Loaded ${questions.size} fallback questions from JSON asset")
+            questions.take(count)
+        } catch (e: Exception) {
+            Log.e(TAG, 
+                // e,
+                "Failed to load fallback questions from JSON, using emergency fallback"
+            )
+
+            // Emergency fallback: minimal hardcoded questions if JSON fails to load
+            listOf(
+                InterviewQuestion(
+                    id = UUID.randomUUID().toString(),
+                    questionText = "Tell me about yourself and your background.",
+                    expectedOLQs = listOf(OLQ.SELF_CONFIDENCE, OLQ.POWER_OF_EXPRESSION),
+                    context = "Emergency fallback question",
+                    source = QuestionSource.GENERIC_POOL
+                ),
+                InterviewQuestion(
+                    id = UUID.randomUUID().toString(),
+                    questionText = "Why do you want to join the armed forces?",
+                    expectedOLQs = listOf(OLQ.DETERMINATION, OLQ.SENSE_OF_RESPONSIBILITY),
+                    context = "Emergency fallback question",
+                    source = QuestionSource.GENERIC_POOL
+                )
+            ).take(count)
+        }
     }
+
+    /**
+     * DTOs for parsing fallback questions JSON
+     */
+    private data class FallbackQuestionsFile(
+        val version: String,
+        val description: String,
+        val lastUpdated: String,
+        val questions: List<FallbackQuestionDTO>
+    )
+
+    private data class FallbackQuestionDTO(
+        val questionText: String,
+        val expectedOLQs: List<String>,
+        val context: String
+    )
 
     override suspend fun getQuestion(questionId: String): Result<InterviewQuestion> {
         return try {
@@ -736,7 +797,10 @@ class FirestoreInterviewRepository @Inject constructor(
             .orderBy(FIELD_COMPLETED_AT, Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error listening to user results", error)
+                    Log.e(TAG, 
+                        // error,
+                        "Error listening to user results for user: $userId"
+                    )
                     return@addSnapshotListener
                 }
 
@@ -769,7 +833,7 @@ class FirestoreInterviewRepository @Inject constructor(
 
             Result.success(stats)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get interview stats", e)
+            Log.e(TAG, "Failed to get interview stats for user: $userId", e)
             Result.failure(e)
         }
     }
@@ -801,7 +865,7 @@ class FirestoreInterviewRepository @Inject constructor(
 
             Result.success(remaining)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get remaining interviews", e)
+            Log.e(TAG, "Failed to get remaining interviews for user: $userId, mode: $mode", e)
             Result.failure(e)
         }
     }
