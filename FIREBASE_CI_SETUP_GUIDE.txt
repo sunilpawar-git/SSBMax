@@ -15,22 +15,25 @@ STEP 1: Obtain google-services.json
 4. Under "Your apps", select your Android app
 5. Click "Download google-services.json"
 
-STEP 2: Create GitHub Secret
+STEP 2: Create GitHub Secret (Base64 Encoded)
 
 1. Go to your GitHub repository
 2. Click "Settings" tab
 3. Click "Secrets and variables" -> "Actions" in the left sidebar
 4. Click "New repository secret"
 5. Name: GOOGLE_SERVICES_JSON
-6. Value: Copy and paste the ENTIRE contents of your google-services.json file
+6. Value: Encode your google-services.json file as base64 and paste the result:
+   - macOS/Linux: `base64 -i google-services.json`
+   - Windows (PowerShell): `[Convert]::ToBase64String([IO.File]::ReadAllBytes("google-services.json"))`
 7. Click "Add secret"
 
 STEP 3: Verify CI Configuration
 
-The CI workflow (.github/workflows/android-ci.yml) has been updated to include:
+The CI workflow (.github/workflows/android-ci.yml) has been updated to use base64 decoding:
 
 - name: Setup google-services.json
-  run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+  run: |
+    echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
   if: env.GOOGLE_SERVICES_JSON != ''
 
 This step will:
@@ -51,9 +54,11 @@ NEXT STEPS:
 
 TROUBLESHOOTING:
 If CI still fails:
-- Verify the GOOGLE_SERVICES_JSON secret is set correctly
-- Ensure the secret contains the complete JSON content (no formatting issues)
+- Verify the GOOGLE_SERVICES_JSON secret is set correctly as base64 encoded content
+- Ensure you used base64 encoding when creating the secret (not raw JSON)
+- Test base64 decoding locally: `echo "YOUR_SECRET" | base64 -d` should produce valid JSON
 - Check that your Firebase project configuration matches your app's package name
+- Verify the secret name is exactly: GOOGLE_SERVICES_JSON (case-sensitive)
 
 ALTERNATIVE: Local Development
 For local development, you still need to place google-services.json in app/google-services.json. This file is already in .gitignore to prevent accidental commits.

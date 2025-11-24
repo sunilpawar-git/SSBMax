@@ -31,7 +31,8 @@ jobs:
           echo "GEMINI_API_KEY=test_key_for_ci_build" >> local.properties
 
       - name: Setup google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
         if: env.GOOGLE_SERVICES_JSON != ''
 
       - name: Run lint checks
