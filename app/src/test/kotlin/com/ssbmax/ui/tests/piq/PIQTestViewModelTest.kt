@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.piq
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
@@ -31,6 +32,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
     private lateinit var subscriptionManager: SubscriptionManager
     private lateinit var difficultyManager: DifficultyProgressionManager
     private lateinit var securityLogger: SecurityEventLogger
+    private lateinit var workManager: WorkManager
     private lateinit var savedStateHandle: SavedStateHandle
 
     @Before
@@ -41,6 +43,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
         subscriptionManager = mockk()
         difficultyManager = mockk()
         securityLogger = mockk(relaxed = true)
+        workManager = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("testId" to "piq_standard"))
 
         // Default mocks - observeCurrentUser returns SSBMaxUser
@@ -237,6 +240,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
         subscriptionManager = subscriptionManager,
         difficultyManager = difficultyManager,
         securityLogger = securityLogger,
+        workManager = workManager,
         savedStateHandle = savedStateHandle
     )
 }

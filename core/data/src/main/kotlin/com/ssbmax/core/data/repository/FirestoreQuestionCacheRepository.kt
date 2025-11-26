@@ -62,7 +62,8 @@ class FirestoreQuestionCacheRepository @Inject constructor(
         expirationDays: Int
     ): Result<Unit> {
         return try {
-            val expiresAt = Instant.now().plusSeconds((expirationDays * 86400).toLong())
+            val secondsPerDay = 86400L // 24 hours * 60 minutes * 60 seconds
+            val expiresAt = Instant.now().plusSeconds(expirationDays * secondsPerDay)
             val batch = firestore.batch()
 
             questions.forEach { question ->

@@ -147,7 +147,12 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    
+
+    // WorkManager (background jobs for question pre-generation)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
@@ -174,6 +179,12 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
+
+    // WorkManager testing (for Phase 1 worker tests)
+    testImplementation("androidx.work:work-testing:2.9.0")
+
+    // Robolectric for Android unit tests
+    testImplementation("org.robolectric:robolectric:4.11.1")
     
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

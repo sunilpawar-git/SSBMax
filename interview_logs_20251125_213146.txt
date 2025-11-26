@@ -1,0 +1,382 @@
+11-25 21:34:18.830 32712 32712 D SSBMaxScaffold: 📱 Profile state: userProfile=null, isLoading=false, hasProfile=false
+11-25 21:34:21.236 32712 32712 D SSBMaxScaffold: 📱 Profile state: userProfile=Sunil Pawar, isLoading=false, hasProfile=true
+11-25 21:34:23.505 32712 32712 W FirestoreContent: Failed to enable persistence: FirebaseFirestore has already been started and its settings can no longer be changed. You can only call setFirestoreSettings() before calling any other methods on a FirebaseFirestore object.
+11-25 21:34:23.506 32712 32712 D TopicViewModel: ✓ Loading interview from CLOUD (Firestore)
+11-25 21:34:23.508 32712 32712 D StudyContentRepo: REPO: Cloud enabled for interview, attempting Firestore load
+11-25 21:34:23.508 32712 32712 D StudyContentRepo: REPO: Fetching topic document 'INTERVIEW' from Firestore...
+11-25 21:34:23.687 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:34:23.687 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:34:23.687 32712 32712 D FirestoreContent: ✓ Fetched topic: INTERVIEW
+11-25 21:34:23.687 32712 32712 D StudyContentRepo: REPO: ✓ Topic fetched: Interview Preparation
+11-25 21:34:23.687 32712 32712 D StudyContentRepo: REPO: Fetching materials for 'INTERVIEW' from Firestore...
+11-25 21:34:23.896 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.896 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.897 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.897 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.897 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.898 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.899 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.899 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.899 32712 32712 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:34:23.899 32712 32712 D FirestoreContent: ✓ Fetched 7 materials for INTERVIEW
+11-25 21:34:27.807 32712 32712 D MemoryLeakTracker: 📊 ViewModel REGISTERED: StartInterviewViewModel (Thread: main)
+11-25 21:34:32.564 32712 32712 D QuestionCacheRepo: Retrieved 4 PIQ-based questions from cache
+11-25 21:34:32.706 32712 32712 D QuestionCacheRepo: Retrieved 0 generic questions from pool
+11-25 21:34:32.860 32712 32712 D InterviewRepository: Created interview session: 01edef4a-d46c-433a-936e-754daa2495d9 with 4 questions
+11-25 21:34:32.942 32712 32712 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewSessionViewModel (Thread: main)
+11-25 21:35:02.023 32712 32712 D InterviewRepository: Submitted response: 68ce65dd-ead8-4451-816c-7918c6bd882f
+11-25 21:35:02.177 32712 32712 D InterviewRepository: Updated session: 01edef4a-d46c-433a-936e-754daa2495d9
+11-25 21:35:53.028 32712 32712 D InterviewRepository: Submitted response: 1b22dec5-b333-4bc2-8d57-844c18180090
+11-25 21:35:53.194 32712 32712 D InterviewRepository: Updated session: 01edef4a-d46c-433a-936e-754daa2495d9
+11-25 21:36:33.697 32712 32712 D InterviewRepository: Submitted response: 8130165c-1540-4bb3-94f7-8ba8ef4cc36b
+11-25 21:36:33.839 32712 32712 D InterviewRepository: Updated session: 01edef4a-d46c-433a-936e-754daa2495d9
+11-25 21:37:01.155 32712 32712 D InterviewRepository: Submitted response: 288c8f5e-7b95-4cac-a733-3df18c82fcea
+11-25 21:37:01.559 32712 32712 D InterviewRepository: Retrieved 4 responses for session: 01edef4a-d46c-433a-936e-754daa2495d9
+11-25 21:37:01.799 32712 32712 D InterviewRepository: Updated session: 01edef4a-d46c-433a-936e-754daa2495d9
+11-25 21:37:01.800 32712 32712 D InterviewRepository: Completed interview: 01edef4a-d46c-433a-936e-754daa2495d9, result: f0318823-5565-48cc-9896-9de5f5a7a3f6
+11-25 21:37:01.843 32712 32712 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewResultViewModel (Thread: main)
+11-25 21:48:59.752  1431  1431 D SSBMaxScaffold: 📱 Profile state: userProfile=null, isLoading=false, hasProfile=false
+11-25 21:49:02.071  1431  1431 D SSBMaxScaffold: 📱 Profile state: userProfile=Sunil Pawar, isLoading=false, hasProfile=true
+11-25 21:49:03.323  1431  1431 W FirestoreContent: Failed to enable persistence: FirebaseFirestore has already been started and its settings can no longer be changed. You can only call setFirestoreSettings() before calling any other methods on a FirebaseFirestore object.
+11-25 21:49:03.324  1431  1431 D TopicViewModel: ✓ Loading interview from CLOUD (Firestore)
+11-25 21:49:03.326  1431  1431 D StudyContentRepo: REPO: Cloud enabled for interview, attempting Firestore load
+11-25 21:49:03.326  1431  1431 D StudyContentRepo: REPO: Fetching topic document 'INTERVIEW' from Firestore...
+11-25 21:49:03.528  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:49:03.528  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:49:03.528  1431  1431 D FirestoreContent: ✓ Fetched topic: INTERVIEW
+11-25 21:49:03.528  1431  1431 D StudyContentRepo: REPO: ✓ Topic fetched: Interview Preparation
+11-25 21:49:03.528  1431  1431 D StudyContentRepo: REPO: Fetching materials for 'INTERVIEW' from Firestore...
+11-25 21:49:03.708  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.708  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.709  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.710  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.710  1431  1431 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:49:03.710  1431  1431 D FirestoreContent: ✓ Fetched 7 materials for INTERVIEW
+11-25 21:49:04.617  1431  1431 D MemoryLeakTracker: 📊 ViewModel REGISTERED: StartInterviewViewModel (Thread: main)
+11-25 21:49:07.896  1431  1431 D QuestionCacheRepo: Retrieved 4 PIQ-based questions from cache
+11-25 21:49:08.057  1431  1431 D QuestionCacheRepo: Retrieved 0 generic questions from pool
+11-25 21:49:08.336  1431  1431 D InterviewRepository: Created interview session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3 with 4 questions
+11-25 21:49:08.386  1431  1431 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewSessionViewModel (Thread: main)
+11-25 21:49:26.220  1431  1431 D InterviewRepository: Submitted response: ede7fa91-6865-4621-9ac8-3110b306dd2a
+11-25 21:49:26.474  1431  1431 D InterviewRepository: Updated session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3
+11-25 21:49:47.157  1431  1431 D InterviewRepository: Submitted response: 0434d2c1-e148-4ca3-82c7-37d4fc874728
+11-25 21:49:47.285  1431  1431 D InterviewRepository: Updated session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3
+11-25 21:50:21.137  1431  1431 D InterviewRepository: Submitted response: 754ef3c3-c6a0-4b58-916f-745b25dd591f
+11-25 21:50:21.284  1431  1431 D InterviewRepository: Updated session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3
+11-25 21:50:43.477  1431  1431 D InterviewRepository: Submitted response: 281aa157-24a2-4980-98ec-d90d6d2623f4
+11-25 21:50:43.874  1431  1431 D InterviewRepository: Retrieved 4 responses for session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3
+11-25 21:50:44.145  1431  1431 D InterviewRepository: Updated session: 6fda5d71-37b0-4791-bfff-4489e96eb3b3
+11-25 21:50:44.145  1431  1431 D InterviewRepository: Completed interview: 6fda5d71-37b0-4791-bfff-4489e96eb3b3, result: e8a48e84-438a-4a9b-9b17-a275ad033522
+11-25 21:50:44.189  1431  1431 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewResultViewModel (Thread: main)
+11-25 21:53:34.496  2006  2006 D SSBMaxScaffold: 📱 Profile state: userProfile=null, isLoading=false, hasProfile=false
+11-25 21:53:40.544  2006  2006 D LoginScreen: UI State changed: Success(user=SSBMaxUser(id=MEkxQsweaEhNYFa0LeTJgCUDqVc2, email=mail.sunilpawar@gmail.com, displayName=Sunil Pawar, photoUrl=https://lh3.googleusercontent.com/a/ACg8ocIX--4uvN3OZYHEppuNYAzZ59DHaxtTrXK5A59jPCI06KbSrlxw=s96-c, role=STUDENT, subscriptionTier=FREE, subscription=null, studentProfile=StudentProfile(userId=MEkxQsweaEhNYFa0LeTJgCUDqVc2, currentBatchIds=[], phase1Progress=null, phase2Progress=null, totalTestsAttempted=0, totalStudyHours=0.0, currentStreak=0, longestStreak=0, achievements=[]), instructorProfile=null, createdAt=1761996065516, lastLoginAt=1764087818387))
+11-25 21:53:40.991  2006  2006 D SSBMaxScaffold: 📱 Profile state: userProfile=Sunil Pawar, isLoading=false, hasProfile=true
+11-25 21:53:46.081  2006  2006 W FirestoreContent: Failed to enable persistence: FirebaseFirestore has already been started and its settings can no longer be changed. You can only call setFirestoreSettings() before calling any other methods on a FirebaseFirestore object.
+11-25 21:53:46.082  2006  2006 D TopicViewModel: ✓ Loading interview from CLOUD (Firestore)
+11-25 21:53:46.083  2006  2006 D StudyContentRepo: REPO: Cloud enabled for interview, attempting Firestore load
+11-25 21:53:46.083  2006  2006 D StudyContentRepo: REPO: Fetching topic document 'INTERVIEW' from Firestore...
+11-25 21:53:46.208  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:53:46.208  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:53:46.208  2006  2006 D FirestoreContent: ✓ Fetched topic: INTERVIEW
+11-25 21:53:46.208  2006  2006 D StudyContentRepo: REPO: ✓ Topic fetched: Interview Preparation
+11-25 21:53:46.208  2006  2006 D StudyContentRepo: REPO: Fetching materials for 'INTERVIEW' from Firestore...
+11-25 21:53:46.427  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.427  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.427  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.428  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.428  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.429  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.429  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.429  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.429  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:53:46.432  2006  2006 D FirestoreContent: ✓ Fetched 7 materials for INTERVIEW
+11-25 21:53:48.808  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: StartInterviewViewModel (Thread: main)
+11-25 21:53:52.350  2006  2006 D QuestionCacheRepo: Retrieved 4 PIQ-based questions from cache
+11-25 21:53:52.478  2006  2006 D QuestionCacheRepo: Retrieved 0 generic questions from pool
+11-25 21:53:52.646  2006  2006 D InterviewRepository: Created interview session: 5f770959-cbdb-47fe-9cf6-d16b991d879b with 4 questions
+11-25 21:53:52.705  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewSessionViewModel (Thread: main)
+11-25 21:54:35.647  2006  2006 D InterviewRepository: Submitted response: 446eb7d0-2567-4dbe-9fd4-148c5741ac61
+11-25 21:54:35.820  2006  2006 D InterviewRepository: Updated session: 5f770959-cbdb-47fe-9cf6-d16b991d879b
+11-25 21:54:51.843  2006  2006 D InterviewRepository: Submitted response: b24dddfd-03c0-423f-a52b-0a0cb2511736
+11-25 21:54:52.008  2006  2006 D InterviewRepository: Updated session: 5f770959-cbdb-47fe-9cf6-d16b991d879b
+11-25 21:55:15.785  2006  2006 D InterviewRepository: Submitted response: f468752c-0cc5-4ab4-848a-e35fbb5956c9
+11-25 21:55:15.968  2006  2006 D InterviewRepository: Updated session: 5f770959-cbdb-47fe-9cf6-d16b991d879b
+11-25 21:55:29.330  2006  2006 D InterviewRepository: Submitted response: 9ad9bcfc-e46a-4fe3-a4e1-be2d949c9afd
+11-25 21:55:29.686  2006  2006 D InterviewRepository: Retrieved 4 responses for session: 5f770959-cbdb-47fe-9cf6-d16b991d879b
+11-25 21:55:29.964  2006  2006 D InterviewRepository: Updated session: 5f770959-cbdb-47fe-9cf6-d16b991d879b
+11-25 21:55:29.965  2006  2006 D InterviewRepository: Completed interview: 5f770959-cbdb-47fe-9cf6-d16b991d879b, result: 950a7f42-1fe8-4ae6-8602-8937dfa95304
+11-25 21:55:30.009  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewResultViewModel (Thread: main)
+11-25 21:56:46.832  2006  2006 D TopicViewModel: ✓ Loading interview from CLOUD (Firestore)
+11-25 21:56:46.833  2006  2006 D StudyContentRepo: REPO: Cloud enabled for interview, attempting Firestore load
+11-25 21:56:46.833  2006  2006 D StudyContentRepo: REPO: Fetching topic document 'INTERVIEW' from Firestore...
+11-25 21:56:46.956  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:56:46.956  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.TopicContent
+11-25 21:56:46.956  2006  2006 D FirestoreContent: ✓ Fetched topic: INTERVIEW
+11-25 21:56:46.956  2006  2006 D StudyContentRepo: REPO: ✓ Topic fetched: Interview Preparation
+11-25 21:56:46.956  2006  2006 D StudyContentRepo: REPO: Fetching materials for 'INTERVIEW' from Firestore...
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.110  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for metadata found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.111  2006  2006 W Firestore: (25.1.1) [CustomClassMapper]: No setter/field for isPremium found on class com.ssbmax.core.domain.model.CloudStudyMaterial
+11-25 21:56:47.112  2006  2006 D FirestoreContent: ✓ Fetched 7 materials for INTERVIEW
+11-25 21:56:49.385  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: StartInterviewViewModel (Thread: main)
+11-25 21:57:14.287  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: StartInterviewViewModel (Thread: main)
+11-25 21:57:32.392  2006  2006 D QuestionCacheRepo: Retrieved 4 PIQ-based questions from cache
+11-25 21:57:32.503  2006  2006 D QuestionCacheRepo: Retrieved 0 generic questions from pool
+11-25 21:57:32.975  2006  2006 D InterviewRepository: Created interview session: 1fd0c8c2-7596-4111-8d57-6ca191e66ade with 4 questions
+11-25 21:57:33.012  2006  2006 D MemoryLeakTracker: 📊 ViewModel REGISTERED: InterviewSessionViewModel (Thread: main)
+11-25 21:57:45.055  2880  2971 D AlphabeticIndexCompat: computeSectionName: cs: Gemini sectionName: G
+11-25 21:59:36.766  3512  3512 D SSBMaxScaffold: 📱 Profile state: userProfile=null, isLoading=false, hasProfile=false
+11-25 21:59:46.827  3512  3576 W Firestore: (25.1.1) [OnlineStateTracker]: Could not reach Cloud Firestore backend. Backend didn't respond within 10 seconds
+11-25 21:59:46.827  3512  3576 W Firestore: 
+11-25 21:59:46.827  3512  3576 W Firestore: This typically indicates that your device does not have a healthy Internet connection at the moment. The client will operate in offline mode until it is able to successfully connect to the backend.
+11-25 21:59:48.742  3512  3576 W Firestore: (25.1.1) [WatchStream]: (866f388) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.742  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:48.742  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:48.742  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:48.742  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.742  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 21:59:48.742  3512  3576 W Firestore: 	... 9 more
+11-25 21:59:48.742  3512  3576 W Firestore: }.
+11-25 21:59:48.743  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.743  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:48.743  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:48.743  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:48.743  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.743  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 21:59:48.743  3512  3576 W Firestore: 	... 9 more
+11-25 21:59:48.743  3512  3576 W Firestore: }.
+11-25 21:59:48.744  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.744  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:48.744  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:48.744  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:48.744  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:48.744  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 21:59:48.744  3512  3576 W Firestore: 	... 9 more
+11-25 21:59:48.744  3512  3576 W Firestore: }.
+11-25 21:59:49.688  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:49.688  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:49.688  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:49.688  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:49.688  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 21:59:49.688  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 21:59:49.688  3512  3576 W Firestore: 	... 9 more
+11-25 21:59:49.688  3512  3576 W Firestore: }.
+11-25 21:59:50.558  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:50.558  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:50.558  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:124)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:50.558  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:50.558  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:50.558  3512  3576 W Firestore: }.
+11-25 21:59:53.265  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:53.265  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:53.265  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:124)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:53.265  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:53.265  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:53.265  3512  3576 W Firestore: }.
+11-25 21:59:57.176  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:57.176  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 21:59:57.176  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:124)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 21:59:57.176  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 21:59:57.176  3512  3576 W Firestore: 	... 5 more
+11-25 21:59:57.176  3512  3576 W Firestore: }.
+11-25 22:00:04.285  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:04.285  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 22:00:04.285  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 22:00:04.285  3512  3576 W Firestore: 	... 5 more
+11-25 22:00:04.285  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:04.285  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 22:00:04.285  3512  3576 W Firestore: 	... 9 more
+11-25 22:00:04.285  3512  3576 W Firestore: }.
+11-25 22:00:08.795  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:08.795  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 22:00:08.795  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 22:00:08.795  3512  3576 W Firestore: 	... 5 more
+11-25 22:00:08.795  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:08.795  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 22:00:08.795  3512  3576 W Firestore: 	... 9 more
+11-25 22:00:08.795  3512  3576 W Firestore: }.
+11-25 22:00:21.135  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:21.135  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 22:00:21.135  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 22:00:21.135  3512  3576 W Firestore: 	... 5 more
+11-25 22:00:21.135  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:21.135  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 22:00:21.135  3512  3576 W Firestore: 	... 9 more
+11-25 22:00:21.135  3512  3576 W Firestore: }.
+11-25 22:00:44.566  3512  3576 W Firestore: (25.1.1) [WriteStream]: (fbec27b) Stream closed with status: Status{code=UNAVAILABLE, description=Unable to resolve host firestore.googleapis.com, cause=java.lang.RuntimeException: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:44.566  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:223)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.doResolve(DnsNameResolver.java:282)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$Resolve.run(DnsNameResolver.java:318)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.lang.Thread.run(Thread.java:1119)
+11-25 22:00:44.566  3512  3576 W Firestore: Caused by: java.net.UnknownHostException: Unable to resolve host "firestore.googleapis.com": No address associated with hostname
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:156)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupAllHostAddr(Inet6AddressImpl.java:103)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.net.InetAddress.getAllByName(InetAddress.java:1152)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver$JdkAddressResolver.resolveAddress(DnsNameResolver.java:632)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at io.grpc.internal.DnsNameResolver.resolveAddresses(DnsNameResolver.java:219)
+11-25 22:00:44.566  3512  3576 W Firestore: 	... 5 more
+11-25 22:00:44.566  3512  3576 W Firestore: Caused by: android.system.GaiException: android_getaddrinfo failed: EAI_NODATA (No address associated with hostname)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at libcore.io.Linux.android_getaddrinfo(Native Method)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at libcore.io.BlockGuardOs.android_getaddrinfo(BlockGuardOs.java:222)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at libcore.io.ForwardingOs.android_getaddrinfo(ForwardingOs.java:133)
+11-25 22:00:44.566  3512  3576 W Firestore: 	at java.net.Inet6AddressImpl.lookupHostByName(Inet6AddressImpl.java:135)
+11-25 22:00:44.566  3512  3576 W Firestore: 	... 9 more
+11-25 22:00:44.566  3512  3576 W Firestore: }.

@@ -153,7 +153,7 @@ class StartInterviewViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    loadingMessage = "Creating interview session...",
+                    loadingMessage = "Checking for cached questions...",
                     error = null
                 )
             }
@@ -173,6 +173,10 @@ class StartInterviewViewModel @Inject constructor(
                 }
 
                 // Fetch latest PIQ submission ID
+                _uiState.update {
+                    it.copy(loadingMessage = "Loading PIQ data...")
+                }
+
                 val piqResult = submissionRepository.getLatestPIQSubmission(userId)
                 if (piqResult.isFailure) {
                     ErrorLogger.log(
@@ -202,6 +206,12 @@ class StartInterviewViewModel @Inject constructor(
                 }
 
                 // Create session
+                // Repository will check cache first (instant if questions pre-generated)
+                // or generate questions on-the-fly if cache miss (30s-1min)
+                _uiState.update {
+                    it.copy(loadingMessage = "Preparing interview...")
+                }
+
                 // NOTE: Force TEXT_BASED mode until voice recording UI is implemented
                 val result = interviewRepository.createSession(
                     userId = userId,

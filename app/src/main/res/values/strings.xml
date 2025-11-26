@@ -1058,4 +1058,14 @@
     <string name="cd_play">Play audio</string>
     <string name="cd_stop">Stop</string>
 
+    <!-- Speech-to-Text Transcription States (Phase 2) -->
+    <string name="listening">Listening…</string>
+    <string name="processing_speech">Processing speech…</string>
+    <string name="transcription_complete">Transcription complete</string>
+    <string name="transcription_error">Transcription error</string>
+    <string name="ready_to_record">Ready to record</string>
+    <string name="your_response">Your Response</string>
+    <string name="generating_personalized_questions">Generating personalized questions…</string>
+    <string name="this_will_take_30_60_seconds">This will take 30-60 seconds</string>
+
 </resources>

@@ -19,14 +19,21 @@ data class VoiceInterviewSessionUiState(
     val recordingState: RecordingState = RecordingState.IDLE,
     val audioFilePath: String? = null,
     val audioDurationMs: Long = 0L,
+    @Deprecated("Use finalTranscription instead", ReplaceWith("finalTranscription"))
     val transcriptionText: String = "",
+    @Deprecated("Use transcriptionState instead", ReplaceWith("transcriptionState"))
     val isTranscribing: Boolean = false,
     val isSubmittingResponse: Boolean = false,
     val thinkingStartTime: Long? = null,
     val error: String? = null,
     val isCompleted: Boolean = false,
     val resultId: String? = null,
-    val hasRecordPermission: Boolean = false
+    val hasRecordPermission: Boolean = false,
+    // Phase 2: Speech-to-Text fields
+    val transcriptionState: TranscriptionState = TranscriptionState.IDLE,
+    val liveTranscription: String = "",
+    val finalTranscription: String = "",
+    val transcriptionError: String? = null
 ) {
     /**
      * Get interview mode
@@ -48,10 +55,10 @@ data class VoiceInterviewSessionUiState(
      */
     fun canSubmitResponse(): Boolean {
         return audioFilePath != null &&
-                transcriptionText.trim().isNotBlank() &&
+                finalTranscription.trim().isNotBlank() &&
                 !isSubmittingResponse &&
                 !isLoading &&
-                !isTranscribing &&
+                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING) &&
                 currentQuestion != null &&
                 recordingState == RecordingState.RECORDED
     }
@@ -104,7 +111,7 @@ data class VoiceInterviewSessionUiState(
     fun canPlayAudio(): Boolean {
         return audioFilePath != null &&
                 recordingState == RecordingState.RECORDED &&
-                !isTranscribing
+                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING)
     }
 
     /**
@@ -113,7 +120,7 @@ data class VoiceInterviewSessionUiState(
     fun canReRecord(): Boolean {
         return recordingState == RecordingState.RECORDED &&
                 !isSubmittingResponse &&
-                !isTranscribing
+                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING)
     }
 }
 
@@ -125,4 +132,15 @@ enum class RecordingState {
     RECORDING,      // Currently recording
     RECORDED,       // Recording complete, ready for playback/transcription
     PLAYING         // Playing back recorded audio
+}
+
+/**
+ * Speech-to-text transcription states (Phase 2)
+ */
+enum class TranscriptionState {
+    IDLE,           // No transcription activity
+    LISTENING,      // SpeechRecognizer active, receiving audio
+    PROCESSING,     // Finalizing transcription
+    COMPLETED,      // Transcription complete
+    ERROR           // Transcription failed
 }

@@ -4,6 +4,12 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
@@ -11,6 +17,8 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.AppConstants
+import com.ssbmax.workers.InterviewQuestionGenerationWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -59,6 +67,7 @@ class PIQTestViewModel @Inject constructor(
     private val subscriptionManager: SubscriptionManager,
     private val difficultyManager: DifficultyProgressionManager,
     private val securityLogger: SecurityEventLogger,
+    private val workManager: WorkManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -82,7 +91,7 @@ class PIQTestViewModel @Inject constructor(
     private fun setupAutoSave() {
         viewModelScope.launch {
             autoSaveChannel.receiveAsFlow()
-                .debounce(2000L) // 2 seconds
+                .debounce(AppConstants.Time.AUTOSAVE_DEBOUNCE_MS)
                 .collect {
                     saveDraft()
                 }
@@ -330,7 +339,11 @@ class PIQTestViewModel @Inject constructor(
                         timeSeconds = 0f
                     )
                     Log.d(TAG, "✅ PIQ: Performance recorded")
-                    
+
+                    // Step 8: Trigger background question generation
+                    Log.d(TAG, "📍 PIQ Step 8: Triggering background question generation...")
+                    triggerBackgroundQuestionGeneration(submissionId)
+
                     _uiState.update { it.copy(
                         isLoading = false,
                         submissionComplete = true,
@@ -618,6 +631,43 @@ class PIQTestViewModel @Inject constructor(
      */
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    /**
+     * Trigger background question generation after PIQ submission
+     *
+     * Schedules a background WorkManager job to:
+     * 1. Fetch PIQ data from Firestore
+     * 2. Generate 18 personalized questions using Gemini AI
+     * 3. Cache questions for 30 days
+     *
+     * Constraints:
+     * - Requires network connection (for Gemini API)
+     * - Requires battery not low (to avoid draining)
+     */
+    private fun triggerBackgroundQuestionGeneration(submissionId: String) {
+        val workRequest = OneTimeWorkRequestBuilder<InterviewQuestionGenerationWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresBatteryNotLow(true)
+                    .build()
+            )
+            .setInputData(workDataOf(
+                InterviewQuestionGenerationWorker.KEY_PIQ_SUBMISSION_ID to submissionId,
+                InterviewQuestionGenerationWorker.KEY_NOTIFY_ON_COMPLETE to false
+            ))
+            .addTag(AppConstants.WorkManager.PIQ_GENERATION_TAG)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "gen_questions_$submissionId",
+            ExistingWorkPolicy.KEEP, // Don't duplicate if already scheduled
+            workRequest
+        )
+
+        Log.d(TAG, "📋 Enqueued background question generation for PIQ: $submissionId")
+        Log.d(TAG, "   Questions will be ready for instant interview start in 30s-1min")
     }
 
     override fun onCleared() {

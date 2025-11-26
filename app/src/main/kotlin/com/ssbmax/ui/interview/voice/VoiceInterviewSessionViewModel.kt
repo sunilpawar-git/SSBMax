@@ -11,6 +11,7 @@ import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.utils.AudioRecorder
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.utils.SpeechToTextManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,7 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     val uiState: StateFlow<VoiceInterviewSessionUiState> = _uiState.asStateFlow()
 
     private val audioRecorder = AudioRecorder(context)
+    private var speechToTextManager: SpeechToTextManager? = null
 
     init {
         // Register for memory leak tracking
@@ -168,7 +170,7 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     }
 
     /**
-     * Start recording audio response
+     * Start recording audio response (Phase 2: with simultaneous STT)
      */
     fun startRecording() {
         if (!_uiState.value.canStartRecording()) {
@@ -176,19 +178,75 @@ class VoiceInterviewSessionViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            // 1. Start audio recording
             val filePath = audioRecorder.startRecording()
-            if (filePath != null) {
-                _uiState.update {
-                    it.copy(
-                        recordingState = RecordingState.RECORDING,
-                        audioFilePath = filePath,
-                        error = null
-                    )
-                }
-            } else {
+            if (filePath == null) {
                 _uiState.update {
                     it.copy(
                         error = "Failed to start recording"
+                    )
+                }
+                return@launch
+            }
+
+            _uiState.update {
+                it.copy(
+                    recordingState = RecordingState.RECORDING,
+                    audioFilePath = filePath,
+                    transcriptionState = TranscriptionState.IDLE,
+                    liveTranscription = "",
+                    finalTranscription = "",
+                    transcriptionError = null,
+                    error = null
+                )
+            }
+
+            // 2. Start speech-to-text simultaneously
+            speechToTextManager = SpeechToTextManager(
+                context = context,
+                onResult = { transcription ->
+                    // Final transcription complete
+                    _uiState.update {
+                        it.copy(
+                            finalTranscription = transcription,
+                            transcriptionState = TranscriptionState.COMPLETED,
+                            liveTranscription = "",
+                            transcriptionText = transcription // Keep deprecated field in sync
+                        )
+                    }
+                },
+                onPartialResult = { partial ->
+                    // Live partial transcription (show in real-time)
+                    _uiState.update {
+                        it.copy(
+                            liveTranscription = partial,
+                            transcriptionState = TranscriptionState.LISTENING
+                        )
+                    }
+                },
+                onError = { error ->
+                    // Transcription error (audio recording continues)
+                    ErrorLogger.log(
+                        throwable = Exception("Speech-to-text error: $error"),
+                        description = "STT failed during voice interview"
+                    )
+                    _uiState.update {
+                        it.copy(
+                            transcriptionError = error,
+                            transcriptionState = TranscriptionState.ERROR
+                        )
+                    }
+                }
+            )
+
+            // Check STT availability before starting
+            if (speechToTextManager?.isAvailable() == true) {
+                speechToTextManager?.startListening()
+            } else {
+                _uiState.update {
+                    it.copy(
+                        transcriptionState = TranscriptionState.ERROR,
+                        transcriptionError = "Speech recognition not available - you can manually type transcription"
                     )
                 }
             }
@@ -196,7 +254,7 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     }
 
     /**
-     * Stop recording audio response
+     * Stop recording audio response (Phase 2: with simultaneous STT)
      */
     fun stopRecording() {
         if (!_uiState.value.canStopRecording()) {
@@ -204,18 +262,9 @@ class VoiceInterviewSessionViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            // 1. Stop audio recording
             val result = audioRecorder.stopRecording()
-            if (result != null) {
-                val (filePath, duration) = result
-                _uiState.update {
-                    it.copy(
-                        recordingState = RecordingState.RECORDED,
-                        audioFilePath = filePath,
-                        audioDurationMs = duration,
-                        error = null
-                    )
-                }
-            } else {
+            if (result == null) {
                 _uiState.update {
                     it.copy(
                         recordingState = RecordingState.IDLE,
@@ -223,31 +272,68 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                         error = "Failed to save recording"
                     )
                 }
+                // Also stop STT
+                speechToTextManager?.stopListening()
+                return@launch
             }
+
+            val (filePath, duration) = result
+
+            // 2. Stop speech-to-text
+            speechToTextManager?.stopListening()
+
+            _uiState.update {
+                it.copy(
+                    recordingState = RecordingState.RECORDED,
+                    audioFilePath = filePath,
+                    audioDurationMs = duration,
+                    transcriptionState = if (it.transcriptionState == TranscriptionState.LISTENING) {
+                        TranscriptionState.PROCESSING
+                    } else {
+                        it.transcriptionState
+                    },
+                    error = null
+                )
+            }
+
+            // Note: User can now review/edit transcription before submitting
         }
     }
 
     /**
-     * Cancel current recording and reset
+     * Cancel current recording and reset (Phase 2: also cancel STT)
      */
     fun cancelRecording() {
         audioRecorder.cancelRecording()
+        speechToTextManager?.cancel()
+        speechToTextManager?.release()
+        speechToTextManager = null
+
         _uiState.update {
             it.copy(
                 recordingState = RecordingState.IDLE,
                 audioFilePath = null,
                 audioDurationMs = 0L,
                 transcriptionText = "",
+                finalTranscription = "",
+                liveTranscription = "",
+                transcriptionState = TranscriptionState.IDLE,
+                transcriptionError = null,
                 error = null
             )
         }
     }
 
     /**
-     * Update transcription text (user can edit)
+     * Update transcription text (user can edit) - Phase 2
      */
     fun updateTranscription(text: String) {
-        _uiState.update { it.copy(transcriptionText = text) }
+        _uiState.update {
+            it.copy(
+                finalTranscription = text,
+                transcriptionText = text // Keep deprecated field in sync
+            )
+        }
     }
 
     /**
@@ -271,10 +357,10 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                 val currentQuestion = state.currentQuestion ?: return@launch
                 val session = state.session ?: return@launch
 
-                // Analyze response with AI (using transcribed text)
+                // Analyze response with AI (using transcribed text) - Phase 2: use finalTranscription
                 val analysisResult = aiService.analyzeResponse(
                     question = currentQuestion,
-                    response = state.transcriptionText,
+                    response = state.finalTranscription,
                     responseMode = state.mode.name
                 )
 
@@ -297,12 +383,12 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                     )
                 } ?: emptyMap()
 
-                // Create response object
+                // Create response object - Phase 2: use finalTranscription
                 val response = InterviewResponse(
                     id = UUID.randomUUID().toString(),
                     sessionId = sessionId,
                     questionId = currentQuestion.id,
-                    responseText = state.transcriptionText,
+                    responseText = state.finalTranscription,
                     responseMode = state.mode,
                     respondedAt = Instant.now(),
                     thinkingTimeSec = state.getThinkingTimeSeconds(),
@@ -389,6 +475,10 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                 audioFilePath = null,
                 audioDurationMs = 0L,
                 transcriptionText = "",
+                finalTranscription = "",
+                liveTranscription = "",
+                transcriptionState = TranscriptionState.IDLE,
+                transcriptionError = null,
                 thinkingStartTime = System.currentTimeMillis()
             )
         }
@@ -462,10 +552,12 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     }
 
     /**
-     * Clean up resources
+     * Clean up resources - Phase 2: also release STT manager
      */
     override fun onCleared() {
         super.onCleared()
         audioRecorder.release()
+        speechToTextManager?.release()
+        speechToTextManager = null
     }
 }
