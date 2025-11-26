@@ -19,10 +19,6 @@ data class VoiceInterviewSessionUiState(
     val recordingState: RecordingState = RecordingState.IDLE,
     val audioFilePath: String? = null,
     val audioDurationMs: Long = 0L,
-    @Deprecated("Use finalTranscription instead", ReplaceWith("finalTranscription"))
-    val transcriptionText: String = "",
-    @Deprecated("Use transcriptionState instead", ReplaceWith("transcriptionState"))
-    val isTranscribing: Boolean = false,
     val isSubmittingResponse: Boolean = false,
     val thinkingStartTime: Long? = null,
     val error: String? = null,

@@ -4,14 +4,15 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.R
 import com.ssbmax.core.data.util.trackMemoryLeaks
+import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewResponse
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
-import com.ssbmax.utils.AudioRecorder
+import com.ssbmax.core.domain.service.ResponseAnalysis
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.utils.SpeechToTextManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,18 +27,12 @@ import javax.inject.Inject
 /**
  * ViewModel for Voice Interview Session screen
  *
- * Responsibilities:
- * - Load interview session and questions
- * - Manage voice recording lifecycle
- * - Handle transcription workflow
- * - Submit responses with AI analysis
- * - Complete interview and navigate to results
+ * Manages interview session state and coordinates between:
+ * - VoiceRecordingHelper for audio/transcription
+ * - InterviewRepository for session persistence
+ * - AIService for response analysis
  *
- * MEMORY LEAK PREVENTION:
- * - Registers with MemoryLeakTracker
- * - Uses viewModelScope for all coroutines (auto-cancelled)
- * - AudioRecorder released in onCleared()
- * - No static references or context leaks
+ * @see VoiceRecordingHelper for recording logic
  */
 @HiltViewModel
 class VoiceInterviewSessionViewModel @Inject constructor(
@@ -47,95 +42,69 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId")) {
-        "sessionId is required"
-    }
+    private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId"))
 
     private val _uiState = MutableStateFlow(VoiceInterviewSessionUiState())
     val uiState: StateFlow<VoiceInterviewSessionUiState> = _uiState.asStateFlow()
 
-    private val audioRecorder = AudioRecorder(context)
-    private var speechToTextManager: SpeechToTextManager? = null
+    private val recordingHelper = VoiceRecordingHelper(context)
 
     init {
-        // Register for memory leak tracking
         trackMemoryLeaks("VoiceInterviewSessionViewModel")
-
-        // Load session
+        observeRecordingState()
         loadSession()
     }
 
-    /**
-     * Load interview session and first question
-     */
+    private fun observeRecordingState() {
+        viewModelScope.launch {
+            recordingHelper.state.collect { recording ->
+                _uiState.update {
+                    it.copy(
+                        recordingState = recording.recordingState,
+                        audioFilePath = recording.audioFilePath,
+                        audioDurationMs = recording.audioDurationMs,
+                        transcriptionState = recording.transcriptionState,
+                        liveTranscription = recording.liveTranscription,
+                        finalTranscription = recording.finalTranscription,
+                        transcriptionError = recording.transcriptionError
+                    )
+                }
+            }
+        }
+    }
+
     private fun loadSession() {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    loadingMessage = "Loading interview session..."
+                    loadingMessage = context.getString(R.string.voice_interview_loading_session)
                 )
             }
 
             try {
-                // Get session
                 val sessionResult = interviewRepository.getSession(sessionId)
                 if (sessionResult.isFailure) {
-                    ErrorLogger.log(
-                        throwable = sessionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "Failed to load interview session"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Failed to load session"
-                        )
-                    }
+                    handleError(sessionResult.exceptionOrNull() ?: Exception("Unknown"), "Failed to load interview session", R.string.voice_interview_error_load_session)
                     return@launch
                 }
 
                 val session = sessionResult.getOrNull()
                 if (session == null) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Session not found"
-                        )
-                    }
+                    setError(R.string.voice_interview_error_session_not_found)
                     return@launch
                 }
 
-                // Load current question
-                val questionId = session.questionIds.getOrNull(session.currentQuestionIndex)
-                if (questionId == null) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "No questions available"
-                        )
-                    }
+                val questionId = session.questionIds.getOrNull(session.currentQuestionIndex) ?: run {
+                    setError(R.string.voice_interview_error_no_questions)
                     return@launch
                 }
 
                 val questionResult = interviewRepository.getQuestion(questionId)
                 if (questionResult.isFailure) {
-                    ErrorLogger.log(
-                        throwable = questionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "Failed to load interview question"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Failed to load question"
-                        )
-                    }
+                    handleError(questionResult.exceptionOrNull() ?: Exception("Unknown"), "Failed to load question", R.string.voice_interview_error_load_question)
                     return@launch
                 }
-
                 val question = questionResult.getOrNull()
 
                 _uiState.update {
@@ -150,414 +119,169 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Exception loading interview session")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadingMessage = null,
-                        error = "An error occurred"
-                    )
-                }
+                handleError(e, "Exception loading session", R.string.voice_interview_error_generic)
             }
         }
     }
 
-    /**
-     * Update permission status
-     */
     fun updateRecordPermission(granted: Boolean) {
         _uiState.update { it.copy(hasRecordPermission = granted) }
     }
 
-    /**
-     * Start recording audio response (Phase 2: with simultaneous STT)
-     */
     fun startRecording() {
-        if (!_uiState.value.canStartRecording()) {
-            return
-        }
-
+        if (!_uiState.value.canStartRecording()) return
         viewModelScope.launch {
-            // 1. Start audio recording
-            val filePath = audioRecorder.startRecording()
-            if (filePath == null) {
-                _uiState.update {
-                    it.copy(
-                        error = "Failed to start recording"
-                    )
-                }
-                return@launch
-            }
-
-            _uiState.update {
-                it.copy(
-                    recordingState = RecordingState.RECORDING,
-                    audioFilePath = filePath,
-                    transcriptionState = TranscriptionState.IDLE,
-                    liveTranscription = "",
-                    finalTranscription = "",
-                    transcriptionError = null,
-                    error = null
-                )
-            }
-
-            // 2. Start speech-to-text simultaneously
-            speechToTextManager = SpeechToTextManager(
-                context = context,
-                onResult = { transcription ->
-                    // Final transcription complete
-                    _uiState.update {
-                        it.copy(
-                            finalTranscription = transcription,
-                            transcriptionState = TranscriptionState.COMPLETED,
-                            liveTranscription = "",
-                            transcriptionText = transcription // Keep deprecated field in sync
-                        )
-                    }
-                },
-                onPartialResult = { partial ->
-                    // Live partial transcription (show in real-time)
-                    _uiState.update {
-                        it.copy(
-                            liveTranscription = partial,
-                            transcriptionState = TranscriptionState.LISTENING
-                        )
-                    }
-                },
-                onError = { error ->
-                    // Transcription error (audio recording continues)
-                    ErrorLogger.log(
-                        throwable = Exception("Speech-to-text error: $error"),
-                        description = "STT failed during voice interview"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            transcriptionError = error,
-                            transcriptionState = TranscriptionState.ERROR
-                        )
-                    }
-                }
-            )
-
-            // Check STT availability before starting
-            if (speechToTextManager?.isAvailable() == true) {
-                speechToTextManager?.startListening()
+            if (recordingHelper.startRecording() == null) {
+                _uiState.update { it.copy(error = context.getString(R.string.voice_interview_error_start_recording)) }
             } else {
-                _uiState.update {
-                    it.copy(
-                        transcriptionState = TranscriptionState.ERROR,
-                        transcriptionError = "Speech recognition not available - you can manually type transcription"
-                    )
-                }
+                _uiState.update { it.copy(error = null) }
             }
         }
     }
 
-    /**
-     * Stop recording audio response (Phase 2: with simultaneous STT)
-     */
     fun stopRecording() {
-        if (!_uiState.value.canStopRecording()) {
-            return
-        }
-
+        if (!_uiState.value.canStopRecording()) return
         viewModelScope.launch {
-            // 1. Stop audio recording
-            val result = audioRecorder.stopRecording()
-            if (result == null) {
-                _uiState.update {
-                    it.copy(
-                        recordingState = RecordingState.IDLE,
-                        audioFilePath = null,
-                        error = "Failed to save recording"
-                    )
-                }
-                // Also stop STT
-                speechToTextManager?.stopListening()
-                return@launch
+            if (recordingHelper.stopRecording() == null) {
+                _uiState.update { it.copy(error = context.getString(R.string.voice_interview_error_save_recording)) }
+            } else {
+                _uiState.update { it.copy(error = null) }
             }
-
-            val (filePath, duration) = result
-
-            // 2. Stop speech-to-text
-            speechToTextManager?.stopListening()
-
-            _uiState.update {
-                it.copy(
-                    recordingState = RecordingState.RECORDED,
-                    audioFilePath = filePath,
-                    audioDurationMs = duration,
-                    transcriptionState = if (it.transcriptionState == TranscriptionState.LISTENING) {
-                        TranscriptionState.PROCESSING
-                    } else {
-                        it.transcriptionState
-                    },
-                    error = null
-                )
-            }
-
-            // Note: User can now review/edit transcription before submitting
         }
     }
 
-    /**
-     * Cancel current recording and reset (Phase 2: also cancel STT)
-     */
     fun cancelRecording() {
-        audioRecorder.cancelRecording()
-        speechToTextManager?.cancel()
-        speechToTextManager?.release()
-        speechToTextManager = null
-
-        _uiState.update {
-            it.copy(
-                recordingState = RecordingState.IDLE,
-                audioFilePath = null,
-                audioDurationMs = 0L,
-                transcriptionText = "",
-                finalTranscription = "",
-                liveTranscription = "",
-                transcriptionState = TranscriptionState.IDLE,
-                transcriptionError = null,
-                error = null
-            )
-        }
+        recordingHelper.cancelRecording()
+        _uiState.update { it.copy(error = null) }
     }
 
-    /**
-     * Update transcription text (user can edit) - Phase 2
-     */
-    fun updateTranscription(text: String) {
-        _uiState.update {
-            it.copy(
-                finalTranscription = text,
-                transcriptionText = text // Keep deprecated field in sync
-            )
-        }
-    }
+    fun updateTranscription(text: String) = recordingHelper.updateTranscription(text)
 
-    /**
-     * Submit current response and move to next question
-     */
     fun submitResponse() {
-        if (!_uiState.value.canSubmitResponse()) {
-            return
-        }
+        if (!_uiState.value.canSubmitResponse()) return
 
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = true,
-                    error = null
-                )
-            }
+            _uiState.update { it.copy(isSubmittingResponse = true, error = null) }
 
             try {
                 val state = _uiState.value
-                val currentQuestion = state.currentQuestion ?: return@launch
+                val question = state.currentQuestion ?: return@launch
                 val session = state.session ?: return@launch
 
-                // Analyze response with AI (using transcribed text) - Phase 2: use finalTranscription
-                val analysisResult = aiService.analyzeResponse(
-                    question = currentQuestion,
-                    response = state.finalTranscription,
-                    responseMode = state.mode.name
-                )
+                val analysis = analyzeResponse(question, state.finalTranscription, state.mode.name)
+                val response = buildResponse(state, question, analysis)
 
-                val analysis = if (analysisResult.isSuccess) {
-                    analysisResult.getOrNull()
-                } else {
-                    ErrorLogger.log(
-                        throwable = analysisResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "AI analysis failed for interview response"
-                    )
-                    null
-                }
-
-                // Convert OLQScoreWithReasoning to OLQScore
-                val olqScores = analysis?.olqScores?.mapValues { (_, scoreWithReasoning) ->
-                    OLQScore(
-                        score = scoreWithReasoning.score.toInt().coerceIn(1, 5),
-                        confidence = analysis.overallConfidence,
-                        reasoning = scoreWithReasoning.reasoning
-                    )
-                } ?: emptyMap()
-
-                // Create response object - Phase 2: use finalTranscription
-                val response = InterviewResponse(
-                    id = UUID.randomUUID().toString(),
-                    sessionId = sessionId,
-                    questionId = currentQuestion.id,
-                    responseText = state.finalTranscription,
-                    responseMode = state.mode,
-                    respondedAt = Instant.now(),
-                    thinkingTimeSec = state.getThinkingTimeSeconds(),
-                    audioUrl = state.audioFilePath, // Store local path
-                    olqScores = olqScores,
-                    confidenceScore = analysis?.overallConfidence ?: 0
-                )
-
-                // Submit response
-                val submitResult = interviewRepository.submitResponse(response)
-                if (submitResult.isFailure) {
-                    ErrorLogger.log(
-                        throwable = submitResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "Failed to submit interview response"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            isSubmittingResponse = false,
-                            error = "Failed to submit response"
-                        )
-                    }
+                interviewRepository.submitResponse(response).onFailure {
+                    handleSubmitError(it)
                     return@launch
                 }
 
-                // Check if there are more questions
-                if (state.hasMoreQuestions()) {
-                    // Move to next question
-                    loadNextQuestion()
-                } else {
-                    // Complete interview
-                    completeInterview()
-                }
+                if (state.hasMoreQuestions()) loadNextQuestion() else completeInterview()
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Exception submitting interview response")
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        error = "An error occurred"
-                    )
-                }
+                handleError(e, "Exception submitting response", R.string.voice_interview_error_generic)
+                _uiState.update { it.copy(isSubmittingResponse = false) }
             }
         }
     }
 
-    /**
-     * Load next question
-     */
+    private suspend fun analyzeResponse(question: InterviewQuestion, response: String, mode: String): ResponseAnalysis? {
+        return aiService.analyzeResponse(question, response, mode).getOrElse {
+            ErrorLogger.log(it, "AI analysis failed for interview response")
+            null
+        }
+    }
+
+    private fun buildResponse(state: VoiceInterviewSessionUiState, question: InterviewQuestion, analysis: ResponseAnalysis?): InterviewResponse {
+        val olqScores = analysis?.olqScores?.mapValues { (_, s) ->
+            OLQScore(score = s.score.toInt().coerceIn(1, 5), confidence = analysis.overallConfidence, reasoning = s.reasoning)
+        } ?: emptyMap()
+
+        return InterviewResponse(
+            id = UUID.randomUUID().toString(),
+            sessionId = sessionId,
+            questionId = question.id,
+            responseText = state.finalTranscription,
+            responseMode = state.mode,
+            respondedAt = Instant.now(),
+            thinkingTimeSec = state.getThinkingTimeSeconds(),
+            audioUrl = state.audioFilePath,
+            olqScores = olqScores,
+            confidenceScore = analysis?.overallConfidence ?: 0
+        )
+    }
+
+    private fun handleSubmitError(error: Throwable) {
+        ErrorLogger.log(error, "Failed to submit interview response")
+        _uiState.update {
+            it.copy(isSubmittingResponse = false, error = context.getString(R.string.voice_interview_error_submit_response))
+        }
+    }
+
     private suspend fun loadNextQuestion() {
         val state = _uiState.value
         val session = state.session ?: return
-
         val nextIndex = state.currentQuestionIndex + 1
         val nextQuestionId = session.questionIds.getOrNull(nextIndex) ?: return
 
-        // Update session progress
         val updatedSession = session.copy(currentQuestionIndex = nextIndex)
         interviewRepository.updateSession(updatedSession)
 
-        // Load next question
-        val questionResult = interviewRepository.getQuestion(nextQuestionId)
-        if (questionResult.isFailure) {
-            ErrorLogger.log(
-                throwable = questionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                description = "Failed to load next question"
-            )
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    error = "Failed to load next question"
-                )
-            }
+        val question = interviewRepository.getQuestion(nextQuestionId).getOrElse {
+            handleError(it, "Failed to load next question", R.string.voice_interview_error_load_next_question)
+            _uiState.update { s -> s.copy(isSubmittingResponse = false) }
             return
         }
 
-        val question = questionResult.getOrNull()
-
+        recordingHelper.resetForNextQuestion()
         _uiState.update {
             it.copy(
                 isSubmittingResponse = false,
                 session = updatedSession,
                 currentQuestion = question,
                 currentQuestionIndex = nextIndex,
-                recordingState = RecordingState.IDLE,
-                audioFilePath = null,
-                audioDurationMs = 0L,
-                transcriptionText = "",
-                finalTranscription = "",
-                liveTranscription = "",
-                transcriptionState = TranscriptionState.IDLE,
-                transcriptionError = null,
                 thinkingStartTime = System.currentTimeMillis()
             )
         }
     }
 
-    /**
-     * Complete interview and generate result
-     */
     private suspend fun completeInterview() {
-        _uiState.update {
-            it.copy(
-                isSubmittingResponse = true,
-                loadingMessage = "Generating results..."
-            )
-        }
+        _uiState.update { it.copy(loadingMessage = context.getString(R.string.voice_interview_generating_results)) }
 
         try {
-            val resultResult = interviewRepository.completeInterview(sessionId)
-            if (resultResult.isFailure) {
-                ErrorLogger.log(
-                    throwable = resultResult.exceptionOrNull() ?: Exception("Unknown error"),
-                    description = "Failed to complete interview"
-                )
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        loadingMessage = null,
-                        error = "Failed to complete interview"
-                    )
-                }
+            val completeResult = interviewRepository.completeInterview(sessionId)
+            if (completeResult.isFailure) {
+                handleError(completeResult.exceptionOrNull() ?: Exception("Unknown"), "Failed to complete interview", R.string.voice_interview_error_complete_interview)
+                _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null) }
                 return
             }
 
-            val result = resultResult.getOrNull()
+            val result = completeResult.getOrNull()
             if (result == null) {
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        loadingMessage = null,
-                        error = "Failed to generate results"
-                    )
-                }
+                setError(R.string.voice_interview_error_generate_results)
+                _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null) }
                 return
             }
 
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    loadingMessage = null,
-                    isCompleted = true,
-                    resultId = result.id
-                )
-            }
+            _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null, isCompleted = true, resultId = result.id) }
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Exception completing interview")
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    loadingMessage = null,
-                    error = "An error occurred"
-                )
-            }
+            handleError(e, "Exception completing interview", R.string.voice_interview_error_generic)
+            _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null) }
         }
     }
 
-    /**
-     * Clear error message
-     */
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
+    private fun handleError(error: Throwable, logDescription: String, stringResId: Int) {
+        ErrorLogger.log(error, logDescription)
+        setError(stringResId)
     }
 
-    /**
-     * Clean up resources - Phase 2: also release STT manager
-     */
+    private fun setError(stringResId: Int) {
+        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = context.getString(stringResId)) }
+    }
+
+    fun clearError() = _uiState.update { it.copy(error = null) }
+
     override fun onCleared() {
         super.onCleared()
-        audioRecorder.release()
-        speechToTextManager?.release()
-        speechToTextManager = null
+        recordingHelper.release()
     }
 }

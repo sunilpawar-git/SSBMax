@@ -5,9 +5,25 @@ import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewSession
 
 /**
+ * Pending response stored locally during interview (before AI analysis)
+ */
+data class PendingResponse(
+    val questionId: String,
+    val questionText: String,
+    val responseText: String,
+    val thinkingTimeSec: Int,
+    val respondedAt: Long = System.currentTimeMillis()
+)
+
+/**
  * UI state for Interview Session screen
  *
  * Manages question display, response input, and session progress
+ *
+ * OPTIMIZATION: Uses batch AI analysis at the end instead of per-question analysis.
+ * Responses are stored in [pendingResponses] during the interview and analyzed
+ * together when the user completes all questions. This reduces per-question
+ * submission time from 6-8 seconds to nearly instant.
  */
 data class InterviewSessionUiState(
     val isLoading: Boolean = true,
@@ -21,7 +37,11 @@ data class InterviewSessionUiState(
     val thinkingStartTime: Long? = null,
     val error: String? = null,
     val isCompleted: Boolean = false,
-    val resultId: String? = null
+    val resultId: String? = null,
+    // Batch analysis: store responses locally during interview
+    val pendingResponses: List<PendingResponse> = emptyList(),
+    val isAnalyzingResponses: Boolean = false,
+    val analysisProgress: String? = null
 ) {
     /**
      * Get interview mode

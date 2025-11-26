@@ -26,17 +26,30 @@ const fs = require('fs');
 const path = require('path');
 
 // Initialize Firebase Admin SDK
-// Uses GOOGLE_APPLICATION_CREDENTIALS environment variable or default credentials
+// Uses existing service account key from .firebase/ directory (same as other scripts)
 try {
+  const serviceAccountPath = path.join(__dirname, '.firebase', 'service-account.json');
+  
+  if (!fs.existsSync(serviceAccountPath)) {
+    throw new Error(`Service account key not found at: ${serviceAccountPath}`);
+  }
+  
+  const serviceAccount = require(serviceAccountPath);
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    projectId: 'ssbmax-app' // Replace with your Firebase project ID
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id
   });
+  
   console.log('✅ Firebase Admin SDK initialized');
+  console.log(`📦 Project: ${serviceAccount.project_id}`);
 } catch (error) {
   console.error('❌ Failed to initialize Firebase Admin SDK');
-  console.error('Make sure GOOGLE_APPLICATION_CREDENTIALS is set or use:');
-  console.error('export GOOGLE_APPLICATION_CREDENTIALS="/path/to/serviceAccountKey.json"');
+  console.error('Error:', error.message);
+  console.error('');
+  console.error('Solution:');
+  console.error('Ensure service account key exists at: .firebase/service-account.json');
+  console.error('If missing, download from Firebase Console → Project Settings → Service Accounts');
+  console.error('');
   process.exit(1);
 }
 
@@ -78,9 +91,10 @@ async function uploadGenericQuestions() {
       const docRef = db.collection('generic_questions').doc(question.id);
 
       // Prepare document data
+      // IMPORTANT: Field names must match QuestionCacheMappers.kt expectations
       const docData = {
         id: question.id,
-        text: question.text,
+        questionText: question.text,  // Mapper expects 'questionText', not 'text'
         category: question.category || 'General',
         targetOLQs: question.targetOLQs,
         difficulty: question.difficulty || 3,

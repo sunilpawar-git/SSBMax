@@ -1006,11 +1006,21 @@
     <string name="interview_select_mode">Select Interview Mode</string>
     <string name="interview_checking_eligibility">Checking eligibility…</string>
     <string name="interview_prerequisites_title">Prerequisites</string>
+    <string name="interview_prerequisites_met">All prerequisites met</string>
+    <string name="interview_prerequisites_not_met">Prerequisites not met</string>
     <string name="interview_consent_title">Consent for Transcript Storage</string>
     <string name="interview_consent_message">I consent to storing my interview transcript for analysis and feedback</string>
     <string name="interview_button_start">Start Interview</string>
     <string name="interview_error_auth">Authentication required</string>
     <string name="interview_error_generic">An error occurred</string>
+    <string name="interview_error_no_piq">No PIQ submission found</string>
+    <string name="interview_error_create_session">Failed to create session</string>
+    <string name="interview_error_fetch_piq">Failed to fetch PIQ data</string>
+    <string name="interview_loading_checking_cache">Checking for cached questions…</string>
+    <string name="interview_loading_piq_data">Loading PIQ data…</string>
+    <string name="interview_loading_preparing">Preparing interview…</string>
+    <string name="interview_generating_questions">Generating personalized questions…</string>
+    <string name="interview_generating_questions_hint">This will take 30–60 seconds</string>
 
     <!-- Interview Session Screen -->
     <string name="interview_session_title">Interview</string>
@@ -1067,5 +1077,22 @@
     <string name="your_response">Your Response</string>
     <string name="generating_personalized_questions">Generating personalized questions…</string>
     <string name="this_will_take_30_60_seconds">This will take 30-60 seconds</string>
+
+    <!-- Voice Interview Additional States -->
+    <string name="voice_interview_question_label">Question</string>
+    <string name="voice_interview_playing">Playing…</string>
+    <string name="voice_interview_loading_session">Loading interview session…</string>
+    <string name="voice_interview_error_load_session">Failed to load session</string>
+    <string name="voice_interview_error_session_not_found">Session not found</string>
+    <string name="voice_interview_error_no_questions">No questions available</string>
+    <string name="voice_interview_error_load_question">Failed to load question</string>
+    <string name="voice_interview_error_start_recording">Failed to start recording</string>
+    <string name="voice_interview_error_save_recording">Failed to save recording</string>
+    <string name="voice_interview_error_submit_response">Failed to submit response</string>
+    <string name="voice_interview_error_load_next_question">Failed to load next question</string>
+    <string name="voice_interview_generating_results">Generating results…</string>
+    <string name="voice_interview_error_complete_interview">Failed to complete interview</string>
+    <string name="voice_interview_error_generate_results">Failed to generate results</string>
+    <string name="voice_interview_error_generic">An error occurred</string>
 
 </resources>

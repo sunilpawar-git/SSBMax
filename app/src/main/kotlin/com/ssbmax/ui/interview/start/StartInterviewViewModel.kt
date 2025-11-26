@@ -1,8 +1,10 @@
 package com.ssbmax.ui.interview.start
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.BuildConfig
+import com.ssbmax.R
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.repository.InterviewRepository
@@ -11,6 +13,7 @@ import com.ssbmax.core.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,67 +25,46 @@ import javax.inject.Inject
 /**
  * ViewModel for Start Interview screen
  *
- * Responsibilities:
- * - Check prerequisites (PIQ, OIR, PPDT, subscription)
- * - Create interview session
- * - Navigate to session screen
- *
- * MEMORY LEAK PREVENTION:
- * - Registers with MemoryLeakTracker
- * - Uses viewModelScope for all coroutines (auto-cancelled)
- * - No static references or context leaks
+ * Optimizes interview start by checking for pre-generated questions (instant start)
+ * and showing progress during on-demand generation (30-60s).
  */
 @HiltViewModel
 class StartInterviewViewModel @Inject constructor(
     private val checkPrerequisites: CheckInterviewPrerequisitesUseCase,
     private val interviewRepository: InterviewRepository,
     private val submissionRepository: SubmissionRepository,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StartInterviewUiState())
     val uiState: StateFlow<StartInterviewUiState> = _uiState.asStateFlow()
 
     init {
-        // Register for memory leak tracking
         trackMemoryLeaks("StartInterviewViewModel")
     }
 
-    /**
-     * Select interview mode (text or voice)
-     */
     fun selectMode(mode: InterviewMode) {
         _uiState.update { it.copy(selectedMode = mode) }
     }
 
-    /**
-     * Check if user meets all prerequisites
-     */
     fun checkEligibility() {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    loadingMessage = "Checking eligibility...",
+                    loadingMessage = context.getString(R.string.interview_checking_eligibility),
                     error = null
                 )
             }
 
             try {
-                // Get current user
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: run {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Authentication required"
-                        )
-                    }
+                    setError(R.string.interview_error_auth)
                     return@launch
                 }
 
-                // Check prerequisites (bypass subscription check in debug builds)
                 val result = checkPrerequisites(
                     userId = userId,
                     desiredMode = _uiState.value.selectedMode,
@@ -94,25 +76,13 @@ class StartInterviewViewModel @Inject constructor(
                         throwable = result.exceptionOrNull() ?: Exception("Unknown error"),
                         description = "Failed to check interview prerequisites"
                     )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Failed to check eligibility"
-                        )
-                    }
+                    setError(R.string.interview_error_generic)
                     return@launch
                 }
 
                 val prerequisiteResult = result.getOrNull()
                 if (prerequisiteResult == null) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Failed to check eligibility"
-                        )
-                    }
+                    setError(R.string.interview_error_generic)
                     return@launch
                 }
 
@@ -126,26 +96,14 @@ class StartInterviewViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Exception checking interview eligibility")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadingMessage = null,
-                        error = "An error occurred"
-                    )
-                }
+                setError(R.string.interview_error_generic)
             }
         }
     }
 
-    /**
-     * Create interview session
-     *
-     * Prerequisites must be met before calling this.
-     * Fetches latest PIQ submission ID automatically.
-     */
     fun createSession(consentGiven: Boolean) {
         if (!_uiState.value.canStartInterview()) {
-            _uiState.update { it.copy(error = "Prerequisites not met") }
+            _uiState.update { it.copy(error = context.getString(R.string.interview_prerequisites_not_met)) }
             return
         }
 
@@ -153,29 +111,20 @@ class StartInterviewViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    loadingMessage = "Checking for cached questions...",
+                    loadingMessage = context.getString(R.string.interview_loading_checking_cache),
                     error = null
                 )
             }
 
             try {
-                // Get current user
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: run {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Authentication required"
-                        )
-                    }
+                    setError(R.string.interview_error_auth)
                     return@launch
                 }
 
                 // Fetch latest PIQ submission ID
-                _uiState.update {
-                    it.copy(loadingMessage = "Loading PIQ data...")
-                }
+                _uiState.update { it.copy(loadingMessage = context.getString(R.string.interview_loading_piq_data)) }
 
                 val piqResult = submissionRepository.getLatestPIQSubmission(userId)
                 if (piqResult.isFailure) {
@@ -183,39 +132,27 @@ class StartInterviewViewModel @Inject constructor(
                         throwable = piqResult.exceptionOrNull() ?: Exception("Unknown error"),
                         description = "Failed to fetch latest PIQ submission"
                     )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "Failed to fetch PIQ data"
-                        )
-                    }
+                    setError(R.string.interview_error_fetch_piq)
                     return@launch
                 }
 
                 val piqSubmission = piqResult.getOrNull()
                 val piqSnapshotId = piqSubmission?.id ?: run {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = "No PIQ submission found"
-                        )
-                    }
+                    setError(R.string.interview_error_no_piq)
                     return@launch
                 }
 
-                // Create session
-                // Repository will check cache first (instant if questions pre-generated)
-                // or generate questions on-the-fly if cache miss (30s-1min)
+                // Create session - repository checks cache first (instant) or generates on-demand (30-60s)
                 _uiState.update {
-                    it.copy(loadingMessage = "Preparing interview...")
+                    it.copy(
+                        loadingMessage = context.getString(R.string.interview_loading_preparing),
+                        isGeneratingQuestions = true
+                    )
                 }
 
-                // NOTE: Force TEXT_BASED mode until voice recording UI is implemented
                 val result = interviewRepository.createSession(
                     userId = userId,
-                    mode = InterviewMode.TEXT_BASED,  // Force TEXT mode for now
+                    mode = InterviewMode.TEXT_BASED,  // Force TEXT mode until voice UI ready
                     piqSnapshotId = piqSnapshotId,
                     consentGiven = consentGiven
                 )
@@ -228,8 +165,9 @@ class StartInterviewViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
+                            isGeneratingQuestions = false,
                             loadingMessage = null,
-                            error = "Failed to create session"
+                            error = context.getString(R.string.interview_error_create_session)
                         )
                     }
                     return@launch
@@ -240,8 +178,9 @@ class StartInterviewViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
+                            isGeneratingQuestions = false,
                             loadingMessage = null,
-                            error = "Failed to create session"
+                            error = context.getString(R.string.interview_error_create_session)
                         )
                     }
                     return@launch
@@ -250,6 +189,7 @@ class StartInterviewViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isGeneratingQuestions = false,
                         loadingMessage = null,
                         sessionId = session.id,
                         isSessionCreated = true
@@ -260,17 +200,26 @@ class StartInterviewViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isGeneratingQuestions = false,
                         loadingMessage = null,
-                        error = "An error occurred"
+                        error = context.getString(R.string.interview_error_generic)
                     )
                 }
             }
         }
     }
 
-    /**
-     * Clear error message
-     */
+    private fun setError(stringResId: Int) {
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isGeneratingQuestions = false,
+                loadingMessage = null,
+                error = context.getString(stringResId)
+            )
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }

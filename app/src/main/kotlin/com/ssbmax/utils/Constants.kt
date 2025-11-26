@@ -23,8 +23,14 @@ object AppConstants {
      * Interview & Question Cache constants
      */
     object Interview {
-        /** Target number of PIQ-based questions to generate */
+        /** Target total questions per interview session (20-25 recommended) */
+        const val TARGET_TOTAL_QUESTIONS = 25
+
+        /** Target number of PIQ-based questions to generate (70% of total) */
         const val TARGET_PIQ_QUESTION_COUNT = 18
+
+        /** Target number of generic questions (25% of total) */
+        const val TARGET_GENERIC_QUESTION_COUNT = 6
 
         /** Default question cache expiration in days */
         const val DEFAULT_CACHE_EXPIRATION_DAYS = 30

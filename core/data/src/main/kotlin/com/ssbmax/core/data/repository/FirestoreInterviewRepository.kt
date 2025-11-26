@@ -99,7 +99,8 @@ class FirestoreInterviewRepository @Inject constructor(
     ): Result<InterviewSession> {
         return try {
             // Generate questions using internal method
-            val questionsResult = internalGenerateQuestions(piqSnapshotId, 10)
+            // Target: 20-25 questions (70% PIQ ~17, 25% Generic ~6, 5% Adaptive ~1)
+            val questionsResult = internalGenerateQuestions(piqSnapshotId, 25)
 
             if (questionsResult.isFailure) {
                 return Result.failure(

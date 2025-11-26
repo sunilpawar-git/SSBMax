@@ -105,26 +105,6 @@
       ]
     },
     {
-      "collectionGroup": "question_cache",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "expiresAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "question_cache",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "usageCount",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "generic_questions",
       "queryScope": "COLLECTION",
       "fields": [

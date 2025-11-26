@@ -4,34 +4,51 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 
-/**
- * Voice Interview Session Screen
- *
- * Manages the voice interview flow:
- * - Displays questions one by one
- * - Records audio responses
- * - Allows transcription review and editing
- * - Submits to AI for analysis
- * - Progresses through all questions
- * - Completes interview and navigates to results
- */
+/** Voice Interview Session Screen - manages voice interview flow with recording/transcription */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceInterviewSessionScreen(
@@ -43,23 +60,19 @@ fun VoiceInterviewSessionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Handle RECORD_AUDIO permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         viewModel.updateRecordPermission(granted)
     }
 
-    // Check permission status on launch
     LaunchedEffect(Unit) {
         val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
+            context, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
         viewModel.updateRecordPermission(hasPermission)
     }
 
-    // Navigate to result when completed
     LaunchedEffect(uiState.isCompleted) {
         if (uiState.isCompleted && uiState.resultId != null) {
             onNavigateToResult(uiState.resultId!!)
@@ -70,11 +83,7 @@ fun VoiceInterviewSessionScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(
-                        R.string.interview_question_number,
-                        uiState.currentQuestionIndex + 1,
-                        uiState.totalQuestions
-                    ))
+                    Text(stringResource(R.string.interview_question_number, uiState.currentQuestionIndex + 1, uiState.totalQuestions))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -84,368 +93,195 @@ fun VoiceInterviewSessionScreen(
             )
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                uiState.isLoading -> LoadingContent()
+                uiState.error != null -> ErrorContent(uiState.error)
+                !uiState.hasRecordPermission -> PermissionContent(onRequest = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) })
+                uiState.currentQuestion != null -> InterviewContent(uiState = uiState, viewModel = viewModel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+
+@Composable
+private fun ErrorContent(error: String?) = Column(
+    Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+) { Text(error ?: stringResource(R.string.interview_error_generic), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error) }
+
+@Composable
+private fun PermissionContent(onRequest: () -> Unit) = Column(
+    Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)
+) {
+    Spacer(Modifier.weight(1f))
+    Icon(Icons.Default.Mic, stringResource(R.string.cd_microphone), Modifier.size(64.dp), MaterialTheme.colorScheme.primary)
+    Text(stringResource(R.string.voice_interview_permission_required), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+    Button(onClick = onRequest) { Text(stringResource(R.string.voice_interview_permission_button)) }
+    Spacer(Modifier.weight(1f))
+}
+
+@Composable
+private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: VoiceInterviewSessionViewModel) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        LinearProgressIndicator(
+            progress = { uiState.getProgressPercentage() / 100f },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        QuestionCard(questionText = uiState.currentQuestion!!.questionText)
+
+        RecordingControlsCard(
+            recordingState = uiState.recordingState,
+            audioDurationMs = uiState.audioDurationMs,
+            formattedDuration = uiState.getFormattedDuration(),
+            canStart = uiState.canStartRecording(),
+            canPlay = uiState.canPlayAudio(),
+            canReRecord = uiState.canReRecord(),
+            onStart = viewModel::startRecording,
+            onStop = viewModel::stopRecording,
+            onCancel = viewModel::cancelRecording
+        )
+
+        if (uiState.recordingState == RecordingState.RECORDING || uiState.recordingState == RecordingState.RECORDED) {
+            LiveTranscriptionCard(
+                state = uiState.transcriptionState,
+                liveTranscription = uiState.liveTranscription,
+                finalTranscription = uiState.finalTranscription,
+                transcriptionError = uiState.transcriptionError,
+                onEdit = viewModel::updateTranscription,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        SubmitButton(
+            isSubmitting = uiState.isSubmittingResponse,
+            canSubmit = uiState.canSubmitResponse(),
+            hasMoreQuestions = uiState.hasMoreQuestions(),
+            onSubmit = viewModel::submitResponse
+        )
+    }
+}
+
+@Composable
+private fun QuestionCard(questionText: String) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text = stringResource(R.string.voice_interview_question_label), style = MaterialTheme.typography.labelMedium)
+            Text(text = questionText, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+private fun RecordingControlsCard(
+    recordingState: RecordingState,
+    audioDurationMs: Long,
+    formattedDuration: String,
+    canStart: Boolean,
+    canPlay: Boolean,
+    canReRecord: Boolean,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (recordingState == RecordingState.RECORDING) {
+                MaterialTheme.colorScheme.errorContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = when (recordingState) {
+                    RecordingState.IDLE -> stringResource(R.string.voice_interview_record_hint)
+                    RecordingState.RECORDING -> stringResource(R.string.voice_interview_recording)
+                    RecordingState.RECORDED -> stringResource(R.string.voice_interview_recorded)
+                    RecordingState.PLAYING -> stringResource(R.string.voice_interview_playing)
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            if (audioDurationMs > 0) {
+                Text(
+                    text = stringResource(R.string.voice_interview_duration, formattedDuration),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+
+            RecordingButtons(
+                recordingState = recordingState,
+                canStart = canStart,
+                canPlay = canPlay,
+                canReRecord = canReRecord,
+                onStart = onStart,
+                onStop = onStop,
+                onCancel = onCancel
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecordingButtons(
+    recordingState: RecordingState,
+    canStart: Boolean,
+    canPlay: Boolean,
+    canReRecord: Boolean,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        when (recordingState) {
+            RecordingState.IDLE -> {
+                FilledTonalButton(onClick = onStart, enabled = canStart) {
+                    Icon(Icons.Default.Mic, stringResource(R.string.cd_microphone), Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.voice_interview_button_start_recording))
                 }
-                uiState.error != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = uiState.error ?: stringResource(R.string.interview_error_generic),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+            }
+            RecordingState.RECORDING -> {
+                FilledTonalButton(
+                    onClick = onStop,
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.Stop, stringResource(R.string.cd_stop), Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.voice_interview_button_stop_recording))
                 }
-                !uiState.hasRecordPermission -> {
-                    // Permission not granted
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = stringResource(R.string.cd_microphone),
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.voice_interview_permission_required),
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                        Button(onClick = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) }) {
-                            Text(stringResource(R.string.voice_interview_permission_button))
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+            }
+            RecordingState.RECORDED, RecordingState.PLAYING -> {
+                OutlinedButton(onClick = { /* TODO: Playback */ }, enabled = canPlay) {
+                    Icon(Icons.Default.PlayArrow, stringResource(R.string.cd_play), Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.voice_interview_button_play))
                 }
-                uiState.currentQuestion != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Progress indicator
-                        LinearProgressIndicator(
-                            progress = { uiState.getProgressPercentage() / 100f },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Question card
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Question",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                                Text(
-                                    text = uiState.currentQuestion!!.questionText,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        }
-
-                        // Recording controls
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (uiState.recordingState == RecordingState.RECORDING) {
-                                    MaterialTheme.colorScheme.errorContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                }
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                // Status text
-                                Text(
-                                    text = when (uiState.recordingState) {
-                                        RecordingState.IDLE -> stringResource(R.string.voice_interview_record_hint)
-                                        RecordingState.RECORDING -> stringResource(R.string.voice_interview_recording)
-                                        RecordingState.RECORDED -> stringResource(R.string.voice_interview_recorded)
-                                        RecordingState.PLAYING -> "Playing..."
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                // Duration display
-                                if (uiState.audioDurationMs > 0) {
-                                    Text(
-                                        text = stringResource(
-                                            R.string.voice_interview_duration,
-                                            uiState.getFormattedDuration()
-                                        ),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-
-                                // Recording button row
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    when (uiState.recordingState) {
-                                        RecordingState.IDLE -> {
-                                            // Start recording button
-                                            FilledTonalButton(
-                                                onClick = { viewModel.startRecording() },
-                                                enabled = uiState.canStartRecording()
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Mic,
-                                                    contentDescription = stringResource(R.string.cd_microphone),
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.voice_interview_button_start_recording))
-                                            }
-                                        }
-                                        RecordingState.RECORDING -> {
-                                            // Stop recording button
-                                            FilledTonalButton(
-                                                onClick = { viewModel.stopRecording() },
-                                                colors = ButtonDefaults.filledTonalButtonColors(
-                                                    containerColor = MaterialTheme.colorScheme.error
-                                                )
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Stop,
-                                                    contentDescription = stringResource(R.string.cd_stop),
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.voice_interview_button_stop_recording))
-                                            }
-                                        }
-                                        RecordingState.RECORDED, RecordingState.PLAYING -> {
-                                            // Play button (note: playback not implemented in MVP)
-                                            OutlinedButton(
-                                                onClick = { /* TODO: Phase 6 - implement playback */ },
-                                                enabled = uiState.canPlayAudio()
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.PlayArrow,
-                                                    contentDescription = stringResource(R.string.cd_play),
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(stringResource(R.string.voice_interview_button_play))
-                                            }
-
-                                            // Re-record button
-                                            OutlinedButton(
-                                                onClick = { viewModel.cancelRecording() },
-                                                enabled = uiState.canReRecord()
-                                            ) {
-                                                Text(stringResource(R.string.voice_interview_button_re_record))
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Live Transcription Card (Phase 2: shows real-time STT)
-                        if (uiState.recordingState == RecordingState.RECORDING ||
-                            uiState.recordingState == RecordingState.RECORDED) {
-                            LiveTranscriptionCard(
-                                state = uiState.transcriptionState,
-                                liveTranscription = uiState.liveTranscription,
-                                finalTranscription = uiState.finalTranscription,
-                                transcriptionError = uiState.transcriptionError,
-                                onEdit = { viewModel.updateTranscription(it) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        // Submit button
-                        Button(
-                            onClick = { viewModel.submitResponse() },
-                            enabled = uiState.canSubmitResponse(),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (uiState.isSubmittingResponse) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                Text(
-                                    if (uiState.hasMoreQuestions()) {
-                                        stringResource(R.string.interview_button_submit)
-                                    } else {
-                                        stringResource(R.string.interview_button_complete)
-                                    }
-                                )
-                            }
-                        }
-                    }
+                OutlinedButton(onClick = onCancel, enabled = canReRecord) {
+                    Text(stringResource(R.string.voice_interview_button_re_record))
                 }
             }
         }
     }
 }
 
-/**
- * Live Transcription Card (Phase 2)
- *
- * Displays real-time speech-to-text transcription with:
- * - Status indicator (listening, processing, completed, error)
- * - Live partial transcription while recording
- * - Editable final transcription
- * - Color-coded based on state
- */
 @Composable
-fun LiveTranscriptionCard(
-    state: TranscriptionState,
-    liveTranscription: String,
-    finalTranscription: String,
-    transcriptionError: String?,
-    onEdit: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = when (state) {
-                TranscriptionState.LISTENING -> MaterialTheme.colorScheme.primaryContainer
-                TranscriptionState.COMPLETED -> MaterialTheme.colorScheme.secondaryContainer
-                TranscriptionState.ERROR -> MaterialTheme.colorScheme.errorContainer
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Status indicator row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Icon with visual feedback
-                when (state) {
-                    TranscriptionState.LISTENING -> {
-                        // Pulsing mic icon for listening state
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    TranscriptionState.PROCESSING -> {
-                        // Spinner for processing
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    TranscriptionState.COMPLETED -> {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    TranscriptionState.ERROR -> {
-                        Icon(
-                            imageVector = Icons.Default.Error,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    else -> {
-                        Icon(
-                            imageVector = Icons.Default.MicNone,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Text(
-                    text = when (state) {
-                        TranscriptionState.LISTENING -> stringResource(R.string.listening)
-                        TranscriptionState.PROCESSING -> stringResource(R.string.processing_speech)
-                        TranscriptionState.COMPLETED -> stringResource(R.string.transcription_complete)
-                        TranscriptionState.ERROR -> stringResource(R.string.transcription_error)
-                        else -> stringResource(R.string.ready_to_record)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = when (state) {
-                        TranscriptionState.ERROR -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-            }
-
-            // Error message
-            if (transcriptionError != null) {
-                Text(
-                    text = transcriptionError,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            // Live/Final transcription text field
-            val displayText = when (state) {
-                TranscriptionState.LISTENING -> liveTranscription
-                else -> finalTranscription
-            }
-
-            if (displayText.isNotBlank() || state == TranscriptionState.COMPLETED || state == TranscriptionState.ERROR) {
-                OutlinedTextField(
-                    value = displayText,
-                    onValueChange = onEdit,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.your_response)) },
-                    minLines = 4,
-                    maxLines = 8,
-                    enabled = state == TranscriptionState.COMPLETED || state == TranscriptionState.ERROR,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-            }
-        }
-    }
+private fun SubmitButton(isSubmitting: Boolean, canSubmit: Boolean, hasMoreQuestions: Boolean, onSubmit: () -> Unit) = Button(onClick = onSubmit, enabled = canSubmit, modifier = Modifier.fillMaxWidth()) {
+    if (isSubmitting) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+    else Text(stringResource(if (hasMoreQuestions) R.string.interview_button_submit else R.string.interview_button_complete))
 }

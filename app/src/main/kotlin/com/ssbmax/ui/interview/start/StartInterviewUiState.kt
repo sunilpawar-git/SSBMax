@@ -11,6 +11,7 @@ import com.ssbmax.core.domain.model.interview.PrerequisiteCheckResult
 data class StartInterviewUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String? = null,
+    val isGeneratingQuestions: Boolean = false,
     val selectedMode: InterviewMode = InterviewMode.TEXT_BASED,
     val prerequisiteResult: PrerequisiteCheckResult? = null,
     val isEligible: Boolean = false,
@@ -18,17 +19,9 @@ data class StartInterviewUiState(
     val error: String? = null,
     val isSessionCreated: Boolean = false
 ) {
-    /**
-     * Check if we're ready to start the interview
-     */
-    fun canStartInterview(): Boolean {
-        return isEligible && !isLoading && error == null
-    }
+    /** Check if we're ready to start the interview */
+    fun canStartInterview(): Boolean = isEligible && !isLoading && !isGeneratingQuestions && error == null
 
-    /**
-     * Get user-friendly failure reasons
-     */
-    fun getFailureReasons(): List<String> {
-        return prerequisiteResult?.failureReasons ?: emptyList()
-    }
+    /** Get user-friendly failure reasons */
+    fun getFailureReasons(): List<String> = prerequisiteResult?.failureReasons ?: emptyList()
 }
