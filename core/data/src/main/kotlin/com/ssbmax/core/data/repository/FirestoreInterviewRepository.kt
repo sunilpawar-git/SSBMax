@@ -660,6 +660,36 @@ class FirestoreInterviewRepository @Inject constructor(
         }
     }
 
+    override suspend fun updateResponse(response: InterviewResponse): Result<InterviewResponse> {
+        return try {
+            // Get session to extract userId
+            val sessionResult = getSession(response.sessionId)
+            if (sessionResult.isFailure) {
+                return Result.failure(
+                    sessionResult.exceptionOrNull() ?: Exception("Failed to get session")
+                )
+            }
+            val session = sessionResult.getOrNull() ?: return Result.failure(
+                Exception("Session not found")
+            )
+
+            // Update response with OLQ scores
+            val responseMap = responseToMap(response).toMutableMap()
+            responseMap["userId"] = session.userId
+
+            firestore.collection(COLLECTION_RESPONSES)
+                .document(response.id)
+                .set(responseMap)
+                .await()
+
+            Log.d(TAG, "Updated response with OLQ scores: ${response.id}")
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update response: ${response.id}", e)
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getResponses(sessionId: String): Result<List<InterviewResponse>> {
         return try {
             // Get session to extract userId (required for Firestore security rule)

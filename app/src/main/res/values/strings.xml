@@ -1095,4 +1095,28 @@
     <string name="voice_interview_error_generate_results">Failed to generate results</string>
     <string name="voice_interview_error_generic">An error occurred</string>
 
+    <!-- Interview Result Notifications -->
+    <string name="notification_interview_results_title">Interview Results Ready!</string>
+    <string name="notification_interview_results_body">Your interview has been analyzed. Tap to view your OLQ assessment.</string>
+    <string name="notification_interview_failed_title">Interview Analysis Issue</string>
+    <string name="notification_interview_failed_body">We couldn\'t complete the analysis. Please try again later.</string>
+    <string name="interview_results_pending_title">Results Being Analyzed</string>
+    <string name="interview_results_pending_message">Your interview is complete! Results will be ready shortly. We\'ll notify you when they\'re available.</string>
+    <string name="interview_results_pending_short">Results pending…</string>
+    <string name="interview_results_analyzing">Your results are being analyzed…</string>
+    <string name="interview_analysis_failed">Analysis failed. Please try again.</string>
+
+    <!-- Common Buttons -->
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_retry">Retry</string>
+
+    <!-- Interview History -->
+    <string name="interview_history_title">Past Interviews</string>
+    <string name="interview_new_interview_title">Start New Interview</string>
+    <string name="interview_loading_history">Loading history…</string>
+    <string name="interview_no_past_results">No past interviews yet. Complete your first interview to see results here.</string>
+    <string name="interview_more_results">+ %d more results</string>
+    <string name="interview_result_summary">Score: %.1f • %d min</string>
+
 </resources>

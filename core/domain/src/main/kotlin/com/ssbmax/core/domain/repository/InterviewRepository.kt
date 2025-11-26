@@ -158,6 +158,14 @@ interface InterviewRepository {
      */
     suspend fun getResponse(responseId: String): Result<InterviewResponse>
 
+    /**
+     * Update response with OLQ scores (used by background analysis worker)
+     *
+     * @param response Updated response with OLQ scores
+     * @return Updated response
+     */
+    suspend fun updateResponse(response: InterviewResponse): Result<InterviewResponse>
+
     // Result management
 
     /**

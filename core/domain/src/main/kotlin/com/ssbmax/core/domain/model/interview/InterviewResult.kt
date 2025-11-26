@@ -5,6 +5,13 @@ import java.time.Instant
 /**
  * Final interview assessment result
  *
+ * SSB Rating Scale (1-10, LOWER is BETTER):
+ * - 1-4: Outstanding (very rare, exceptional candidates)
+ * - 5: Recommended (best typical score for selection)
+ * - 6: Good (above average, borderline recommended)
+ * - 7: Average (meets basic expectations)
+ * - 8-10: Not Recommended (needs significant improvement)
+ *
  * @param id Unique result identifier
  * @param sessionId Parent interview session ID
  * @param userId User who completed the interview
@@ -16,10 +23,10 @@ import java.time.Instant
  * @param overallOLQScores Aggregated OLQ scores across all responses
  * @param categoryScores Average scores by OLQ category
  * @param overallConfidence Average AI confidence across all assessments
- * @param strengths Top 3 OLQs demonstrated
- * @param weaknesses Bottom 3 OLQs needing improvement
+ * @param strengths Top 3 OLQs demonstrated (lowest scores = strongest)
+ * @param weaknesses Bottom 3 OLQs needing improvement (highest scores = weakest)
  * @param feedback Personalized feedback and recommendations
- * @param overallRating Final rating (1-5 scale)
+ * @param overallRating Final rating (SSB 1-10 scale, lower is better)
  */
 data class InterviewResult(
     val id: String,
@@ -47,7 +54,7 @@ data class InterviewResult(
         require(totalResponses > 0) { "Must have at least one response" }
         require(totalResponses <= totalQuestions) { "Responses cannot exceed questions" }
         require(overallConfidence in 0..100) { "Overall confidence must be between 0 and 100" }
-        require(overallRating in 1..5) { "Overall rating must be between 1 and 5" }
+        require(overallRating in 1..10) { "Overall rating must be between 1 and 10 (SSB scale)" }
         require(strengths.size <= 3) { "Maximum 3 strengths allowed" }
         require(weaknesses.size <= 3) { "Maximum 3 weaknesses allowed" }
         require(feedback.isNotBlank()) { "Feedback cannot be blank" }
@@ -74,22 +81,15 @@ data class InterviewResult(
     fun getDurationMinutes(): Int = (durationSec / 60).toInt()
 
     /**
-     * Check if result is passing (average score >= 3)
+     * Check if result is passing (SSB scale: score <= 6 is recommended)
      */
-    fun isPassing(): Boolean = getAverageOLQScore() >= 3.0f
+    fun isPassing(): Boolean = overallRating <= 6
 
     /**
-     * Get performance level based on overall rating
+     * Get performance level based on overall rating (SSB 1-10 scale, lower is better)
      */
     fun getPerformanceLevel(): PerformanceLevel {
-        return when (overallRating) {
-            1 -> PerformanceLevel.POOR
-            2 -> PerformanceLevel.BELOW_AVERAGE
-            3 -> PerformanceLevel.AVERAGE
-            4 -> PerformanceLevel.GOOD
-            5 -> PerformanceLevel.EXCELLENT
-            else -> PerformanceLevel.AVERAGE
-        }
+        return PerformanceLevel.fromRating(overallRating)
     }
 
     /**
@@ -108,23 +108,33 @@ data class InterviewResult(
 }
 
 /**
- * Performance level classification
+ * Performance level classification (SSB 1-10 scale, LOWER is BETTER)
+ *
+ * SSB Grading:
+ * - 1-4: Outstanding (exceptional, very rare)
+ * - 5: Excellent (recommended for selection)
+ * - 6: Good (above average, borderline recommended)
+ * - 7: Average (meets basic expectations)
+ * - 8-10: Below Average to Poor (not recommended)
  */
 enum class PerformanceLevel(val displayName: String, val description: String) {
-    POOR("Poor", "Needs significant improvement across multiple areas"),
-    BELOW_AVERAGE("Below Average", "Some qualities need development"),
+    EXCELLENT("Excellent", "Outstanding performance - recommended for selection"),
+    GOOD("Good", "Strong officer-like qualities demonstrated"),
     AVERAGE("Average", "Meets basic officer-like quality expectations"),
-    GOOD("Good", "Demonstrates strong officer-like qualities"),
-    EXCELLENT("Excellent", "Outstanding performance across all qualities");
+    BELOW_AVERAGE("Below Average", "Some qualities need development"),
+    POOR("Poor", "Needs significant improvement across multiple areas");
 
     companion object {
+        /**
+         * Convert SSB rating (1-10, lower is better) to performance level
+         */
         fun fromRating(rating: Int): PerformanceLevel {
             return when (rating) {
-                1 -> POOR
-                2 -> BELOW_AVERAGE
-                3 -> AVERAGE
-                4 -> GOOD
-                5 -> EXCELLENT
+                in 1..5 -> EXCELLENT  // 1-5: Recommended
+                6 -> GOOD             // 6: Good, borderline
+                7 -> AVERAGE          // 7: Average
+                8 -> BELOW_AVERAGE    // 8: Below average
+                in 9..10 -> POOR      // 9-10: Not recommended
                 else -> AVERAGE
             }
         }
@@ -144,7 +154,7 @@ data class InterviewResultSummary(
     val completionRate: Float
 ) {
     init {
-        require(overallRating in 1..5) { "Overall rating must be between 1 and 5" }
+        require(overallRating in 1..10) { "Overall rating must be between 1 and 10 (SSB scale)" }
         require(averageScore >= 0) { "Average score cannot be negative" }
         require(durationMinutes > 0) { "Duration must be positive" }
         require(completionRate in 0f..100f) { "Completion rate must be between 0 and 100" }

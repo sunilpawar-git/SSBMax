@@ -193,7 +193,7 @@ class VoiceInterviewSessionViewModel @Inject constructor(
 
     private fun buildResponse(state: VoiceInterviewSessionUiState, question: InterviewQuestion, analysis: ResponseAnalysis?): InterviewResponse {
         val olqScores = analysis?.olqScores?.mapValues { (_, s) ->
-            OLQScore(score = s.score.toInt().coerceIn(1, 5), confidence = analysis.overallConfidence, reasoning = s.reasoning)
+            OLQScore(score = s.score.toInt().coerceIn(1, 10), confidence = analysis.overallConfidence, reasoning = s.reasoning)
         } ?: emptyMap()
 
         return InterviewResponse(

@@ -52,7 +52,42 @@ fun InterviewResultScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = uiState.loadingMessage ?: stringResource(R.string.interview_results_analyzing),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                uiState.isAnalysisPending -> {
+                    // Show pending state (for future history view)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.interview_results_pending_message),
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        OutlinedButton(onClick = onNavigateBack) {
+                            Text(stringResource(R.string.button_ok))
+                        }
+                    }
                 }
                 uiState.error != null -> {
                     Column(
@@ -69,7 +104,7 @@ fun InterviewResultScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { viewModel.refresh() }) {
-                            Text(stringResource(R.string.action_retry))
+                            Text(stringResource(R.string.button_retry))
                         }
                     }
                 }

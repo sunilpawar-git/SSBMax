@@ -1,5 +1,6 @@
 package com.ssbmax.ui.interview.start
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,15 +10,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,13 +47,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.interview.InterviewMode
+import com.ssbmax.core.domain.model.interview.InterviewResult
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-/** Start Interview Screen - Mode selection, prerequisites check, and session creation */
+/** Start Interview Screen - Mode selection, prerequisites check, session creation, and history */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSession: (String) -> Unit,
+    onNavigateToResult: (String) -> Unit,
     viewModel: StartInterviewViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,12 +90,13 @@ fun StartInterviewScreen(
                 uiState.isGeneratingQuestions -> GeneratingQuestionsContent(uiState.loadingMessage)
                 uiState.isLoading -> LoadingContent(uiState.loadingMessage)
                 uiState.error != null -> ErrorContent(uiState.error, onRetry = viewModel::checkEligibility)
-                else -> MainContent(
+                else -> MainContentWithHistory(
                     uiState = uiState,
                     consentGiven = consentGiven,
                     onConsentChange = { consentGiven = it },
                     onModeSelect = viewModel::selectMode,
-                    onStartInterview = { viewModel.createSession(consentGiven) }
+                    onStartInterview = { viewModel.createSession(consentGiven) },
+                    onResultClick = onNavigateToResult
                 )
             }
         }
@@ -147,62 +160,211 @@ private fun ErrorContent(error: String?, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun MainContent(
+private fun MainContentWithHistory(
     uiState: StartInterviewUiState,
     consentGiven: Boolean,
     onConsentChange: (Boolean) -> Unit,
     onModeSelect: (InterviewMode) -> Unit,
-    onStartInterview: () -> Unit
+    onStartInterview: () -> Unit,
+    onResultClick: (String) -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Past Interview Results Section
+        if (uiState.hasPastInterviews() || uiState.isLoadingHistory) {
+            item {
+                InterviewHistorySection(
+                    results = uiState.pastResults,
+                    isLoading = uiState.isLoadingHistory,
+                    onResultClick = onResultClick
+                )
+            }
+
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+
+        // New Interview Section Header
+        item {
+            Text(
+                text = stringResource(R.string.interview_new_interview_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
         // Mode selection
-        Text(text = stringResource(R.string.interview_select_mode), style = MaterialTheme.typography.titleMedium)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = uiState.selectedMode == InterviewMode.TEXT_BASED,
-                onClick = { onModeSelect(InterviewMode.TEXT_BASED) },
-                label = { Text(stringResource(R.string.interview_mode_text)) },
-                modifier = Modifier.weight(1f)
-            )
-            FilterChip(
-                selected = uiState.selectedMode == InterviewMode.VOICE_BASED,
-                onClick = { /* Disabled until voice UI implemented */ },
-                label = { Text(stringResource(R.string.interview_mode_voice)) },
-                enabled = false,
-                modifier = Modifier.weight(1f)
-            )
+        item {
+            Text(text = stringResource(R.string.interview_select_mode), style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = uiState.selectedMode == InterviewMode.TEXT_BASED,
+                    onClick = { onModeSelect(InterviewMode.TEXT_BASED) },
+                    label = { Text(stringResource(R.string.interview_mode_text)) },
+                    modifier = Modifier.weight(1f)
+                )
+                FilterChip(
+                    selected = uiState.selectedMode == InterviewMode.VOICE_BASED,
+                    onClick = { /* Disabled until voice UI implemented */ },
+                    label = { Text(stringResource(R.string.interview_mode_voice)) },
+                    enabled = false,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
 
         // Prerequisites status
         if (uiState.prerequisiteResult != null) {
-            PrerequisitesCard(isEligible = uiState.isEligible, failureReasons = uiState.getFailureReasons())
+            item {
+                PrerequisitesCard(isEligible = uiState.isEligible, failureReasons = uiState.getFailureReasons())
+            }
         }
 
         // Consent checkbox
         if (uiState.isEligible) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = consentGiven, onCheckedChange = onConsentChange)
-                Spacer(Modifier.width(8.dp))
-                Text(text = stringResource(R.string.interview_consent_message), style = MaterialTheme.typography.bodyMedium)
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = consentGiven, onCheckedChange = onConsentChange)
+                    Spacer(Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.interview_consent_message), style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
-
-        Spacer(Modifier.weight(1f))
 
         // Start button
         if (uiState.isEligible) {
-            Button(
-                onClick = onStartInterview,
-                enabled = consentGiven && !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.interview_button_start))
+            item {
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = onStartInterview,
+                    enabled = consentGiven && !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.interview_button_start))
+                }
             }
         }
     }
+}
+
+@Composable
+private fun InterviewHistorySection(
+    results: List<InterviewResult>,
+    isLoading: Boolean,
+    onResultClick: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.interview_history_title),
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        if (isLoading) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(text = stringResource(R.string.interview_loading_history))
+            }
+        } else if (results.isEmpty()) {
+            Text(
+                text = stringResource(R.string.interview_no_past_results),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            results.take(5).forEach { result ->
+                InterviewResultCard(result = result, onClick = { onResultClick(result.id) })
+            }
+
+            if (results.size > 5) {
+                Text(
+                    text = stringResource(R.string.interview_more_results, results.size - 5),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InterviewResultCard(
+    result: InterviewResult,
+    onClick: () -> Unit
+) {
+    val dateFormatter = remember {
+        DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+            .withZone(ZoneId.systemDefault())
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = dateFormatter.format(result.completedAt),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.interview_result_summary,
+                            result.getAverageOLQScore(),
+                            result.getDurationMinutes()
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Score badge
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${result.overallRating}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = getScoreColor(result.overallRating)
+                )
+                Text(
+                    text = "/10",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun getScoreColor(score: Int) = when {
+    score <= 5 -> MaterialTheme.colorScheme.primary      // Good (SSB: lower is better)
+    score <= 7 -> MaterialTheme.colorScheme.tertiary     // Average
+    else -> MaterialTheme.colorScheme.error               // Poor
 }
 
 @Composable

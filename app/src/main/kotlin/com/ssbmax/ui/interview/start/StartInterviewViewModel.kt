@@ -1,6 +1,7 @@
 package com.ssbmax.ui.interview.start
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.BuildConfig
@@ -17,6 +18,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +29,7 @@ import javax.inject.Inject
  *
  * Optimizes interview start by checking for pre-generated questions (instant start)
  * and showing progress during on-demand generation (30-60s).
+ * Also loads past interview results for history display.
  */
 @HiltViewModel
 class StartInterviewViewModel @Inject constructor(
@@ -37,11 +40,51 @@ class StartInterviewViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "StartInterviewVM"
+    }
+
     private val _uiState = MutableStateFlow(StartInterviewUiState())
     val uiState: StateFlow<StartInterviewUiState> = _uiState.asStateFlow()
 
     init {
         trackMemoryLeaks("StartInterviewViewModel")
+        loadInterviewHistory()
+    }
+
+    /**
+     * Load past interview results for history display
+     */
+    private fun loadInterviewHistory() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingHistory = true) }
+
+            try {
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: return@launch
+
+                Log.d(TAG, "Loading interview history for user: $userId")
+
+                // Collect past results from the Flow
+                interviewRepository.getUserResults(userId)
+                    .catch { e ->
+                        ErrorLogger.log(e, "Failed to load interview history")
+                        _uiState.update { it.copy(isLoadingHistory = false) }
+                    }
+                    .collect { results ->
+                        Log.d(TAG, "Loaded ${results.size} past interview results")
+                        _uiState.update {
+                            it.copy(
+                                pastResults = results.sortedByDescending { r -> r.completedAt },
+                                isLoadingHistory = false
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Exception loading interview history")
+                _uiState.update { it.copy(isLoadingHistory = false) }
+            }
+        }
     }
 
     fun selectMode(mode: InterviewMode) {

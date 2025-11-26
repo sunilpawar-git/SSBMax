@@ -4,14 +4,22 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewResponse
+import com.ssbmax.core.domain.model.interview.InterviewStatus
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.InterviewAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +48,7 @@ import javax.inject.Inject
 class InterviewSessionViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
     private val aiService: AIService,
+    private val workManager: WorkManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -274,69 +283,39 @@ class InterviewSessionViewModel @Inject constructor(
     }
 
     /**
-     * Complete interview with batch AI analysis
+     * Complete interview with BACKGROUND AI analysis
      *
-     * OPTIMIZATION: Analyzes ALL responses in one batch instead of per-question.
-     * This moves the AI wait time to the end where users expect a delay
-     * (like real SSB results), instead of interrupting the interview flow.
+     * FLOW:
+     * 1. Save responses immediately WITHOUT OLQ scores (instant)
+     * 2. Update session status to PENDING_ANALYSIS
+     * 3. Enqueue InterviewAnalysisWorker for background processing
+     * 4. Navigate user to home immediately with "results pending" message
+     * 5. Background: AI analyzes all responses, generates result, sends notification
+     *
+     * This provides real-time UX - user doesn't wait for AI analysis.
+     * Results appear later via notification (like real SSB).
      */
     private suspend fun completeInterview() {
         val state = _uiState.value
         val session = state.session ?: return
         val pendingResponses = state.pendingResponses
 
-        Log.d(TAG, "🏁 Completing interview with ${pendingResponses.size} responses for batch analysis")
+        Log.d(TAG, "🏁 Completing interview with ${pendingResponses.size} responses (background analysis mode)")
 
         _uiState.update {
             it.copy(
                 isSubmittingResponse = true,
-                isAnalyzingResponses = true,
-                analysisProgress = "Analyzing your responses...",
-                loadingMessage = "Analyzing ${pendingResponses.size} responses..."
+                loadingMessage = "Submitting your answers..."
             )
         }
 
         try {
-            // STEP 1: Batch analyze all responses with AI
-            Log.d(TAG, "🤖 Starting batch AI analysis...")
-            val startTime = System.currentTimeMillis()
-
-            val analyzedResponses = mutableListOf<InterviewResponse>()
-
+            // STEP 1: Save all responses to Firestore WITHOUT OLQ scores (INSTANT)
+            // OLQ scores will be added by background worker
+            Log.d(TAG, "💾 Saving ${pendingResponses.size} responses to Firestore (no AI analysis)...")
+            
             for ((index, pending) in pendingResponses.withIndex()) {
-                // Update progress
-                _uiState.update {
-                    it.copy(analysisProgress = "Analyzing response ${index + 1}/${pendingResponses.size}...")
-                }
-
-                // Get question for analysis
-                val questionResult = interviewRepository.getQuestion(pending.questionId)
-                val question = questionResult.getOrNull()
-
-                // Analyze with AI (or use mock if question not found)
-                val olqScores = if (question != null) {
-                    val analysisResult = aiService.analyzeResponse(
-                        question = question,
-                        response = pending.responseText,
-                        responseMode = state.mode.name
-                    )
-                    if (analysisResult.isSuccess) {
-                        analysisResult.getOrNull()?.olqScores?.mapValues { (_, scoreWithReasoning) ->
-                            OLQScore(
-                                score = scoreWithReasoning.score.toInt().coerceIn(1, 10),
-                                confidence = analysisResult.getOrNull()?.overallConfidence ?: 75,
-                                reasoning = scoreWithReasoning.reasoning
-                            )
-                        } ?: generateMockOLQScores(question)
-                    } else {
-                        Log.w(TAG, "⚠️ AI analysis failed for Q${index + 1}, using mock scores")
-                        generateMockOLQScores(question)
-                    }
-                } else {
-                    emptyMap()
-                }
-
-                // Create response object
+                // Create response object WITHOUT OLQ scores - worker will add them
                 val response = InterviewResponse(
                     id = UUID.randomUUID().toString(),
                     sessionId = sessionId,
@@ -346,87 +325,81 @@ class InterviewSessionViewModel @Inject constructor(
                     respondedAt = Instant.ofEpochMilli(pending.respondedAt),
                     thinkingTimeSec = pending.thinkingTimeSec,
                     audioUrl = null,
-                    olqScores = olqScores,
-                    confidenceScore = 75
+                    olqScores = emptyMap(),  // Empty - worker will fill this
+                    confidenceScore = 0       // Worker will update
                 )
 
-                analyzedResponses.add(response)
-            }
-
-            val analysisTime = System.currentTimeMillis() - startTime
-            Log.d(TAG, "✅ Batch analysis complete in ${analysisTime}ms (${pendingResponses.size} responses)")
-
-            // STEP 2: Save all responses to Firestore
-            _uiState.update { it.copy(analysisProgress = "Saving responses...") }
-
-            for (response in analyzedResponses) {
                 val submitResult = interviewRepository.submitResponse(response)
                 if (submitResult.isFailure) {
-                    Log.e(TAG, "Failed to save response ${response.id}")
+                    Log.w(TAG, "Failed to save response ${index + 1}: ${submitResult.exceptionOrNull()?.message}")
                 }
             }
 
-            Log.d(TAG, "💾 Saved ${analyzedResponses.size} responses to Firestore")
+            Log.d(TAG, "✅ Saved ${pendingResponses.size} responses to Firestore")
 
-            // STEP 3: Generate final results
-            _uiState.update { it.copy(analysisProgress = "Generating your results...") }
-
-            val resultResult = interviewRepository.completeInterview(sessionId)
-            if (resultResult.isFailure) {
-                ErrorLogger.log(
-                    throwable = resultResult.exceptionOrNull() ?: Exception("Unknown error"),
-                    description = "Failed to complete interview"
-                )
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        isAnalyzingResponses = false,
-                        analysisProgress = null,
-                        loadingMessage = null,
-                        error = "Failed to complete interview"
-                    )
-                }
-                return
+            // STEP 2: Update session status to PENDING_ANALYSIS
+            Log.d(TAG, "📊 Updating session status to PENDING_ANALYSIS...")
+            val updatedSession = session.copy(
+                status = InterviewStatus.PENDING_ANALYSIS,
+                currentQuestionIndex = session.questionIds.size - 1  // Mark all questions answered
+            )
+            val sessionUpdateResult = interviewRepository.updateSession(updatedSession)
+            if (sessionUpdateResult.isFailure) {
+                Log.w(TAG, "Failed to update session status: ${sessionUpdateResult.exceptionOrNull()?.message}")
             }
 
-            val result = resultResult.getOrNull()
-            if (result == null) {
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        isAnalyzingResponses = false,
-                        analysisProgress = null,
-                        loadingMessage = null,
-                        error = "Failed to generate results"
-                    )
-                }
-                return
-            }
+            // STEP 3: Enqueue background analysis worker
+            Log.d(TAG, "🔄 Enqueuing InterviewAnalysisWorker for background processing...")
+            enqueueAnalysisWorker(sessionId)
 
-            Log.d(TAG, "🎉 Interview complete! Result ID: ${result.id}")
+            Log.d(TAG, "🎉 Responses saved! Navigating to home. Results will be available shortly via notification.")
 
+            // STEP 4: Navigate user away immediately
             _uiState.update {
                 it.copy(
                     isSubmittingResponse = false,
-                    isAnalyzingResponses = false,
-                    analysisProgress = null,
                     loadingMessage = null,
                     isCompleted = true,
-                    resultId = result.id
+                    isResultPending = true,  // Signal UI to show pending message
+                    resultId = null          // No result yet - will come via notification
                 )
             }
+
         } catch (e: Exception) {
             ErrorLogger.log(e, "Exception completing interview")
             _uiState.update {
                 it.copy(
                     isSubmittingResponse = false,
-                    isAnalyzingResponses = false,
-                    analysisProgress = null,
                     loadingMessage = null,
                     error = "An error occurred"
                 )
             }
         }
+    }
+
+    /**
+     * Enqueue the InterviewAnalysisWorker for background AI processing
+     */
+    private fun enqueueAnalysisWorker(sessionId: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)  // Need network for Gemini API
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<InterviewAnalysisWorker>()
+            .setInputData(
+                workDataOf(InterviewAnalysisWorker.KEY_SESSION_ID to sessionId)
+            )
+            .setConstraints(constraints)
+            .build()
+
+        // Use unique work to prevent duplicate workers for same session
+        workManager.enqueueUniqueWork(
+            "interview_analysis_$sessionId",
+            ExistingWorkPolicy.KEEP,  // Don't restart if already running
+            workRequest
+        )
+
+        Log.d(TAG, "📥 InterviewAnalysisWorker enqueued for session: $sessionId")
     }
 
     /**

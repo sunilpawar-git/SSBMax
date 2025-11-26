@@ -356,6 +356,9 @@ fun NavGraphBuilder.sharedNavGraph(
                 navController.navigate(
                     SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
                 )
+            },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
             }
         )
     }
@@ -373,6 +376,9 @@ fun NavGraphBuilder.sharedNavGraph(
                 // For now, route based on mode stored in session
                 // TODO: Fetch session mode to determine routing
                 navController.navigate(SSBMaxDestinations.TextInterviewSession.createRoute(sessionId))
+            },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
             }
         )
     }
@@ -388,6 +394,12 @@ fun NavGraphBuilder.sharedNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
+                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                }
+            },
+            onNavigateToHome = {
+                // Navigate to home, clearing interview backstack
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
                 }
             }

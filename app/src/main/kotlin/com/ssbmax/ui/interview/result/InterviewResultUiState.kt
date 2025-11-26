@@ -11,12 +11,18 @@ import com.ssbmax.core.domain.model.interview.PerformanceLevel
  * UI state for Interview Result screen
  *
  * Displays OLQ scores, strengths/weaknesses, and feedback
+ *
+ * Note: With background analysis, the resultId is only available after
+ * the InterviewAnalysisWorker completes. The notification provides the
+ * resultId to navigate directly to results.
  */
 data class InterviewResultUiState(
     val isLoading: Boolean = true,
     val loadingMessage: String? = null,
     val result: InterviewResult? = null,
-    val error: String? = null
+    val error: String? = null,
+    // True when analysis is still in progress (for future history view)
+    val isAnalysisPending: Boolean = false
 ) {
     /**
      * Get interview mode

@@ -20,10 +20,10 @@ data class PendingResponse(
  *
  * Manages question display, response input, and session progress
  *
- * OPTIMIZATION: Uses batch AI analysis at the end instead of per-question analysis.
- * Responses are stored in [pendingResponses] during the interview and analyzed
- * together when the user completes all questions. This reduces per-question
- * submission time from 6-8 seconds to nearly instant.
+ * OPTIMIZATION: Uses BACKGROUND AI analysis via WorkManager.
+ * Responses are saved to Firestore immediately (without OLQ scores),
+ * and AI analysis happens in the background. User is navigated away
+ * instantly and notified when results are ready.
  */
 data class InterviewSessionUiState(
     val isLoading: Boolean = true,
@@ -38,7 +38,9 @@ data class InterviewSessionUiState(
     val error: String? = null,
     val isCompleted: Boolean = false,
     val resultId: String? = null,
-    // Batch analysis: store responses locally during interview
+    // Background analysis: navigate away while AI processes
+    val isResultPending: Boolean = false, // True when analysis is happening in background
+    // Local response storage during interview
     val pendingResponses: List<PendingResponse> = emptyList(),
     val isAnalyzingResponses: Boolean = false,
     val analysisProgress: String? = null

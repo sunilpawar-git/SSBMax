@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,9 +20,10 @@ import com.ssbmax.R
  * Manages the interview flow:
  * - Displays questions one by one
  * - Captures text responses
- * - Submits to AI for analysis
- * - Progresses through all questions
- * - Completes interview and navigates to results
+ * - Submits responses instantly (stored locally)
+ * - On last question: saves to Firestore, triggers background AI analysis
+ * - Shows "results pending" dialog and navigates to home
+ * - User gets notification when results are ready
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,15 +31,50 @@ fun InterviewSessionScreen(
     sessionId: String,
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit,
+    onNavigateToHome: () -> Unit,
     viewModel: InterviewSessionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showPendingDialog by remember { mutableStateOf(false) }
 
-    // Navigate to result when completed
-    LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.resultId != null) {
-            onNavigateToResult(uiState.resultId!!)
+    // Handle completion
+    LaunchedEffect(uiState.isCompleted, uiState.isResultPending) {
+        when {
+            // Background analysis mode - show dialog, then navigate to home
+            uiState.isCompleted && uiState.isResultPending -> {
+                showPendingDialog = true
+            }
+            // Instant result mode (legacy) - navigate directly to result
+            uiState.isCompleted && uiState.resultId != null -> {
+                onNavigateToResult(uiState.resultId!!)
+            }
         }
+    }
+
+    // Results Pending Dialog
+    if (showPendingDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Can't dismiss - must acknowledge */ },
+            title = {
+                Text(stringResource(R.string.interview_results_pending_title))
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.interview_results_pending_message),
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPendingDialog = false
+                        onNavigateToHome()
+                    }
+                ) {
+                    Text(stringResource(R.string.button_ok))
+                }
+            }
+        )
     }
 
     Scaffold(

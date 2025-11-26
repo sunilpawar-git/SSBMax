@@ -37,10 +37,16 @@ data class InterviewSession(
         require(currentQuestionIndex >= 0) { "Current question index cannot be negative" }
         require(estimatedDuration > 0) { "Estimated duration must be positive" }
 
+        // Completed sessions must have a completion timestamp
         if (status == InterviewStatus.COMPLETED) {
             require(completedAt != null) { "Completed session must have completion timestamp" }
         }
     }
+
+    /**
+     * Check if analysis is pending
+     */
+    fun isPendingAnalysis(): Boolean = status == InterviewStatus.PENDING_ANALYSIS
 
     /**
      * Calculate session duration in seconds
@@ -79,19 +85,41 @@ enum class InterviewStatus {
     IN_PROGRESS,
 
     /**
-     * Interview completed successfully
+     * Responses saved, awaiting background AI analysis
+     */
+    PENDING_ANALYSIS,
+
+    /**
+     * Interview completed successfully with results ready
      */
     COMPLETED,
 
     /**
      * Interview was abandoned before completion
      */
-    ABANDONED;
+    ABANDONED,
+
+    /**
+     * AI analysis failed - can be retried
+     */
+    FAILED;
 
     val displayName: String
         get() = when (this) {
             IN_PROGRESS -> "In Progress"
+            PENDING_ANALYSIS -> "Analyzing..."
             COMPLETED -> "Completed"
             ABANDONED -> "Abandoned"
+            FAILED -> "Failed"
         }
+
+    /**
+     * Check if results are ready to view
+     */
+    fun isResultsReady(): Boolean = this == COMPLETED
+
+    /**
+     * Check if analysis is still pending
+     */
+    fun isPending(): Boolean = this == PENDING_ANALYSIS
 }
