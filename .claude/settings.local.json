@@ -26,7 +26,12 @@
       "Bash(./scripts/validate-security.sh:*)",
       "Bash(test.env)",
       "Bash(test_security.txt)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(adb install:*)",
+      "WebFetch(domain:docs.cloud.google.com)",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb -s 4A231VDAQ0001D logcat:*)"
     ],
     "deny": [],
     "ask": []

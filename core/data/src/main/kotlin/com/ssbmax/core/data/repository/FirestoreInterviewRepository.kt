@@ -278,45 +278,50 @@ class FirestoreInterviewRepository @Inject constructor(
                 val piqResult = submissionRepository.getSubmission(piqSnapshotId)
 
                 if (piqResult.isSuccess) {
-                    val piqSubmission = piqResult.getOrNull()
+                    val piqSubmissionMap = piqResult.getOrNull()
 
-                    if (piqSubmission != null) {
-                        // Convert PIQ to JSON for AI
-                        val piqJson = convertPIQToJson(piqSubmission)
+                    if (piqSubmissionMap != null) {
+                        // Convert PIQ Map to JSON for AI (safer than deserialization)
+                        val piqJson = convertPIQMapToJson(piqSubmissionMap)
 
-                        // Generate AI questions
-                        val aiQuestionsResult = aiService.generatePIQBasedQuestions(
-                            piqData = piqJson,
-                            targetOLQs = null, // Generate balanced set
-                            count = count,
-                            difficulty = 3
-                        )
+                        if (piqJson != "{}") {
+                            // Generate AI questions
+                            val aiQuestionsResult = aiService.generatePIQBasedQuestions(
+                                piqData = piqJson,
+                                targetOLQs = null, // Generate balanced set
+                                count = count,
+                                difficulty = 3
+                            )
 
-                        if (aiQuestionsResult.isSuccess) {
-                            val aiQuestions = aiQuestionsResult.getOrNull() ?: emptyList()
+                            if (aiQuestionsResult.isSuccess) {
+                                val aiQuestions = aiQuestionsResult.getOrNull() ?: emptyList()
 
-                            if (aiQuestions.isNotEmpty()) {
-                                Log.i(TAG, "✅ AI generated ${aiQuestions.size} personalized questions!")
+                                if (aiQuestions.isNotEmpty()) {
+                                    Log.i(TAG, "✅ AI generated ${aiQuestions.size} personalized questions!")
 
-                                // Cache the AI-generated questions for future use
-                                questionCacheRepository.cachePIQQuestions(
-                                    piqSnapshotId = piqSnapshotId,
-                                    questions = aiQuestions,
-                                    expirationDays = 30
-                                )
+                                    // Cache the AI-generated questions for future use
+                                    questionCacheRepository.cachePIQQuestions(
+                                        piqSnapshotId = piqSnapshotId,
+                                        questions = aiQuestions,
+                                        expirationDays = 30
+                                    )
 
-                                allQuestions = aiQuestions
+                                    allQuestions = aiQuestions
+                                } else {
+                                    Log.e(TAG, "AI question generation returned empty list for PIQ: $piqSnapshotId",
+                                        Exception("AI returned empty questions list"))
+                                }
                             } else {
-                                Log.e(TAG, "AI question generation returned empty list for PIQ: $piqSnapshotId",
-                                    Exception("AI returned empty questions list"))
+                                Log.e(TAG, "AI question generation failed for PIQ: $piqSnapshotId",
+                                    aiQuestionsResult.exceptionOrNull() ?: Exception("Unknown AI error"))
                             }
                         } else {
-                            Log.e(TAG, "AI question generation failed for PIQ: $piqSnapshotId",
-                                aiQuestionsResult.exceptionOrNull() ?: Exception("Unknown AI error"))
+                            Log.e(TAG, "PIQ Map conversion to JSON failed for ID: $piqSnapshotId",
+                                Exception("Could not convert PIQ Map to JSON"))
                         }
                     } else {
-                        Log.e(TAG, "PIQ submission is null despite successful fetch for ID: $piqSnapshotId",
-                            Exception("PIQ submission is null"))
+                        Log.e(TAG, "PIQ submission map is null for ID: $piqSnapshotId",
+                            Exception("PIQ submission map is null"))
                     }
                 } else {
                     Log.e(TAG, 
@@ -398,6 +403,49 @@ class FirestoreInterviewRepository @Inject constructor(
                 "Error converting PIQ to JSON for AI processing"
             )
             "{}" // Return empty JSON on error
+        }
+    }
+
+    /**
+     * Convert PIQ Map directly to JSON for AI (avoids complex deserialization)
+     * Safely extracts fields with null checks and type casting
+     */
+    private fun convertPIQMapToJson(piqMap: Map<String, Any>): String {
+        return try {
+            // Safely extract string fields
+            fun getString(key: String): String = (piqMap[key] as? String) ?: ""
+
+            // Safely extract list of maps
+            @Suppress("UNCHECKED_CAST")
+            fun getListOfMaps(key: String): List<Map<String, Any>> =
+                (piqMap[key] as? List<*>)?.filterIsInstance<Map<String, Any>>() ?: emptyList()
+
+            // Safely extract nested map
+            @Suppress("UNCHECKED_CAST")
+            fun getMap(key: String): Map<String, Any> = (piqMap[key] as? Map<String, Any>) ?: emptyMap()
+
+            // Build simplified PIQ JSON for AI (only essential fields to reduce token usage)
+            val simplifiedPIQ = mapOf(
+                "name" to getString("fullName"),
+                "age" to getString("age"),
+                "education" to getString("educationGraduation").ifBlank {
+                    getMap("educationGraduation").let { "${it["level"]} - ${it["institution"]}" }
+                },
+                "occupation" to getString("presentOccupation"),
+                "hobbies" to getString("hobbies"),
+                "sports" to getListOfMaps("sportsParticipation").joinToString(", ") {
+                    (it["sport"] as? String) ?: ""
+                }.ifBlank { getString("sports") },
+                "whyDefense" to getString("whyDefenseForces"),
+                "serviceChoice" to getString("choiceOfService"),
+                "strengths" to getString("strengths"),
+                "weaknesses" to getString("weaknesses")
+            )
+
+            gson.toJson(simplifiedPIQ)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error converting PIQ Map to JSON", e)
+            "{}"
         }
     }
 

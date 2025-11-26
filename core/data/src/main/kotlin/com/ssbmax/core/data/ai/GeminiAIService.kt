@@ -40,20 +40,29 @@ class GeminiAIService @Inject constructor(
     private val apiKey: String
 ) : AIService {
 
+    init {
+        Log.d(TAG, "🏗️ GeminiAIService constructed with API key: ${apiKey.take(10)}...${apiKey.takeLast(4)}")
+    }
+
     companion object {
         private const val TAG = "GeminiAIService"
+        // Using gemini-2.5-flash: Latest production flash model
+        // Note: gemini-1.5-flash is RETIRED since late 2024
         private const val MODEL_NAME = "gemini-2.5-flash"
         private const val TEMPERATURE = 0.7f
-        private const val MAX_TOKENS = 2048
+        // Balanced: Enough for 10 questions but still fast
+        private const val MAX_TOKENS = 4096
 
         // Timeout values (milliseconds) per guidelines
-        private const val QUESTION_GENERATION_TIMEOUT = 10_000L
-        private const val RESPONSE_ANALYSIS_TIMEOUT = 5_000L
-        private const val FEEDBACK_GENERATION_TIMEOUT = 15_000L
-        private const val HEALTH_CHECK_TIMEOUT = 3_000L
+        // Increased for high-latency networks (76-96ms observed)
+        private const val QUESTION_GENERATION_TIMEOUT = 30_000L  // 30 seconds
+        private const val RESPONSE_ANALYSIS_TIMEOUT = 20_000L     // 20 seconds
+        private const val FEEDBACK_GENERATION_TIMEOUT = 30_000L   // 30 seconds
+        private const val HEALTH_CHECK_TIMEOUT = 10_000L          // 10 seconds
     }
 
     private val model: GenerativeModel by lazy {
+        Log.d(TAG, "🤖 Initializing GenerativeModel (model: $MODEL_NAME, temp: $TEMPERATURE, maxTokens: $MAX_TOKENS)")
         GenerativeModel(
             modelName = MODEL_NAME,
             apiKey = apiKey,
@@ -61,7 +70,9 @@ class GeminiAIService @Inject constructor(
                 temperature = TEMPERATURE
                 maxOutputTokens = MAX_TOKENS
             }
-        )
+        ).also {
+            Log.d(TAG, "✅ GenerativeModel initialized successfully")
+        }
     }
 
     override suspend fun generatePIQBasedQuestions(
@@ -112,15 +123,27 @@ class GeminiAIService @Inject constructor(
         response: String,
         responseMode: String
     ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
+        Log.d(TAG, "🚀 analyzeResponse() called - Question: ${question.id}, Response length: ${response.length}, Mode: $responseMode")
         try {
+            Log.d(TAG, "⏱️ Starting withTimeout block (${RESPONSE_ANALYSIS_TIMEOUT}ms timeout)")
             withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                Log.d(TAG, "📝 Building analysis prompt...")
                 val prompt = buildResponseAnalysisPrompt(question, response, responseMode)
-                val aiResponse = model.generateContent(prompt)
 
-                parseAnalysisResponse(aiResponse)
+                Log.d(TAG, "📤 Sending request to Gemini API (model: $MODEL_NAME)...")
+                val startTime = System.currentTimeMillis()
+                val aiResponse = model.generateContent(prompt)
+                val duration = System.currentTimeMillis() - startTime
+
+                Log.d(TAG, "✅ Received response from Gemini in ${duration}ms")
+                Log.d(TAG, "🔍 Parsing analysis response...")
+
+                val result = parseAnalysisResponse(aiResponse)
+                Log.d(TAG, "✨ Analysis complete: ${if (result.isSuccess) "SUCCESS" else "FAILED"}")
+                result
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to analyze response", e)
+            Log.e(TAG, "❌ Failed to analyze response: ${e.javaClass.simpleName}: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -169,40 +192,14 @@ class GeminiAIService @Inject constructor(
         count: Int,
         difficulty: Int
     ): String {
-        val olqList = targetOLQs?.joinToString(", ") { it.displayName }
-            ?: "all 15 Officer-Like Qualities"
-
         return """
-You are an SSB (Services Selection Board) interviewing officer expert in assessing candidates for Indian Armed Forces.
+Generate $count SSB questions from PIQ. Return JSON only.
 
-**TASK**: Generate $count personalized interview questions based on the candidate's PIQ (Personal Information Questionnaire) data.
+PIQ: $piqData
 
-**PIQ DATA**:
-$piqData
+Format: [{"id":"q1","questionText":"...?","targetOLQs":["INITIATIVE","COURAGE"],"reasoning":"..."}]
 
-**TARGET OLQs**: $olqList
-
-**DIFFICULTY LEVEL**: $difficulty/5 (1=basic, 5=complex situational)
-
-**REQUIREMENTS**:
-1. Questions must be personalized using PIQ data (family, education, hobbies, achievements)
-2. Each question should assess 2-3 OLQs simultaneously
-3. Use "Why", "How would you", "Tell me about a time" formats
-4. Questions should be open-ended, not yes/no
-5. Difficulty should match the level specified
-6. Questions should feel natural and conversational
-
-**OUTPUT FORMAT** (JSON array):
-[
-  {
-    "id": "unique-id",
-    "questionText": "The interview question",
-    "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
-    "reasoning": "Why this question is relevant to candidate"
-  }
-]
-
-Generate exactly $count questions as a valid JSON array.
+OLQs: EFFECTIVE_INTELLIGENCE,REASONING_ABILITY,ORGANIZING_ABILITY,POWER_OF_EXPRESSION,SOCIAL_ADJUSTMENT,COOPERATION,SENSE_OF_RESPONSIBILITY,INITIATIVE,SELF_CONFIDENCE,SPEED_OF_DECISION,INFLUENCE_GROUP,LIVELINESS,DETERMINATION,COURAGE,STAMINA
         """.trimIndent()
     }
 
@@ -258,55 +255,20 @@ Generate exactly $count questions as a valid JSON array.
         response: String,
         responseMode: String
     ): String {
-        val expectedOLQs = question.expectedOLQs.joinToString(", ") { it.displayName }
+        val expectedOLQs = question.expectedOLQs.joinToString(", ") { it.name }
 
         return """
-You are an SSB psychologist analyzing a candidate's interview response.
+Analyze SSB response. Return JSON only.
 
-**QUESTION**: ${question.questionText}
-**TARGET OLQs**: $expectedOLQs
-**RESPONSE MODE**: $responseMode
+Q: ${question.questionText}
+OLQs: $expectedOLQs
+A: $response
 
-**CANDIDATE'S RESPONSE**:
-$response
+Format: {"olqScores":[{"olq":"INITIATIVE","score":5.5,"reasoning":"...","evidence":["..."]}],"overallConfidence":85,"keyInsights":["..."],"suggestedFollowUp":"..."}
 
-**TASK**: Analyze the response and assess demonstrated OLQs.
+Score 1-10 (SSB): 1-3=Exceptional, 4=Excellent, 5=Very Good, 6=Good, 7=Average, 8=Below Avg, 9-10=Poor. LOWER is BETTER. Use decimals (e.g. 5.5, 6.5).
 
-**EVALUATION CRITERIA**:
-- Clarity and coherence of thought
-- Depth of self-awareness
-- Leadership potential indicators
-- Problem-solving approach
-- Emotional intelligence
-- Confidence and communication style
-
-**OUTPUT FORMAT** (JSON):
-{
-  "olqScores": [
-    {
-      "olq": "EFFECTIVE_INTELLIGENCE",
-      "score": 5.5,
-      "reasoning": "Why this score (lower is better in SSB scale)",
-      "evidence": ["Specific phrases from response"]
-    }
-  ],
-  "overallConfidence": 85,
-  "keyInsights": ["Notable observations"],
-  "suggestedFollowUp": "Optional follow-up question"
-}
-
-**SCORING SCALE (SSB Convention - LOWER is BETTER)**:
-1-3 = Exceptional (rare, outstanding performance)
-4 = Excellent (top tier)
-5 = Very Good (best common score - aim for this)
-6 = Good (above average)
-7 = Average (typical performance)
-8 = Below Average (lowest acceptable)
-9-10 = Poor (usually rejected)
-
-Note: Use decimal scores (e.g., 5.5) for precision. Bell curve distribution: most scores 5-7.
-
-Provide analysis as a valid JSON object.
+OLQs: EFFECTIVE_INTELLIGENCE,REASONING_ABILITY,ORGANIZING_ABILITY,POWER_OF_EXPRESSION,SOCIAL_ADJUSTMENT,COOPERATION,SENSE_OF_RESPONSIBILITY,INITIATIVE,SELF_CONFIDENCE,SPEED_OF_DECISION,INFLUENCE_GROUP,LIVELINESS,DETERMINATION,COURAGE,STAMINA
         """.trimIndent()
     }
 
@@ -365,11 +327,26 @@ Write the feedback directly (not as JSON).
             )
 
             // Extract JSON from markdown code blocks if present
-            val cleanJson = jsonText
-                .substringAfter("```json", jsonText)
-                .substringAfter("```", jsonText)
-                .substringBefore("```", jsonText)
-                .trim()
+            val cleanJson = when {
+                "```json" in jsonText -> {
+                    // Extract content between ```json and closing ```
+                    jsonText
+                        .substringAfter("```json")
+                        .substringBefore("```")
+                        .trim()
+                }
+                "```" in jsonText -> {
+                    // Extract content between ``` and closing ```
+                    jsonText
+                        .substringAfter("```")
+                        .substringBefore("```")
+                        .trim()
+                }
+                else -> {
+                    // No markdown, use as-is but trim whitespace
+                    jsonText.trim()
+                }
+            }
 
             val jsonArray = JSONArray(cleanJson)
             val questions = mutableListOf<InterviewQuestion>()
@@ -418,11 +395,26 @@ Write the feedback directly (not as JSON).
             )
 
             // Extract JSON from markdown code blocks if present
-            val cleanJson = jsonText
-                .substringAfter("```json", jsonText)
-                .substringAfter("```", jsonText)
-                .substringBefore("```", jsonText)
-                .trim()
+            val cleanJson = when {
+                "```json" in jsonText -> {
+                    // Extract content between ```json and closing ```
+                    jsonText
+                        .substringAfter("```json")
+                        .substringBefore("```")
+                        .trim()
+                }
+                "```" in jsonText -> {
+                    // Extract content between ``` and closing ```
+                    jsonText
+                        .substringAfter("```")
+                        .substringBefore("```")
+                        .trim()
+                }
+                else -> {
+                    // No markdown, use as-is but trim whitespace
+                    jsonText.trim()
+                }
+            }
 
             val json = JSONObject(cleanJson)
 
@@ -432,7 +424,11 @@ Write the feedback directly (not as JSON).
             for (i in 0 until olqScoresArray.length()) {
                 val scoreJson = olqScoresArray.getJSONObject(i)
                 val olqName = scoreJson.getString("olq")
-                val olq = OLQ.entries.find { it.name == olqName } ?: continue
+                // Match by displayName (e.g., "Self Confidence") or enum name (e.g., "SELF_CONFIDENCE")
+                val olq = OLQ.entries.find {
+                    it.displayName.equals(olqName, ignoreCase = true) ||
+                    it.name.equals(olqName, ignoreCase = true)
+                } ?: continue
 
                 val evidenceArray = scoreJson.optJSONArray("evidence")
                 val evidence = mutableListOf<String>()

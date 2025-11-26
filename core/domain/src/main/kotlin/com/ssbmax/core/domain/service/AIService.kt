@@ -94,7 +94,7 @@ interface AIService {
 /**
  * Response analysis result from AI
  *
- * @param olqScores Map of OLQ to score (1-5) and reasoning
+ * @param olqScores Map of OLQ to score (1-10, SSB scale) and reasoning
  * @param overallConfidence AI confidence in the assessment (0-100)
  * @param keyInsights Notable observations about the response
  * @param suggestedFollowUp Recommended follow-up question (optional)
@@ -114,8 +114,17 @@ data class ResponseAnalysis(
 /**
  * OLQ score with AI reasoning
  *
+ * SSB Convention: 1-10 scale where LOWER is BETTER
+ * - 1-3: Exceptional (rare, outstanding performance)
+ * - 4: Excellent (top tier)
+ * - 5: Very Good (best common score)
+ * - 6: Good (above average)
+ * - 7: Average (typical performance)
+ * - 8: Below Average (lowest acceptable)
+ * - 9-10: Poor (usually rejected)
+ *
  * @param olq The Officer-Like Quality being assessed
- * @param score Score from 1 (poor) to 5 (excellent)
+ * @param score Score from 1-10 (SSB scale, lower is better)
  * @param reasoning AI's explanation for the score
  * @param evidence Specific phrases/behaviors from response supporting the score
  */
@@ -126,7 +135,7 @@ data class OLQScoreWithReasoning(
     val evidence: List<String> = emptyList()
 ) {
     init {
-        require(score in 1f..5f) { "Score must be between 1 and 5" }
+        require(score in 1f..10f) { "Score must be between 1 and 10 (SSB scale)" }
         require(reasoning.isNotBlank()) { "Reasoning cannot be blank" }
     }
 }

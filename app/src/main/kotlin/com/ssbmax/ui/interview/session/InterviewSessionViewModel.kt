@@ -1,5 +1,6 @@
 package com.ssbmax.ui.interview.session
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,6 +40,10 @@ class InterviewSessionViewModel @Inject constructor(
     private val aiService: AIService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "InterviewSessionVM"
+    }
 
     private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId")) {
         "sessionId is required"
@@ -181,15 +186,21 @@ class InterviewSessionViewModel @Inject constructor(
                 val session = state.session ?: return@launch
 
                 // Analyze response with AI
+                Log.d(TAG, "🤖 Calling aiService.analyzeResponse() - Question: ${currentQuestion.id}, Response: '${state.responseText.take(50)}...', Mode: ${state.mode.name}")
+                val startTime = System.currentTimeMillis()
                 val analysisResult = aiService.analyzeResponse(
                     question = currentQuestion,
                     response = state.responseText,
                     responseMode = state.mode.name
                 )
+                val duration = System.currentTimeMillis() - startTime
+                Log.d(TAG, "⏱️ aiService.analyzeResponse() completed in ${duration}ms - Success: ${analysisResult.isSuccess}")
 
                 val analysis = if (analysisResult.isSuccess) {
+                    Log.d(TAG, "✅ AI analysis succeeded, parsing OLQ scores...")
                     analysisResult.getOrNull()
                 } else {
+                    Log.e(TAG, "❌ AI analysis failed: ${analysisResult.exceptionOrNull()?.message}")
                     ErrorLogger.log(
                         throwable = analysisResult.exceptionOrNull() ?: Exception("Unknown error"),
                         description = "AI analysis failed for interview response"
@@ -199,6 +210,7 @@ class InterviewSessionViewModel @Inject constructor(
 
                 // Convert OLQScoreWithReasoning to OLQScore, or use mock scores as fallback
                 val olqScores = if (analysis != null) {
+                    Log.d(TAG, "📊 Converting AI OLQ scores - Found ${analysis.olqScores.size} scores")
                     analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
                             score = scoreWithReasoning.score.toInt().coerceIn(1, 5),
@@ -208,6 +220,7 @@ class InterviewSessionViewModel @Inject constructor(
                     }
                 } else {
                     // AI failed - use mock OLQ scores for development
+                    Log.w(TAG, "⚠️ AI analysis null - falling back to MOCK OLQ scores")
                     generateMockOLQScores(currentQuestion)
                 }
 
