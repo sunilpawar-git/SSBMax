@@ -1033,6 +1033,12 @@
     <string name="interview_loading_session">Loading interview session…</string>
     <string name="interview_loading_question">Loading question…</string>
     <string name="interview_submitting_response">Submitting response…</string>
+    <string name="interview_submitting_answers">Submitting your answers…</string>
+    <string name="interview_error_load_session">Failed to load session</string>
+    <string name="interview_error_session_not_found">Session not found</string>
+    <string name="interview_error_no_questions">No questions available</string>
+    <string name="interview_error_load_question">Failed to load question</string>
+    <string name="interview_error_load_next_question">Failed to load next question</string>
     <string name="interview_generating_results">Generating results…</string>
 
     <!-- Interview Result Screen -->

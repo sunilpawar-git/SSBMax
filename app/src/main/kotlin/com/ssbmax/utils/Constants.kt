@@ -1,7 +1,12 @@
 package com.ssbmax.utils
 
+import com.ssbmax.core.domain.constants.InterviewConstants
+
 /**
  * Application-wide constants
+ *
+ * Note: Interview-specific constants are defined in [InterviewConstants]
+ * in the domain layer for cross-module access.
  */
 object AppConstants {
 
@@ -20,26 +25,15 @@ object AppConstants {
     }
 
     /**
-     * Interview & Question Cache constants
+     * Interview constants - delegates to domain layer for cross-module access
+     *
+     * @see InterviewConstants for all interview-related constants
      */
     object Interview {
-        /** Target total questions per interview session (20-25 recommended) */
-        const val TARGET_TOTAL_QUESTIONS = 25
-
-        /** Target number of PIQ-based questions to generate (70% of total) */
-        const val TARGET_PIQ_QUESTION_COUNT = 18
-
-        /** Target number of generic questions (25% of total) */
-        const val TARGET_GENERIC_QUESTION_COUNT = 6
-
-        /** Default question cache expiration in days */
-        const val DEFAULT_CACHE_EXPIRATION_DAYS = 30
-
-        /** Maximum retry attempts for background workers */
-        const val MAX_WORKER_RETRY_ATTEMPTS = 3
-
-        /** Medium difficulty level for questions */
-        const val MEDIUM_DIFFICULTY = 3
+        // Re-export commonly used constants for convenience in app module
+        val TARGET_TOTAL_QUESTIONS = InterviewConstants.TARGET_TOTAL_QUESTIONS
+        val TARGET_PIQ_QUESTION_COUNT = InterviewConstants.TARGET_PIQ_QUESTION_COUNT
+        val TARGET_GENERIC_QUESTION_COUNT = InterviewConstants.TARGET_GENERIC_QUESTION_COUNT
     }
 
     /**

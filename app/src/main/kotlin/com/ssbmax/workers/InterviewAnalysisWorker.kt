@@ -11,6 +11,7 @@ import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.core.domain.constants.InterviewConstants
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
@@ -42,8 +43,6 @@ class InterviewAnalysisWorker @AssistedInject constructor(
     companion object {
         private const val TAG = "InterviewAnalysisWorker"
         const val KEY_SESSION_ID = "session_id"
-        private const val MAX_RETRY_ATTEMPTS = 3
-        private const val RETRY_DELAY_MS = 2000L
     }
 
     override suspend fun doWork(): Result {
@@ -114,14 +113,14 @@ class InterviewAnalysisWorker @AssistedInject constructor(
                     // Save with default scores so interview can still complete
                     val fallbackResponse = response.copy(
                         olqScores = generateFallbackOLQScores(),
-                        confidenceScore = 30
+                        confidenceScore = InterviewConstants.FALLBACK_CONFIDENCE
                     )
                     interviewRepository.updateResponse(fallbackResponse)
                 }
 
                 // Small delay between API calls to avoid rate limiting
                 if (index < responses.size - 1) {
-                    delay(500)
+                    delay(InterviewConstants.API_CALL_DELAY_MS)
                 }
             }
 
@@ -168,8 +167,8 @@ class InterviewAnalysisWorker @AssistedInject constructor(
         } catch (e: Exception) {
             ErrorLogger.log(e, "Background interview analysis failed for session: $sessionId")
 
-            if (runAttemptCount < MAX_RETRY_ATTEMPTS) {
-                Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/$MAX_RETRY_ATTEMPTS")
+            if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
+                Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS}")
                 Result.retry()
             } else {
                 Log.e(TAG, "❌ Max retries reached, marking session as failed")
@@ -184,7 +183,7 @@ class InterviewAnalysisWorker @AssistedInject constructor(
      * Analyze a single response with retry logic
      */
     private suspend fun analyzeResponseWithRetry(response: InterviewResponse): AnalysisResult? {
-        repeat(MAX_RETRY_ATTEMPTS) { attempt ->
+        repeat(InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) { attempt ->
             try {
                 // Get the question for context
                 val questionResult = interviewRepository.getQuestion(response.questionId)
@@ -217,8 +216,8 @@ class InterviewAnalysisWorker @AssistedInject constructor(
 
             } catch (e: Exception) {
                 Log.w(TAG, "Analysis attempt ${attempt + 1} failed: ${e.message}")
-                if (attempt < MAX_RETRY_ATTEMPTS - 1) {
-                    delay(RETRY_DELAY_MS * (attempt + 1))
+                if (attempt < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS - 1) {
+                    delay(InterviewConstants.RETRY_DELAY_MS * (attempt + 1))
                 }
             }
         }
@@ -233,8 +232,8 @@ class InterviewAnalysisWorker @AssistedInject constructor(
     private fun generateFallbackOLQScores(): Map<OLQ, OLQScore> {
         return OLQ.entries.take(5).associate { olq ->
             olq to OLQScore(
-                score = 6, // Good - neutral fallback
-                confidence = 30,
+                score = InterviewConstants.FALLBACK_OLQ_SCORE,
+                confidence = InterviewConstants.FALLBACK_CONFIDENCE,
                 reasoning = "AI analysis unavailable - neutral score assigned"
             )
         }

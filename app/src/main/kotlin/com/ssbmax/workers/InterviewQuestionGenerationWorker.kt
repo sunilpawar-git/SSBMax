@@ -5,10 +5,10 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.ssbmax.core.domain.constants.InterviewConstants
 import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.service.AIService
-import com.ssbmax.utils.AppConstants
 import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -63,18 +63,18 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
             Log.d(TAG, "   ✅ PIQ data fetched successfully")
 
             // 2. Generate 18 PIQ-based questions with Gemini
-            Log.d(TAG, "   Step 2: Generating ${AppConstants.Interview.TARGET_PIQ_QUESTION_COUNT} PIQ-based questions with Gemini AI...")
+            Log.d(TAG, "   Step 2: Generating ${InterviewConstants.TARGET_PIQ_QUESTION_COUNT} PIQ-based questions with Gemini AI...")
             val questionsResult = aiService.generatePIQBasedQuestions(
                 piqData = buildPIQContext(piq),
                 targetOLQs = null, // Let AI determine best OLQs based on PIQ data
-                count = AppConstants.Interview.TARGET_PIQ_QUESTION_COUNT,
-                difficulty = AppConstants.Interview.MEDIUM_DIFFICULTY
+                count = InterviewConstants.TARGET_PIQ_QUESTION_COUNT,
+                difficulty = InterviewConstants.MEDIUM_DIFFICULTY
             )
 
             val questions = questionsResult.getOrElse { error ->
                 ErrorLogger.log(error, "Failed to generate PIQ questions in background")
-                return if (runAttemptCount < AppConstants.Interview.MAX_WORKER_RETRY_ATTEMPTS) {
-                    Log.w(TAG, "   ⚠️ Retry attempt ${runAttemptCount + 1}/${AppConstants.Interview.MAX_WORKER_RETRY_ATTEMPTS}")
+                return if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
+                    Log.w(TAG, "   ⚠️ Retry attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS}")
                     Result.retry()
                 } else {
                     Log.e(TAG, "   ❌ Max retries reached, failing")
@@ -85,14 +85,14 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
             Log.d(TAG, "   ✅ Generated ${questions.size} questions")
 
             // 3. Cache questions for 30 days
-            Log.d(TAG, "   Step 3: Caching questions to Firestore (${AppConstants.Interview.DEFAULT_CACHE_EXPIRATION_DAYS}-day expiration)...")
+            Log.d(TAG, "   Step 3: Caching questions to Firestore (${InterviewConstants.DEFAULT_CACHE_EXPIRATION_DAYS}-day expiration)...")
             questionCacheRepository.cachePIQQuestions(
                 piqSnapshotId = piqSubmissionId,
                 questions = questions,
-                expirationDays = AppConstants.Interview.DEFAULT_CACHE_EXPIRATION_DAYS
+                expirationDays = InterviewConstants.DEFAULT_CACHE_EXPIRATION_DAYS
             ).getOrElse { error ->
                 ErrorLogger.log(error, "Failed to cache PIQ questions")
-                return if (runAttemptCount < AppConstants.Interview.MAX_WORKER_RETRY_ATTEMPTS) {
+                return if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
                     Result.retry()
                 } else {
                     Result.failure()
@@ -111,8 +111,8 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
             Result.success()
         } catch (e: Exception) {
             ErrorLogger.log(e, "Background question generation failed unexpectedly")
-            if (runAttemptCount < AppConstants.Interview.MAX_WORKER_RETRY_ATTEMPTS) {
-                Log.w(TAG, "⚠️ Unexpected error, retrying... (attempt ${runAttemptCount + 1}/${AppConstants.Interview.MAX_WORKER_RETRY_ATTEMPTS})")
+            if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
+                Log.w(TAG, "⚠️ Unexpected error, retrying... (attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS})")
                 Result.retry()
             } else {
                 Log.e(TAG, "❌ Max retries reached after unexpected error")

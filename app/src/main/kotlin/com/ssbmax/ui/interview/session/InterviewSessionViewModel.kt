@@ -1,5 +1,6 @@
 package com.ssbmax.ui.interview.session
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,17 +11,15 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.R
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewResponse
 import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.InterviewAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,8 +46,8 @@ import javax.inject.Inject
 @HiltViewModel
 class InterviewSessionViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
-    private val aiService: AIService,
     private val workManager: WorkManager,
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -79,7 +78,7 @@ class InterviewSessionViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    loadingMessage = "Loading interview session..."
+                    loadingMessage = context.getString(R.string.interview_loading_session)
                 )
             }
 
@@ -95,7 +94,7 @@ class InterviewSessionViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             loadingMessage = null,
-                            error = "Failed to load session"
+                            error = context.getString(R.string.interview_error_load_session)
                         )
                     }
                     return@launch
@@ -107,7 +106,7 @@ class InterviewSessionViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             loadingMessage = null,
-                            error = "Session not found"
+                            error = context.getString(R.string.interview_error_session_not_found)
                         )
                     }
                     return@launch
@@ -120,7 +119,7 @@ class InterviewSessionViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             loadingMessage = null,
-                            error = "No questions available"
+                            error = context.getString(R.string.interview_error_no_questions)
                         )
                     }
                     return@launch
@@ -136,7 +135,7 @@ class InterviewSessionViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             loadingMessage = null,
-                            error = "Failed to load question"
+                            error = context.getString(R.string.interview_error_load_question)
                         )
                     }
                     return@launch
@@ -161,7 +160,7 @@ class InterviewSessionViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         loadingMessage = null,
-                        error = "An error occurred"
+                        error = context.getString(R.string.interview_error_generic)
                     )
                 }
             }
@@ -222,17 +221,17 @@ class InterviewSessionViewModel @Inject constructor(
                     _uiState.update { it.copy(pendingResponses = updatedPending) }
                     completeInterview()
                 }
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Exception submitting interview response")
-                _uiState.update {
-                    it.copy(
-                        isSubmittingResponse = false,
-                        error = "An error occurred"
-                    )
-                }
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Exception submitting interview response")
+            _uiState.update {
+                it.copy(
+                    isSubmittingResponse = false,
+                    error = context.getString(R.string.interview_error_generic)
+                )
             }
         }
     }
+}
 
     /**
      * Load next question (instant - no AI analysis)
@@ -262,7 +261,7 @@ class InterviewSessionViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isSubmittingResponse = false,
-                    error = "Failed to load next question"
+                    error = context.getString(R.string.interview_error_load_next_question)
                 )
             }
             return
@@ -305,7 +304,7 @@ class InterviewSessionViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 isSubmittingResponse = true,
-                loadingMessage = "Submitting your answers..."
+                loadingMessage = context.getString(R.string.interview_submitting_answers)
             )
         }
 
@@ -371,7 +370,7 @@ class InterviewSessionViewModel @Inject constructor(
                 it.copy(
                     isSubmittingResponse = false,
                     loadingMessage = null,
-                    error = "An error occurred"
+                    error = context.getString(R.string.interview_error_generic)
                 )
             }
         }
@@ -400,47 +399,6 @@ class InterviewSessionViewModel @Inject constructor(
         )
 
         Log.d(TAG, "📥 InterviewAnalysisWorker enqueued for session: $sessionId")
-    }
-
-    /**
-     * Generate mock OLQ scores for development (when AI fails)
-     *
-     * Uses SSB 1-10 scale (LOWER is BETTER):
-     * - Expected OLQs: 5-6 (Good to Very Good)
-     * - Other OLQs: 6-7 (Good to Average)
-     * Bell curve distribution based on SSB standards
-     */
-    private fun generateMockOLQScores(question: InterviewQuestion): Map<OLQ, OLQScore> {
-        val scores = mutableMapOf<OLQ, OLQScore>()
-
-        // Score the question's expected OLQs better (5-6 range, weighted toward 5)
-        question.expectedOLQs.forEach { olq ->
-            // Weighted random: 70% chance of 5, 30% chance of 6
-            val score = if (Math.random() < 0.7) 5 else 6  // Very Good to Good
-            scores[olq] = OLQScore(
-                score = score,
-                confidence = 75,
-                reasoning = "Mock score for development (AI not available)"
-            )
-        }
-
-        // Score a few random other OLQs slightly lower (6-7 range)
-        val otherOLQs = OLQ.entries
-            .filter { it !in question.expectedOLQs }
-            .shuffled()
-            .take(2) // Score 2 additional random OLQs
-
-        otherOLQs.forEach { olq ->
-            // Weighted random: 60% chance of 6, 40% chance of 7
-            val score = if (Math.random() < 0.6) 6 else 7  // Good to Average
-            scores[olq] = OLQScore(
-                score = score,
-                confidence = 65,
-                reasoning = "Mock score for development (AI not available)"
-            )
-        }
-
-        return scores
     }
 
     /**
