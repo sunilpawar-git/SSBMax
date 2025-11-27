@@ -96,6 +96,9 @@ class InterviewQuestionGenerator @Inject constructor(
 
     /**
      * Generate questions using AI from PIQ data
+     *
+     * Uses the comprehensive PIQ context builder to provide Gemini AI
+     * with all available candidate information for personalized questions.
      */
     private suspend fun generateAIQuestions(
         piqSnapshotId: String,
@@ -111,18 +114,20 @@ class InterviewQuestionGenerator @Inject constructor(
 
         val piqSubmissionMap = piqResult.getOrNull() ?: return emptyList()
 
-        // Convert PIQ Map to JSON for AI
-        val piqJson = piqDataMapper.convertPIQMapToJson(piqSubmissionMap)
+        // Build comprehensive PIQ context for AI (extracts all 60+ fields)
+        val piqContext = piqDataMapper.buildComprehensivePIQContext(piqSubmissionMap)
 
-        if (piqJson == "{}") {
-            Log.e(TAG, "PIQ Map conversion to JSON failed for ID: $piqSnapshotId")
+        if (piqContext.isBlank() || piqContext.contains("Error processing PIQ")) {
+            Log.e(TAG, "PIQ context building failed for ID: $piqSnapshotId")
             return emptyList()
         }
 
-        // Generate AI questions
+        Log.d(TAG, "📋 Built comprehensive PIQ context (${piqContext.length} chars) for question generation")
+
+        // Generate AI questions with full PIQ context
         val aiQuestionsResult = aiService.generatePIQBasedQuestions(
-            piqData = piqJson,
-            targetOLQs = null, // Generate balanced set
+            piqData = piqContext,
+            targetOLQs = null, // Generate balanced set across all OLQ clusters
             count = count,
             difficulty = InterviewConstants.MEDIUM_DIFFICULTY
         )
@@ -228,4 +233,5 @@ class InterviewQuestionGenerator @Inject constructor(
         val context: String
     )
 }
+
 

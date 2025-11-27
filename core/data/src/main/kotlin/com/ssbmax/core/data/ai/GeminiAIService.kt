@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.generationConfig
+import com.ssbmax.core.data.ai.prompts.SSBInterviewPrompts
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.service.AIService
@@ -22,7 +23,7 @@ import javax.inject.Singleton
  * Gemini AI service implementation
  *
  * Uses Google's Gemini 2.5 Flash model for interview question generation
- * and response analysis
+ * and response analysis with comprehensive SSB-focused prompts.
  *
  * Model: gemini-2.5-flash
  * - Best price-performance for large-scale processing
@@ -30,8 +31,11 @@ import javax.inject.Singleton
  * - Thinking capability for complex reasoning
  * - 1M token context window
  *
- * Note: Using Google AI Client SDK (generativeai:0.9.0).
- * For structured outputs with JSON Schema, consider migrating to Firebase AI Logic SDK.
+ * Enhanced Features:
+ * - Uses SSBInterviewPrompts for comprehensive OLQ-focused prompts
+ * - Full PIQ context extraction for personalized questions
+ * - Difficulty-based question strategies
+ * - Detailed response analysis with evidence
  *
  * @param apiKey Gemini API key (injected from BuildConfig)
  */
@@ -50,15 +54,15 @@ class GeminiAIService @Inject constructor(
         // Note: gemini-1.5-flash is RETIRED since late 2024
         private const val MODEL_NAME = "gemini-2.5-flash"
         private const val TEMPERATURE = 0.7f
-        // Balanced: Enough for 10 questions but still fast
-        private const val MAX_TOKENS = 4096
+        // Increased for comprehensive prompts with OLQ definitions
+        private const val MAX_TOKENS = 8192
 
         // Timeout values (milliseconds) per guidelines
-        // Increased for high-latency networks (76-96ms observed)
-        private const val QUESTION_GENERATION_TIMEOUT = 30_000L  // 30 seconds
-        private const val RESPONSE_ANALYSIS_TIMEOUT = 20_000L     // 20 seconds
-        private const val FEEDBACK_GENERATION_TIMEOUT = 30_000L   // 30 seconds
-        private const val HEALTH_CHECK_TIMEOUT = 10_000L          // 10 seconds
+        // Increased for high-latency networks and comprehensive prompts
+        private const val QUESTION_GENERATION_TIMEOUT = 45_000L  // 45 seconds (increased for larger prompts)
+        private const val RESPONSE_ANALYSIS_TIMEOUT = 25_000L    // 25 seconds
+        private const val FEEDBACK_GENERATION_TIMEOUT = 40_000L  // 40 seconds
+        private const val HEALTH_CHECK_TIMEOUT = 10_000L         // 10 seconds
     }
 
     private val model: GenerativeModel by lazy {
@@ -82,9 +86,21 @@ class GeminiAIService @Inject constructor(
         difficulty: Int
     ): Result<List<InterviewQuestion>> = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "📝 Generating $count PIQ-based questions (difficulty: $difficulty)")
             withTimeout(QUESTION_GENERATION_TIMEOUT) {
-                val prompt = buildPIQQuestionPrompt(piqData, targetOLQs, count, difficulty)
+                // Use enhanced SSB prompts for comprehensive question generation
+                val prompt = SSBInterviewPrompts.buildQuestionGenerationPrompt(
+                    piqContext = piqData,
+                    count = count,
+                    difficulty = difficulty,
+                    targetOLQs = targetOLQs
+                )
+
+                Log.d(TAG, "📤 Sending comprehensive question generation request to Gemini...")
+                val startTime = System.currentTimeMillis()
                 val response = model.generateContent(prompt)
+                val duration = System.currentTimeMillis() - startTime
+                Log.d(TAG, "✅ Received question generation response in ${duration}ms")
 
                 parseQuestionResponse(response)
             }
@@ -101,21 +117,46 @@ class GeminiAIService @Inject constructor(
         count: Int
     ): Result<List<InterviewQuestion>> = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "🔄 Generating $count adaptive follow-up questions for weak OLQs: ${weakOLQs.map { it.name }}")
             withTimeout(QUESTION_GENERATION_TIMEOUT) {
-                val prompt = buildAdaptiveQuestionPrompt(
-                    previousQuestions,
-                    previousResponses,
-                    weakOLQs,
-                    count
-                )
-                val response = model.generateContent(prompt)
+                // Build Q&A pairs for context
+                val qaHistory = previousQuestions.zip(previousResponses)
+                    .map { (q, a) -> q.questionText to a }
 
+                // Use enhanced adaptive question prompt
+                // Note: piqContext would ideally be passed here too for full personalization
+                // For now, we build from Q&A history
+                val prompt = SSBInterviewPrompts.buildAdaptiveQuestionPrompt(
+                    piqContext = buildContextFromQA(previousQuestions),
+                    previousQA = qaHistory,
+                    weakOLQs = weakOLQs,
+                    count = count
+                )
+
+                val response = model.generateContent(prompt)
                 parseQuestionResponse(response)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate adaptive questions", e)
             Result.failure(e)
         }
+    }
+
+    /**
+     * Build minimal context from previous questions when full PIQ not available
+     */
+    private fun buildContextFromQA(questions: List<InterviewQuestion>): String {
+        return """
+(Context derived from previous questions asked)
+
+Topics covered so far:
+${questions.mapIndexed { index, q -> 
+    "- Question ${index + 1}: ${q.questionText.take(100)}..."
+}.joinToString("\n")}
+
+OLQs assessed:
+${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displayName }}
+        """.trimIndent()
     }
 
     override suspend fun analyzeResponse(
@@ -127,8 +168,15 @@ class GeminiAIService @Inject constructor(
         try {
             Log.d(TAG, "⏱️ Starting withTimeout block (${RESPONSE_ANALYSIS_TIMEOUT}ms timeout)")
             withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
-                Log.d(TAG, "📝 Building analysis prompt...")
-                val prompt = buildResponseAnalysisPrompt(question, response, responseMode)
+                Log.d(TAG, "📝 Building comprehensive analysis prompt...")
+
+                // Use enhanced response analysis prompt
+                val prompt = SSBInterviewPrompts.buildResponseAnalysisPrompt(
+                    questionText = question.questionText,
+                    responseText = response,
+                    expectedOLQs = question.expectedOLQs,
+                    responseMode = responseMode
+                )
 
                 Log.d(TAG, "📤 Sending request to Gemini API (model: $MODEL_NAME)...")
                 val startTime = System.currentTimeMillis()
@@ -154,14 +202,27 @@ class GeminiAIService @Inject constructor(
         olqScores: Map<OLQ, Float>
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "📊 Generating comprehensive feedback for ${questions.size} Q&A pairs")
             withTimeout(FEEDBACK_GENERATION_TIMEOUT) {
-                val prompt = buildFeedbackPrompt(questions, responses, olqScores)
+                // Build Q&A pairs
+                val qaHistory = questions.zip(responses)
+                    .map { (q, a) -> q.questionText to a }
+
+                // Use enhanced feedback prompt
+                // Note: piqContext would ideally be passed for full personalization
+                val prompt = SSBInterviewPrompts.buildFeedbackPrompt(
+                    piqContext = "(Full PIQ context not available for feedback generation)",
+                    questionAnswerPairs = qaHistory,
+                    olqScores = olqScores
+                )
+
                 val response = model.generateContent(prompt)
 
                 val feedbackText = response.text ?: return@withTimeout Result.failure(
                     IllegalStateException("No feedback generated")
                 )
 
+                Log.d(TAG, "✅ Feedback generated successfully (${feedbackText.length} chars)")
                 Result.success(feedbackText.trim())
             }
         } catch (e: Exception) {
@@ -184,139 +245,6 @@ class GeminiAIService @Inject constructor(
     }
 
     /**
-     * Build prompt for PIQ-based question generation
-     */
-    private fun buildPIQQuestionPrompt(
-        piqData: String,
-        targetOLQs: List<OLQ>?,
-        count: Int,
-        difficulty: Int
-    ): String {
-        return """
-Generate $count SSB questions from PIQ. Return JSON only.
-
-PIQ: $piqData
-
-Format: [{"id":"q1","questionText":"...?","targetOLQs":["INITIATIVE","COURAGE"],"reasoning":"..."}]
-
-OLQs: EFFECTIVE_INTELLIGENCE,REASONING_ABILITY,ORGANIZING_ABILITY,POWER_OF_EXPRESSION,SOCIAL_ADJUSTMENT,COOPERATION,SENSE_OF_RESPONSIBILITY,INITIATIVE,SELF_CONFIDENCE,SPEED_OF_DECISION,INFLUENCE_GROUP,LIVELINESS,DETERMINATION,COURAGE,STAMINA
-        """.trimIndent()
-    }
-
-    /**
-     * Build prompt for adaptive follow-up questions
-     */
-    private fun buildAdaptiveQuestionPrompt(
-        previousQuestions: List<InterviewQuestion>,
-        previousResponses: List<String>,
-        weakOLQs: List<OLQ>,
-        count: Int
-    ): String {
-        val qaHistory = previousQuestions.zip(previousResponses)
-            .joinToString("\n\n") { (q, a) ->
-                "Q: ${q.questionText}\nA: $a"
-            }
-
-        val weakOLQNames = weakOLQs.joinToString(", ") { it.displayName }
-
-        return """
-You are an SSB interviewing officer conducting a follow-up assessment.
-
-**PREVIOUS Q&A**:
-$qaHistory
-
-**WEAK OLQs NEEDING ASSESSMENT**: $weakOLQNames
-
-**TASK**: Generate $count adaptive follow-up questions that:
-1. Probe deeper into the weak OLQs identified
-2. Challenge assumptions or generalizations from previous answers
-3. Present situational scenarios requiring those specific OLQs
-4. Are more challenging than initial questions (difficulty 4-5)
-
-**OUTPUT FORMAT** (JSON array):
-[
-  {
-    "id": "unique-id",
-    "questionText": "The follow-up question",
-    "targetOLQs": ["COURAGE", "DETERMINATION"],
-    "reasoning": "Why this follow-up is needed"
-  }
-]
-
-Generate exactly $count questions as a valid JSON array.
-        """.trimIndent()
-    }
-
-    /**
-     * Build prompt for response analysis
-     */
-    private fun buildResponseAnalysisPrompt(
-        question: InterviewQuestion,
-        response: String,
-        responseMode: String
-    ): String {
-        val expectedOLQs = question.expectedOLQs.joinToString(", ") { it.name }
-
-        return """
-Analyze SSB response. Return JSON only.
-
-Q: ${question.questionText}
-OLQs: $expectedOLQs
-A: $response
-
-Format: {"olqScores":[{"olq":"INITIATIVE","score":5.5,"reasoning":"...","evidence":["..."]}],"overallConfidence":85,"keyInsights":["..."],"suggestedFollowUp":"..."}
-
-Score 1-10 (SSB): 1-3=Exceptional, 4=Excellent, 5=Very Good, 6=Good, 7=Average, 8=Below Avg, 9-10=Poor. LOWER is BETTER. Use decimals (e.g. 5.5, 6.5).
-
-OLQs: EFFECTIVE_INTELLIGENCE,REASONING_ABILITY,ORGANIZING_ABILITY,POWER_OF_EXPRESSION,SOCIAL_ADJUSTMENT,COOPERATION,SENSE_OF_RESPONSIBILITY,INITIATIVE,SELF_CONFIDENCE,SPEED_OF_DECISION,INFLUENCE_GROUP,LIVELINESS,DETERMINATION,COURAGE,STAMINA
-        """.trimIndent()
-    }
-
-    /**
-     * Build prompt for comprehensive feedback generation
-     */
-    private fun buildFeedbackPrompt(
-        questions: List<InterviewQuestion>,
-        responses: List<String>,
-        olqScores: Map<OLQ, Float>
-    ): String {
-        val qaHistory = questions.zip(responses)
-            .joinToString("\n\n") { (q, a) ->
-                "Q: ${q.questionText}\nA: $a"
-            }
-
-        val scoresSummary = olqScores.entries
-            .sortedByDescending { it.value }
-            .joinToString("\n") { (olq, score) ->
-                "- ${olq.displayName}: ${"%.1f".format(score)}/5"
-            }
-
-        return """
-You are an SSB interviewing officer providing final interview feedback.
-
-**INTERVIEW TRANSCRIPT**:
-$qaHistory
-
-**OLQ SCORES**:
-$scoresSummary
-
-**TASK**: Provide comprehensive, constructive feedback covering:
-
-1. **Overall Performance** (2-3 sentences)
-2. **Key Strengths** (top 3 OLQs with specific examples)
-3. **Areas for Improvement** (3-4 OLQs with actionable advice)
-4. **Recommendations** (concrete steps for development)
-5. **Encouraging Conclusion** (motivational closing)
-
-**TONE**: Professional, respectful, constructive, and encouraging.
-
-**LENGTH**: 300-400 words.
-
-Write the feedback directly (not as JSON).
-        """.trimIndent()
-    }
-
-    /**
      * Parse question generation response
      * Handles both clean JSON and markdown-wrapped JSON
      */
@@ -326,27 +254,10 @@ Write the feedback directly (not as JSON).
                 IllegalStateException("No response text")
             )
 
+            Log.d(TAG, "🔍 Parsing question response (${jsonText.length} chars)")
+
             // Extract JSON from markdown code blocks if present
-            val cleanJson = when {
-                "```json" in jsonText -> {
-                    // Extract content between ```json and closing ```
-                    jsonText
-                        .substringAfter("```json")
-                        .substringBefore("```")
-                        .trim()
-                }
-                "```" in jsonText -> {
-                    // Extract content between ``` and closing ```
-                    jsonText
-                        .substringAfter("```")
-                        .substringBefore("```")
-                        .trim()
-                }
-                else -> {
-                    // No markdown, use as-is but trim whitespace
-                    jsonText.trim()
-                }
-            }
+            val cleanJson = extractJsonFromResponse(jsonText)
 
             val jsonArray = JSONArray(cleanJson)
             val questions = mutableListOf<InterviewQuestion>()
@@ -356,10 +267,40 @@ Write the feedback directly (not as JSON).
                 questions.add(parseQuestion(questionJson))
             }
 
+            Log.d(TAG, "✅ Parsed ${questions.size} questions successfully")
             Result.success(questions)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse question response: ${response.text}", e)
+            Log.e(TAG, "Failed to parse question response: ${response.text?.take(500)}", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Extract JSON from response, handling markdown code blocks
+     */
+    private fun extractJsonFromResponse(responseText: String): String {
+        return when {
+            "```json" in responseText -> {
+                responseText
+                    .substringAfter("```json")
+                    .substringBefore("```")
+                    .trim()
+            }
+            "```" in responseText -> {
+                responseText
+                    .substringAfter("```")
+                    .substringBefore("```")
+                    .trim()
+            }
+            else -> {
+                // Try to find JSON array or object
+                val trimmed = responseText.trim()
+                when {
+                    trimmed.startsWith("[") -> trimmed.substringBefore("\n\n").trim()
+                    trimmed.startsWith("{") -> trimmed.substringBefore("\n\n").trim()
+                    else -> trimmed
+                }
+            }
         }
     }
 
@@ -367,19 +308,36 @@ Write the feedback directly (not as JSON).
      * Parse individual question JSON
      */
     private fun parseQuestion(json: JSONObject): InterviewQuestion {
-        val targetOLQsArray = json.getJSONArray("targetOLQs")
-        val expectedOLQs = mutableListOf<OLQ>()
-
-        for (i in 0 until targetOLQsArray.length()) {
-            val olqName = targetOLQsArray.getString(i)
-            OLQ.entries.find { it.name == olqName }?.let { expectedOLQs.add(it) }
+        // Handle both "targetOLQs" and "expectedOLQs" field names
+        val olqsArray = when {
+            json.has("targetOLQs") -> json.getJSONArray("targetOLQs")
+            json.has("expectedOLQs") -> json.getJSONArray("expectedOLQs")
+            else -> JSONArray()
         }
+
+        val expectedOLQs = mutableListOf<OLQ>()
+        for (i in 0 until olqsArray.length()) {
+            val olqName = olqsArray.getString(i)
+            // Match by name or display name
+            OLQ.entries.find {
+                it.name.equals(olqName, ignoreCase = true) ||
+                    it.displayName.equals(olqName, ignoreCase = true)
+            }?.let { expectedOLQs.add(it) }
+        }
+
+        // Build context from available fields
+        val context = buildString {
+            json.optString("reasoning", "").let { if (it.isNotBlank()) append(it) }
+            json.optString("piqTouchpoint", "").let {
+                if (it.isNotBlank()) append(" [PIQ: $it]")
+            }
+        }.ifBlank { null }
 
         return InterviewQuestion(
             id = json.optString("id", UUID.randomUUID().toString()),
             questionText = json.getString("questionText"),
             expectedOLQs = expectedOLQs,
-            context = json.optString("reasoning", null),
+            context = context,
             source = com.ssbmax.core.domain.model.interview.QuestionSource.AI_GENERATED
         )
     }
@@ -394,28 +352,9 @@ Write the feedback directly (not as JSON).
                 IllegalStateException("No response text")
             )
 
-            // Extract JSON from markdown code blocks if present
-            val cleanJson = when {
-                "```json" in jsonText -> {
-                    // Extract content between ```json and closing ```
-                    jsonText
-                        .substringAfter("```json")
-                        .substringBefore("```")
-                        .trim()
-                }
-                "```" in jsonText -> {
-                    // Extract content between ``` and closing ```
-                    jsonText
-                        .substringAfter("```")
-                        .substringBefore("```")
-                        .trim()
-                }
-                else -> {
-                    // No markdown, use as-is but trim whitespace
-                    jsonText.trim()
-                }
-            }
+            Log.d(TAG, "🔍 Parsing analysis response (${jsonText.length} chars)")
 
+            val cleanJson = extractJsonFromResponse(jsonText)
             val json = JSONObject(cleanJson)
 
             val olqScoresArray = json.getJSONArray("olqScores")
@@ -424,10 +363,11 @@ Write the feedback directly (not as JSON).
             for (i in 0 until olqScoresArray.length()) {
                 val scoreJson = olqScoresArray.getJSONObject(i)
                 val olqName = scoreJson.getString("olq")
-                // Match by displayName (e.g., "Self Confidence") or enum name (e.g., "SELF_CONFIDENCE")
+
+                // Match by displayName or enum name
                 val olq = OLQ.entries.find {
                     it.displayName.equals(olqName, ignoreCase = true) ||
-                    it.name.equals(olqName, ignoreCase = true)
+                        it.name.equals(olqName, ignoreCase = true)
                 } ?: continue
 
                 val evidenceArray = scoreJson.optJSONArray("evidence")
@@ -441,12 +381,12 @@ Write the feedback directly (not as JSON).
                 olqScores[olq] = OLQScoreWithReasoning(
                     olq = olq,
                     score = scoreJson.getDouble("score").toFloat(),
-                    reasoning = scoreJson.getString("reasoning"),
+                    reasoning = scoreJson.optString("reasoning", ""),
                     evidence = evidence
                 )
             }
 
-            val insightsArray = json.getJSONArray("keyInsights")
+            val insightsArray = json.optJSONArray("keyInsights") ?: JSONArray()
             val insights = mutableListOf<String>()
             for (i in 0 until insightsArray.length()) {
                 insights.add(insightsArray.getString(i))
@@ -454,15 +394,17 @@ Write the feedback directly (not as JSON).
 
             val analysis = ResponseAnalysis(
                 olqScores = olqScores,
-                overallConfidence = json.getInt("overallConfidence"),
+                overallConfidence = json.optInt("overallConfidence", 50),
                 keyInsights = insights,
-                suggestedFollowUp = json.optString("suggestedFollowUp", null)
+                suggestedFollowUp = json.optString("suggestedFollowUp", "").takeIf { it.isNotBlank() }
             )
 
+            Log.d(TAG, "✅ Parsed analysis with ${olqScores.size} OLQ scores")
             Result.success(analysis)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse analysis response: ${response.text}", e)
+            Log.e(TAG, "Failed to parse analysis response: ${response.text?.take(500)}", e)
             Result.failure(e)
         }
     }
 }
+

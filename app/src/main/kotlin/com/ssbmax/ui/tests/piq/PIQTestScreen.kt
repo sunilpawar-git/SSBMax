@@ -52,7 +52,7 @@ fun PIQTestScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("PIQ - ${uiState.currentPage.displayName}") },
+                    title = { Text(stringResource(R.string.piq_page_title, uiState.currentPage.displayName)) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(Icons.Default.ArrowBack, stringResource(R.string.piq_back))

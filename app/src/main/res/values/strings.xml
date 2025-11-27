@@ -680,6 +680,29 @@
     <string name="piq_previous">Previous</string>
     <string name="piq_next">Next</string>
     <string name="piq_review">Review</string>
+    
+    <!-- PIQ Result Screen -->
+    <string name="piq_quality_assessment">PIQ Quality Assessment</string>
+    <string name="piq_submitted_successfully">PIQ Submitted Successfully</string>
+    <string name="piq_submission_id">Submission ID: %1$s…</string>
+    <string name="piq_ai_quality_assessment">AI Quality Assessment</string>
+    <string name="piq_overall_score">Overall Score</string>
+    <string name="piq_score_format">%1$d/100</string>
+    <string name="piq_personal_info">Personal Information</string>
+    <string name="piq_family_info">Family Information</string>
+    <string name="piq_motivation_goals">Motivation &amp; Goals</string>
+    <string name="piq_self_assessment_label">Self-Assessment</string>
+    <string name="piq_completeness">Completeness</string>
+    <string name="piq_clarity">Clarity</string>
+    <string name="piq_consistency">Consistency</string>
+    <string name="piq_feedback">Feedback</string>
+    <string name="piq_strengths">Strengths</string>
+    <string name="piq_areas_improvement">Areas for Improvement</string>
+    <string name="piq_info_message">Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.</string>
+    <string name="return_to_home">Return to Home</string>
+    
+    <!-- PIQ Test Screen Title -->
+    <string name="piq_page_title">PIQ - %1$s</string>
 
     <!-- ============================================ -->
     <!-- TEST GRADING SCREEN - DETAILED STRINGS -->

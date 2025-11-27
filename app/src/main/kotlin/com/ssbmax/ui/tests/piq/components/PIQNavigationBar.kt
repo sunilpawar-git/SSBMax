@@ -7,7 +7,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.PIQPage
 
 /**
@@ -34,7 +36,7 @@ fun PIQNavigationBar(
         ) {
             if (canGoBack) {
                 OutlinedButton(onClick = onPreviousPage) {
-                    Text("Previous")
+                    Text(stringResource(R.string.piq_previous))
                 }
             } else {
                 Spacer(modifier = Modifier.width(1.dp))

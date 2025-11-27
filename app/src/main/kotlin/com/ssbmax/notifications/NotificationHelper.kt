@@ -10,6 +10,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.ssbmax.MainActivity
 import com.ssbmax.R
+import com.ssbmax.utils.DeepLinkParser
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -66,10 +68,13 @@ class NotificationHelper @Inject constructor(
         Log.d(TAG, "📢 showInterviewResultsReadyNotification called - sessionId: $sessionId, resultId: $resultId")
 
         try {
+            // Build deep link using centralized parser
+            val deepLink = DeepLinkParser.buildInterviewResultDeepLink(resultId)
+            
             // Create intent to open results screen
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("deepLink", "ssbmax://interview/result/$resultId")
+                putExtra("deepLink", deepLink)
                 putExtra("sessionId", sessionId)
                 putExtra("resultId", resultId)
             }
@@ -98,7 +103,10 @@ class NotificationHelper @Inject constructor(
             val notificationId = NOTIFICATION_ID_INTERVIEW_RESULT + sessionId.hashCode()
 
             if (notificationManager == null) {
-                Log.e(TAG, "❌ NotificationManager is null!")
+                ErrorLogger.log(
+                    IllegalStateException("NotificationManager is null"),
+                    "Failed to get NotificationManager service"
+                )
                 return
             }
 
@@ -113,7 +121,7 @@ class NotificationHelper @Inject constructor(
             Log.d(TAG, "✅ Notification sent successfully! ID: $notificationId")
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to show notification", e)
+            ErrorLogger.log(e, "Failed to show interview results notification")
         }
     }
 
@@ -123,32 +131,39 @@ class NotificationHelper @Inject constructor(
      * @param sessionId The interview session ID
      */
     fun showInterviewAnalysisFailedNotification(sessionId: String) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("deepLink", "ssbmax://interview/history")
+        try {
+            // Build deep link using centralized parser
+            val deepLink = DeepLinkParser.buildInterviewHistoryDeepLink()
+            
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("deepLink", deepLink)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                sessionId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID_INTERVIEW)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle(context.getString(R.string.notification_interview_failed_title))
+                .setContentText(context.getString(R.string.notification_interview_failed_body))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            notificationManager?.notify(
+                NOTIFICATION_ID_INTERVIEW_RESULT + sessionId.hashCode(),
+                notification
+            )
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to show interview analysis failed notification")
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            sessionId.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID_INTERVIEW)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle(context.getString(R.string.notification_interview_failed_title))
-            .setContentText(context.getString(R.string.notification_interview_failed_body))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager?.notify(
-            NOTIFICATION_ID_INTERVIEW_RESULT + sessionId.hashCode(),
-            notification
-        )
     }
 }
 
