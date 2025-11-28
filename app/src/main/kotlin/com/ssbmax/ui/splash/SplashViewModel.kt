@@ -43,12 +43,19 @@ class SplashViewModel @Inject constructor(
     private fun checkAuthenticationState() {
         viewModelScope.launch {
             android.util.Log.d("SplashViewModel", "Starting authentication check...")
-            // Show splash for minimum 2 seconds for branding
-            delay(2000)
+            val startTime = System.currentTimeMillis()
             
-            // Check authentication
+            // Check authentication first (fast for returning users)
             val user = authRepository.currentUser.first()
             android.util.Log.d("SplashViewModel", "Current user: ${user?.email ?: "null"}")
+            
+            // Ensure minimum splash time for branding, but shorter if already authenticated
+            val elapsedTime = System.currentTimeMillis() - startTime
+            val minSplashTime = if (user != null) 800L else 2000L  // Faster for logged-in users
+            val remainingDelay = (minSplashTime - elapsedTime).coerceAtLeast(0)
+            if (remainingDelay > 0) {
+                delay(remainingDelay)
+            }
             
             if (user == null) {
                 android.util.Log.d("SplashViewModel", "No user found, navigating to login")

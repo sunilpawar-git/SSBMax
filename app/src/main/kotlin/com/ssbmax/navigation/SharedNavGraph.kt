@@ -505,6 +505,9 @@ fun NavGraphBuilder.sharedNavGraph(
                         android.util.Log.w("Navigation", "Unknown test ID: $testId")
                     }
                 }
+            },
+            onNavigateToInterviewResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
             }
         )
     }
