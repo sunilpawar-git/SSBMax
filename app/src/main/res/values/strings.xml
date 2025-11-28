@@ -1063,6 +1063,10 @@
     <string name="interview_error_load_question">Failed to load question</string>
     <string name="interview_error_load_next_question">Failed to load next question</string>
     <string name="interview_generating_results">Generating results…</string>
+    <string name="interview_exit_title">Exit Interview?</string>
+    <string name="interview_exit_message">Are you sure you want to exit? Your progress will be saved, but you\'ll need to start a new interview session to continue.</string>
+    <string name="interview_exit_confirm">Exit</string>
+    <string name="cd_exit_interview">Exit Interview</string>
 
     <!-- Interview Result Screen -->
     <string name="interview_result_title">Interview Results</string>

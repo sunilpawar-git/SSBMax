@@ -1,9 +1,7 @@
 package com.ssbmax.ui.home.student
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -93,7 +90,6 @@ private fun Phase1Card(
     modifier: Modifier = Modifier
 ) {
     val phaseColor = Color(0xFF1976D2)
-    val percentage = progress?.completionPercentage ?: 0f
     
     Card(
         modifier = modifier
@@ -114,52 +110,19 @@ private fun Phase1Card(
                 .padding(12.dp)
         ) {
             // Phase Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        "PHASE 1",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = phaseColor
-                    )
-                    Text(
-                        "Screening",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(phaseColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "${percentage.toInt()}%",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = phaseColor
-                    )
-                }
+            Column {
+                Text(
+                    "PHASE 1",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = phaseColor
+                )
+                Text(
+                    "Screening",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            LinearProgressIndicator(
-                progress = { percentage / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = phaseColor,
-                trackColor = phaseColor.copy(alpha = 0.2f)
-            )
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -216,7 +179,6 @@ private fun Phase2Card(
     modifier: Modifier = Modifier
 ) {
     val phaseColor = Color(0xFF388E3C)
-    val percentage = progress?.completionPercentage ?: 0f
     
     Card(
         modifier = modifier
@@ -237,52 +199,19 @@ private fun Phase2Card(
                 .padding(12.dp)
         ) {
             // Phase Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        "PHASE 2",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = phaseColor
-                    )
-                    Text(
-                        "Assessment",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(phaseColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "${percentage.toInt()}%",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = phaseColor
-                    )
-                }
+            Column {
+                Text(
+                    "PHASE 2",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = phaseColor
+                )
+                Text(
+                    "Assessment",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            LinearProgressIndicator(
-                progress = { percentage / 100f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = phaseColor,
-                trackColor = phaseColor.copy(alpha = 0.2f)
-            )
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -355,12 +284,10 @@ private fun TestProgressItem(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Status Icon
+        // Status Icon - Checkmark for any completed/attempted test, empty circle for not attempted
         val (icon, iconColor) = when (testProgress.status) {
-            TestStatus.COMPLETED, TestStatus.GRADED -> 
+            TestStatus.COMPLETED, TestStatus.GRADED, TestStatus.SUBMITTED_PENDING_REVIEW -> 
                 Icons.Default.CheckCircle to Color(0xFF4CAF50)
-            TestStatus.SUBMITTED_PENDING_REVIEW -> 
-                Icons.Default.HourglassEmpty to Color(0xFF2196F3)
             TestStatus.IN_PROGRESS -> 
                 Icons.Default.Schedule to Color(0xFFFFA726)
             TestStatus.NOT_ATTEMPTED -> 
@@ -383,27 +310,17 @@ private fun TestProgressItem(
                 fontWeight = FontWeight.Medium
             )
             
-            // Show date and status
-            val statusText = when {
-                testProgress.lastAttemptDate != null -> {
-                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                    val attemptDate = testProgress.lastAttemptDate ?: 0L
-                    val dateStr = dateFormat.format(Date(attemptDate))
-                    val score = testProgress.latestScore
-                    when {
-                        testProgress.isPendingReview -> "Pending Review ($dateStr)"
-                        score != null -> "Graded - ${score.toInt()}% ($dateStr)"
-                        else -> "Attempted on $dateStr"
-                    }
-                }
-                else -> "Not Attempted"
-            }
+            // Simplified status text - just show "Completed on {date}" or "Not Attempted"
+            val statusText = testProgress.lastAttemptDate?.let { lastAttemptDate ->
+                val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                val dateStr = dateFormat.format(Date(lastAttemptDate))
+                "Completed on $dateStr"
+            } ?: "Not Attempted"
             
             Text(
                 statusText,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (testProgress.isPendingReview) Color(0xFF2196F3) 
-                       else if (testProgress.latestScore != null) phaseColor
+                color = if (testProgress.lastAttemptDate != null) phaseColor
                        else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

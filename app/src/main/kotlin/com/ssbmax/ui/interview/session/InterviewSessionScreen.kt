@@ -3,6 +3,7 @@ package com.ssbmax.ui.interview.session
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +37,7 @@ fun InterviewSessionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showPendingDialog by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     // Handle completion
     LaunchedEffect(uiState.isCompleted, uiState.isResultPending) {
@@ -77,6 +79,39 @@ fun InterviewSessionScreen(
         )
     }
 
+    // Exit Confirmation Dialog
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = {
+                Text(stringResource(R.string.interview_exit_title))
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.interview_exit_message),
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+                        onNavigateToHome()
+                    }
+                ) {
+                    Text(stringResource(R.string.interview_exit_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitDialog = false }
+                ) {
+                    Text(stringResource(R.string.button_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,6 +125,15 @@ fun InterviewSessionScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showExitDialog = true }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.cd_exit_interview),
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             )
