@@ -56,6 +56,7 @@ class FirestoreInterviewRepository @Inject constructor(
         private const val COLLECTION_RESPONSES = "interview_responses"
         private const val COLLECTION_RESULTS = "interview_results"
         private const val COLLECTION_QUESTIONS = "interview_questions"
+        private const val COLLECTION_SUBMISSIONS = "submissions"
 
         private const val FIELD_USER_ID = "userId"
         private const val FIELD_STATUS = "status"
@@ -63,6 +64,13 @@ class FirestoreInterviewRepository @Inject constructor(
         private const val FIELD_COMPLETED_AT = "completedAt"
         private const val FIELD_SESSION_ID = "sessionId"
         private const val FIELD_RESPONDED_AT = "respondedAt"
+        
+        // Submission fields for progress tracking
+        private const val FIELD_ID = "id"
+        private const val FIELD_TEST_TYPE = "testType"
+        private const val FIELD_SUBMITTED_AT = "submittedAt"
+        private const val FIELD_SCORE = "score"
+        private const val FIELD_TEST_ID = "testId"
     }
 
     // ============================================
@@ -415,6 +423,28 @@ class FirestoreInterviewRepository @Inject constructor(
 
             // Update session status
             updateSession(session.copy(status = InterviewStatus.COMPLETED, completedAt = Instant.now()))
+
+            // Create submission record for progress tracking
+            // This ensures the interview shows up in "Your Progress" section
+            val submissionId = "interview_${result.id}"
+            val submissionMap = mapOf(
+                FIELD_ID to submissionId,
+                FIELD_USER_ID to session.userId,
+                FIELD_TEST_ID to sessionId,
+                FIELD_TEST_TYPE to "IO",
+                FIELD_STATUS to "COMPLETED",
+                FIELD_SUBMITTED_AT to result.completedAt.toEpochMilli(),
+                FIELD_SCORE to (10 - result.overallRating).toFloat() * 10, // Convert 1-10 scale (lower=better) to 0-100 (higher=better)
+                "resultId" to result.id,
+                "mode" to result.mode.name
+            )
+            
+            firestore.collection(COLLECTION_SUBMISSIONS)
+                .document(submissionId)
+                .set(submissionMap)
+                .await()
+            
+            Log.d(TAG, "Created submission record for progress tracking: $submissionId")
 
             Log.d(TAG, "Completed interview: $sessionId, result: ${result.id}")
             Result.success(result)
