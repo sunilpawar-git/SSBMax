@@ -1,6 +1,7 @@
 package com.ssbmax.ui.interview.voice
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.service.ResponseAnalysis
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.utils.TextToSpeechManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,25 +41,90 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
     private val aiService: AIService,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "VoiceInterviewVM"
+    }
 
     private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId"))
 
     private val _uiState = MutableStateFlow(VoiceInterviewSessionUiState())
     val uiState: StateFlow<VoiceInterviewSessionUiState> = _uiState.asStateFlow()
+    
+    /** Flag to prevent state updates during exit (stopAll() called) */
+    @Volatile
+    private var isExiting: Boolean = false
 
     private val recordingHelper = VoiceRecordingHelper(context)
+    
+    /** Text-to-Speech manager for interviewer voice (auto-speaks questions) */
+    private val ttsManager = TextToSpeechManager(
+        context = context,
+        onReady = {
+            if (isExiting) {
+                Log.d(TAG, "⚠️ TTS onReady after exit started, ignoring")
+                return@TextToSpeechManager
+            }
+            Log.d(TAG, "🔊 TTS ready")
+            _uiState.update { it.copy(isTTSReady = true) }
+            // Speak current question if available when TTS becomes ready (only if not exiting)
+            if (!isExiting) {
+                _uiState.value.currentQuestion?.let { 
+                    Log.d(TAG, "🔊 Auto-speaking question when TTS becomes ready")
+                    speakQuestion(it.questionText) 
+                }
+            }
+        },
+        onSpeechComplete = {
+            if (isExiting) {
+                Log.d(TAG, "⚠️ TTS onSpeechComplete after exit started, ignoring")
+                return@TextToSpeechManager
+            }
+            Log.d(TAG, "✅ TTS speech complete")
+            _uiState.update { it.copy(isTTSSpeaking = false) }
+        },
+        onError = { error ->
+            if (isExiting) {
+                Log.d(TAG, "⚠️ TTS onError after exit started, ignoring: $error")
+                return@TextToSpeechManager
+            }
+            Log.e(TAG, "❌ TTS error: $error")
+            ErrorLogger.log(Exception(error), "TTS error during voice interview")
+            _uiState.update { it.copy(isTTSSpeaking = false) }
+        }
+    )
 
     init {
+        Log.d(TAG, "🚀 ViewModel initializing for session: $sessionId")
         trackMemoryLeaks("VoiceInterviewSessionViewModel")
         observeRecordingState()
         loadSession()
+    }
+    
+    /**
+     * Speak the question text using TTS
+     */
+    private fun speakQuestion(questionText: String) {
+        if (isExiting) {
+            Log.d(TAG, "⚠️ speakQuestion called during exit, ignoring")
+            return
+        }
+        if (_uiState.value.isTTSReady) {
+            Log.d(TAG, "🔊 Speaking question: ${questionText.take(50)}...")
+            _uiState.update { it.copy(isTTSSpeaking = true) }
+            ttsManager.speak(questionText)
+        }
     }
 
     private fun observeRecordingState() {
         viewModelScope.launch {
             recordingHelper.state.collect { recording ->
+                if (isExiting) {
+                    Log.d(TAG, "⚠️ Recording state update during exit, ignoring")
+                    return@collect
+                }
                 _uiState.update {
                     it.copy(
                         recordingState = recording.recordingState,
@@ -117,6 +184,13 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                         totalQuestions = session.questionIds.size,
                         thinkingStartTime = System.currentTimeMillis()
                     )
+                }
+                
+                // Auto-speak the question using TTS (only if not exiting)
+                if (!isExiting) {
+                    question?.let { speakQuestion(it.questionText) }
+                } else {
+                    Log.d(TAG, "⚠️ Skipping auto-speak - exit in progress")
                 }
             } catch (e: Exception) {
                 handleError(e, "Exception loading session", R.string.voice_interview_error_generic)
@@ -242,6 +316,9 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                 thinkingStartTime = System.currentTimeMillis()
             )
         }
+        
+        // Auto-speak the next question using TTS
+        question?.let { speakQuestion(it.questionText) }
     }
 
     private suspend fun completeInterview() {
@@ -279,9 +356,32 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     }
 
     fun clearError() = _uiState.update { it.copy(error = null) }
+    
+    /**
+     * Stop all speech and recording - call before exiting.
+     * Sets isExiting flag to prevent callbacks from updating state after exit.
+     */
+    fun stopAll() {
+        Log.d(TAG, "🛑 stopAll() called")
+        isExiting = true
+        ttsManager.stop()
+        recordingHelper.release()
+        _uiState.update { 
+            it.copy(
+                isTTSSpeaking = false,
+                recordingState = RecordingState.IDLE,
+                transcriptionState = TranscriptionState.IDLE
+            ) 
+        }
+        Log.d(TAG, "✅ stopAll() complete")
+    }
 
     override fun onCleared() {
+        Log.d(TAG, "🧹 onCleared()")
         super.onCleared()
+        isExiting = true
+        ttsManager.release()
         recordingHelper.release()
+        Log.d(TAG, "✅ ViewModel cleared")
     }
 }

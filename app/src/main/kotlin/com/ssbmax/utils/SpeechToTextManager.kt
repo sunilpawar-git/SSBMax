@@ -36,11 +36,17 @@ class SpeechToTextManager(
     private val context: Context,
     private val onResult: (String) -> Unit,
     private val onPartialResult: (String) -> Unit = {},
-    private val onError: (String) -> Unit
+    private val onError: (String) -> Unit,
+    private val onSilenceTimeout: () -> Unit = {} // Called when no speech detected - can restart
 ) {
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
+    private var accumulatedTranscription = StringBuilder()
+    
+    /** Flag to prevent callbacks after release/cancel */
+    @Volatile
+    private var isReleased = false
 
     /**
      * Check if speech recognition is available on this device
@@ -62,17 +68,24 @@ class SpeechToTextManager(
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
                 setRecognitionListener(object : RecognitionListener {
                     override fun onResults(results: Bundle?) {
+                        if (isReleased) {
+                            Log.d(TAG, "⚠️ onResults after release, ignoring")
+                            return
+                        }
+                        
                         val matches = results?.getStringArrayList(
                             SpeechRecognizer.RESULTS_RECOGNITION
                         )
                         val transcription = matches?.firstOrNull() ?: ""
 
                         Log.d(TAG, "📝 Transcription complete: $transcription")
-                        onResult(transcription)
                         isListening = false
+                        onResult(transcription)
                     }
 
                     override fun onPartialResults(partialResults: Bundle?) {
+                        if (isReleased) return
+                        
                         val matches = partialResults?.getStringArrayList(
                             SpeechRecognizer.RESULTS_RECOGNITION
                         )
@@ -85,15 +98,29 @@ class SpeechToTextManager(
                     }
 
                     override fun onError(error: Int) {
+                        isListening = false
+                        
+                        if (isReleased) {
+                            Log.d(TAG, "⚠️ onError after release, ignoring: $error")
+                            return
+                        }
+                        
+                        // Handle silence/no-match errors gracefully - these are normal during recording
+                        // User may be thinking before speaking
+                        if (error == SpeechRecognizer.ERROR_NO_MATCH || 
+                            error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                            Log.d(TAG, "⏳ Silence detected, calling onSilenceTimeout for auto-restart")
+                            onSilenceTimeout()
+                            return
+                        }
+                        
                         val errorMessage = when (error) {
                             SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
                             SpeechRecognizer.ERROR_CLIENT -> "Client error"
                             SpeechRecognizer.ERROR_NETWORK -> "Network error - please check your connection"
                             SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout - please try again"
-                            SpeechRecognizer.ERROR_NO_MATCH -> "No speech detected - please try again"
                             SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy - please try again"
                             SpeechRecognizer.ERROR_SERVER -> "Server error - please try again"
-                            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input detected"
                             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Missing microphone permission"
                             else -> "Speech recognition error (code: $error)"
                         }
@@ -104,19 +131,21 @@ class SpeechToTextManager(
                             description = errorMessage
                         )
                         onError(errorMessage)
-                        isListening = false
                     }
 
                     override fun onReadyForSpeech(params: Bundle?) {
+                        if (isReleased) return
                         Log.d(TAG, "🎤 Ready for speech")
                         isListening = true
                     }
 
                     override fun onBeginningOfSpeech() {
+                        if (isReleased) return
                         Log.d(TAG, "🗣️ Speech started")
                     }
 
                     override fun onEndOfSpeech() {
+                        if (isReleased) return
                         Log.d(TAG, "🛑 Speech ended")
                     }
 
@@ -143,9 +172,12 @@ class SpeechToTextManager(
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN") // English (India)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-                // Silence detection: 2 seconds of silence completes recognition
-                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+                // Extended silence detection for interview responses (user may pause to think)
+                // Complete silence = 4 seconds (after speech detected, wait 4s before finalizing)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 4000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L)
+                // Allow up to 60 seconds of recording (interview answers can be long)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 60000L)
             }
 
             speechRecognizer?.startListening(intent)
@@ -173,10 +205,13 @@ class SpeechToTextManager(
      * Cancel listening without returning results
      */
     fun cancel() {
+        Log.d(TAG, "❌ Cancelling speech recognition...")
         try {
+            // Set released flag FIRST to prevent callbacks
+            isReleased = true
             speechRecognizer?.cancel()
             isListening = false
-            Log.d(TAG, "❌ Cancelled speech recognition")
+            Log.d(TAG, "✅ Speech recognition cancelled")
         } catch (e: Exception) {
             ErrorLogger.log(e, "Failed to cancel speech recognition")
         }
@@ -185,18 +220,21 @@ class SpeechToTextManager(
     /**
      * Check if currently listening
      */
-    fun isCurrentlyListening(): Boolean = isListening
+    fun isCurrentlyListening(): Boolean = isListening && !isReleased
 
     /**
      * Release resources and cleanup
      * MUST be called when done to prevent memory leaks
      */
     fun release() {
+        Log.d(TAG, "🧹 Releasing SpeechToTextManager resources...")
         try {
+            // Set released flag FIRST to prevent callbacks
+            isReleased = true
             speechRecognizer?.destroy()
             speechRecognizer = null
             isListening = false
-            Log.d(TAG, "🧹 Released SpeechToTextManager resources")
+            Log.d(TAG, "✅ SpeechToTextManager resources released")
         } catch (e: Exception) {
             ErrorLogger.log(e, "Failed to release speech recognizer")
         }

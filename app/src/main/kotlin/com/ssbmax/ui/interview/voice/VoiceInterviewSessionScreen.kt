@@ -2,6 +2,7 @@ package com.ssbmax.ui.interview.voice
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +57,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 
+private const val TAG = "VoiceInterviewScreen"
+
 /** Voice Interview Session Screen - manages voice interview flow with recording/transcription */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +71,21 @@ fun VoiceInterviewSessionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showExitDialog by remember { mutableStateOf(false) }
+    
+    // Navigation guard to prevent multiple navigations
+    var hasNavigated by remember { mutableStateOf(false) }
+    
+    /** Safe navigation helper that prevents multiple calls */
+    fun safeNavigateBack() {
+        if (hasNavigated) {
+            Log.d(TAG, "⚠️ safeNavigateBack: Already navigated, ignoring")
+            return
+        }
+        Log.d(TAG, "🚪 safeNavigateBack: Navigating back")
+        hasNavigated = true
+        viewModel.stopAll()
+        onNavigateBack()
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -74,14 +94,33 @@ fun VoiceInterviewSessionScreen(
     }
 
     LaunchedEffect(Unit) {
+        Log.d(TAG, "🚀 Screen initialized for session: $sessionId")
         val hasPermission = ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
         viewModel.updateRecordPermission(hasPermission)
     }
+    
+    // Cleanup effect - ensure ViewModel is stopped when screen is disposed
+    DisposableEffect(sessionId) {
+        Log.d(TAG, "📌 DisposableEffect: Screen entered composition for session: $sessionId")
+        onDispose {
+            Log.d(TAG, "🧹 DisposableEffect: Screen being disposed for session: $sessionId")
+            // Only stop if we haven't already navigated (to avoid double-stop)
+            if (!hasNavigated) {
+                Log.d(TAG, "🛑 DisposableEffect: Stopping ViewModel on dispose")
+                viewModel.stopAll()
+            } else {
+                Log.d(TAG, "⏭️ DisposableEffect: Already navigated, skipping stopAll()")
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.resultId != null) {
+        if (uiState.isCompleted && uiState.resultId != null && !hasNavigated) {
+            Log.d(TAG, "✅ Interview completed, navigating to result: ${uiState.resultId}")
+            hasNavigated = true
+            viewModel.stopAll()
             onNavigateToResult(uiState.resultId!!)
         }
     }
@@ -89,7 +128,10 @@ fun VoiceInterviewSessionScreen(
     // Exit Confirmation Dialog
     if (showExitDialog) {
         AlertDialog(
-            onDismissRequest = { showExitDialog = false },
+            onDismissRequest = { 
+                Log.d(TAG, "❌ Exit dialog dismissed")
+                showExitDialog = false 
+            },
             title = {
                 Text(stringResource(R.string.interview_exit_title))
             },
@@ -102,8 +144,9 @@ fun VoiceInterviewSessionScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        Log.d(TAG, "✅ Exit confirmed via dialog")
                         showExitDialog = false
-                        onNavigateBack()
+                        safeNavigateBack()
                     }
                 ) {
                     Text(stringResource(R.string.interview_exit_confirm))
@@ -111,7 +154,10 @@ fun VoiceInterviewSessionScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showExitDialog = false }
+                    onClick = { 
+                        Log.d(TAG, "❌ Exit cancelled via dialog")
+                        showExitDialog = false 
+                    }
                 ) {
                     Text(stringResource(R.string.button_cancel))
                 }
@@ -126,12 +172,19 @@ fun VoiceInterviewSessionScreen(
                     Text(stringResource(R.string.interview_question_number, uiState.currentQuestionIndex + 1, uiState.totalQuestions))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { 
+                        Log.d(TAG, "⬅️ Back arrow pressed")
+                        safeNavigateBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showExitDialog = true }) {
+                    IconButton(onClick = { 
+                        Log.d(TAG, "❌ Close (X) button pressed")
+                        viewModel.stopAll() // Stop TTS and recording before showing dialog
+                        showExitDialog = true 
+                    }) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_exit_interview),
@@ -183,7 +236,10 @@ private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: V
             modifier = Modifier.fillMaxWidth()
         )
 
-        QuestionCard(questionText = uiState.currentQuestion!!.questionText)
+        QuestionCard(
+            questionText = uiState.currentQuestion!!.questionText,
+            isSpeaking = uiState.isTTSSpeaking
+        )
 
         RecordingControlsCard(
             recordingState = uiState.recordingState,
@@ -197,6 +253,7 @@ private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: V
             onCancel = viewModel::cancelRecording
         )
 
+        // Show transcription card when recording/recorded, otherwise show spacer
         if (uiState.recordingState == RecordingState.RECORDING || uiState.recordingState == RecordingState.RECORDED) {
             LiveTranscriptionCard(
                 state = uiState.transcriptionState,
@@ -204,11 +261,11 @@ private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: V
                 finalTranscription = uiState.finalTranscription,
                 transcriptionError = uiState.transcriptionError,
                 onEdit = viewModel::updateTranscription,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f, fill = false)
             )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
-
-        Spacer(modifier = Modifier.weight(1f))
 
         SubmitButton(
             isSubmitting = uiState.isSubmittingResponse,
@@ -220,10 +277,37 @@ private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: V
 }
 
 @Composable
-private fun QuestionCard(questionText: String) {
+private fun QuestionCard(questionText: String, isSpeaking: Boolean) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(text = stringResource(R.string.voice_interview_question_label), style = MaterialTheme.typography.labelMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.voice_interview_question_label),
+                    style = MaterialTheme.typography.labelMedium
+                )
+                if (isSpeaking) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = stringResource(R.string.cd_interviewer_speaking),
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.voice_interview_interviewer_speaking),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
             Text(text = questionText, style = MaterialTheme.typography.bodyLarge)
         }
     }

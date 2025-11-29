@@ -195,7 +195,7 @@ class StartInterviewViewModel @Inject constructor(
 
                 val result = interviewRepository.createSession(
                     userId = userId,
-                    mode = InterviewMode.TEXT_BASED,  // Force TEXT mode until voice UI ready
+                    mode = _uiState.value.selectedMode,
                     piqSnapshotId = piqSnapshotId,
                     consentGiven = consentGiven
                 )

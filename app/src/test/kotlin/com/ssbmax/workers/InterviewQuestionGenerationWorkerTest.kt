@@ -21,6 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for InterviewQuestionGenerationWorker
@@ -33,6 +34,7 @@ import org.robolectric.RuntimeEnvironment
  * - Invalid PIQ submission handling
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE)
 class InterviewQuestionGenerationWorkerTest {
 
     private lateinit var context: Context

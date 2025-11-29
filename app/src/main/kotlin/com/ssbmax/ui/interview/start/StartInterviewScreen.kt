@@ -46,7 +46,7 @@ import com.ssbmax.core.domain.model.interview.InterviewMode
 @Composable
 fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSession: (String) -> Unit,
+    onNavigateToSession: (sessionId: String, mode: InterviewMode) -> Unit,
     onNavigateToResult: (String) -> Unit = {},  // Kept for compatibility but history now on TopicScreen
     viewModel: StartInterviewViewModel = hiltViewModel()
 ) {
@@ -55,7 +55,7 @@ fun StartInterviewScreen(
 
     LaunchedEffect(uiState.isSessionCreated) {
         if (uiState.isSessionCreated && uiState.sessionId != null) {
-            onNavigateToSession(uiState.sessionId!!)
+            onNavigateToSession(uiState.sessionId!!, uiState.selectedMode)
         }
     }
 
@@ -181,9 +181,8 @@ private fun MainContent(
                 )
                 FilterChip(
                     selected = uiState.selectedMode == InterviewMode.VOICE_BASED,
-                    onClick = { /* Disabled until voice UI implemented */ },
+                    onClick = { onModeSelect(InterviewMode.VOICE_BASED) },
                     label = { Text(stringResource(R.string.interview_mode_voice)) },
-                    enabled = false,
                     modifier = Modifier.weight(1f)
                 )
             }

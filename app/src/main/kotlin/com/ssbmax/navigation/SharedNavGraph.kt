@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ssbmax.core.domain.model.interview.InterviewMode
 
 /**
  * Shared navigation graph
@@ -352,10 +353,12 @@ fun NavGraphBuilder.sharedNavGraph(
         // IO Test (Interview Officer) - Navigate to interview feature
         com.ssbmax.ui.interview.start.StartInterviewScreen(
             onNavigateBack = { navController.navigateUp() },
-            onNavigateToSession = { sessionId ->
-                navController.navigate(
-                    SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
-                )
+            onNavigateToSession = { sessionId, mode ->
+                val destination = when (mode) {
+                    InterviewMode.TEXT_BASED -> SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
+                    InterviewMode.VOICE_BASED -> SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
+                }
+                navController.navigate(destination)
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
@@ -371,11 +374,12 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(SSBMaxDestinations.StartInterview.route) {
         com.ssbmax.ui.interview.start.StartInterviewScreen(
             onNavigateBack = { navController.navigateUp() },
-            onNavigateToSession = { sessionId ->
-                // Check interview mode from session to route appropriately
-                // For now, route based on mode stored in session
-                // TODO: Fetch session mode to determine routing
-                navController.navigate(SSBMaxDestinations.TextInterviewSession.createRoute(sessionId))
+            onNavigateToSession = { sessionId, mode ->
+                val destination = when (mode) {
+                    InterviewMode.TEXT_BASED -> SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
+                    InterviewMode.VOICE_BASED -> SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
+                }
+                navController.navigate(destination)
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
@@ -391,16 +395,29 @@ fun NavGraphBuilder.sharedNavGraph(
         val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
         com.ssbmax.ui.interview.session.InterviewSessionScreen(
             sessionId = sessionId,
-            onNavigateBack = { navController.navigateUp() },
+            onNavigateBack = {
+                // Use explicit navigation with popUpTo to avoid race conditions
+                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                }
+            },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
                     popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
                 }
             },
             onNavigateToHome = {
-                // Navigate to home, clearing interview backstack
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                // Navigate to Interview Preparation topic Tests tab, clearing interview backstack
+                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
                 }
             }
         )
@@ -414,7 +431,19 @@ fun NavGraphBuilder.sharedNavGraph(
         val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
         com.ssbmax.ui.interview.voice.VoiceInterviewSessionScreen(
             sessionId = sessionId,
-            onNavigateBack = { navController.navigateUp() },
+            onNavigateBack = {
+                // CRITICAL: Use explicit navigation with popUpTo to synchronously remove
+                // this screen from the back stack. Using popBackStack() alone causes a race
+                // condition where Compose creates a new ViewModel before the old screen is removed.
+                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    // Remove the voice interview session AND start interview from back stack
+                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
+                        inclusive = false // Keep the Topic screen in back stack
+                    }
+                    launchSingleTop = true
+                }
+            },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
                     popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }

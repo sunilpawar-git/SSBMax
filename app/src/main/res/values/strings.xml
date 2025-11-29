@@ -1127,6 +1127,8 @@
     <string name="voice_interview_error_complete_interview">Failed to complete interview</string>
     <string name="voice_interview_error_generate_results">Failed to generate results</string>
     <string name="voice_interview_error_generic">An error occurred</string>
+    <string name="voice_interview_interviewer_speaking">Speaking…</string>
+    <string name="cd_interviewer_speaking">Interviewer is speaking the question</string>
 
     <!-- Interview Result Notifications -->
     <string name="notification_interview_results_title">Interview Results Ready!</string>

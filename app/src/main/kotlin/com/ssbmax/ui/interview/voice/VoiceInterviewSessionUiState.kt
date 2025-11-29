@@ -25,11 +25,14 @@ data class VoiceInterviewSessionUiState(
     val isCompleted: Boolean = false,
     val resultId: String? = null,
     val hasRecordPermission: Boolean = false,
-    // Phase 2: Speech-to-Text fields
+    // Speech-to-Text fields
     val transcriptionState: TranscriptionState = TranscriptionState.IDLE,
     val liveTranscription: String = "",
     val finalTranscription: String = "",
-    val transcriptionError: String? = null
+    val transcriptionError: String? = null,
+    // Text-to-Speech fields (interviewer voice)
+    val isTTSSpeaking: Boolean = false,
+    val isTTSReady: Boolean = false
 ) {
     /**
      * Get interview mode
@@ -86,10 +89,12 @@ data class VoiceInterviewSessionUiState(
 
     /**
      * Check if can start recording
+     * Recording is allowed when TTS finishes speaking the question
      */
     fun canStartRecording(): Boolean {
         return hasRecordPermission &&
                 !isLoading &&
+                !isTTSSpeaking &&
                 recordingState == RecordingState.IDLE &&
                 currentQuestion != null
     }
