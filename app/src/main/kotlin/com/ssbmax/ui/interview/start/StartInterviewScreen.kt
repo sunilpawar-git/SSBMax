@@ -1,5 +1,10 @@
 package com.ssbmax.ui.interview.start
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,9 +38,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
@@ -52,6 +59,30 @@ fun StartInterviewScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var consentGiven by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Notification permission launcher (Android 13+)
+    // Results are delivered via notification, so we request permission before starting
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Permission granted/denied - proceed regardless */ }
+
+    /**
+     * Request notification permission if needed (Android 13+)
+     * Non-blocking: interview starts regardless of permission status
+     */
+    fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isSessionCreated) {
         if (uiState.isSessionCreated && uiState.sessionId != null) {
@@ -59,8 +90,10 @@ fun StartInterviewScreen(
         }
     }
 
+    // Request notification permission on first load (non-blocking)
     LaunchedEffect(Unit) {
         viewModel.checkEligibility()
+        requestNotificationPermissionIfNeeded()
     }
 
     Scaffold(

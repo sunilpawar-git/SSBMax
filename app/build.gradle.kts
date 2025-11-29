@@ -38,6 +38,20 @@ android {
             ?: project.findProperty("GEMINI_API_KEY") as? String
             ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+
+        // Sarvam AI API Key for primary premium TTS (Pro/Premium users)
+        // Read from local.properties (fallback to empty string - will use ElevenLabs or Android TTS)
+        val sarvamApiKey: String = localProperties.getProperty("SARVAM_API_KEY")
+            ?: project.findProperty("SARVAM_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "SARVAM_API_KEY", "\"$sarvamApiKey\"")
+
+        // ElevenLabs API Key for fallback premium TTS (Pro/Premium users)
+        // Read from local.properties (fallback to empty string - will use Android TTS)
+        val elevenLabsApiKey: String = localProperties.getProperty("ELEVENLABS_API_KEY")
+            ?: project.findProperty("ELEVENLABS_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "ELEVENLABS_API_KEY", "\"$elevenLabsApiKey\"")
     }
 
     buildTypes {
@@ -51,6 +65,13 @@ android {
             // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
             // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
+            
+            // Debug: Force premium TTS (Sarvam AI) for testing (even for FREE users)
+            // Premium TTS Debug Override:
+            // - "true": Force Sarvam AI TTS for all users (bypasses subscription check)
+            // - "false": Normal behavior (Sarvam AI for Pro/Premium, Android TTS for Free)
+            // NOTE: Set to "true" temporarily when testing premium voice quality
+            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
         }
         
         release {

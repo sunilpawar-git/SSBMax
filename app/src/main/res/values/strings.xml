@@ -1085,33 +1085,10 @@
 
     <!-- Voice Interview Session Screen -->
     <string name="voice_interview_session_title">Voice Interview</string>
-    <string name="voice_interview_record_hint">Tap the microphone to record your response</string>
-    <string name="voice_interview_recording">Recording…</string>
-    <string name="voice_interview_recorded">Recording complete</string>
-    <string name="voice_interview_duration">Duration: %1$s</string>
-    <string name="voice_interview_button_start_recording">Start Recording</string>
-    <string name="voice_interview_button_stop_recording">Stop Recording</string>
-    <string name="voice_interview_button_play">Play Recording</string>
-    <string name="voice_interview_button_re_record">Re-record</string>
-    <string name="voice_interview_transcription_label">Transcription (review and edit if needed)</string>
-    <string name="voice_interview_transcription_hint">Transcribed text will appear here…</string>
-    <string name="voice_interview_permission_required">Microphone permission required to record audio</string>
-    <string name="voice_interview_permission_button">Grant Permission</string>
-    <string name="cd_microphone">Microphone</string>
-    <string name="cd_play">Play audio</string>
-    <string name="cd_stop">Stop</string>
-
-    <!-- Speech-to-Text Transcription States (Phase 2) -->
-    <string name="listening">Listening…</string>
-    <string name="processing_speech">Processing speech…</string>
-    <string name="transcription_complete">Transcription complete</string>
-    <string name="transcription_error">Transcription error</string>
-    <string name="ready_to_record">Ready to record</string>
-    <string name="your_response">Your Response</string>
     <string name="generating_personalized_questions">Generating personalized questions…</string>
     <string name="this_will_take_30_60_seconds">This will take 30-60 seconds</string>
 
-    <!-- Voice Interview Additional States -->
+    <!-- Voice Interview States -->
     <string name="voice_interview_question_label">Question</string>
     <string name="voice_interview_playing">Playing…</string>
     <string name="voice_interview_loading_session">Loading interview session…</string>
@@ -1129,6 +1106,18 @@
     <string name="voice_interview_error_generic">An error occurred</string>
     <string name="voice_interview_interviewer_speaking">Speaking…</string>
     <string name="cd_interviewer_speaking">Interviewer is speaking the question</string>
+    
+    <!-- Response Input (Simplified UI - type or use keyboard voice) -->
+    <string name="voice_interview_response_hint">Your Response</string>
+    <string name="voice_interview_response_placeholder">Type your response or tap the keyboard mic to speak…</string>
+    <string name="voice_interview_char_count">%1$d characters</string>
+    
+    <!-- Premium Voice Feature (ElevenLabs TTS) -->
+    <string name="voice_interview_premium_voice">Premium Voice</string>
+    <string name="voice_interview_premium_voice_active">Human-like interviewer voice enabled</string>
+    <string name="voice_interview_standard_voice">Standard Voice</string>
+    <string name="voice_interview_premium_voice_upgrade">Upgrade to Pro or Premium for a more realistic interviewer voice</string>
+    <string name="voice_interview_premium_voice_error">Premium voice unavailable, using standard voice</string>
 
     <!-- Interview Result Notifications -->
     <string name="notification_interview_results_title">Interview Results Ready!</string>

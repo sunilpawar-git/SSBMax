@@ -5,9 +5,26 @@ import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.InterviewSession
 
 /**
+ * Pending response stored locally during interview (before AI analysis)
+ * Same pattern as text-based interview for consistency
+ */
+data class PendingResponse(
+    val questionId: String,
+    val questionText: String,
+    val responseText: String,
+    val thinkingTimeSec: Int,
+    val respondedAt: Long = System.currentTimeMillis()
+)
+
+/**
  * UI state for Voice Interview Session screen
  *
- * Manages voice recording, playback, and transcription
+ * OPTIMIZATION: Uses BACKGROUND AI analysis via WorkManager.
+ * Responses are saved to Firestore immediately (without OLQ scores),
+ * and AI analysis happens in the background. User navigates away
+ * instantly and is notified when results are ready.
+ *
+ * Same pattern as text-based interview for consistency.
  */
 data class VoiceInterviewSessionUiState(
     val isLoading: Boolean = true,
@@ -16,20 +33,17 @@ data class VoiceInterviewSessionUiState(
     val currentQuestion: InterviewQuestion? = null,
     val currentQuestionIndex: Int = 0,
     val totalQuestions: Int = 0,
-    val recordingState: RecordingState = RecordingState.IDLE,
-    val audioFilePath: String? = null,
-    val audioDurationMs: Long = 0L,
+    // User's response text (typed or voice-transcribed via keyboard)
+    val responseText: String = "",
     val isSubmittingResponse: Boolean = false,
     val thinkingStartTime: Long? = null,
     val error: String? = null,
     val isCompleted: Boolean = false,
     val resultId: String? = null,
-    val hasRecordPermission: Boolean = false,
-    // Speech-to-Text fields
-    val transcriptionState: TranscriptionState = TranscriptionState.IDLE,
-    val liveTranscription: String = "",
-    val finalTranscription: String = "",
-    val transcriptionError: String? = null,
+    // Background analysis: navigate away while AI processes
+    val isResultPending: Boolean = false,
+    // Local response storage during interview (NO real-time AI)
+    val pendingResponses: List<PendingResponse> = emptyList(),
     // Text-to-Speech fields (interviewer voice)
     val isTTSSpeaking: Boolean = false,
     val isTTSReady: Boolean = false
@@ -50,16 +64,12 @@ data class VoiceInterviewSessionUiState(
 
     /**
      * Check if response is ready to submit
-     * (audio recorded AND transcription available)
      */
     fun canSubmitResponse(): Boolean {
-        return audioFilePath != null &&
-                finalTranscription.trim().isNotBlank() &&
+        return responseText.trim().isNotBlank() &&
                 !isSubmittingResponse &&
                 !isLoading &&
-                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING) &&
-                currentQuestion != null &&
-                recordingState == RecordingState.RECORDED
+                currentQuestion != null
     }
 
     /**
@@ -78,70 +88,9 @@ data class VoiceInterviewSessionUiState(
     }
 
     /**
-     * Get audio duration in formatted string (MM:SS)
+     * Check if user can edit response
      */
-    fun getFormattedDuration(): String {
-        val seconds = (audioDurationMs / 1000).toInt()
-        val minutes = seconds / 60
-        val remainingSeconds = seconds % 60
-        return String.format("%02d:%02d", minutes, remainingSeconds)
+    fun canEditResponse(): Boolean {
+        return !isSubmittingResponse && !isLoading && currentQuestion != null
     }
-
-    /**
-     * Check if can start recording
-     * Recording is allowed when TTS finishes speaking the question
-     */
-    fun canStartRecording(): Boolean {
-        return hasRecordPermission &&
-                !isLoading &&
-                !isTTSSpeaking &&
-                recordingState == RecordingState.IDLE &&
-                currentQuestion != null
-    }
-
-    /**
-     * Check if can stop recording
-     */
-    fun canStopRecording(): Boolean {
-        return recordingState == RecordingState.RECORDING
-    }
-
-    /**
-     * Check if can play audio
-     */
-    fun canPlayAudio(): Boolean {
-        return audioFilePath != null &&
-                recordingState == RecordingState.RECORDED &&
-                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING)
-    }
-
-    /**
-     * Check if can re-record
-     */
-    fun canReRecord(): Boolean {
-        return recordingState == RecordingState.RECORDED &&
-                !isSubmittingResponse &&
-                transcriptionState !in listOf(TranscriptionState.LISTENING, TranscriptionState.PROCESSING)
-    }
-}
-
-/**
- * Audio recording states
- */
-enum class RecordingState {
-    IDLE,           // No recording yet
-    RECORDING,      // Currently recording
-    RECORDED,       // Recording complete, ready for playback/transcription
-    PLAYING         // Playing back recorded audio
-}
-
-/**
- * Speech-to-text transcription states (Phase 2)
- */
-enum class TranscriptionState {
-    IDLE,           // No transcription activity
-    LISTENING,      // SpeechRecognizer active, receiving audio
-    PROCESSING,     // Finalizing transcription
-    COMPLETED,      // Transcription complete
-    ERROR           // Transcription failed
 }

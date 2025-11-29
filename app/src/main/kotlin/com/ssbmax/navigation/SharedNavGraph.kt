@@ -448,6 +448,15 @@ fun NavGraphBuilder.sharedNavGraph(
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
                     popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
                 }
+            },
+            onNavigateToHome = {
+                // Navigate to interview topic screen after background analysis starts
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                }
             }
         )
     }

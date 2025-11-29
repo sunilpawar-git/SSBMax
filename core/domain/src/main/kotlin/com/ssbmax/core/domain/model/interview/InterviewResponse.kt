@@ -36,9 +36,9 @@ data class InterviewResponse(
         require(thinkingTimeSec >= 0) { "Thinking time cannot be negative" }
         require(confidenceScore in 0..100) { "Confidence score must be between 0 and 100" }
 
-        if (responseMode == InterviewMode.VOICE_BASED) {
-            require(audioUrl != null) { "Voice mode responses must have audio URL" }
-        }
+        // Note: Voice mode no longer requires audio URL since the new UX uses keyboard
+        // text input (with optional voice-to-text via keyboard mic). Audio recording
+        // was removed to simplify the flow and improve UX.
     }
 
     /**

@@ -1,10 +1,6 @@
 package com.ssbmax.ui.interview.voice
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,29 +8,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -48,29 +43,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 
 private const val TAG = "VoiceInterviewScreen"
 
-/** Voice Interview Session Screen - manages voice interview flow with recording/transcription */
+/** 
+ * Voice Interview Session Screen
+ * 
+ * Simplified UX: User types response OR uses keyboard's voice input (mic button)
+ * The Android keyboard's built-in voice-to-text is used instead of custom recording UI
+ * 
+ * OPTIMIZATION: Uses background analysis - user navigates away instantly,
+ * results arrive via notification.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VoiceInterviewSessionScreen(
     sessionId: String,
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit,
+    onNavigateToHome: () -> Unit,
     viewModel: VoiceInterviewSessionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     var showExitDialog by remember { mutableStateOf(false) }
+    var showPendingDialog by remember { mutableStateOf(false) }
     
     // Navigation guard to prevent multiple navigations
     var hasNavigated by remember { mutableStateOf(false) }
@@ -87,18 +91,56 @@ fun VoiceInterviewSessionScreen(
         onNavigateBack()
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        viewModel.updateRecordPermission(granted)
+    // Handle completion - show pending dialog for background analysis
+    LaunchedEffect(uiState.isCompleted, uiState.isResultPending) {
+        when {
+            // Background analysis mode - show dialog, then navigate to home
+            uiState.isCompleted && uiState.isResultPending -> {
+                showPendingDialog = true
+            }
+            // Instant result mode (legacy) - navigate directly to result
+            uiState.isCompleted && uiState.resultId != null && !uiState.isResultPending -> {
+                if (!hasNavigated) {
+                    hasNavigated = true
+                    viewModel.stopAll()
+                    onNavigateToResult(uiState.resultId!!)
+                }
+            }
+        }
+    }
+
+    // Results Pending Dialog
+    if (showPendingDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Can't dismiss - must acknowledge */ },
+            title = {
+                Text(stringResource(R.string.interview_results_pending_title))
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.interview_results_pending_message),
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPendingDialog = false
+                        if (!hasNavigated) {
+                            hasNavigated = true
+                            viewModel.stopAll()
+                            onNavigateToHome()
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.button_ok))
+                }
+            }
+        )
     }
 
     LaunchedEffect(Unit) {
         Log.d(TAG, "🚀 Screen initialized for session: $sessionId")
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-        viewModel.updateRecordPermission(hasPermission)
     }
     
     // Cleanup effect - ensure ViewModel is stopped when screen is disposed
@@ -113,15 +155,6 @@ fun VoiceInterviewSessionScreen(
             } else {
                 Log.d(TAG, "⏭️ DisposableEffect: Already navigated, skipping stopAll()")
             }
-        }
-    }
-
-    LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.resultId != null && !hasNavigated) {
-            Log.d(TAG, "✅ Interview completed, navigating to result: ${uiState.resultId}")
-            hasNavigated = true
-            viewModel.stopAll()
-            onNavigateToResult(uiState.resultId!!)
         }
     }
 
@@ -199,7 +232,6 @@ fun VoiceInterviewSessionScreen(
             when {
                 uiState.isLoading -> LoadingContent()
                 uiState.error != null -> ErrorContent(uiState.error)
-                !uiState.hasRecordPermission -> PermissionContent(onRequest = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) })
                 uiState.currentQuestion != null -> InterviewContent(uiState = uiState, viewModel = viewModel)
             }
         }
@@ -214,59 +246,42 @@ private fun ErrorContent(error: String?) = Column(
     Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
 ) { Text(error ?: stringResource(R.string.interview_error_generic), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error) }
 
-@Composable
-private fun PermissionContent(onRequest: () -> Unit) = Column(
-    Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)
-) {
-    Spacer(Modifier.weight(1f))
-    Icon(Icons.Default.Mic, stringResource(R.string.cd_microphone), Modifier.size(64.dp), MaterialTheme.colorScheme.primary)
-    Text(stringResource(R.string.voice_interview_permission_required), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-    Button(onClick = onRequest) { Text(stringResource(R.string.voice_interview_permission_button)) }
-    Spacer(Modifier.weight(1f))
-}
-
+/**
+ * Main interview content - Question + Response TextField + Submit
+ * 
+ * Simplified UX: Users type their response or use keyboard's voice input (mic button)
+ */
 @Composable
 private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: VoiceInterviewSessionViewModel) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Progress indicator
         LinearProgressIndicator(
             progress = { uiState.getProgressPercentage() / 100f },
             modifier = Modifier.fillMaxWidth()
         )
 
+        // Question card
         QuestionCard(
             questionText = uiState.currentQuestion!!.questionText,
             isSpeaking = uiState.isTTSSpeaking
         )
 
-        RecordingControlsCard(
-            recordingState = uiState.recordingState,
-            audioDurationMs = uiState.audioDurationMs,
-            formattedDuration = uiState.getFormattedDuration(),
-            canStart = uiState.canStartRecording(),
-            canPlay = uiState.canPlayAudio(),
-            canReRecord = uiState.canReRecord(),
-            onStart = viewModel::startRecording,
-            onStop = viewModel::stopRecording,
-            onCancel = viewModel::cancelRecording
+        // Response input card (TextField with keyboard voice support)
+        ResponseInputCard(
+            responseText = uiState.responseText,
+            onResponseChange = viewModel::updateResponseText,
+            enabled = uiState.canEditResponse()
         )
 
-        // Show transcription card when recording/recorded, otherwise show spacer
-        if (uiState.recordingState == RecordingState.RECORDING || uiState.recordingState == RecordingState.RECORDED) {
-            LiveTranscriptionCard(
-                state = uiState.transcriptionState,
-                liveTranscription = uiState.liveTranscription,
-                finalTranscription = uiState.finalTranscription,
-                transcriptionError = uiState.transcriptionError,
-                onEdit = viewModel::updateTranscription,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-        }
+        Spacer(modifier = Modifier.height(8.dp))
 
+        // Submit button
         SubmitButton(
             isSubmitting = uiState.isSubmittingResponse,
             canSubmit = uiState.canSubmitResponse(),
@@ -276,6 +291,9 @@ private fun InterviewContent(uiState: VoiceInterviewSessionUiState, viewModel: V
     }
 }
 
+/**
+ * Question card showing the interviewer's question
+ */
 @Composable
 private fun QuestionCard(questionText: String, isSpeaking: Boolean) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -313,108 +331,89 @@ private fun QuestionCard(questionText: String, isSpeaking: Boolean) {
     }
 }
 
+/**
+ * Response input card with TextField
+ * 
+ * Users can:
+ * - Type their response directly
+ * - Use the keyboard's microphone button for voice-to-text
+ *   (native Android feature - no custom recording needed)
+ */
 @Composable
-private fun RecordingControlsCard(
-    recordingState: RecordingState,
-    audioDurationMs: Long,
-    formattedDuration: String,
-    canStart: Boolean,
-    canPlay: Boolean,
-    canReRecord: Boolean,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onCancel: () -> Unit
+private fun ResponseInputCard(
+    responseText: String,
+    onResponseChange: (String) -> Unit,
+    enabled: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (recordingState == RecordingState.RECORDING) {
-                MaterialTheme.colorScheme.errorContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = when (recordingState) {
-                    RecordingState.IDLE -> stringResource(R.string.voice_interview_record_hint)
-                    RecordingState.RECORDING -> stringResource(R.string.voice_interview_recording)
-                    RecordingState.RECORDED -> stringResource(R.string.voice_interview_recorded)
-                    RecordingState.PLAYING -> stringResource(R.string.voice_interview_playing)
+                text = stringResource(R.string.voice_interview_response_hint),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedTextField(
+                value = responseText,
+                onValueChange = onResponseChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 150.dp, max = 300.dp),
+                enabled = enabled,
+                placeholder = { 
+                    Text(stringResource(R.string.voice_interview_response_placeholder)) 
                 },
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            if (audioDurationMs > 0) {
-                Text(
-                    text = stringResource(R.string.voice_interview_duration, formattedDuration),
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-
-            RecordingButtons(
-                recordingState = recordingState,
-                canStart = canStart,
-                canPlay = canPlay,
-                canReRecord = canReRecord,
-                onStart = onStart,
-                onStop = onStop,
-                onCancel = onCancel
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Default
+                ),
+                maxLines = 10,
+                supportingText = {
+                    Text(
+                        text = stringResource(R.string.voice_interview_char_count, responseText.length),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             )
         }
     }
 }
 
+/**
+ * Submit button - submits the current response
+ */
 @Composable
-private fun RecordingButtons(
-    recordingState: RecordingState,
-    canStart: Boolean,
-    canPlay: Boolean,
-    canReRecord: Boolean,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onCancel: () -> Unit
+private fun SubmitButton(
+    isSubmitting: Boolean,
+    canSubmit: Boolean,
+    hasMoreQuestions: Boolean,
+    onSubmit: () -> Unit
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        when (recordingState) {
-            RecordingState.IDLE -> {
-                FilledTonalButton(onClick = onStart, enabled = canStart) {
-                    Icon(Icons.Default.Mic, stringResource(R.string.cd_microphone), Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.voice_interview_button_start_recording))
-                }
-            }
-            RecordingState.RECORDING -> {
-                FilledTonalButton(
-                    onClick = onStop,
-                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(Icons.Default.Stop, stringResource(R.string.cd_stop), Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.voice_interview_button_stop_recording))
-                }
-            }
-            RecordingState.RECORDED, RecordingState.PLAYING -> {
-                OutlinedButton(onClick = { /* TODO: Playback */ }, enabled = canPlay) {
-                    Icon(Icons.Default.PlayArrow, stringResource(R.string.cd_play), Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.voice_interview_button_play))
-                }
-                OutlinedButton(onClick = onCancel, enabled = canReRecord) {
-                    Text(stringResource(R.string.voice_interview_button_re_record))
-                }
-            }
+    Button(
+        onClick = onSubmit,
+        enabled = canSubmit,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (isSubmitting) {
+            CircularProgressIndicator(
+                Modifier.size(24.dp),
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            Text(
+                stringResource(
+                    if (hasMoreQuestions) R.string.interview_button_submit 
+                    else R.string.interview_button_complete
+                )
+            )
         }
     }
-}
-
-@Composable
-private fun SubmitButton(isSubmitting: Boolean, canSubmit: Boolean, hasMoreQuestions: Boolean, onSubmit: () -> Unit) = Button(onClick = onSubmit, enabled = canSubmit, modifier = Modifier.fillMaxWidth()) {
-    if (isSubmitting) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-    else Text(stringResource(if (hasMoreQuestions) R.string.interview_button_submit else R.string.interview_button_complete))
 }
