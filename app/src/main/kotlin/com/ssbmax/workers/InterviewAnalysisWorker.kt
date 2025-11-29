@@ -49,10 +49,21 @@ class InterviewAnalysisWorker @AssistedInject constructor(
         val sessionId = inputData.getString(KEY_SESSION_ID)
         if (sessionId.isNullOrBlank()) {
             Log.e(TAG, "❌ No session ID provided")
+            ErrorLogger.log(
+                "Interview analysis worker started without session ID",
+                emptyMap(),
+                ErrorLogger.Severity.ERROR
+            )
             return Result.failure()
         }
 
+        val startTime = System.currentTimeMillis()
         Log.d(TAG, "🔄 Starting background analysis for session: $sessionId")
+        ErrorLogger.log(
+            "Interview analysis worker started",
+            mapOf("sessionId" to sessionId, "attempt" to runAttemptCount.toString()),
+            ErrorLogger.Severity.INFO
+        )
 
         return try {
             // 1. Get session
@@ -161,17 +172,49 @@ class InterviewAnalysisWorker @AssistedInject constructor(
                 Log.w(TAG, "⚠️ interviewResult is null, skipping notification")
             }
 
+            val durationMs = System.currentTimeMillis() - startTime
             Log.d(TAG, "🎉 InterviewAnalysisWorker completed successfully for session: $sessionId")
+            ErrorLogger.log(
+                "Interview analysis worker completed successfully",
+                mapOf(
+                    "sessionId" to sessionId,
+                    "successCount" to successCount.toString(),
+                    "failCount" to failCount.toString(),
+                    "durationMs" to durationMs.toString()
+                ),
+                ErrorLogger.Severity.INFO
+            )
             Result.success()
 
         } catch (e: Exception) {
+            val durationMs = System.currentTimeMillis() - startTime
             ErrorLogger.log(e, "Background interview analysis failed for session: $sessionId")
 
             if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
                 Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS}")
+                ErrorLogger.log(
+                    "Interview analysis worker will retry",
+                    mapOf(
+                        "sessionId" to sessionId,
+                        "attempt" to runAttemptCount.toString(),
+                        "maxAttempts" to InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS.toString(),
+                        "durationMs" to durationMs.toString()
+                    ),
+                    ErrorLogger.Severity.WARNING
+                )
                 Result.retry()
             } else {
                 Log.e(TAG, "❌ Max retries reached, marking session as failed")
+                ErrorLogger.log(
+                    e,
+                    "Interview analysis worker failed permanently",
+                    mapOf(
+                        "sessionId" to sessionId,
+                        "attempt" to runAttemptCount.toString(),
+                        "durationMs" to durationMs.toString()
+                    ),
+                    ErrorLogger.Severity.ERROR
+                )
                 updateSessionFailed(sessionId)
                 notificationHelper.showInterviewAnalysisFailedNotification(sessionId)
                 Result.failure()

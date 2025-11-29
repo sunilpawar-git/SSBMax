@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.ssbmax.BuildConfig
 import com.ssbmax.R
+import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.interview.InterviewResponse
@@ -55,6 +56,7 @@ class VoiceInterviewSessionViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val workManager: WorkManager,
+    private val analyticsManager: AnalyticsManager,
     @AndroidTTS private val androidTTSService: TTSService,
     @SarvamTTS private val sarvamTTSService: TTSService,
     @ElevenLabsTTS private val elevenLabsTTSService: TTSService,
@@ -161,10 +163,21 @@ class VoiceInterviewSessionViewModel @Inject constructor(
                             // Try ElevenLabs as fallback if Sarvam fails, then Android
                             if (ttsService == sarvamTTSService && elevenLabsTTSService.isReady()) {
                                 Log.d(TAG, "🔄 Sarvam AI failed, falling back to ElevenLabs TTS")
+                                analyticsManager.trackFeatureUsed(
+                                    "tts_fallback",
+                                    mapOf("from_service" to "sarvam_ai", "to_service" to "elevenlabs")
+                                )
                                 ttsService = elevenLabsTTSService
                                 observeTTSEvents()
                             } else {
                                 Log.d(TAG, "🔄 Premium TTS failed, falling back to Android TTS")
+                                analyticsManager.trackFeatureUsed(
+                                    "tts_fallback",
+                                    mapOf(
+                                        "from_service" to if (ttsService == sarvamTTSService) "sarvam_ai" else "elevenlabs",
+                                        "to_service" to "android"
+                                    )
+                                )
                                 ttsService = androidTTSService
                                 usingPremiumVoice = false
                                 observeTTSEvents()

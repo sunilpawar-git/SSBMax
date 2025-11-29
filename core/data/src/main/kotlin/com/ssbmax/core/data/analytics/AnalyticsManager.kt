@@ -36,6 +36,14 @@ class AnalyticsManager @Inject constructor(
         private const val EVENT_STUDY_MATERIAL_VIEWED = "study_material_viewed"
         private const val EVENT_FEATURE_USED = "feature_used"
         
+        // Interview Funnel Events
+        private const val EVENT_INTERVIEW_STARTED = "interview_started"
+        private const val EVENT_INTERVIEW_QUESTION_ANSWERED = "interview_question_answered"
+        private const val EVENT_INTERVIEW_COMPLETED = "interview_completed"
+        private const val EVENT_INTERVIEW_ABANDONED = "interview_abandoned"
+        private const val EVENT_INTERVIEW_RESULT_VIEWED = "interview_result_viewed"
+        private const val EVENT_TTS_USED = "tts_service_used"
+        
         // Parameter Names
         private const val PARAM_TEST_TYPE = "test_type"
         private const val PARAM_TEST_ID = "test_id"
@@ -254,6 +262,130 @@ class AnalyticsManager @Inject constructor(
             Log.d(TAG, "📊 Engagement tracked: $activityType for ${durationSeconds}s")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track engagement", e)
+        }
+    }
+    
+    // ============================================
+    // INTERVIEW FUNNEL TRACKING
+    // ============================================
+    
+    /**
+     * Track when an interview is started
+     * @param mode Interview mode (TEXT_BASED or VOICE_BASED)
+     * @param tier User's subscription tier
+     */
+    fun trackInterviewStarted(mode: String, tier: String) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_STARTED) {
+                param("interview_mode", mode)
+                param(PARAM_CURRENT_TIER, tier)
+            }
+            Log.d(TAG, "📊 Interview started: mode=$mode, tier=$tier")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track interview started", e)
+        }
+    }
+    
+    /**
+     * Track when a question is answered during interview
+     * @param questionIndex Current question index (0-based)
+     * @param totalQuestions Total number of questions
+     * @param thinkingTimeSec Time spent thinking before answering
+     */
+    fun trackInterviewQuestionAnswered(
+        questionIndex: Int,
+        totalQuestions: Int,
+        thinkingTimeSec: Int
+    ) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_QUESTION_ANSWERED) {
+                param("question_index", questionIndex.toLong())
+                param("total_questions", totalQuestions.toLong())
+                param("thinking_time_sec", thinkingTimeSec.toLong())
+                param("progress_percent", ((questionIndex + 1) * 100 / totalQuestions).toLong())
+            }
+            Log.d(TAG, "📊 Interview question answered: ${questionIndex + 1}/$totalQuestions")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track interview question answered", e)
+        }
+    }
+    
+    /**
+     * Track when an interview is completed successfully
+     * @param mode Interview mode (TEXT_BASED or VOICE_BASED)
+     * @param durationSec Total interview duration in seconds
+     * @param questionsAnswered Number of questions answered
+     */
+    fun trackInterviewCompleted(mode: String, durationSec: Long, questionsAnswered: Int) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_COMPLETED) {
+                param("interview_mode", mode)
+                param("duration_sec", durationSec)
+                param("questions_answered", questionsAnswered.toLong())
+                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            }
+            Log.d(TAG, "📊 Interview completed: mode=$mode, duration=${durationSec}s")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track interview completed", e)
+        }
+    }
+    
+    /**
+     * Track when an interview is abandoned (user exits early)
+     * @param mode Interview mode (TEXT_BASED or VOICE_BASED)
+     * @param questionIndex Question index where user abandoned (0-based)
+     * @param totalQuestions Total number of questions
+     */
+    fun trackInterviewAbandoned(mode: String, questionIndex: Int, totalQuestions: Int) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_ABANDONED) {
+                param("interview_mode", mode)
+                param("abandoned_at_question", questionIndex.toLong())
+                param("total_questions", totalQuestions.toLong())
+                param("progress_percent", (questionIndex * 100 / totalQuestions).toLong())
+                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            }
+            Log.d(TAG, "📊 Interview abandoned at question ${questionIndex + 1}/$totalQuestions")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track interview abandoned", e)
+        }
+    }
+    
+    /**
+     * Track when interview result is viewed
+     * @param resultId Interview result ID
+     * @param overallRating Final rating (1-10 SSB scale)
+     */
+    fun trackInterviewResultViewed(resultId: String, overallRating: Int) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_RESULT_VIEWED) {
+                param("result_id", resultId)
+                param("overall_rating", overallRating.toLong())
+                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            }
+            Log.d(TAG, "📊 Interview result viewed: rating=$overallRating")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track interview result viewed", e)
+        }
+    }
+    
+    /**
+     * Track TTS service usage and performance
+     * @param service TTS service name (sarvam_ai, elevenlabs, android)
+     * @param latencyMs API response latency in milliseconds
+     * @param success Whether the TTS call was successful
+     */
+    fun trackTTSUsed(service: String, latencyMs: Long, success: Boolean) {
+        try {
+            firebaseAnalytics.logEvent(EVENT_TTS_USED) {
+                param("tts_service", service)
+                param("latency_ms", latencyMs)
+                param("success", if (success) 1L else 0L)
+                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            }
+            Log.d(TAG, "📊 TTS used: service=$service, latency=${latencyMs}ms, success=$success")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to track TTS used", e)
         }
     }
     

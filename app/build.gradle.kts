@@ -71,7 +71,7 @@ android {
             // - "true": Force Sarvam AI TTS for all users (bypasses subscription check)
             // - "false": Normal behavior (Sarvam AI for Pro/Premium, Android TTS for Free)
             // NOTE: Set to "true" temporarily when testing premium voice quality
-            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
+            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "true")
         }
         
         release {

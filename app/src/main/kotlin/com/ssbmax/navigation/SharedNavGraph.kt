@@ -397,25 +397,29 @@ fun NavGraphBuilder.sharedNavGraph(
             sessionId = sessionId,
             onNavigateBack = {
                 // Use explicit navigation with popUpTo to avoid race conditions
+                // CRITICAL: Pop to StudentHome (always in back stack) instead of TopicScreen
+                // which might not exist if user navigated through IOTest or other routes
                 // Tab indices: 0=Overview, 1=Study Material, 2=Tests
                 navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
-                        inclusive = false
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
                     }
                     launchSingleTop = true
                 }
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
-                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = false }
                 }
             },
             onNavigateToHome = {
                 // Navigate to Interview Preparation topic Tests tab, clearing interview backstack
+                // CRITICAL: Pop to StudentHome (always in back stack) to ensure all interview
+                // screens are removed, regardless of navigation path
                 // Tab indices: 0=Overview, 1=Study Material, 2=Tests
                 navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
-                        inclusive = false
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
                     }
                     launchSingleTop = true
                 }
@@ -435,25 +439,28 @@ fun NavGraphBuilder.sharedNavGraph(
                 // CRITICAL: Use explicit navigation with popUpTo to synchronously remove
                 // this screen from the back stack. Using popBackStack() alone causes a race
                 // condition where Compose creates a new ViewModel before the old screen is removed.
+                // Pop to StudentHome (always in back stack) instead of TopicScreen which might
+                // not exist if user navigated through IOTest or other routes
                 // Tab indices: 0=Overview, 1=Study Material, 2=Tests
                 navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    // Remove the voice interview session AND start interview from back stack
-                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
-                        inclusive = false // Keep the Topic screen in back stack
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
                     }
                     launchSingleTop = true
                 }
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
-                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = false }
                 }
             },
             onNavigateToHome = {
                 // Navigate to interview topic screen after background analysis starts
+                // CRITICAL: Pop to StudentHome (always in back stack) to ensure all interview
+                // screens are removed, regardless of navigation path
                 navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    popUpTo(SSBMaxDestinations.TopicScreen.route) {
-                        inclusive = false
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
                     }
                     launchSingleTop = true
                 }

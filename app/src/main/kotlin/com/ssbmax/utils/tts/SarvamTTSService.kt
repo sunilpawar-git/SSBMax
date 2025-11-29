@@ -42,12 +42,11 @@ class SarvamTTSService @Inject constructor(
     companion object {
         private const val TAG = "SarvamTTS"
         
-        // Base URL for Sarvam AI API
-        // Note: This may need to be adjusted based on actual API documentation
-        private const val BASE_URL = "https://api.sarvam.ai/v1"
+        // Base URL for Sarvam AI API (no /v1 prefix)
+        private const val TTS_URL = "https://api.sarvam.ai/text-to-speech"
         
-        // TTS endpoint
-        private const val TTS_ENDPOINT = "/text-to-speech"
+        // Model for TTS synthesis
+        private const val MODEL = "bulbul:v2"
         
         // Speaker options from Sarvam AI
         // Male voices: abhilash, karun, hitesh
@@ -59,10 +58,10 @@ class SarvamTTSService @Inject constructor(
         private const val TARGET_LANGUAGE_CODE = "en-IN"
         
         // Audio format settings
-        private const val SPEECH_SAMPLE_RATE = 24000 // Hz - high quality
-        private const val PITCH = 0.0 // Default pitch (-0.75 to 0.75)
+        private const val SPEECH_SAMPLE_RATE = 22050 // Hz - as per Sarvam API docs
+        private const val PITCH = 0 // Default pitch
         private const val PACE = 1.0 // Default pace (0.5 to 2.0)
-        private const val LOUDNESS = 1.0 // Default loudness (0.3 to 3.0)
+        private const val LOUDNESS = 1.0 // Default loudness
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -153,14 +152,14 @@ class SarvamTTSService @Inject constructor(
 
     private suspend fun synthesizeSpeech(text: String): ByteArray? = withContext(Dispatchers.IO) {
         try {
-            val url = "$BASE_URL$TTS_ENDPOINT"
-            Log.d(TAG, "🌐 Calling Sarvam AI API: $url")
+            Log.d(TAG, "🌐 Calling Sarvam AI API: $TTS_URL")
 
             // Build request body according to Sarvam AI API format
             val requestBody = JSONObject().apply {
-                put("text", text)
+                put("inputs", org.json.JSONArray().put(text))
                 put("target_language_code", TARGET_LANGUAGE_CODE)
                 put("speaker", DEFAULT_SPEAKER)
+                put("model", MODEL)
                 put("enable_preprocessing", true)
                 put("pitch", PITCH)
                 put("pace", PACE)
@@ -171,10 +170,9 @@ class SarvamTTSService @Inject constructor(
             Log.d(TAG, "📤 Request body: $requestBody")
 
             val request = Request.Builder()
-                .url(url)
-                .addHeader("Authorization", "Bearer $apiKey")
+                .url(TTS_URL)
+                .addHeader("api-subscription-key", apiKey)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "audio/wav") // Sarvam AI returns WAV format
                 .post(requestBody.toRequestBody("application/json".toMediaType()))
                 .build()
 
@@ -185,19 +183,56 @@ class SarvamTTSService @Inject constructor(
             Log.d(TAG, "📥 Response in ${duration}ms (status: ${response.code})")
 
             if (response.isSuccessful) {
-                val audioBytes = response.body?.bytes()
+                val contentType = response.header("Content-Type") ?: ""
+                Log.d(TAG, "📦 Response Content-Type: $contentType")
+                
+                val responseBody = response.body?.string()
+                if (responseBody == null) {
+                    Log.e(TAG, "❌ Response body is null")
+                    return@withContext null
+                }
+                
+                // Sarvam AI returns JSON with base64-encoded audio
+                val audioBytes = try {
+                    val jsonResponse = JSONObject(responseBody)
+                    Log.d(TAG, "📦 Response JSON keys: ${jsonResponse.keys().asSequence().toList()}")
+                    
+                    // Try different possible field names for audio data
+                    val audioBase64 = when {
+                        jsonResponse.has("audios") -> {
+                            val audiosArray = jsonResponse.getJSONArray("audios")
+                            if (audiosArray.length() > 0) audiosArray.getString(0) else null
+                        }
+                        jsonResponse.has("audio") -> jsonResponse.getString("audio")
+                        jsonResponse.has("audio_content") -> jsonResponse.getString("audio_content")
+                        jsonResponse.has("data") -> jsonResponse.getString("data")
+                        else -> {
+                            Log.e(TAG, "❌ No audio field found in response: $responseBody")
+                            null
+                        }
+                    }
+                    
+                    if (audioBase64 != null) {
+                        android.util.Base64.decode(audioBase64, android.util.Base64.DEFAULT)
+                    } else null
+                } catch (e: Exception) {
+                    // If not JSON, try as raw bytes
+                    Log.d(TAG, "📦 Response is not JSON, treating as raw audio")
+                    responseBody.toByteArray()
+                }
+                
                 if (audioBytes != null) {
                     Log.d(TAG, "✅ Audio synthesized: ${audioBytes.size} bytes")
                     audioBytes
                 } else {
-                    Log.e(TAG, "❌ Response body is null")
+                    Log.e(TAG, "❌ Failed to extract audio from response")
                     null
                 }
             } else {
                 val errorBody = response.body?.string() ?: "No error body"
                 Log.e(TAG, "❌ Sarvam AI API error: ${response.code} - $errorBody")
-                Log.e(TAG, "🔍 Request URL: $url")
-                Log.e(TAG, "🔍 Request headers: Authorization=Bearer ${apiKey.take(8)}..., Content-Type=application/json")
+                Log.e(TAG, "🔍 Request URL: $TTS_URL")
+                Log.e(TAG, "🔍 Request headers: api-subscription-key=${apiKey.take(8)}...")
                 ErrorLogger.log(
                     Exception("Sarvam AI API error: ${response.code} - $errorBody"),
                     "Sarvam AI TTS API call failed"
