@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -216,22 +217,18 @@ fun InterviewSessionScreen(
                 },
                 actions = {
                     // Mute/Unmute toggle button (always enabled for silent text-based interview)
-                    IconButton(
-                        onClick = { viewModel.toggleTTSMute() }
-                    ) {
+                    IconButton(onClick = { viewModel.toggleTTSMute() }) {
                         Icon(
                             imageVector = if (uiState.isTTSMuted)
                                 Icons.Default.VolumeOff
                             else
                                 Icons.Default.VolumeUp,
-                            contentDescription = stringResource(
-                                if (uiState.isTTSMuted)
-                                    R.string.cd_unmute_tts
-                                else
-                                    R.string.cd_mute_tts
-                            ),
+                            contentDescription = if (uiState.isTTSMuted)
+                                stringResource(R.string.cd_unmute_tts)
+                            else
+                                stringResource(R.string.cd_mute_tts),
                             tint = if (uiState.isTTSMuted)
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                Color.Red // Red when muted
                             else
                                 MaterialTheme.colorScheme.primary
                         )

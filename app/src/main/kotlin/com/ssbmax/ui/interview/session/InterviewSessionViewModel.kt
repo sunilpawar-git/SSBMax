@@ -124,23 +124,27 @@ class InterviewSessionViewModel @Inject constructor(
         ttsService = when (subscriptionType) {
             SubscriptionType.PRO, SubscriptionType.PREMIUM -> {
                 Log.d(TAG, "🔊 [TTS-SELECT] Checking premium TTS services...")
+                Log.d(TAG, "🔊 [TTS-SELECT] Enhanced Android TTS ready: ${androidTTSService.isReady()}")
                 Log.d(TAG, "🔊 [TTS-SELECT] Sarvam AI ready: ${sarvamTTSService.isReady()}")
                 Log.d(TAG, "🔊 [TTS-SELECT] ElevenLabs ready: ${elevenLabsTTSService.isReady()}")
-                Log.d(TAG, "🔊 [TTS-SELECT] Android TTS ready: ${androidTTSService.isReady()}")
 
-                // Try Sarvam AI first (primary), fallback to ElevenLabs if not ready
-                if (sarvamTTSService.isReady()) {
+                // Priority: Android TTS (local) → Sarvam API → ElevenLabs API
+                if (androidTTSService.isReady()) {
+                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Enhanced Android TTS (Local Pro/Premium with Indian English)")
+                    usingPremiumVoice = true
+                    androidTTSService
+                } else if (sarvamTTSService.isReady()) {
                     Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Sarvam AI TTS (Pro/Premium)")
                     usingPremiumVoice = true
                     sarvamTTSService
                 } else if (elevenLabsTTSService.isReady()) {
-                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using ElevenLabs TTS (Fallback - Sarvam not available)")
+                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using ElevenLabs TTS (Fallback)")
                     usingPremiumVoice = true
                     elevenLabsTTSService
                 } else {
-                    Log.w(TAG, "⚠️ [TTS-SELECT] Premium TTS services not available, falling back to Android TTS")
+                    Log.w(TAG, "⚠️ [TTS-SELECT] No TTS services available")
                     usingPremiumVoice = false
-                    androidTTSService
+                    androidTTSService // Last resort
                 }
             }
             SubscriptionType.FREE -> {
@@ -185,27 +189,43 @@ class InterviewSessionViewModel @Inject constructor(
                         ErrorLogger.log(Exception(event.message), "[TTS-EVENTS] TTS service error")
                         _uiState.update { it.copy(isTTSSpeaking = false) }
                         if (event.fallbackToAndroid && usingPremiumVoice) {
-                            // Try ElevenLabs as fallback if Sarvam fails, then Android
-                            if (ttsService == sarvamTTSService && elevenLabsTTSService.isReady()) {
-                                Log.d(TAG, "🔄 Sarvam AI failed, falling back to ElevenLabs TTS")
-                                analyticsManager.trackFeatureUsed(
-                                    "tts_fallback",
-                                    mapOf("from_service" to "sarvam_ai", "to_service" to "elevenlabs")
-                                )
-                                ttsService = elevenLabsTTSService
-                                observeTTSEvents()
-                            } else {
-                                Log.d(TAG, "🔄 Premium TTS failed, falling back to Android TTS")
-                                analyticsManager.trackFeatureUsed(
-                                    "tts_fallback",
-                                    mapOf(
-                                        "from_service" to if (ttsService == sarvamTTSService) "sarvam_ai" else "elevenlabs",
-                                        "to_service" to "android"
+                            // Fallback chain: Android → Sarvam → ElevenLabs
+                            when {
+                                ttsService == androidTTSService && sarvamTTSService.isReady() -> {
+                                    Log.d(TAG, "🔄 Enhanced Android TTS failed, falling back to Sarvam AI TTS")
+                                    analyticsManager.trackFeatureUsed(
+                                        "tts_fallback",
+                                        mapOf("from_service" to "android_enhanced", "to_service" to "sarvam_ai")
                                     )
-                                )
-                                ttsService = androidTTSService
-                                usingPremiumVoice = false
-                                observeTTSEvents()
+                                    ttsService = sarvamTTSService
+                                    observeTTSEvents()
+                                }
+                                (ttsService == androidTTSService || ttsService == sarvamTTSService) && elevenLabsTTSService.isReady() -> {
+                                    Log.d(TAG, "🔄 Premium TTS failed, falling back to ElevenLabs TTS")
+                                    analyticsManager.trackFeatureUsed(
+                                        "tts_fallback",
+                                        mapOf("from_service" to if (ttsService == androidTTSService) "android_enhanced" else "sarvam_ai", "to_service" to "elevenlabs")
+                                    )
+                                    ttsService = elevenLabsTTSService
+                                    observeTTSEvents()
+                                }
+                                else -> {
+                                    Log.w(TAG, "⚠️ All premium TTS services failed, staying with basic Android TTS")
+                                    analyticsManager.trackFeatureUsed(
+                                        "tts_fallback",
+                                        mapOf(
+                                            "from_service" to when (ttsService) {
+                                                androidTTSService -> "android_enhanced"
+                                                sarvamTTSService -> "sarvam_ai"
+                                                elevenLabsTTSService -> "elevenlabs"
+                                                else -> "unknown"
+                                            },
+                                            "to_service" to "android_basic"
+                                        )
+                                    )
+                                    usingPremiumVoice = false
+                                    // Stay with current service but mark as not premium
+                                }
                             }
                         }
                     }
@@ -215,14 +235,20 @@ class InterviewSessionViewModel @Inject constructor(
     }
     
     private fun speakQuestion(questionText: String) {
-        if (isExiting || _uiState.value.isTTSMuted) return  // Skip if muted
-        if (ttsService.isReady()) {
-            Log.d(TAG, "🔊 Speaking question: ${questionText.take(50)}...")
-            _uiState.update { it.copy(isTTSSpeaking = true) }
-            viewModelScope.launch { ttsService.speak(questionText) }
-        } else {
-            _uiState.update { it.copy(isTTSReady = true) }
+        if (isExiting) {
+            Log.d(TAG, "🔊 [TTS-SPEAK] Skipping speech - exiting")
+            return
         }
+        if (_uiState.value.isTTSMuted) {
+            Log.d(TAG, "🔊 [TTS-SPEAK] Skipping speech - TTS is muted")
+            return
+        }
+
+        // Always attempt to speak - TTS service handles queuing internally
+        Log.d(TAG, "🔊 [TTS-SPEAK] Speaking question: ${questionText.take(50)}...")
+        Log.d(TAG, "🔊 [TTS-SPEAK] TTS service ready: ${ttsService.isReady()}")
+        _uiState.update { it.copy(isTTSSpeaking = true) }
+        viewModelScope.launch { ttsService.speak(questionText) }
     }
 
     private fun loadSession() {
@@ -308,6 +334,24 @@ class InterviewSessionViewModel @Inject constructor(
             } ?: Log.d(TAG, "🔊 [TTS-MUTE] No current question to speak")
             Log.d(TAG, "🔊 [TTS-MUTE] ✅ TTS unmuted successfully")
         }
+    }
+
+    /**
+     * Force unmute TTS (emergency function for stuck mute state)
+     *
+     * This function can be called if the mute toggle gets stuck
+     */
+    fun forceUnmuteTTS() {
+        Log.d(TAG, "🔊 [TTS-MUTE] Force unmute requested - current state: ${_uiState.value.isTTSMuted}")
+        _uiState.update { it.copy(isTTSMuted = false) }
+
+        // Try to speak current question
+        _uiState.value.currentQuestion?.let {
+            Log.d(TAG, "🔊 [TTS-MUTE] Force unmute - speaking current question")
+            speakQuestion(it.questionText)
+        } ?: Log.d(TAG, "🔊 [TTS-MUTE] Force unmute - no current question to speak")
+
+        Log.d(TAG, "🔊 [TTS-MUTE] ✅ TTS force unmuted successfully")
     }
 
     /**
@@ -513,9 +557,9 @@ class InterviewSessionViewModel @Inject constructor(
         Log.d(TAG, "🧹 onCleared()")
         super.onCleared()
         isExiting = true
-        androidTTSService.release()
         sarvamTTSService.release()
         elevenLabsTTSService.release()
+        androidTTSService.release()
     }
 }
 
