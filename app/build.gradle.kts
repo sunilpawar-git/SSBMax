@@ -25,7 +25,10 @@ tasks.register("createMockGoogleServices") {
               "client": [
                 {
                   "client_info": {
-                    "mobilesdk_app_id": "1:123456789:android:mockappid"
+                    "mobilesdk_app_id": "1:123456789:android:mockappid",
+                    "android_client_info": {
+                      "package_name": "com.ssbmax"
+                    }
                   },
                   "oauth_client": [],
                   "api_key": [
@@ -45,7 +48,7 @@ tasks.register("createMockGoogleServices") {
             """.trimIndent()
 
             file("google-services.json").writeText(mockGoogleServices)
-            println("✅ Created mock google-services.json for CI build")
+            println("✅ Created mock google-services.json for CI build with package name 'com.ssbmax'")
         }
     }
 }
