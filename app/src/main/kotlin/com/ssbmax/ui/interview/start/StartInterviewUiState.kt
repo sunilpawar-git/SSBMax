@@ -15,7 +15,6 @@ data class StartInterviewUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String? = null,
     val isGeneratingQuestions: Boolean = false,
-    val selectedMode: InterviewMode = InterviewMode.TEXT_BASED,
     val prerequisiteResult: PrerequisiteCheckResult? = null,
     val isEligible: Boolean = false,
     val sessionId: String? = null,

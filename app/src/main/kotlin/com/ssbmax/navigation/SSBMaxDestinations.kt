@@ -87,10 +87,8 @@ sealed class SSBMaxDestinations(val route: String) {
     }
 
     // Interview Screens - Stage 4 (Personal Interview)
+    // Unified interview with TTS support (mutable)
     data object StartInterview : SSBMaxDestinations("interview/start")
-    data object TextInterviewSession : SSBMaxDestinations("interview/text/{sessionId}") {
-        fun createRoute(sessionId: String) = "interview/text/$sessionId"
-    }
     data object VoiceInterviewSession : SSBMaxDestinations("interview/voice/{sessionId}") {
         fun createRoute(sessionId: String) = "interview/voice/$sessionId"
     }

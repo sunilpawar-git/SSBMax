@@ -53,7 +53,7 @@ import com.ssbmax.core.domain.model.interview.InterviewMode
 @Composable
 fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSession: (sessionId: String, mode: InterviewMode) -> Unit,
+    onNavigateToSession: (sessionId: String) -> Unit,
     onNavigateToResult: (String) -> Unit = {},  // Kept for compatibility but history now on TopicScreen
     viewModel: StartInterviewViewModel = hiltViewModel()
 ) {
@@ -86,7 +86,7 @@ fun StartInterviewScreen(
 
     LaunchedEffect(uiState.isSessionCreated) {
         if (uiState.isSessionCreated && uiState.sessionId != null) {
-            onNavigateToSession(uiState.sessionId!!, uiState.selectedMode)
+            onNavigateToSession(uiState.sessionId!!)
         }
     }
 
@@ -117,7 +117,6 @@ fun StartInterviewScreen(
                     uiState = uiState,
                     consentGiven = consentGiven,
                     onConsentChange = { consentGiven = it },
-                    onModeSelect = viewModel::selectMode,
                     onStartInterview = { viewModel.createSession(consentGiven) }
                 )
             }
@@ -186,7 +185,6 @@ private fun MainContent(
     uiState: StartInterviewUiState,
     consentGiven: Boolean,
     onConsentChange: (Boolean) -> Unit,
-    onModeSelect: (InterviewMode) -> Unit,
     onStartInterview: () -> Unit
 ) {
     LazyColumn(
@@ -199,26 +197,6 @@ private fun MainContent(
                 text = stringResource(R.string.interview_new_interview_title),
                 style = MaterialTheme.typography.titleLarge
             )
-        }
-
-        // Mode selection
-        item {
-            Text(text = stringResource(R.string.interview_select_mode), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = uiState.selectedMode == InterviewMode.TEXT_BASED,
-                    onClick = { onModeSelect(InterviewMode.TEXT_BASED) },
-                    label = { Text(stringResource(R.string.interview_mode_text)) },
-                    modifier = Modifier.weight(1f)
-                )
-                FilterChip(
-                    selected = uiState.selectedMode == InterviewMode.VOICE_BASED,
-                    onClick = { onModeSelect(InterviewMode.VOICE_BASED) },
-                    label = { Text(stringResource(R.string.interview_mode_voice)) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
         }
 
         // Prerequisites status

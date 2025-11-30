@@ -554,14 +554,19 @@ class FirestoreInterviewRepository @Inject constructor(
             val tierResult = subscriptionRepository.getSubscriptionTier(userId)
             if (tierResult.isFailure) return Result.success(0)
 
-            val tier = tierResult.getOrNull()?.displayName ?: return Result.success(0)
-            val limit = InterviewLimits.getLimit(tier, mode)
+            val tier = tierResult.getOrNull() ?: return Result.success(0)
 
+            // Convert SubscriptionTier to SubscriptionType
+            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
+
+            // Get total used interviews (unified system sums all modes)
             val stats = getInterviewStats(userId).getOrDefault(emptyMap())
-            val completed = stats[mode] ?: 0
-            val remaining = (limit - completed).coerceAtLeast(0)
+            val totalUsed = stats.values.sum()
 
-            Result.success(remaining)
+            // Calculate limits using new API
+            val limits = InterviewLimits.forSubscription(subscriptionType, totalUsed)
+
+            Result.success(limits.remaining)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get remaining interviews for user: $userId, mode: $mode", e)
             Result.failure(e)

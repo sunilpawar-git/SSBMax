@@ -1,56 +1,117 @@
 package com.ssbmax.core.domain.model.interview
 
+import com.ssbmax.core.domain.model.SubscriptionType
+
 /**
- * Interview limits based on subscription tiers
- *
- * Centralized constants to avoid duplication across use cases and repositories
+ * TTS service type available based on subscription tier
  */
-object InterviewLimits {
+enum class TTSServiceType {
+    ANDROID,      // Free tier - built-in Android TTS (robotic)
+    SARVAM_AI     // Pro/Premium tier - Sarvam AI TTS (premium, with ElevenLabs fallback)
+}
 
-    /**
-     * Get maximum interview limit for a subscription tier and mode
-     *
-     * @param tierName Subscription tier name (FREE, PRO, PREMIUM)
-     * @param mode Interview mode
-     * @return Maximum interviews allowed
-     */
-    fun getLimit(tierName: String, mode: InterviewMode): Int {
-        val tier = tierName.uppercase()
-        return when {
-            tier == "FREE" -> 0
-            tier == "PRO" && mode == InterviewMode.TEXT_BASED -> FREE_TIER_TEXT_LIMIT
-            tier == "PRO" && mode == InterviewMode.VOICE_BASED -> 0
-            tier == "PREMIUM" && mode == InterviewMode.TEXT_BASED -> PREMIUM_TIER_TEXT_LIMIT
-            tier == "PREMIUM" && mode == InterviewMode.VOICE_BASED -> PREMIUM_TIER_VOICE_LIMIT
-            else -> 0
+/**
+ * Interview limits for unified interview system (TTS-based subscriptions)
+ *
+ * New model after removing text-based interview:
+ * - All interviews use the same unified implementation
+ * - Subscription tier determines TTS quality and monthly limit
+ * - FREE: 1 interview/month with Android TTS
+ * - PRO: 1 interview/month with Sarvam AI TTS
+ * - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ *
+ * @param subscriptionType User's subscription tier
+ * @param totalLimit Total interviews allowed per month
+ * @param used Number of interviews used this month
+ * @param remaining Interviews remaining this month
+ * @param ttsService TTS service provided for this tier
+ */
+data class InterviewLimits(
+    val subscriptionType: SubscriptionType,
+    val totalLimit: Int,
+    val used: Int,
+    val remaining: Int,
+    val ttsService: TTSServiceType
+) {
+    init {
+        require(totalLimit >= 0) { "Total limit cannot be negative" }
+        require(used >= 0) { "Used count cannot be negative" }
+        require(remaining >= 0) { "Remaining count cannot be negative" }
+        require(used + remaining == totalLimit) { "Used + remaining must equal total limit" }
+    }
+
+    companion object {
+        /**
+         * Get interview limits for a subscription tier
+         *
+         * @param subscriptionType User's subscription tier
+         * @param used Number of interviews already used this month
+         * @return InterviewLimits with tier-specific values
+         */
+        fun forSubscription(subscriptionType: SubscriptionType, used: Int): InterviewLimits {
+            return when (subscriptionType) {
+                SubscriptionType.FREE -> InterviewLimits(
+                    subscriptionType = subscriptionType,
+                    totalLimit = 1,
+                    used = used,
+                    remaining = maxOf(0, 1 - used),
+                    ttsService = TTSServiceType.ANDROID
+                )
+                SubscriptionType.PRO -> InterviewLimits(
+                    subscriptionType = subscriptionType,
+                    totalLimit = 1,
+                    used = used,
+                    remaining = maxOf(0, 1 - used),
+                    ttsService = TTSServiceType.SARVAM_AI
+                )
+                SubscriptionType.PREMIUM -> InterviewLimits(
+                    subscriptionType = subscriptionType,
+                    totalLimit = 3,
+                    used = used,
+                    remaining = maxOf(0, 3 - used),
+                    ttsService = TTSServiceType.SARVAM_AI
+                )
+            }
+        }
+
+        /**
+         * Check if user has interviews remaining
+         */
+        fun hasInterviewsRemaining(subscriptionType: SubscriptionType, used: Int): Boolean {
+            return forSubscription(subscriptionType, used).remaining > 0
+        }
+
+        /**
+         * Get TTS service type for subscription tier
+         */
+        fun getTTSService(subscriptionType: SubscriptionType): TTSServiceType {
+            return when (subscriptionType) {
+                SubscriptionType.FREE -> TTSServiceType.ANDROID
+                SubscriptionType.PRO, SubscriptionType.PREMIUM -> TTSServiceType.SARVAM_AI
+            }
         }
     }
 
     /**
-     * Check if a tier supports a specific interview mode
-     *
-     * @param tierName Subscription tier name
-     * @param mode Interview mode
-     * @return True if tier supports the mode, false otherwise
+     * Check if user can start a new interview
      */
-    fun supportsMode(tierName: String, mode: InterviewMode): Boolean {
-        val tier = tierName.uppercase()
-        return when {
-            tier == "FREE" -> false
-            tier == "PRO" && mode == InterviewMode.VOICE_BASED -> false
-            tier == "PRO" && mode == InterviewMode.TEXT_BASED -> true
-            tier == "PREMIUM" -> true
-            else -> false
-        }
-    }
-
-    // Tier-specific limits
-    private const val FREE_TIER_TEXT_LIMIT = 2  // Free tier (renamed from PRO)
-    private const val PREMIUM_TIER_TEXT_LIMIT = 2
-    private const val PREMIUM_TIER_VOICE_LIMIT = 2
+    fun canStartInterview(): Boolean = remaining > 0
 
     /**
-     * Total interview limit for premium tier (all modes)
+     * Get percentage of limit used (0-100)
      */
-    const val PREMIUM_TOTAL_LIMIT = PREMIUM_TIER_TEXT_LIMIT + PREMIUM_TIER_VOICE_LIMIT
+    fun getUsagePercentage(): Int {
+        if (totalLimit == 0) return 0
+        return ((used.toFloat() / totalLimit) * 100).toInt()
+    }
+
+    /**
+     * Get display string for TTS service
+     */
+    fun getTTSDisplayName(): String {
+        return when (ttsService) {
+            TTSServiceType.ANDROID -> "Standard Voice"
+            TTSServiceType.SARVAM_AI -> "Premium AI Voice"
+        }
+    }
 }

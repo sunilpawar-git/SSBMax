@@ -353,12 +353,9 @@ fun NavGraphBuilder.sharedNavGraph(
         // IO Test (Interview Officer) - Navigate to interview feature
         com.ssbmax.ui.interview.start.StartInterviewScreen(
             onNavigateBack = { navController.navigateUp() },
-            onNavigateToSession = { sessionId, mode ->
-                val destination = when (mode) {
-                    InterviewMode.TEXT_BASED -> SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
-                    InterviewMode.VOICE_BASED -> SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
-                }
-                navController.navigate(destination)
+            onNavigateToSession = { sessionId ->
+                // Unified interview - always use voice-based interview (with TTS mute toggle)
+                navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId))
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
@@ -370,16 +367,13 @@ fun NavGraphBuilder.sharedNavGraph(
     // INTERVIEW SCREENS (Stage 4)
     // ========================
 
-    // Start Interview - Mode selection and prerequisite check
+    // Start Interview - Prerequisite check and session creation
     composable(SSBMaxDestinations.StartInterview.route) {
         com.ssbmax.ui.interview.start.StartInterviewScreen(
             onNavigateBack = { navController.navigateUp() },
-            onNavigateToSession = { sessionId, mode ->
-                val destination = when (mode) {
-                    InterviewMode.TEXT_BASED -> SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
-                    InterviewMode.VOICE_BASED -> SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
-                }
-                navController.navigate(destination)
+            onNavigateToSession = { sessionId ->
+                // Unified interview - always use voice-based interview (with TTS mute toggle)
+                navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId))
             },
             onNavigateToResult = { resultId ->
                 navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
@@ -387,53 +381,13 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
 
-    // Text Interview Session
-    composable(
-        route = SSBMaxDestinations.TextInterviewSession.route,
-        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-        com.ssbmax.ui.interview.session.InterviewSessionScreen(
-            sessionId = sessionId,
-            onNavigateBack = {
-                // Use explicit navigation with popUpTo to avoid race conditions
-                // CRITICAL: Pop to StudentHome (always in back stack) instead of TopicScreen
-                // which might not exist if user navigated through IOTest or other routes
-                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) {
-                        inclusive = false // Keep StudentHome
-                    }
-                    launchSingleTop = true
-                }
-            },
-            onNavigateToResult = { resultId ->
-                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = false }
-                }
-            },
-            onNavigateToHome = {
-                // Navigate to Interview Preparation topic Tests tab, clearing interview backstack
-                // CRITICAL: Pop to StudentHome (always in back stack) to ensure all interview
-                // screens are removed, regardless of navigation path
-                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) {
-                        inclusive = false // Keep StudentHome
-                    }
-                    launchSingleTop = true
-                }
-            }
-        )
-    }
-
-    // Voice Interview Session
+    // Interview Session (Unified - supports TTS with mute toggle)
     composable(
         route = SSBMaxDestinations.VoiceInterviewSession.route,
         arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
     ) { backStackEntry ->
         val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
-        com.ssbmax.ui.interview.voice.VoiceInterviewSessionScreen(
+        com.ssbmax.ui.interview.session.InterviewSessionScreen(
             sessionId = sessionId,
             onNavigateBack = {
                 // CRITICAL: Use explicit navigation with popUpTo to synchronously remove

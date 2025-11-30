@@ -1,27 +1,52 @@
 package com.ssbmax.core.domain.model.interview
 
 /**
- * Interview mode types based on subscription tier
+ * Interview mode types
  *
- * - TEXT_BASED: Available for Pro and Premium tiers (typing responses)
- * - VOICE_BASED: Available for Premium tier only (speech recognition)
+ * UNIFIED MODEL (Current):
+ * - VOICE_BASED: Unified interview with TTS support (mutable)
+ *   - FREE: 1/month with Android TTS
+ *   - PRO: 1/month with Sarvam AI TTS
+ *   - PREMIUM: 3/month with Sarvam AI TTS
+ *
+ * LEGACY (Deprecated):
+ * - TEXT_BASED: Old text-only interview (removed from UI, kept for data migration)
  */
 enum class InterviewMode {
     /**
-     * Text-based interview where candidate types responses
-     * Available for: Pro (2/month), Premium (unlimited)
+     * Legacy text-based interview (DEPRECATED)
+     *
+     * This mode has been removed from the app. All existing TEXT_BASED sessions
+     * will be automatically migrated to VOICE_BASED with TTS enabled.
+     *
+     * @deprecated Use VOICE_BASED instead. This exists only for backward compatibility
+     * with existing Firestore data during migration period.
      */
+    @Deprecated(
+        message = "TEXT_BASED interview has been removed. Use VOICE_BASED instead.",
+        replaceWith = ReplaceWith("VOICE_BASED"),
+        level = DeprecationLevel.WARNING
+    )
     TEXT_BASED,
 
     /**
-     * Voice-based interview with speech recognition and TTS
-     * Available for: Premium (2 voice + 2 text/month = 4 total)
+     * Unified interview with optional TTS voice
+     *
+     * Features:
+     * - Type or use keyboard voice input for responses
+     * - TTS voice quality based on subscription (Android TTS or Sarvam AI)
+     * - Mute toggle to disable TTS if preferred
+     *
+     * Available for:
+     * - FREE: 1/month with Android TTS
+     * - PRO: 1/month with Sarvam AI TTS
+     * - PREMIUM: 3/month with Sarvam AI TTS
      */
     VOICE_BASED;
 
     val displayName: String
         get() = when (this) {
-            TEXT_BASED -> "Text Interview"
-            VOICE_BASED -> "Voice Interview"
+            TEXT_BASED -> "Interview (Legacy)"
+            VOICE_BASED -> "Interview"
         }
 }

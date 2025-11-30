@@ -1,7 +1,7 @@
 package com.ssbmax.core.domain.usecase
 
+import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.interview.InterviewLimits
-import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.OIRStatus
 import com.ssbmax.core.domain.model.interview.PIQStatus
 import com.ssbmax.core.domain.model.interview.PPDTStatus
@@ -19,7 +19,10 @@ import javax.inject.Inject
  * 1. PIQ must be completed with AI score
  * 2. OIR must be completed with score >= 50%
  * 3. PPDT must be completed
- * 4. User must have Pro/Premium subscription with remaining interviews
+ * 4. User must have remaining interviews based on subscription:
+ *    - FREE: 1 interview/month with Android TTS
+ *    - PRO: 1 interview/month with Sarvam AI TTS
+ *    - PREMIUM: 3 interviews/month with Sarvam AI TTS
  */
 class CheckInterviewPrerequisitesUseCase @Inject constructor(
     private val submissionRepository: SubmissionRepository,
@@ -31,13 +34,11 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
      * Check all prerequisites for interview eligibility
      *
      * @param userId User to check
-     * @param desiredMode Desired interview mode (text or voice)
      * @param bypassSubscriptionCheck If true, skip subscription validation (for debug builds)
      * @return Prerequisite check result with detailed status
      */
     suspend operator fun invoke(
         userId: String,
-        desiredMode: InterviewMode,
         bypassSubscriptionCheck: Boolean = false
     ): Result<PrerequisiteCheckResult> {
         return try {
@@ -55,11 +56,10 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
                 // Debug mode: Mock as available with unlimited interviews
                 SubscriptionStatus.Available(
                     tier = "DEBUG",
-                    remaining = Int.MAX_VALUE,
-                    mode = desiredMode
+                    remaining = Int.MAX_VALUE
                 )
             } else {
-                checkSubscriptionStatus(userId, desiredMode)
+                checkSubscriptionStatus(userId)
             }
 
             // Collect failure reasons
@@ -85,7 +85,6 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
             // Only add subscription failure if not bypassed
             if (!bypassSubscriptionCheck) {
                 when (subscriptionStatus) {
-                    is SubscriptionStatus.FreeTier -> failureReasons.add("Upgrade to Pro or Premium subscription")
                     is SubscriptionStatus.LimitReached -> failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")
                     is SubscriptionStatus.Available -> {} // Valid
                 }
@@ -176,56 +175,46 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
     /**
      * Check subscription tier and interview limits
      */
-    private suspend fun checkSubscriptionStatus(
-        userId: String,
-        desiredMode: InterviewMode
-    ): SubscriptionStatus {
+    private suspend fun checkSubscriptionStatus(userId: String): SubscriptionStatus {
         // Get current subscription tier
         val tierResult = subscriptionRepository.getSubscriptionTier(userId)
 
         if (tierResult.isFailure) {
-            return SubscriptionStatus.FreeTier
+            return SubscriptionStatus.LimitReached(
+                tier = "Unknown",
+                used = 0,
+                limit = 0
+            )
         }
 
-        val tier = tierResult.getOrNull() ?: return SubscriptionStatus.FreeTier
+        val tier = tierResult.getOrNull()
+            ?: return SubscriptionStatus.LimitReached(
+                tier = "Unknown",
+                used = 0,
+                limit = 0
+            )
 
-        // Free tier has no access
-        if (tier.displayName.uppercase() == "FREE") {
-            return SubscriptionStatus.FreeTier
-        }
+        // Convert SubscriptionTier to SubscriptionType
+        val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-        // Check if voice mode is requested but user has Pro tier
-        if (desiredMode == InterviewMode.VOICE_BASED && tier.displayName.uppercase() == "PRO") {
-            return SubscriptionStatus.FreeTier // Pro doesn't support voice mode
-        }
-
-        // Check remaining interviews
-        val remainingResult = interviewRepository.getRemainingInterviews(userId, desiredMode)
-
-        if (remainingResult.isFailure) {
-            return SubscriptionStatus.FreeTier
-        }
-
-        val remaining = remainingResult.getOrNull() ?: 0
-
-        // Get usage stats to determine used count
+        // Get used count (sum all interview modes for unified system)
         val statsResult = interviewRepository.getInterviewStats(userId)
-        val used = statsResult.getOrNull()?.get(desiredMode) ?: 0
+        val stats = statsResult.getOrNull() ?: emptyMap()
+        val used = stats.values.sum()
 
-        // Get limit from centralized constants
-        val limit = InterviewLimits.getLimit(tier.displayName, desiredMode)
+        // Calculate limits using new InterviewLimits API
+        val limits = InterviewLimits.forSubscription(subscriptionType, used)
 
-        return if (remaining > 0) {
+        return if (limits.canStartInterview()) {
             SubscriptionStatus.Available(
                 tier = tier.displayName,
-                remaining = remaining,
-                mode = desiredMode
+                remaining = limits.remaining
             )
         } else {
             SubscriptionStatus.LimitReached(
                 tier = tier.displayName,
-                used = used,
-                limit = limit
+                used = limits.used,
+                limit = limits.totalLimit
             )
         }
     }

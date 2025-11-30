@@ -72,8 +72,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
         ppdtStatus = PPDTStatus.Completed(submissionId = "ppdt-123"),
         subscriptionStatus = SubscriptionStatus.Available(
             tier = "PREMIUM",
-            remaining = 5,
-            mode = InterviewMode.TEXT_BASED
+            remaining = 5
         ),
         failureReasons = emptyList()
     )
@@ -190,33 +189,13 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     }
 
     // ============================================
-    // MODE SELECTION TESTS
-    // ============================================
-
-    @Test
-    fun `selectMode updates selectedMode in state`() = runTest {
-        // Given
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // Default is TEXT_BASED
-        assertEquals(InterviewMode.TEXT_BASED, viewModel.uiState.value.selectedMode)
-
-        // When
-        viewModel.selectMode(InterviewMode.VOICE_BASED)
-
-        // Then
-        assertEquals(InterviewMode.VOICE_BASED, viewModel.uiState.value.selectedMode)
-    }
-
-    // ============================================
     // ELIGIBILITY CHECK TESTS
     // ============================================
 
     @Test
     fun `checkEligibility success sets isEligible true`() = runTest {
         // Given
-        coEvery { checkPrerequisites(any(), any(), any()) } returns Result.success(testPrerequisiteResult)
+        coEvery { checkPrerequisites(any(), any()) } returns Result.success(testPrerequisiteResult)
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -236,7 +215,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     @Test
     fun `checkEligibility failure sets error message`() = runTest {
         // Given
-        coEvery { checkPrerequisites(any(), any(), any()) } returns
+        coEvery { checkPrerequisites(any(), any()) } returns
             Result.failure(Exception("Prerequisites check failed"))
 
         val viewModel = createViewModel()
@@ -279,7 +258,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     @Test
     fun `createSession creates session and sets sessionId`() = runTest {
         // Given
-        coEvery { checkPrerequisites(any(), any(), any()) } returns Result.success(testPrerequisiteResult)
+        coEvery { checkPrerequisites(any(), any()) } returns Result.success(testPrerequisiteResult)
         coEvery { submissionRepository.getLatestPIQSubmission(testUserId) } returns Result.success(testPIQSubmission)
         coEvery { interviewRepository.createSession(any(), any(), any(), any()) } returns Result.success(testSession)
 
@@ -305,7 +284,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     @Test
     fun `createSession handles missing PIQ submission`() = runTest {
         // Given
-        coEvery { checkPrerequisites(any(), any(), any()) } returns Result.success(testPrerequisiteResult)
+        coEvery { checkPrerequisites(any(), any()) } returns Result.success(testPrerequisiteResult)
         coEvery { submissionRepository.getLatestPIQSubmission(testUserId) } returns Result.success(null)
 
         val viewModel = createViewModel()
@@ -330,7 +309,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     @Test
     fun `createSession handles repository failure`() = runTest {
         // Given
-        coEvery { checkPrerequisites(any(), any(), any()) } returns Result.success(testPrerequisiteResult)
+        coEvery { checkPrerequisites(any(), any()) } returns Result.success(testPrerequisiteResult)
         coEvery { submissionRepository.getLatestPIQSubmission(testUserId) } returns Result.success(testPIQSubmission)
         coEvery { interviewRepository.createSession(any(), any(), any(), any()) } returns
             Result.failure(Exception("Failed to create session"))

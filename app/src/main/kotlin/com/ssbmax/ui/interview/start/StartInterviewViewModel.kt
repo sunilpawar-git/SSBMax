@@ -87,10 +87,6 @@ class StartInterviewViewModel @Inject constructor(
         }
     }
 
-    fun selectMode(mode: InterviewMode) {
-        _uiState.update { it.copy(selectedMode = mode) }
-    }
-
     fun checkEligibility() {
         viewModelScope.launch {
             _uiState.update {
@@ -110,7 +106,6 @@ class StartInterviewViewModel @Inject constructor(
 
                 val result = checkPrerequisites(
                     userId = userId,
-                    desiredMode = _uiState.value.selectedMode,
                     bypassSubscriptionCheck = BuildConfig.DEBUG
                 )
 
@@ -195,7 +190,7 @@ class StartInterviewViewModel @Inject constructor(
 
                 val result = interviewRepository.createSession(
                     userId = userId,
-                    mode = _uiState.value.selectedMode,
+                    mode = InterviewMode.VOICE_BASED,
                     piqSnapshotId = piqSnapshotId,
                     consentGiven = consentGiven
                 )

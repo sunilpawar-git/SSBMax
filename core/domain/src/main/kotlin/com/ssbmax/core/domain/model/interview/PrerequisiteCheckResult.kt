@@ -166,12 +166,7 @@ sealed class PPDTStatus {
  */
 sealed class SubscriptionStatus {
     /**
-     * User has free tier (no interview access)
-     */
-    object FreeTier : SubscriptionStatus()
-
-    /**
-     * User has Pro/Premium but reached interview limit
+     * User reached interview limit for their tier
      *
      * @param tier Subscription tier
      * @param used Number of interviews used
@@ -188,16 +183,14 @@ sealed class SubscriptionStatus {
     }
 
     /**
-     * User has Pro/Premium with remaining interviews
+     * User has remaining interviews
      *
      * @param tier Subscription tier
      * @param remaining Number of interviews remaining
-     * @param mode Available interview mode (text or voice)
      */
     data class Available(
         val tier: String,
-        val remaining: Int,
-        val mode: InterviewMode
+        val remaining: Int
     ) : SubscriptionStatus() {
         init {
             require(remaining > 0) { "Remaining must be positive for available status" }
@@ -206,7 +199,6 @@ sealed class SubscriptionStatus {
 
     val displayName: String
         get() = when (this) {
-            is FreeTier -> "Free Tier"
             is LimitReached -> "Limit Reached"
             is Available -> "Available"
         }

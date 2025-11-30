@@ -11,18 +11,28 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.BuildConfig
 import com.ssbmax.R
+import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.data.util.trackMemoryLeaks
+import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.interview.InterviewResponse
 import com.ssbmax.core.domain.model.interview.InterviewStatus
+import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.utils.tts.AndroidTTS
+import com.ssbmax.utils.tts.ElevenLabsTTS
+import com.ssbmax.utils.tts.SarvamTTS
+import com.ssbmax.utils.tts.TTSService
 import com.ssbmax.workers.InterviewAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -32,115 +42,216 @@ import javax.inject.Inject
 /**
  * ViewModel for Interview Session screen
  *
- * Responsibilities:
- * - Load interview session and questions
- * - Manage question-by-question flow
- * - Submit responses with AI analysis
- * - Complete interview and navigate to results
+ * OPTIMIZATION: Uses BACKGROUND AI analysis.
+ * - Responses are stored locally during interview (NO real-time AI)
+ * - At completion, all responses saved to Firestore WITHOUT OLQ scores
+ * - WorkManager handles AI analysis in background
+ * - User navigates away instantly, notified when results ready
  *
- * MEMORY LEAK PREVENTION:
- * - Registers with MemoryLeakTracker
- * - Uses viewModelScope for all coroutines (auto-cancelled)
- * - No static references or context leaks
+ * This reduces per-question time from 6-8 seconds to <100ms.
  */
 @HiltViewModel
 class InterviewSessionViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
+    private val authRepository: AuthRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val workManager: WorkManager,
+    private val analyticsManager: AnalyticsManager,
+    @AndroidTTS private val androidTTSService: TTSService,
+    @SarvamTTS private val sarvamTTSService: TTSService,
+    @ElevenLabsTTS private val elevenLabsTTSService: TTSService,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
-        private const val TAG = "InterviewSessionVM"
+        private const val TAG = "VoiceInterviewVM"
     }
 
-    private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId")) {
-        "sessionId is required"
-    }
+    private val sessionId: String = checkNotNull(savedStateHandle.get<String>("sessionId"))
 
     private val _uiState = MutableStateFlow(InterviewSessionUiState())
     val uiState: StateFlow<InterviewSessionUiState> = _uiState.asStateFlow()
+    
+    @Volatile
+    private var isExiting: Boolean = false
+    
+    private var ttsService: TTSService = androidTTSService
+    private var usingPremiumVoice: Boolean = false
 
     init {
-        // Register for memory leak tracking
+        Log.d(TAG, "🚀 ViewModel initializing for session: $sessionId")
         trackMemoryLeaks("InterviewSessionViewModel")
-
-        // Load session
+        initializeTTS()
         loadSession()
     }
+    
+    private fun initializeTTS() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "🔊 [TTS-INIT] Starting TTS initialization...")
 
-    /**
-     * Load interview session and first question
-     */
+                if (BuildConfig.DEBUG && BuildConfig.FORCE_PREMIUM_TTS) {
+                    Log.d(TAG, "🔊 [TTS-INIT] DEBUG MODE: Forcing Sarvam AI TTS for testing")
+                    selectTTSService(SubscriptionType.PREMIUM)
+                    return@launch
+                }
+
+                val userId = authRepository.currentUser.first()?.id
+                if (userId == null) {
+                    Log.d(TAG, "🔊 [TTS-INIT] No user ID, using Android TTS")
+                    selectTTSService(SubscriptionType.FREE)
+                    return@launch
+                }
+
+                Log.d(TAG, "🔊 [TTS-INIT] Fetching user profile for userId: $userId")
+                val profileResult = userProfileRepository.getUserProfile(userId).first()
+                val subscriptionType = profileResult.getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+
+                Log.d(TAG, "🔊 [TTS-INIT] User subscription: $subscriptionType")
+                selectTTSService(subscriptionType)
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ [TTS-INIT] Failed to get subscription, using Android TTS", e)
+                ErrorLogger.log(e, "[TTS-INIT] Failed to initialize TTS with user subscription")
+                selectTTSService(SubscriptionType.FREE)
+            }
+        }
+    }
+    
+    private fun selectTTSService(subscriptionType: SubscriptionType) {
+        Log.d(TAG, "🔊 [TTS-SELECT] Selecting TTS service for: $subscriptionType")
+
+        ttsService = when (subscriptionType) {
+            SubscriptionType.PRO, SubscriptionType.PREMIUM -> {
+                Log.d(TAG, "🔊 [TTS-SELECT] Checking premium TTS services...")
+                Log.d(TAG, "🔊 [TTS-SELECT] Sarvam AI ready: ${sarvamTTSService.isReady()}")
+                Log.d(TAG, "🔊 [TTS-SELECT] ElevenLabs ready: ${elevenLabsTTSService.isReady()}")
+                Log.d(TAG, "🔊 [TTS-SELECT] Android TTS ready: ${androidTTSService.isReady()}")
+
+                // Try Sarvam AI first (primary), fallback to ElevenLabs if not ready
+                if (sarvamTTSService.isReady()) {
+                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Sarvam AI TTS (Pro/Premium)")
+                    usingPremiumVoice = true
+                    sarvamTTSService
+                } else if (elevenLabsTTSService.isReady()) {
+                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using ElevenLabs TTS (Fallback - Sarvam not available)")
+                    usingPremiumVoice = true
+                    elevenLabsTTSService
+                } else {
+                    Log.w(TAG, "⚠️ [TTS-SELECT] Premium TTS services not available, falling back to Android TTS")
+                    usingPremiumVoice = false
+                    androidTTSService
+                }
+            }
+            SubscriptionType.FREE -> {
+                Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Android TTS (Free)")
+                Log.d(TAG, "🔊 [TTS-SELECT] Android TTS ready: ${androidTTSService.isReady()}")
+                usingPremiumVoice = false
+                androidTTSService
+            }
+        }
+
+        Log.d(TAG, "🔊 [TTS-SELECT] Selected TTS service: ${ttsService.javaClass.simpleName}")
+        observeTTSEvents()
+    }
+    
+    private fun observeTTSEvents() {
+        Log.d(TAG, "🔊 [TTS-EVENTS] Starting to observe TTS events for ${ttsService.javaClass.simpleName}")
+
+        viewModelScope.launch {
+            ttsService.events.collect { event ->
+                if (isExiting) {
+                    Log.d(TAG, "🔊 [TTS-EVENTS] Ignoring event (exiting): $event")
+                    return@collect
+                }
+
+                Log.d(TAG, "🔊 [TTS-EVENTS] Received event: $event")
+
+                when (event) {
+                    is TTSService.TTSEvent.Ready -> {
+                        Log.d(TAG, "🔊 [TTS-EVENTS] ✅ TTS ready - Setting isTTSReady=true")
+                        _uiState.update { it.copy(isTTSReady = true) }
+                        _uiState.value.currentQuestion?.let {
+                            Log.d(TAG, "🔊 [TTS-EVENTS] Current question exists, will speak if not muted")
+                            speakQuestion(it.questionText)
+                        } ?: Log.d(TAG, "🔊 [TTS-EVENTS] No current question to speak")
+                    }
+                    is TTSService.TTSEvent.SpeechComplete -> {
+                        Log.d(TAG, "✅ [TTS-EVENTS] TTS speech complete")
+                        _uiState.update { it.copy(isTTSSpeaking = false) }
+                    }
+                    is TTSService.TTSEvent.Error -> {
+                        Log.e(TAG, "❌ [TTS-EVENTS] TTS error: ${event.message}")
+                        ErrorLogger.log(Exception(event.message), "[TTS-EVENTS] TTS service error")
+                        _uiState.update { it.copy(isTTSSpeaking = false) }
+                        if (event.fallbackToAndroid && usingPremiumVoice) {
+                            // Try ElevenLabs as fallback if Sarvam fails, then Android
+                            if (ttsService == sarvamTTSService && elevenLabsTTSService.isReady()) {
+                                Log.d(TAG, "🔄 Sarvam AI failed, falling back to ElevenLabs TTS")
+                                analyticsManager.trackFeatureUsed(
+                                    "tts_fallback",
+                                    mapOf("from_service" to "sarvam_ai", "to_service" to "elevenlabs")
+                                )
+                                ttsService = elevenLabsTTSService
+                                observeTTSEvents()
+                            } else {
+                                Log.d(TAG, "🔄 Premium TTS failed, falling back to Android TTS")
+                                analyticsManager.trackFeatureUsed(
+                                    "tts_fallback",
+                                    mapOf(
+                                        "from_service" to if (ttsService == sarvamTTSService) "sarvam_ai" else "elevenlabs",
+                                        "to_service" to "android"
+                                    )
+                                )
+                                ttsService = androidTTSService
+                                usingPremiumVoice = false
+                                observeTTSEvents()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun speakQuestion(questionText: String) {
+        if (isExiting || _uiState.value.isTTSMuted) return  // Skip if muted
+        if (ttsService.isReady()) {
+            Log.d(TAG, "🔊 Speaking question: ${questionText.take(50)}...")
+            _uiState.update { it.copy(isTTSSpeaking = true) }
+            viewModelScope.launch { ttsService.speak(questionText) }
+        } else {
+            _uiState.update { it.copy(isTTSReady = true) }
+        }
+    }
+
     private fun loadSession() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    loadingMessage = context.getString(R.string.interview_loading_session)
-                )
-            }
+            _uiState.update { it.copy(isLoading = true, loadingMessage = context.getString(R.string.interview_loading_session)) }
 
             try {
-                // Get session
                 val sessionResult = interviewRepository.getSession(sessionId)
                 if (sessionResult.isFailure) {
-                    ErrorLogger.log(
-                        throwable = sessionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "Failed to load interview session"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = context.getString(R.string.interview_error_load_session)
-                        )
-                    }
+                    handleError(sessionResult.exceptionOrNull() ?: Exception("Unknown"), R.string.interview_error_load_session)
                     return@launch
                 }
 
                 val session = sessionResult.getOrNull()
                 if (session == null) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = context.getString(R.string.interview_error_session_not_found)
-                        )
-                    }
+                    setError(R.string.interview_error_session_not_found)
                     return@launch
                 }
 
-                // Load current question
-                val questionId = session.questionIds.getOrNull(session.currentQuestionIndex)
-                if (questionId == null) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = context.getString(R.string.interview_error_no_questions)
-                        )
-                    }
+                val questionId = session.questionIds.getOrNull(session.currentQuestionIndex) ?: run {
+                    setError(R.string.interview_error_no_questions)
                     return@launch
                 }
 
                 val questionResult = interviewRepository.getQuestion(questionId)
                 if (questionResult.isFailure) {
-                    ErrorLogger.log(
-                        throwable = questionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                        description = "Failed to load interview question"
-                    )
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = context.getString(R.string.interview_error_load_question)
-                        )
-                    }
+                    handleError(questionResult.exceptionOrNull() ?: Exception("Unknown"), R.string.interview_error_load_question)
                     return@launch
                 }
-
                 val question = questionResult.getOrNull()
 
                 _uiState.update {
@@ -154,52 +265,73 @@ class InterviewSessionViewModel @Inject constructor(
                         thinkingStartTime = System.currentTimeMillis()
                     )
                 }
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Exception loading interview session")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadingMessage = null,
-                        error = context.getString(R.string.interview_error_generic)
-                    )
+                
+                if (!isExiting) {
+                    question?.let { speakQuestion(it.questionText) }
                 }
+            } catch (e: Exception) {
+                handleError(e, R.string.interview_error_generic)
             }
         }
     }
 
-    /**
-     * Update response text
-     */
-    fun updateResponse(text: String) {
+    fun updateResponseText(text: String) {
         _uiState.update { it.copy(responseText = text) }
     }
 
     /**
-     * Submit current response and move to next question
+     * Toggle TTS mute/unmute
      *
-     * OPTIMIZATION: Stores response locally and moves to next question INSTANTLY.
+     * When muting: stops current speech
+     * When unmuting: speaks current question from beginning
+     */
+    fun toggleTTSMute() {
+        val currentState = _uiState.value.isTTSMuted
+        val newMutedState = !currentState
+        Log.d(TAG, "🔊 [TTS-MUTE] Toggle requested: $currentState → $newMutedState")
+        Log.d(TAG, "🔊 [TTS-MUTE] Current state - isTTSReady: ${_uiState.value.isTTSReady}, isTTSSpeaking: ${_uiState.value.isTTSSpeaking}")
+
+        _uiState.update { it.copy(isTTSMuted = newMutedState) }
+
+        if (newMutedState) {
+            // Muting - stop current speech
+            Log.d(TAG, "🔊 [TTS-MUTE] Muting TTS - stopping any current speech")
+            ttsService.stop()
+            _uiState.update { it.copy(isTTSSpeaking = false) }
+            Log.d(TAG, "🔊 [TTS-MUTE] ✅ TTS muted successfully")
+        } else {
+            // Unmuting - speak current question
+            Log.d(TAG, "🔊 [TTS-MUTE] Unmuting TTS - attempting to speak current question")
+            _uiState.value.currentQuestion?.let {
+                Log.d(TAG, "🔊 [TTS-MUTE] Current question found, speaking...")
+                speakQuestion(it.questionText)
+            } ?: Log.d(TAG, "🔊 [TTS-MUTE] No current question to speak")
+            Log.d(TAG, "🔊 [TTS-MUTE] ✅ TTS unmuted successfully")
+        }
+    }
+
+    /**
+     * Submit current response and move to next question INSTANTLY.
+     *
+     * OPTIMIZATION: Stores response locally, NO AI analysis here.
      * AI analysis is deferred to completeInterview() for batch processing.
      * This reduces per-question time from 6-8s to <100ms.
      */
     fun submitResponse() {
         if (!_uiState.value.canSubmitResponse()) {
+            Log.d(TAG, "⚠️ Cannot submit response - validation failed")
             return
         }
 
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = true,
-                    error = null
-                )
-            }
+            _uiState.update { it.copy(isSubmittingResponse = true, error = null) }
 
             try {
                 val state = _uiState.value
                 val currentQuestion = state.currentQuestion ?: return@launch
 
-                // Store response locally (NO AI analysis here - instant!)
-                Log.d(TAG, "⚡ Storing response locally (batch analysis at end) - Question: ${currentQuestion.id}")
+                // Store response locally (NO AI analysis - instant!)
+                Log.d(TAG, "⚡ Storing response locally - Question: ${currentQuestion.id}")
                 val pendingResponse = PendingResponse(
                     questionId = currentQuestion.id,
                     questionText = currentQuestion.questionText,
@@ -207,67 +339,41 @@ class InterviewSessionViewModel @Inject constructor(
                     thinkingTimeSec = state.getThinkingTimeSeconds()
                 )
 
-                // Add to pending list
                 val updatedPending = state.pendingResponses + pendingResponse
-                Log.d(TAG, "📝 Added to pending (${updatedPending.size}/${state.totalQuestions} responses stored)")
+                Log.d(TAG, "📝 Stored locally (${updatedPending.size}/${state.totalQuestions} responses)")
 
-                // Check if there are more questions
                 if (state.hasMoreQuestions()) {
-                    // Update state with new pending response and load next question
                     _uiState.update { it.copy(pendingResponses = updatedPending) }
                     loadNextQuestion()
                 } else {
-                    // Last question - update state and start batch analysis
-                    _uiState.update { it.copy(pendingResponses = updatedPending) }
-                    completeInterview()
+                    // Last question - pass responses directly to avoid race condition
+                    Log.d(TAG, "🏁 Last question - completing with ${updatedPending.size} responses")
+                    completeInterview(updatedPending)
                 }
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Exception submitting interview response")
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    error = context.getString(R.string.interview_error_generic)
-                )
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Exception in submitResponse", e)
+                handleError(e, R.string.interview_error_generic)
+                _uiState.update { it.copy(isSubmittingResponse = false) }
             }
         }
     }
-}
 
-    /**
-     * Load next question (instant - no AI analysis)
-     */
     private suspend fun loadNextQuestion() {
         val state = _uiState.value
         val session = state.session ?: return
-
         val nextIndex = state.currentQuestionIndex + 1
         val nextQuestionId = session.questionIds.getOrNull(nextIndex) ?: return
+        
+        Log.d(TAG, "📥 Loading question $nextIndex: $nextQuestionId")
 
-        Log.d(TAG, "➡️ Loading next question (${nextIndex + 1}/${state.totalQuestions})")
-
-        // Update session progress in Firestore (async, don't wait)
         val updatedSession = session.copy(currentQuestionIndex = nextIndex)
-        viewModelScope.launch {
-            interviewRepository.updateSession(updatedSession)
-        }
+        interviewRepository.updateSession(updatedSession)
 
-        // Load next question
-        val questionResult = interviewRepository.getQuestion(nextQuestionId)
-        if (questionResult.isFailure) {
-            ErrorLogger.log(
-                throwable = questionResult.exceptionOrNull() ?: Exception("Unknown error"),
-                description = "Failed to load next question"
-            )
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    error = context.getString(R.string.interview_error_load_next_question)
-                )
-            }
+        val question = interviewRepository.getQuestion(nextQuestionId).getOrElse {
+            handleError(it, R.string.interview_error_load_next_question)
+            _uiState.update { s -> s.copy(isSubmittingResponse = false) }
             return
         }
-
-        val question = questionResult.getOrNull()
 
         _uiState.update {
             it.copy(
@@ -275,31 +381,30 @@ class InterviewSessionViewModel @Inject constructor(
                 session = updatedSession,
                 currentQuestion = question,
                 currentQuestionIndex = nextIndex,
-                responseText = "",
-                thinkingStartTime = System.currentTimeMillis()
+                thinkingStartTime = System.currentTimeMillis(),
+                responseText = ""
             )
         }
+        
+        speakQuestion(question.questionText)
     }
 
     /**
-     * Complete interview with BACKGROUND AI analysis
+     * Complete interview with BACKGROUND analysis.
      *
-     * FLOW:
-     * 1. Save responses immediately WITHOUT OLQ scores (instant)
+     * 1. Save all responses to Firestore WITHOUT OLQ scores (instant)
      * 2. Update session status to PENDING_ANALYSIS
-     * 3. Enqueue InterviewAnalysisWorker for background processing
-     * 4. Navigate user to home immediately with "results pending" message
-     * 5. Background: AI analyzes all responses, generates result, sends notification
+     * 3. Schedule WorkManager for background AI analysis
+     * 4. Navigate user away immediately
+     * 5. User gets notification when results ready
      *
-     * This provides real-time UX - user doesn't wait for AI analysis.
-     * Results appear later via notification (like real SSB).
+     * @param pendingResponses All responses collected during interview (passed directly to avoid race condition)
      */
-    private suspend fun completeInterview() {
+    private suspend fun completeInterview(pendingResponses: List<PendingResponse>) {
         val state = _uiState.value
         val session = state.session ?: return
-        val pendingResponses = state.pendingResponses
 
-        Log.d(TAG, "🏁 Completing interview with ${pendingResponses.size} responses (background analysis mode)")
+        Log.d(TAG, "🏁 Completing interview with ${pendingResponses.size} responses (background analysis)")
 
         _uiState.update {
             it.copy(
@@ -309,12 +414,10 @@ class InterviewSessionViewModel @Inject constructor(
         }
 
         try {
-            // STEP 1: Save all responses to Firestore WITHOUT OLQ scores (INSTANT)
-            // OLQ scores will be added by background worker
-            Log.d(TAG, "💾 Saving ${pendingResponses.size} responses to Firestore (no AI analysis)...")
+            // STEP 1: Save all responses to Firestore WITHOUT OLQ scores
+            Log.d(TAG, "💾 Saving ${pendingResponses.size} responses to Firestore...")
             
             for ((index, pending) in pendingResponses.withIndex()) {
-                // Create response object WITHOUT OLQ scores - worker will add them
                 val response = InterviewResponse(
                     id = UUID.randomUUID().toString(),
                     sessionId = sessionId,
@@ -324,8 +427,8 @@ class InterviewSessionViewModel @Inject constructor(
                     respondedAt = Instant.ofEpochMilli(pending.respondedAt),
                     thinkingTimeSec = pending.thinkingTimeSec,
                     audioUrl = null,
-                    olqScores = emptyMap(),  // Empty - worker will fill this
-                    confidenceScore = 0       // Worker will update
+                    olqScores = emptyMap(),  // Empty - background worker will fill
+                    confidenceScore = 0
                 )
 
                 val submitResult = interviewRepository.submitResponse(response)
@@ -333,46 +436,34 @@ class InterviewSessionViewModel @Inject constructor(
                     Log.w(TAG, "Failed to save response ${index + 1}: ${submitResult.exceptionOrNull()?.message}")
                 }
             }
-
-            Log.d(TAG, "✅ Saved ${pendingResponses.size} responses to Firestore")
+            Log.d(TAG, "✅ Saved ${pendingResponses.size} responses")
 
             // STEP 2: Update session status to PENDING_ANALYSIS
-            Log.d(TAG, "📊 Updating session status to PENDING_ANALYSIS...")
-            val updatedSession = session.copy(
-                status = InterviewStatus.PENDING_ANALYSIS,
-                currentQuestionIndex = session.questionIds.size - 1  // Mark all questions answered
-            )
-            val sessionUpdateResult = interviewRepository.updateSession(updatedSession)
-            if (sessionUpdateResult.isFailure) {
-                Log.w(TAG, "Failed to update session status: ${sessionUpdateResult.exceptionOrNull()?.message}")
-            }
+            val updatedSession = session.copy(status = InterviewStatus.PENDING_ANALYSIS)
+            interviewRepository.updateSession(updatedSession)
+            Log.d(TAG, "✅ Session marked as PENDING_ANALYSIS")
 
             // STEP 3: Enqueue background analysis worker
-            Log.d(TAG, "🔄 Enqueuing InterviewAnalysisWorker for background processing...")
+            Log.d(TAG, "🔄 Enqueuing InterviewAnalysisWorker...")
             enqueueAnalysisWorker(sessionId)
 
-            Log.d(TAG, "🎉 Responses saved! Navigating to home. Results will be available shortly via notification.")
-
-            // STEP 4: Navigate user away immediately
+            // STEP 4: Navigate user away (results pending)
             _uiState.update {
                 it.copy(
                     isSubmittingResponse = false,
                     loadingMessage = null,
                     isCompleted = true,
-                    isResultPending = true,  // Signal UI to show pending message
-                    resultId = null          // No result yet - will come via notification
+                    isResultPending = true,
+                    resultId = sessionId  // Use sessionId for pending results
                 )
             }
+            Log.d(TAG, "✅ Interview completed - background analysis scheduled")
 
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Exception completing interview")
-            _uiState.update {
-                it.copy(
-                    isSubmittingResponse = false,
-                    loadingMessage = null,
-                    error = context.getString(R.string.interview_error_generic)
-                )
-            }
+            Log.e(TAG, "❌ Exception completing interview", e)
+            ErrorLogger.log(e, "Exception completing voice interview")
+            handleError(e, R.string.interview_error_complete_interview)
+            _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null) }
         }
     }
 
@@ -381,7 +472,7 @@ class InterviewSessionViewModel @Inject constructor(
      */
     private fun enqueueAnalysisWorker(sessionId: String) {
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)  // Need network for Gemini API
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<InterviewAnalysisWorker>()
@@ -391,20 +482,40 @@ class InterviewSessionViewModel @Inject constructor(
             .setConstraints(constraints)
             .build()
 
-        // Use unique work to prevent duplicate workers for same session
         workManager.enqueueUniqueWork(
             "interview_analysis_$sessionId",
-            ExistingWorkPolicy.KEEP,  // Don't restart if already running
+            ExistingWorkPolicy.KEEP,
             workRequest
         )
 
         Log.d(TAG, "📥 InterviewAnalysisWorker enqueued for session: $sessionId")
     }
 
-    /**
-     * Clear error message
-     */
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
+    private fun handleError(error: Throwable, stringResId: Int) {
+        ErrorLogger.log(error, "Voice interview error")
+        setError(stringResId)
+    }
+
+    private fun setError(stringResId: Int) {
+        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = context.getString(stringResId)) }
+    }
+
+    fun clearError() = _uiState.update { it.copy(error = null) }
+    
+    fun stopAll() {
+        Log.d(TAG, "🛑 stopAll() called")
+        isExiting = true
+        ttsService.stop()
+        _uiState.update { it.copy(isTTSSpeaking = false) }
+    }
+
+    override fun onCleared() {
+        Log.d(TAG, "🧹 onCleared()")
+        super.onCleared()
+        isExiting = true
+        androidTTSService.release()
+        sarvamTTSService.release()
+        elevenLabsTTSService.release()
     }
 }
+

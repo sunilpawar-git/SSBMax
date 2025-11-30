@@ -31,7 +31,8 @@
       "WebFetch(domain:docs.cloud.google.com)",
       "Bash(adb devices:*)",
       "Bash(adb logcat:*)",
-      "Bash(adb -s 4A231VDAQ0001D logcat:*)"
+      "Bash(adb -s 4A231VDAQ0001D logcat:*)",
+      "Bash(uniq:*)"
     ],
     "deny": [],
     "ask": []

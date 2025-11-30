@@ -1,7 +1,7 @@
 package com.ssbmax.core.domain.usecase
 
+import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.interview.InterviewLimits
-import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
 import javax.inject.Inject
@@ -9,10 +9,10 @@ import javax.inject.Inject
 /**
  * Use case to check interview limits based on subscription tier
  *
- * Limits:
- * - Free: No access
- * - Pro: 2 text interviews per month
- * - Premium: 2 text + 2 voice interviews per month (4 total)
+ * New unified interview limits (TTS-based):
+ * - FREE: 1 interview/month with Android TTS
+ * - PRO: 1 interview/month with Sarvam AI TTS
+ * - PREMIUM: 3 interviews/month with Sarvam AI TTS
  */
 class CheckInterviewLimitsUseCase @Inject constructor(
     private val subscriptionRepository: SubscriptionRepository,
@@ -20,16 +20,12 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 ) {
 
     /**
-     * Check if user has remaining interviews for the specified mode
+     * Check if user has remaining interviews
      *
      * @param userId User to check
-     * @param mode Interview mode (text or voice)
      * @return True if user has remaining interviews, false otherwise
      */
-    suspend operator fun invoke(
-        userId: String,
-        mode: InterviewMode
-    ): Result<Boolean> {
+    suspend operator fun invoke(userId: String): Result<Boolean> {
         return try {
             // Get current subscription tier
             val tierResult = subscriptionRepository.getSubscriptionTier(userId)
@@ -40,26 +36,16 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 
             val tier = tierResult.getOrNull() ?: return Result.success(false)
 
-            // Free tier has no access
-            if (tier.displayName.uppercase() == "FREE") {
-                return Result.success(false)
-            }
+            // Convert SubscriptionTier enum to SubscriptionType for InterviewLimits
+            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-            // Pro tier doesn't support voice mode
-            if (tier.displayName.uppercase() == "PRO" && mode == InterviewMode.VOICE_BASED) {
-                return Result.success(false)
-            }
+            // Get used count from repository
+            val used = getUsedCount(userId).getOrNull() ?: 0
 
-            // Check remaining interviews for this mode
-            val remainingResult = interviewRepository.getRemainingInterviews(userId, mode)
+            // Calculate limits using InterviewLimits
+            val limits = InterviewLimits.forSubscription(subscriptionType, used)
 
-            if (remainingResult.isFailure) {
-                return Result.success(false)
-            }
-
-            val remaining = remainingResult.getOrNull() ?: 0
-
-            Result.success(remaining > 0)
+            Result.success(limits.canStartInterview())
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -69,13 +55,9 @@ class CheckInterviewLimitsUseCase @Inject constructor(
      * Get remaining interview count for user
      *
      * @param userId User to check
-     * @param mode Interview mode
      * @return Number of remaining interviews
      */
-    suspend fun getRemainingCount(
-        userId: String,
-        mode: InterviewMode
-    ): Result<Int> {
+    suspend fun getRemainingCount(userId: String): Result<Int> {
         return try {
             // Get current subscription tier
             val tierResult = subscriptionRepository.getSubscriptionTier(userId)
@@ -86,18 +68,16 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 
             val tier = tierResult.getOrNull() ?: return Result.success(0)
 
-            // Free tier has no access
-            if (tier.displayName.uppercase() == "FREE") {
-                return Result.success(0)
-            }
+            // Convert SubscriptionTier enum to SubscriptionType
+            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-            // Pro tier doesn't support voice mode
-            if (tier.displayName.uppercase() == "PRO" && mode == InterviewMode.VOICE_BASED) {
-                return Result.success(0)
-            }
+            // Get used count
+            val used = getUsedCount(userId).getOrNull() ?: 0
 
-            // Get remaining interviews
-            interviewRepository.getRemainingInterviews(userId, mode)
+            // Calculate limits
+            val limits = InterviewLimits.forSubscription(subscriptionType, used)
+
+            Result.success(limits.remaining)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -107,13 +87,9 @@ class CheckInterviewLimitsUseCase @Inject constructor(
      * Get maximum interview limit for user's subscription tier
      *
      * @param userId User to check
-     * @param mode Interview mode
      * @return Maximum interviews allowed
      */
-    suspend fun getMaxLimit(
-        userId: String,
-        mode: InterviewMode
-    ): Result<Int> {
+    suspend fun getMaxLimit(userId: String): Result<Int> {
         return try {
             // Get current subscription tier
             val tierResult = subscriptionRepository.getSubscriptionTier(userId)
@@ -124,10 +100,13 @@ class CheckInterviewLimitsUseCase @Inject constructor(
 
             val tier = tierResult.getOrNull() ?: return Result.success(0)
 
-            // Get limit from centralized constants
-            val limit = InterviewLimits.getLimit(tier.displayName, mode)
+            // Convert SubscriptionTier enum to SubscriptionType
+            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-            Result.success(limit)
+            // Get limit from InterviewLimits (used=0 doesn't matter for totalLimit)
+            val limits = InterviewLimits.forSubscription(subscriptionType, 0)
+
+            Result.success(limits.totalLimit)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -137,14 +116,11 @@ class CheckInterviewLimitsUseCase @Inject constructor(
      * Get used interview count for user
      *
      * @param userId User to check
-     * @param mode Interview mode
-     * @return Number of interviews used
+     * @return Number of interviews used this month
      */
-    suspend fun getUsedCount(
-        userId: String,
-        mode: InterviewMode
-    ): Result<Int> {
+    suspend fun getUsedCount(userId: String): Result<Int> {
         return try {
+            // Get interview stats (returns map of mode -> count)
             val statsResult = interviewRepository.getInterviewStats(userId)
 
             if (statsResult.isFailure) {
@@ -152,73 +128,57 @@ class CheckInterviewLimitsUseCase @Inject constructor(
             }
 
             val stats = statsResult.getOrNull() ?: return Result.success(0)
-            val used = stats[mode] ?: 0
 
-            Result.success(used)
+            // Sum all interview counts (unified system counts all interviews)
+            val totalUsed = stats.values.sum()
+
+            Result.success(totalUsed)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     /**
-     * Get interview usage summary for user
+     * Get interview limits summary for user
      *
      * @param userId User to check
-     * @return Map of mode to usage info (used, limit, remaining)
+     * @return Interview usage info (used, limit, remaining, TTS service)
      */
-    suspend fun getUsageSummary(userId: String): Result<Map<InterviewMode, InterviewUsageInfo>> {
+    suspend fun getInterviewLimits(userId: String): Result<InterviewLimits> {
         return try {
-            val summary = mutableMapOf<InterviewMode, InterviewUsageInfo>()
+            // Get current subscription tier
+            val tierResult = subscriptionRepository.getSubscriptionTier(userId)
 
-            for (mode in InterviewMode.entries) {
-                val maxLimit = getMaxLimit(userId, mode).getOrNull() ?: 0
-                val used = getUsedCount(userId, mode).getOrNull() ?: 0
-                val remaining = getRemainingCount(userId, mode).getOrNull() ?: 0
-
-                summary[mode] = InterviewUsageInfo(
-                    used = used,
-                    limit = maxLimit,
-                    remaining = remaining
+            if (tierResult.isFailure) {
+                // Return default FREE tier limits on error
+                return Result.success(
+                    InterviewLimits.forSubscription(
+                        com.ssbmax.core.domain.model.SubscriptionType.FREE,
+                        0
+                    )
                 )
             }
 
-            Result.success(summary)
+            val tier = tierResult.getOrNull()
+                ?: return Result.success(
+                    InterviewLimits.forSubscription(
+                        com.ssbmax.core.domain.model.SubscriptionType.FREE,
+                        0
+                    )
+                )
+
+            // Convert SubscriptionTier to SubscriptionType
+            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
+
+            // Get used count
+            val used = getUsedCount(userId).getOrNull() ?: 0
+
+            // Calculate and return limits
+            val limits = InterviewLimits.forSubscription(subscriptionType, used)
+
+            Result.success(limits)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-}
-
-/**
- * Interview usage information
- */
-data class InterviewUsageInfo(
-    val used: Int,
-    val limit: Int,
-    val remaining: Int
-) {
-    init {
-        require(used >= 0) { "Used count cannot be negative" }
-        require(limit >= 0) { "Limit cannot be negative" }
-        require(remaining >= 0) { "Remaining count cannot be negative" }
-        require(used + remaining == limit) { "Used + remaining must equal limit" }
-    }
-
-    /**
-     * Calculate usage percentage (0-100)
-     */
-    fun getUsagePercentage(): Int {
-        if (limit == 0) return 0
-        return ((used.toFloat() / limit) * 100).toInt()
-    }
-
-    /**
-     * Check if limit is reached
-     */
-    fun isLimitReached(): Boolean = remaining == 0
-
-    /**
-     * Check if user has any access
-     */
-    fun hasAccess(): Boolean = limit > 0
 }

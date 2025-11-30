@@ -120,11 +120,15 @@ class SarvamTTSService @Inject constructor(
         try {
             val audioData = synthesizeSpeech(text)
 
-            if (audioData != null && !isReleased) {
+            // Check isSpeakingInternal to respect mute/stop during API call
+            if (audioData != null && !isReleased && isSpeakingInternal) {
                 Log.d(TAG, "✅ Playing audio (${audioData.size} bytes)")
                 withContext(Dispatchers.Main) {
                     playAudio(audioData)
                 }
+            } else if (audioData != null && !isSpeakingInternal) {
+                Log.d(TAG, "🔕 Audio ready but TTS was stopped/muted - skipping playback")
+                // Audio synthesized but user muted/stopped during API call - don't play
             } else if (!isReleased) {
                 Log.e(TAG, "❌ Failed to synthesize speech")
                 isSpeakingInternal = false
