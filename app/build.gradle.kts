@@ -10,6 +10,51 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
+// Create mock google-services.json for CI builds if it doesn't exist
+tasks.register("createMockGoogleServices") {
+    doLast {
+        if (!file("google-services.json").exists()) {
+            println("⚠️ google-services.json not found - creating mock for CI build")
+            val mockGoogleServices = """
+            {
+              "project_info": {
+                "project_number": "123456789",
+                "project_id": "mock-project-id",
+                "storage_bucket": "mock-project-id.appspot.com"
+              },
+              "client": [
+                {
+                  "client_info": {
+                    "mobilesdk_app_id": "1:123456789:android:mockappid"
+                  },
+                  "oauth_client": [],
+                  "api_key": [
+                    {
+                      "current_key": "mock_api_key_for_ci"
+                    }
+                  ],
+                  "services": {
+                    "appinvite_service": {
+                      "other_platform_oauth_client": []
+                    }
+                  }
+                }
+              ],
+              "configuration_version": "1"
+            }
+            """.trimIndent()
+
+            file("google-services.json").writeText(mockGoogleServices)
+            println("✅ Created mock google-services.json for CI build")
+        }
+    }
+}
+
+// Run mock creation before Google Services plugin
+tasks.named("preBuild").configure {
+    dependsOn("createMockGoogleServices")
+}
+
 android {
     namespace = "com.ssbmax"
     compileSdk = 35
@@ -84,6 +129,9 @@ android {
 
             // Production: Subscription limits enforced
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
+
+            // Production: No forced premium TTS (use subscription logic)
+            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
         }
     }
     
