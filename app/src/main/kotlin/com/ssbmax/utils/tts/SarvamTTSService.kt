@@ -72,7 +72,7 @@ class SarvamTTSService @Inject constructor(
     @Volatile
     private var isReleased: Boolean = false
 
-    private val _events = MutableSharedFlow<TTSService.TTSEvent>(extraBufferCapacity = 1)
+    private val _events = MutableSharedFlow<TTSService.TTSEvent>(replay = 1, extraBufferCapacity = 1)
     override val events: SharedFlow<TTSService.TTSEvent> = _events.asSharedFlow()
 
     // OkHttp client with appropriate timeouts for TTS synthesis

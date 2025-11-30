@@ -37,6 +37,7 @@ class AndroidTTSService @Inject constructor(
 
     private var textToSpeech: TextToSpeech? = null
     private var isInitialized = false
+    private var initializationFailed = false
     private var pendingText: String? = null
 
     @Volatile
@@ -61,6 +62,7 @@ class AndroidTTSService @Inject constructor(
                     throwable = Exception("TTS initialization failed with status: $status"),
                     description = errorMsg
                 )
+                initializationFailed = true
                 _events.tryEmit(TTSService.TTSEvent.Error(errorMsg))
             }
         }
@@ -147,7 +149,7 @@ class AndroidTTSService @Inject constructor(
 
     override suspend fun speak(text: String, flush: Boolean) {
         if (!isInitialized) {
-            Log.d(TAG, "📝 TTS not ready, queuing text")
+            Log.d(TAG, "📝 TTS not initialized yet, queuing text")
             pendingText = text
             return
         }
@@ -170,7 +172,6 @@ class AndroidTTSService @Inject constructor(
 
     override fun stop() {
         Log.d(TAG, "⏹️ Stopping speech...")
-        isReleased = true
         textToSpeech?.stop()
         Log.d(TAG, "✅ Speech stopped")
     }
@@ -190,7 +191,7 @@ class AndroidTTSService @Inject constructor(
         }
     }
 
-    override fun isReady(): Boolean = isInitialized
+    override fun isReady(): Boolean = !isReleased && !initializationFailed
 
     override fun isSpeaking(): Boolean = textToSpeech?.isSpeaking == true
 
@@ -198,9 +199,21 @@ class AndroidTTSService @Inject constructor(
         try {
             val voices = tts.voices ?: return
 
-            val englishVoices = voices.filter { voice ->
+            // Prioritize Indian English voices for SSB interviews
+            val indianEnglishVoices = voices.filter { voice ->
                 voice.locale.language == "en" &&
+                voice.locale.country == "IN" &&
+                !voice.isNetworkConnectionRequired
+            }
+
+            // Fallback to other English voices if Indian English not available
+            val englishVoices = if (indianEnglishVoices.isNotEmpty()) {
+                indianEnglishVoices
+            } else {
+                voices.filter { voice ->
+                    voice.locale.language == "en" &&
                     !voice.isNetworkConnectionRequired
+                }
             }
 
             if (englishVoices.isEmpty()) {
@@ -208,11 +221,13 @@ class AndroidTTSService @Inject constructor(
                 return
             }
 
+            // Sort by quality: Indian English → High quality → Other English
             val sortedVoices = englishVoices.sortedWith(
                 compareBy(
+                    { voice -> if (voice.locale.country == "IN") 0 else 1 }, // Prioritize IN locale
                     { voice -> !voice.features.contains("legacySetLanguageVoice") },
                     { voice -> voice.quality },
-                    { voice -> if (voice.locale.country == "IN") 0 else 1 }
+                    { voice -> voice.name.contains("male", ignoreCase = true).let { if (it) 0 else 1 } } // Prefer male voices for SSB
                 )
             )
 
@@ -223,7 +238,13 @@ class AndroidTTSService @Inject constructor(
             bestVoice?.let { voice ->
                 val result = tts.setVoice(voice)
                 if (result == TextToSpeech.SUCCESS) {
-                    Log.d(TAG, "📢 Selected voice: ${voice.name} (${voice.locale}, quality=${voice.quality})")
+                    val voiceType = when {
+                        voice.locale.country == "IN" -> "Indian English"
+                        voice.name.contains("male", ignoreCase = true) -> "Male English"
+                        voice.name.contains("female", ignoreCase = true) -> "Female English"
+                        else -> "English"
+                    }
+                    Log.d(TAG, "📢 Selected $voiceType voice: ${voice.name} (${voice.locale}, quality=${voice.quality})")
                 } else {
                     Log.w(TAG, "⚠️ Failed to set voice: ${voice.name}")
                 }

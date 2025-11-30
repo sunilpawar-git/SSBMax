@@ -20,12 +20,12 @@ import javax.inject.Singleton
  * Dependency injection module for Text-to-Speech services
  *
  * Provides:
- * - AndroidTTSService: Built-in Android TTS (Free tier)
- * - SarvamTTSService: Primary TTS service - High-quality Indian English from Sarvam AI (Pro/Premium)
- * - ElevenLabsTTSService: Fallback TTS service - Human-like voice from ElevenLabs API (Pro/Premium)
+ * - AndroidTTSService: Built-in Android TTS with Indian English optimization (Free tier)
+ * - SarvamTTSService: High-quality Indian English from Sarvam AI (Pro/Premium)
+ * - ElevenLabsTTSService: Human-like voice from ElevenLabs API (Pro/Premium fallback)
  *
- * The appropriate service is selected based on user's subscription tier
- * in VoiceInterviewSessionViewModel.
+ * Priority order: Android TTS → Sarvam AI → ElevenLabs API
+ * Selected based on user's subscription tier in InterviewSessionViewModel.
  */
 @Module
 @InstallIn(SingletonComponent::class)
