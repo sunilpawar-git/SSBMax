@@ -336,23 +336,6 @@ class InterviewSessionViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Force unmute TTS (emergency function for stuck mute state)
-     *
-     * This function can be called if the mute toggle gets stuck
-     */
-    fun forceUnmuteTTS() {
-        Log.d(TAG, "🔊 [TTS-MUTE] Force unmute requested - current state: ${_uiState.value.isTTSMuted}")
-        _uiState.update { it.copy(isTTSMuted = false) }
-
-        // Try to speak current question
-        _uiState.value.currentQuestion?.let {
-            Log.d(TAG, "🔊 [TTS-MUTE] Force unmute - speaking current question")
-            speakQuestion(it.questionText)
-        } ?: Log.d(TAG, "🔊 [TTS-MUTE] Force unmute - no current question to speak")
-
-        Log.d(TAG, "🔊 [TTS-MUTE] ✅ TTS force unmuted successfully")
-    }
 
     /**
      * Submit current response and move to next question INSTANTLY.
