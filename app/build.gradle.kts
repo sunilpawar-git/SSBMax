@@ -10,7 +10,10 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
 }
 
-// Create mock google-services.json for CI builds if it doesn't exist
+// Temporarily disable mock google-services.json generation for local development
+// Uncomment the block below if you need CI builds without Firebase config
+
+/*
 tasks.register("createMockGoogleServices") {
     doLast {
         if (!file("google-services.json").exists()) {
@@ -53,10 +56,10 @@ tasks.register("createMockGoogleServices") {
     }
 }
 
-// Run mock creation before Google Services plugin
 tasks.named("preBuild").configure {
     dependsOn("createMockGoogleServices")
 }
+*/
 
 android {
     namespace = "com.ssbmax"
