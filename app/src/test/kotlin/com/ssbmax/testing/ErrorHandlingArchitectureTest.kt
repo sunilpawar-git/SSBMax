@@ -18,7 +18,7 @@ class ErrorHandlingArchitectureTest {
 
     companion object {
         // Handle both project root and app module directory
-        private val USER_DIR = File(System.getProperty("user.dir"))
+        private val USER_DIR = File(System.getProperty("user.dir") ?: ".")
         private val PROJECT_ROOT = if (USER_DIR.name == "SSBMax") USER_DIR else USER_DIR.parentFile
         private val APP_SRC = File(PROJECT_ROOT, "app/src/main/kotlin")
     }

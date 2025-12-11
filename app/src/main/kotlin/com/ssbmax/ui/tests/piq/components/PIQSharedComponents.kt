@@ -73,13 +73,16 @@ fun PIQDropdownField(
         onExpandedChange = { expanded = !expanded },
         modifier = modifier.fillMaxWidth()
     ) {
+        @Suppress("DEPRECATION")
+        val anchorModifier = Modifier.menuAnchor()
+
         OutlinedTextField(
             value = value,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor()
+            modifier = anchorModifier
         )
 
         ExposedDropdownMenu(

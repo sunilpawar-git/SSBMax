@@ -23,7 +23,7 @@ import java.io.File
  */
 class StringResourceValidationTest {
 
-    private val projectRoot = File(System.getProperty("user.dir")).let { buildDir ->
+    private val projectRoot = File(System.getProperty("user.dir") ?: ".").let { buildDir ->
         // When running from Gradle, user.dir points to the project root already
         // When running from a module, we may need to navigate up
         if (File(buildDir, "app").exists()) {

@@ -82,13 +82,13 @@ private fun ResultContent(
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.sdt_result_ai_score_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.sdt_result_overall_score, aiScore.overallScore.toInt()), style = MaterialTheme.typography.titleLarge)
-                        Divider()
+                        HorizontalDivider()
                         ScoreRow(stringResource(R.string.sdt_result_self_awareness), aiScore.selfAwarenessScore)
                         ScoreRow(stringResource(R.string.sdt_result_emotional_maturity), aiScore.emotionalMaturityScore)
                         ScoreRow(stringResource(R.string.sdt_result_social_perception), aiScore.socialPerceptionScore)
                         ScoreRow(stringResource(R.string.sdt_result_introspection), aiScore.introspectionScore)
                         aiScore.feedback?.let {
-                            Divider()
+                            HorizontalDivider()
                             Text(it, style = MaterialTheme.typography.bodyMedium)
                         }
                     }

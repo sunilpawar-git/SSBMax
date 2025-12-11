@@ -20,6 +20,7 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.AppConstants
 import com.ssbmax.workers.InterviewQuestionGenerationWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -59,6 +60,7 @@ val SELECTION_BOARD_OPTIONS = listOf(
  * - Security checks and subscription validation
  * - OIR number auto-fill from OIR test result
  */
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class PIQTestViewModel @Inject constructor(
     private val submissionRepository: SubmissionRepository,

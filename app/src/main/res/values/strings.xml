@@ -1041,6 +1041,7 @@
     <string name="interview_loading_checking_cache">Checking for cached questions…</string>
     <string name="interview_loading_piq_data">Loading PIQ data…</string>
     <string name="interview_loading_preparing">Preparing interview…</string>
+    <string name="interview_loading_generating_questions">Generating personalized questions (30–60s)…</string>
     <string name="interview_generating_questions">Generating personalized questions…</string>
     <string name="interview_generating_questions_hint">This will take 30–60 seconds</string>
 
@@ -1133,6 +1134,6 @@
     <string name="interview_loading_history">Loading history…</string>
     <string name="interview_no_past_results">No past interviews yet. Complete your first interview to see results here.</string>
     <string name="interview_more_results">+ %d more results</string>
-    <string name="interview_result_summary">Score: %.1f • %d min</string>
+    <string name="interview_result_summary">Score: %1$.1f • %2$d min</string>
 
 </resources>

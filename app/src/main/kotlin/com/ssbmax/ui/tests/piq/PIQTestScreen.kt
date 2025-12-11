@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -55,7 +55,7 @@ fun PIQTestScreen(
                     title = { Text(stringResource(R.string.piq_page_title, uiState.currentPage.displayName)) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, stringResource(R.string.piq_back))
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.piq_back))
                         }
                     },
                     actions = {

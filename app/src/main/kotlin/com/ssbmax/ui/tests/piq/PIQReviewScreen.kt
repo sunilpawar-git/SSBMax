@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +31,7 @@ fun PIQReviewScreen(
                 title = { Text(stringResource(R.string.piq_review_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -80,13 +80,13 @@ fun PIQReviewScreen(
                 ReviewField("Chest Number", answers["chestNumber"])
                 ReviewField("UPSC Roll No", answers["upscRollNumber"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Personal Information (Table format in actual form)
                 ReviewField("Full Name", answers["fullName"])
                 ReviewField("Date of Birth", answers["dateOfBirth"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Personal Details Table (as per SSB PIQ form)
                 ReviewField("State", answers["state"])
@@ -96,7 +96,7 @@ fun PIQReviewScreen(
                 ReviewField("Mother Tongue", answers["motherTongue"])
                 ReviewField("Marital Status", answers["maritalStatus"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Residence Information
                 ReviewField("Permanent Address", answers["permanentAddress"])
@@ -109,7 +109,7 @@ fun PIQReviewScreen(
                     ReviewField("Is District HQ", stringResource(R.string.piq_review_yes))
                 }
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Father's Information
                 ReviewField("Father's Name", answers["fatherName"])
@@ -117,14 +117,14 @@ fun PIQReviewScreen(
                 ReviewField("Father's Education", answers["fatherEducation"])
                 ReviewField("Father's Income", answers["fatherIncome"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Mother's Information
                 ReviewField("Mother's Name", answers["motherName"])
                 ReviewField("Mother's Occupation", answers["motherOccupation"])
                 ReviewField("Mother's Education", answers["motherEducation"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 // Siblings Information
                 Text(stringResource(R.string.piq_review_field_siblings), style = MaterialTheme.typography.titleSmall)
@@ -151,7 +151,7 @@ fun PIQReviewScreen(
                     }
                 }
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Family Enhancement
                 ReviewField("Parents Alive", answers["parentsAlive"])
@@ -164,7 +164,7 @@ fun PIQReviewScreen(
                     ReviewField("Guardian Income", answers["guardianIncome"])
                 }
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 // Educational Record - moved from Page 2 to Page 1
                 Text(stringResource(R.string.piq_review_field_educational_record), style = MaterialTheme.typography.titleSmall)
@@ -178,7 +178,7 @@ fun PIQReviewScreen(
                 ReviewField("Boarder/Day Scholar", answers["education10th_boarder"])
                 ReviewField("Outstanding Achievement", answers["education10th_achievement"])
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 Text(stringResource(R.string.piq_review_field_12th), style = MaterialTheme.typography.titleSmall)
                 ReviewField("School Name", answers["education12th_institution"])
@@ -190,7 +190,7 @@ fun PIQReviewScreen(
                 ReviewField("Boarder/Day Scholar", answers["education12th_boarder"])
                 ReviewField("Outstanding Achievement", answers["education12th_achievement"])
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 Text(stringResource(R.string.piq_review_field_graduation), style = MaterialTheme.typography.titleSmall)
                 ReviewField("College Name", answers["educationGrad_institution"])
@@ -202,7 +202,7 @@ fun PIQReviewScreen(
                 ReviewField("Boarder/Day Scholar", answers["educationGrad_boarder"])
                 ReviewField("Outstanding Achievement", answers["educationGrad_achievement"])
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 Text(stringResource(R.string.piq_review_field_pg), style = MaterialTheme.typography.titleSmall)
                 ReviewField("Institution Name", answers["educationPG_institution"])
@@ -225,19 +225,19 @@ fun PIQReviewScreen(
                 ReviewField("Height (metres)", answers["height"])
                 ReviewField("Weight (kilograms)", answers["weight"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Occupation - moved from Page 1 to Page 2
                 ReviewField("Present Occupation", answers["presentOccupation"])
                 ReviewField("Personal Monthly Income", answers["personalMonthlyIncome"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Interests
                 ReviewField("Hobbies & Interests", answers["hobbies"])
                 ReviewField("Sports", answers["sports"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // NCC Training
                 ReviewField("Has NCC Training", if (answers["ncc_hasTraining"]?.toBoolean() == true) "Yes" else "No")
@@ -246,12 +246,12 @@ fun PIQReviewScreen(
                 ReviewField("Division", answers["ncc_division"])
                 ReviewField("Certificate Obtained", answers["ncc_certificate"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Positions of Responsibility
                 ReviewField("Positions Held", answers["positionsOfResponsibility"])
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 
                 // Service Selection
                 ReviewField("Nature of Commission", answers["natureOfCommission"])

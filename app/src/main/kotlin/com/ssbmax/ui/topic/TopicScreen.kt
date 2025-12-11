@@ -5,6 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -67,14 +71,14 @@ fun TopicScreen(
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
                     label = { Text("Study Material") },
                     alwaysShowLabel = true
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = null) },
                     label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") },
                     alwaysShowLabel = true
                 )
@@ -300,7 +304,7 @@ private fun StudyMaterialCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                if (material.isPremium) Icons.Default.Lock else Icons.Default.MenuBook,
+                if (material.isPremium) Icons.Default.Lock else Icons.AutoMirrored.Filled.MenuBook,
                 contentDescription = null,
                 tint = if (material.isPremium) 
                     MaterialTheme.colorScheme.tertiary 
@@ -681,13 +685,13 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
     return when (testType) {
         TestType.OIR -> Icons.Default.Psychology
         TestType.PPDT -> Icons.Default.Image
-        TestType.PIQ -> Icons.Default.Assignment
+        TestType.PIQ -> Icons.AutoMirrored.Filled.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         // GTO Tasks
         TestType.GTO_GD -> Icons.Default.Forum
         TestType.GTO_GPE -> Icons.Default.Map
-        TestType.GTO_PGT -> Icons.Default.TrendingUp
-        TestType.GTO_GOR -> Icons.Default.DirectionsRun
+        TestType.GTO_PGT -> Icons.AutoMirrored.Filled.TrendingUp
+        TestType.GTO_GOR -> Icons.AutoMirrored.Filled.DirectionsRun
         TestType.GTO_HGT -> Icons.Default.People
         TestType.GTO_LECTURETTE -> Icons.Default.Mic
         TestType.GTO_IO -> Icons.Default.Person
