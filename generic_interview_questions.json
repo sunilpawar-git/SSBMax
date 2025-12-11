@@ -11,7 +11,7 @@
     {
       "id": "gen_002",
       "text": "Why do you want to join the Armed Forces?",
-      "category": "Motivation",
+      "category": "Motivation & Service",
       "targetOLQs": ["DETERMINATION", "SENSE_OF_RESPONSIBILITY", "COURAGE"],
       "difficulty": 3,
       "expectedDuration": 180
@@ -27,7 +27,7 @@
     {
       "id": "gen_004",
       "text": "Describe a situation where you showed leadership.",
-      "category": "Leadership",
+      "category": "Leadership & Initiative",
       "targetOLQs": ["INFLUENCE_GROUP", "ORGANIZING_ABILITY", "INITIATIVE"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -35,7 +35,7 @@
     {
       "id": "gen_005",
       "text": "How do you handle stress and pressure?",
-      "category": "Stress Management",
+      "category": "Stress & Resilience",
       "targetOLQs": ["DETERMINATION", "STAMINA", "SPEED_OF_DECISION"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -43,7 +43,7 @@
     {
       "id": "gen_006",
       "text": "What do you know about the current defense situation of India?",
-      "category": "Current Affairs",
+      "category": "Current Affairs & Defense",
       "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -51,7 +51,7 @@
     {
       "id": "gen_007",
       "text": "Tell me about a time when you failed. How did you handle it?",
-      "category": "Resilience",
+      "category": "Stress & Resilience",
       "targetOLQs": ["DETERMINATION", "COURAGE", "SELF_CONFIDENCE"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -67,7 +67,7 @@
     {
       "id": "gen_009",
       "text": "What are your hobbies and how do they contribute to your personality?",
-      "category": "Personality",
+      "category": "Personal Background",
       "targetOLQs": ["LIVELINESS", "INITIATIVE", "SOCIAL_ADJUSTMENT"],
       "difficulty": 2,
       "expectedDuration": 120
@@ -75,7 +75,7 @@
     {
       "id": "gen_010",
       "text": "Describe a conflict you had with a team member and how you resolved it.",
-      "category": "Teamwork",
+      "category": "Teamwork & Cooperation",
       "targetOLQs": ["COOPERATION", "SOCIAL_ADJUSTMENT", "INFLUENCE_GROUP"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -83,7 +83,7 @@
     {
       "id": "gen_011",
       "text": "What do you think are the qualities required to become a good officer?",
-      "category": "Officer Qualities",
+      "category": "Motivation & Service",
       "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "SENSE_OF_RESPONSIBILITY"],
       "difficulty": 3,
       "expectedDuration": 180
@@ -91,7 +91,7 @@
     {
       "id": "gen_012",
       "text": "How do you keep yourself physically and mentally fit?",
-      "category": "Fitness",
+      "category": "Physical Fitness & Discipline",
       "targetOLQs": ["STAMINA", "DETERMINATION", "SELF_CONFIDENCE"],
       "difficulty": 2,
       "expectedDuration": 120
@@ -99,7 +99,7 @@
     {
       "id": "gen_013",
       "text": "Describe a situation where you had to make a quick decision under pressure.",
-      "category": "Decision Making",
+      "category": "Decision Making & Problem Solving",
       "targetOLQs": ["SPEED_OF_DECISION", "COURAGE", "EFFECTIVE_INTELLIGENCE"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -107,7 +107,7 @@
     {
       "id": "gen_014",
       "text": "What role do you usually take in a group - leader or follower?",
-      "category": "Teamwork",
+      "category": "Teamwork & Cooperation",
       "targetOLQs": ["INFLUENCE_GROUP", "COOPERATION", "SOCIAL_ADJUSTMENT"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -115,7 +115,7 @@
     {
       "id": "gen_015",
       "text": "Tell me about a time when you went out of your way to help someone.",
-      "category": "Social Service",
+      "category": "Teamwork & Cooperation",
       "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "COOPERATION", "INITIATIVE"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -123,7 +123,7 @@
     {
       "id": "gen_016",
       "text": "How do you plan and organize your daily activities?",
-      "category": "Planning",
+      "category": "Leadership & Initiative",
       "targetOLQs": ["ORGANIZING_ABILITY", "EFFECTIVE_INTELLIGENCE", "DETERMINATION"],
       "difficulty": 2,
       "expectedDuration": 120
@@ -131,7 +131,7 @@
     {
       "id": "gen_017",
       "text": "What is your understanding of discipline in the Armed Forces?",
-      "category": "Discipline",
+      "category": "Physical Fitness & Discipline",
       "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "DETERMINATION", "COURAGE"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -139,7 +139,7 @@
     {
       "id": "gen_018",
       "text": "Describe a situation where you showed initiative to solve a problem.",
-      "category": "Problem Solving",
+      "category": "Leadership & Initiative",
       "targetOLQs": ["INITIATIVE", "REASONING_ABILITY", "ORGANIZING_ABILITY"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -147,7 +147,7 @@
     {
       "id": "gen_019",
       "text": "How do you react to criticism?",
-      "category": "Feedback Handling",
+      "category": "Self Assessment",
       "targetOLQs": ["SELF_CONFIDENCE", "SOCIAL_ADJUSTMENT", "DETERMINATION"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -155,7 +155,7 @@
     {
       "id": "gen_020",
       "text": "What motivates you to work hard and achieve your goals?",
-      "category": "Motivation",
+      "category": "Motivation & Service",
       "targetOLQs": ["DETERMINATION", "INITIATIVE", "LIVELINESS"],
       "difficulty": 2,
       "expectedDuration": 120
@@ -163,7 +163,7 @@
     {
       "id": "gen_021",
       "text": "Tell me about your academic performance and achievements.",
-      "category": "Academic Background",
+      "category": "Personal Background",
       "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION", "SELF_CONFIDENCE"],
       "difficulty": 2,
       "expectedDuration": 150
@@ -171,7 +171,7 @@
     {
       "id": "gen_022",
       "text": "How would you handle a situation where your team is not cooperating?",
-      "category": "Leadership",
+      "category": "Leadership & Initiative",
       "targetOLQs": ["INFLUENCE_GROUP", "COOPERATION", "ORGANIZING_ABILITY"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -179,7 +179,7 @@
     {
       "id": "gen_023",
       "text": "What are your views on current international relations affecting India?",
-      "category": "Current Affairs",
+      "category": "Current Affairs & Defense",
       "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
       "difficulty": 5,
       "expectedDuration": 180
@@ -187,7 +187,7 @@
     {
       "id": "gen_024",
       "text": "Describe a time when you had to adapt to a difficult situation.",
-      "category": "Adaptability",
+      "category": "Stress & Resilience",
       "targetOLQs": ["SOCIAL_ADJUSTMENT", "STAMINA", "DETERMINATION"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -195,7 +195,7 @@
     {
       "id": "gen_025",
       "text": "What do you think about the role of technology in modern warfare?",
-      "category": "Military Knowledge",
+      "category": "Current Affairs & Defense",
       "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -203,7 +203,7 @@
     {
       "id": "gen_026",
       "text": "How do you build and maintain relationships with different types of people?",
-      "category": "Social Skills",
+      "category": "Teamwork & Cooperation",
       "targetOLQs": ["SOCIAL_ADJUSTMENT", "COOPERATION", "LIVELINESS"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -211,7 +211,7 @@
     {
       "id": "gen_027",
       "text": "Tell me about a goal you set and achieved despite obstacles.",
-      "category": "Achievement",
+      "category": "Decision Making & Problem Solving",
       "targetOLQs": ["DETERMINATION", "STAMINA", "ORGANIZING_ABILITY"],
       "difficulty": 4,
       "expectedDuration": 180
@@ -219,7 +219,7 @@
     {
       "id": "gen_028",
       "text": "What is your opinion on women in combat roles in the Armed Forces?",
-      "category": "Social Issues",
+      "category": "Current Affairs & Defense",
       "targetOLQs": ["REASONING_ABILITY", "POWER_OF_EXPRESSION", "SOCIAL_ADJUSTMENT"],
       "difficulty": 4,
       "expectedDuration": 150
@@ -227,7 +227,7 @@
     {
       "id": "gen_029",
       "text": "How do you ensure effective communication in a diverse team?",
-      "category": "Communication",
+      "category": "Teamwork & Cooperation",
       "targetOLQs": ["POWER_OF_EXPRESSION", "COOPERATION", "INFLUENCE_GROUP"],
       "difficulty": 3,
       "expectedDuration": 150
@@ -235,49 +235,611 @@
     {
       "id": "gen_030",
       "text": "What steps have you taken to prepare yourself for SSB?",
-      "category": "Preparation",
+      "category": "Motivation & Service",
       "targetOLQs": ["INITIATIVE", "ORGANIZING_ABILITY", "DETERMINATION"],
+      "difficulty": 2,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_031",
+      "text": "Describe a time when you had to motivate your team during a crisis.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "DETERMINATION", "COURAGE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_032",
+      "text": "How do you prioritize tasks when everything seems urgent?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["ORGANIZING_ABILITY", "SPEED_OF_DECISION", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_033",
+      "text": "Tell me about a time when you took responsibility for someone else's mistake.",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "COURAGE", "COOPERATION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_034",
+      "text": "What are the biggest challenges facing India's defense forces today?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_035",
+      "text": "How do you maintain discipline in your personal and professional life?",
+      "category": "Physical Fitness & Discipline",
+      "targetOLQs": ["DETERMINATION", "SENSE_OF_RESPONSIBILITY", "ORGANIZING_ABILITY"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_036",
+      "text": "Describe a situation where you had to work with someone you didn't like.",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["COOPERATION", "SOCIAL_ADJUSTMENT", "STAMINA"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_037",
+      "text": "What would you do if you witnessed a senior committing an ethical violation?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["COURAGE", "SENSE_OF_RESPONSIBILITY", "REASONING_ABILITY"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_038",
+      "text": "How do you stay updated with current affairs and national issues?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["INITIATIVE", "EFFECTIVE_INTELLIGENCE", "LIVELINESS"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_039",
+      "text": "Tell me about a time when you had to learn a new skill quickly.",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["DETERMINATION", "INITIATIVE", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_040",
+      "text": "What does patriotism mean to you and how do you express it?",
+      "category": "Motivation & Service",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "POWER_OF_EXPRESSION", "DETERMINATION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_041",
+      "text": "Describe a situation where you had to think creatively to solve a problem.",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["REASONING_ABILITY", "INITIATIVE", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_042",
+      "text": "How would you handle being posted to a remote location away from family?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["STAMINA", "DETERMINATION", "SOCIAL_ADJUSTMENT"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_043",
+      "text": "What is your understanding of leadership by example?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "SENSE_OF_RESPONSIBILITY", "COURAGE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_044",
+      "text": "Tell me about your physical fitness routine and sports activities.",
+      "category": "Physical Fitness & Discipline",
+      "targetOLQs": ["STAMINA", "DETERMINATION", "LIVELINESS"],
+      "difficulty": 1,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_045",
+      "text": "How do you handle conflicting opinions within your team?",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["COOPERATION", "REASONING_ABILITY", "INFLUENCE_GROUP"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_046",
+      "text": "What do you know about India's strategic neighbors and their relations?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_047",
+      "text": "Describe a time when you had to stand up for what you believed was right.",
+      "category": "Self Assessment",
+      "targetOLQs": ["COURAGE", "SELF_CONFIDENCE", "SENSE_OF_RESPONSIBILITY"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_048",
+      "text": "How do you balance work and personal life commitments?",
+      "category": "Personal Background",
+      "targetOLQs": ["ORGANIZING_ABILITY", "SOCIAL_ADJUSTMENT", "DETERMINATION"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_049",
+      "text": "What would you do if given an order you morally disagreed with?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["COURAGE", "REASONING_ABILITY", "SENSE_OF_RESPONSIBILITY"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_050",
+      "text": "Tell me about a time when you exceeded expectations in a task.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INITIATIVE", "DETERMINATION", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_051",
+      "text": "How do you deal with monotonous or repetitive work?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["STAMINA", "DETERMINATION", "LIVELINESS"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_052",
+      "text": "What role does a military officer play in nation building?",
+      "category": "Motivation & Service",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "SENSE_OF_RESPONSIBILITY", "REASONING_ABILITY"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_053",
+      "text": "Describe a situation where you had to delegate responsibilities effectively.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["ORGANIZING_ABILITY", "INFLUENCE_GROUP", "COOPERATION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_054",
+      "text": "How would you motivate a team member who is performing poorly?",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["INFLUENCE_GROUP", "COOPERATION", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_055",
+      "text": "What are your views on work-life balance in military service?",
+      "category": "Motivation & Service",
+      "targetOLQs": ["REASONING_ABILITY", "SENSE_OF_RESPONSIBILITY", "SOCIAL_ADJUSTMENT"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_056",
+      "text": "Tell me about a time when you had to make a sacrifice for the greater good.",
+      "category": "Self Assessment",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "COURAGE", "DETERMINATION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_057",
+      "text": "How do you prepare yourself mentally for challenging situations?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["STAMINA", "DETERMINATION", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_058",
+      "text": "What is your understanding of the chain of command?",
+      "category": "Physical Fitness & Discipline",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "SOCIAL_ADJUSTMENT", "COOPERATION"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_059",
+      "text": "Describe a time when you had to give constructive feedback to someone.",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["POWER_OF_EXPRESSION", "COOPERATION", "INFLUENCE_GROUP"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_060",
+      "text": "What are India's key defense achievements in recent years?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "LIVELINESS"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_061",
+      "text": "How would you handle a situation where resources are limited?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["ORGANIZING_ABILITY", "REASONING_ABILITY", "INITIATIVE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_062",
+      "text": "Tell me about your long-term career aspirations in the Armed Forces.",
+      "category": "Motivation & Service",
+      "targetOLQs": ["DETERMINATION", "ORGANIZING_ABILITY", "SENSE_OF_RESPONSIBILITY"],
+      "difficulty": 2,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_063",
+      "text": "Describe a situation where you demonstrated courage in the face of adversity.",
+      "category": "Self Assessment",
+      "targetOLQs": ["COURAGE", "DETERMINATION", "SELF_CONFIDENCE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_064",
+      "text": "How do you ensure your decisions are fair and unbiased?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["REASONING_ABILITY", "SENSE_OF_RESPONSIBILITY", "SOCIAL_ADJUSTMENT"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_065",
+      "text": "What is your understanding of cyber warfare and its implications?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_066",
+      "text": "Tell me about a time when you had to work under minimal supervision.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INITIATIVE", "SELF_CONFIDENCE", "ORGANIZING_ABILITY"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_067",
+      "text": "How do you maintain your composure during emergencies?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["SPEED_OF_DECISION", "COURAGE", "STAMINA"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_068",
+      "text": "What role does continuous learning play in your professional development?",
+      "category": "Personal Background",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "INITIATIVE", "DETERMINATION"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_069",
+      "text": "Describe a situation where you had to convince others to follow your plan.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "POWER_OF_EXPRESSION", "REASONING_ABILITY"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_070",
+      "text": "How would you build trust within a new team?",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["COOPERATION", "SOCIAL_ADJUSTMENT", "LIVELINESS"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_071",
+      "text": "What is your opinion on joint military exercises with foreign nations?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["REASONING_ABILITY", "EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_072",
+      "text": "Tell me about a time when you had to admit you were wrong.",
+      "category": "Self Assessment",
+      "targetOLQs": ["SELF_CONFIDENCE", "COURAGE", "SOCIAL_ADJUSTMENT"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_073",
+      "text": "How do you handle situations where there is no clear right answer?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["REASONING_ABILITY", "COURAGE", "SPEED_OF_DECISION"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_074",
+      "text": "What measures do you take to maintain operational security?",
+      "category": "Physical Fitness & Discipline",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "EFFECTIVE_INTELLIGENCE", "DETERMINATION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_075",
+      "text": "Describe a situation where you had to manage multiple competing priorities.",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["ORGANIZING_ABILITY", "SPEED_OF_DECISION", "STAMINA"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_076",
+      "text": "How do you inspire excellence in others?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "LIVELINESS", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_077",
+      "text": "What is your understanding of jointmanship in the Armed Forces?",
+      "category": "Motivation & Service",
+      "targetOLQs": ["COOPERATION", "EFFECTIVE_INTELLIGENCE", "SOCIAL_ADJUSTMENT"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_078",
+      "text": "Tell me about a time when you had to overcome a personal limitation.",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["DETERMINATION", "COURAGE", "STAMINA"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_079",
+      "text": "How do you ensure accountability within your team?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["ORGANIZING_ABILITY", "SENSE_OF_RESPONSIBILITY", "INFLUENCE_GROUP"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_080",
+      "text": "What are your views on the privatization of defense manufacturing?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["REASONING_ABILITY", "EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_081",
+      "text": "Describe a situation where you had to negotiate a compromise.",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["COOPERATION", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_082",
+      "text": "How do you maintain focus during long-duration tasks?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["STAMINA", "DETERMINATION", "ORGANIZING_ABILITY"],
+      "difficulty": 2,
+      "expectedDuration": 120
+    },
+    {
+      "id": "gen_083",
+      "text": "What is your understanding of ethical leadership?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "REASONING_ABILITY", "COURAGE"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_084",
+      "text": "Tell me about a project you managed from start to finish.",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["ORGANIZING_ABILITY", "INITIATIVE", "DETERMINATION"],
+      "difficulty": 3,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_085",
+      "text": "How would you handle a situation involving cultural differences in your team?",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["SOCIAL_ADJUSTMENT", "COOPERATION", "REASONING_ABILITY"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_086",
+      "text": "What are the qualities that distinguish an officer from others?",
+      "category": "Motivation & Service",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "SENSE_OF_RESPONSIBILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_087",
+      "text": "Describe a time when you had to mentor or guide someone younger.",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "COOPERATION", "POWER_OF_EXPRESSION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_088",
+      "text": "How do you handle information overload in decision-making?",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "SPEED_OF_DECISION", "REASONING_ABILITY"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_089",
+      "text": "What is your understanding of India's nuclear doctrine?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_090",
+      "text": "Tell me about a time when you showed resilience after a setback.",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["DETERMINATION", "STAMINA", "SELF_CONFIDENCE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_091",
+      "text": "How do you foster innovation within your team?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INITIATIVE", "INFLUENCE_GROUP", "EFFECTIVE_INTELLIGENCE"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_092",
+      "text": "What role does mental toughness play in military operations?",
+      "category": "Stress & Resilience",
+      "targetOLQs": ["STAMINA", "COURAGE", "DETERMINATION"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_093",
+      "text": "Describe a situation where you had to build consensus among diverse opinions.",
+      "category": "Teamwork & Cooperation",
+      "targetOLQs": ["COOPERATION", "INFLUENCE_GROUP", "REASONING_ABILITY"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_094",
+      "text": "How do you evaluate the success of your leadership?",
+      "category": "Self Assessment",
+      "targetOLQs": ["SELF_CONFIDENCE", "REASONING_ABILITY", "ORGANIZING_ABILITY"],
+      "difficulty": 3,
+      "expectedDuration": 150
+    },
+    {
+      "id": "gen_095",
+      "text": "What are your views on unmanned warfare and autonomous weapons?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["REASONING_ABILITY", "EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_096",
+      "text": "Tell me about a time when you had to execute a plan despite limited information.",
+      "category": "Decision Making & Problem Solving",
+      "targetOLQs": ["COURAGE", "SPEED_OF_DECISION", "INITIATIVE"],
+      "difficulty": 5,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_097",
+      "text": "How do you maintain unit morale during difficult times?",
+      "category": "Leadership & Initiative",
+      "targetOLQs": ["INFLUENCE_GROUP", "LIVELINESS", "DETERMINATION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_098",
+      "text": "What is your understanding of the role of soft power in national security?",
+      "category": "Current Affairs & Defense",
+      "targetOLQs": ["EFFECTIVE_INTELLIGENCE", "REASONING_ABILITY", "POWER_OF_EXPRESSION"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_099",
+      "text": "Describe a situation where you had to balance compassion with discipline.",
+      "category": "Physical Fitness & Discipline",
+      "targetOLQs": ["SENSE_OF_RESPONSIBILITY", "SOCIAL_ADJUSTMENT", "REASONING_ABILITY"],
+      "difficulty": 4,
+      "expectedDuration": 180
+    },
+    {
+      "id": "gen_100",
+      "text": "How do you ensure continuous improvement in your professional competence?",
+      "category": "Personal Background",
+      "targetOLQs": ["INITIATIVE", "DETERMINATION", "EFFECTIVE_INTELLIGENCE"],
       "difficulty": 2,
       "expectedDuration": 150
     }
   ],
   "metadata": {
-    "totalQuestions": 30,
-    "version": "1.0",
-    "createdAt": "2025-01-26",
-    "description": "Generic SSB interview questions covering all OLQ categories with balanced difficulty distribution",
+    "totalQuestions": 100,
+    "version": "2.0",
+    "lastUpdated": "2025-12-05",
+    "description": "Comprehensive generic SSB interview questions covering all OLQ categories with balanced difficulty distribution",
     "difficultyDistribution": {
-      "level_2_easy": 6,
-      "level_3_medium": 10,
-      "level_4_hard": 13,
-      "level_5_very_hard": 1
+      "level_1_very_easy": 1,
+      "level_2_easy": 19,
+      "level_3_medium": 49,
+      "level_4_hard": 24,
+      "level_5_very_hard": 7
     },
     "categoryDistribution": {
-      "Personal Background": 1,
-      "Motivation": 2,
-      "Self Assessment": 2,
-      "Leadership": 2,
-      "Stress Management": 1,
-      "Current Affairs": 2,
-      "Resilience": 1,
-      "Personality": 1,
-      "Teamwork": 2,
-      "Officer Qualities": 1,
-      "Fitness": 1,
-      "Decision Making": 1,
-      "Social Service": 1,
-      "Planning": 1,
-      "Discipline": 1,
-      "Problem Solving": 1,
-      "Feedback Handling": 1,
-      "Academic Background": 1,
-      "Military Knowledge": 1,
-      "Adaptability": 1,
-      "Social Skills": 1,
-      "Achievement": 1,
-      "Social Issues": 1,
-      "Communication": 1,
-      "Preparation": 1
+      "Personal Background": 10,
+      "Motivation & Service": 12,
+      "Leadership & Initiative": 15,
+      "Teamwork & Cooperation": 12,
+      "Decision Making & Problem Solving": 15,
+      "Stress & Resilience": 10,
+      "Current Affairs & Defense": 12,
+      "Self Assessment": 8,
+      "Physical Fitness & Discipline": 6
+    },
+    "olqCoverage": {
+      "EFFECTIVE_INTELLIGENCE": 33,
+      "REASONING_ABILITY": 31,
+      "ORGANIZING_ABILITY": 18,
+      "POWER_OF_EXPRESSION": 19,
+      "SOCIAL_ADJUSTMENT": 20,
+      "COOPERATION": 19,
+      "SENSE_OF_RESPONSIBILITY": 22,
+      "INITIATIVE": 17,
+      "SELF_CONFIDENCE": 13,
+      "SPEED_OF_DECISION": 10,
+      "COURAGE": 15,
+      "DETERMINATION": 27,
+      "INFLUENCE_GROUP": 16,
+      "LIVELINESS": 8,
+      "STAMINA": 12
     }
   }
 }

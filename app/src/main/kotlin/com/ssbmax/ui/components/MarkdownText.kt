@@ -155,11 +155,11 @@ fun MarkdownText(
                             inNumberedList = false
                         }
                         
-                        Text(
-                            text = buildAnnotatedString { appendWithInlineBold(line) },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = textColor
-                        )
+                    Text(
+                        text = parseInlineBold(line),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textColor
+                    )
                     }
                 }
             }
@@ -189,7 +189,7 @@ private fun renderBulletList(items: List<String>, textColor: Color) {
                 ) {
                     Text("•", style = MaterialTheme.typography.bodyMedium, color = textColor)
                     Text(
-                        text = buildAnnotatedString { appendWithInlineBold(item) },
+                        text = parseInlineBold(item),
                         style = MaterialTheme.typography.bodyMedium,
                         color = textColor,
                         modifier = Modifier.weight(1f)
@@ -219,7 +219,7 @@ private fun renderNumberedList(items: List<String>, textColor: Color) {
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = buildAnnotatedString { appendWithInlineBold(item) },
+                        text = parseInlineBold(item),
                         style = MaterialTheme.typography.bodyMedium,
                         color = textColor,
                         modifier = Modifier.weight(1f)
@@ -241,14 +241,16 @@ private fun AnnotatedString.Builder.appendWithInlineBold(text: String) {
     parts.forEachIndexed { index, part ->
         if (part.isNotEmpty()) {
             if (index % 2 == 1) {
-                // Odd index = text inside ** markers = bold
                 pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
                 append(part)
                 pop()
             } else {
-                // Even index = normal text
                 append(part)
             }
         }
     }
 }
+
+@androidx.annotation.VisibleForTesting
+internal fun parseInlineBold(text: String): AnnotatedString =
+    buildAnnotatedString { appendWithInlineBold(text) }

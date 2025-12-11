@@ -33,7 +33,8 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val aiService: AIService,
     private val submissionRepository: SubmissionRepository,
-    private val questionCacheRepository: QuestionCacheRepository
+    private val questionCacheRepository: QuestionCacheRepository,
+    private val piqDataMapper: com.ssbmax.core.data.repository.interview.PIQDataMapper
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -62,10 +63,15 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
 
             Log.d(TAG, "   ✅ PIQ data fetched successfully")
 
-            // 2. Generate 18 PIQ-based questions with Gemini
-            Log.d(TAG, "   Step 2: Generating ${InterviewConstants.TARGET_PIQ_QUESTION_COUNT} PIQ-based questions with Gemini AI...")
+            // 2. Build comprehensive PIQ context (extracts all 60+ fields)
+            Log.d(TAG, "   Step 2a: Building comprehensive PIQ context from all 60+ fields...")
+            val piqContext = piqDataMapper.buildComprehensivePIQContext(piq)
+            Log.d(TAG, "   ✅ Built comprehensive context (${piqContext.length} chars)")
+
+            // 3. Generate 18 PIQ-based questions with Gemini using comprehensive context
+            Log.d(TAG, "   Step 2b: Generating ${InterviewConstants.TARGET_PIQ_QUESTION_COUNT} PIQ-based questions with Gemini AI...")
             val questionsResult = aiService.generatePIQBasedQuestions(
-                piqData = buildPIQContext(piq),
+                piqData = piqContext,
                 targetOLQs = null, // Let AI determine best OLQs based on PIQ data
                 count = InterviewConstants.TARGET_PIQ_QUESTION_COUNT,
                 difficulty = InterviewConstants.MEDIUM_DIFFICULTY
@@ -84,7 +90,7 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
 
             Log.d(TAG, "   ✅ Generated ${questions.size} questions")
 
-            // 3. Cache questions for 30 days
+            // 4. Cache questions for 30 days
             Log.d(TAG, "   Step 3: Caching questions to Firestore (${InterviewConstants.DEFAULT_CACHE_EXPIRATION_DAYS}-day expiration)...")
             questionCacheRepository.cachePIQQuestions(
                 piqSnapshotId = piqSubmissionId,
@@ -121,29 +127,4 @@ class InterviewQuestionGenerationWorker @AssistedInject constructor(
         }
     }
 
-    /**
-     * Build PIQ context string for AI question generation
-     *
-     * Extracts relevant fields from PIQ submission to personalize questions
-     */
-    private fun buildPIQContext(piq: Map<String, Any>): String {
-        val data = piq["data"] as? Map<*, *> ?: emptyMap<String, Any>()
-
-        return """
-        Candidate Profile:
-        Name: ${data["fullName"] ?: "Unknown"}
-        Education 12th: ${data["education12th"] ?: "Not provided"}
-        Education Graduation: ${data["educationGraduation"] ?: "Not provided"}
-        Hobbies: ${data["hobbies"] ?: "Not provided"}
-        Sports: ${data["sports"] ?: "Not provided"}
-        Work Experience: ${data["workExperience"] ?: "None"}
-        NCC Training: ${data["nccTraining"] ?: "None"}
-        Why Defense Forces: ${data["whyDefenseForces"] ?: "Not provided"}
-        Strengths: ${data["strengths"] ?: "Not provided"}
-        Weaknesses: ${data["weaknesses"] ?: "Not provided"}
-        Previous Interviews: ${data["previousInterviews"] ?: "None"}
-        Positions of Responsibility: ${data["positionsOfResponsibility"] ?: "None"}
-        Extra-Curricular Activities: ${data["extraCurricularActivities"] ?: "None"}
-        """.trimIndent()
-    }
 }

@@ -1,4 +1,7 @@
 import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import java.math.BigDecimal
 
 plugins {
     alias(libs.plugins.android.application)
@@ -253,6 +256,11 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
 
@@ -337,6 +345,70 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
     executionData.setFrom(fileTree(project.buildDir) {
-        include("jacoco/testDebugUnitTest.exec")
+        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
     })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn("testDebugUnitTest")
+    group = "Verification"
+    description = "Validate jacoco coverage for Debug unit tests"
+
+    val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+            "android/**/*.*",
+            "**/*_MembersInjector.class",
+            "**/Dagger*Component*.*",
+            "**/*Module_*Factory.class",
+            "**/di/**",
+            "**/*_Factory*.*",
+            "**/*_Impl*.*",
+            "**/HiltWrapper*.*",
+            "**/*_Hilt*.*",
+            "**/*Navigation*.*",
+            "**/*Destinations*.*",
+            "**/*NavGraph*.*",
+            "**/*Application*.*",
+            "**/ui/theme/**",
+            "**/designsystem/**",
+            "**/Lambda$*.class",
+            "**/Lambda.class",
+            "**/*Lambda.class",
+            "**/*Lambda*.class"
+        )
+    }
+
+    val mainSrc = "${project.projectDir}/src/main/kotlin"
+
+    classDirectories.setFrom(files(debugTree))
+    sourceDirectories.setFrom(files(mainSrc))
+    executionData.setFrom(fileTree(project.buildDir) {
+        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
+    })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal("0.03")
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal("0.01")
+            }
+        }
+    }
+
+    onlyIf { executionData.files.any { it.exists() } }
+}
+
+tasks.named("check") {
+    // Coverage verification can be run explicitly in CI (not wired here to avoid extra task ordering)
 }

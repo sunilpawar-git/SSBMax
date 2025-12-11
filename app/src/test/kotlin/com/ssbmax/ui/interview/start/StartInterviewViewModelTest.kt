@@ -54,6 +54,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     private lateinit var interviewRepository: InterviewRepository
     private lateinit var submissionRepository: SubmissionRepository
     private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
+    private lateinit var questionCacheRepository: com.ssbmax.core.domain.model.interview.QuestionCacheRepository
     private lateinit var context: Context
 
     private val testUserId = "user-123"
@@ -120,11 +121,13 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
         interviewRepository = mockk(relaxed = true)
         submissionRepository = mockk(relaxed = true)
         observeCurrentUser = mockk(relaxed = true)
+        questionCacheRepository = mockk(relaxed = true)
         context = mockk(relaxed = true)
 
         // Default mocks
         every { observeCurrentUser() } returns flowOf(testUser)
         coEvery { interviewRepository.getUserResults(testUserId) } returns flowOf(emptyList())
+        coEvery { questionCacheRepository.getPIQQuestions(any(), any(), any()) } returns Result.success(emptyList())
         every { context.getString(any()) } returns "Mocked String"
     }
 
@@ -134,6 +137,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
             interviewRepository = interviewRepository,
             submissionRepository = submissionRepository,
             observeCurrentUser = observeCurrentUser,
+            questionCacheRepository = questionCacheRepository,
             context = context
         )
     }

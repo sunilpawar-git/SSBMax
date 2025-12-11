@@ -37,6 +37,7 @@ class StartInterviewViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
     private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val questionCacheRepository: com.ssbmax.core.domain.model.interview.QuestionCacheRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -180,11 +181,32 @@ class StartInterviewViewModel @Inject constructor(
                     return@launch
                 }
 
+                // Check if cached questions are available for instant start
+                _uiState.update { it.copy(loadingMessage = context.getString(R.string.interview_loading_checking_cache)) }
+
+                val cachedQuestions = questionCacheRepository.getPIQQuestions(
+                    piqSnapshotId = piqSnapshotId,
+                    limit = 1,
+                    excludeUsed = true
+                ).getOrDefault(emptyList())
+
+                val hasCachedQuestions = cachedQuestions.isNotEmpty()
+
+                Log.d(TAG, if (hasCachedQuestions) {
+                    "✅ Cached questions available - instant start!"
+                } else {
+                    "⚠️ No cached questions - will generate on-demand (30-60s)"
+                })
+
                 // Create session - repository checks cache first (instant) or generates on-demand (30-60s)
                 _uiState.update {
                     it.copy(
-                        loadingMessage = context.getString(R.string.interview_loading_preparing),
-                        isGeneratingQuestions = true
+                        loadingMessage = if (hasCachedQuestions) {
+                            context.getString(R.string.interview_loading_preparing)
+                        } else {
+                            context.getString(R.string.interview_loading_generating_questions)
+                        },
+                        isGeneratingQuestions = !hasCachedQuestions
                     )
                 }
 

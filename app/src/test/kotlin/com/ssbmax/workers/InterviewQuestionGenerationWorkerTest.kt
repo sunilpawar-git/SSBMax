@@ -41,6 +41,7 @@ class InterviewQuestionGenerationWorkerTest {
     private lateinit var aiService: AIService
     private lateinit var submissionRepository: SubmissionRepository
     private lateinit var questionCacheRepository: QuestionCacheRepository
+    private lateinit var piqDataMapper: com.ssbmax.core.data.repository.interview.PIQDataMapper
 
     @Before
     fun setup() {
@@ -48,6 +49,85 @@ class InterviewQuestionGenerationWorkerTest {
         aiService = mockk()
         submissionRepository = mockk()
         questionCacheRepository = mockk()
+        piqDataMapper = mockk()
+    }
+
+    @Test
+    fun `worker uses comprehensive PIQ context with all 60+ fields`() = runTest {
+        // Given
+        val piqSubmissionId = "test-piq-comprehensive"
+        val mockPIQData = mapOf(
+            "id" to piqSubmissionId,
+            "data" to mapOf(
+                "fullName" to "Comprehensive Test",
+                "age" to "25",
+                "state" to "Maharashtra",
+                "fatherOccupation" to "Army Officer",
+                "education12th" to mapOf("institution" to "Test School"),
+                "hobbies" to "Reading",
+                "nccTraining" to mapOf("hasTraining" to true),
+                "whyDefenseForces" to "Serve nation"
+            )
+        )
+
+        // This comprehensive context should include all major sections
+        val comprehensiveContext = """
+            CANDIDATE PROFILE
+            =================
+
+            PERSONAL BACKGROUND:
+            - Name: Comprehensive Test
+            - Age: 25
+            - State: Maharashtra
+
+            FAMILY ENVIRONMENT:
+            - Father Occupation: Army Officer
+
+            EDUCATION JOURNEY:
+            - 12th: Test School
+
+            ACTIVITIES & INTERESTS:
+            - Hobbies: Reading
+
+            LEADERSHIP EXPOSURE:
+            - NCC Training: Yes
+
+            SELF-ASSESSMENT:
+            - Why Defense Forces: Serve nation
+        """.trimIndent()
+
+        val mockQuestions = List(18) { InterviewQuestion(
+            id = "q-$it",
+            questionText = "Question $it",
+            expectedOLQs = listOf(OLQ.EFFECTIVE_INTELLIGENCE),
+            context = null,
+            source = QuestionSource.PIQ_BASED
+        )}
+
+        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
+        coEvery { piqDataMapper.buildComprehensivePIQContext(mockPIQData) } returns comprehensiveContext
+        coEvery { aiService.generatePIQBasedQuestions(comprehensiveContext, null, 18, 3) } returns Result.success(mockQuestions)
+        coEvery { questionCacheRepository.cachePIQQuestions(any(), any(), any()) } returns Result.success(Unit)
+
+        // When
+        val worker = createWorker(piqSubmissionId)
+        val result = worker.doWork()
+
+        // Then
+        assertEquals(ListenableWorker.Result.success(), result)
+
+        // Verify PIQDataMapper was called to build comprehensive context
+        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
+
+        // Verify AI service received the comprehensive context (not custom minimal context)
+        coVerify(exactly = 1) {
+            aiService.generatePIQBasedQuestions(
+                piqData = match { it.contains("CANDIDATE PROFILE") && it.contains("FAMILY ENVIRONMENT") },
+                targetOLQs = null,
+                count = 18,
+                difficulty = 3
+            )
+        }
     }
 
     @Test
@@ -63,6 +143,18 @@ class InterviewQuestionGenerationWorkerTest {
             )
         )
 
+        val comprehensiveContext = """
+            CANDIDATE PROFILE
+            =================
+
+            PERSONAL BACKGROUND:
+            - Name: Test Candidate
+            - Hobbies: Reading, Sports
+
+            SELF-ASSESSMENT:
+            - Why Defense Forces: Serve the nation
+        """.trimIndent()
+
         val mockQuestions = List(18) { index ->
             InterviewQuestion(
                 id = "q-$index",
@@ -74,9 +166,10 @@ class InterviewQuestionGenerationWorkerTest {
         }
 
         coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
+        coEvery { piqDataMapper.buildComprehensivePIQContext(mockPIQData) } returns comprehensiveContext
         coEvery {
             aiService.generatePIQBasedQuestions(
-                piqData = any(),
+                piqData = comprehensiveContext,
                 targetOLQs = null,
                 count = 18,
                 difficulty = 3
@@ -97,7 +190,8 @@ class InterviewQuestionGenerationWorkerTest {
         // Then
         assertEquals(ListenableWorker.Result.success(), result)
         coVerify(exactly = 1) { submissionRepository.getSubmission(piqSubmissionId) }
-        coVerify(exactly = 1) { aiService.generatePIQBasedQuestions(any(), null, 18, 3) }
+        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
+        coVerify(exactly = 1) { aiService.generatePIQBasedQuestions(comprehensiveContext, null, 18, 3) }
         coVerify(exactly = 1) { questionCacheRepository.cachePIQQuestions(piqSubmissionId, mockQuestions, 30) }
     }
 
@@ -111,6 +205,7 @@ class InterviewQuestionGenerationWorkerTest {
         )
 
         coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
+        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
         coEvery {
             aiService.generatePIQBasedQuestions(any(), any(), any(), any())
         } returns Result.failure(Exception("AI service unavailable"))
@@ -121,6 +216,7 @@ class InterviewQuestionGenerationWorkerTest {
 
         // Then
         assertEquals(ListenableWorker.Result.retry(), result)
+        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
         coVerify(exactly = 1) { aiService.generatePIQBasedQuestions(any(), any(), any(), any()) }
     }
 
@@ -143,6 +239,7 @@ class InterviewQuestionGenerationWorkerTest {
         }
 
         coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
+        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
         coEvery { aiService.generatePIQBasedQuestions(any(), any(), any(), any()) } returns Result.success(mockQuestions)
         coEvery {
             questionCacheRepository.cachePIQQuestions(any(), any(), any())
@@ -154,6 +251,7 @@ class InterviewQuestionGenerationWorkerTest {
 
         // Then
         assertEquals(ListenableWorker.Result.retry(), result)
+        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
         coVerify(exactly = 1) { questionCacheRepository.cachePIQQuestions(any(), any(), any()) }
     }
 
@@ -167,6 +265,7 @@ class InterviewQuestionGenerationWorkerTest {
         )
 
         coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
+        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
         coEvery {
             aiService.generatePIQBasedQuestions(any(), any(), any(), any())
         } returns Result.failure(Exception("Persistent failure"))
@@ -250,7 +349,8 @@ class InterviewQuestionGenerationWorkerTest {
                     params = workerParameters,
                     aiService = aiService,
                     submissionRepository = submissionRepository,
-                    questionCacheRepository = questionCacheRepository
+                    questionCacheRepository = questionCacheRepository,
+                    piqDataMapper = piqDataMapper
                 )
             }
         }
