@@ -151,5 +151,61 @@ class NavigationTest : BaseComposeTest() {
         // Then: Nav controller should be initialized
         assert(navController != null) { "Navigation controller should be initialized" }
     }
+
+    @Test
+    fun navigation_interviewResultRoute_generatesCorrectly() {
+        // Test interview result route generation (used for deep linking from notifications)
+        val resultId = "result-abc123"
+        val route = SSBMaxDestinations.InterviewResult.createRoute(resultId)
+        
+        assert(route == "interview/result/$resultId") { 
+            "Interview result route should match deep link format. Expected: interview/result/$resultId, got: $route" 
+        }
+    }
+
+    @Test
+    fun navigation_interviewRoutes_areValid() {
+        // Verify all interview-related destinations have valid routes
+        assert(SSBMaxDestinations.StartInterview.route.isNotEmpty()) { 
+            "StartInterview route should not be empty" 
+        }
+        assert(SSBMaxDestinations.TextInterviewSession.route.contains("{sessionId}")) { 
+            "TextInterviewSession route should contain sessionId parameter" 
+        }
+        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) { 
+            "VoiceInterviewSession route should contain sessionId parameter" 
+        }
+        assert(SSBMaxDestinations.InterviewResult.route.contains("{resultId}")) { 
+            "InterviewResult route should contain resultId parameter" 
+        }
+    }
+
+    @Test
+    fun deepLink_interviewResult_matchesNavigationRoute() {
+        // Test that the deep link format matches navigation route format
+        // Deep link format: ssbmax://interview/result/{resultId}
+        // Navigation route: interview/result/{resultId}
+        val resultId = "test-result-123"
+        
+        // Use DeepLinkParser to build and parse (tests round-trip)
+        val deepLink = com.ssbmax.utils.DeepLinkParser.buildInterviewResultDeepLink(resultId)
+        val processedRoute = com.ssbmax.utils.DeepLinkParser.parseToRoute(deepLink)
+        
+        // Verify it matches the route we'd navigate to
+        val expectedRoute = SSBMaxDestinations.InterviewResult.createRoute(resultId)
+        
+        assert(processedRoute == expectedRoute) {
+            "Processed deep link should match navigation route. " +
+            "Processed: $processedRoute, Expected: $expectedRoute"
+        }
+    }
+
+    @Test
+    fun deepLinkParser_usesCorrectScheme() {
+        // Verify the scheme constant is what we expect
+        assert(com.ssbmax.utils.DeepLinkParser.SCHEME == "ssbmax://") {
+            "DeepLinkParser should use ssbmax:// scheme"
+        }
+    }
 }
 

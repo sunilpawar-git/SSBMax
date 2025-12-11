@@ -79,5 +79,20 @@ interface SubmissionRepository {
         submissionId: String,
         status: SubmissionStatus
     ): Result<Unit>
+
+    /**
+     * Get latest PIQ submission for user
+     */
+    suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?>
+
+    /**
+     * Get latest OIR submission for user
+     */
+    suspend fun getLatestOIRSubmission(userId: String): Result<OIRSubmission?>
+
+    /**
+     * Get latest PPDT submission for user
+     */
+    suspend fun getLatestPPDTSubmission(userId: String): Result<PPDTSubmission?>
 }
 

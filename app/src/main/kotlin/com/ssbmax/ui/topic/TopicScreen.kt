@@ -5,6 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,13 +16,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.interview.InterviewResult
 import com.ssbmax.ui.components.TabSwipeableContent
 import com.ssbmax.ui.components.MarkdownText
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * Topic Screen with 3 tabs: Introduction, Study Material, Tests
@@ -31,6 +40,7 @@ fun TopicScreen(
     onNavigateBack: () -> Unit,
     onNavigateToStudyMaterial: (String) -> Unit = {},
     onNavigateToTest: (String) -> Unit = {},
+    onNavigateToInterviewResult: (String) -> Unit = {},
     viewModel: TopicViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -61,14 +71,14 @@ fun TopicScreen(
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
                     label = { Text("Study Material") },
                     alwaysShowLabel = true
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = null) },
                     label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") },
                     alwaysShowLabel = true
                 )
@@ -98,11 +108,14 @@ fun TopicScreen(
                     tests = uiState.availableTests,
                     topicId = topicId,
                     isLoading = uiState.isLoading,
+                    pastInterviewResults = uiState.pastInterviewResults,
+                    isLoadingInterviewHistory = uiState.isLoadingInterviewHistory,
                     onTestClick = { testType ->
                         // Convert TestType to testId string for navigation
                         val testId = "${testType.name.lowercase()}_standard"
                         onNavigateToTest(testId)
-                    }
+                    },
+                    onInterviewResultClick = onNavigateToInterviewResult
                 )
             }
         }
@@ -291,7 +304,7 @@ private fun StudyMaterialCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                if (material.isPremium) Icons.Default.Lock else Icons.Default.MenuBook,
+                if (material.isPremium) Icons.Default.Lock else Icons.AutoMirrored.Filled.MenuBook,
                 contentDescription = null,
                 tint = if (material.isPremium) 
                     MaterialTheme.colorScheme.tertiary 
@@ -337,7 +350,10 @@ private fun TestsTab(
     tests: List<TestType>,
     topicId: String,
     isLoading: Boolean,
+    pastInterviewResults: List<InterviewResult> = emptyList(),
+    isLoadingInterviewHistory: Boolean = false,
     onTestClick: (TestType) -> Unit,
+    onInterviewResultClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (isLoading) {
@@ -396,15 +412,172 @@ private fun TestsTab(
                     onClick = { onTestClick(test) }
                 )
             }
+        } else if (topicId.equals("INTERVIEW", ignoreCase = true)) {
+            // Interview topic - show test card and past results
+            items(tests) { test ->
+                TestCard(
+                    test = test,
+                    onClick = { onTestClick(test) }
+                )
+            }
+            
+            // Past Interview Results Section
+            if (pastInterviewResults.isNotEmpty() || isLoadingInterviewHistory) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    InterviewHistorySection(
+                        results = pastInterviewResults,
+                        isLoading = isLoadingInterviewHistory,
+                        onResultClick = onInterviewResultClick
+                    )
+                }
+            }
         } else {
             // Default behavior for other topics
-        items(tests) { test ->
-            TestCard(
-                test = test,
-                onClick = { onTestClick(test) }
+            items(tests) { test ->
+                TestCard(
+                    test = test,
+                    onClick = { onTestClick(test) }
+                )
+            }
+        }
+    }
+}
+
+// ========================
+// Interview History Components
+// ========================
+
+@Composable
+private fun InterviewHistorySection(
+    results: List<InterviewResult>,
+    isLoading: Boolean,
+    onResultClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.interview_history_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        } else if (results.isEmpty()) {
+            Text(
+                text = stringResource(R.string.interview_no_past_results),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        } else {
+            // Show first 5 results, with option to see more
+            val displayResults = results.take(5)
+            displayResults.forEach { result ->
+                InterviewResultCard(
+                    result = result,
+                    onClick = { onResultClick(result.id) }
+                )
+            }
+            
+            if (results.size > 5) {
+                Text(
+                    text = "+ ${results.size - 5} more results",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun InterviewResultCard(
+    result: InterviewResult,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dateFormatter = remember {
+        DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+            .withZone(ZoneId.systemDefault())
+    }
+    
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Checkmark icon
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            
+            // Date and score info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = dateFormatter.format(result.completedAt),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Score: ${String.format("%.1f", result.getAverageOLQScore())} • ${result.getDurationMinutes()} min",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // Score badge (SSB scale: lower is better, 1-10)
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = getInterviewScoreColor(result.overallRating).copy(alpha = 0.2f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "${result.overallRating}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = getInterviewScoreColor(result.overallRating)
+                    )
+                    Text(
+                        text = "/10",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
+    }
+}
+
+/** SSB scale: lower score is better (1-5 = excellent, 6 = good, 7 = average, 8-10 = poor) */
+private fun getInterviewScoreColor(rating: Int): Color {
+    return when (rating) {
+        in 1..5 -> Color(0xFF4CAF50) // Green - Excellent/Recommended
+        6 -> Color(0xFF8BC34A)       // Light Green - Good
+        7 -> Color(0xFFFF9800)       // Orange - Average
+        else -> Color(0xFFF44336)    // Red - Below Average/Poor
     }
 }
 
@@ -512,13 +685,13 @@ private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector
     return when (testType) {
         TestType.OIR -> Icons.Default.Psychology
         TestType.PPDT -> Icons.Default.Image
-        TestType.PIQ -> Icons.Default.Assignment
+        TestType.PIQ -> Icons.AutoMirrored.Filled.Assignment
         TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
         // GTO Tasks
         TestType.GTO_GD -> Icons.Default.Forum
         TestType.GTO_GPE -> Icons.Default.Map
-        TestType.GTO_PGT -> Icons.Default.TrendingUp
-        TestType.GTO_GOR -> Icons.Default.DirectionsRun
+        TestType.GTO_PGT -> Icons.AutoMirrored.Filled.TrendingUp
+        TestType.GTO_GOR -> Icons.AutoMirrored.Filled.DirectionsRun
         TestType.GTO_HGT -> Icons.Default.People
         TestType.GTO_LECTURETTE -> Icons.Default.Mic
         TestType.GTO_IO -> Icons.Default.Person

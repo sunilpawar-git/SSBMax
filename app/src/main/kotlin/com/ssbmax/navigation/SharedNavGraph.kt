@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ssbmax.core.domain.model.interview.InterviewMode
 
 /**
  * Shared navigation graph
@@ -348,12 +349,95 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(
         route = SSBMaxDestinations.IOTest.route,
         arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.getString("testId") ?: ""
-        // TODO: Implement IOTestScreen
-        SharedPlaceholderScreen(title = "IO Test: $testId")
+    ) {
+        // IO Test (Interview Officer) - Navigate to interview feature
+        com.ssbmax.ui.interview.start.StartInterviewScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToSession = { sessionId ->
+                // Unified interview - always use voice-based interview (with TTS mute toggle)
+                navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId))
+            },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
+            }
+        )
     }
-    
+
+    // ========================
+    // INTERVIEW SCREENS (Stage 4)
+    // ========================
+
+    // Start Interview - Prerequisite check and session creation
+    composable(SSBMaxDestinations.StartInterview.route) {
+        com.ssbmax.ui.interview.start.StartInterviewScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToSession = { sessionId ->
+                // Unified interview - always use voice-based interview (with TTS mute toggle)
+                navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId))
+            },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
+            }
+        )
+    }
+
+    // Interview Session (Unified - supports TTS with mute toggle)
+    composable(
+        route = SSBMaxDestinations.VoiceInterviewSession.route,
+        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+        com.ssbmax.ui.interview.session.InterviewSessionScreen(
+            sessionId = sessionId,
+            onNavigateBack = {
+                // CRITICAL: Use explicit navigation with popUpTo to synchronously remove
+                // this screen from the back stack. Using popBackStack() alone causes a race
+                // condition where Compose creates a new ViewModel before the old screen is removed.
+                // Pop to StudentHome (always in back stack) instead of TopicScreen which might
+                // not exist if user navigated through IOTest or other routes
+                // Tab indices: 0=Overview, 1=Study Material, 2=Tests
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
+                    }
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = false }
+                }
+            },
+            onNavigateToHome = {
+                // Navigate to interview topic screen after background analysis starts
+                // CRITICAL: Pop to StudentHome (always in back stack) to ensure all interview
+                // screens are removed, regardless of navigation path
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("INTERVIEW") + "?selectedTab=2") {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) {
+                        inclusive = false // Keep StudentHome
+                    }
+                    launchSingleTop = true
+                }
+            }
+        )
+    }
+
+    // Interview Result
+    composable(
+        route = SSBMaxDestinations.InterviewResult.route,
+        arguments = listOf(navArgument("resultId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val resultId = backStackEntry.arguments?.getString("resultId") ?: ""
+        com.ssbmax.ui.interview.result.InterviewResultScreen(
+            resultId = resultId,
+            onNavigateBack = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
     // ========================
     // STUDY MATERIALS
     // ========================
@@ -420,6 +504,9 @@ fun NavGraphBuilder.sharedNavGraph(
                         android.util.Log.w("Navigation", "Unknown test ID: $testId")
                     }
                 }
+            },
+            onNavigateToInterviewResult = { resultId ->
+                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
             }
         )
     }

@@ -449,6 +449,437 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             Result.failure(Exception("Failed to delete submission: ${e.message}", e))
         }
     }
+
+    /**
+     * Get latest PIQ submission for user
+     */
+    override suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "PIQ")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                val doc = snapshot.documents[0]
+                val data = doc.get("data") as? Map<*, *>
+
+                if (data == null) {
+                    Log.w(TAG, "PIQ submission found but data field is null")
+                    Result.success(null)
+                } else {
+                    val submission = parsePIQSubmission(data)
+                    Result.success(submission)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest PIQ submission", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get latest OIR submission for user
+     */
+    override suspend fun getLatestOIRSubmission(userId: String): Result<OIRSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "OIR")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                val doc = snapshot.documents[0]
+                val data = doc.get("data") as? Map<*, *>
+
+                if (data == null) {
+                    Log.w(TAG, "OIR submission found but data field is null")
+                    Result.success(null)
+                } else {
+                    val submission = parseOIRSubmission(data)
+                    Result.success(submission)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest OIR submission", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get latest PPDT submission for user
+     */
+    override suspend fun getLatestPPDTSubmission(userId: String): Result<PPDTSubmission?> {
+        return try {
+            val query = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, "PPDT")
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+
+            val snapshot = query.get().await()
+
+            if (snapshot.isEmpty) {
+                Result.success(null)
+            } else {
+                val doc = snapshot.documents[0]
+                val data = doc.get("data") as? Map<*, *>
+
+                if (data == null) {
+                    Log.w(TAG, "PPDT submission found but data field is null")
+                    Result.success(null)
+                } else {
+                    val submission = parsePPDTSubmission(data)
+                    Result.success(submission)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting latest PPDT submission", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Parse PIQ submission from Firestore map
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
+        // Helper to safely get list of maps
+        fun getListOfMaps(key: String): List<Map<*, *>> {
+            return (data[key] as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
+        }
+
+        // Parse siblings
+        val siblings = getListOfMaps("siblings").map {
+            Sibling(
+                id = it["id"] as? String ?: "",
+                name = it["name"] as? String ?: "",
+                age = it["age"] as? String ?: "",
+                occupation = it["occupation"] as? String ?: "",
+                education = it["education"] as? String ?: "",
+                income = it["income"] as? String ?: ""
+            )
+        }
+
+        // Parse education levels
+        fun parseEducation(key: String, level: String): Education {
+            val eduMap = data[key] as? Map<*, *> ?: emptyMap<String, Any>()
+            return Education(
+                level = level,
+                institution = eduMap["institution"] as? String ?: "",
+                board = eduMap["board"] as? String ?: "",
+                stream = eduMap["stream"] as? String ?: "",
+                year = eduMap["year"] as? String ?: "",
+                percentage = eduMap["percentage"] as? String ?: "",
+                cgpa = eduMap["cgpa"] as? String ?: "",
+                mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+                boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+                outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
+            )
+        }
+
+        // Parse sports participation
+        val sportsParticipation = getListOfMaps("sportsParticipation").map {
+            SportsParticipation(
+                id = it["id"] as? String ?: "",
+                sport = it["sport"] as? String ?: "",
+                period = it["period"] as? String ?: "",
+                representedInstitution = it["representedInstitution"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        }
+
+        // Parse extra-curricular activities
+        val extraCurricularActivities = getListOfMaps("extraCurricularActivities").map {
+            ExtraCurricularActivity(
+                id = it["id"] as? String ?: "",
+                activityName = it["activityName"] as? String ?: "",
+                duration = it["duration"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        }
+
+        // Parse work experience
+        val workExperience = getListOfMaps("workExperience").map {
+            WorkExperience(
+                id = it["id"] as? String ?: "",
+                company = it["company"] as? String ?: "",
+                role = it["role"] as? String ?: "",
+                duration = it["duration"] as? String ?: "",
+                description = it["description"] as? String ?: ""
+            )
+        }
+
+        // Parse NCC training
+        val nccTrainingMap = data["nccTraining"] as? Map<*, *> ?: emptyMap<String, Any>()
+        val nccTraining = NCCTraining(
+            hasTraining = nccTrainingMap["hasTraining"] as? Boolean ?: false,
+            totalTraining = nccTrainingMap["totalTraining"] as? String ?: "",
+            wing = nccTrainingMap["wing"] as? String ?: "",
+            division = nccTrainingMap["division"] as? String ?: "",
+            certificateObtained = nccTrainingMap["certificateObtained"] as? String ?: ""
+        )
+
+        // Parse previous interviews
+        val previousInterviews = getListOfMaps("previousInterviews").map {
+            PreviousInterview(
+                id = it["id"] as? String ?: "",
+                typeOfEntry = it["typeOfEntry"] as? String ?: "",
+                ssbNumber = it["ssbNumber"] as? String ?: "",
+                ssbPlace = it["ssbPlace"] as? String ?: "",
+                date = it["date"] as? String ?: "",
+                chestNumber = it["chestNumber"] as? String ?: "",
+                batchNumber = it["batchNumber"] as? String ?: ""
+            )
+        }
+
+        // Parse AI score
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            PIQAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                personalInfoScore = (it["personalInfoScore"] as? Number)?.toFloat() ?: 0f,
+                familyInfoScore = (it["familyInfoScore"] as? Number)?.toFloat() ?: 0f,
+                motivationScore = (it["motivationScore"] as? Number)?.toFloat() ?: 0f,
+                selfAssessmentScore = (it["selfAssessmentScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                completenessPercentage = (it["completenessPercentage"] as? Number)?.toInt() ?: 0,
+                clarityScore = (it["clarityScore"] as? Number)?.toFloat() ?: 0f,
+                consistencyScore = (it["consistencyScore"] as? Number)?.toFloat() ?: 0f,
+                analysisTimestamp = (it["analysisTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
+            )
+        }
+
+        return PIQSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "piq_standard",
+            oirNumber = data["oirNumber"] as? String ?: "",
+            selectionBoard = data["selectionBoard"] as? String ?: "",
+            batchNumber = data["batchNumber"] as? String ?: "",
+            chestNumber = data["chestNumber"] as? String ?: "",
+            upscRollNumber = data["upscRollNumber"] as? String ?: "",
+            fullName = data["fullName"] as? String ?: "",
+            dateOfBirth = data["dateOfBirth"] as? String ?: "",
+            age = data["age"] as? String ?: "",
+            gender = data["gender"] as? String ?: "",
+            phone = data["phone"] as? String ?: "",
+            email = data["email"] as? String ?: "",
+            state = data["state"] as? String ?: "",
+            district = data["district"] as? String ?: "",
+            religion = data["religion"] as? String ?: "",
+            scStObcStatus = data["scStObcStatus"] as? String ?: "",
+            motherTongue = data["motherTongue"] as? String ?: "",
+            maritalStatus = data["maritalStatus"] as? String ?: "",
+            permanentAddress = data["permanentAddress"] as? String ?: "",
+            presentAddress = data["presentAddress"] as? String ?: "",
+            maximumResidence = data["maximumResidence"] as? String ?: "",
+            maximumResidencePopulation = data["maximumResidencePopulation"] as? String ?: "",
+            presentResidencePopulation = data["presentResidencePopulation"] as? String ?: "",
+            permanentResidencePopulation = data["permanentResidencePopulation"] as? String ?: "",
+            isDistrictHQ = data["isDistrictHQ"] as? Boolean ?: false,
+            height = data["height"] as? String ?: "",
+            weight = data["weight"] as? String ?: "",
+            fatherName = data["fatherName"] as? String ?: "",
+            fatherOccupation = data["fatherOccupation"] as? String ?: "",
+            fatherEducation = data["fatherEducation"] as? String ?: "",
+            fatherIncome = data["fatherIncome"] as? String ?: "",
+            motherName = data["motherName"] as? String ?: "",
+            motherOccupation = data["motherOccupation"] as? String ?: "",
+            motherEducation = data["motherEducation"] as? String ?: "",
+            parentsAlive = data["parentsAlive"] as? String ?: "",
+            ageAtFatherDeath = data["ageAtFatherDeath"] as? String ?: "",
+            ageAtMotherDeath = data["ageAtMotherDeath"] as? String ?: "",
+            guardianName = data["guardianName"] as? String ?: "",
+            guardianOccupation = data["guardianOccupation"] as? String ?: "",
+            guardianEducation = data["guardianEducation"] as? String ?: "",
+            guardianIncome = data["guardianIncome"] as? String ?: "",
+            siblings = siblings,
+            presentOccupation = data["presentOccupation"] as? String ?: "",
+            personalMonthlyIncome = data["personalMonthlyIncome"] as? String ?: "",
+            education10th = parseEducation("education10th", "10th"),
+            education12th = parseEducation("education12th", "12th"),
+            educationGraduation = parseEducation("educationGraduation", "Graduation"),
+            educationPostGraduation = parseEducation("educationPostGraduation", "Post-Graduation"),
+            hobbies = data["hobbies"] as? String ?: "",
+            sports = data["sports"] as? String ?: "",
+            sportsParticipation = sportsParticipation,
+            extraCurricularActivities = extraCurricularActivities,
+            positionsOfResponsibility = data["positionsOfResponsibility"] as? String ?: "",
+            workExperience = workExperience,
+            nccTraining = nccTraining,
+            natureOfCommission = data["natureOfCommission"] as? String ?: "",
+            choiceOfService = data["choiceOfService"] as? String ?: "",
+            chancesAvailed = data["chancesAvailed"] as? String ?: "",
+            previousInterviews = previousInterviews,
+            whyDefenseForces = data["whyDefenseForces"] as? String ?: "",
+            strengths = data["strengths"] as? String ?: "",
+            weaknesses = data["weaknesses"] as? String ?: "",
+            status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            lastModifiedAt = (data["lastModifiedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            aiPreliminaryScore = aiPreliminaryScore
+        )
+    }
+
+    /**
+     * Parse OIR submission from Firestore map
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseOIRSubmission(data: Map<*, *>): OIRSubmission {
+        val testResultMap = data["testResult"] as? Map<*, *> ?: emptyMap<String, Any>()
+
+        // Parse category scores
+        val categoryScoresMap = testResultMap["categoryScores"] as? Map<*, *> ?: emptyMap<String, Any>()
+        val categoryScores = categoryScoresMap.mapNotNull { (key, value) ->
+            val categoryName = key as? String ?: return@mapNotNull null
+            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
+
+            val category = try {
+                OIRQuestionType.valueOf(categoryName)
+            } catch (e: Exception) {
+                return@mapNotNull null
+            }
+
+            category to CategoryScore(
+                category = category,
+                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f,
+                averageTimeSeconds = (scoreMap["averageTimeSeconds"] as? Number)?.toInt() ?: 0
+            )
+        }.toMap()
+
+        // Parse difficulty breakdown
+        val difficultyBreakdownMap = testResultMap["difficultyBreakdown"] as? Map<*, *> ?: emptyMap<String, Any>()
+        val difficultyBreakdown = difficultyBreakdownMap.mapNotNull { (key, value) ->
+            val difficultyName = key as? String ?: return@mapNotNull null
+            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
+
+            val difficulty = try {
+                QuestionDifficulty.valueOf(difficultyName)
+            } catch (e: Exception) {
+                return@mapNotNull null
+            }
+
+            difficulty to DifficultyScore(
+                difficulty = difficulty,
+                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f
+            )
+        }.toMap()
+
+        // Parse answered questions (simplified - full parsing would be complex)
+        val answeredQuestions = emptyList<OIRAnsweredQuestion>()
+
+        val testResult = OIRTestResult(
+            testId = testResultMap["testId"] as? String ?: "",
+            sessionId = testResultMap["sessionId"] as? String ?: "",
+            userId = testResultMap["userId"] as? String ?: "",
+            totalQuestions = (testResultMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+            correctAnswers = (testResultMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+            incorrectAnswers = (testResultMap["incorrectAnswers"] as? Number)?.toInt() ?: 0,
+            skippedQuestions = (testResultMap["skippedQuestions"] as? Number)?.toInt() ?: 0,
+            totalTimeSeconds = (testResultMap["totalTimeSeconds"] as? Number)?.toInt() ?: 0,
+            timeTakenSeconds = (testResultMap["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+            rawScore = (testResultMap["rawScore"] as? Number)?.toInt() ?: 0,
+            percentageScore = (testResultMap["percentageScore"] as? Number)?.toFloat() ?: 0f,
+            categoryScores = categoryScores,
+            difficultyBreakdown = difficultyBreakdown,
+            answeredQuestions = answeredQuestions,
+            completedAt = (testResultMap["completedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+        )
+
+        return OIRSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            testResult = testResult,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
+        )
+    }
+
+    /**
+     * Parse PPDT submission from Firestore map
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parsePPDTSubmission(data: Map<*, *>): PPDTSubmission {
+        // Parse AI score
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            PPDTAIScore(
+                perceptionScore = (it["perceptionScore"] as? Number)?.toFloat() ?: 0f,
+                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
+                narrationScore = (it["narrationScore"] as? Number)?.toFloat() ?: 0f,
+                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
+                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList()
+            )
+        }
+
+        // Parse instructor review (if available)
+        val instructorReviewMap = data["instructorReview"] as? Map<*, *>
+        val instructorReview = instructorReviewMap?.let {
+            val detailedScoresMap = it["detailedScores"] as? Map<*, *> ?: emptyMap<String, Any>()
+            val detailedScores = PPDTDetailedScores(
+                perception = (detailedScoresMap["perception"] as? Number)?.toFloat() ?: 0f,
+                imagination = (detailedScoresMap["imagination"] as? Number)?.toFloat() ?: 0f,
+                narration = (detailedScoresMap["narration"] as? Number)?.toFloat() ?: 0f,
+                characterDepiction = (detailedScoresMap["characterDepiction"] as? Number)?.toFloat() ?: 0f,
+                positivity = (detailedScoresMap["positivity"] as? Number)?.toFloat() ?: 0f
+            )
+
+            PPDTInstructorReview(
+                reviewId = it["reviewId"] as? String ?: "",
+                instructorId = it["instructorId"] as? String ?: "",
+                instructorName = it["instructorName"] as? String ?: "",
+                finalScore = (it["finalScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                detailedScores = detailedScores,
+                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false,
+                reviewedAt = (it["reviewedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                timeSpentMinutes = (it["timeSpentMinutes"] as? Number)?.toInt() ?: 0
+            )
+        }
+
+        return PPDTSubmission(
+            submissionId = data["submissionId"] as? String ?: "",
+            questionId = data["questionId"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            userName = data["userName"] as? String ?: "",
+            userEmail = data["userEmail"] as? String ?: "",
+            batchId = data["batchId"] as? String,
+            story = data["story"] as? String ?: "",
+            charactersCount = (data["charactersCount"] as? Number)?.toInt() ?: 0,
+            viewingTimeTakenSeconds = (data["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
+            writingTimeTakenMinutes = (data["writingTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
+            aiPreliminaryScore = aiPreliminaryScore,
+            instructorReview = instructorReview
+        )
+    }
 }
 
 /**

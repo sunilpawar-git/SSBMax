@@ -1,3 +1,8 @@
+import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import java.math.BigDecimal
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +12,57 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
 }
+
+// Temporarily disable mock google-services.json generation for local development
+// Uncomment the block below if you need CI builds without Firebase config
+
+/*
+tasks.register("createMockGoogleServices") {
+    doLast {
+        if (!file("google-services.json").exists()) {
+            println("⚠️ google-services.json not found - creating mock for CI build")
+            val mockGoogleServices = """
+            {
+              "project_info": {
+                "project_number": "123456789",
+                "project_id": "mock-project-id",
+                "storage_bucket": "mock-project-id.appspot.com"
+              },
+              "client": [
+                {
+                  "client_info": {
+                    "mobilesdk_app_id": "1:123456789:android:mockappid",
+                    "android_client_info": {
+                      "package_name": "com.ssbmax"
+                    }
+                  },
+                  "oauth_client": [],
+                  "api_key": [
+                    {
+                      "current_key": "mock_api_key_for_ci"
+                    }
+                  ],
+                  "services": {
+                    "appinvite_service": {
+                      "other_platform_oauth_client": []
+                    }
+                  }
+                }
+              ],
+              "configuration_version": "1"
+            }
+            """.trimIndent()
+
+            file("google-services.json").writeText(mockGoogleServices)
+            println("✅ Created mock google-services.json for CI build with package name 'com.ssbmax'")
+        }
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("createMockGoogleServices")
+}
+*/
 
 android {
     namespace = "com.ssbmax"
@@ -20,10 +76,36 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "com.ssbmax.testing.HiltTestRunner"
-        
+
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Gemini API Key for AI Interview Feature
+        // Read from local.properties (fallback to project property, then empty string)
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY")
+            ?: project.findProperty("GEMINI_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+
+        // Sarvam AI API Key for primary premium TTS (Pro/Premium users)
+        // Read from local.properties (fallback to empty string - will use ElevenLabs or Android TTS)
+        val sarvamApiKey: String = localProperties.getProperty("SARVAM_API_KEY")
+            ?: project.findProperty("SARVAM_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "SARVAM_API_KEY", "\"$sarvamApiKey\"")
+
+        // ElevenLabs API Key for fallback premium TTS (Pro/Premium users)
+        // Read from local.properties (fallback to empty string - will use Android TTS)
+        val elevenLabsApiKey: String = localProperties.getProperty("ELEVENLABS_API_KEY")
+            ?: project.findProperty("ELEVENLABS_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "ELEVENLABS_API_KEY", "\"$elevenLabsApiKey\"")
     }
 
     buildTypes {
@@ -37,6 +119,13 @@ android {
             // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
             // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
+            
+            // Debug: Force premium TTS (Sarvam AI) for testing (even for FREE users)
+            // Premium TTS Debug Override:
+            // - "true": Force Sarvam AI TTS for all users (bypasses subscription check)
+            // - "false": Normal behavior (Sarvam AI for Pro/Premium, Android TTS for Free)
+            // NOTE: Set to "true" temporarily when testing premium voice quality
+            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "true")
         }
         
         release {
@@ -49,6 +138,9 @@ android {
 
             // Production: Subscription limits enforced
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
+
+            // Production: No forced premium TTS (use subscription logic)
+            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
         }
     }
     
@@ -133,7 +225,12 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    
+
+    // WorkManager (background jobs for question pre-generation)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
@@ -150,6 +247,7 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
 
+
     // Google Play Billing
     implementation(libs.billing.ktx)
 
@@ -158,8 +256,19 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
+
+    // WorkManager testing (for Phase 1 worker tests)
+    testImplementation("androidx.work:work-testing:2.9.0")
+
+    // Robolectric for Android unit tests
+    testImplementation("org.robolectric:robolectric:4.11.1")
     
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -236,6 +345,70 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
     executionData.setFrom(fileTree(project.buildDir) {
-        include("jacoco/testDebugUnitTest.exec")
+        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
     })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn("testDebugUnitTest")
+    group = "Verification"
+    description = "Validate jacoco coverage for Debug unit tests"
+
+    val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/R.class",
+            "**/R$*.class",
+            "**/BuildConfig.*",
+            "**/Manifest*.*",
+            "**/*Test*.*",
+            "android/**/*.*",
+            "**/*_MembersInjector.class",
+            "**/Dagger*Component*.*",
+            "**/*Module_*Factory.class",
+            "**/di/**",
+            "**/*_Factory*.*",
+            "**/*_Impl*.*",
+            "**/HiltWrapper*.*",
+            "**/*_Hilt*.*",
+            "**/*Navigation*.*",
+            "**/*Destinations*.*",
+            "**/*NavGraph*.*",
+            "**/*Application*.*",
+            "**/ui/theme/**",
+            "**/designsystem/**",
+            "**/Lambda$*.class",
+            "**/Lambda.class",
+            "**/*Lambda.class",
+            "**/*Lambda*.class"
+        )
+    }
+
+    val mainSrc = "${project.projectDir}/src/main/kotlin"
+
+    classDirectories.setFrom(files(debugTree))
+    sourceDirectories.setFrom(files(mainSrc))
+    executionData.setFrom(fileTree(project.buildDir) {
+        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
+    })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal("0.03")
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal("0.01")
+            }
+        }
+    }
+
+    onlyIf { executionData.files.any { it.exists() } }
+}
+
+tasks.named("check") {
+    // Coverage verification can be run explicitly in CI (not wired here to avoid extra task ordering)
 }

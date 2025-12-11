@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "description": "Fallback interview questions for development and when AI generation fails",
+  "lastUpdated": "2025-11-23",
+  "questions": [
+    {
+      "questionText": "Tell me about yourself and your background.",
+      "expectedOLQs": ["SELF_CONFIDENCE", "POWER_OF_EXPRESSION"],
+      "context": "Opening question to assess communication skills and self-awareness"
+    },
+    {
+      "questionText": "Why do you want to join the armed forces?",
+      "expectedOLQs": ["DETERMINATION", "SENSE_OF_RESPONSIBILITY"],
+      "context": "Core motivation assessment"
+    },
+    {
+      "questionText": "Describe a challenging situation you faced and how you handled it.",
+      "expectedOLQs": ["REASONING_ABILITY", "SPEED_OF_DECISION", "COURAGE"],
+      "context": "Problem-solving and decision-making under pressure"
+    },
+    {
+      "questionText": "What are your strengths and weaknesses?",
+      "expectedOLQs": ["SELF_CONFIDENCE", "POWER_OF_EXPRESSION"],
+      "context": "Self-assessment and honesty evaluation"
+    },
+    {
+      "questionText": "How do you handle working in a team?",
+      "expectedOLQs": ["COOPERATION", "SOCIAL_ADJUSTMENT", "INFLUENCE_GROUP"],
+      "context": "Teamwork and social compatibility assessment"
+    },
+    {
+      "questionText": "Describe a time when you demonstrated leadership.",
+      "expectedOLQs": ["ORGANIZING_ABILITY", "INITIATIVE", "EFFECTIVE_INTELLIGENCE"],
+      "context": "Leadership potential and organizational skills"
+    },
+    {
+      "questionText": "What are your hobbies and interests?",
+      "expectedOLQs": ["LIVELINESS", "SOCIAL_ADJUSTMENT"],
+      "context": "Personality and social engagement assessment"
+    },
+    {
+      "questionText": "How do you handle stress and pressure?",
+      "expectedOLQs": ["STAMINA", "COURAGE", "SELF_CONFIDENCE"],
+      "context": "Mental resilience and stress management"
+    },
+    {
+      "questionText": "What do you know about the role you are applying for?",
+      "expectedOLQs": ["EFFECTIVE_INTELLIGENCE", "SENSE_OF_RESPONSIBILITY"],
+      "context": "Preparation and awareness assessment"
+    },
+    {
+      "questionText": "Where do you see yourself in 5 years?",
+      "expectedOLQs": ["DETERMINATION", "ORGANIZING_ABILITY"],
+      "context": "Career planning and long-term vision"
+    }
+  ]
+}

@@ -245,7 +245,6 @@ class SplashViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `all navigation events are sealed class instances`() {
-        // Test that all navigation events are properly defined
         val events = listOf(
             SplashNavigationEvent.NavigateToLogin,
             SplashNavigationEvent.NavigateToStudentHome,
@@ -253,13 +252,12 @@ class SplashViewModelTest : BaseViewModelTest() {
             SplashNavigationEvent.NavigateToRoleSelection,
             SplashNavigationEvent.NavigateToProfileOnboarding
         )
-        
-        events.forEach { event ->
-            assertTrue(
-                "All events should be instances of SplashNavigationEvent",
-                event is SplashNavigationEvent
-            )
-        }
+
+        assertEquals(
+            "All SplashNavigationEvent variants should be listed once",
+            5,
+            events.distinct().size
+        )
     }
 }
 

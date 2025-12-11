@@ -1,5 +1,6 @@
 package com.ssbmax.ui
 
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -10,6 +11,12 @@ import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.navigation.SSBMaxNavGraph
 import com.ssbmax.ui.components.SSBMaxScaffold
+import com.ssbmax.utils.ErrorLogger
+
+private const val TAG = "SSBMaxApp"
+
+/** Auth screens that don't show scaffold and must be passed before deep link navigation */
+private val AUTH_SCREENS = setOf("splash", "login", "role_selection")
 
 /**
  * Main app composable
@@ -17,7 +24,9 @@ import com.ssbmax.ui.components.SSBMaxScaffold
  */
 @Composable
 fun SSBMaxApp(
-    viewModel: AppViewModel = hiltViewModel()
+    viewModel: AppViewModel = hiltViewModel(),
+    pendingDeepLink: String? = null,
+    onDeepLinkHandled: () -> Unit = {}
 ) {
     val navController = rememberNavController()
 
@@ -38,11 +47,35 @@ fun SSBMaxApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     
-    val needsScaffold = currentRoute !in listOf(
-        "splash",
-        "login",
-        "role_selection"
-    )
+    // Handle deep link navigation after user is authenticated and past auth screens
+    LaunchedEffect(pendingDeepLink, currentRoute, currentUser) {
+        Log.d(TAG, "Deep link check - pendingDeepLink: $pendingDeepLink, " +
+                "currentRoute: $currentRoute, currentUser: ${currentUser?.email}")
+        
+        if (pendingDeepLink != null && currentUser != null && currentRoute != null) {
+            // Only navigate if we're past the auth screens
+            val isOnAuthScreen = currentRoute in AUTH_SCREENS
+            
+            if (!isOnAuthScreen) {
+                Log.d(TAG, "✅ Navigating to deep link: $pendingDeepLink (from route: $currentRoute)")
+                try {
+                    navController.navigate(pendingDeepLink) {
+                        // Don't pop the home screen, just add on top
+                        launchSingleTop = true
+                    }
+                    Log.d(TAG, "✅ Deep link navigation successful!")
+                    onDeepLinkHandled()
+                } catch (e: Exception) {
+                    ErrorLogger.log(e, "Failed to navigate to deep link: $pendingDeepLink")
+                    onDeepLinkHandled()
+                }
+            } else {
+                Log.d(TAG, "⏳ Waiting to pass auth screen (current: $currentRoute)")
+            }
+        }
+    }
+    
+    val needsScaffold = currentRoute !in AUTH_SCREENS
     
     if (needsScaffold) {
         SSBMaxScaffold(

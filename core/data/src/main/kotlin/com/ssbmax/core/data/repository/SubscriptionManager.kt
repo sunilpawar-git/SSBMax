@@ -273,7 +273,7 @@ class SubscriptionManager @Inject constructor(
                 // GTO Tests: 3 attempts per sub-test
                 TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
                 TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 3
-                TestType.IO -> 1  // Interview Officer
+                TestType.IO -> 2  // Interview Test (text mode only)
             }
             SubscriptionTier.PREMIUM -> Int.MAX_VALUE  // Unlimited for all
         }

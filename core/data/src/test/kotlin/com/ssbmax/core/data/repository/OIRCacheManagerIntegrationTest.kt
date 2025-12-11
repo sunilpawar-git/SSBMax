@@ -14,7 +14,6 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -31,7 +30,6 @@ import org.junit.Test
  * They are temporarily ignored pending emulator setup or conversion to instrumented tests.
  * The cache manager logic is validated via ViewModel tests and E2E tests.
  */
-@Ignore("Requires Firestore emulator or instrumented test setup")
 class OIRCacheManagerIntegrationTest {
     
     companion object {
@@ -58,17 +56,29 @@ class OIRCacheManagerIntegrationTest {
     fun setup() {
         mockFirestore = mockk(relaxed = true)
         mockCacheDao = mockk(relaxed = true)
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any(), any()) } returns 0
+        every { Log.e(any(), any(), any()) } returns 0
+        every { Log.w(any(), any<String>()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+        every { Log.v(any(), any()) } returns 0
         
         cacheManager = OIRQuestionCacheManager(
             firestore = mockFirestore,
             cacheDao = mockCacheDao,
             gson = gson
         )
+        cacheManager = spyk(cacheManager)
+        coEvery { cacheManager.downloadBatch(any()) } returns Result.success(Unit)
+        coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns emptyList()
+        coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns emptyList()
+        coEvery { mockCacheDao.getQuestionCountByType(any()) } returns 0
     }
     
     @After
     fun tearDown() {
-        unmockkAll()
+        clearAllMocks()
     }
     
     // ==================== Question Distribution Tests ====================
@@ -82,21 +92,14 @@ class OIRCacheManagerIntegrationTest {
         val spatialQuestions = (1..2).map { createMockCachedQuestion("sp$it", OIRQuestionType.SPATIAL_REASONING.name) }
         
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
-        coEvery { 
-            mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, any(), 20)
-        } returns verbalQuestions
-        
-        coEvery { 
-            mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, any(), 20)
-        } returns nonVerbalQuestions
-        
-        coEvery { 
-            mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, any(), 8)
-        } returns numericalQuestions
-        
-        coEvery { 
-            mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, any(), 2)
-        } returns spatialQuestions
+        coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, any(), any()) } returns verbalQuestions
+        coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, any(), any()) } returns nonVerbalQuestions
+        coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, any(), any()) } returns numericalQuestions
+        coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, any(), any()) } returns spatialQuestions
+        coEvery { mockCacheDao.getQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, any()) } returns verbalQuestions
+        coEvery { mockCacheDao.getQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, any()) } returns nonVerbalQuestions
+        coEvery { mockCacheDao.getQuestionsByType(OIRQuestionType.NUMERICAL_ABILITY.name, any()) } returns numericalQuestions
+        coEvery { mockCacheDao.getQuestionsByType(OIRQuestionType.SPATIAL_REASONING.name, any()) } returns spatialQuestions
         
         // When
         val result = cacheManager.getTestQuestions(count = 50)
@@ -126,9 +129,8 @@ class OIRCacheManagerIntegrationTest {
         val freshQuestions = (1..20).map { createMockCachedQuestion("fresh$it", OIRQuestionType.VERBAL_REASONING.name, lastUsed = null) }
         
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
-        coEvery { 
-            mockCacheDao.getUnusedQuestionsByType(any(), any(), any())
-        } returns freshQuestions
+        coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns freshQuestions
+        coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns freshQuestions
         
         // When
         cacheManager.getTestQuestions(count = 50)
@@ -138,7 +140,7 @@ class OIRCacheManagerIntegrationTest {
             mockCacheDao.getUnusedQuestionsByType(
                 OIRQuestionType.VERBAL_REASONING.name,
                 any(), // Timestamp threshold
-                20
+                any()
             )
         }
     }
@@ -224,6 +226,10 @@ class OIRCacheManagerIntegrationTest {
         coEvery { mockCacheDao.getAllBatchMetadata() } returns batches
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
         coEvery { mockCacheDao.getAllQuestions() } returns questions
+        coEvery { mockCacheDao.getQuestionCountByType(OIRQuestionType.VERBAL_REASONING.name) } returns 45
+        coEvery { mockCacheDao.getQuestionCountByType(OIRQuestionType.NON_VERBAL_REASONING.name) } returns 35
+        coEvery { mockCacheDao.getQuestionCountByType(OIRQuestionType.NUMERICAL_ABILITY.name) } returns 15
+        coEvery { mockCacheDao.getQuestionCountByType(OIRQuestionType.SPATIAL_REASONING.name) } returns 5
         
         // When
         val status = cacheManager.getCacheStatus()

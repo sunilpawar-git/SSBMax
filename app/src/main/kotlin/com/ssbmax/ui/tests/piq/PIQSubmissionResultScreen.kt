@@ -8,10 +8,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.PIQAIScore
 
 /**
@@ -34,7 +36,7 @@ fun PIQSubmissionResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("PIQ Quality Assessment") }
+                title = { Text(stringResource(R.string.piq_quality_assessment)) }
             )
         }
     ) { padding ->
@@ -52,7 +54,7 @@ fun PIQSubmissionResultScreen(
                     ) {
                         Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
                         Button(onClick = onNavigateHome) {
-                            Text("Return to Home")
+                            Text(stringResource(R.string.return_to_home))
                         }
                     }
                 }
@@ -104,12 +106,12 @@ private fun ResultContent(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            "PIQ Submitted Successfully",
+                            stringResource(R.string.piq_submitted_successfully),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Submission ID: ${submissionId.take(8)}...",
+                            stringResource(R.string.piq_submission_id, submissionId.take(8)),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -132,18 +134,18 @@ private fun ResultContent(
                         ) {
                             Column {
                                 Text(
-                                    "AI Quality Assessment",
+                                    stringResource(R.string.piq_ai_quality_assessment),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    "Overall Score",
+                                    stringResource(R.string.piq_overall_score),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Text(
-                                "${score.overallScore.toInt()}/100",
+                                stringResource(R.string.piq_score_format, score.overallScore.toInt()),
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -153,10 +155,10 @@ private fun ResultContent(
                         HorizontalDivider()
                         
                         // Category Breakdown
-                        ScoreBreakdown("Personal Information", score.personalInfoScore, 25f)
-                        ScoreBreakdown("Family Information", score.familyInfoScore, 25f)
-                        ScoreBreakdown("Motivation & Goals", score.motivationScore, 25f)
-                        ScoreBreakdown("Self-Assessment", score.selfAssessmentScore, 25f)
+                        ScoreBreakdown(stringResource(R.string.piq_personal_info), score.personalInfoScore, 25f)
+                        ScoreBreakdown(stringResource(R.string.piq_family_info), score.familyInfoScore, 25f)
+                        ScoreBreakdown(stringResource(R.string.piq_motivation_goals), score.motivationScore, 25f)
+                        ScoreBreakdown(stringResource(R.string.piq_self_assessment_label), score.selfAssessmentScore, 25f)
                         
                         HorizontalDivider()
                         
@@ -173,7 +175,7 @@ private fun ResultContent(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    "Completeness",
+                                    stringResource(R.string.piq_completeness),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -185,7 +187,7 @@ private fun ResultContent(
                                     color = MaterialTheme.colorScheme.tertiary
                                 )
                                 Text(
-                                    "Clarity",
+                                    stringResource(R.string.piq_clarity),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -197,7 +199,7 @@ private fun ResultContent(
                                     color = MaterialTheme.colorScheme.secondary
                                 )
                                 Text(
-                                    "Consistency",
+                                    stringResource(R.string.piq_consistency),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -207,7 +209,7 @@ private fun ResultContent(
                         
                         // Feedback
                         Text(
-                            "Feedback",
+                            stringResource(R.string.piq_feedback),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -240,7 +242,7 @@ private fun ResultContent(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Strengths",
+                                    stringResource(R.string.piq_strengths),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -286,7 +288,7 @@ private fun ResultContent(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Areas for Improvement",
+                                    stringResource(R.string.piq_areas_improvement),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -331,7 +333,7 @@ private fun ResultContent(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.",
+                        stringResource(R.string.piq_info_message),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -345,7 +347,7 @@ private fun ResultContent(
                 onClick = onNavigateHome,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Return to Home")
+                Text(stringResource(R.string.return_to_home))
             }
         }
     }

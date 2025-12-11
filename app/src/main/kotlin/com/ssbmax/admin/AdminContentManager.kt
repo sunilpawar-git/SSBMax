@@ -159,7 +159,7 @@ class AdminContentManager @Inject constructor(
                 readTime = doc.getString("readTime") ?: "",
                 author = doc.getString("author") ?: "",
                 isPremium = doc.getBoolean("isPremium") ?: false,
-                tags = doc.get("tags") as? List<String> ?: emptyList(),
+                tags = (doc.get("tags") as? List<*>)?.filterIsInstance<String>().orEmpty(),
                 lastUpdated = doc.getLong("lastUpdated") ?: 0L
             )
             

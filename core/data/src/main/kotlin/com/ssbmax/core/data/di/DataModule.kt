@@ -54,7 +54,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_7_8,
                 DatabaseMigrations.MIGRATION_8_9,
                 DatabaseMigrations.MIGRATION_9_10,
-                DatabaseMigrations.MIGRATION_10_11 // Added adaptive difficulty!
+                DatabaseMigrations.MIGRATION_10_11,
+                DatabaseMigrations.MIGRATION_11_12 // Add PIQ/SD usage columns
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -203,5 +204,17 @@ abstract class RepositoryModule {
     abstract fun bindStudyProgressRepository(
         impl: com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
     ): com.ssbmax.core.domain.repository.StudyProgressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindQuestionCacheRepository(
+        impl: com.ssbmax.core.data.repository.FirestoreQuestionCacheRepository
+    ): com.ssbmax.core.domain.model.interview.QuestionCacheRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInterviewRepository(
+        impl: com.ssbmax.core.data.repository.FirestoreInterviewRepository
+    ): com.ssbmax.core.domain.repository.InterviewRepository
 }
 

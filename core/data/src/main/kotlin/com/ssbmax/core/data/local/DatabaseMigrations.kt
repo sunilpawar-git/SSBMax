@@ -510,5 +510,16 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+
+    /**
+     * Migration from version 11 to 12
+     * Adds PIQ and SD monthly usage tracking to test_usage
+     */
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE test_usage ADD COLUMN piqTestsUsed INTEGER NOT NULL DEFAULT 0")
+            database.execSQL("ALTER TABLE test_usage ADD COLUMN sdTestsUsed INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 }
 

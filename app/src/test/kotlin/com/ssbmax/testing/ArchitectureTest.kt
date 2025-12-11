@@ -19,7 +19,7 @@ class ArchitectureTest {
 
     companion object {
         // Root directory of the project
-        private val PROJECT_ROOT = File(System.getProperty("user.dir"))
+        private val PROJECT_ROOT = File(System.getProperty("user.dir") ?: ".")
 
         // Directories to scan
         private val APP_SRC = File(PROJECT_ROOT, "app/src/main/kotlin")

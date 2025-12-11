@@ -680,6 +680,29 @@
     <string name="piq_previous">Previous</string>
     <string name="piq_next">Next</string>
     <string name="piq_review">Review</string>
+    
+    <!-- PIQ Result Screen -->
+    <string name="piq_quality_assessment">PIQ Quality Assessment</string>
+    <string name="piq_submitted_successfully">PIQ Submitted Successfully</string>
+    <string name="piq_submission_id">Submission ID: %1$s…</string>
+    <string name="piq_ai_quality_assessment">AI Quality Assessment</string>
+    <string name="piq_overall_score">Overall Score</string>
+    <string name="piq_score_format">%1$d/100</string>
+    <string name="piq_personal_info">Personal Information</string>
+    <string name="piq_family_info">Family Information</string>
+    <string name="piq_motivation_goals">Motivation &amp; Goals</string>
+    <string name="piq_self_assessment_label">Self-Assessment</string>
+    <string name="piq_completeness">Completeness</string>
+    <string name="piq_clarity">Clarity</string>
+    <string name="piq_consistency">Consistency</string>
+    <string name="piq_feedback">Feedback</string>
+    <string name="piq_strengths">Strengths</string>
+    <string name="piq_areas_improvement">Areas for Improvement</string>
+    <string name="piq_info_message">Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.</string>
+    <string name="return_to_home">Return to Home</string>
+    
+    <!-- PIQ Test Screen Title -->
+    <string name="piq_page_title">PIQ - %1$s</string>
 
     <!-- ============================================ -->
     <!-- TEST GRADING SCREEN - DETAILED STRINGS -->
@@ -994,5 +1017,123 @@
     <string name="student_detail_placeholder_description">Viewing performance for student: %1$s</string>
     <string name="student_detail_features_title">Coming Soon</string>
     <string name="student_detail_features_list">• Complete test history\n• Performance trends and charts\n• All submissions with scores\n• Instructor notes and feedback\n• Compare with batch average\n• Track engagement</string>
+
+    <!-- ============================================ -->
+    <!-- INTERVIEW FEATURE -->
+    <!-- ============================================ -->
+
+    <!-- Start Interview Screen -->
+    <string name="interview_start_title">Start Interview</string>
+    <string name="interview_mode_text">Text-Based Interview</string>
+    <string name="interview_mode_voice">Voice-Based Interview</string>
+    <string name="interview_select_mode">Select Interview Mode</string>
+    <string name="interview_checking_eligibility">Checking eligibility…</string>
+    <string name="interview_prerequisites_title">Prerequisites</string>
+    <string name="interview_prerequisites_met">All prerequisites met</string>
+    <string name="interview_prerequisites_not_met">Prerequisites not met</string>
+    <string name="interview_consent_title">Consent for Transcript Storage</string>
+    <string name="interview_consent_message">I consent to storing my interview transcript for analysis and feedback</string>
+    <string name="interview_button_start">Start Interview</string>
+    <string name="interview_error_auth">Authentication required</string>
+    <string name="interview_error_no_piq">No PIQ submission found</string>
+    <string name="interview_error_create_session">Failed to create session</string>
+    <string name="interview_error_fetch_piq">Failed to fetch PIQ data</string>
+    <string name="interview_loading_checking_cache">Checking for cached questions…</string>
+    <string name="interview_loading_piq_data">Loading PIQ data…</string>
+    <string name="interview_loading_preparing">Preparing interview…</string>
+    <string name="interview_loading_generating_questions">Generating personalized questions (30–60s)…</string>
+    <string name="interview_generating_questions">Generating personalized questions…</string>
+    <string name="interview_generating_questions_hint">This will take 30–60 seconds</string>
+
+
+    <!-- Interview Result Screen -->
+    <string name="interview_result_title">Interview Results</string>
+    <string name="interview_result_overall_rating">Overall Rating</string>
+    <string name="interview_result_performance_level">Performance Level</string>
+    <string name="interview_result_average_score">Average Score: %.1f / 10.0</string>
+    <string name="interview_result_duration">Duration: %1$d minutes</string>
+    <string name="interview_result_completion">Completion: %.0f%%</string>
+    <string name="interview_result_strengths_title">Strengths</string>
+    <string name="interview_result_weaknesses_title">Areas for Improvement</string>
+    <string name="interview_result_olq_scores_title">OLQ Scores</string>
+    <string name="interview_result_category_scores_title">Category Scores</string>
+    <string name="interview_result_feedback_title">Feedback</string>
+    <string name="interview_result_button_done">Done</string>
+    <string name="interview_result_loading">Loading results…</string>
+
+    <!-- Interview Session Screen (Unified - TTS with mute toggle) -->
+    <string name="interview_session_title">Interview</string>
+    <string name="interview_question_number">Question %1$d of %2$d</string>
+    <string name="generating_personalized_questions">Generating personalized questions…</string>
+    <string name="this_will_take_30_60_seconds">This will take 30-60 seconds</string>
+
+    <!-- Interview Buttons -->
+    <string name="interview_button_submit">Submit Response</string>
+    <string name="interview_button_complete">Complete Interview</string>
+
+    <!-- Interview Exit Dialog -->
+    <string name="interview_exit_title">Exit Interview?</string>
+    <string name="interview_exit_message">Are you sure you want to exit? Your progress will be saved, but you\'ll need to start a new interview session to continue.</string>
+    <string name="interview_exit_confirm">Exit</string>
+    <string name="cd_exit_interview">Exit Interview</string>
+
+    <!-- Interview States -->
+    <string name="interview_question_label">Question</string>
+    <string name="interview_playing">Playing…</string>
+    <string name="interview_loading_session">Loading interview session…</string>
+    <string name="interview_submitting_answers">Submitting your answers…</string>
+    <string name="interview_error_load_session">Failed to load session</string>
+    <string name="interview_error_session_not_found">Session not found</string>
+    <string name="interview_error_no_questions">No questions available</string>
+    <string name="interview_error_load_question">Failed to load question</string>
+    <string name="interview_error_start_recording">Failed to start recording</string>
+    <string name="interview_error_save_recording">Failed to save recording</string>
+    <string name="interview_error_submit_response">Failed to submit response</string>
+    <string name="interview_error_load_next_question">Failed to load next question</string>
+    <string name="interview_generating_results">Generating results…</string>
+    <string name="interview_error_complete_interview">Failed to complete interview</string>
+    <string name="interview_error_generate_results">Failed to generate results</string>
+    <string name="interview_error_generic">An error occurred</string>
+    <string name="interview_interviewer_speaking">Speaking…</string>
+    <string name="cd_interviewer_speaking">Interviewer is speaking the question</string>
+    <string name="interview_audio_muted">Audio Muted</string>
+    <string name="cd_mute_tts">Mute audio</string>
+    <string name="cd_unmute_tts">Unmute audio</string>
+
+    <!-- Response Input (Simplified UI - type or use keyboard voice) -->
+    <string name="interview_response_hint">Your Response</string>
+    <string name="interview_response_placeholder">Type your response or tap the keyboard mic to speak…</string>
+    <string name="interview_char_count">%1$d characters</string>
+
+    <!-- Premium Voice Feature (Sarvam AI TTS) -->
+    <string name="interview_premium_voice">Premium Voice</string>
+    <string name="interview_premium_voice_active">Human-like interviewer voice enabled</string>
+    <string name="interview_standard_voice">Standard Voice</string>
+    <string name="interview_premium_voice_upgrade">Upgrade to Pro or Premium for a more realistic interviewer voice</string>
+    <string name="interview_premium_voice_error">Premium voice unavailable, using standard voice</string>
+
+    <!-- Interview Result Notifications -->
+    <string name="notification_interview_results_title">Interview Results Ready!</string>
+    <string name="notification_interview_results_body">Your interview has been analyzed. Tap to view your OLQ assessment.</string>
+    <string name="notification_interview_failed_title">Interview Analysis Issue</string>
+    <string name="notification_interview_failed_body">We couldn\'t complete the analysis. Please try again later.</string>
+    <string name="interview_results_pending_title">Results Being Analyzed</string>
+    <string name="interview_results_pending_message">Your interview is complete! Results will be ready shortly. We\'ll notify you when they\'re available.</string>
+    <string name="interview_results_pending_short">Results pending…</string>
+    <string name="interview_results_analyzing">Your results are being analyzed…</string>
+    <string name="interview_analysis_failed">Analysis failed. Please try again.</string>
+
+    <!-- Common Buttons -->
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_retry">Retry</string>
+
+    <!-- Interview History -->
+    <string name="interview_history_title">Past Interviews</string>
+    <string name="interview_new_interview_title">Start New Interview</string>
+    <string name="interview_loading_history">Loading history…</string>
+    <string name="interview_no_past_results">No past interviews yet. Complete your first interview to see results here.</string>
+    <string name="interview_more_results">+ %d more results</string>
+    <string name="interview_result_summary">Score: %1$.1f • %2$d min</string>
 
 </resources>

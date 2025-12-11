@@ -254,9 +254,6 @@ private fun getTierGradient(tier: SubscriptionTier): List<Color> {
         )
         SubscriptionTier.PREMIUM -> listOf(
             Color(0xFFa855f7),
-            Color(0xFFc026d3)
-        )
-        SubscriptionTier.PREMIUM -> listOf(
             Color(0xFFc026d3),
             Color(0xFFdb2777)
         )
@@ -271,7 +268,6 @@ private fun getUpgradeMessage(tier: SubscriptionTier): String {
         SubscriptionTier.FREE -> "Unlock unlimited tests & more"
         SubscriptionTier.PRO -> "Get AI-powered insights"
         SubscriptionTier.PREMIUM -> "Access SSB Marketplace"
-        SubscriptionTier.PREMIUM -> ""
     }
 }
 

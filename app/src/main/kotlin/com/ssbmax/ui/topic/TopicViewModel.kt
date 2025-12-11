@@ -9,14 +9,18 @@ import com.ssbmax.core.data.repository.TopicContentData
 import com.ssbmax.core.domain.config.ContentFeatureFlags
 import com.ssbmax.core.domain.model.StudyMaterial
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.interview.InterviewResult
+import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.StudyContentRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -37,7 +41,8 @@ class TopicViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val studyContentRepository: StudyContentRepository
+    private val studyContentRepository: StudyContentRepository,
+    private val interviewRepository: InterviewRepository
 ) : ViewModel() {
     
     private val testType: String = savedStateHandle.get<String>("topicId") ?: "OIR"
@@ -47,6 +52,44 @@ class TopicViewModel @Inject constructor(
     
     init {
         loadTopicContent()
+        // Load interview history if this is the Interview topic
+        if (testType.equals("INTERVIEW", ignoreCase = true)) {
+            loadInterviewHistory()
+        }
+    }
+    
+    /**
+     * Load past interview results for Interview topic
+     */
+    private fun loadInterviewHistory() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingInterviewHistory = true) }
+            
+            try {
+                val user = observeCurrentUser().first()
+                val userId = user?.id ?: return@launch
+                
+                Log.d(TAG, "Loading interview history for user: $userId")
+                
+                interviewRepository.getUserResults(userId)
+                    .catch { e ->
+                        ErrorLogger.log(e, "Failed to load interview history")
+                        _uiState.update { it.copy(isLoadingInterviewHistory = false) }
+                    }
+                    .collect { results ->
+                        Log.d(TAG, "Loaded ${results.size} past interview results")
+                        _uiState.update {
+                            it.copy(
+                                pastInterviewResults = results.sortedByDescending { r -> r.completedAt },
+                                isLoadingInterviewHistory = false
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Exception loading interview history")
+                _uiState.update { it.copy(isLoadingInterviewHistory = false) }
+            }
+        }
     }
     
     private fun loadTopicContent() {
@@ -286,8 +329,14 @@ data class TopicUiState(
     val testLatestScore: Float? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val contentSource: String = "Local" // "Cloud (Firestore)" or "Local"
-)
+    val contentSource: String = "Local", // "Cloud (Firestore)" or "Local"
+    // Interview-specific state
+    val pastInterviewResults: List<InterviewResult> = emptyList(),
+    val isLoadingInterviewHistory: Boolean = false
+) {
+    /** Check if there are past interview results to display */
+    fun hasPastInterviews(): Boolean = pastInterviewResults.isNotEmpty()
+}
 
 /**
  * Study material item for list display

@@ -23,27 +23,24 @@ jobs:
           distribution: 'temurin'
           cache: gradle
           
-      - name: Grant execute permission for gradle.sh
-        run: chmod +x ./gradle.sh
-        
       - name: Create google-services.json from secret
         run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-        
+
       - name: Build project
-        run: ./gradle.sh assembleDebug --stacktrace --no-daemon
-        
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
       - name: Run unit tests
-        run: ./gradle.sh test --stacktrace --no-daemon
+        run: ./gradlew test --stacktrace --no-daemon
 
       - name: Generate coverage report
-        run: ./gradle.sh :app:jacocoTestReport --no-daemon
+        run: ./gradlew :app:jacocoTestReport --no-daemon
         continue-on-error: true  # Coverage generation can fail without blocking the build
 
       - name: Run lint checks
-        run: ./gradle.sh lintDebug --no-daemon
-      
+        run: ./gradlew lintDebug --no-daemon
+
       - name: Run architecture tests
-        run: ./gradle.sh :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon --stacktrace
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon --stacktrace
         continue-on-error: false  # Architecture violations MUST block build
         
       - name: Upload test reports on failure

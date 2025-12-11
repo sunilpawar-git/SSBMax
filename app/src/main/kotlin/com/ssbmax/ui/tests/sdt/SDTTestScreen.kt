@@ -324,7 +324,7 @@ private fun ReviewScreen(
                                 }
                             }
                             Text(question.question, style = MaterialTheme.typography.bodyMedium)
-                            Divider()
+                            HorizontalDivider()
                             if (response != null && !response.isSkipped) {
                                 Text(response.answer, style = MaterialTheme.typography.bodySmall)
                                 Text(stringResource(R.string.sdt_review_word_count, response.wordCount), style = MaterialTheme.typography.labelSmall,

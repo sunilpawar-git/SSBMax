@@ -135,7 +135,7 @@ class PIQSubmissionResultViewModelTest : BaseViewModelTest() {
         assertEquals("15/08/1995", submission.dateOfBirth)
         assertEquals("9876543210", submission.phone)
         assertTrue("Should have education details", submission.education10th.level.isNotEmpty())
-        assertTrue("Should have work experience list", submission.workExperience != null)
+        assertTrue("Should allow empty work experience list", submission.workExperience.isEmpty())
     }
     
     @Test

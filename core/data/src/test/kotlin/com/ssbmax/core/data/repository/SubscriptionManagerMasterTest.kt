@@ -103,7 +103,7 @@ class SubscriptionManagerMasterTest(
                 arrayOf(TestType.GTO_IO, SubscriptionTier.PRO, 3),
                 arrayOf(TestType.GTO_CT, SubscriptionTier.PRO, 3),
                 // Interview
-                arrayOf(TestType.IO, SubscriptionTier.PRO, 1),
+                arrayOf(TestType.IO, SubscriptionTier.PRO, 2),
                 
                 // ===== PREMIUM TIER LIMITS (All Unlimited) =====
                 arrayOf(TestType.OIR, SubscriptionTier.PREMIUM, Int.MAX_VALUE),

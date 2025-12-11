@@ -29,13 +29,18 @@ class TopicViewModelTest : BaseViewModelTest() {
         val mockTestProgressRepo = mockk<TestProgressRepository>(relaxed = true)
         val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>()
         val mockStudyContentRepo = mockk<StudyContentRepository>(relaxed = true)
+        val mockInterviewRepo = mockk<InterviewRepository>(relaxed = true)
         
         val testUser = SSBMaxUser("user-1", "test@test.com", "Test", role = UserRole.STUDENT)
         coEvery { mockObserveCurrentUser() } returns flowOf(testUser)
         
         // When
         val viewModel = TopicViewModel(
-            savedStateHandle, mockTestProgressRepo, mockObserveCurrentUser, mockStudyContentRepo
+            savedStateHandle,
+            mockTestProgressRepo,
+            mockObserveCurrentUser,
+            mockStudyContentRepo,
+            mockInterviewRepo
         )
         advanceUntilIdle()
         

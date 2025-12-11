@@ -1,0 +1,33 @@
+{
+  "name": "ssbmax-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions for SSBMax - Secure Gemini API integration",
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "keywords": [
+    "firebase",
+    "functions",
+    "gemini",
+    "ssb",
+    "interview"
+  ],
+  "author": "SSBMax Team",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.2.3",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0"
+  }
+}
