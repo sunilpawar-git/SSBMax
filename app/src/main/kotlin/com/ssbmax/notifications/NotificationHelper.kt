@@ -30,7 +30,10 @@ class NotificationHelper @Inject constructor(
         private const val TAG = "NotificationHelper"
         private const val CHANNEL_ID_INTERVIEW = "interview_results"
         private const val CHANNEL_NAME_INTERVIEW = "Interview Results"
+        private const val CHANNEL_ID_GTO = "gto_results"
+        private const val CHANNEL_NAME_GTO = "GTO Test Results"
         private const val NOTIFICATION_ID_INTERVIEW_RESULT = 1001
+        private const val NOTIFICATION_ID_GTO_RESULT = 2001
     }
 
     init {
@@ -53,8 +56,19 @@ class NotificationHelper @Inject constructor(
                 enableLights(true)
             }
 
+            val gtoChannel = NotificationChannel(
+                CHANNEL_ID_GTO,
+                CHANNEL_NAME_GTO,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications when your GTO test results are ready"
+                enableVibration(true)
+                enableLights(true)
+            }
+
             val notificationManager = context.getSystemService(NotificationManager::class.java)
             notificationManager?.createNotificationChannel(interviewChannel)
+            notificationManager?.createNotificationChannel(gtoChannel)
         }
     }
 
@@ -163,6 +177,72 @@ class NotificationHelper @Inject constructor(
             )
         } catch (e: Exception) {
             ErrorLogger.log(e, "Failed to show interview analysis failed notification")
+        }
+    }
+
+    /**
+     * Show notification when GTO test analysis is complete
+     *
+     * @param submissionId The GTO submission ID
+     * @param testName The test name (e.g., "Group Discussion")
+     */
+    fun showGTOAnalysisCompleteNotification(submissionId: String, testName: String) {
+        Log.d(TAG, "📢 showGTOAnalysisCompleteNotification called - submissionId: $submissionId, test: $testName")
+
+        try {
+            // Build deep link to GTO result screen
+            val deepLink = "ssbmax://gto/result/$submissionId"
+            
+            // Create intent to open results screen
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("deepLink", deepLink)
+                putExtra("submissionId", submissionId)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                submissionId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID_GTO)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("$testName Results Ready")
+                .setContentText("Your GTO test has been analyzed. Tap to view your OLQ scores!")
+                .setStyle(NotificationCompat.BigTextStyle()
+                    .bigText("Your $testName has been analyzed by AI. View your performance across all 15 Officer-Like Qualities."))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setVibrate(longArrayOf(0, 250, 250, 250))
+                .build()
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            val notificationId = NOTIFICATION_ID_GTO_RESULT + submissionId.hashCode()
+
+            if (notificationManager == null) {
+                ErrorLogger.log(
+                    IllegalStateException("NotificationManager is null"),
+                    "Failed to get NotificationManager service"
+                )
+                return
+            }
+
+            // Check if notifications are enabled
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (!notificationManager.areNotificationsEnabled()) {
+                    Log.w(TAG, "⚠️ Notifications are disabled by user")
+                }
+            }
+
+            notificationManager.notify(notificationId, notification)
+            Log.d(TAG, "✅ GTO notification sent successfully! ID: $notificationId")
+
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to show GTO analysis complete notification")
         }
     }
 }

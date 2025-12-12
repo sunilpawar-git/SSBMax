@@ -78,10 +78,76 @@ sealed class SSBMaxDestinations(val route: String) {
         fun createRoute(testId: String) = "test/piq/$testId"
     }
     
-    // Test Screens - Phase 2 Other Tests
+    // Test Screens - Phase 2 GTO Tests (8 individual tests)
     data object GTOTest : SSBMaxDestinations("test/gto/{testId}") {
         fun createRoute(testId: String) = "test/gto/$testId"
     }
+    
+    // GTO - Group Discussion
+    data object GTOGDTest : SSBMaxDestinations("test/gto/gd/{testId}") {
+        fun createRoute(testId: String) = "test/gto/gd/$testId"
+    }
+    data object GTOGDResult : SSBMaxDestinations("test/gto/gd/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/gd/result/$submissionId"
+    }
+    
+    // GTO - Group Planning Exercise
+    data object GTOGPETest : SSBMaxDestinations("test/gto/gpe/{testId}") {
+        fun createRoute(testId: String) = "test/gto/gpe/$testId"
+    }
+    data object GTOGPEResult : SSBMaxDestinations("test/gto/gpe/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/gpe/result/$submissionId"
+    }
+    
+    // GTO - Lecturette
+    data object GTOLecturetteTest : SSBMaxDestinations("test/gto/lecturette/{testId}") {
+        fun createRoute(testId: String) = "test/gto/lecturette/$testId"
+    }
+    data object GTOLecturetteResult : SSBMaxDestinations("test/gto/lecturette/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/lecturette/result/$submissionId"
+    }
+    
+    // GTO - Progressive Group Task
+    data object GTOPGTTest : SSBMaxDestinations("test/gto/pgt/{testId}") {
+        fun createRoute(testId: String) = "test/gto/pgt/$testId"
+    }
+    data object GTOPGTResult : SSBMaxDestinations("test/gto/pgt/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/pgt/result/$submissionId"
+    }
+    
+    // GTO - Half Group Task
+    data object GTOHGTTest : SSBMaxDestinations("test/gto/hgt/{testId}") {
+        fun createRoute(testId: String) = "test/gto/hgt/$testId"
+    }
+    data object GTOHGTResult : SSBMaxDestinations("test/gto/hgt/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/hgt/result/$submissionId"
+    }
+    
+    // GTO - Group Obstacle Race
+    data object GTOGORTest : SSBMaxDestinations("test/gto/gor/{testId}") {
+        fun createRoute(testId: String) = "test/gto/gor/$testId"
+    }
+    data object GTOGORResult : SSBMaxDestinations("test/gto/gor/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/gor/result/$submissionId"
+    }
+    
+    // GTO - Individual Obstacles
+    data object GTOIOTest : SSBMaxDestinations("test/gto/io/{testId}") {
+        fun createRoute(testId: String) = "test/gto/io/$testId"
+    }
+    data object GTOIOResult : SSBMaxDestinations("test/gto/io/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/io/result/$submissionId"
+    }
+    
+    // GTO - Command Task
+    data object GTOCTTest : SSBMaxDestinations("test/gto/ct/{testId}") {
+        fun createRoute(testId: String) = "test/gto/ct/$testId"
+    }
+    data object GTOCTResult : SSBMaxDestinations("test/gto/ct/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/ct/result/$submissionId"
+    }
+    
+    // Interview Test (IO - Interviewing Officer)
     data object IOTest : SSBMaxDestinations("test/io/{testId}") {
         fun createRoute(testId: String) = "test/io/$testId"
     }
