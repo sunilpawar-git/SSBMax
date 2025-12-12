@@ -7,8 +7,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssbmax.di.GTOWhiteNoisePlayerEntryPoint
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
@@ -39,9 +41,11 @@ fun LecturetteTestScreen(
     onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: LecturetteTestViewModel = hiltViewModel(),
-    whiteNoisePlayer: GTOWhiteNoisePlayer = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
+    // Inject GTOWhiteNoisePlayer via Hilt entry point (not a ViewModel)
+    val entryPoint = hiltEntryPoint<GTOWhiteNoisePlayerEntryPoint>()
+    val whiteNoisePlayer = entryPoint.whiteNoisePlayer()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val whiteNoiseState = rememberWhiteNoiseState(whiteNoisePlayer)
     var showExitDialog by rememberSaveable { mutableStateOf(false) }

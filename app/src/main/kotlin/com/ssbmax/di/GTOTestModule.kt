@@ -8,9 +8,11 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
+import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
 import androidx.work.WorkManager
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -51,4 +53,15 @@ object GTOTestModule {
             workManager = workManager
         )
     }
+}
+
+/**
+ * Hilt Entry Point for accessing GTOWhiteNoisePlayer in Compose screens
+ * 
+ * This allows non-ViewModel dependencies to be injected in Compose using hiltEntryPoint()
+ */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface GTOWhiteNoisePlayerEntryPoint {
+    fun whiteNoisePlayer(): GTOWhiteNoisePlayer
 }
