@@ -72,23 +72,78 @@ Return JSON format:
     
     private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String {
         return """
-You are analyzing a Group Planning Exercise response for SSB GTO assessment.
+You are analyzing a Group Planning Exercise (GPE) response for SSB GTO assessment.
 
 **Scenario**: ${submission.scenario}
-**Candidate's Plan**: 
+**Candidate's Tactical Plan**:
 ${submission.plan}
 
 **Character Count**: ${submission.characterCount}
 **Time Spent**: ${submission.timeSpent} seconds
 
-Evaluate the candidate's tactical planning against ALL 15 OLQs, focusing on:
-- Reasoning Ability: Logical approach to problem
-- Organizing Ability: Resource allocation and sequencing
-- Speed of Decision: Decisiveness in planning
-- Initiative: Leadership in solution design
-- (Include all 15 OLQs as in GD prompt)
+**GPE Assessment Focus**:
+The Group Planning Exercise tests a candidate's ability to:
+1. Analyze a tactical military scenario
+2. Develop a practical action plan
+3. Allocate resources effectively
+4. Demonstrate leadership qualities
+5. Consider contingencies and risks
 
-Return JSON with all 15 OLQ scores in the same format.
+Evaluate the candidate's tactical planning against ALL 15 Officer-Like Qualities (OLQs):
+
+1. **Effective Intelligence**: Clarity of situation analysis, understanding of tactical requirements
+2. **Reasoning Ability**: Logical approach to problem-solving, tactical thinking
+3. **Organizing Ability**: Resource allocation, task sequencing, team coordination
+4. **Power of Expression**: Clarity of plan communication
+5. **Social Adjustment**: Team consideration in planning
+6. **Cooperation**: Collaborative approach in resource sharing
+7. **Sense of Responsibility**: Accountability for mission success
+8. **Initiative**: Leadership in solution design, proactive thinking
+9. **Self Confidence**: Decisiveness in choices
+10. **Speed of Decision**: Quick assessment and planning
+11. **Ability to Influence Group**: Persuasive leadership approach
+12. **Liveliness**: Dynamic and creative solutions
+13. **Determination**: Firmness in execution plan
+14. **Courage**: Willingness to take calculated risks
+15. **Stamina**: Sustained quality and thoroughness
+
+**SSB Scoring Convention (CRITICAL)**:
+- Scale: 1-10 where LOWER is BETTER
+- 1-3: Exceptional (rare, outstanding tactical planning)
+- 4: Excellent (top tier leadership)
+- 5: Very Good (best common score for officers)
+- 6: Good (above average)
+- 7: Average (typical performance)
+- 8: Below Average (lowest acceptable)
+- 9-10: Poor (usually rejected)
+
+**Evaluation Criteria**:
+- Does the plan address the tactical scenario comprehensively?
+- Are resources (personnel, equipment, time) allocated effectively?
+- Does the plan show leadership and initiative?
+- Is there consideration of contingencies and risks?
+- Is the plan practical and achievable?
+
+Return JSON format:
+{
+  "olqScores": {
+    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 85, "reasoning": "Clear tactical analysis, identified key challenges"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 80, "reasoning": "Logical sequence of actions"},
+    "ORGANIZING_ABILITY": {"score": 5, "confidence": 90, "reasoning": "Excellent resource allocation and team coordination"},
+    "POWER_OF_EXPRESSION": {"score": 6, "confidence": 75, "reasoning": "Clear communication of plan"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate team consideration"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative approach evident"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 5, "confidence": 85, "reasoning": "Strong accountability for mission"},
+    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Proactive leadership demonstrated"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive choices made"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick tactical assessment"},
+    "ABILITY_TO_INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership approach shown"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Creative solutions proposed"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm execution plan"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Calculated risks considered"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Thorough throughout the plan"}
+  }
+}
         """.trimIndent()
     }
     

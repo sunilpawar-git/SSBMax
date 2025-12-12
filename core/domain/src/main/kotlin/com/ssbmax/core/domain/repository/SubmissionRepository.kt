@@ -44,6 +44,11 @@ interface SubmissionRepository {
     suspend fun submitPIQ(submission: PIQSubmission, batchId: String? = null): Result<String>
 
     /**
+     * Submit GPE test
+     */
+    suspend fun submitGPE(submission: GPESubmission, batchId: String? = null): Result<String>
+
+    /**
      * Get submission by ID
      */
     suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?>

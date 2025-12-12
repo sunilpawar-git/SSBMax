@@ -1136,4 +1136,67 @@
     <string name="interview_more_results">+ %d more results</string>
     <string name="interview_result_summary">Score: %1$.1f • %2$d min</string>
 
+    <!-- GPE (Group Planning Exercise) Test -->
+    <string name="gpe_title">GPE Test</string>
+    <string name="gpe_loading">Loading GPE scenario…</string>
+    <string name="gpe_instructions_title">Group Planning Exercise</string>
+    <string name="gpe_instruction_1">1. You will be shown a tactical scenario image for 60 seconds</string>
+    <string name="gpe_instruction_2">2. Observe the situation carefully: obstacles, terrain, resources available</string>
+    <string name="gpe_instruction_3">3. After viewing, you will have 29 minutes to write your planning response</string>
+    <string name="gpe_instruction_4">4. Your plan should include clear objectives, resource allocation, and execution strategy</string>
+    <string name="gpe_format_viewing">• Image Viewing: 60 seconds</string>
+    <string name="gpe_format_planning">• Planning Response: 29 minutes</string>
+    <string name="gpe_image_viewing_instruction">Observe the tactical scenario carefully. Identify obstacles, resources, and constraints that will affect your plan.</string>
+    <string name="gpe_test_image">GPE Tactical Scenario Image</string>
+    <string name="gpe_scenario_label">Tactical Scenario</string>
+    <string name="gpe_resources_available">Available Resources</string>
+    <string name="gpe_planning_response_label">Your Planning Response</string>
+    <string name="gpe_planning_response_placeholder">Describe your tactical plan: objectives, strategy, resource allocation, team roles, timeline, and contingencies…</string>
+    <string name="gpe_planning_guidelines">Planning Guidelines</string>
+    <string name="gpe_guideline_1">• Define clear objectives and success criteria</string>
+    <string name="gpe_guideline_2">• Assign roles and responsibilities to team members</string>
+    <string name="gpe_guideline_3">• Consider time management and contingency plans</string>
+    <string name="gpe_your_planning_response">Your Planning Response</string>
+    <string name="gpe_submit_review_message">Your plan will be reviewed by your instructor.</string>
+    <string name="character_count_simple">%1$d characters</string>
+    <string name="error_image_url_empty">Image URL is empty</string>
+    <string name="check_logs">Check ViewModel logs</string>
+
+    <!-- GPE Result Screen Strings -->
+    <string name="gpe_test_results">GPE Test Results</string>
+    <string name="gpe_plan_submitted_successfully">Planning Response Submitted Successfully!</string>
+    <string name="character_count_label">Character Count:</string>
+    <string name="planning_time_label">Planning Time:</string>
+    <string name="minutes_format">%1$d minutes</string>
+    <string name="ai_preliminary_analysis">AI Preliminary Analysis</string>
+    <string name="gpe_score_situation_analysis">Situation Analysis</string>
+    <string name="gpe_score_planning_quality">Planning Quality</string>
+    <string name="gpe_score_leadership">Leadership</string>
+    <string name="gpe_score_resource_utilization">Resource Utilization</string>
+    <string name="gpe_score_practicality">Practicality</string>
+    <string name="strengths_label">Strengths:</string>
+    <string name="areas_for_improvement_label">Areas for Improvement:</string>
+    <string name="pending_instructor_review">Pending Instructor Review</string>
+    <string name="instructor_review_message">Your instructor will review your planning response and provide detailed feedback</string>
+    <string name="back_to_home">Back to Home</string>
+
+    <!-- Common Test UI Strings -->
+    <string name="exit_test">Exit Test</string>
+    <string name="exit_test_title">Exit Test?</string>
+    <string name="exit_test_message_save_progress">Your progress will be saved. You can continue later from where you left off.</string>
+    <string name="exit">Exit</string>
+    <string name="continue_test">Continue Test</string>
+    <string name="submit_test_title">Submit Test?</string>
+    <string name="submit_test_warning">Once submitted, you cannot make changes.</string>
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+    <string name="review">Review</string>
+    <string name="submit_test">Submit Test</string>
+    <string name="test_format">Test Format</string>
+    <string name="start_test">Start Test</string>
+    <string name="character_count_format">%1$d / %2$d - %3$d characters</string>
+    <string name="review_submission">Review Your Submission</string>
+    <string name="edit">Edit</string>
+    <string name="review_before_submit_message">Please review your response carefully before submitting. You cannot make changes after submission.</string>
+
 </resources>

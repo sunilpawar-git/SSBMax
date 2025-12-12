@@ -2,6 +2,7 @@ package com.ssbmax.core.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.ssbmax.core.data.local.dao.GPEImageCacheDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
@@ -13,6 +14,7 @@ import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
+import com.ssbmax.core.data.local.entity.CachedGPEImageEntity
 import com.ssbmax.core.data.local.entity.CachedGTOTaskEntity
 import com.ssbmax.core.data.local.entity.CachedInterviewQuestionEntity
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
@@ -20,6 +22,7 @@ import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
 import com.ssbmax.core.data.local.entity.CachedSRTSituationEntity
 import com.ssbmax.core.data.local.entity.CachedTATImageEntity
 import com.ssbmax.core.data.local.entity.CachedWATWordEntity
+import com.ssbmax.core.data.local.entity.GPEBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.GTOBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.InterviewBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.NotificationEntity
@@ -51,13 +54,15 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         TATBatchMetadataEntity::class,
         CachedPPDTImageEntity::class,
         PPDTBatchMetadataEntity::class,
+        CachedGPEImageEntity::class,
+        GPEBatchMetadataEntity::class,
         CachedGTOTaskEntity::class,
         GTOBatchMetadataEntity::class,
         CachedInterviewQuestionEntity::class,
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 12, // Added piqTestsUsed and sdTestsUsed fields to TestUsageEntity
+    version = 13, // Added GPE image cache entities
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {
@@ -101,7 +106,12 @@ abstract class SSBDatabase : RoomDatabase() {
      * PPDT image cache DAO
      */
     abstract fun ppdtImageCacheDao(): PPDTImageCacheDao
-    
+
+    /**
+     * GPE image cache DAO
+     */
+    abstract fun gpeImageCacheDao(): GPEImageCacheDao
+
     /**
      * GTO task cache DAO
      */

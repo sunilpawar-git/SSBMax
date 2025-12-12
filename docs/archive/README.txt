@@ -6,3 +6,4 @@ Archive index
 - Rationale: reduce clutter while keeping historical context; current docs remain in docs/.
 
 
+

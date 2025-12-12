@@ -23,12 +23,14 @@ class TestContentRepositoryImpl @Inject constructor(
     private val watWordCacheManager: WATWordCacheManager,
     private val srtSituationCacheManager: SRTSituationCacheManager,
     private val ppdtImageCacheManager: PPDTImageCacheManager,
+    private val gpeImageCacheManager: GPEImageCacheManager,
     private val tatImageCacheManager: TATImageCacheManager
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
     private val oirCache = ConcurrentHashMap<String, List<OIRQuestion>>()
     private val ppdtCache = ConcurrentHashMap<String, List<PPDTQuestion>>()
+    private val gpeCache = ConcurrentHashMap<String, List<GPEQuestion>>()
     private val tatCache = ConcurrentHashMap<String, List<TATQuestion>>()
     private val watCache = ConcurrentHashMap<String, List<WATWord>>()
     private val srtCache = ConcurrentHashMap<String, List<SRTSituation>>()
@@ -123,7 +125,7 @@ class TestContentRepositoryImpl @Inject constructor(
 
             // Use cache manager for progressive loading
             Log.d("TestContent", "Fetching PPDT image from cache manager")
-            
+
             // Initialize cache if needed OR if we have old placeholder data
             val cacheStatus = ppdtImageCacheManager.getCacheStatus()
             if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 50) {
@@ -132,10 +134,10 @@ class TestContentRepositoryImpl @Inject constructor(
                 ppdtImageCacheManager.clearCache() // Clear old data
                 ppdtImageCacheManager.initialSync().getOrThrow()
             }
-            
+
             // Get one image for the test
             val questionResult = ppdtImageCacheManager.getImageForTest()
-            
+
             if (questionResult.isFailure) {
                 // Fallback to mock data if cache manager fails
                 Log.w("TestContent", "Cache manager failed, using mock data: ${questionResult.exceptionOrNull()?.message}")
@@ -143,11 +145,11 @@ class TestContentRepositoryImpl @Inject constructor(
                 ppdtCache[testId] = mockQuestions
                 return Result.success(mockQuestions)
             }
-            
+
             val question = questionResult.getOrNull()!!
             val ppdtQuestions = listOf(question)
             ppdtCache[testId] = ppdtQuestions
-            
+
             Log.d("TestContent", "✅ Loaded PPDT image: ${question.id}")
             Result.success(ppdtQuestions)
         } catch (e: Exception) {
@@ -156,6 +158,39 @@ class TestContentRepositoryImpl @Inject constructor(
             val mockQuestions = MockTestDataProvider.getPPDTQuestions()
             ppdtCache[testId] = mockQuestions
             Result.success(mockQuestions)
+        }
+    }
+
+    override suspend fun getGPEQuestions(testId: String): Result<List<GPEQuestion>> {
+        return try {
+            gpeCache[testId]?.let { return Result.success(it) }
+
+            // Use cache manager for progressive loading
+            Log.d("TestContent", "Fetching GPE scenario from cache manager")
+
+            // Initialize cache if needed
+            val cacheStatus = gpeImageCacheManager.getCacheStatus()
+            if (cacheStatus.cachedImages == 0) {
+                Log.d("TestContent", "Initializing GPE image cache...")
+                gpeImageCacheManager.initialSync().getOrThrow()
+            }
+
+            // Get one scenario image for the test
+            val questionResult = gpeImageCacheManager.getImageForTest()
+
+            if (questionResult.isFailure) {
+                throw questionResult.exceptionOrNull() ?: Exception("Failed to load GPE scenario")
+            }
+
+            val question = questionResult.getOrNull()!!
+            val gpeQuestions = listOf(question)
+            gpeCache[testId] = gpeQuestions
+
+            Log.d("TestContent", "✅ Loaded GPE scenario: ${question.id}")
+            Result.success(gpeQuestions)
+        } catch (e: Exception) {
+            Log.e("TestContent", "Failed to load GPE scenario", e)
+            Result.failure(e)
         }
     }
 
@@ -346,6 +381,7 @@ class TestContentRepositoryImpl @Inject constructor(
     override fun clearCache() {
         oirCache.clear()
         ppdtCache.clear()
+        gpeCache.clear()
         tatCache.clear()
         watCache.clear()
         srtCache.clear()

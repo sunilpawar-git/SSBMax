@@ -1,6 +1,7 @@
 package com.ssbmax.core.domain.repository
 
 import com.ssbmax.core.domain.model.CacheStatus
+import com.ssbmax.core.domain.model.GPEQuestion
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.SDTQuestion
@@ -58,7 +59,14 @@ interface TestContentRepository {
      * @return Result with list of PPDT questions or error
      */
     suspend fun getPPDTQuestions(testId: String): Result<List<PPDTQuestion>>
-    
+
+    /**
+     * Fetch GPE test questions from Firestore/Cache
+     * @param testId The specific test ID to load
+     * @return Result with list of GPE questions or error
+     */
+    suspend fun getGPEQuestions(testId: String): Result<List<GPEQuestion>>
+
     /**
      * Fetch TAT test questions from Firestore
      * @param testId The specific test ID to load

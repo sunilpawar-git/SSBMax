@@ -28,7 +28,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class FirestoreGTORepository @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val taskCacheManager: GTOTaskCacheManager
 ) : GTORepository {
     
     companion object {
@@ -654,20 +655,124 @@ class FirestoreGTORepository @Inject constructor(
     }
     
     // ==================== Cache Management ====================
-    
+
+    /**
+     * Cache test content for offline access
+     * Used for animation tests (PGT, HGT, GOR, IO, CT) to pre-download obstacle assets
+     */
     override suspend fun cacheTestContent(testType: GTOTestType): Result<Unit> {
-        // TODO: Implement caching logic (Phase 3+)
-        return Result.success(Unit)
+        return try {
+            Log.d(TAG, "Caching content for: ${testType.displayName}")
+
+            val result = when (testType) {
+                GTOTestType.GROUP_DISCUSSION,
+                GTOTestType.LECTURETTE -> {
+                    // Text-based tests use GTOTaskCacheManager
+                    taskCacheManager.initialSync()
+                }
+                GTOTestType.GROUP_PLANNING_EXERCISE -> {
+                    // Image-based test uses GPEImageCacheManager (already implemented)
+                    Result.success(Unit)
+                }
+                GTOTestType.PROGRESSIVE_GROUP_TASK,
+                GTOTestType.HALF_GROUP_TASK,
+                GTOTestType.GROUP_OBSTACLE_RACE,
+                GTOTestType.INDIVIDUAL_OBSTACLES,
+                GTOTestType.COMMAND_TASK -> {
+                    // Animation tests - cache obstacles and animation assets
+                    cacheAnimationAssets(testType)
+                }
+            }
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to cache content for ${testType.name}", e)
+            Result.failure(e)
+        }
     }
-    
+
+    /**
+     * Clear cached content for specific test type or all tests
+     */
     override suspend fun clearCache(testType: GTOTestType?): Result<Unit> {
-        // TODO: Implement cache clearing (Phase 3+)
-        return Result.success(Unit)
+        return try {
+            Log.d(TAG, "Clearing cache for: ${testType?.displayName ?: "all tests"}")
+
+            if (testType == null) {
+                // Clear all GTO caches
+                taskCacheManager.clearCache()
+                Log.d(TAG, "✅ Cleared all GTO caches")
+            } else {
+                // Clear specific test cache
+                when (testType) {
+                    GTOTestType.GROUP_DISCUSSION,
+                    GTOTestType.LECTURETTE -> {
+                        // Clear all tasks (no type-specific clearing in current implementation)
+                        taskCacheManager.clearCache()
+                    }
+                    GTOTestType.GROUP_PLANNING_EXERCISE -> {
+                        // GPE has its own cache manager
+                        Log.d(TAG, "GPE cache managed by GPEImageCacheManager")
+                    }
+                    else -> {
+                        // Animation tests - clear obstacle cache
+                        Log.d(TAG, "Animation asset cache clearing not yet implemented")
+                    }
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear cache", e)
+            Result.failure(e)
+        }
     }
-    
+
+    /**
+     * Check if content is cached and ready for offline use
+     */
     override suspend fun isContentCached(testType: GTOTestType): Result<Boolean> {
-        // TODO: Implement cache checking (Phase 3+)
-        return Result.success(false)
+        return try {
+            val isCached = when (testType) {
+                GTOTestType.GROUP_DISCUSSION,
+                GTOTestType.LECTURETTE -> {
+                    // Check if we have at least MIN_CACHE_SIZE tasks cached
+                    val cacheStatus = taskCacheManager.getCacheStatus()
+                    cacheStatus.cachedTasks >= 5
+                }
+                GTOTestType.GROUP_PLANNING_EXERCISE -> {
+                    // GPE uses dedicated image cache
+                    true // Managed by GPEImageCacheManager
+                }
+                GTOTestType.PROGRESSIVE_GROUP_TASK,
+                GTOTestType.HALF_GROUP_TASK,
+                GTOTestType.GROUP_OBSTACLE_RACE,
+                GTOTestType.INDIVIDUAL_OBSTACLES,
+                GTOTestType.COMMAND_TASK -> {
+                    // Animation tests - check if obstacles are cached
+                    false // Will be implemented in Phase 4
+                }
+            }
+
+            Result.success(isCached)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check cache status", e)
+            Result.failure(Exception("Failed to check cache status", e))
+        }
+    }
+
+    /**
+     * Cache animation assets for obstacle-based tests
+     * Will be fully implemented in Phase 4 when animation tests are added
+     */
+    private suspend fun cacheAnimationAssets(testType: GTOTestType): Result<Unit> {
+        return try {
+            Log.d(TAG, "Animation asset caching placeholder for ${testType.displayName}")
+            // Phase 4: Download Lottie animations, obstacle configurations, etc.
+            // For now, return success to allow method to be called without errors
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
     // ==================== Helper Functions ====================

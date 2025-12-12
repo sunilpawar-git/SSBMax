@@ -41,6 +41,7 @@ fun LecturetteTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: LecturetteTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -114,7 +115,10 @@ fun LecturetteTestScreen(
             title = { Text("Test Limit Reached") },
             text = { Text(uiState.limitMessage ?: "You've reached your monthly test limit.") },
             confirmButton = {
-                TextButton(onClick = { /* TODO: Navigate to upgrade */ }) {
+                TextButton(onClick = {
+                    viewModel.dismissLimitDialog()
+                    onNavigateToUpgrade()
+                }) {
                     Text("Upgrade")
                 }
             },
@@ -136,7 +140,10 @@ fun LecturetteTestScreen(
             title = { Text("Upgrade Required") },
             text = { Text(uiState.upgradeMessage ?: "Upgrade to access Lecturette test") },
             confirmButton = {
-                TextButton(onClick = { /* TODO: Navigate to upgrade */ }) {
+                TextButton(onClick = {
+                    viewModel.dismissUpgradeDialog()
+                    onNavigateToUpgrade()
+                }) {
                     Text("Upgrade")
                 }
             },

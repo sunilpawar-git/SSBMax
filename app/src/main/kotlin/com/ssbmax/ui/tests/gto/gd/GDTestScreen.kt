@@ -37,6 +37,7 @@ fun GDTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: GDTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -110,7 +111,10 @@ fun GDTestScreen(
             title = { Text("Test Limit Reached") },
             text = { Text(uiState.limitMessage ?: "You've reached your monthly test limit.") },
             confirmButton = {
-                TextButton(onClick = { /* TODO: Navigate to upgrade */ }) {
+                TextButton(onClick = {
+                    viewModel.dismissLimitDialog()
+                    onNavigateToUpgrade()
+                }) {
                     Text("Upgrade")
                 }
             },
@@ -132,7 +136,10 @@ fun GDTestScreen(
             title = { Text("Upgrade Required") },
             text = { Text(uiState.upgradeMessage ?: "Upgrade to access GTO tests") },
             confirmButton = {
-                TextButton(onClick = { /* TODO: Navigate to upgrade */ }) {
+                TextButton(onClick = {
+                    viewModel.dismissUpgradeDialog()
+                    onNavigateToUpgrade()
+                }) {
                     Text("Upgrade")
                 }
             },

@@ -260,6 +260,34 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     }
 
     /**
+     * Submit GPE test
+     */
+    override suspend fun submitGPE(submission: GPESubmission, batchId: String?): Result<String> {
+        return try {
+            val submissionMap = mapOf(
+                FIELD_ID to submission.submissionId,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.questionId,
+                FIELD_TEST_TYPE to TestType.GTO_GPE.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to null,
+                FIELD_GRADING_TIMESTAMP to null,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to submission.toMap()
+            )
+
+            submissionsCollection.document(submission.submissionId)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Result.success(submission.submissionId)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to submit GPE: ${e.message}", e))
+        }
+    }
+
+    /**
      * Get submission by ID
      */
     override suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?> {
@@ -1249,6 +1277,55 @@ private fun SDTInstructorScore.toMap(): Map<String, Any?> {
         "gradedByInstructorName" to gradedByInstructorName,
         "gradedAt" to gradedAt,
         "agreedWithAI" to agreedWithAI
+    )
+}
+
+private fun GPESubmission.toMap(): Map<String, Any?> {
+    return mapOf(
+        "submissionId" to submissionId,
+        "questionId" to questionId,
+        "userId" to userId,
+        "userName" to userName,
+        "userEmail" to userEmail,
+        "batchId" to batchId,
+        "planningResponse" to planningResponse,
+        "charactersCount" to charactersCount,
+        "viewingTimeTakenSeconds" to viewingTimeTakenSeconds,
+        "planningTimeTakenMinutes" to planningTimeTakenMinutes,
+        "submittedAt" to submittedAt,
+        "status" to status.name,
+        "aiPreliminaryScore" to aiPreliminaryScore?.let {
+            mapOf(
+                "situationAnalysisScore" to it.situationAnalysisScore,
+                "planningQualityScore" to it.planningQualityScore,
+                "leadershipScore" to it.leadershipScore,
+                "resourceUtilizationScore" to it.resourceUtilizationScore,
+                "practicalityScore" to it.practicalityScore,
+                "overallScore" to it.overallScore,
+                "feedback" to it.feedback,
+                "strengths" to it.strengths,
+                "areasForImprovement" to it.areasForImprovement
+            )
+        },
+        "instructorReview" to instructorReview?.let {
+            mapOf(
+                "reviewId" to it.reviewId,
+                "instructorId" to it.instructorId,
+                "instructorName" to it.instructorName,
+                "finalScore" to it.finalScore,
+                "feedback" to it.feedback,
+                "detailedScores" to mapOf(
+                    "situationAnalysis" to it.detailedScores.situationAnalysis,
+                    "planningQuality" to it.detailedScores.planningQuality,
+                    "leadership" to it.detailedScores.leadership,
+                    "resourceUtilization" to it.detailedScores.resourceUtilization,
+                    "practicality" to it.detailedScores.practicality
+                ),
+                "agreedWithAI" to it.agreedWithAI,
+                "reviewedAt" to it.reviewedAt,
+                "timeSpentMinutes" to it.timeSpentMinutes
+            )
+        }
     )
 }
 

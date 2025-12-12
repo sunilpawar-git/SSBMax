@@ -521,5 +521,72 @@ object DatabaseMigrations {
             database.execSQL("ALTER TABLE test_usage ADD COLUMN sdTestsUsed INTEGER NOT NULL DEFAULT 0")
         }
     }
+
+    /**
+     * Migration from version 12 to 13
+     * Adds GPE (Group Planning Exercise) image caching tables
+     */
+    val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create cached_gpe_images table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_gpe_images (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    localFilePath TEXT,
+                    scenario TEXT NOT NULL,
+                    imageDescription TEXT NOT NULL,
+                    resources TEXT,
+                    viewingTimeSeconds INTEGER NOT NULL DEFAULT 60,
+                    planningTimeSeconds INTEGER NOT NULL DEFAULT 1740,
+                    minCharacters INTEGER NOT NULL DEFAULT 500,
+                    maxCharacters INTEGER NOT NULL DEFAULT 2000,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL DEFAULT 0,
+                    imageDownloaded INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+
+            // Create gpe_batch_metadata table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS gpe_batch_metadata (
+                    batchId TEXT PRIMARY KEY NOT NULL,
+                    downloadedAt INTEGER NOT NULL,
+                    imageCount INTEGER NOT NULL,
+                    version TEXT NOT NULL
+                )
+            """.trimIndent())
+
+            // Create indices for better query performance
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_batchId
+                ON cached_gpe_images(batchId)
+            """.trimIndent())
+
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_category
+                ON cached_gpe_images(category)
+            """.trimIndent())
+
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_difficulty
+                ON cached_gpe_images(difficulty)
+            """.trimIndent())
+
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_lastUsed
+                ON cached_gpe_images(lastUsed)
+            """.trimIndent())
+
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_usageCount
+                ON cached_gpe_images(usageCount)
+            """.trimIndent())
+        }
+    }
 }
 

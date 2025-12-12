@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.DatabaseMigrations
 import com.ssbmax.core.data.local.SSBDatabase
+import com.ssbmax.core.data.local.dao.GPEImageCacheDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
@@ -57,7 +58,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_8_9,
                 DatabaseMigrations.MIGRATION_9_10,
                 DatabaseMigrations.MIGRATION_10_11,
-                DatabaseMigrations.MIGRATION_11_12 // Add PIQ/SD usage columns
+                DatabaseMigrations.MIGRATION_11_12, // Add PIQ/SD usage columns
+                DatabaseMigrations.MIGRATION_12_13  // Add GPE image cache tables
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -102,7 +104,12 @@ object DatabaseModule {
     fun providePPDTImageCacheDao(database: SSBDatabase): PPDTImageCacheDao {
         return database.ppdtImageCacheDao()
     }
-    
+
+    @Provides
+    fun provideGPEImageCacheDao(database: SSBDatabase): GPEImageCacheDao {
+        return database.gpeImageCacheDao()
+    }
+
     @Provides
     fun provideGTOTaskCacheDao(database: SSBDatabase): GTOTaskCacheDao {
         return database.gtoTaskCacheDao()

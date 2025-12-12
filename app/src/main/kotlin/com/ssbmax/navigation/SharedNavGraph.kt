@@ -458,7 +458,10 @@ fun NavGraphBuilder.sharedNavGraph(
                     navController = navController
                 )
             },
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToUpgrade = {
+                navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+            }
         )
     }
     
@@ -494,7 +497,10 @@ fun NavGraphBuilder.sharedNavGraph(
                     navController = navController
                 )
             },
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToUpgrade = {
+                navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+            }
         )
     }
     
@@ -505,6 +511,42 @@ fun NavGraphBuilder.sharedNavGraph(
     ) { backStackEntry ->
         val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
         com.ssbmax.ui.tests.gto.lecturette.LecturetteResultScreen(
+            submissionId = submissionId,
+            onNavigateHome = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
+    // GTO - Group Planning Exercise Test
+    composable(
+        route = SSBMaxDestinations.GTOGPETest.route,
+        arguments = listOf(navArgument("testId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val testId = backStackEntry.arguments?.getString("testId") ?: ""
+        com.ssbmax.ui.tests.gpe.GPETestScreen(
+            testId = testId,
+            onTestComplete = { submissionId, subscriptionType ->
+                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = com.ssbmax.core.domain.model.TestType.GTO_GPE,
+                    navController = navController
+                )
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+
+    // GTO - Group Planning Exercise Result
+    composable(
+        route = SSBMaxDestinations.GTOGPEResult.route,
+        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+        com.ssbmax.ui.tests.gpe.GPESubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
@@ -558,23 +600,30 @@ fun NavGraphBuilder.sharedNavGraph(
             },
             onNavigateToTest = { testId ->
                 when {
-                    testId.startsWith("oir_") -> 
+                    testId.startsWith("oir_") ->
                         navController.navigate(SSBMaxDestinations.OIRTest.createRoute(testId))
-                    testId.startsWith("ppdt_") -> 
+                    testId.startsWith("ppdt_") ->
                         navController.navigate(SSBMaxDestinations.PPDTTest.createRoute(testId))
-                    testId.startsWith("tat_") -> 
+                    testId.startsWith("tat_") ->
                         navController.navigate(SSBMaxDestinations.TATTest.createRoute(testId))
-                    testId.startsWith("wat_") -> 
+                    testId.startsWith("wat_") ->
                         navController.navigate(SSBMaxDestinations.WATTest.createRoute(testId))
-                    testId.startsWith("srt_") -> 
+                    testId.startsWith("srt_") ->
                         navController.navigate(SSBMaxDestinations.SRTTest.createRoute(testId))
-                    testId.startsWith("sd_") -> 
+                    testId.startsWith("sd_") ->
                         navController.navigate(SSBMaxDestinations.SDTest.createRoute(testId))
-                    testId.startsWith("piq_") -> 
+                    testId.startsWith("piq_") ->
                         navController.navigate(SSBMaxDestinations.PIQTest.createRoute(testId))
-                    testId.startsWith("gto_") -> 
+                    // GTO Tests - Route to specific screens
+                    testId.startsWith("gto_gd_") ->
+                        navController.navigate(SSBMaxDestinations.GTOGDTest.createRoute(testId))
+                    testId.startsWith("gto_gpe_") ->
+                        navController.navigate(SSBMaxDestinations.GTOGPETest.createRoute(testId))
+                    testId.startsWith("gto_lecturette_") ->
+                        navController.navigate(SSBMaxDestinations.GTOLecturetteTest.createRoute(testId))
+                    testId.startsWith("gto_") ->
                         navController.navigate(SSBMaxDestinations.GTOTest.createRoute(testId))
-                    testId.startsWith("io_") -> 
+                    testId.startsWith("io_") ->
                         navController.navigate(SSBMaxDestinations.IOTest.createRoute(testId))
                     else -> {
                         android.util.Log.w("Navigation", "Unknown test ID: $testId")
