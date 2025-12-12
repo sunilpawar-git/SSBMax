@@ -103,7 +103,8 @@ class GTOAnalysisWorker @AssistedInject constructor(
                 
                 notificationHelper.showGTOAnalysisCompleteNotification(
                     submissionId,
-                    submission.testType.displayName
+                    submission.testType.displayName,
+                    submission.testType
                 )
 
                 ErrorLogger.log(
@@ -127,7 +128,8 @@ class GTOAnalysisWorker @AssistedInject constructor(
                 Log.w(TAG, "⚠️ Using fallback scores due to AI failure")
                 notificationHelper.showGTOAnalysisCompleteNotification(
                     submissionId,
-                    submission.testType.displayName
+                    submission.testType.displayName,
+                    submission.testType
                 )
 
                 ErrorLogger.log(
@@ -399,20 +401,60 @@ Return JSON with all 15 OLQ scores in the same format.
     }
 
     /**
-     * Analyze with Gemini (placeholder - will be implemented with actual AI service)
+     * Analyze with Gemini using the AI service
+     * 
+     * Sends the GTO-specific prompt to Gemini and parses the OLQ scores
+     * from the JSON response. Returns null on failure to trigger fallback.
      */
     private suspend fun analyzeWithGemini(
         prompt: String,
         testType: GTOTestType
     ): Map<OLQ, OLQScore>? {
         return try {
-            // TODO: Implement actual Gemini API call via AIService
-            // For now, return null to use fallback scores
-            // 
-            // val response = aiService.analyzeGTOResponse(prompt)
-            // return parseOLQScores(response)
+            Log.d(TAG, "🤖 Calling Gemini AI for $testType analysis")
             
-            null
+            // Use the generative model directly to analyze GTO response
+            // We create a temporary InterviewQuestion as a wrapper since
+            // AIService's analyzeResponse expects one. For GTO, we pass
+            // the full prompt as both question and response context.
+            val dummyQuestion = com.ssbmax.core.domain.model.interview.InterviewQuestion(
+                id = "gto_$testType",
+                questionText = "Analyze GTO $testType performance",
+                expectedOLQs = OLQ.entries,
+                context = null,
+                source = com.ssbmax.core.domain.model.interview.QuestionSource.AI_GENERATED
+            )
+            
+            // Call AI service with the GTO prompt as the "response"
+            // This allows us to reuse the existing analyzeResponse infrastructure
+            val analysisResult = aiService.analyzeResponse(
+                question = dummyQuestion,
+                response = prompt,
+                responseMode = "text"
+            )
+            
+            if (analysisResult.isFailure) {
+                ErrorLogger.log(
+                    analysisResult.exceptionOrNull() ?: Exception("Unknown error"),
+                    "Gemini analysis failed for $testType"
+                )
+                return null
+            }
+            
+            val analysis = analysisResult.getOrNull() ?: return null
+            
+            // Convert OLQScoreWithReasoning to OLQScore
+            val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
+                OLQScore(
+                    score = scoreWithReasoning.score.toInt(),
+                    confidence = analysis.overallConfidence,
+                    reasoning = scoreWithReasoning.reasoning
+                )
+            }
+            
+            Log.d(TAG, "✅ Gemini analysis complete: ${olqScores.size} OLQ scores (confidence: ${analysis.overallConfidence}%)")
+            olqScores
+            
         } catch (e: Exception) {
             ErrorLogger.log(e, "Gemini API call failed for $testType")
             null

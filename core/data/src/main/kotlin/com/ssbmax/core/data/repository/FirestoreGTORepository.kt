@@ -842,7 +842,64 @@ class FirestoreGTORepository @Inject constructor(
                 status = status,
                 olqScores = olqScores
             )
-            else -> throw IllegalArgumentException("Unsupported test type for mapping: $testType")
+            GTOTestType.PROGRESSIVE_GROUP_TASK -> GTOSubmission.PGTSubmission(
+                id = id,
+                userId = userId,
+                testId = testId,
+                obstacles = parseObstacleConfigList(data["obstacles"]),
+                solutions = parseObstacleSolutionList(data["solutions"]),
+                submittedAt = submittedAt,
+                timeSpent = timeSpent,
+                status = status,
+                olqScores = olqScores
+            )
+            GTOTestType.HALF_GROUP_TASK -> GTOSubmission.HGTSubmission(
+                id = id,
+                userId = userId,
+                testId = testId,
+                obstacle = parseObstacleConfig(data["obstacle"]),
+                solution = parseObstacleSolution(data["solution"]),
+                leadershipDecisions = data["leadershipDecisions"] as? String ?: "",
+                submittedAt = submittedAt,
+                timeSpent = timeSpent,
+                status = status,
+                olqScores = olqScores
+            )
+            GTOTestType.GROUP_OBSTACLE_RACE -> GTOSubmission.GORSubmission(
+                id = id,
+                userId = userId,
+                testId = testId,
+                obstacles = parseObstacleConfigList(data["obstacles"]),
+                coordinationStrategy = data["coordinationStrategy"] as? String ?: "",
+                submittedAt = submittedAt,
+                timeSpent = timeSpent,
+                status = status,
+                olqScores = olqScores
+            )
+            GTOTestType.INDIVIDUAL_OBSTACLES -> GTOSubmission.IOSubmission(
+                id = id,
+                userId = userId,
+                testId = testId,
+                obstacles = parseObstacleConfigList(data["obstacles"]),
+                approach = data["approach"] as? String ?: "",
+                submittedAt = submittedAt,
+                timeSpent = timeSpent,
+                status = status,
+                olqScores = olqScores
+            )
+            GTOTestType.COMMAND_TASK -> GTOSubmission.CTSubmission(
+                id = id,
+                userId = userId,
+                testId = testId,
+                scenario = data["scenario"] as? String ?: "",
+                obstacle = parseObstacleConfig(data["obstacle"]),
+                commandDecisions = data["commandDecisions"] as? String ?: "",
+                resourceAllocation = data["resourceAllocation"] as? String ?: "",
+                submittedAt = submittedAt,
+                timeSpent = timeSpent,
+                status = status,
+                olqScores = olqScores
+            )
         }
     }
     
@@ -900,6 +957,82 @@ class FirestoreGTORepository @Inject constructor(
             score <= 7f -> "Average"
             score <= 8f -> "Below Average"
             else -> "Poor"
+        }
+    }
+    
+    /**
+     * Parse single ObstacleConfig from Firestore map
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseObstacleConfig(data: Any?): ObstacleConfig {
+        val map = data as? Map<String, Any> ?: return ObstacleConfig(
+            id = "",
+            name = "",
+            description = "",
+            difficulty = 1,
+            animationAsset = ""
+        )
+        
+        return ObstacleConfig(
+            id = map["id"] as? String ?: "",
+            name = map["name"] as? String ?: "",
+            description = map["description"] as? String ?: "",
+            difficulty = ((map["difficulty"] as? Number)?.toInt()) ?: 1,
+            animationAsset = map["animationAsset"] as? String ?: "",
+            resources = (map["resources"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            height = (map["height"] as? Number)?.toFloat(),
+            width = (map["width"] as? Number)?.toFloat(),
+            depth = (map["depth"] as? Number)?.toFloat()
+        )
+    }
+    
+    /**
+     * Parse list of ObstacleConfig from Firestore list
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseObstacleConfigList(data: Any?): List<ObstacleConfig> {
+        val list = data as? List<*> ?: return emptyList()
+        return list.mapNotNull { item ->
+            try {
+                parseObstacleConfig(item)
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to parse ObstacleConfig")
+                null
+            }
+        }
+    }
+    
+    /**
+     * Parse single ObstacleSolution from Firestore map
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseObstacleSolution(data: Any?): ObstacleSolution {
+        val map = data as? Map<String, Any> ?: return ObstacleSolution(
+            obstacleId = "",
+            solutionText = ""
+        )
+        
+        return ObstacleSolution(
+            obstacleId = map["obstacleId"] as? String ?: "",
+            solutionText = map["solutionText"] as? String ?: "",
+            resourcesUsed = (map["resourcesUsed"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            estimatedTime = (map["estimatedTime"] as? Number)?.toInt()
+        )
+    }
+    
+    /**
+     * Parse list of ObstacleSolution from Firestore list
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseObstacleSolutionList(data: Any?): List<ObstacleSolution> {
+        val list = data as? List<*> ?: return emptyList()
+        return list.mapNotNull { item ->
+            try {
+                parseObstacleSolution(item)
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to parse ObstacleSolution")
+                null
+            }
         }
     }
 }

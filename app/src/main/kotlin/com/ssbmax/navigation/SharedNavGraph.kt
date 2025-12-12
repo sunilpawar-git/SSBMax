@@ -439,6 +439,42 @@ fun NavGraphBuilder.sharedNavGraph(
     }
 
     // ========================
+    // GTO TESTS (8 Tests)
+    // ========================
+    
+    // GTO - Group Discussion Test
+    composable(
+        route = SSBMaxDestinations.GTOGDTest.route,
+        arguments = listOf(navArgument("testId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val testId = backStackEntry.arguments?.getString("testId") ?: ""
+        com.ssbmax.ui.tests.gto.gd.GDTestScreen(
+            testId = testId,
+            onTestComplete = { submissionId, subscriptionType ->
+                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = com.ssbmax.core.domain.model.TestType.GTO_GD,
+                    navController = navController
+                )
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+    
+    // GTO - Group Discussion Result
+    composable(
+        route = SSBMaxDestinations.GTOGDResult.route,
+        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+        // TODO: Implement GDResultScreen
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("GD Result: $submissionId")
+        }
+    }
+
+    // ========================
     // STUDY MATERIALS
     // ========================
     

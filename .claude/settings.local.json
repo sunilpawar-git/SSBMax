@@ -32,7 +32,8 @@
       "Bash(adb devices:*)",
       "Bash(adb logcat:*)",
       "Bash(adb -s 4A231VDAQ0001D logcat:*)",
-      "Bash(uniq:*)"
+      "Bash(uniq:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

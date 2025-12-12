@@ -32,3 +32,5 @@ class InterviewConstantsTest {
         assertTrue(InterviewConstants.FALLBACK_CONFIDENCE in 0..100)
     }
 }
+
+

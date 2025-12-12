@@ -22,3 +22,5 @@ class MarkdownTextParseTest {
         assertEquals(boldEnd, span.end)
     }
 }
+
+

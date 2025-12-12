@@ -185,13 +185,38 @@ class NotificationHelper @Inject constructor(
      *
      * @param submissionId The GTO submission ID
      * @param testName The test name (e.g., "Group Discussion")
+     * @param testType The GTO test type for building correct deep link
      */
-    fun showGTOAnalysisCompleteNotification(submissionId: String, testName: String) {
-        Log.d(TAG, "📢 showGTOAnalysisCompleteNotification called - submissionId: $submissionId, test: $testName")
+    fun showGTOAnalysisCompleteNotification(
+        submissionId: String, 
+        testName: String,
+        testType: com.ssbmax.core.domain.model.gto.GTOTestType
+    ) {
+        Log.d(TAG, "📢 showGTOAnalysisCompleteNotification called - submissionId: $submissionId, test: $testName, type: ${testType.name}")
 
         try {
-            // Build deep link to GTO result screen
-            val deepLink = "ssbmax://gto/result/$submissionId"
+            // Build test-type-specific deep link to GTO result screen
+            // Navigation routes: test/gto/{type}/result/{submissionId}
+            val deepLink = when (testType) {
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_DISCUSSION -> 
+                    "ssbmax://test/gto/gd/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE -> 
+                    "ssbmax://test/gto/gpe/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.LECTURETTE -> 
+                    "ssbmax://test/gto/lecturette/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.PROGRESSIVE_GROUP_TASK -> 
+                    "ssbmax://test/gto/pgt/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.HALF_GROUP_TASK -> 
+                    "ssbmax://test/gto/hgt/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_OBSTACLE_RACE -> 
+                    "ssbmax://test/gto/gor/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.INDIVIDUAL_OBSTACLES -> 
+                    "ssbmax://test/gto/io/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.COMMAND_TASK -> 
+                    "ssbmax://test/gto/ct/result/$submissionId"
+            }
+            
+            Log.d(TAG, "📱 Deep link generated: $deepLink")
             
             // Create intent to open results screen
             val intent = Intent(context, MainActivity::class.java).apply {
