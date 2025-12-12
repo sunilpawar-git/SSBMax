@@ -196,24 +196,24 @@ class NotificationHelper @Inject constructor(
 
         try {
             // Build test-type-specific deep link to GTO result screen
-            // Navigation routes: test/gto/{type}/result/{submissionId}
+            // Only implemented test types get specific routes; others use generic submission detail
+            // See SSBMaxDestinations.kt lines 102-110 for implementation status
             val deepLink = when (testType) {
+                // Implemented test types - use specific result routes
                 com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_DISCUSSION -> 
                     "ssbmax://test/gto/gd/result/$submissionId"
-                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE -> 
-                    "ssbmax://test/gto/gpe/result/$submissionId"
                 com.ssbmax.core.domain.model.gto.GTOTestType.LECTURETTE -> 
                     "ssbmax://test/gto/lecturette/result/$submissionId"
-                com.ssbmax.core.domain.model.gto.GTOTestType.PROGRESSIVE_GROUP_TASK -> 
-                    "ssbmax://test/gto/pgt/result/$submissionId"
-                com.ssbmax.core.domain.model.gto.GTOTestType.HALF_GROUP_TASK -> 
-                    "ssbmax://test/gto/hgt/result/$submissionId"
-                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_OBSTACLE_RACE -> 
-                    "ssbmax://test/gto/gor/result/$submissionId"
-                com.ssbmax.core.domain.model.gto.GTOTestType.INDIVIDUAL_OBSTACLES -> 
-                    "ssbmax://test/gto/io/result/$submissionId"
+                
+                // Unimplemented test types - use generic submission detail route as fallback
+                // This allows users to access results even if specific screen isn't implemented yet
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE,
+                com.ssbmax.core.domain.model.gto.GTOTestType.PROGRESSIVE_GROUP_TASK,
+                com.ssbmax.core.domain.model.gto.GTOTestType.HALF_GROUP_TASK,
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_OBSTACLE_RACE,
+                com.ssbmax.core.domain.model.gto.GTOTestType.INDIVIDUAL_OBSTACLES,
                 com.ssbmax.core.domain.model.gto.GTOTestType.COMMAND_TASK -> 
-                    "ssbmax://test/gto/ct/result/$submissionId"
+                    "ssbmax://submission/$submissionId"
             }
             
             Log.d(TAG, "📱 Deep link generated: $deepLink")
