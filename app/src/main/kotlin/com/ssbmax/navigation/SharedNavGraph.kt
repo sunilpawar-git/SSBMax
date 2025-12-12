@@ -468,10 +468,50 @@ fun NavGraphBuilder.sharedNavGraph(
         arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
     ) { backStackEntry ->
         val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
-        // TODO: Implement GDResultScreen
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("GD Result: $submissionId")
-        }
+        com.ssbmax.ui.tests.gto.gd.GDResultScreen(
+            submissionId = submissionId,
+            onNavigateHome = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
+    }
+    
+    // GTO - Lecturette Test
+    composable(
+        route = SSBMaxDestinations.GTOLecturetteTest.route,
+        arguments = listOf(navArgument("testId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val testId = backStackEntry.arguments?.getString("testId") ?: ""
+        com.ssbmax.ui.tests.gto.lecturette.LecturetteTestScreen(
+            testId = testId,
+            onTestComplete = { submissionId, subscriptionType ->
+                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE,
+                    navController = navController
+                )
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+    
+    // GTO - Lecturette Result
+    composable(
+        route = SSBMaxDestinations.GTOLecturetteResult.route,
+        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+        com.ssbmax.ui.tests.gto.lecturette.LecturetteResultScreen(
+            submissionId = submissionId,
+            onNavigateHome = {
+                navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                }
+            }
+        )
     }
 
     // ========================

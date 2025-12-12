@@ -1,4 +1,4 @@
-package com.ssbmax.ui.tests.gto.gd
+package com.ssbmax.ui.tests.gto.lecturette
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,7 +20,6 @@ import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.GTOAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,23 +31,25 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * ViewModel for Group Discussion (GD) Test
+ * ViewModel for Lecturette Test
  * 
  * Test Flow:
- * 1. Instructions Phase: Show test format, rules, white noise warning
- * 2. Discussion Phase: Display topic, enable white noise, text input (20 min)
- * 3. Review Phase: Show response, word count, allow editing
- * 4. Submit: Create GDSubmission, enqueue worker, navigate to result
+ * 1. Instructions: Test format, 3-min speech, white noise warning
+ * 2. Topic Selection: Show 4 random topics, user picks 1
+ * 3. Speech: 3-minute timer + text input + white noise
+ * 4. Review: Show speech transcript, word count
+ * 5. Submit: Create LecturetteSubmission, enqueue worker
  * 
  * Features:
- * - Real-time word count (300-1500 words)
- * - White noise audio + visual overlay
- * - 20-minute timer with auto-advance
- * - Sequential access enforcement (must be first GTO test)
- * - Subscription limit checking
+ * - 4-topic random selection from Firestore
+ * - 3-minute countdown timer
+ * - White noise during speech
+ * - Real-time word count
+ * - No preparation time (immediate start after selection)
+ * - Sequential access enforcement (must complete GD, GPE first)
  */
 @HiltViewModel
-class GDTestViewModel @Inject constructor(
+class LecturetteTestViewModel @Inject constructor(
     private val gtoRepository: GTORepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository,
@@ -59,26 +60,23 @@ class GDTestViewModel @Inject constructor(
     private val workManager: WorkManager
 ) : ViewModel() {
     
-    private val _uiState = MutableStateFlow(GDTestUiState())
-    val uiState: StateFlow<GDTestUiState> = _uiState.asStateFlow()
-    
-    // Track timer job to prevent duplicate coroutines
-    private var timerJob: Job? = null
-    
-    init {
-        trackMemoryLeaks("GDTestViewModel")
-        android.util.Log.d(TAG, "🚀 GDTestViewModel initialized")
-    }
+    private val _uiState = MutableStateFlow(LecturetteTestUiState())
+    val uiState: StateFlow<LecturetteTestUiState> = _uiState.asStateFlow()
     
     companion object {
-        private const val TAG = "GDTestViewModel"
-        private const val DISCUSSION_TIME_SECONDS = 1200 // 20 minutes
-        private const val MIN_WORDS = 300
-        private const val MAX_WORDS = 1500
+        private const val TAG = "LecturetteViewModel"
+        private const val SPEECH_TIME_SECONDS = 180 // 3 minutes
+        private const val MIN_WORDS = 100 // Shorter than GD since it's a speech
+        private const val TOPIC_COUNT = 4
+    }
+    
+    init {
+        trackMemoryLeaks("LecturetteTestViewModel")
+        android.util.Log.d(TAG, "🚀 LecturetteTestViewModel initialized")
     }
     
     /**
-     * Load GD test (check eligibility, fetch topic)
+     * Load Lecturette test (check eligibility, fetch 4 topics)
      */
     fun loadTest(testId: String) {
         viewModelScope.launch {
@@ -98,8 +96,8 @@ class GDTestViewModel @Inject constructor(
                 val userId = user?.id ?: run {
                     android.util.Log.e(TAG, "🚨 SECURITY: Unauthenticated access blocked")
                     securityLogger.logUnauthenticatedAccess(
-                        testType = TestType.GTO_GD,
-                        context = "GDTestViewModel.loadTest"
+                        testType = TestType.GTO_LECTURETTE,
+                        context = "LecturetteTestViewModel.loadTest"
                     )
                     _uiState.update { it.copy(
                         isLoading = false,
@@ -110,11 +108,11 @@ class GDTestViewModel @Inject constructor(
                 
                 android.util.Log.d(TAG, "✅ User authenticated: $userId")
                 
-                // Check sequential access (GD must be first GTO test)
+                // Check sequential access (Lecturette is 3rd GTO test)
                 android.util.Log.d(TAG, "📍 Step 2: Checking sequential access...")
                 val (canAccess, accessError) = sequentialAccessManager.checkAccess(
                     userId,
-                    GTOTestType.GROUP_DISCUSSION
+                    GTOTestType.LECTURETTE
                 )
                 
                 if (!canAccess) {
@@ -128,7 +126,7 @@ class GDTestViewModel @Inject constructor(
                 
                 // Check subscription limits
                 android.util.Log.d(TAG, "📍 Step 3: Checking subscription limits...")
-                val eligibility = subscriptionManager.canTakeTest(TestType.GTO_GD, userId)
+                val eligibility = subscriptionManager.canTakeTest(TestType.GTO_LECTURETTE, userId)
                 
                 when (eligibility) {
                     is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
@@ -154,24 +152,27 @@ class GDTestViewModel @Inject constructor(
                     }
                 }
                 
-                // Fetch random GD topic
-                android.util.Log.d(TAG, "📍 Step 4: Fetching random topic...")
-                _uiState.update { it.copy(loadingMessage = "Loading topic...") }
+                // Fetch 4 random Lecturette topics
+                android.util.Log.d(TAG, "📍 Step 4: Fetching 4 random topics...")
+                _uiState.update { it.copy(loadingMessage = "Loading topics...") }
                 
-                val topicResult = gtoRepository.getRandomGDTopic()
-                if (topicResult.isFailure) {
-                    android.util.Log.e(TAG, "❌ Failed to fetch topic", topicResult.exceptionOrNull())
+                val topicsResult = gtoRepository.getRandomLecturetteTopics(TOPIC_COUNT)
+                if (topicsResult.isFailure) {
+                    android.util.Log.e(TAG, "❌ Failed to fetch topics", topicsResult.exceptionOrNull())
                     _uiState.update { it.copy(
                         isLoading = false,
-                        error = "Failed to load test topic. Please try again."
+                        error = "Failed to load test topics. Please try again."
                     ) }
                     return@launch
                 }
                 
-                val topic = topicResult.getOrNull()!!
-                android.util.Log.d(TAG, "✅ Topic loaded: ${topic.take(50)}...")
+                val topics = topicsResult.getOrNull()!!
+                android.util.Log.d(TAG, "✅ Topics loaded: ${topics.size} topics")
+                topics.forEachIndexed { index, topic ->
+                    android.util.Log.d(TAG, "   ${index + 1}. ${topic.take(50)}...")
+                }
                 
-                // Get subscription tier for result navigation
+                // Get subscription tier
                 val profile = userProfileRepository.getUserProfile(userId).getOrNull()
                 val subscriptionType = profile?.subscriptionType ?: SubscriptionType.FREE
                 
@@ -181,9 +182,9 @@ class GDTestViewModel @Inject constructor(
                     loadingMessage = null,
                     testId = testId,
                     userId = userId,
-                    topic = topic,
+                    topicChoices = topics,
                     subscriptionType = subscriptionType,
-                    phase = GDPhase.INSTRUCTIONS
+                    phase = LecturettePhase.INSTRUCTIONS
                 ) }
                 
                 android.util.Log.d(TAG, "════════════════════════════════════════")
@@ -191,7 +192,7 @@ class GDTestViewModel @Inject constructor(
                 android.util.Log.d(TAG, "════════════════════════════════════════")
                 
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to load GD test")
+                ErrorLogger.log(e, "Failed to load Lecturette test")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = "Failed to load test. Please try again."
@@ -201,29 +202,35 @@ class GDTestViewModel @Inject constructor(
     }
     
     /**
-     * Start the discussion phase (from instructions)
+     * Proceed to topic selection
      */
-    fun startDiscussion() {
-        android.util.Log.d(TAG, "▶️ Starting discussion phase")
+    fun proceedToTopicSelection() {
+        android.util.Log.d(TAG, "➡️ Proceeding to topic selection")
+        _uiState.update { it.copy(phase = LecturettePhase.TOPIC_SELECTION) }
+    }
+    
+    /**
+     * Select a topic and start speech
+     */
+    fun selectTopic(topic: String) {
+        android.util.Log.d(TAG, "🎯 Topic selected: $topic")
         _uiState.update { it.copy(
-            phase = GDPhase.DISCUSSION,
-            discussionStartTime = System.currentTimeMillis(),
-            timeRemaining = DISCUSSION_TIME_SECONDS
+            selectedTopic = topic,
+            phase = LecturettePhase.SPEECH,
+            speechStartTime = System.currentTimeMillis(),
+            timeRemaining = SPEECH_TIME_SECONDS
         ) }
         startTimer()
     }
     
     /**
-     * Start 20-minute timer
+     * Start 3-minute timer
      */
     private fun startTimer() {
-        // Cancel any existing timer to prevent duplicate coroutines
-        timerJob?.cancel()
-        
-        timerJob = viewModelScope.launch {
-            android.util.Log.d(TAG, "⏱️ Timer started: ${DISCUSSION_TIME_SECONDS}s")
+        viewModelScope.launch {
+            android.util.Log.d(TAG, "⏱️ Timer started: ${SPEECH_TIME_SECONDS}s")
             
-            while (_uiState.value.timeRemaining > 0 && _uiState.value.phase == GDPhase.DISCUSSION) {
+            while (_uiState.value.timeRemaining > 0 && _uiState.value.phase == LecturettePhase.SPEECH) {
                 delay(1000)
                 _uiState.update { it.copy(
                     timeRemaining = (it.timeRemaining - 1).coerceAtLeast(0)
@@ -231,7 +238,7 @@ class GDTestViewModel @Inject constructor(
             }
             
             // Time expired - auto-advance to review
-            if (_uiState.value.phase == GDPhase.DISCUSSION && _uiState.value.timeRemaining == 0) {
+            if (_uiState.value.phase == LecturettePhase.SPEECH && _uiState.value.timeRemaining == 0) {
                 android.util.Log.d(TAG, "⏰ Time expired - auto-advancing to review")
                 proceedToReview()
             }
@@ -239,12 +246,12 @@ class GDTestViewModel @Inject constructor(
     }
     
     /**
-     * Update response text
+     * Update speech transcript
      */
-    fun onResponseChanged(newResponse: String) {
-        val wordCount = countWords(newResponse)
+    fun onTranscriptChanged(newTranscript: String) {
+        val wordCount = countWords(newTranscript)
         _uiState.update { it.copy(
-            response = newResponse,
+            speechTranscript = newTranscript,
             wordCount = wordCount
         ) }
     }
@@ -259,39 +266,32 @@ class GDTestViewModel @Inject constructor(
         val wordCount = _uiState.value.wordCount
         if (wordCount < MIN_WORDS) {
             _uiState.update { it.copy(
-                validationError = "Response must be at least $MIN_WORDS words (currently $wordCount)"
-            ) }
-            return
-        }
-        
-        if (wordCount > MAX_WORDS) {
-            _uiState.update { it.copy(
-                validationError = "Response must not exceed $MAX_WORDS words (currently $wordCount)"
+                validationError = "Speech must be at least $MIN_WORDS words (currently $wordCount)"
             ) }
             return
         }
         
         _uiState.update { it.copy(
-            phase = GDPhase.REVIEW,
+            phase = LecturettePhase.REVIEW,
             validationError = null
         ) }
     }
     
     /**
-     * Go back to discussion phase (from review)
+     * Go back to speech (from review)
      */
-    fun backToDiscussion() {
-        android.util.Log.d(TAG, "⬅️ Back to discussion phase")
-        _uiState.update { it.copy(phase = GDPhase.DISCUSSION) }
+    fun backToSpeech() {
+        android.util.Log.d(TAG, "⬅️ Back to speech phase")
+        _uiState.update { it.copy(phase = LecturettePhase.SPEECH) }
         startTimer() // Restart timer
     }
     
     /**
-     * Submit GD test
+     * Submit Lecturette test
      */
     fun submitTest() {
         viewModelScope.launch {
-            android.util.Log.d(TAG, "📤 Submitting GD test...")
+            android.util.Log.d(TAG, "📤 Submitting Lecturette test...")
             
             _uiState.update { it.copy(
                 isSubmitting = true,
@@ -301,15 +301,16 @@ class GDTestViewModel @Inject constructor(
             try {
                 val state = _uiState.value
                 val submissionId = UUID.randomUUID().toString()
-                val timeSpent = ((System.currentTimeMillis() - state.discussionStartTime) / 1000).toInt()
+                val timeSpent = ((System.currentTimeMillis() - state.speechStartTime) / 1000).toInt()
                 
                 // Create submission
-                val submission = GTOSubmission.GDSubmission(
+                val submission = GTOSubmission.LecturetteSubmission(
                     id = submissionId,
                     userId = state.userId,
                     testId = state.testId,
-                    topic = state.topic,
-                    response = state.response,
+                    topicChoices = state.topicChoices,
+                    selectedTopic = state.selectedTopic,
+                    speechTranscript = state.speechTranscript,
                     wordCount = state.wordCount,
                     submittedAt = System.currentTimeMillis(),
                     timeSpent = timeSpent
@@ -325,22 +326,22 @@ class GDTestViewModel @Inject constructor(
                 
                 android.util.Log.d(TAG, "✅ Submission saved: $submissionId")
                 
-                // Record test usage for subscription limits
+                // Record test usage
                 android.util.Log.d(TAG, "📊 Recording test usage...")
                 gtoRepository.recordTestUsage(
                     userId = state.userId,
-                    testType = GTOTestType.GROUP_DISCUSSION,
+                    testType = GTOTestType.LECTURETTE,
                     submissionId = submissionId
                 )
                 
-                // Update progress (mark GD as completed)
+                // Update progress
                 android.util.Log.d(TAG, "📈 Updating user progress...")
                 gtoRepository.updateProgress(
                     userId = state.userId,
-                    completedTestType = GTOTestType.GROUP_DISCUSSION
+                    completedTestType = GTOTestType.LECTURETTE
                 )
                 
-                // Enqueue background analysis worker
+                // Enqueue analysis worker
                 android.util.Log.d(TAG, "🤖 Enqueuing analysis worker...")
                 val workRequest = OneTimeWorkRequestBuilder<GTOAnalysisWorker>()
                     .setInputData(workDataOf(
@@ -350,18 +351,18 @@ class GDTestViewModel @Inject constructor(
                 
                 workManager.enqueue(workRequest)
                 
-                // Update UI state with completion info
+                // Update UI state
                 _uiState.update { it.copy(
                     isSubmitting = false,
-                    phase = GDPhase.SUBMITTED,
+                    phase = LecturettePhase.SUBMITTED,
                     submissionId = submissionId,
                     isCompleted = true
                 ) }
                 
-                android.util.Log.d(TAG, "✅ GD test submitted successfully!")
+                android.util.Log.d(TAG, "✅ Lecturette test submitted successfully!")
                 
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to submit GD test")
+                ErrorLogger.log(e, "Failed to submit Lecturette test")
                 _uiState.update { it.copy(
                     isSubmitting = false,
                     submitError = "Failed to submit test. Please try again."
@@ -392,7 +393,7 @@ class GDTestViewModel @Inject constructor(
     }
     
     /**
-     * Count words in text (split by whitespace)
+     * Count words in text
      */
     private fun countWords(text: String): Int {
         if (text.isBlank()) return 0
@@ -401,16 +402,14 @@ class GDTestViewModel @Inject constructor(
     
     override fun onCleared() {
         super.onCleared()
-        // Cancel timer job to prevent memory leaks
-        timerJob?.cancel()
         android.util.Log.d(TAG, "🧹 ViewModel cleared")
     }
 }
 
 /**
- * GD Test UI State
+ * Lecturette Test UI State
  */
-data class GDTestUiState(
+data class LecturetteTestUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String? = null,
     val error: String? = null,
@@ -418,16 +417,17 @@ data class GDTestUiState(
     // Test info
     val testId: String = "",
     val userId: String = "",
-    val topic: String = "",
+    val topicChoices: List<String> = emptyList(),
+    val selectedTopic: String = "",
     val subscriptionType: SubscriptionType = SubscriptionType.FREE,
     
     // Phase management
-    val phase: GDPhase = GDPhase.INSTRUCTIONS,
+    val phase: LecturettePhase = LecturettePhase.INSTRUCTIONS,
     
-    // Discussion phase
-    val discussionStartTime: Long = 0L,
-    val timeRemaining: Int = 1200, // 20 minutes
-    val response: String = "",
+    // Speech phase
+    val speechStartTime: Long = 0L,
+    val timeRemaining: Int = 180, // 3 minutes
+    val speechTranscript: String = "",
     val wordCount: Int = 0,
     val validationError: String? = null,
     
@@ -444,16 +444,10 @@ data class GDTestUiState(
     val upgradeMessage: String? = null
 ) {
     /**
-     * Check if response meets word count requirements
+     * Check if transcript meets minimum word count
      */
     val meetsMinWordCount: Boolean
-        get() = wordCount >= 300
-    
-    val meetsMaxWordCount: Boolean
-        get() = wordCount <= 1500
-    
-    val meetsWordCountRequirements: Boolean
-        get() = meetsMinWordCount && meetsMaxWordCount
+        get() = wordCount >= 100
     
     /**
      * Format time remaining as MM:SS
@@ -462,22 +456,23 @@ data class GDTestUiState(
         get() {
             val minutes = timeRemaining / 60
             val seconds = timeRemaining % 60
-            return "%02d:%02d".format(minutes, seconds)
+            return "%d:%02d".format(minutes, seconds)
         }
     
     /**
-     * Warning when time is running low (< 2 minutes)
+     * Warning when time is running low (< 30 seconds)
      */
     val isTimeLow: Boolean
-        get() = timeRemaining < 120 && timeRemaining > 0
+        get() = timeRemaining < 30 && timeRemaining > 0
 }
 
 /**
- * GD Test Phases
+ * Lecturette Test Phases
  */
-enum class GDPhase {
-    INSTRUCTIONS,   // Show test format and rules
-    DISCUSSION,     // Active discussion phase (20 min)
-    REVIEW,         // Review response before submission
-    SUBMITTED       // Test submitted
+enum class LecturettePhase {
+    INSTRUCTIONS,       // Show test format and rules
+    TOPIC_SELECTION,    // Show 4 topics, user picks 1
+    SPEECH,             // 3-minute speech phase with white noise
+    REVIEW,             // Review speech transcript
+    SUBMITTED           // Test submitted
 }

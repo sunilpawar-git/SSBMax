@@ -43,7 +43,7 @@ class GTOWhiteNoisePlayer @Inject constructor(
     
     /**
      * Start playing white noise audio
-     * Uses pink_noise.mp3 from res/raw/
+     * Uses pink_noise.wav from res/raw/
      */
     fun startAudio() {
         try {
