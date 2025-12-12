@@ -7,7 +7,6 @@ import com.ssbmax.core.domain.model.gto.*
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.GTORepository
-import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -97,7 +96,7 @@ class FirestoreGTORepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get random GTO test: $testType")
+            Log.e(TAG, "Failed to get random GTO test: $testType", e)
             Result.failure(e)
         }
     }
@@ -108,7 +107,7 @@ class FirestoreGTORepository @Inject constructor(
             val testType = GTOTestType.GROUP_DISCUSSION // Default
             getRandomTest(testType)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get GTO test by ID: $testId")
+            Log.e(TAG, "Failed to get GTO test by ID: $testId", e)
             Result.failure(e)
         }
     }
@@ -131,7 +130,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(topicText)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get random GD topic")
+            Log.e(TAG, "Failed to get random GD topic", e)
             Result.failure(e)
         }
     }
@@ -150,7 +149,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(topicStrings.shuffled().take(count))
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get random Lecturette topics")
+            Log.e(TAG, "Failed to get random Lecturette topics", e)
             Result.failure(e)
         }
     }
@@ -179,7 +178,7 @@ class FirestoreGTORepository @Inject constructor(
                 )
             )
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get random GPE scenario")
+            Log.e(TAG, "Failed to get random GPE scenario", e)
             Result.failure(e)
         }
     }
@@ -217,7 +216,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(obstacleConfigs)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get obstacles for test: $testType")
+            Log.e(TAG, "Failed to get obstacles for test: $testType", e)
             Result.failure(e)
         }
     }
@@ -236,7 +235,7 @@ class FirestoreGTORepository @Inject constructor(
             Log.d(TAG, "Submitted GTO test: ${submission.testType}, ID: ${submission.id}")
             Result.success(submission.id)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to submit GTO test")
+            Log.e(TAG, "Failed to submit GTO test", e)
             Result.failure(e)
         }
     }
@@ -255,7 +254,7 @@ class FirestoreGTORepository @Inject constructor(
             val submission = mapToSubmission(doc.data ?: emptyMap())
             Result.success(submission)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get submission: $submissionId")
+            Log.e(TAG, "Failed to get submission: $submissionId", e)
             Result.failure(e)
         }
     }
@@ -265,7 +264,7 @@ class FirestoreGTORepository @Inject constructor(
             .document(submissionId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    ErrorLogger.log(error, "Error observing submission: $submissionId")
+                    Log.e(TAG, "Error observing submission: $submissionId", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -275,7 +274,7 @@ class FirestoreGTORepository @Inject constructor(
                         val submission = mapToSubmission(snapshot.data ?: emptyMap())
                         trySend(submission)
                     } catch (e: Exception) {
-                        ErrorLogger.log(e, "Error mapping submission")
+                        Log.e(TAG, "Error mapping submission", e)
                         trySend(null)
                     }
                 } else {
@@ -298,7 +297,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(Unit)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update submission status")
+            Log.e(TAG, "Failed to update submission status", e)
             Result.failure(e)
         }
     }
@@ -328,7 +327,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(Unit)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update submission OLQ scores")
+            Log.e(TAG, "Failed to update submission OLQ scores", e)
             Result.failure(e)
         }
     }
@@ -351,14 +350,14 @@ class FirestoreGTORepository @Inject constructor(
                 try {
                     mapToSubmission(doc.data ?: emptyMap())
                 } catch (e: Exception) {
-                    ErrorLogger.log(e, "Error mapping submission: ${doc.id}")
+                    Log.e(TAG, "Error mapping submission: ${doc.id}", e)
                     null
                 }
             }
             
             Result.success(submissions)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get user submissions")
+            Log.e(TAG, "Failed to get user submissions", e)
             Result.failure(e)
         }
     }
@@ -376,14 +375,14 @@ class FirestoreGTORepository @Inject constructor(
                 try {
                     mapToSubmission(doc.data ?: emptyMap())
                 } catch (e: Exception) {
-                    ErrorLogger.log(e, "Error mapping pending submission: ${doc.id}")
+                    Log.e(TAG, "Error mapping pending submission: ${doc.id}", e)
                     null
                 }
             }
             
             Result.success(submissions)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get pending submissions")
+            Log.e(TAG, "Failed to get pending submissions", e)
             Result.failure(e)
         }
     }
@@ -405,7 +404,7 @@ class FirestoreGTORepository @Inject constructor(
             val progress = mapToProgress(userId, doc.data ?: emptyMap())
             Result.success(progress)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get user progress")
+            Log.e(TAG, "Failed to get user progress", e)
             Result.failure(e)
         }
     }
@@ -415,7 +414,7 @@ class FirestoreGTORepository @Inject constructor(
             .document(userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    ErrorLogger.log(error, "Error observing user progress")
+                    Log.e(TAG, "Error observing user progress", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
@@ -425,7 +424,7 @@ class FirestoreGTORepository @Inject constructor(
                         val progress = mapToProgress(userId, snapshot.data ?: emptyMap())
                         trySend(progress)
                     } catch (e: Exception) {
-                        ErrorLogger.log(e, "Error mapping progress")
+                        Log.e(TAG, "Error mapping progress", e)
                         trySend(null)
                     }
                 } else {
@@ -470,7 +469,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(Unit)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update progress")
+            Log.e(TAG, "Failed to update progress", e)
             Result.failure(e)
         }
     }
@@ -483,7 +482,7 @@ class FirestoreGTORepository @Inject constructor(
             val progress = getUserProgress(userId).getOrThrow()
             Result.success(progress.isTestUnlocked(testType))
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to check test access")
+            Log.e(TAG, "Failed to check test access", e)
             Result.failure(e)
         }
     }
@@ -493,7 +492,7 @@ class FirestoreGTORepository @Inject constructor(
             val progress = getUserProgress(userId).getOrThrow()
             Result.success(progress.completedTests)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get completed tests")
+            Log.e(TAG, "Failed to get completed tests", e)
             Result.failure(e)
         }
     }
@@ -503,7 +502,7 @@ class FirestoreGTORepository @Inject constructor(
             val progress = getUserProgress(userId).getOrThrow()
             Result.success(progress.getNextTest())
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get next available test")
+            Log.e(TAG, "Failed to get next available test", e)
             Result.failure(e)
         }
     }
@@ -539,7 +538,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(Unit)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to record test usage")
+            Log.e(TAG, "Failed to record test usage", e)
             Result.failure(e)
         }
     }
@@ -553,7 +552,7 @@ class FirestoreGTORepository @Inject constructor(
             val count = progress.testsUsedThisMonth[testType] ?: 0
             Result.success(count)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get test usage count")
+            Log.e(TAG, "Failed to get test usage count", e)
             Result.failure(e)
         }
     }
@@ -572,7 +571,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(Unit)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to reset monthly usage")
+            Log.e(TAG, "Failed to reset monthly usage", e)
             Result.failure(e)
         }
     }
@@ -605,7 +604,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(result)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get test result")
+            Log.e(TAG, "Failed to get test result", e)
             Result.failure(e)
         }
     }
@@ -622,14 +621,14 @@ class FirestoreGTORepository @Inject constructor(
                     try {
                         getTestResult(submission.id).getOrNull()
                     } catch (e: Exception) {
-                        ErrorLogger.log(e, "Error getting result for submission: ${submission.id}")
+                        Log.e(TAG, "Error getting result for submission: ${submission.id}", e)
                         null
                     }
                 }
             
             Result.success(results)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get user results")
+            Log.e(TAG, "Failed to get user results", e)
             Result.failure(e)
         }
     }
@@ -649,7 +648,7 @@ class FirestoreGTORepository @Inject constructor(
             
             Result.success(olqAverages)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to get average OLQ scores")
+            Log.e(TAG, "Failed to get average OLQ scores", e)
             Result.failure(e)
         }
     }
@@ -996,7 +995,7 @@ class FirestoreGTORepository @Inject constructor(
             try {
                 parseObstacleConfig(item)
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to parse ObstacleConfig")
+                Log.e(TAG, "Failed to parse ObstacleConfig", e)
                 null
             }
         }
@@ -1030,7 +1029,7 @@ class FirestoreGTORepository @Inject constructor(
             try {
                 parseObstacleSolution(item)
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to parse ObstacleSolution")
+                Log.e(TAG, "Failed to parse ObstacleSolution", e)
                 null
             }
         }

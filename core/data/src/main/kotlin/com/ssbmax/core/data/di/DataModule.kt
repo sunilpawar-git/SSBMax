@@ -16,8 +16,10 @@ import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
+import com.ssbmax.core.data.repository.FirestoreGTORepository
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
+import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.repository.TestRepository
 import dagger.Binds
@@ -216,5 +218,11 @@ abstract class RepositoryModule {
     abstract fun bindInterviewRepository(
         impl: com.ssbmax.core.data.repository.FirestoreInterviewRepository
     ): com.ssbmax.core.domain.repository.InterviewRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindGTORepository(
+        impl: FirestoreGTORepository
+    ): GTORepository
 }
 

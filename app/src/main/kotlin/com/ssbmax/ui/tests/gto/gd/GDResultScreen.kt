@@ -1,6 +1,5 @@
 package com.ssbmax.ui.tests.gto.gd
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,16 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.R
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQCategory
+import com.ssbmax.ui.tests.gto.common.*
+import com.ssbmax.ui.tests.gto.gd.*
 
 /**
  * Group Discussion Result Screen
@@ -114,7 +112,6 @@ fun GDResultScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Submission confirmation
                     item {
                         SubmissionConfirmationCard(
                             topic = uiState.submission!!.topic,
@@ -124,7 +121,6 @@ fun GDResultScreen(
                         )
                     }
                     
-                    // Analysis status
                     item {
                         when {
                             uiState.isAnalyzing -> AnalyzingCard()
@@ -135,7 +131,6 @@ fun GDResultScreen(
                         }
                     }
                     
-                    // Overall score (if completed)
                     if (uiState.isCompleted && uiState.result != null) {
                         item {
                             OverallScoreCard(
@@ -145,7 +140,6 @@ fun GDResultScreen(
                             )
                         }
                         
-                        // Top OLQs (strengths)
                         item {
                             Text(
                                 text = "Top Strengths",
@@ -158,7 +152,6 @@ fun GDResultScreen(
                             OLQScoreCard(olq = olq, score = score, isStrength = true)
                         }
                         
-                        // Improvement areas
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -172,7 +165,6 @@ fun GDResultScreen(
                             OLQScoreCard(olq = olq, score = score, isStrength = false)
                         }
                         
-                        // All OLQ scores grouped by category
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -182,7 +174,6 @@ fun GDResultScreen(
                             )
                         }
                         
-                        // Group OLQs by category
                         OLQCategory.entries.forEach { category ->
                             item {
                                 Text(
@@ -202,7 +193,6 @@ fun GDResultScreen(
                             }
                         }
                         
-                        // Response preview
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -238,355 +228,3 @@ fun GDResultScreen(
     }
 }
 
-@Composable
-private fun SubmissionConfirmationCard(
-    topic: String,
-    wordCount: Int,
-    timeSpent: String,
-    status: GTOSubmissionStatus
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Test Submitted Successfully!",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            HorizontalDivider()
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                InfoItem(label = "Word Count", value = "$wordCount words")
-                InfoItem(label = "Time Spent", value = timeSpent)
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnalyzingCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CircularProgressIndicator(modifier = Modifier.size(32.dp))
-            Column {
-                Text(
-                    text = "Analyzing Your Response...",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "AI is evaluating your response across 15 Officer-Like Qualities. This usually takes 30-60 seconds.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnalysisFailedCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Error,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
-            Column {
-                Text(
-                    text = "Analysis Failed",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "AI analysis could not be completed. Please contact support or retake the test.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun OverallScoreCard(
-    overallScore: Float,
-    overallRating: String,
-    aiConfidence: Int
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = when (overallRating) {
-                "Exceptional", "Excellent" -> MaterialTheme.colorScheme.tertiaryContainer
-                "Very Good", "Good" -> MaterialTheme.colorScheme.primaryContainer
-                "Average" -> MaterialTheme.colorScheme.secondaryContainer
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Overall Performance",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Score circle
-            Text(
-                text = "%.1f".format(overallScore),
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Text(
-                text = "out of 10",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = overallRating,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "AI Confidence: $aiConfidence%",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Note: SSB uses 1-10 scale where LOWER scores indicate BETTER performance",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun OLQScoreCard(
-    olq: OLQ,
-    score: com.ssbmax.core.domain.model.interview.OLQScore,
-    isStrength: Boolean?
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = when (isStrength) {
-                true -> MaterialTheme.colorScheme.tertiaryContainer
-                false -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                null -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = olq.displayName,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = score.rating,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = when (score.rating) {
-                            "Exceptional", "Excellent" -> MaterialTheme.colorScheme.tertiary
-                            "Very Good", "Good" -> MaterialTheme.colorScheme.primary
-                            "Average" -> MaterialTheme.colorScheme.onSurfaceVariant
-                            else -> MaterialTheme.colorScheme.error
-                        }
-                    )
-                }
-                
-                // Score badge
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = when (score.score) {
-                        in 1..3 -> MaterialTheme.colorScheme.tertiary
-                        in 4..6 -> MaterialTheme.colorScheme.primary
-                        7 -> MaterialTheme.colorScheme.onSurfaceVariant
-                        else -> MaterialTheme.colorScheme.error
-                    }
-                ) {
-                    Text(
-                        text = "${score.score}",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.surface
-                    )
-                }
-            }
-            
-            if (score.reasoning.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = score.reasoning,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResponsePreviewCard(
-    topic: String,
-    response: String,
-    wordCount: Int
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Topic",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = topic,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            HorizontalDivider()
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Your Response",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "$wordCount words",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = response,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-private fun InfoItem(
-    label: String,
-    value: String
-) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    }
-}

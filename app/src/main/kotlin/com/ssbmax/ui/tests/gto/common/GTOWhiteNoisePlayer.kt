@@ -57,7 +57,9 @@ class GTOWhiteNoisePlayer @Inject constructor(
                 isLooping = true
                 setVolume(NOISE_VOLUME, NOISE_VOLUME)
                 start()
-                isPlaying = true
+            }
+            isPlaying = mediaPlayer != null
+            if (isPlaying) {
                 Log.d(TAG, "🔊 White noise audio started (${NOISE_VOLUME * 100}% volume)")
             }
             

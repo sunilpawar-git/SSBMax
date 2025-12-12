@@ -91,9 +91,16 @@ sealed class SSBMaxDestinations(val route: String) {
         fun createRoute(submissionId: String) = "test/gto/gd/result/$submissionId"
     }
     
-    // NOTE: Remaining 7 GTO test destinations will be added when their screens are implemented:
+    // GTO - Lecturette (IMPLEMENTED)
+    data object GTOLecturetteTest : SSBMaxDestinations("test/gto/lecturette/{testId}") {
+        fun createRoute(testId: String) = "test/gto/lecturette/$testId"
+    }
+    data object GTOLecturetteResult : SSBMaxDestinations("test/gto/lecturette/result/{submissionId}") {
+        fun createRoute(submissionId: String) = "test/gto/lecturette/result/$submissionId"
+    }
+    
+    // NOTE: Remaining 6 GTO test destinations will be added when their screens are implemented:
     // - GTOGPETest/Result (Group Planning Exercise)
-    // - GTOLecturetteTest/Result (Lecturette)
     // - GTOPGTTest/Result (Progressive Group Task)
     // - GTOHGTTest/Result (Half Group Task)
     // - GTOGORTest/Result (Group Obstacle Race)
