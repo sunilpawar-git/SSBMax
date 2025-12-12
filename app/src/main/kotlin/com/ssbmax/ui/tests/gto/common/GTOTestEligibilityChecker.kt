@@ -42,7 +42,7 @@ class GTOTestEligibilityChecker(
             }
             
             val eligibility = subscriptionManager.canTakeTest(testType, userId)
-            when (eligibility) {
+            return when (eligibility) {
                 is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
                     val message = "You've completed ${eligibility.usedCount} of ${eligibility.limit} tests this month on the ${eligibility.tier.displayName} plan. Your limit resets on ${eligibility.resetsAt}."
                     EligibilityResult.LimitReached(message)
