@@ -20,6 +20,7 @@ import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.GTOAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,6 +63,9 @@ class LecturetteTestViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(LecturetteTestUiState())
     val uiState: StateFlow<LecturetteTestUiState> = _uiState.asStateFlow()
+    
+    // Track timer job to prevent duplicate coroutines
+    private var timerJob: Job? = null
     
     companion object {
         private const val TAG = "LecturetteViewModel"
@@ -227,7 +231,10 @@ class LecturetteTestViewModel @Inject constructor(
      * Start 3-minute timer
      */
     private fun startTimer() {
-        viewModelScope.launch {
+        // Cancel any existing timer to prevent duplicate coroutines
+        timerJob?.cancel()
+        
+        timerJob = viewModelScope.launch {
             android.util.Log.d(TAG, "⏱️ Timer started: ${SPEECH_TIME_SECONDS}s")
             
             while (_uiState.value.timeRemaining > 0 && _uiState.value.phase == LecturettePhase.SPEECH) {
@@ -402,6 +409,8 @@ class LecturetteTestViewModel @Inject constructor(
     
     override fun onCleared() {
         super.onCleared()
+        // Cancel timer job to prevent memory leaks
+        timerJob?.cancel()
         android.util.Log.d(TAG, "🧹 ViewModel cleared")
     }
 }
