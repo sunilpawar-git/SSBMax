@@ -34,6 +34,16 @@ interface SubmissionRepository {
     suspend fun submitPPDT(submission: PPDTSubmission, batchId: String? = null): Result<String>
 
     /**
+     * Submit GD test
+     */
+    suspend fun submitGD(submission: com.ssbmax.core.domain.model.gto.GTOSubmission.GDSubmission, batchId: String? = null): Result<String>
+
+    /**
+     * Submit Lecturette test
+     */
+    suspend fun submitLecturette(submission: com.ssbmax.core.domain.model.gto.GTOSubmission.LecturetteSubmission, batchId: String? = null): Result<String>
+    
+    /**
      * Submit OIR test
      */
     suspend fun submitOIR(submission: OIRSubmission, batchId: String? = null): Result<String>
@@ -46,7 +56,7 @@ interface SubmissionRepository {
     /**
      * Submit GPE test
      */
-    suspend fun submitGPE(submission: GPESubmission, batchId: String? = null): Result<String>
+    suspend fun submitGPE(submission: com.ssbmax.core.domain.model.gto.GTOSubmission.GPESubmission, batchId: String? = null): Result<String>
 
     /**
      * Get submission by ID

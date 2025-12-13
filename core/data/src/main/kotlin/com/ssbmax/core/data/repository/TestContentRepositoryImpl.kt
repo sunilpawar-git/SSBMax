@@ -40,6 +40,15 @@ class TestContentRepositoryImpl @Inject constructor(
 
     private val testsCollection = firestore.collection("tests")
     private val sessionsCollection = firestore.collection("test_sessions")
+    
+    companion object {
+        private const val TAG = "TestContent"
+        private const val COLLECTION_TEST_CONTENT = "test_content"
+        private const val PATH_GTO = "gto"
+        private const val PATH_TOPICS = "topics"
+        private const val PATH_BATCHES = "batches"
+        private const val DEFAULT_BATCH_ID = "batch_001"
+    }
 
     /**
      * Legacy method for OIR question fetching.
@@ -385,6 +394,48 @@ class TestContentRepositoryImpl @Inject constructor(
         tatCache.clear()
         watCache.clear()
         srtCache.clear()
+    }
+
+    override suspend fun getRandomGDTopic(): Result<String> {
+        return try {
+            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/gd/$PATH_BATCHES/$DEFAULT_BATCH_ID"
+            val doc = firestore.document(path).get().await()
+            
+            val topics = doc.get("topics") as? List<*>
+            val topicObjects = topics?.filterIsInstance<Map<*, *>>() ?: emptyList()
+            
+            if (topicObjects.isEmpty()) {
+                return Result.failure(Exception("No GD topics available"))
+            }
+            
+            val randomTopic = topicObjects.random()
+            val topicText = randomTopic["topic"] as? String 
+                ?: return Result.failure(Exception("Invalid topic format"))
+            
+            Result.success(topicText)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get random GD topic", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun getRandomLecturetteTopics(count: Int): Result<List<String>> {
+        return try {
+            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/lecturette/$PATH_BATCHES/$DEFAULT_BATCH_ID"
+            val doc = firestore.document(path).get().await()
+            
+            val topics = doc.get("topics") as? List<*>
+            val topicStrings = topics?.filterIsInstance<String>() ?: emptyList()
+            
+            if (topicStrings.size < count) {
+                return Result.failure(Exception("Not enough Lecturette topics available"))
+            }
+            
+            Result.success(topicStrings.shuffled().take(count))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get random Lecturette topics", e)
+            Result.failure(e)
+        }
     }
 
 

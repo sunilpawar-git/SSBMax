@@ -29,7 +29,8 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreGTORepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val taskCacheManager: GTOTaskCacheManager
+    private val taskCacheManager: GTOTaskCacheManager,
+    private val testContentRepository: com.ssbmax.core.domain.repository.TestContentRepository
 ) : GTORepository {
     
     companion object {
@@ -67,7 +68,7 @@ class FirestoreGTORepository @Inject constructor(
         return try {
             when (testType) {
                 GTOTestType.GROUP_DISCUSSION -> {
-                    val topic = getRandomGDTopic().getOrThrow()
+                    val topic = testContentRepository.getRandomGDTopic().getOrThrow()
                     Result.success(
                         GTOTest.GDTest(
                             id = UUID.randomUUID().toString(),
@@ -81,7 +82,11 @@ class FirestoreGTORepository @Inject constructor(
                 }
                 
                 GTOTestType.LECTURETTE -> {
-                    val topics = getRandomLecturetteTopics(4).getOrThrow()
+                    // Lecturette topics are now fetched directly by TestContentRepository
+                    // But for the Test object creation here, we might need them?
+                    // Actually, getRandomLecturetteTopics(count) in TestContentRepository returns a list.
+                    // Let's use it.
+                    val topics = testContentRepository.getRandomLecturetteTopics(4).getOrThrow()
                     Result.success(
                         GTOTest.LecturetteTest(
                             id = UUID.randomUUID().toString(),
@@ -113,48 +118,8 @@ class FirestoreGTORepository @Inject constructor(
         }
     }
     
-    override suspend fun getRandomGDTopic(): Result<String> {
-        return try {
-            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/gd/$PATH_BATCHES/$DEFAULT_BATCH_ID"
-            val doc = firestore.document(path).get().await()
-            
-            val topics = doc.get("topics") as? List<*>
-            val topicObjects = topics?.filterIsInstance<Map<*, *>>() ?: emptyList()
-            
-            if (topicObjects.isEmpty()) {
-                return Result.failure(Exception("No GD topics available"))
-            }
-            
-            val randomTopic = topicObjects.random()
-            val topicText = randomTopic["topic"] as? String 
-                ?: return Result.failure(Exception("Invalid topic format"))
-            
-            Result.success(topicText)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get random GD topic", e)
-            Result.failure(e)
-        }
-    }
-    
-    override suspend fun getRandomLecturetteTopics(count: Int): Result<List<String>> {
-        return try {
-            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/lecturette/$PATH_BATCHES/$DEFAULT_BATCH_ID"
-            val doc = firestore.document(path).get().await()
-            
-            val topics = doc.get("topics") as? List<*>
-            val topicStrings = topics?.filterIsInstance<String>() ?: emptyList()
-            
-            if (topicStrings.size < count) {
-                return Result.failure(Exception("Not enough Lecturette topics available"))
-            }
-            
-            Result.success(topicStrings.shuffled().take(count))
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get random Lecturette topics", e)
-            Result.failure(e)
-        }
-    }
-    
+    // getRandomGDTopic and getRandomLecturetteTopics moved to TestContentRepository
+
     override suspend fun getRandomGPEScenario(): Result<GTOTest.GPETest> {
         return try {
             val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_SCENARIOS/gpe/$PATH_BATCHES/$DEFAULT_BATCH_ID"
@@ -224,22 +189,7 @@ class FirestoreGTORepository @Inject constructor(
     
     // ==================== Submission Management ====================
     
-    override suspend fun submitTest(submission: GTOSubmission): Result<String> {
-        return try {
-            val submissionMap = submissionToMap(submission)
-            
-            firestore.collection(COLLECTION_GTO_SUBMISSIONS)
-                .document(submission.id)
-                .set(submissionMap)
-                .await()
-            
-            Log.d(TAG, "Submitted GTO test: ${submission.testType}, ID: ${submission.id}")
-            Result.success(submission.id)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to submit GTO test", e)
-            Result.failure(e)
-        }
-    }
+    // submitTest moved to SubmissionRepository
     
     override suspend fun getSubmission(submissionId: String): Result<GTOSubmission> {
         return try {
@@ -816,69 +766,8 @@ class FirestoreGTORepository @Inject constructor(
         }
     }
     
-    private fun submissionToMap(submission: GTOSubmission): Map<String, Any> {
-        val baseMap = mutableMapOf<String, Any>(
-            "id" to submission.id,
-            FIELD_USER_ID to submission.userId,
-            FIELD_TEST_ID to submission.testId,
-            FIELD_TEST_TYPE to submission.testType.name,
-            FIELD_SUBMITTED_AT to submission.submittedAt,
-            "timeSpent" to submission.timeSpent,
-            FIELD_STATUS to submission.status.name,
-            FIELD_OLQ_SCORES to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
-                mapOf(
-                    "score" to entry.value.score,
-                    "confidence" to entry.value.confidence,
-                    "reasoning" to entry.value.reasoning
-                )
-            }
-        )
-        
-        when (submission) {
-            is GTOSubmission.GDSubmission -> {
-                baseMap["topic"] = submission.topic
-                baseMap["response"] = submission.response
-                baseMap["wordCount"] = submission.wordCount
-            }
-            is GTOSubmission.GPESubmission -> {
-                baseMap["imageUrl"] = submission.imageUrl
-                baseMap["scenario"] = submission.scenario
-                baseMap["plan"] = submission.plan
-                baseMap["characterCount"] = submission.characterCount
-            }
-            is GTOSubmission.LecturetteSubmission -> {
-                baseMap["topicChoices"] = submission.topicChoices
-                baseMap["selectedTopic"] = submission.selectedTopic
-                baseMap["speechTranscript"] = submission.speechTranscript
-                baseMap["wordCount"] = submission.wordCount
-            }
-            is GTOSubmission.PGTSubmission -> {
-                baseMap["obstacles"] = submission.obstacles.map { obstacleToMap(it) }
-                baseMap["solutions"] = submission.solutions.map { solutionToMap(it) }
-            }
-            is GTOSubmission.HGTSubmission -> {
-                baseMap["obstacle"] = obstacleToMap(submission.obstacle)
-                baseMap["solution"] = solutionToMap(submission.solution)
-                baseMap["leadershipDecisions"] = submission.leadershipDecisions
-            }
-            is GTOSubmission.GORSubmission -> {
-                baseMap["obstacles"] = submission.obstacles.map { obstacleToMap(it) }
-                baseMap["coordinationStrategy"] = submission.coordinationStrategy
-            }
-            is GTOSubmission.IOSubmission -> {
-                baseMap["obstacles"] = submission.obstacles.map { obstacleToMap(it) }
-                baseMap["approach"] = submission.approach
-            }
-            is GTOSubmission.CTSubmission -> {
-                baseMap["scenario"] = submission.scenario
-                baseMap["obstacle"] = obstacleToMap(submission.obstacle)
-                baseMap["commandDecisions"] = submission.commandDecisions
-                baseMap["resourceAllocation"] = submission.resourceAllocation
-            }
-        }
-        
-        return baseMap
-    }
+    // submissionToMap removed as it's no longer used within this repository for submission creation
+    // mapToSubmission is used for simple retrieval but logic should eventually move to SubmissionRepository
     
     private fun mapToSubmission(data: Map<String, Any>): GTOSubmission {
         val testTypeStr = data[FIELD_TEST_TYPE] as? String 

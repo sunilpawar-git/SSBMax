@@ -43,6 +43,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LecturetteTestViewModel @Inject constructor(
     private val gtoRepository: GTORepository,
+    private val testContentRepository: com.ssbmax.core.domain.repository.TestContentRepository,
     private val eligibilityChecker: GTOTestEligibilityChecker,
     private val submissionHelper: GTOTestSubmissionHelper
 ) : ViewModel() {
@@ -91,7 +92,7 @@ class LecturetteTestViewModel @Inject constructor(
                     }
                     is GTOTestEligibilityChecker.EligibilityResult.Eligible -> {
                         _uiState.update { it.copy(loadingMessage = "Loading topics...") }
-                        val topicsResult = gtoRepository.getRandomLecturetteTopics(TOPIC_COUNT)
+                        val topicsResult = testContentRepository.getRandomLecturetteTopics(TOPIC_COUNT)
                         if (topicsResult.isFailure) {
                             _uiState.update { it.copy(
                                 isLoading = false,

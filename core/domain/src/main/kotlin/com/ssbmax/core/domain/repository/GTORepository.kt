@@ -31,14 +31,23 @@ interface GTORepository {
     suspend fun getTestById(testId: String): Result<GTOTest>
     
     /**
-     * Get random Group Discussion topic
+     * Submit ANY GTO test result
+     * @return Submission ID
      */
-    suspend fun getRandomGDTopic(): Result<String>
+    // Moved to SubmissionRepository
+    // suspend fun submitTest(submission: GTOSubmission): Result<String>
     
     /**
-     * Get 4 random Lecturette topics for selection
+     * Get 8 random Lecturette topics
      */
-    suspend fun getRandomLecturetteTopics(count: Int = 4): Result<List<String>>
+    // Moved to TestContentRepository
+    // suspend fun getRandomLecturetteTopics(count: Int = 4): Result<List<String>>
+    
+    /**
+     * Get random GD topic
+     */
+    // Moved to TestContentRepository
+    // suspend fun getRandomGDTopic(): Result<String>
     
     /**
      * Get random GPE scenario with image
@@ -56,7 +65,7 @@ interface GTORepository {
      * Submit a GTO test response
      * Returns submission ID for navigation
      */
-    suspend fun submitTest(submission: GTOSubmission): Result<String>
+    // submitTest moved to SubmissionRepository
     
     /**
      * Get submission by ID

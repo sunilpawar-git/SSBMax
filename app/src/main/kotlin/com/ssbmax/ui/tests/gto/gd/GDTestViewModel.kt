@@ -41,6 +41,7 @@ import javax.inject.Inject
 @HiltViewModel
 class GDTestViewModel @Inject constructor(
     private val gtoRepository: GTORepository,
+    private val testContentRepository: com.ssbmax.core.domain.repository.TestContentRepository,
     private val eligibilityChecker: GTOTestEligibilityChecker,
     private val submissionHelper: GTOTestSubmissionHelper
 ) : ViewModel() {
@@ -89,7 +90,8 @@ class GDTestViewModel @Inject constructor(
                     }
                     is GTOTestEligibilityChecker.EligibilityResult.Eligible -> {
                         _uiState.update { it.copy(loadingMessage = "Loading topic...") }
-                        val topicResult = gtoRepository.getRandomGDTopic()
+                        
+                        val topicResult = testContentRepository.getRandomGDTopic()
                         if (topicResult.isFailure) {
                             _uiState.update { it.copy(
                                 isLoading = false,
@@ -104,6 +106,7 @@ class GDTestViewModel @Inject constructor(
                             ) }
                             return@launch
                         }
+                        
                         _uiState.update { it.copy(
                             isLoading = false,
                             loadingMessage = null,

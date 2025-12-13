@@ -11,11 +11,14 @@ import com.ssbmax.workers.GTOAnalysisWorker
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.MutableStateFlow
 
+import com.ssbmax.core.domain.repository.SubmissionRepository
+
 /**
  * Helper for submitting GTO tests
  */
 class GTOTestSubmissionHelper(
     private val gtoRepository: GTORepository,
+    private val submissionRepository: SubmissionRepository,
     private val workManager: WorkManager
 ) {
     
@@ -29,7 +32,19 @@ class GTOTestSubmissionHelper(
         try {
             val submissionId = submission.id
             
-            val submitResult = gtoRepository.submitTest(submission)
+            val submitResult = when (submission) {
+                is GTOSubmission.GDSubmission -> submissionRepository.submitGD(submission)
+                is GTOSubmission.LecturetteSubmission -> submissionRepository.submitLecturette(submission)
+                is GTOSubmission.GPESubmission -> submissionRepository.submitGPE(submission)
+                // For other types, temporarily fallback or duplicate logic if generic submit not available
+                // Assuming we only strictly support reviewed types for now
+                else -> {
+                     // Temporary fallback to old repo if supported, or error
+                     // effectively assuming new types will be added to SubmissionRepository
+                     throw NotImplementedError("Submission type ${submission.testType} not yet migrated to SubmissionRepository")
+                }
+            }
+
             if (submitResult.isFailure) {
                 throw submitResult.exceptionOrNull() ?: Exception("Unknown submission error")
             }

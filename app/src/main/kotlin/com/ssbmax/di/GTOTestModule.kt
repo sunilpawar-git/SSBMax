@@ -46,10 +46,12 @@ object GTOTestModule {
     @Singleton
     fun provideGTOTestSubmissionHelper(
         gtoRepository: GTORepository,
+        submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
         workManager: WorkManager
     ): GTOTestSubmissionHelper {
         return GTOTestSubmissionHelper(
             gtoRepository = gtoRepository,
+            submissionRepository = submissionRepository,
             workManager = workManager
         )
     }

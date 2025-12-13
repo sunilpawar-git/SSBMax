@@ -262,28 +262,128 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     /**
      * Submit GPE test
      */
-    override suspend fun submitGPE(submission: GPESubmission, batchId: String?): Result<String> {
+    override suspend fun submitGPE(
+        submission: com.ssbmax.core.domain.model.gto.GTOSubmission.GPESubmission, 
+        batchId: String?
+    ): Result<String> {
         return try {
             val submissionMap = mapOf(
-                FIELD_ID to submission.submissionId,
+                FIELD_ID to submission.id,
                 FIELD_USER_ID to submission.userId,
-                FIELD_TEST_ID to submission.questionId,
+                FIELD_TEST_ID to submission.testId,
                 FIELD_TEST_TYPE to TestType.GTO_GPE.name,
                 FIELD_STATUS to submission.status.name,
                 FIELD_SUBMITTED_AT to submission.submittedAt,
                 FIELD_GRADED_BY_INSTRUCTOR_ID to null,
                 FIELD_GRADING_TIMESTAMP to null,
                 FIELD_BATCH_ID to batchId,
-                FIELD_DATA to submission.toMap()
+                FIELD_DATA to mapOf(
+                    "imageUrl" to submission.imageUrl,
+                    "scenario" to submission.scenario,
+                    "plan" to submission.plan,
+                    "characterCount" to submission.characterCount,
+                    "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
+                        mapOf(
+                            "score" to entry.value.score,
+                            "confidence" to entry.value.confidence,
+                            "reasoning" to entry.value.reasoning
+                        )
+                    }
+                )
             )
 
-            submissionsCollection.document(submission.submissionId)
+            submissionsCollection.document(submission.id)
                 .set(submissionMap, SetOptions.merge())
                 .await()
 
-            Result.success(submission.submissionId)
+            Result.success(submission.id)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to submit GPE: ${e.message}", e))
+        }
+    }
+    
+    /**
+     * Submit GD test
+     */
+    override suspend fun submitGD(
+        submission: com.ssbmax.core.domain.model.gto.GTOSubmission.GDSubmission, 
+        batchId: String?
+    ): Result<String> {
+        return try {
+            val submissionMap = mapOf(
+                FIELD_ID to submission.id,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.testId,
+                FIELD_TEST_TYPE to TestType.GTO_GD.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to null,
+                FIELD_GRADING_TIMESTAMP to null,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to mapOf(
+                    "topic" to submission.topic,
+                    "response" to submission.response,
+                    "wordCount" to submission.wordCount,
+                    "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
+                        mapOf(
+                            "score" to entry.value.score,
+                            "confidence" to entry.value.confidence,
+                            "reasoning" to entry.value.reasoning
+                        )
+                    }
+                )
+            )
+
+            submissionsCollection.document(submission.id)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Result.success(submission.id)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to submit GD: ${e.message}", e))
+        }
+    }
+
+    /**
+     * Submit Lecturette test
+     */
+    override suspend fun submitLecturette(
+        submission: com.ssbmax.core.domain.model.gto.GTOSubmission.LecturetteSubmission, 
+        batchId: String?
+    ): Result<String> {
+        return try {
+            val submissionMap = mapOf(
+                FIELD_ID to submission.id,
+                FIELD_USER_ID to submission.userId,
+                FIELD_TEST_ID to submission.testId,
+                FIELD_TEST_TYPE to TestType.GTO_LECTURETTE.name,
+                FIELD_STATUS to submission.status.name,
+                FIELD_SUBMITTED_AT to submission.submittedAt,
+                FIELD_GRADED_BY_INSTRUCTOR_ID to null,
+                FIELD_GRADING_TIMESTAMP to null,
+                FIELD_BATCH_ID to batchId,
+                FIELD_DATA to mapOf(
+                    "topicChoices" to submission.topicChoices,
+                    "selectedTopic" to submission.selectedTopic,
+                    "speechTranscript" to submission.speechTranscript,
+                    "wordCount" to submission.wordCount,
+                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
+                        mapOf(
+                            "score" to entry.value.score,
+                            "confidence" to entry.value.confidence,
+                            "reasoning" to entry.value.reasoning
+                        )
+                    }
+                )
+            )
+
+            submissionsCollection.document(submission.id)
+                .set(submissionMap, SetOptions.merge())
+                .await()
+
+            Result.success(submission.id)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to submit Lecturette: ${e.message}", e))
         }
     }
 

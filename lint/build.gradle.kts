@@ -10,16 +10,16 @@ java {
 
 dependencies {
     // Lint API dependencies
-    compileOnly("com.android.tools.lint:lint-api:31.5.1")
-    compileOnly("com.android.tools.lint:lint-checks:31.5.1")
+    compileOnly("com.android.tools.lint:lint-api:31.13.2")
+    compileOnly("com.android.tools.lint:lint-checks:31.13.2")
 
     // Kotlin standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24")
 
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")
-    testImplementation("com.android.tools.lint:lint:31.5.1")
-    testImplementation("com.android.tools.lint:lint-tests:31.5.1")
+    testImplementation("com.android.tools.lint:lint:31.13.2")
+    testImplementation("com.android.tools.lint:lint-tests:31.13.2")
     testImplementation("com.android.tools:testutils:31.5.1")
 }
 

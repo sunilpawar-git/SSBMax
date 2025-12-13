@@ -26,5 +26,7 @@
             "provider": "ollama",
             "model": "nomic-embed-text"
         }
-    }
+    },
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

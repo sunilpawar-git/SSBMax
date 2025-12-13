@@ -105,6 +105,16 @@ interface TestContentRepository {
     suspend fun hasActiveTestSession(userId: String, testId: String): Result<Boolean>
     
     /**
+     * Get random Group Discussion topic
+     */
+    suspend fun getRandomGDTopic(): Result<String>
+
+    /**
+     * Get 4 random Lecturette topics for selection
+     */
+    suspend fun getRandomLecturetteTopics(count: Int = 4): Result<List<String>>
+    
+    /**
      * Create test session for user
      * Required before accessing test content
      * @param userId User ID
