@@ -1,8 +1,8 @@
 package com.ssbmax.core.data.analytics
 
+import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.auth.FirebaseAuth
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -64,11 +64,12 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackTestStarted(testType: String, testId: String) {
         try {
-            firebaseAnalytics.logEvent(EVENT_TEST_STARTED) {
-                param(PARAM_TEST_TYPE, testType)
-                param(PARAM_TEST_ID, testId)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString(PARAM_TEST_TYPE, testType)
+                putString(PARAM_TEST_ID, testId)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_TEST_STARTED, bundle)
             Log.d(TAG, "📊 Test started: $testType")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track test started", e)
@@ -86,14 +87,15 @@ class AnalyticsManager @Inject constructor(
         questionsAnswered: Int
     ) {
         try {
-            firebaseAnalytics.logEvent(EVENT_TEST_COMPLETED) {
-                param(PARAM_TEST_TYPE, testType)
-                param(PARAM_TEST_ID, testId)
-                param(PARAM_SCORE, score.toDouble())
-                param(PARAM_TIME_SPENT, timeSpentSeconds)
-                param(PARAM_QUESTIONS_ANSWERED, questionsAnswered.toLong())
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString(PARAM_TEST_TYPE, testType)
+                putString(PARAM_TEST_ID, testId)
+                putDouble(PARAM_SCORE, score.toDouble())
+                putLong(PARAM_TIME_SPENT, timeSpentSeconds)
+                putLong(PARAM_QUESTIONS_ANSWERED, questionsAnswered.toLong())
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_TEST_COMPLETED, bundle)
             Log.d(TAG, "📊 Test completed: $testType, score=$score")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track test completed", e)
@@ -110,12 +112,13 @@ class AnalyticsManager @Inject constructor(
         limit: Int
     ) {
         try {
-            firebaseAnalytics.logEvent(EVENT_TEST_LIMIT_REACHED) {
-                param(PARAM_TEST_TYPE, testType)
-                param(PARAM_CURRENT_TIER, currentTier)
-                param("current_usage", currentUsage.toLong())
-                param("limit", limit.toLong())
+            val bundle = Bundle().apply {
+                putString(PARAM_TEST_TYPE, testType)
+                putString(PARAM_CURRENT_TIER, currentTier)
+                putLong("current_usage", currentUsage.toLong())
+                putLong("limit", limit.toLong())
             }
+            firebaseAnalytics.logEvent(EVENT_TEST_LIMIT_REACHED, bundle)
             Log.d(TAG, "📊 Test limit reached: $testType, tier=$currentTier")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track test limit reached", e)
@@ -127,10 +130,11 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackSubscriptionView(source: String) {
         try {
-            firebaseAnalytics.logEvent(EVENT_SUBSCRIPTION_VIEW) {
-                param(PARAM_SOURCE, source)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString(PARAM_SOURCE, source)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_SUBSCRIPTION_VIEW, bundle)
             Log.d(TAG, "📊 Subscription viewed from: $source")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track subscription view", e)
@@ -142,11 +146,12 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackUpgradeInitiated(fromTier: String, toTier: String, source: String) {
         try {
-            firebaseAnalytics.logEvent(EVENT_UPGRADE_INITIATED) {
-                param(PARAM_FROM_TIER, fromTier)
-                param(PARAM_TO_TIER, toTier)
-                param(PARAM_SOURCE, source)
+            val bundle = Bundle().apply {
+                putString(PARAM_FROM_TIER, fromTier)
+                putString(PARAM_TO_TIER, toTier)
+                putString(PARAM_SOURCE, source)
             }
+            firebaseAnalytics.logEvent(EVENT_UPGRADE_INITIATED, bundle)
             Log.d(TAG, "📊 Upgrade initiated: $fromTier → $toTier from $source")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track upgrade initiated", e)
@@ -158,21 +163,23 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackUpgradeCompleted(fromTier: String, toTier: String, priceInRupees: Int) {
         try {
-            firebaseAnalytics.logEvent(EVENT_UPGRADE_COMPLETED) {
-                param(PARAM_FROM_TIER, fromTier)
-                param(PARAM_TO_TIER, toTier)
-                param(FirebaseAnalytics.Param.VALUE, priceInRupees.toDouble())
-                param(FirebaseAnalytics.Param.CURRENCY, "INR")
+            val upgradeBundle = Bundle().apply {
+                putString(PARAM_FROM_TIER, fromTier)
+                putString(PARAM_TO_TIER, toTier)
+                putDouble(FirebaseAnalytics.Param.VALUE, priceInRupees.toDouble())
+                putString(FirebaseAnalytics.Param.CURRENCY, "INR")
             }
+            firebaseAnalytics.logEvent(EVENT_UPGRADE_COMPLETED, upgradeBundle)
             
             // Track as purchase event for revenue tracking
-            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.PURCHASE) {
-                param(FirebaseAnalytics.Param.ITEM_ID, "subscription_$toTier")
-                param(FirebaseAnalytics.Param.ITEM_NAME, "$toTier Subscription")
-                param(FirebaseAnalytics.Param.ITEM_CATEGORY, "Subscription")
-                param(FirebaseAnalytics.Param.VALUE, priceInRupees.toDouble())
-                param(FirebaseAnalytics.Param.CURRENCY, "INR")
+            val purchaseBundle = Bundle().apply {
+                putString(FirebaseAnalytics.Param.ITEM_ID, "subscription_$toTier")
+                putString(FirebaseAnalytics.Param.ITEM_NAME, "$toTier Subscription")
+                putString(FirebaseAnalytics.Param.ITEM_CATEGORY, "Subscription")
+                putDouble(FirebaseAnalytics.Param.VALUE, priceInRupees.toDouble())
+                putString(FirebaseAnalytics.Param.CURRENCY, "INR")
             }
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.PURCHASE, purchaseBundle)
             
             Log.d(TAG, "📊 💰 Upgrade completed: $fromTier → $toTier (₹$priceInRupees)")
         } catch (e: Exception) {
@@ -185,11 +192,12 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackStudyMaterialViewed(materialId: String, category: String) {
         try {
-            firebaseAnalytics.logEvent(EVENT_STUDY_MATERIAL_VIEWED) {
-                param(PARAM_MATERIAL_ID, materialId)
-                param(PARAM_MATERIAL_CATEGORY, category)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString(PARAM_MATERIAL_ID, materialId)
+                putString(PARAM_MATERIAL_CATEGORY, category)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_STUDY_MATERIAL_VIEWED, bundle)
             Log.d(TAG, "📊 Study material viewed: $category/$materialId")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track study material viewed", e)
@@ -201,20 +209,21 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackFeatureUsed(featureName: String, parameters: Map<String, Any> = emptyMap()) {
         try {
-            firebaseAnalytics.logEvent(EVENT_FEATURE_USED) {
-                param(PARAM_FEATURE_NAME, featureName)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString(PARAM_FEATURE_NAME, featureName)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
                 parameters.forEach { (key, value) ->
                     when (value) {
-                        is String -> param(key, value)
-                        is Long -> param(key, value)
-                        is Double -> param(key, value)
-                        is Int -> param(key, value.toLong())
-                        is Float -> param(key, value.toDouble())
-                        else -> param(key, value.toString())
+                        is String -> putString(key, value)
+                        is Long -> putLong(key, value)
+                        is Double -> putDouble(key, value)
+                        is Int -> putLong(key, value.toLong())
+                        is Float -> putDouble(key, value.toDouble())
+                        else -> putString(key, value.toString())
                     }
                 }
             }
+            firebaseAnalytics.logEvent(EVENT_FEATURE_USED, bundle)
             Log.d(TAG, "📊 Feature used: $featureName")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track feature used", e)
@@ -239,10 +248,11 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackScreenView(screenName: String, screenClass: String) {
         try {
-            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
-                param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
-                param(FirebaseAnalytics.Param.SCREEN_CLASS, screenClass)
+            val bundle = Bundle().apply {
+                putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+                putString(FirebaseAnalytics.Param.SCREEN_CLASS, screenClass)
             }
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle)
             Log.d(TAG, "📊 Screen view: $screenName")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track screen view", e)
@@ -254,11 +264,12 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackEngagement(durationSeconds: Long, activityType: String) {
         try {
-            firebaseAnalytics.logEvent("user_engagement") {
-                param("engagement_time_msec", durationSeconds * 1000)
-                param("activity_type", activityType)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putLong("engagement_time_msec", durationSeconds * 1000)
+                putString("activity_type", activityType)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent("user_engagement", bundle)
             Log.d(TAG, "📊 Engagement tracked: $activityType for ${durationSeconds}s")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track engagement", e)
@@ -276,10 +287,11 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackInterviewStarted(mode: String, tier: String) {
         try {
-            firebaseAnalytics.logEvent(EVENT_INTERVIEW_STARTED) {
-                param("interview_mode", mode)
-                param(PARAM_CURRENT_TIER, tier)
+            val bundle = Bundle().apply {
+                putString("interview_mode", mode)
+                putString(PARAM_CURRENT_TIER, tier)
             }
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_STARTED, bundle)
             Log.d(TAG, "📊 Interview started: mode=$mode, tier=$tier")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track interview started", e)
@@ -298,12 +310,13 @@ class AnalyticsManager @Inject constructor(
         thinkingTimeSec: Int
     ) {
         try {
-            firebaseAnalytics.logEvent(EVENT_INTERVIEW_QUESTION_ANSWERED) {
-                param("question_index", questionIndex.toLong())
-                param("total_questions", totalQuestions.toLong())
-                param("thinking_time_sec", thinkingTimeSec.toLong())
-                param("progress_percent", ((questionIndex + 1) * 100 / totalQuestions).toLong())
+            val bundle = Bundle().apply {
+                putLong("question_index", questionIndex.toLong())
+                putLong("total_questions", totalQuestions.toLong())
+                putLong("thinking_time_sec", thinkingTimeSec.toLong())
+                putLong("progress_percent", ((questionIndex + 1) * 100 / totalQuestions).toLong())
             }
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_QUESTION_ANSWERED, bundle)
             Log.d(TAG, "📊 Interview question answered: ${questionIndex + 1}/$totalQuestions")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track interview question answered", e)
@@ -318,12 +331,13 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackInterviewCompleted(mode: String, durationSec: Long, questionsAnswered: Int) {
         try {
-            firebaseAnalytics.logEvent(EVENT_INTERVIEW_COMPLETED) {
-                param("interview_mode", mode)
-                param("duration_sec", durationSec)
-                param("questions_answered", questionsAnswered.toLong())
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString("interview_mode", mode)
+                putLong("duration_sec", durationSec)
+                putLong("questions_answered", questionsAnswered.toLong())
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_COMPLETED, bundle)
             Log.d(TAG, "📊 Interview completed: mode=$mode, duration=${durationSec}s")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track interview completed", e)
@@ -338,13 +352,14 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackInterviewAbandoned(mode: String, questionIndex: Int, totalQuestions: Int) {
         try {
-            firebaseAnalytics.logEvent(EVENT_INTERVIEW_ABANDONED) {
-                param("interview_mode", mode)
-                param("abandoned_at_question", questionIndex.toLong())
-                param("total_questions", totalQuestions.toLong())
-                param("progress_percent", (questionIndex * 100 / totalQuestions).toLong())
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString("interview_mode", mode)
+                putLong("abandoned_at_question", questionIndex.toLong())
+                putLong("total_questions", totalQuestions.toLong())
+                putLong("progress_percent", (questionIndex * 100 / totalQuestions).toLong())
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_ABANDONED, bundle)
             Log.d(TAG, "📊 Interview abandoned at question ${questionIndex + 1}/$totalQuestions")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track interview abandoned", e)
@@ -358,11 +373,12 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackInterviewResultViewed(resultId: String, overallRating: Int) {
         try {
-            firebaseAnalytics.logEvent(EVENT_INTERVIEW_RESULT_VIEWED) {
-                param("result_id", resultId)
-                param("overall_rating", overallRating.toLong())
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString("result_id", resultId)
+                putLong("overall_rating", overallRating.toLong())
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_INTERVIEW_RESULT_VIEWED, bundle)
             Log.d(TAG, "📊 Interview result viewed: rating=$overallRating")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track interview result viewed", e)
@@ -377,12 +393,13 @@ class AnalyticsManager @Inject constructor(
      */
     fun trackTTSUsed(service: String, latencyMs: Long, success: Boolean) {
         try {
-            firebaseAnalytics.logEvent(EVENT_TTS_USED) {
-                param("tts_service", service)
-                param("latency_ms", latencyMs)
-                param("success", if (success) 1L else 0L)
-                param(PARAM_CURRENT_TIER, getCurrentUserTier())
+            val bundle = Bundle().apply {
+                putString("tts_service", service)
+                putLong("latency_ms", latencyMs)
+                putLong("success", if (success) 1L else 0L)
+                putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
+            firebaseAnalytics.logEvent(EVENT_TTS_USED, bundle)
             Log.d(TAG, "📊 TTS used: service=$service, latency=${latencyMs}ms, success=$success")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track TTS used", e)
