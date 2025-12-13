@@ -15,6 +15,7 @@ import dagger.hilt.android.EntryPointAccessors
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
+import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
 import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
 import com.ssbmax.ui.tests.gto.common.rememberWhiteNoiseState
 import com.ssbmax.ui.tests.gto.lecturette.*
@@ -69,12 +70,6 @@ fun LecturetteTestScreen(
         }
     }
     
-    // Navigate to result when completed
-    LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.submissionId != null) {
-            onTestComplete(uiState.submissionId!!, uiState.subscriptionType)
-        }
-    }
     
     // Cleanup on exit
     DisposableEffect(Unit) {
@@ -211,13 +206,10 @@ fun LecturetteTestScreen(
                         onSubmit = { viewModel.submitTest() }
                     )
                     LecturettePhase.SUBMITTED -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text("Submitting test...")
-                            }
-                        }
+                        GTOSubmissionSuccessScreen(
+                            testName = "Lecturette",
+                            onNavigateHome = onNavigateBack
+                        )
                     }
                 }
             }

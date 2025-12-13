@@ -38,8 +38,8 @@ class FirestoreGTORepository @Inject constructor(
         
         // Collection paths
         private const val COLLECTION_TEST_CONTENT = "test_content"
-        private const val COLLECTION_GTO_SUBMISSIONS = "gto_submissions"
-        private const val COLLECTION_USER_GTO_PROGRESS = "user_gto_progress"
+        private const val COLLECTION_GTO_SUBMISSIONS = "submissions"  // Changed from gto_submissions to match other tests
+        private const val COLLECTION_USER_GTO_PROGRESS = "user_progress"
         
         // Subcollection paths
         private const val PATH_GTO = "gto"
@@ -772,7 +772,14 @@ class FirestoreGTORepository @Inject constructor(
     private fun mapToSubmission(data: Map<String, Any>): GTOSubmission {
         val testTypeStr = data[FIELD_TEST_TYPE] as? String 
             ?: throw IllegalArgumentException("Missing test type")
-        val testType = GTOTestType.valueOf(testTypeStr)
+        
+        // Map from TestType enum values to GTOTestType enum values
+        val testType = when (testTypeStr) {
+            "GTO_GD", "GROUP_DISCUSSION" -> GTOTestType.GROUP_DISCUSSION
+            "GTO_LECTURETTE", "LECTURETTE" -> GTOTestType.LECTURETTE
+            "GTO_GPE", "GROUP_PLANNING_EXERCISE" -> GTOTestType.GROUP_PLANNING_EXERCISE
+            else -> throw IllegalArgumentException("Unknown GTO test type: $testTypeStr")
+        }
         
         val id = data["id"] as? String ?: ""
         val userId = data[FIELD_USER_ID] as? String ?: ""

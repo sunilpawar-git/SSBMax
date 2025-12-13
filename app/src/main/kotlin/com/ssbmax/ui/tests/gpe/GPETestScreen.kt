@@ -14,6 +14,7 @@ import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.gpe.components.*
 import com.ssbmax.ui.tests.gpe.components.phases.*
+import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
 
 /**
  * GPE Test Screen - Image viewing + Planning response
@@ -37,16 +38,7 @@ fun GPETestScreen(
         viewModel.loadTest(testId)
     }
 
-    // Handle navigation events (one-time events, consumed on collection)
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvents.collect { event ->
-            when (event) {
-                is com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult -> {
-                    onTestComplete(event.submissionId, event.subscriptionType)
-                }
-            }
-        }
-    }
+
 
     // Show limit reached dialog if needed
     if (uiState.isLimitReached) {
@@ -130,7 +122,10 @@ fun GPETestScreen(
                             onEdit = { viewModel.returnToPlanning() }
                         )
                         GPEPhase.SUBMITTED -> {
-                            // This shouldn't show, navigation happens in LaunchedEffect
+                            GTOSubmissionSuccessScreen(
+                                testName = "Group Planning Exercise",
+                                onNavigateHome = onNavigateBack
+                            )
                         }
                     }
                 }

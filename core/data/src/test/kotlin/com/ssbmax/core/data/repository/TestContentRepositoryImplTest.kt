@@ -51,6 +51,7 @@ class TestContentRepositoryImplTest {
         every { Log.v(any(), any()) } returns 0
         
         val mockPPDTImageCacheManager = mockk<PPDTImageCacheManager>(relaxed = true)
+        val mockGPEImageCacheManager = mockk<GPEImageCacheManager>(relaxed = true)
         val mockTATImageCacheManager = mockk<TATImageCacheManager>(relaxed = true)
         
         repository = TestContentRepositoryImpl(
@@ -59,6 +60,7 @@ class TestContentRepositoryImplTest {
             watWordCacheManager = mockWATCacheManager,
             srtSituationCacheManager = mockSRTCacheManager,
             ppdtImageCacheManager = mockPPDTImageCacheManager,
+            gpeImageCacheManager = mockGPEImageCacheManager,
             tatImageCacheManager = mockTATImageCacheManager
         )
         

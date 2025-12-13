@@ -15,6 +15,7 @@ import dagger.hilt.android.EntryPointAccessors
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
+import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
 import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
 import com.ssbmax.ui.tests.gto.common.rememberWhiteNoiseState
 import com.ssbmax.ui.tests.gto.gd.*
@@ -62,13 +63,6 @@ fun GDTestScreen(
         when (uiState.phase) {
             GDPhase.DISCUSSION -> whiteNoiseState.enable()
             else -> whiteNoiseState.disable()
-        }
-    }
-    
-    // Navigate to result when test is completed
-    LaunchedEffect(uiState.isCompleted) {
-        if (uiState.isCompleted && uiState.submissionId != null) {
-            onTestComplete(uiState.submissionId!!, uiState.subscriptionType)
         }
     }
     
@@ -202,13 +196,10 @@ fun GDTestScreen(
                         onSubmit = { viewModel.submitTest() }
                     )
                     GDPhase.SUBMITTED -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text("Submitting test...")
-                            }
-                        }
+                        GTOSubmissionSuccessScreen(
+                            testName = "Group Discussion",
+                            onNavigateHome = onNavigateBack
+                        )
                     }
                 }
             }

@@ -398,18 +398,21 @@ class TestContentRepositoryImpl @Inject constructor(
 
     override suspend fun getRandomGDTopic(): Result<String> {
         return try {
-            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/gd/$PATH_BATCHES/$DEFAULT_BATCH_ID"
+            // Use task_batches path to match GTOTaskCacheManager and security rules
+            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/task_batches/$DEFAULT_BATCH_ID"
             val doc = firestore.document(path).get().await()
             
-            val topics = doc.get("topics") as? List<*>
-            val topicObjects = topics?.filterIsInstance<Map<*, *>>() ?: emptyList()
+            // Get tasks array and filter for GD type
+            val tasks = doc.get("tasks") as? List<*>
+            val taskObjects = tasks?.filterIsInstance<Map<*, *>>() ?: emptyList()
+            val gdTasks = taskObjects.filter { it["taskType"] == "GD" }
             
-            if (topicObjects.isEmpty()) {
+            if (gdTasks.isEmpty()) {
                 return Result.failure(Exception("No GD topics available"))
             }
             
-            val randomTopic = topicObjects.random()
-            val topicText = randomTopic["topic"] as? String 
+            val randomTask = gdTasks.random()
+            val topicText = randomTask["title"] as? String 
                 ?: return Result.failure(Exception("Invalid topic format"))
             
             Result.success(topicText)
@@ -421,17 +424,22 @@ class TestContentRepositoryImpl @Inject constructor(
     
     override suspend fun getRandomLecturetteTopics(count: Int): Result<List<String>> {
         return try {
-            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/$PATH_TOPICS/lecturette/$PATH_BATCHES/$DEFAULT_BATCH_ID"
+            // Use task_batches path to match GTOTaskCacheManager and security rules
+            val path = "$COLLECTION_TEST_CONTENT/$PATH_GTO/task_batches/$DEFAULT_BATCH_ID"
             val doc = firestore.document(path).get().await()
             
-            val topics = doc.get("topics") as? List<*>
-            val topicStrings = topics?.filterIsInstance<String>() ?: emptyList()
+            // Get tasks array and filter for LECTURETTE type
+            val tasks = doc.get("tasks") as? List<*>
+            val taskObjects = tasks?.filterIsInstance<Map<*, *>>() ?: emptyList()
+            val lecturetteTasks = taskObjects.filter { it["taskType"] == "LECTURETTE" }
             
-            if (topicStrings.size < count) {
+            if (lecturetteTasks.size < count) {
                 return Result.failure(Exception("Not enough Lecturette topics available"))
             }
             
-            Result.success(topicStrings.shuffled().take(count))
+            // Extract titles from tasks
+            val topicTitles = lecturetteTasks.mapNotNull { it["title"] as? String }
+            Result.success(topicTitles.shuffled().take(count))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get random Lecturette topics", e)
             Result.failure(e)

@@ -342,14 +342,9 @@ class GPETestViewModel @Inject constructor(
                     subscriptionType = subscriptionType,
                     submission = submission
                 ) }
-
-                // Emit navigation event (one-time, consumed by screen)
-                _navigationEvents.trySend(
-                    TestNavigationEvent.NavigateToResult(
-                        submissionId = submissionId,
-                        subscriptionType = subscriptionType
-                    )
-                )
+                
+                // Success! User will see success screen and can navigate home
+                android.util.Log.d("GPETestViewModel", "✅ GPE submitted - showing success screen")
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"

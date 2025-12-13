@@ -1,0 +1,209 @@
+{
+    "batch_id": "batch_001",
+    "version": "1.0.0",
+    "task_count": 20,
+    "uploaded_at": "2025-12-13",
+    "description": "Base GTO task repository - Group Discussion and Lecturette topics",
+    "tasks": [
+        {
+            "id": "gd_001",
+            "taskType": "GD",
+            "title": "Impact of Social Media on Youth",
+            "description": "Discuss the positive and negative impacts of social media on today's youth and suggest measures for responsible usage.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "MEDIUM",
+            "category": "Current Affairs"
+        },
+        {
+            "id": "gd_002",
+            "taskType": "GD",
+            "title": "Climate Change and National Security",
+            "description": "Analyze how climate change poses threats to national security and discuss potential mitigation strategies.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "HARD",
+            "category": "Environment & Security"
+        },
+        {
+            "id": "gd_003",
+            "taskType": "GD",
+            "title": "Women in Combat Roles",
+            "description": "Discuss the advantages and challenges of inducting women in combat roles in the armed forces.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "MEDIUM",
+            "category": "Defense & Gender"
+        },
+        {
+            "id": "gd_004",
+            "taskType": "GD",
+            "title": "Digital India Initiative",
+            "description": "Evaluate the progress and challenges of the Digital India initiative and its impact on rural development.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "EASY",
+            "category": "Technology & Development"
+        },
+        {
+            "id": "gd_005",
+            "taskType": "GD",
+            "title": "Leadership Lessons from History",
+            "description": "Discuss key leadership lessons that can be learned from historical military leaders and their relevance today.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "MEDIUM",
+            "category": "Leadership & History"
+        },
+        {
+            "id": "gd_006",
+            "taskType": "GD",
+            "title": "Artificial Intelligence in Warfare",
+            "description": "Analyze the ethical implications and strategic advantages of using AI in modern warfare.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "HARD",
+            "category": "Technology & Ethics"
+        },
+        {
+            "id": "gd_007",
+            "taskType": "GD",
+            "title": "Youth Unemployment in India",
+            "description": "Discuss the causes of youth unemployment in India and suggest practical solutions.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "MEDIUM",
+            "category": "Economy & Society"
+        },
+        {
+            "id": "gd_008",
+            "taskType": "GD",
+            "title": "Border Security Challenges",
+            "description": "Examine the current challenges in securing India's borders and propose effective strategies.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "HARD",
+            "category": "Defense & Security"
+        },
+        {
+            "id": "gd_009",
+            "taskType": "GD",
+            "title": "Sports and Nation Building",
+            "description": "Discuss how sports can contribute to nation building and national integration.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "EASY",
+            "category": "Sports & Society"
+        },
+        {
+            "id": "gd_010",
+            "taskType": "GD",
+            "title": "Cyber Security Threats",
+            "description": "Analyze emerging cyber security threats to national infrastructure and discuss countermeasures.",
+            "instructions": "Engage in a constructive group discussion. Listen to others, present your viewpoints clearly, and work towards a consensus.",
+            "timeAllowedMinutes": 20,
+            "difficultyLevel": "HARD",
+            "category": "Technology & Security"
+        },
+        {
+            "id": "lect_001",
+            "taskType": "LECTURETTE",
+            "title": "Leadership in Crisis Situations",
+            "description": "Deliver a 3-minute talk on the qualities required for effective leadership during crisis situations.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "MEDIUM",
+            "category": "Leadership"
+        },
+        {
+            "id": "lect_002",
+            "taskType": "LECTURETTE",
+            "title": "Importance of Physical Fitness",
+            "description": "Speak about the importance of physical fitness for armed forces personnel.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "EASY",
+            "category": "Health & Fitness"
+        },
+        {
+            "id": "lect_003",
+            "taskType": "LECTURETTE",
+            "title": "Role of Technology in Modern Warfare",
+            "description": "Discuss how technology has transformed modern warfare and future implications.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "MEDIUM",
+            "category": "Technology & Defense"
+        },
+        {
+            "id": "lect_004",
+            "taskType": "LECTURETTE",
+            "title": "Importance of Discipline",
+            "description": "Explain the significance of discipline in personal and professional life.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "EASY",
+            "category": "Values & Ethics"
+        },
+        {
+            "id": "lect_005",
+            "taskType": "LECTURETTE",
+            "title": "India's Space Program",
+            "description": "Talk about India's achievements in space exploration and future missions.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "MEDIUM",
+            "category": "Science & Technology"
+        },
+        {
+            "id": "lect_006",
+            "taskType": "LECTURETTE",
+            "title": "Teamwork and Cooperation",
+            "description": "Discuss the importance of teamwork and cooperation in achieving common goals.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "EASY",
+            "category": "Teamwork"
+        },
+        {
+            "id": "lect_007",
+            "taskType": "LECTURETTE",
+            "title": "Environmental Conservation",
+            "description": "Speak about the need for environmental conservation and individual responsibility.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "MEDIUM",
+            "category": "Environment"
+        },
+        {
+            "id": "lect_008",
+            "taskType": "LECTURETTE",
+            "title": "Courage and Determination",
+            "description": "Discuss how courage and determination are essential qualities for success.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "EASY",
+            "category": "Values & Ethics"
+        },
+        {
+            "id": "lect_009",
+            "taskType": "LECTURETTE",
+            "title": "India-China Relations",
+            "description": "Analyze the current state of India-China relations and future prospects.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "HARD",
+            "category": "International Relations"
+        },
+        {
+            "id": "lect_010",
+            "taskType": "LECTURETTE",
+            "title": "Time Management",
+            "description": "Explain the importance of time management and strategies for effective time utilization.",
+            "instructions": "Prepare and deliver a structured 3-minute presentation. Include introduction, main points, and conclusion.",
+            "timeAllowedMinutes": 3,
+            "difficultyLevel": "EASY",
+            "category": "Personal Development"
+        }
+    ]
+}

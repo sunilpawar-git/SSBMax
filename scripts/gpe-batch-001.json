@@ -1,0 +1,129 @@
+{
+  "batch_id": "batch_001",
+  "version": "1.0.0",
+  "image_count": 9,
+  "uploaded_at": {
+    "_seconds": 1765646680,
+    "_nanoseconds": 435000000
+  },
+  "description": "GPE tactical scenario images - Base batch",
+  "images": [
+    {
+      "id": "gpe_001",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/1733733185.jpg",
+      "scenario": "River crossing with limited resources",
+      "imageDescription": "Tactical scenario showing a river with available resources for crossing",
+      "resources": "[\"2 planks\", \"3 ropes\", \"1 barrel\", \"4 logs\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "id": "gpe_002",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/9f46fa85c797c595f8e411ad8394b69b.jpg",
+      "scenario": "Mountain terrain navigation",
+      "imageDescription": "Navigate through mountainous terrain with obstacles",
+      "resources": "[\"1 rope\", \"2 hooks\", \"3 wooden poles\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "HARD"
+    },
+    {
+      "id": "gpe_003",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE-4.jpg",
+      "scenario": "Urban obstacle course",
+      "imageDescription": "Navigate through urban obstacles with team",
+      "resources": "[\"2 ladders\", \"4 ropes\", \"1 plank\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "id": "gpe_004",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE.jpg",
+      "scenario": "Bridge construction challenge",
+      "imageDescription": "Build a bridge across a gap using available materials",
+      "resources": "[\"3 planks\", \"2 ropes\", \"4 bamboo sticks\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "HARD"
+    },
+    {
+      "id": "gpe_005",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-4-2-2048.jpg",
+      "scenario": "Wall climbing exercise",
+      "imageDescription": "Scale a wall using limited equipment",
+      "resources": "[\"2 ropes\", \"1 ladder\", \"3 wooden blocks\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "id": "gpe_006",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-7.jpg",
+      "scenario": "Rescue operation simulation",
+      "imageDescription": "Rescue team members from difficult terrain",
+      "resources": "[\"1 stretcher\", \"3 ropes\", \"2 planks\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "HARD"
+    },
+    {
+      "id": "gpe_007",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-Map-1-1-scaled.jpg",
+      "scenario": "Supply transport challenge",
+      "imageDescription": "Transport supplies across obstacles",
+      "resources": "[\"2 barrels\", \"4 ropes\", \"3 planks\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "MEDIUM"
+    },
+    {
+      "id": "gpe_008",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/gpe1.jpg",
+      "scenario": "Trench crossing exercise",
+      "imageDescription": "Cross a trench using available materials",
+      "resources": "[\"2 planks\", \"2 ropes\", \"1 ladder\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "EASY"
+    },
+    {
+      "id": "gpe_009",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/map-reading.jpeg",
+      "scenario": "Team coordination task",
+      "imageDescription": "Coordinate team movement through obstacles",
+      "resources": "[\"3 ropes\", \"2 poles\", \"1 plank\"]",
+      "viewingTimeSeconds": 60,
+      "planningTimeSeconds": 1740,
+      "minCharacters": 500,
+      "maxCharacters": 2000,
+      "category": "Tactical",
+      "difficulty": "MEDIUM"
+    }
+  ]
+}
