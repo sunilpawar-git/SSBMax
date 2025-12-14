@@ -59,7 +59,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_9_10,
                 DatabaseMigrations.MIGRATION_10_11,
                 DatabaseMigrations.MIGRATION_11_12, // Add PIQ/SD usage columns
-                DatabaseMigrations.MIGRATION_12_13  // Add GPE image cache tables
+                DatabaseMigrations.MIGRATION_12_13, // Add GPE image cache tables
+                DatabaseMigrations.MIGRATION_13_14  // Add GPE solution column
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()

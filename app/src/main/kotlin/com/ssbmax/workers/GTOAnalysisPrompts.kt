@@ -86,10 +86,18 @@ Return ONLY the JSON object with exact enum names:
     }
     
     private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String {
+        val solutionSection = if (!submission.solution.isNullOrBlank()) {
+            """
+            
+            **Ideal/Suggested Scenario Solution**:
+            ${submission.solution}
+            """
+        } else ""
+
         return """
 You are analyzing a Group Planning Exercise (GPE) response for SSB GTO assessment.
 
-**Scenario**: ${submission.scenario}
+**Scenario**: ${submission.scenario}${solutionSection}
 **Candidate's Tactical Plan**:
 ${submission.plan}
 
@@ -138,6 +146,7 @@ Evaluate the candidate's tactical planning against ALL 15 Officer-Like Qualities
 - Does the plan show leadership and initiative?
 - Is there consideration of contingencies and risks?
 - Is the plan practical and achievable?
+- **Compare against the Ideal Solution provided (if any) for accuracy and completeness.**
 
 **CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
 Do NOT include any text like "Here is the analysis" or explanations.

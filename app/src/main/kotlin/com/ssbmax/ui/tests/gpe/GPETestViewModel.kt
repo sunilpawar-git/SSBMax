@@ -310,6 +310,7 @@ class GPETestViewModel @Inject constructor(
                     testId = session.questionId,
                     imageUrl = session.question.imageUrl,
                     scenario = session.question.scenario,
+                    solution = session.question.solution,
                     plan = session.planningResponse,
                     characterCount = session.planningResponse.length,
                     submittedAt = System.currentTimeMillis(),

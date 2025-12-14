@@ -15,6 +15,7 @@ data class CachedGPEImageEntity(
     val imageUrl: String, // Firebase Storage URL
     val localFilePath: String? = null, // Local cache path if image is downloaded
     val scenario: String, // Tactical scenario description
+    val solution: String? = null, // Ideal solution
     val imageDescription: String, // Alt text for accessibility
     val resources: String? = null, // JSON array of available resources
     val viewingTimeSeconds: Int = 60,

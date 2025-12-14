@@ -16,6 +16,7 @@ data class GPEQuestion(
     val id: String,
     val imageUrl: String,
     val scenario: String, // Tactical scenario description
+    val solution: String? = null,
     val imageDescription: String, // Alt text for accessibility
     val resources: List<String> = emptyList(), // Available resources (rope, planks, etc.)
     val viewingTimeSeconds: Int = 60,

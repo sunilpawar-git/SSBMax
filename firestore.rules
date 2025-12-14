@@ -482,6 +482,17 @@ service cloud.firestore {
       allow write: if false;
     }
     
+    // GPE (Group Planning Exercise) Test Content
+    match /test_content/gto/scenarios/gpe/meta/{document} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
+    match /test_content/gto/scenarios/gpe/batches/{batchId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
     // Interview Test Content
     match /test_content/interview/meta/{document} {
       allow read: if isAuthenticated();

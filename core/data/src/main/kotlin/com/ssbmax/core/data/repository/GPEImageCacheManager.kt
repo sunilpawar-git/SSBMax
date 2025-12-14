@@ -26,8 +26,9 @@ class GPEImageCacheManager @Inject constructor(
 ) {
     companion object {
         private const val TAG = "GPECacheManager"
-        private const val COLLECTION_PATH = "test_content/gpe/image_batches"
-        private const val METADATA_PATH = "test_content/gpe/meta"
+        // Updated to match FirestoreGTORepository and upload script paths
+        private const val COLLECTION_PATH = "test_content/gto/scenarios/gpe/batches"
+        private const val METADATA_PATH = "test_content/gto/scenarios/gpe/meta"
         private const val TARGET_CACHE_SIZE = 15 // Multiple GPE scenarios
         private const val MIN_CACHE_SIZE = 5 // Minimum before resyncing
     }
@@ -98,6 +99,7 @@ class GPEImageCacheManager @Inject constructor(
                         localFilePath = null, // Will be set when image is downloaded
                         scenario = imageMap["scenario"] as? String
                             ?: "Tactical scenario requiring planning and resource allocation",
+                        solution = imageMap["solution"] as? String, // Parse solution
                         imageDescription = imageMap["imageDescription"] as? String
                             ?: "Tactical scenario image showing obstacles and constraints",
                         resources = resourcesJson, // Store as JSON string
@@ -163,7 +165,25 @@ class GPEImageCacheManager @Inject constructor(
                 throw Exception("No images in cache")
             }
 
-            val image = cachedImages.first()
+            var image = cachedImages.first()
+            
+            // Check if solution is missing (old cache) -> Force refresh
+            if (image.solution == null) {
+                Log.w(TAG, "Image ${image.id} missing solution (stale cache). Forcing refresh...")
+                try {
+                    dao.clearAllImages()
+                    dao.deleteBatchMetadata("batch_001")
+                    initialSync().getOrThrow()
+                    // Fetch again
+                    val newImages = dao.getLeastUsedImages(1)
+                    if (newImages.isNotEmpty()) {
+                        image = newImages.first()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to refresh stale cache", e)
+                    // Continue with old image if refresh fails
+                }
+            }
 
             // Mark as used
             dao.markImagesAsUsed(listOf(image.id))
@@ -186,6 +206,7 @@ class GPEImageCacheManager @Inject constructor(
                 id = image.id,
                 imageUrl = image.imageUrl,
                 scenario = image.scenario,
+                solution = image.solution,
                 imageDescription = image.imageDescription,
                 resources = resources,
                 viewingTimeSeconds = image.viewingTimeSeconds,
@@ -247,6 +268,7 @@ class GPEImageCacheManager @Inject constructor(
                     id = entity.id,
                     imageUrl = entity.imageUrl,
                     scenario = entity.scenario,
+                    solution = entity.solution,
                     imageDescription = entity.imageDescription,
                     resources = resources,
                     viewingTimeSeconds = entity.viewingTimeSeconds,

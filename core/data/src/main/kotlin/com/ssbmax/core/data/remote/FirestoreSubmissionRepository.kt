@@ -280,6 +280,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                 FIELD_DATA to mapOf(
                     "imageUrl" to submission.imageUrl,
                     "scenario" to submission.scenario,
+                    "solution" to submission.solution,
                     "plan" to submission.plan,
                     "characterCount" to submission.characterCount,
                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->

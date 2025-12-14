@@ -35,6 +35,7 @@ sealed class GTOTest {
         override val id: String,
         val imageUrl: String,
         val scenario: String,
+        val solution: String? = null,
         val resources: List<String> = emptyList(),
         val difficulty: String = "Medium",
         val viewingTimeSeconds: Int = 60,

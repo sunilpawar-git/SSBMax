@@ -366,6 +366,18 @@ object MockTestDataProvider {
                     Task:
                     Identify the problems, prioritize them, and produce a plan to handle all situations effectively and reach the Bus Stop by 1700 hrs to catch your bus.
                 """.trimIndent(),
+                solution = """
+                    Priority 1: Stop the train and diffuse explosives at Railway Bridge (High Risk, Time Critical).
+                    Priority 2: Evacuate villagers from forest fire (High Risk).
+                    Priority 3: Rescue snake bite victim at Old Temple (Medical Emergency).
+                    Priority 4: Fix college van and reach Bus Stop by 1700 hrs.
+                    
+                    Plan:
+                    1. Divide group into 3 sub-groups using Jeep and Motorboat.
+                    2. Group A (3 students + Jeep): Rush to Railway bridge to alert station master/driver.
+                    3. Group B (2 students + Motorboat): Go to Old Temple for snake bite victim.
+                    4. Group C (3 students): Stay back, fix van, and coordinate with villagers for fire evacuation.
+                """.trimIndent(),
                 imageDescription = "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads.",
                 resources = listOf("Jeep", "Motorboat", "Rope", "First Aid Kit", "Flashlights"),
                 viewingTimeSeconds = 60,

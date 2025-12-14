@@ -62,7 +62,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 13, // Added GPE image cache entities
+    version = 14, // Added GPE solution column
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

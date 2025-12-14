@@ -54,6 +54,7 @@ sealed class GTOSubmission {
         override val testId: String,
         val imageUrl: String,
         val scenario: String,
+        val solution: String? = null,
         val plan: String,
         val characterCount: Int,
         override val submittedAt: Long = System.currentTimeMillis(),

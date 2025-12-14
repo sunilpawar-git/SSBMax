@@ -578,14 +578,19 @@ object DatabaseMigrations {
             """.trimIndent())
 
             database.execSQL("""
-                CREATE INDEX IF NOT EXISTS index_cached_gpe_images_lastUsed
-                ON cached_gpe_images(lastUsed)
-            """.trimIndent())
-
-            database.execSQL("""
                 CREATE INDEX IF NOT EXISTS index_cached_gpe_images_usageCount
                 ON cached_gpe_images(usageCount)
             """.trimIndent())
+        }
+    }
+
+    /**
+     * Migration from version 13 to 14
+     * Adds solution column to GPE image cache
+     */
+    val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_gpe_images ADD COLUMN solution TEXT")
         }
     }
 }

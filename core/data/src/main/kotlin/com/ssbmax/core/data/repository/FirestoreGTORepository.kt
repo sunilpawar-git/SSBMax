@@ -139,6 +139,7 @@ class FirestoreGTORepository @Inject constructor(
                     id = randomScenario["id"] as? String ?: UUID.randomUUID().toString(),
                     imageUrl = randomScenario["imageUrl"] as? String ?: "",
                     scenario = randomScenario["scenario"] as? String ?: "",
+                    solution = randomScenario["solution"] as? String,
                     resources = (randomScenario["resources"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     difficulty = randomScenario["difficulty"] as? String ?: "Medium"
                 )

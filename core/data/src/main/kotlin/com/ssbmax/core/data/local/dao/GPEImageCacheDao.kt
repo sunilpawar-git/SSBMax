@@ -51,7 +51,7 @@ interface GPEImageCacheDao {
     /**
      * Get least used images
      */
-    @Query("SELECT * FROM cached_gpe_images ORDER BY usageCount ASC, lastUsed ASC LIMIT :count")
+    @Query("SELECT * FROM cached_gpe_images ORDER BY usageCount ASC, RANDOM() LIMIT :count")
     suspend fun getLeastUsedImages(count: Int): List<CachedGPEImageEntity>
 
     /**
