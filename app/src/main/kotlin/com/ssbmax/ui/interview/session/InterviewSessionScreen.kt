@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -220,7 +220,7 @@ fun InterviewSessionScreen(
                     IconButton(onClick = { viewModel.toggleTTSMute() }) {
                         Icon(
                             imageVector = if (uiState.isTTSMuted)
-                                Icons.Default.VolumeOff
+                                Icons.AutoMirrored.Filled.VolumeOff
                             else
                                 Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = if (uiState.isTTSMuted)
@@ -337,7 +337,7 @@ private fun QuestionCard(questionText: String, isSpeaking: Boolean, isMuted: Boo
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            Icons.Default.VolumeOff,
+                            Icons.AutoMirrored.Filled.VolumeOff,
                             contentDescription = stringResource(R.string.cd_unmute_tts),
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant

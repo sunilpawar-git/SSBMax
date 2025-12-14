@@ -99,10 +99,9 @@ fun GPETestScreen(
                         GPEPhase.INSTRUCTIONS -> GPEInstructionsPhase(
                             onStart = { viewModel.startTest() }
                         )
-                        GPEPhase.IMAGE_VIEWING -> GPEImageViewingPhase(
-                            imageUrl = uiState.imageUrl,
-                            timeRemainingSeconds = uiState.timeRemainingSeconds
-                        )
+                        // Should not be reached with new flow, but required for exhaustive when
+                        GPEPhase.IMAGE_VIEWING -> {}
+                        
                         GPEPhase.PLANNING -> GPEPlanningPhase(
                             planningResponse = uiState.planningResponse,
                             onPlanningResponseChange = { viewModel.updatePlanningResponse(it) },

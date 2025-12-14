@@ -225,13 +225,13 @@ class GPETestViewModel @Inject constructor(
 
         _uiState.update { it.copy(
             session = session.copy(
-                currentPhase = GPEPhase.IMAGE_VIEWING,
-                imageViewingStartTime = System.currentTimeMillis()
+                currentPhase = GPEPhase.PLANNING,
+                planningStartTime = System.currentTimeMillis()
             )
         ) }
 
         updateUiFromSession()
-        startTimer(60) // 60 seconds for image viewing - timer will auto-advance via startTimer()
+        startTimer(600) // 10 minutes for planning (Map + Text + Response all in one)
     }
 
     fun proceedToNextPhase() {
@@ -239,7 +239,7 @@ class GPETestViewModel @Inject constructor(
 
         when (session.currentPhase) {
             GPEPhase.IMAGE_VIEWING -> {
-                // Signal timer to stop via isTimerActive flag
+                // Deprecated phase - auto-forward to planning if somehow reached
                 _uiState.update { it.copy(
                     isTimerActive = false,
                     session = session.copy(
@@ -248,7 +248,7 @@ class GPETestViewModel @Inject constructor(
                     )
                 ) }
                 updateUiFromSession()
-                startTimer(session.question.planningTimeSeconds)
+                startTimer(600) // 10 minutes
             }
             GPEPhase.PLANNING -> {
                 if (_uiState.value.planningResponse.length >= session.question.minCharacters) {
@@ -270,7 +270,11 @@ class GPETestViewModel @Inject constructor(
             session = session.copy(currentPhase = GPEPhase.PLANNING)
         ) }
         updateUiFromSession()
-        startTimer(session.question.planningTimeSeconds)
+        // If returning, give them the remaining time or a fixed amount? 
+        // For now, resetting to 10 mins as per "new attempt" logic or we should track remaining.
+        // Given complexity, let's just reset to 600s or keep what was remaining if we were tracking it better.
+        // Simpler: Reset to 600s for consistent experience during this refactor.
+        startTimer(600)
     }
 
     fun updatePlanningResponse(newResponse: String) {
