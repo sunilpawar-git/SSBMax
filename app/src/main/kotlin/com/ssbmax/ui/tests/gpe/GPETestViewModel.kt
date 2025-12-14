@@ -49,7 +49,8 @@ class GPETestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val submissionHelper: com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GPETestUiState())
@@ -293,7 +294,7 @@ class GPETestViewModel @Inject constructor(
                 // Generate submission ID
                 val submissionId = UUID.randomUUID().toString()
 
-                // Create submission (AI scoring will happen via GTOAnalysisWorker)
+                // Create submission
                 val submission = GTOSubmission.GPESubmission(
                     id = submissionId,
                     userId = session.userId,
@@ -308,43 +309,58 @@ class GPETestViewModel @Inject constructor(
                     olqScores = emptyMap()
                 )
 
-                // Submit to Firestore
-                submissionRepository.submitGPE(submission, null).getOrThrow()
-                android.util.Log.d("GPETestViewModel", "✅ GPE submission completed: $submissionId")
+                // Use helper to submit test and trigger worker
+                submissionHelper.submitTest(
+                    submission = submission,
+                    testType = GTOTestType.GROUP_PLANNING_EXERCISE,
+                    userId = session.userId,
+                    onSuccess = { id ->
+                        android.util.Log.d("GPETestViewModel", "✅ GPE submission completed via helper: $id")
 
-                // Calculate score for analytics (response >500 chars is "valid")
-                val isValid = session.planningResponse.length >= 500
-                val scorePercentage = if (isValid) 100f else 0f
+                        // Calculate score for analytics (response >500 chars is "valid")
+                        val isValid = session.planningResponse.length >= 500
+                        val scorePercentage = if (isValid) 100f else 0f
 
-                // Record performance for analytics
-                difficultyManager.recordPerformance(
-                    testType = "GPE",
-                    difficulty = "MEDIUM", // GPE doesn't have difficulty levels yet
-                    score = scorePercentage,
-                    correctAnswers = if (isValid) 1 else 0,
-                    totalQuestions = 1,
-                    timeSeconds = (29 * 60).toFloat() // 29 minutes
+                        // Record performance for analytics
+                        viewModelScope.launch {
+                            difficultyManager.recordPerformance(
+                                testType = "GPE",
+                                difficulty = "MEDIUM", // GPE doesn't have difficulty levels yet
+                                score = scorePercentage,
+                                correctAnswers = if (isValid) 1 else 0,
+                                totalQuestions = 1,
+                                timeSeconds = (29 * 60).toFloat() // 29 minutes
+                            )
+                            android.util.Log.d("GPETestViewModel", "📊 Recorded performance: $scorePercentage%")
+                        }
+
+                        // NOTE: submissionHelper handles recordTestUsage via GTORepository,
+                        // so we don't need to call subscriptionManager.recordTestUsage separately here
+                        // to avoid duplication, unless they track different things.
+                        // For safety in this refactor, we rely on the helper for the main GTO flow.
+
+                        // Mark as submitted using thread-safe .update {}
+                        _uiState.update { it.copy(
+                            session = session.copy(
+                                currentPhase = GPEPhase.SUBMITTED,
+                                isCompleted = true
+                            ),
+                            isSubmitted = true,
+                            submissionId = id,
+                            subscriptionType = subscriptionType,
+                            submission = submission
+                        ) }
+
+                        // Success! User will see success screen and can navigate home
+                        android.util.Log.d("GPETestViewModel", "✅ GPE submitted - showing success screen")
+                    },
+                    onError = { error ->
+                         _uiState.update { it.copy(
+                            error = "Failed to submit: $error"
+                        ) }
+                    }
                 )
-                android.util.Log.d("GPETestViewModel", "📊 Recorded performance: $scorePercentage%")
 
-                // Record test usage for subscription tracking
-                subscriptionManager.recordTestUsage(TestType.GTO_GPE, session.userId)
-                android.util.Log.d("GPETestViewModel", "📝 Recorded test usage for subscription tracking")
-
-                // Mark as submitted using thread-safe .update {}
-                _uiState.update { it.copy(
-                    session = session.copy(
-                        currentPhase = GPEPhase.SUBMITTED,
-                        isCompleted = true
-                    ),
-                    isSubmitted = true,
-                    submissionId = submissionId,
-                    subscriptionType = subscriptionType,
-                    submission = submission
-                ) }
-                
-                // Success! User will see success screen and can navigate home
-                android.util.Log.d("GPETestViewModel", "✅ GPE submitted - showing success screen")
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"

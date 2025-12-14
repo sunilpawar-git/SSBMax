@@ -204,10 +204,11 @@ class NotificationHelper @Inject constructor(
                     "ssbmax://test/gto/gd/result/$submissionId"
                 com.ssbmax.core.domain.model.gto.GTOTestType.LECTURETTE -> 
                     "ssbmax://test/gto/lecturette/result/$submissionId"
+                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE ->
+                    "ssbmax://test/gto/gpe/result/$submissionId"
                 
                 // Unimplemented test types - use generic submission detail route as fallback
                 // This allows users to access results even if specific screen isn't implemented yet
-                com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE,
                 com.ssbmax.core.domain.model.gto.GTOTestType.PROGRESSIVE_GROUP_TASK,
                 com.ssbmax.core.domain.model.gto.GTOTestType.HALF_GROUP_TASK,
                 com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_OBSTACLE_RACE,
