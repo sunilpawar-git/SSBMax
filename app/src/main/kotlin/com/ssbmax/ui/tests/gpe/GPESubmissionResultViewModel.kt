@@ -1,7 +1,12 @@
 package com.ssbmax.ui.tests.gpe
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.SubmissionRepository
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.data.util.trackMemoryLeaks
+import com.ssbmax.core.domain.model.gto.GTOResult
+import com.ssbmax.core.domain.model.gto.GTOSubmission
+import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,140 +15,152 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 
 /**
  * ViewModel for GPE Submission Result Screen
- * Fetches submission data from SubmissionRepository
+ * 
+ * Displays:
+ * - Submission details (scenario, plan, character count)
+ * - Analysis status (PENDING → ANALYZING → COMPLETED)
+ * - OLQ scores (15 Officer-Like Qualities)
+ * - Overall rating and performance summary
+ * - Strengths and areas for improvement
  */
 @HiltViewModel
 class GPESubmissionResultViewModel @Inject constructor(
-    private val submissionRepository: SubmissionRepository
+    private val gtoRepository: GTORepository
 ) : ViewModel() {
-
+    
     private val _uiState = MutableStateFlow(GPESubmissionResultUiState())
     val uiState: StateFlow<GPESubmissionResultUiState> = _uiState.asStateFlow()
-
+    
+    companion object {
+        private const val TAG = "GPEResultViewModel"
+    }
+    
+    init {
+        trackMemoryLeaks("GPESubmissionResultViewModel")
+        android.util.Log.d(TAG, "🚀 GPESubmissionResultViewModel initialized")
+    }
+    
+    /**
+     * Load submission and observe for real-time updates
+     */
     fun loadSubmission(submissionId: String) {
+        android.util.Log.d(TAG, "📥 Loading submission: $submissionId")
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-
-            submissionRepository.getSubmission(submissionId)
-                .onSuccess { data ->
-                    if (data == null) {
+            
+            try {
+                // Observe submission for real-time status updates
+                gtoRepository.observeSubmission(submissionId).collect { submission ->
+                    android.util.Log.d(TAG, "📊 Submission update received: ${submission?.status}")
+                    
+                    if (submission == null) {
                         _uiState.update { it.copy(
                             isLoading = false,
                             error = "Submission not found"
                         ) }
-                        return@onSuccess
+                        return@collect
                     }
-
-                    // Parse GPE submission from map
-                    val submission = parseGPESubmission(data)
-                    if (submission != null) {
-                        _uiState.update { it.copy(
+                    
+                    // Update UI with submission data
+                    _uiState.update { currentState ->
+                        currentState.copy(
                             isLoading = false,
-                            submission = submission
-                        ) }
-                    } else {
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            error = "Failed to parse submission data"
-                        ) }
+                            submission = submission as? GTOSubmission.GPESubmission,
+                            error = null
+                        )
+                    }
+                    
+                    // If analysis is completed, load the result with OLQ scores
+                    if (submission.status == GTOSubmissionStatus.COMPLETED) {
+                        loadResult(submissionId)
                     }
                 }
-                .onFailure { error ->
-                    ErrorLogger.log(error, "Error loading GPE submission")
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to load submission"
-                    ) }
-                }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to load GPE submission")
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "Failed to load submission. Please try again."
+                ) }
+            }
         }
     }
-
+    
     /**
-     * Parse GPE submission from Firestore document data
+     * Load detailed result with OLQ analysis
      */
-    private fun parseGPESubmission(data: Map<String, Any>): GPESubmission? {
-        return try {
-            val submissionData = data["data"] as? Map<*, *> ?: return null
-
-            // Parse AI score if present
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                GPEAIScore(
-                    situationAnalysisScore = (it["situationAnalysisScore"] as? Number)?.toFloat() ?: 0f,
-                    planningQualityScore = (it["planningQualityScore"] as? Number)?.toFloat() ?: 0f,
-                    leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
-                    resourceUtilizationScore = (it["resourceUtilizationScore"] as? Number)?.toFloat() ?: 0f,
-                    practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String ?: "",
-                    strengths = (it["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                )
+    private suspend fun loadResult(submissionId: String) {
+        try {
+            android.util.Log.d(TAG, "📈 Loading result analysis...")
+            
+            val resultResult = gtoRepository.getTestResult(submissionId)
+            
+            if (resultResult.isSuccess) {
+                val result = resultResult.getOrNull()
+                android.util.Log.d(TAG, "✅ Result loaded: ${result?.olqScores?.size} OLQ scores")
+                
+                _uiState.update { it.copy(result = result) }
+            } else {
+                android.util.Log.w(TAG, "⚠️ Result not yet available", resultResult.exceptionOrNull())
             }
-
-            // Parse instructor review if present
-            val instructorReviewData = submissionData["instructorReview"] as? Map<*, *>
-            val instructorReview = instructorReviewData?.let {
-                val detailedScoresData = it["detailedScores"] as? Map<*, *>
-                val detailedScores = detailedScoresData?.let { scores ->
-                    GPEDetailedScores(
-                        situationAnalysis = (scores["situationAnalysis"] as? Number)?.toFloat() ?: 0f,
-                        planningQuality = (scores["planningQuality"] as? Number)?.toFloat() ?: 0f,
-                        leadership = (scores["leadership"] as? Number)?.toFloat() ?: 0f,
-                        resourceUtilization = (scores["resourceUtilization"] as? Number)?.toFloat() ?: 0f,
-                        practicality = (scores["practicality"] as? Number)?.toFloat() ?: 0f
-                    )
-                } ?: GPEDetailedScores(0f, 0f, 0f, 0f, 0f)
-
-                GPEInstructorReview(
-                    reviewId = it["reviewId"] as? String ?: "",
-                    instructorId = it["instructorId"] as? String ?: "",
-                    instructorName = it["instructorName"] as? String ?: "",
-                    finalScore = (it["finalScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String ?: "",
-                    detailedScores = detailedScores,
-                    agreedWithAI = it["agreedWithAI"] as? Boolean ?: false,
-                    reviewedAt = (it["reviewedAt"] as? Number)?.toLong() ?: 0L,
-                    timeSpentMinutes = (it["timeSpentMinutes"] as? Number)?.toInt() ?: 0
-                )
-            }
-
-            GPESubmission(
-                submissionId = submissionData["submissionId"] as? String ?: data["id"] as? String ?: "",
-                questionId = submissionData["questionId"] as? String ?: "",
-                userId = submissionData["userId"] as? String ?: data["userId"] as? String ?: "",
-                userName = submissionData["userName"] as? String ?: "",
-                userEmail = submissionData["userEmail"] as? String ?: "",
-                batchId = submissionData["batchId"] as? String,
-                planningResponse = submissionData["planningResponse"] as? String ?: "",
-                charactersCount = (submissionData["charactersCount"] as? Number)?.toInt() ?: 0,
-                viewingTimeTakenSeconds = (submissionData["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 60,
-                planningTimeTakenMinutes = (submissionData["planningTimeTakenMinutes"] as? Number)?.toInt() ?: 29,
-                submittedAt = (submissionData["submittedAt"] as? Number)?.toLong()
-                    ?: (data["submittedAt"] as? Number)?.toLong() ?: 0L,
-                status = SubmissionStatus.valueOf(
-                    data["status"] as? String ?: SubmissionStatus.SUBMITTED_PENDING_REVIEW.name
-                ),
-                aiPreliminaryScore = aiScore,
-                instructorReview = instructorReview
-            )
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Error parsing GPE submission")
-            null
+            ErrorLogger.logTestError(e, "Failed to load GPE result", "GTO")
         }
+    }
+    
+    /**
+     * Retry loading if there was an error
+     */
+    fun retry(submissionId: String) {
+        loadSubmission(submissionId)
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        android.util.Log.d(TAG, "🧹 ViewModel cleared")
     }
 }
 
 /**
- * UI State for GPE Submission Result
+ * GPE Result UI State
  */
 data class GPESubmissionResultUiState(
     val isLoading: Boolean = true,
-    val submission: GPESubmission? = null,
+    val submission: GTOSubmission.GPESubmission? = null,
+    val result: GTOResult? = null,
     val error: String? = null
-)
+) {
+    /**
+     * Check if analysis is still in progress
+     */
+    val isAnalyzing: Boolean
+        get() = submission != null && 
+                (submission.status == GTOSubmissionStatus.PENDING_ANALYSIS || 
+                 submission.status == GTOSubmissionStatus.ANALYZING)
+    
+    /**
+     * Check if analysis is completed
+     */
+    val isCompleted: Boolean
+        get() = submission?.status == GTOSubmissionStatus.COMPLETED && result != null
+    
+    /**
+     * Check if analysis failed
+     */
+    val isFailed: Boolean
+        get() = submission?.status == GTOSubmissionStatus.FAILED
+    
+    /**
+     * Get formatted time spent
+     */
+    val formattedTimeSpent: String
+        get() {
+            val timeSpent = submission?.timeSpent ?: 0
+            val minutes = timeSpent / 60
+            val seconds = timeSpent % 60
+            return "${minutes}m ${seconds}s"
+        }
+}
