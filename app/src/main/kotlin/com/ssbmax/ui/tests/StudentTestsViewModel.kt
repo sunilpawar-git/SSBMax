@@ -1,5 +1,4 @@
 package com.ssbmax.ui.tests
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.lifecycle.ViewModel
@@ -8,6 +7,7 @@ import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -222,9 +222,9 @@ class StudentTestsViewModel @Inject constructor(
                     isLoading = false,
                     error = null
                 )
-                
+
             } catch (e: Exception) {
-                Log.e("StudentTests", "Error loading tests", e)
+                ErrorLogger.log(e, "Error loading student tests")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load tests"

@@ -1,10 +1,10 @@
 package com.ssbmax.ui.ssboverview
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SSBInfoCard
 import com.ssbmax.core.domain.model.SSBInfoIcon
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,13 +39,10 @@ class SSBOverviewViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
-                Log.d("SSBOverview", "Loading SSB informational content")
-                
                 // Load static SSB information cards
                 val cards = SSBContentProvider.getInfoCards()
-                
+
                 if (cards.isEmpty()) {
-                    Log.w("SSBOverview", "No SSB info cards found")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -54,9 +51,7 @@ class SSBOverviewViewModel @Inject constructor(
                     }
                     return@launch
                 }
-                
-                Log.d("SSBOverview", "Loaded ${cards.size} SSB info cards")
-                
+
                 _uiState.update {
                     it.copy(
                         infoCards = cards,
@@ -65,7 +60,7 @@ class SSBOverviewViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("SSBOverview", "Error loading SSB information", e)
+                ErrorLogger.log(e, "Error loading SSB overview information")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

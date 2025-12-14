@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.srt
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +54,7 @@ class SRTSubmissionResultViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.e("SRTSubmissionResult", "Error loading submission", error)
+                    ErrorLogger.logTestError(error, "Failed to load SRT submission result", "SRT")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load submission"
@@ -150,7 +150,7 @@ class SRTSubmissionResultViewModel @Inject constructor(
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
             )
         } catch (e: Exception) {
-            Log.e("SRTSubmissionResult", "Error parsing SRT submission", e)
+            ErrorLogger.logTestError(e, "Error parsing SRT submission data", "SRT")
             null
         }
     }

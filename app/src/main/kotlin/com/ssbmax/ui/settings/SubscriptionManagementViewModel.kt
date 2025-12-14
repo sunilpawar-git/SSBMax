@@ -1,11 +1,11 @@
 package com.ssbmax.ui.settings
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.subscription.GetMonthlyUsageUseCase
 import com.ssbmax.core.domain.usecase.subscription.GetSubscriptionTierUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,7 +52,7 @@ class SubscriptionManagementViewModel @Inject constructor(
                 // Load monthly usage
                 val usageResult = getMonthlyUsage(userId)
                 val domainUsage = usageResult.getOrElse {
-                    Log.w(TAG, "Failed to load usage, using empty map", it)
+                    ErrorLogger.log(it, "Failed to load usage, using empty map")
                     emptyMap()
                 }
                 
@@ -78,9 +78,8 @@ class SubscriptionManagementViewModel @Inject constructor(
                     subscriptionExpiresAt = expiresAt
                 )
                 
-                Log.d(TAG, "Loaded subscription data: tier=$uiTier, usage=${uiUsage.size} tests")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to load subscription data", e)
+                ErrorLogger.log(e, "Failed to load subscription data")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = "Failed to load subscription data: ${e.message}"

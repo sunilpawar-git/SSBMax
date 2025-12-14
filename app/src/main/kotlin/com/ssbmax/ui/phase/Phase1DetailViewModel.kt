@@ -1,5 +1,4 @@
 package com.ssbmax.ui.phase
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.Phase1Progress
@@ -8,6 +7,7 @@ import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,7 +56,7 @@ class Phase1DetailViewModel @Inject constructor(
                 // Observe Phase 1 progress from repository with lifecycle awareness
                 testProgressRepository.getPhase1Progress(userId)
                     .catch { error ->
-                        Log.e("Phase1Detail", "Error loading Phase 1 progress", error)
+                        ErrorLogger.log(error, "Error loading Phase 1 progress")
                         _uiState.update { it.copy(
                             isLoading = false,
                             error = "Failed to load Phase 1 progress: ${error.message}"
@@ -111,7 +111,7 @@ class Phase1DetailViewModel @Inject constructor(
                         )
                     }
             } catch (e: Exception) {
-                Log.e("Phase1Detail", "Error in loadPhase1Tests", e)
+                ErrorLogger.log(e, "Error in loadPhase1Tests")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Unknown error occurred"

@@ -12,6 +12,7 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.core.domain.usecase.auth.UpdateUserRoleUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,7 +88,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    android.util.Log.e("AuthViewModel", "Sign-in FAILED: ${error.message}", error)
+                    ErrorLogger.log(error, "Google Sign-In failed")
                     _uiState.value = AuthUiState.Error(error.message ?: "Google Sign-In failed")
                 }
         }

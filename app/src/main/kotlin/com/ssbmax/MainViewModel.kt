@@ -6,6 +6,7 @@ import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.ui.theme.ThemeState
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -39,7 +40,7 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 // Silently fail - streak update is not critical for app functionality
-                android.util.Log.e("MainViewModel", "Failed to update login streak", e)
+                ErrorLogger.log(e, "Failed to update login streak")
             }
         }
     }

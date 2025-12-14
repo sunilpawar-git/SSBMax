@@ -8,6 +8,7 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -101,8 +102,12 @@ class WATTestViewModel @Inject constructor(
                 // Get current user - SECURITY: Require authentication
                 val user = observeCurrentUser().first()
                 val userId = user?.id ?: run {
-                    android.util.Log.e("WATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
-                    
+                    ErrorLogger.logTestError(
+                        throwable = IllegalStateException("Unauthenticated WAT test access"),
+                        description = "WAT test access without authentication",
+                        testType = "WAT"
+                    )
+
                     // SECURITY: Log unauthenticated access attempt to Firebase Analytics
                     securityLogger.logUnauthenticatedAccess(
                         testType = TestType.WAT,

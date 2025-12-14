@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.AnalyticsRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,7 +58,8 @@ class AnalyticsViewModel @Inject constructor(
                     ) }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AnalyticsViewModel", "Failed to load test stats", e)
+                ErrorLogger.log(e, "Failed to load test stats", mapOf("testType" to testType))
+                // Silent failure - analytics is non-critical feature
             }
         }
     }
@@ -71,7 +73,8 @@ class AnalyticsViewModel @Inject constructor(
                     ) }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AnalyticsViewModel", "Failed to load all test stats", e)
+                ErrorLogger.log(e, "Failed to load all test stats")
+                // Silent failure - analytics is non-critical feature
             }
         }
     }
@@ -85,7 +88,8 @@ class AnalyticsViewModel @Inject constructor(
                     ) }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AnalyticsViewModel", "Failed to load recent progress", e)
+                ErrorLogger.log(e, "Failed to load recent progress", mapOf("limit" to limit.toString()))
+                // Silent failure - analytics is non-critical feature
             }
         }
     }

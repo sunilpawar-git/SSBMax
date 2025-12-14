@@ -1,11 +1,11 @@
 package com.ssbmax.ui.marketplace
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.CoachingInstitute
 import com.ssbmax.core.domain.model.InstituteType
 import com.ssbmax.core.domain.model.PriceRange
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +33,6 @@ class MarketplaceViewModel @Inject constructor(
     val uiState: StateFlow<MarketplaceUiState> = _uiState.asStateFlow()
 
     private val allInstitutes: List<CoachingInstitute> by lazy {
-        Log.d("Marketplace", "Loading mock institute data")
         MarketplaceMockData.getInstitutes()
     }
 
@@ -44,14 +43,8 @@ class MarketplaceViewModel @Inject constructor(
     private fun loadInstitutes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            
+
             try {
-                Log.d("Marketplace", "Loading institutes with filters - " +
-                        "search: '${_uiState.value.searchQuery}', " +
-                        "type: ${_uiState.value.filterType}, " +
-                        "price: ${_uiState.value.filterPriceRange}, " +
-                        "city: ${_uiState.value.filterCity}")
-                
                 // Apply filters
                 val filtered = filterInstitutes(
                     institutes = allInstitutes,
@@ -60,9 +53,7 @@ class MarketplaceViewModel @Inject constructor(
                     filterPriceRange = _uiState.value.filterPriceRange,
                     filterCity = _uiState.value.filterCity
                 )
-                
-                Log.d("Marketplace", "Filtered ${filtered.size} institutes from ${allInstitutes.size} total")
-                
+
                 _uiState.update {
                     it.copy(
                         institutes = filtered,
@@ -71,7 +62,7 @@ class MarketplaceViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("Marketplace", "Error loading institutes", e)
+                ErrorLogger.log(e, "Error loading marketplace institutes")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

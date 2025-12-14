@@ -107,8 +107,7 @@ class GDResultViewModel @Inject constructor(
                 android.util.Log.w(TAG, "⚠️ Result not yet available", resultResult.exceptionOrNull())
             }
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to load GD result")
-            android.util.Log.e(TAG, "❌ Failed to load result", e)
+            ErrorLogger.logTestError(e, "Failed to load GD result", "GTO")
         }
     }
     

@@ -106,8 +106,7 @@ class LecturetteResultViewModel @Inject constructor(
                 android.util.Log.w(TAG, "⚠️ Result not yet available", resultResult.exceptionOrNull())
             }
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to load Lecturette result")
-            android.util.Log.e(TAG, "❌ Failed to load result", e)
+            ErrorLogger.logTestError(e, "Failed to load Lecturette result", "GTO")
         }
     }
     

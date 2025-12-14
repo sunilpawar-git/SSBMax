@@ -10,6 +10,7 @@ import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -110,7 +111,11 @@ class GPETestViewModel @Inject constructor(
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
             val userId = user?.id ?: run {
-                android.util.Log.e("GPETestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
+                ErrorLogger.logTestError(
+                    throwable = IllegalStateException("Unauthenticated GPE test access"),
+                    description = "GPE test access without authentication",
+                    testType = "GPE"
+                )
 
                 // SECURITY: Log unauthenticated access attempt to Firebase Analytics
                 securityLogger.logUnauthenticatedAccess(

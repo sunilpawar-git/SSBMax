@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.tat
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +54,7 @@ class TATSubmissionResultViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.e("TATSubmissionResult", "Error loading submission", error)
+                    ErrorLogger.logTestError(error, "Error loading TAT submission", "TAT")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load submission"
@@ -134,7 +134,7 @@ class TATSubmissionResultViewModel @Inject constructor(
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
             )
         } catch (e: Exception) {
-            Log.e("TATSubmissionResult", "Error parsing TAT submission", e)
+            ErrorLogger.logTestError(e, "Error parsing TAT submission data", "TAT")
             null
         }
     }

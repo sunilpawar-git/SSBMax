@@ -7,6 +7,7 @@ import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -106,8 +107,12 @@ class PPDTTestViewModel @Inject constructor(
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
             val userId = user?.id ?: run {
-                android.util.Log.e("PPDTTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
-                
+                ErrorLogger.logTestError(
+                    throwable = IllegalStateException("Unauthenticated PPDT test access"),
+                    description = "PPDT test access without authentication",
+                    testType = "PPDT"
+                )
+
                 // SECURITY: Log unauthenticated access attempt to Firebase Analytics
                 securityLogger.logUnauthenticatedAccess(
                     testType = TestType.PPDT,

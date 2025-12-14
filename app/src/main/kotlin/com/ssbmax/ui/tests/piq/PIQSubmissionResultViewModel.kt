@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.piq
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,35 +27,35 @@ class PIQSubmissionResultViewModel @Inject constructor(
 
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
-            Log.d(TAG, "📥 PIQ Result: Loading submission from Firestore...")
-            Log.d(TAG, "   Submission ID: $submissionId")
             _uiState.update { it.copy(isLoading = true) }
 
             submissionRepository.getSubmission(submissionId)
                 .onSuccess { data ->
                     if (data == null) {
-                        Log.e(TAG, "❌ PIQ Result: Submission data is null")
+                        ErrorLogger.logTestError(
+                            throwable = IllegalStateException("Submission data is null"),
+                            description = "PIQ submission not found: $submissionId",
+                            testType = "PIQ"
+                        )
                         _uiState.update { it.copy(isLoading = false, submission = null, error = "Submission not found") }
                         return@onSuccess
                     }
-                    
-                    Log.d(TAG, "✅ PIQ Result: Submission data received from Firestore")
-                    Log.d(TAG, "   Parsing submission data...")
+
                     val submission = parsePIQSubmission(data)
-                    
-                    if (submission != null) {
-                        Log.d(TAG, "✅ PIQ Result: Successfully parsed submission")
-                        Log.d(TAG, "   Full Name: ${submission.fullName}")
-                        Log.d(TAG, "   AI Score: ${submission.aiPreliminaryScore?.overallScore}")
-                    } else {
-                        Log.e(TAG, "❌ PIQ Result: Failed to parse submission data")
+
+                    if (submission == null) {
+                        ErrorLogger.logTestError(
+                            throwable = IllegalStateException("Failed to parse submission"),
+                            description = "PIQ submission parsing failed: $submissionId",
+                            testType = "PIQ"
+                        )
                     }
-                    
+
                     _uiState.update { it.copy(isLoading = false, submission = submission,
                         error = if (submission == null) "Submission not found" else null) }
                 }
                 .onFailure { error ->
-                    Log.e(TAG, "❌ PIQ Result: Failed to load submission - ${error.message}", error)
+                    ErrorLogger.logTestError(error, "Failed to load PIQ submission result", "PIQ")
                     _uiState.update { it.copy(isLoading = false,
                         error = error.message ?: "Failed to load submission") }
                 }
@@ -342,7 +342,7 @@ class PIQSubmissionResultViewModel @Inject constructor(
                 aiPreliminaryScore = aiScore
             )
         } catch (e: Exception) {
-            Log.e(TAG, "❌ PIQ Result: Exception parsing submission", e)
+            ErrorLogger.logTestError(e, "Error parsing PIQ submission data", "PIQ")
             null
         }
     }

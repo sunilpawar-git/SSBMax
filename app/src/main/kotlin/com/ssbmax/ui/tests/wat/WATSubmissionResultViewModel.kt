@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.wat
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +54,7 @@ class WATSubmissionResultViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.e("WATSubmissionResult", "Error loading submission", error)
+                    ErrorLogger.logTestError(error, "Failed to load WAT submission result", "WAT")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load submission"
@@ -139,7 +139,7 @@ class WATSubmissionResultViewModel @Inject constructor(
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
             )
         } catch (e: Exception) {
-            Log.e("WATSubmissionResult", "Error parsing WAT submission", e)
+            ErrorLogger.logTestError(e, "Error parsing WAT submission data", "WAT")
             null
         }
     }

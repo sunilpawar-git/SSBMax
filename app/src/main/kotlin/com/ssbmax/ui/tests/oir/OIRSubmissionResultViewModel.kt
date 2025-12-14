@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.oir
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,7 +57,7 @@ class OIRSubmissionResultViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.e("OIRSubmissionResult", "Error loading submission", error)
+                    ErrorLogger.logTestError(error, "Failed to load OIR submission result", "OIR")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load submission"
@@ -99,7 +99,6 @@ class OIRSubmissionResultViewModel @Inject constructor(
                     )
                     category to categoryScore
                 } catch (e: Exception) {
-                    Log.w("OIRSubmissionResult", "Failed to parse category: $categoryName", e)
                     null
                 }
             }.toMap()
@@ -120,7 +119,6 @@ class OIRSubmissionResultViewModel @Inject constructor(
                     )
                     difficulty to difficultyScore
                 } catch (e: Exception) {
-                    Log.w("OIRSubmissionResult", "Failed to parse difficulty: $difficultyName", e)
                     null
                 }
             }.toMap()
@@ -165,7 +163,6 @@ class OIRSubmissionResultViewModel @Inject constructor(
                         selectedOption = selectedOption
                     )
                 } catch (e: Exception) {
-                    Log.w("OIRSubmissionResult", "Failed to parse answered question", e)
                     null
                 }
             }
@@ -189,7 +186,7 @@ class OIRSubmissionResultViewModel @Inject constructor(
                 completedAt = (resultData["completedAt"] as? Number)?.toLong() ?: 0L
             )
         } catch (e: Exception) {
-            Log.e("OIRSubmissionResult", "Error parsing OIR test result", e)
+            ErrorLogger.logTestError(e, "Error parsing OIR test result data", "OIR")
             null
         }
     }

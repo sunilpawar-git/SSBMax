@@ -34,7 +34,18 @@
       "Bash(adb -s 4A231VDAQ0001D logcat:*)",
       "Bash(uniq:*)",
       "Bash(ls:*)",
-      "Bash(adb:*)"
+      "Bash(adb:*)",
+      "Bash(grep:*)",
+      "Bash(for file in )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/piq/PIQTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/oir/OIRTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt\" )",
+      "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/gpe/GPETestViewModel.kt\")",
+      "Bash(do)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

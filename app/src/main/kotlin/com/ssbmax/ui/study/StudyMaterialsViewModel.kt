@@ -1,6 +1,5 @@
 package com.ssbmax.ui.study
 
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -137,9 +137,9 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                     isLoading = false,
                     error = null
                 )
-                
+
             } catch (e: Exception) {
-                Log.e("StudyMaterials", "Error loading categories", e)
+                ErrorLogger.log(e, "Error loading study material categories")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load study materials"

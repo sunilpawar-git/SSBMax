@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.oir
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +54,7 @@ class OIRTestResultViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.e("OIRTestResult", "Error loading result", error)
+                    ErrorLogger.logTestError(error, "Failed to load OIR test result", "OIR")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = error.message ?: "Failed to load test result"
@@ -86,7 +86,6 @@ class OIRTestResultViewModel @Inject constructor(
                     )
                     type to score
                 } catch (e: Exception) {
-                    Log.w("OIRTestResult", "Failed to parse category $typeStr", e)
                     null
                 }
             }.toMap()
@@ -106,7 +105,6 @@ class OIRTestResultViewModel @Inject constructor(
                     )
                     difficulty to score
                 } catch (e: Exception) {
-                    Log.w("OIRTestResult", "Failed to parse difficulty $diffStr", e)
                     null
                 }
             }.toMap()
@@ -133,7 +131,7 @@ class OIRTestResultViewModel @Inject constructor(
                 completedAt = (resultData["completedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
             )
         } catch (e: Exception) {
-            Log.e("OIRTestResult", "Error parsing OIR test result", e)
+            ErrorLogger.logTestError(e, "Error parsing OIR test result data", "OIR")
             null
         }
     }
