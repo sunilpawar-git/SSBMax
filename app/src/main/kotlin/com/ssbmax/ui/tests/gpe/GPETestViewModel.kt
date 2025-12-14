@@ -344,20 +344,22 @@ class GPETestViewModel @Inject constructor(
                         // to avoid duplication, unless they track different things.
                         // For safety in this refactor, we rely on the helper for the main GTO flow.
 
-                        // Mark as submitted using thread-safe .update {}
-                        _uiState.update { it.copy(
-                            session = session.copy(
-                                currentPhase = GPEPhase.SUBMITTED,
-                                isCompleted = true
-                            ),
-                            isSubmitted = true,
-                            submissionId = id,
-                            subscriptionType = subscriptionType,
-                            submission = submission
-                        ) }
+                        // Mark as submitted using thread-safe .update {} with CURRENT state
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                session = currentState.session?.copy(
+                                    currentPhase = GPEPhase.SUBMITTED,
+                                    isCompleted = true
+                                ),
+                                isSubmitted = true,
+                                submissionId = id,
+                                subscriptionType = subscriptionType,
+                                submission = submission
+                            )
+                        }
 
                         // Success! User will see success screen and can navigate home
-                        android.util.Log.d("GPETestViewModel", "✅ GPE submitted - showing success screen")
+                        android.util.Log.d("GPETestViewModel", "✅ GPE submitted - showing success screen (phase: SUBMITTED)")
                     },
                     onError = { error ->
                          _uiState.update { it.copy(
