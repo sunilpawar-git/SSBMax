@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -30,10 +31,23 @@ class SettingsViewModel @Inject constructor(
      */
     private fun observeSubscriptionTier() {
         viewModelScope.launch {
-            observeCurrentUser().collect { user ->
-                _uiState.update { 
-                    it.copy(subscriptionTier = user?.subscriptionTier ?: SubscriptionTier.FREE) 
-                }
+            try {
+                observeCurrentUser()
+                    .catch { error ->
+                        ErrorLogger.log(error, "Failed to observe subscription tier")
+                        _uiState.update { it.copy(error = "Failed to load subscription") }
+                    }
+                    .collect { user ->
+                        _uiState.update {
+                            it.copy(
+                                subscriptionTier = user?.subscriptionTier ?: SubscriptionTier.FREE,
+                                error = null
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Unexpected error in observeSubscriptionTier")
+                _uiState.update { it.copy(error = "Failed to load subscription") }
             }
         }
     }

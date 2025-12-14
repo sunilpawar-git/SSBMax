@@ -48,6 +48,19 @@
     <string name="drawer_my_batches">My Batches</string>
     <string name="drawer_settings">Settings</string>
 
+    <!-- ============================================ -->
+    <!-- ERROR MESSAGES -->
+    <!-- ============================================ -->
+    <!-- Splash Screen Errors -->
+    <string name="splash_error_authentication">Failed to check authentication</string>
+
+    <!-- Student Home Errors -->
+    <string name="home_error_load_profile">Failed to load profile</string>
+    <string name="home_error_load_progress">Failed to load progress</string>
+
+    <!-- Settings Errors -->
+    <string name="settings_error_load_subscription">Failed to load subscription</string>
+
     <!-- Content Descriptions -->
     <string name="cd_menu">Menu</string>
     <string name="cd_notifications">Notifications</string>
