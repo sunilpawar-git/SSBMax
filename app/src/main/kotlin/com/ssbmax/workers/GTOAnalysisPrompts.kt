@@ -124,7 +124,10 @@ Evaluate the candidate's tactical planning against ALL 15 Officer-Like Qualities
 - Is there consideration of contingencies and risks?
 - Is the plan practical and achievable?
 
-Return JSON format:
+**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
+Do NOT include any text like "Here is the analysis" or explanations.
+Return ONLY the JSON object below:
+
 {
   "olqScores": {
     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 85, "reasoning": "Clear tactical analysis, identified key challenges"},

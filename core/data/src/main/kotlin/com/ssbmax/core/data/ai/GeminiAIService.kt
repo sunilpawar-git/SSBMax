@@ -271,10 +271,34 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
                 return Result.failure(IllegalStateException("Empty response from Gemini"))
             }
             
-            // Extract JSON from markdown code blocks if present
-            val cleanJson = extractJsonFromResponse(jsonText)
-            val json = org.json.JSONObject(cleanJson)
+            // Log first 200 chars for debugging
+            Log.d(TAG, "Raw response preview: ${jsonText.take(200)}")
             
+            // Extract JSON from response - handle various formats
+            val cleanJson = when {
+                // Look for JSON in markdown code blocks first
+                "```json" in jsonText -> {
+                    jsonText.substringAfter("```json")
+                        .substringBefore("```")
+                        .trim()
+                }
+                "```" in jsonText -> {
+                    jsonText.substringAfter("```")
+                        .substringBefore("```")
+                        .trim()
+                }
+                // Look for JSON object boundaries
+                "{" in jsonText && "}" in jsonText -> {
+                    val startIndex = jsonText.indexOf('{')
+                    val endIndex = jsonText.lastIndexOf('}') + 1
+                    jsonText.substring(startIndex, endIndex).trim()
+                }
+                else -> jsonText.trim()
+            }
+            
+            Log.d(TAG, "Extracted JSON preview: ${cleanJson.take(200)}")
+            
+            val json = org.json.JSONObject(cleanJson)
             val olqScoresJson = json.getJSONObject("olqScores")
             val olqScores = mutableMapOf<OLQ, OLQScoreWithReasoning>()
             
@@ -299,12 +323,15 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
             }
             
             if (olqScores.isEmpty()) {
+                Log.e(TAG, "No OLQ scores found in response")
                 return Result.failure(IllegalStateException("No OLQ scores parsed from response"))
             }
             
-            // Calculate average confidence
-            val avgConfidence = olqScores.values
-                .mapNotNull { it.score } // Access score directly from OLQScoreWithReasoning
+            // Calculate average confidence from individual scores
+            val avgConfidence = olqScoresJson.keys().asSequence()
+                .mapNotNull {
+                    olqScoresJson.optJSONObject(it)?.optInt("confidence")
+                }
                 .average()
                 .toInt()
                 .coerceIn(0, 100)
