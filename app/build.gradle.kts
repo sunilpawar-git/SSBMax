@@ -163,6 +163,9 @@ android {
         error += "HardcodedText"
         lintConfig = file("lint.xml")
 
+        // Lint baseline for systematic cleanup of warnings (Phase 1.5)
+        baseline = file("lint-baseline.xml")
+
         // Fail build on any errors (enforce quality)
         abortOnError = true
         warningsAsErrors = false // Can enable later for stricter enforcement

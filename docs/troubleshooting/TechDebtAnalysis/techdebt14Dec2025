@@ -19,7 +19,7 @@ After migrating text-based content to Firestore and phasing out hardcoded conten
 - ✅ Builds pass consistently (zero lint errors)
 - ✅ Domain layer properly abstracted (no Android dependencies)
 - ✅ Error handling follows established patterns
-- ✅ SettingsViewModel refactoring completed
+- ✅ SettingsViewModel refactoring completed (53 lines, proper separation)
 
 ### 📋 Tasks
 
@@ -64,33 +64,56 @@ firebaseAnalytics.logEvent("user_app_engagement", bundle)
 
 **Verification:** `./gradle.sh lint` shows no `PrintStackTraceDetector` violations
 
-#### 1.4 Complete SettingsViewModel Refactoring (1-2 days)
-**Current Status:** Phase 2 of 5-phase plan (Theme settings extraction)
-**Remaining:** Phases 3-5 (Profile, Notifications, Final cleanup)
+#### 1.4 Complete SettingsViewModel Refactoring ✅ COMPLETED
+**Issue:** SettingsViewModel exceeded 300-line limit, violating project file size rules
 
-**Action:**
-- Complete Phase 3: Profile settings extraction
-- Complete Phase 4: Notifications settings extraction
-- Complete Phase 5: Final cleanup and validation
+**Action Taken:**
+- **Phase 1:** Created ThemeSettingsViewModel (72 lines) for theme-related functionality
+- **Phase 2:** Created NotificationSettingsViewModel (170 lines) for notification settings
+- **Phase 3:** Created dedicated UI state classes (ThemeSettingsUiState, NotificationSettingsUiState)
+- **Phase 4:** Updated SettingsViewModel to only handle shared state (subscription tier, errors)
+- **Phase 5:** Final cleanup and verification
 
-**Verification:** SettingsViewModel under 300 lines, proper separation of concerns
+**Result:**
+- SettingsViewModel: 53 lines (down from 400+ lines)
+- ThemeSettingsViewModel: 72 lines
+- NotificationSettingsViewModel: 170 lines
+- All files under 300-line limit
+- Proper separation of concerns achieved
 
-#### 1.5 Create Lint Baseline (2-3 hours)
+**Verification:** `./gradle.sh lint` passes, all settings files < 300 lines
+
+#### 1.5 Create Lint Baseline ✅ COMPLETED
 **Issue:** 15 lint warnings need systematic cleanup
 
-**Action:**
-- Run `./gradlew updateLintBaseline` to create baseline
-- Document which warnings will be addressed in later phases
+**Action Taken:**
+- Added `baseline = file("lint-baseline.xml")` to `app/build.gradle.kts` lint configuration
+- Ran `./gradlew updateLintBaseline` to create baseline file
+- Documented which warnings will be addressed in later phases
 - Set up CI to track warning count reduction
 
-**Verification:** Build passes with baseline, warning trends tracked
+**Baseline Summary:**
+- **Total warnings baselined:** 300 warnings + 1 hint
+- **Primary categories:**
+  - **Material Design 3 Icon Deprecations:** ~30 warnings (Icons.Filled.ArrowBack → Icons.AutoMirrored.Filled.ArrowBack, Divider → HorizontalDivider, etc.)
+  - **Unused Resources:** ~50+ warnings (old content migration files)
+  - **Gradle Dependency Updates:** ~50 warnings (library version updates available)
+  - **Typography Issues:** ~30 warnings (dashes, ellipsis formatting)
+  - **Code Quality:** Various minor issues (PluralsCandidate, ObsoleteSdkInt, etc.)
+
+**Phase 4 Cleanup Plan:**
+- **Week 11-12:** Update deprecated Material Design 3 icons (highest priority - UI consistency)
+- **Week 13:** Remove unused resources after content migration completion
+- **Week 14:** Update library dependencies and address remaining quality issues
+
+**Verification:** `./gradlew lint` now passes with baseline (no new issues reported), warning trends tracked
 
 ### 📊 Phase 1 Metrics
 - Build time: < 2 minutes
 - Lint errors: 0
 - Domain layer Android imports: 0
 - printStackTrace() calls: 0
-- SettingsViewModel file size: < 300 lines
+- SettingsViewModel file size: 53 lines ✅
 
 ## Phase 2: Testing Infrastructure & Quality Gates (Week 3-6)
 **Goal:** Establish robust testing foundation and prevent future regressions
