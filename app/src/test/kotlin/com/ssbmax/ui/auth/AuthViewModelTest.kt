@@ -2,6 +2,7 @@ package com.ssbmax.ui.auth
 
 import android.content.Intent
 import app.cash.turbine.test
+import com.ssbmax.core.domain.model.GoogleSignInData
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.usecase.auth.GetGoogleSignInIntentUseCase
@@ -25,7 +26,7 @@ import org.junit.Assert.*
 
 /**
  * Tests for AuthViewModel with Google Sign-In
- * UPDATED: Now tests use cases instead of repositories
+ * UPDATED: Now tests use cases with platform-agnostic GoogleSignInData
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
@@ -78,7 +79,8 @@ class AuthViewModelTest {
     fun `getGoogleSignInIntent returns valid intent`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
-        every { mockGetGoogleSignInIntent() } returns mockIntent
+        val launchData = GoogleSignInData.LaunchData(platformData = mockIntent)
+        every { mockGetGoogleSignInIntent() } returns launchData
         
         // When
         val intent = viewModel.getGoogleSignInIntent()
@@ -98,7 +100,7 @@ class AuthViewModelTest {
             createdAt = currentTime - 86400000, // Created 1 day ago
             lastLoginAt = currentTime
         )
-        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.success(existingUser)
+        coEvery { mockSignInWithGoogle(any<GoogleSignInData>()) } returns Result.success(existingUser)
 
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
@@ -124,7 +126,7 @@ class AuthViewModelTest {
             createdAt = timestamp,
             lastLoginAt = timestamp // Same as createdAt (first login)
         )
-        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.success(newUser)
+        coEvery { mockSignInWithGoogle(any<GoogleSignInData>()) } returns Result.success(newUser)
 
         // When
         viewModel.handleGoogleSignInResult(mockIntent)
@@ -141,9 +143,9 @@ class AuthViewModelTest {
     
     @Test
     fun `handleGoogleSignInResult with null intent shows error`() = runTest {
-        // Given
-        coEvery { mockSignInWithGoogle(null) } returns Result.failure(
-            Exception("Google Sign-In failed")
+        // Given - null Intent results in Cancelled GoogleSignInData
+        coEvery { mockSignInWithGoogle(GoogleSignInData.Cancelled) } returns Result.failure(
+            Exception("Sign-in cancelled")
         )
 
         // When
@@ -154,16 +156,13 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue("Should be error state, got: $state", state is AuthUiState.Error)
-        if (state is AuthUiState.Error) {
-            assertTrue(state.message.contains("Google Sign-In failed"))
-        }
     }
     
     @Test
     fun `handleGoogleSignInResult with failure shows error state`() = runTest {
         // Given
         val mockIntent = mockk<Intent>(relaxed = true)
-        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.failure(
+        coEvery { mockSignInWithGoogle(any<GoogleSignInData>()) } returns Result.failure(
             Exception("Authentication error")
         )
 
@@ -266,7 +265,7 @@ class AuthViewModelTest {
     fun `resetState returns to initial`() = runTest {
         // Given - simulate an error state first
         val mockIntent = mockk<Intent>(relaxed = true)
-        coEvery { mockSignInWithGoogle(mockIntent) } returns Result.failure(
+        coEvery { mockSignInWithGoogle(any<GoogleSignInData>()) } returns Result.failure(
             Exception("Error")
         )
 

@@ -1,0 +1,415 @@
+# SSBMax Tech Debt Analysis - December 2025 (Phase-Wise Plan)
+
+## Executive Summary
+
+After migrating text-based content to Firestore and phasing out hardcoded content files, SSBMax's remaining technical debt focuses on core architectural quality, build system stability, and developer experience. This analysis provides a systematic 4-phase approach to resolve all identified issues.
+
+**Key Metrics:**
+- **Remaining Files:** 233 main source files
+- **Test Coverage:** 25% (59 test files)
+- **Critical Lint Issues:** 1 error blocking builds
+- **Architecture Violations:** Domain layer Android dependencies
+- **Async Operations:** 104 viewModelScope.launch blocks to audit
+- **Navigation Complexity:** 31 navigation calls needing standardization
+
+## Phase 1: Foundation & Critical Fixes (Week 1-2)
+**Goal:** Eliminate build blockers and establish stable development foundation
+
+### 🎯 Success Criteria
+- ✅ Builds pass consistently (zero lint errors)
+- ✅ Domain layer properly abstracted (no Android dependencies)
+- ✅ Error handling follows established patterns
+- ✅ SettingsViewModel refactoring completed
+
+### 📋 Tasks
+
+#### 1.1 Fix Critical Lint Error ✅ COMPLETED
+**Issue:** `InvalidAnalyticsName` error blocking builds
+**Location:** `core/data/src/main/kotlin/com/ssbmax/core/data/analytics/AnalyticsManager.kt:272`
+
+**Action Taken:**
+```kotlin
+// Changed from:
+firebaseAnalytics.logEvent("user_engagement", bundle)
+// To:
+firebaseAnalytics.logEvent("user_app_engagement", bundle)
+```
+
+**Verification:** `./gradle.sh lint` now passes
+
+#### 1.2 Fix Domain Layer Architecture Violations ✅ COMPLETED
+**Issue:** Domain layer importing Android dependencies (breaks Clean Architecture)
+**Files:** `SignInWithGoogleUseCase.kt`, `GetGoogleSignInIntentUseCase.kt`, `AuthRepository.kt`, `SubscriptionTier.kt`
+
+**Action Taken:**
+- Created `GoogleSignInData` sealed class for platform-agnostic Google Sign-In abstraction
+- Updated `AuthRepository` interface to use `GoogleSignInData` instead of `Intent`
+- Updated `SignInWithGoogleUseCase` and `GetGoogleSignInIntentUseCase` to use abstractions
+- Removed `Parcelable` dependency from `SubscriptionTier` and `SubscriptionPlan`
+- Updated `AuthRepositoryImpl` to wrap/unwrap Android `Intent` objects
+- Updated `AuthViewModel` to handle conversion between Intent and GoogleSignInData
+- Updated `AuthViewModelTest` to test new abstractions
+
+**Verification:** Domain layer contains zero Android imports (verified via grep)
+
+#### 1.3 Fix Error Handling Anti-Patterns (2-3 hours)
+**Issue:** 2 printStackTrace() violations
+**Files:** `ErrorLogger.kt`, `OIRTestViewModel.kt`
+
+**Action:**
+- Replace `printStackTrace()` with `ErrorLogger.log(throwable)`
+- Ensure all error handling uses established patterns
+
+**Verification:** `./gradle.sh lint` shows no `PrintStackTraceDetector` violations
+
+#### 1.4 Complete SettingsViewModel Refactoring (1-2 days)
+**Current Status:** Phase 2 of 5-phase plan (Theme settings extraction)
+**Remaining:** Phases 3-5 (Profile, Notifications, Final cleanup)
+
+**Action:**
+- Complete Phase 3: Profile settings extraction
+- Complete Phase 4: Notifications settings extraction
+- Complete Phase 5: Final cleanup and validation
+
+**Verification:** SettingsViewModel under 300 lines, proper separation of concerns
+
+#### 1.5 Create Lint Baseline (2-3 hours)
+**Issue:** 15 lint warnings need systematic cleanup
+
+**Action:**
+- Run `./gradlew updateLintBaseline` to create baseline
+- Document which warnings will be addressed in later phases
+- Set up CI to track warning count reduction
+
+**Verification:** Build passes with baseline, warning trends tracked
+
+### 📊 Phase 1 Metrics
+- Build time: < 2 minutes
+- Lint errors: 0
+- Domain layer Android imports: 0
+- printStackTrace() calls: 0
+- SettingsViewModel file size: < 300 lines
+
+## Phase 2: Testing Infrastructure & Quality Gates (Week 3-6)
+**Goal:** Establish robust testing foundation and prevent future regressions
+
+### 🎯 Success Criteria
+- ✅ Test coverage increased to 50%+
+- ✅ Critical user flows have integration tests
+- ✅ CI/CD pipeline blocks on quality violations
+- ✅ Pre-commit hooks prevent common mistakes
+
+### 📋 Tasks
+
+#### 2.1 Test Coverage Audit & Planning (1 day)
+**Current Coverage:** 25% (59 test files for 233 source files)
+
+**Action:**
+- Analyze current test distribution
+- Identify critical untested components:
+  - ViewModels with complex business logic
+  - Navigation flows
+  - Error scenarios
+  - Integration points
+
+**Deliverable:** Test coverage roadmap document
+
+#### 2.2 Implement Critical Test Coverage (2-3 weeks)
+**Priority Components:**
+- All 53 ViewModels (currently 104 viewModelScope.launch blocks)
+- Navigation logic (31 navigation calls)
+- Repository layer operations
+- Error handling paths
+
+**Action:**
+- Create ViewModel test templates
+- Implement repository testing patterns
+- Add navigation testing utilities
+- Set up mock data infrastructure
+
+**Target:** 50% coverage achieved
+
+#### 2.3 Set Up CI/CD Quality Gates (1 week)
+**Current State:** No quality enforcement
+
+**Action:**
+- Configure CI pipeline to fail on:
+  - Lint errors (not warnings)
+  - Test coverage below threshold
+  - Architecture violations
+- Add code quality reporting
+- Set up automated dependency updates
+
+**Verification:** CI blocks commits violating core rules
+
+#### 2.4 Implement Pre-commit Hooks (2-3 days)
+**Current State:** No pre-commit validation
+
+**Action:**
+- Set up pre-commit framework (pre-commit.com or husky)
+- Add hooks for:
+  - Lint checking (block on errors)
+  - Unit tests (block on failures)
+  - File size limits (300 lines)
+  - Hardcoded string detection (future-proofing)
+
+**Verification:** `./gradlew check` runs automatically before commits
+
+### 📊 Phase 2 Metrics
+- Test coverage: 25% → 50%+
+- CI build time: < 5 minutes
+- Pre-commit failure rate: < 5%
+- Critical path test coverage: 90%+
+
+## Phase 3: Async Operations & Performance Audit (Week 7-10)
+**Goal:** Ensure reliable async operations and optimal performance
+
+### 🎯 Success Criteria
+- ✅ All 104 viewModelScope.launch blocks audited for proper error handling
+- ✅ Memory leak prevention verified across all ViewModels
+- ✅ Navigation patterns standardized and process-death safe
+- ✅ Performance baselines established
+
+### 📋 Tasks
+
+#### 3.1 Async Operations Audit (1-2 weeks)
+**Scope:** 104 viewModelScope.launch blocks across 53 ViewModels
+
+**Action:**
+- Create audit checklist for each async operation:
+  - Proper exception handling (try-catch with ErrorLogger)
+  - Cancellation handling (isActive checks)
+  - Timeout management
+  - Loading state management
+  - Error state recovery
+
+**Deliverable:** Async operations audit report with risk assessment
+
+#### 3.2 Memory Leak Prevention Verification (1 week)
+**Focus Areas:**
+- ViewModel lifecycle management
+- Coroutine scope cleanup
+- Listener registration/removal
+- Resource disposal
+
+**Action:**
+- Implement memory leak detection tests
+- Add LeakCanary integration for debug builds
+- Create memory profiling guidelines
+
+**Verification:** Zero memory leaks in critical user flows
+
+#### 3.3 Navigation Pattern Standardization (1 week)
+**Scope:** 31 navigation calls requiring audit
+
+**Action:**
+- Audit all navigation calls for:
+  - Complex object passing (should use IDs)
+  - Process-death safety
+  - Deep linking support
+- Implement ID-based navigation pattern consistently
+- Update navigation testing utilities
+
+**Verification:** All navigation uses ID-based pattern
+
+#### 3.4 Performance Baseline Establishment (3-5 days)
+**Key Metrics:**
+- App startup time
+- Screen transition times
+- Memory usage patterns
+- Network request performance
+
+**Action:**
+- Set up performance monitoring
+- Establish baseline metrics
+- Create performance regression tests
+- Document performance guidelines
+
+### 📊 Phase 3 Metrics
+- Audited async operations: 104/104
+- Navigation calls using ID pattern: 31/31
+- Memory leak detection: Pass
+- Performance regression tests: Implemented
+
+## Phase 4: Developer Experience & Future-Proofing (Week 11-14)
+**Goal:** Optimize development workflow and prepare for scale
+
+### 🎯 Success Criteria
+- ✅ All dependencies updated to latest stable versions
+- ✅ Code style consistency achieved
+- ✅ Documentation complete and current
+- ✅ Architecture enforcement automated
+
+### 📋 Tasks
+
+#### 4.1 Dependency Updates & Security Audit (1 week)
+**Current Issues:**
+- Compile SDK 35 → 36 available
+- Test dependencies outdated
+- Security vulnerabilities check
+
+**Action:**
+- Update all dependencies to latest stable versions
+- Run security vulnerability scans
+- Update compatibility matrices
+- Test compatibility across update
+
+**Verification:** All dependencies current, security scan clean
+
+#### 4.2 Code Style & Consistency Improvements (3-5 days)
+**Issues to Address:**
+- Import organization inconsistencies
+- Comment style variations
+- Naming convention variations
+- Code formatting edge cases
+
+**Action:**
+- Run comprehensive ktlint configuration
+- Create team coding standards document
+- Set up automated code formatting
+- Implement style guide enforcement
+
+**Verification:** ktlint passes with zero violations
+
+#### 4.3 Documentation Completion (1 week)
+**Missing Documentation:**
+- API documentation (KDoc) for public APIs
+- Architecture decision records
+- Setup and deployment guides
+- Troubleshooting guides
+
+**Action:**
+- Complete KDoc for all public APIs
+- Create architecture documentation
+- Update developer onboarding materials
+- Document common troubleshooting scenarios
+
+**Verification:** Documentation coverage > 90%
+
+#### 4.4 Architecture Enforcement Automation (3-5 days)
+**Tools to Implement:**
+- Custom lint rules for project-specific patterns
+- Architecture test suite
+- Automated dependency analysis
+- Code generation validation
+
+**Action:**
+- Implement custom lint rules:
+  - StateFlow update pattern enforcement
+  - Singleton mutable state detection
+  - Domain layer Android import prevention
+- Create architecture test suite
+- Set up automated dependency validation
+
+**Verification:** Architecture violations caught at compile time
+
+### 📊 Phase 4 Metrics
+- Dependencies updated: 100%
+- Code style violations: 0
+- Documentation coverage: > 90%
+- Architecture violations caught: 100%
+
+## Risk Assessment & Mitigation
+
+### High Risk Issues
+- **Domain Layer Violations:** Could prevent platform reuse (iOS, Desktop)
+  - *Mitigation:* Addressed in Phase 1
+- **Build Instability:** Lint errors block development
+  - *Mitigation:* Fixed in Phase 1
+- **Test Coverage Gap:** High regression risk
+  - *Mitigation:* Phase 2 priority
+
+### Medium Risk Issues
+- **Async Operation Complexity:** 104+ coroutine operations
+  - *Mitigation:* Comprehensive audit in Phase 3
+- **Navigation Inconsistencies:** Process-death safety concerns
+  - *Mitigation:* Standardized in Phase 3
+
+### Low Risk Issues
+- **Dependency Updates:** Technical debt but not blocking
+  - *Mitigation:* Systematic updates in Phase 4
+- **Style Inconsistencies:** Developer experience impact
+  - *Mitigation:* Automated enforcement in Phase 4
+
+## Success Metrics Dashboard
+
+| Metric | Current | Phase 1 Target | Phase 2 Target | Phase 3 Target | Phase 4 Target |
+|--------|---------|----------------|----------------|----------------|----------------|
+| Build Success Rate | 0% (failing) | 100% | 100% | 100% | 100% |
+| Lint Errors | 1 | 0 | 0 | 0 | 0 |
+| Test Coverage | 25% | 25% | 50%+ | 50%+ | 50%+ |
+| Domain Android Imports | 4 | 0 | 0 | 0 | 0 |
+| Files > 300 lines | 6 | 6 | 6 | 6 | 6 |
+| Singleton Objects | 18 | 18 | 18 | 18 | 18 |
+| Hardcoded Strings | 152 | 152 | 152 | 152 | 152 |
+| CI Quality Gates | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Pre-commit Hooks | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Dependencies Updated | 60% | 60% | 60% | 60% | 100% |
+| Documentation Coverage | 70% | 70% | 70% | 70% | 90%+ |
+
+*Note: Files > 300 lines, Singleton Objects, and Hardcoded Strings metrics reflect content migration files being phased out separately*
+
+## Implementation Timeline
+
+```
+Week 1-2: Phase 1 (Foundation)
+├── Day 1-2: Critical fixes (lint, domain layer)
+├── Day 3-4: Error handling, Settings refactoring
+└── Day 5-10: Lint baseline, verification
+
+Week 3-6: Phase 2 (Testing & CI/CD)
+├── Week 3: Test audit & planning
+├── Week 4-5: Critical test implementation
+└── Week 6: CI/CD setup & pre-commit hooks
+
+Week 7-10: Phase 3 (Async & Performance)
+├── Week 7-8: Async operations audit
+├── Week 9: Memory leak verification
+└── Week 10: Navigation standardization
+
+Week 11-14: Phase 4 (Developer Experience)
+├── Week 11: Dependency updates
+├── Week 12: Code style consistency
+├── Week 13: Documentation completion
+└── Week 14: Architecture enforcement
+```
+
+## Monitoring & Adjustment
+
+### Weekly Checkpoints
+- **Monday:** Review progress against phase goals
+- **Friday:** Assess blockers and adjust timeline if needed
+- **Phase End:** Comprehensive verification of success criteria
+
+### Early Warning Signs
+- Build times increasing beyond targets
+- Test coverage growth slowing
+- New lint violations appearing
+- Team velocity decreasing
+
+### Contingency Plans
+- **Phase Slippage:** Parallelize non-dependent tasks
+- **Blockers Identified:** Escalate to architecture team
+- **Scope Creep:** Stick to defined success criteria
+
+## Conclusion
+
+This phased approach systematically addresses SSBMax's remaining technical debt while maintaining development velocity. The focus on quick wins (Phase 1) followed by foundational improvements (Phase 2) ensures immediate stability, while later phases build quality and scalability.
+
+**Key Success Factors:**
+1. **Strict Phase Completion:** Don't advance until success criteria met
+2. **Team Alignment:** Regular syncs on progress and blockers
+3. **Measurement Focus:** Track metrics religiously
+4. **Parallel Execution:** Content migration runs alongside technical debt cleanup
+
+**Expected Outcomes:**
+- **Build Stability:** Zero build failures from technical debt
+- **Developer Productivity:** 30-50% faster development cycles
+- **Code Quality:** Industry-standard practices enforced
+- **Scalability:** Architecture ready for team growth and feature expansion
+
+---
+
+**Last Updated:** December 2025
+**Next Review:** After Phase 1 completion
+**Document Owner:** SSBMax Architecture Team

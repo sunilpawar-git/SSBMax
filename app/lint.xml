@@ -8,4 +8,13 @@
         <!-- Allow in debug/developer screens -->
         <ignore path="**/components/DeveloperOptionsSection.kt" />
     </issue>
+
+    <!-- Enforce ErrorLogger usage - prevent printStackTrace() anti-pattern -->
+    <issue id="PrintStackTraceUsage" severity="error">
+        <!-- Allow in test files where stack traces might be useful for debugging -->
+        <ignore path="**/test/**" />
+        <ignore path="**/androidTest/**" />
+        <!-- Allow in lint test files -->
+        <ignore path="**/lint/src/test/**" />
+    </issue>
 </lint>

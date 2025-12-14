@@ -3,8 +3,10 @@ package com.ssbmax.ui.auth
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.domain.model.GoogleSignInData
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.core.domain.model.getPlatformData
 import com.ssbmax.core.domain.usecase.auth.GetGoogleSignInIntentUseCase
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.auth.SignInWithGoogleUseCase
@@ -20,6 +22,10 @@ import javax.inject.Inject
 
 /**
  * ViewModel for authentication screens with Firebase integration
+ * 
+ * This ViewModel handles the conversion between Android-specific Intent objects
+ * and platform-agnostic GoogleSignInData for the domain layer.
+ * 
  * REFACTORED: Now uses use cases instead of direct repository implementation injection
  */
 @HiltViewModel
@@ -35,21 +41,37 @@ class AuthViewModel @Inject constructor(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
     
     /**
-     * Get Google Sign-In intent
+     * Get Google Sign-In intent for launching authentication flow
+     * 
+     * Extracts Android Intent from platform-agnostic GoogleSignInData
      */
     fun getGoogleSignInIntent(): Intent {
-        return getGoogleSignInIntent.invoke()
+        val launchData = getGoogleSignInIntent.invoke()
+        return launchData.getPlatformData<Intent>() 
+            ?: throw IllegalStateException("Failed to get Android Intent from GoogleSignInData")
     }
     
     /**
-     * Handle Google Sign-In result
+     * Handle Google Sign-In result from Android activity
+     * 
+     * Wraps Android Intent in platform-agnostic GoogleSignInData before
+     * passing to domain layer use case.
+     * 
+     * @param data Intent returned from Google Sign-In activity, or null if cancelled
      */
     fun handleGoogleSignInResult(data: Intent?) {
         viewModelScope.launch {
             android.util.Log.d("AuthViewModel", "handleGoogleSignInResult called, data=$data")
             _uiState.value = AuthUiState.Loading
             
-            signInWithGoogle(data)
+            // Wrap Intent in platform-agnostic GoogleSignInData
+            val signInData = if (data != null) {
+                GoogleSignInData.ResultData(platformData = data)
+            } else {
+                GoogleSignInData.Cancelled
+            }
+            
+            signInWithGoogle(signInData)
                 .onSuccess { user ->
                     android.util.Log.d("AuthViewModel", "Sign-in SUCCESS: user=${user.email}, role=${user.role}")
                     // User authenticated successfully

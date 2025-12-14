@@ -7,6 +7,7 @@ import com.ssbmax.core.data.di.ApplicationScope
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirestoreUserRepository
 import com.ssbmax.core.data.util.MemoryLeakTracker
+import com.ssbmax.core.domain.model.GoogleSignInData
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.StudentProfile
 import com.ssbmax.core.domain.model.SubscriptionTier
@@ -21,6 +22,9 @@ import javax.inject.Singleton
 /**
  * Firebase implementation of AuthRepository
  * Manages authentication with Firebase Auth and user profiles with Firestore
+ * 
+ * This implementation wraps Android-specific Intent objects in platform-agnostic
+ * GoogleSignInData to maintain domain layer independence.
  * 
  * Uses reactive StateFlow with WhileSubscribed to automatically manage lifecycle:
  * - Starts collecting when first subscriber attaches
@@ -85,20 +89,44 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Get Google Sign-In intent
+     * Get Google Sign-In launch data wrapped in platform-agnostic container
+     * 
+     * @return GoogleSignInData.LaunchData containing Android Intent
      */
-    override fun getGoogleSignInIntent(): Intent {
-        return firebaseAuthService.getSignInIntent()
+    override fun getGoogleSignInIntent(): GoogleSignInData.LaunchData {
+        val androidIntent = firebaseAuthService.getSignInIntent()
+        return GoogleSignInData.LaunchData(platformData = androidIntent)
     }
 
     /**
-     * Handle Google Sign-In result
+     * Handle Google Sign-In result from platform-agnostic data wrapper
+     * 
+     * @param data Platform-agnostic GoogleSignInData wrapping the Android Intent
+     * @return Result containing authenticated user or error
      */
-    override suspend fun handleGoogleSignInResult(data: Intent?): Result<SSBMaxUser> {
+    override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result<SSBMaxUser> {
         return try {
             android.util.Log.d("AuthRepositoryImpl", "handleGoogleSignInResult: Starting authentication")
+            
+            // Extract Android Intent from platform-agnostic wrapper
+            val androidIntent = when (data) {
+                is GoogleSignInData.ResultData -> data.platformData as? Intent
+                is GoogleSignInData.Cancelled -> {
+                    android.util.Log.w("AuthRepositoryImpl", "Sign-in cancelled by user")
+                    return Result.failure(Exception("Sign-in cancelled"))
+                }
+                is GoogleSignInData.Error -> {
+                    android.util.Log.e("AuthRepositoryImpl", "Sign-in error: ${data.message}", data.exception)
+                    return Result.failure(data.exception ?: Exception(data.message))
+                }
+                else -> {
+                    android.util.Log.e("AuthRepositoryImpl", "Invalid GoogleSignInData type: ${data::class.simpleName}")
+                    return Result.failure(Exception("Invalid sign-in data"))
+                }
+            }
+            
             // Authenticate with Firebase using Google credentials
-            val firebaseResult = firebaseAuthService.handleSignInResult(data)
+            val firebaseResult = firebaseAuthService.handleSignInResult(androidIntent)
             
             if (firebaseResult.isFailure) {
                 val error = firebaseResult.exceptionOrNull() ?: Exception("Sign-in failed")

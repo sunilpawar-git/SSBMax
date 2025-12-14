@@ -1,11 +1,10 @@
 package com.ssbmax.core.domain.model
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-
 /**
  * Subscription tiers available in SSBMax
  * IMPORTANT: This is the SINGLE SOURCE OF TRUTH for pricing
+ * 
+ * Platform-independent enum - serialization handled in presentation layer
  */
 enum class SubscriptionTier {
     FREE,
@@ -189,8 +188,10 @@ enum class BillingCycle {
 
 /**
  * Subscription plan option for display in upgrade screen
+ * 
+ * Note: Platform-specific serialization (Parcelable, Codable, etc.) 
+ * should be handled in the presentation layer if needed.
  */
-@Parcelize
 data class SubscriptionPlan(
     val tier: SubscriptionTier,
     val name: String,
@@ -199,7 +200,7 @@ data class SubscriptionPlan(
     val features: List<String>,
     val isPopular: Boolean = false,
     val savings: Int? = null // percentage savings for annual plans
-) : Parcelable
+)
 
 /**
  * Billing period for subscriptions
