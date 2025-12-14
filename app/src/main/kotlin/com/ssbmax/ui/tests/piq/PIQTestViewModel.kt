@@ -18,11 +18,13 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.AppConstants
+import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.InterviewQuestionGenerationWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -107,7 +109,9 @@ class PIQTestViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 Log.d(TAG, "📂 PIQ: Loading draft...")
-                val userId = observeCurrentUser().first()?.id
+                val userId = withTimeout(3000L) { // 3 second timeout for auth state
+                    observeCurrentUser().first()?.id
+                }
                 if (userId == null) {
                     Log.w(TAG, "⚠️ PIQ: No user logged in, skipping draft load")
                     return@launch
@@ -120,7 +124,7 @@ class PIQTestViewModel @Inject constructor(
                 // For now, start with empty form
                 Log.d(TAG, "✅ PIQ: Ready for new form")
             } catch (e: Exception) {
-                Log.e(TAG, "❌ PIQ: Error loading draft", e)
+                ErrorLogger.log(e, "Failed to load PIQ draft for test: $testId")
             }
         }
     }
@@ -163,7 +167,7 @@ class PIQTestViewModel @Inject constructor(
                 Log.d(TAG, "ℹ️ PIQ: No OIR submissions found")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ PIQ: Error loading OIR number", e)
+            ErrorLogger.log(e, "Failed to load OIR number for PIQ form")
             // Don't fail the whole form if OIR loading fails
         }
     }
@@ -225,7 +229,9 @@ class PIQTestViewModel @Inject constructor(
                 
                 Log.d(TAG, "💾 PIQ: Auto-saving draft...")
                 
-                val userId = observeCurrentUser().first()?.id
+                val userId = withTimeout(3000L) { // 3 second timeout for auth state
+                    observeCurrentUser().first()?.id
+                }
                 if (userId == null) {
                     Log.w(TAG, "⚠️ PIQ: Cannot save draft - user not logged in")
                     _uiState.update { it.copy(isSaving = false) }
@@ -245,11 +251,11 @@ class PIQTestViewModel @Inject constructor(
                         lastSavedAt = System.currentTimeMillis()
                     ) }
                 }.onFailure { error ->
-                    Log.e(TAG, "❌ PIQ: Failed to save draft", error)
+                    ErrorLogger.log(error, "Failed to save PIQ draft for test: $testId")
                     _uiState.update { it.copy(isSaving = false) }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "❌ PIQ: Error in saveDraft", e)
+                ErrorLogger.log(e, "Exception in PIQ draft save operation for test: $testId")
                 _uiState.update { it.copy(isSaving = false) }
             }
         }
@@ -265,12 +271,15 @@ class PIQTestViewModel @Inject constructor(
             Log.d(TAG, "════════════════════════════════════════")
             
             _uiState.update { it.copy(isLoading = true) }
-            
+
+            var currentUserId: String? = null
             try {
                 // Step 1: Get current user
                 Log.d(TAG, "📍 PIQ Step 1: Getting current user...")
-                val currentUserId: String = observeCurrentUser().first()?.id ?: run {
-                    Log.e(TAG, "❌ PIQ: User not authenticated")
+                currentUserId = withTimeout(3000L) { // 3 second timeout for auth state
+                    observeCurrentUser().first()?.id
+                } ?: run {
+                    ErrorLogger.log(Exception("User not authenticated during PIQ submission"), "PIQ submission failed: user not authenticated")
                     securityLogger.logUnauthenticatedAccess(
                         testType = TestType.PIQ,
                         context = "PIQTestViewModel.submitTest"
@@ -302,7 +311,9 @@ class PIQTestViewModel @Inject constructor(
                 
                 // Step 3: Get user profile for subscription type
                 Log.d(TAG, "📍 PIQ Step 3: Getting user profile...")
-                val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
+                val userProfileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
+                    userProfileRepository.getUserProfile(currentUserId).first()
+                }
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
                 Log.d(TAG, "✅ PIQ: Subscription type: $subscriptionType")
@@ -356,14 +367,14 @@ class PIQTestViewModel @Inject constructor(
                     Log.d(TAG, "✅ PIQ: Submission complete!")
                     Log.d(TAG, "════════════════════════════════════════")
                 }.onFailure { error ->
-                    Log.e(TAG, "❌ PIQ: Submission failed", error)
+                    ErrorLogger.log(error, "Failed to submit PIQ test for user: $currentUserId")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = "Failed to submit PIQ: ${error.message}"
                     ) }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "❌ PIQ: Error in submitTest", e)
+                ErrorLogger.log(e, "Exception during PIQ submission for user: ${currentUserId ?: "unknown"}")
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = "An error occurred: ${e.message}"

@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -97,7 +98,9 @@ class InterviewSessionViewModel @Inject constructor(
                     return@launch
                 }
 
-                val userId = authRepository.currentUser.first()?.id
+                val userId = withTimeout(3000L) { // 3 second timeout for auth state
+                    authRepository.currentUser.first()?.id
+                }
                 if (userId == null) {
                     Log.d(TAG, "🔊 [TTS-INIT] No user ID, using Android TTS")
                     selectTTSService(SubscriptionType.FREE)
@@ -105,14 +108,15 @@ class InterviewSessionViewModel @Inject constructor(
                 }
 
                 Log.d(TAG, "🔊 [TTS-INIT] Fetching user profile for userId: $userId")
-                val profileResult = userProfileRepository.getUserProfile(userId).first()
+                val profileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
+                    userProfileRepository.getUserProfile(userId).first()
+                }
                 val subscriptionType = profileResult.getOrNull()?.subscriptionType ?: SubscriptionType.FREE
 
                 Log.d(TAG, "🔊 [TTS-INIT] User subscription: $subscriptionType")
                 selectTTSService(subscriptionType)
             } catch (e: Exception) {
-                Log.e(TAG, "❌ [TTS-INIT] Failed to get subscription, using Android TTS", e)
-                ErrorLogger.log(e, "[TTS-INIT] Failed to initialize TTS with user subscription")
+                ErrorLogger.log(e, "[TTS-INIT] Failed to initialize TTS with user subscription, falling back to Android TTS")
                 selectTTSService(SubscriptionType.FREE)
             }
         }
@@ -185,7 +189,6 @@ class InterviewSessionViewModel @Inject constructor(
                         _uiState.update { it.copy(isTTSSpeaking = false) }
                     }
                     is TTSService.TTSEvent.Error -> {
-                        Log.e(TAG, "❌ [TTS-EVENTS] TTS error: ${event.message}")
                         ErrorLogger.log(Exception(event.message), "[TTS-EVENTS] TTS service error")
                         _uiState.update { it.copy(isTTSSpeaking = false) }
                         if (event.fallbackToAndroid && usingPremiumVoice) {
@@ -378,7 +381,7 @@ class InterviewSessionViewModel @Inject constructor(
                     completeInterview(updatedPending)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Exception in submitResponse", e)
+                ErrorLogger.log(e, "Exception during interview response submission")
                 handleError(e, R.string.interview_error_generic)
                 _uiState.update { it.copy(isSubmittingResponse = false) }
             }
@@ -487,7 +490,6 @@ class InterviewSessionViewModel @Inject constructor(
             Log.d(TAG, "✅ Interview completed - background analysis scheduled")
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Exception completing interview", e)
             ErrorLogger.log(e, "Exception completing voice interview")
             handleError(e, R.string.interview_error_complete_interview)
             _uiState.update { it.copy(isSubmittingResponse = false, loadingMessage = null) }

@@ -10,12 +10,14 @@ import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -118,10 +120,12 @@ class TATTestViewModel @Inject constructor(
             try {
                 // Get current user - SECURITY: Require authentication
                 android.util.Log.d("TATTestViewModel", "📍 Step 1: Fetching current user...")
-                val user = observeCurrentUser().first()
+                val user = withTimeout(3000L) { // 3 second timeout for auth state
+                    observeCurrentUser().first()
+                }
                 val userId = user?.id ?: run {
-                    android.util.Log.e("TATTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
-                    
+                    ErrorLogger.log(Exception("Unauthenticated TAT test access attempt"), "SECURITY: Unauthenticated test access attempt blocked")
+
                     // SECURITY: Log unauthenticated access attempt to Firebase Analytics
                     securityLogger.logUnauthenticatedAccess(
                         testType = TestType.TAT,
@@ -189,8 +193,9 @@ class TATTestViewModel @Inject constructor(
                 )
                 
                 if (sessionResult.isFailure) {
-                    android.util.Log.e("TATTestViewModel", "❌ Failed to create test session: ${sessionResult.exceptionOrNull()?.message}")
-                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                    val exception = sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+                    ErrorLogger.log(exception, "Failed to create TAT test session for user: $userId")
+                    throw exception
                 }
                 android.util.Log.d("TATTestViewModel", "✅ Test session created")
                 
@@ -199,16 +204,18 @@ class TATTestViewModel @Inject constructor(
                 val questionsResult = testContentRepository.getTATQuestions(testId)
                 
                 if (questionsResult.isFailure) {
-                    android.util.Log.e("TATTestViewModel", "❌ Failed to load questions: ${questionsResult.exceptionOrNull()?.message}")
-                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+                    val exception = questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+                    ErrorLogger.log(exception, "Failed to load TAT questions for test: $testId")
+                    throw exception
                 }
-                
+
                 val questions = questionsResult.getOrNull() ?: emptyList()
                 android.util.Log.d("TATTestViewModel", "✅ Loaded ${questions.size} TAT questions")
-                
+
                 if (questions.isEmpty()) {
-                    android.util.Log.e("TATTestViewModel", "❌ No questions found!")
-                    throw Exception("No questions found for this test")
+                    val exception = Exception("No TAT questions found for test: $testId")
+                    ErrorLogger.log(exception, "No TAT questions found for test")
+                    throw exception
                 }
                 
                 val config = TATTestConfig()
@@ -225,7 +232,7 @@ class TATTestViewModel @Inject constructor(
                 android.util.Log.d("TATTestViewModel", "✅ Test loaded successfully - showing instructions")
                 android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
             } catch (e: Exception) {
-                android.util.Log.e("TATTestViewModel", "❌ Error loading test: ${e.message}", e)
+                ErrorLogger.log(e, "Exception loading TAT test: $testId")
                 android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 _uiState.update { it.copy(
                     isLoading = false,
@@ -321,15 +328,18 @@ class TATTestViewModel @Inject constructor(
             android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
             
             _uiState.update { it.copy(isLoading = true) }
-            
+
+            var currentUserId: String? = null
             try {
                 // PHASE 2: No manual stopTimer() - viewModelScope cancels on completion
                 _uiState.update { it.copy(isTimerActive = false) }
-                
+
                 // Get current user
                 android.util.Log.d("TATTestViewModel", "📍 Step 1: Getting current user...")
-                val currentUserId: String = observeCurrentUser().first()?.id ?: run {
-                    android.util.Log.e("TATTestViewModel", "❌ User not authenticated")
+                currentUserId = withTimeout(3000L) { // 3 second timeout for auth state
+                    observeCurrentUser().first()?.id
+                } ?: run {
+                    ErrorLogger.log(Exception("User not authenticated during TAT submission"), "TAT submission failed: user not authenticated")
                     _uiState.update { it.copy(
                         isLoading = false,
                         error = "Please login to submit test"
@@ -340,7 +350,9 @@ class TATTestViewModel @Inject constructor(
                 
                 // Get user profile for subscription type
                 android.util.Log.d("TATTestViewModel", "📍 Step 2: Getting user profile...")
-                val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
+                val userProfileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
+                    userProfileRepository.getUserProfile(currentUserId).first()
+                }
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
                 android.util.Log.d("TATTestViewModel", "✅ Subscription type: $subscriptionType")
@@ -412,7 +424,7 @@ class TATTestViewModel @Inject constructor(
                     android.util.Log.d("TATTestViewModel", "✅ TAT test submission complete!")
                     android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 }.onFailure { error ->
-                    android.util.Log.e("TATTestViewModel", "❌ Submission failed: ${error.message}", error)
+                    ErrorLogger.log(error, "Failed to submit TAT test for user: $currentUserId")
                     android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                     _uiState.update { it.copy(
                         isLoading = false,
@@ -420,7 +432,7 @@ class TATTestViewModel @Inject constructor(
                     ) }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TATTestViewModel", "❌ Exception during submission: ${e.message}", e)
+                ErrorLogger.log(e, "Exception during TAT submission for user: ${currentUserId ?: "unknown"}")
                 android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 _uiState.update { it.copy(
                     isLoading = false,

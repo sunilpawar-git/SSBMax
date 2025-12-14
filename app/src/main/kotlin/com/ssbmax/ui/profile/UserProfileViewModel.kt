@@ -8,6 +8,7 @@ import com.ssbmax.core.domain.model.Gender
 import com.ssbmax.core.domain.model.UserProfile
 import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,7 +90,7 @@ class UserProfileViewModel @Inject constructor(
                             }
                         },
                         onFailure = { error ->
-                            Log.e(TAG, "❌ Failed to load profile: ${error.message}", error)
+                            ErrorLogger.log(error, "Failed to load user profile for user: $userId")
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
