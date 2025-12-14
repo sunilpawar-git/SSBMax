@@ -269,7 +269,7 @@ class AnalyticsManager @Inject constructor(
                 putString("activity_type", activityType)
                 putString(PARAM_CURRENT_TIER, getCurrentUserTier())
             }
-            firebaseAnalytics.logEvent("user_engagement", bundle)
+            firebaseAnalytics.logEvent("user_app_engagement", bundle)
             Log.d(TAG, "📊 Engagement tracked: $activityType for ${durationSeconds}s")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to track engagement", e)
