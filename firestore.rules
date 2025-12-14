@@ -234,14 +234,12 @@ service cloud.firestore {
                         request.resource.data.keys().hasAny(['data']) ||
                         request.resource.data.keys().hasAny(['resultId']));
       
-      // Students can update their own submissions for:
-      // 1. IN_PROGRESS submissions (auto-save)
-      // 2. Adding AI analysis results (status, olqScores, aiAnalysis fields)
-      // Assessors can update submissions for grading (add scores, feedback, status)
-      allow update: if isAuthenticated() && 
-                       ((resource.data.userId == request.auth.uid) ||
+      // Students can update their own IN_PROGRESS submissions for auto-save
+      // Assessors can update submissions for grading (any status)
+      allow update: if isAuthenticated() &&
+                       ((resource.data.userId == request.auth.uid && resource.data.status == 'IN_PROGRESS') ||
                         (resource.data.instructorId == request.auth.uid) ||
-                        (isAssessor() && resource.data.keys().hasAny(['batchId']) && 
+                        (isAssessor() && resource.data.keys().hasAny(['batchId']) &&
                          get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
       
       // Students can delete their own DRAFT submissions only
