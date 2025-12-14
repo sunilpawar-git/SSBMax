@@ -17,9 +17,10 @@ import com.android.tools.lint.detector.api.CURRENT_API
  * 3. NavigationComplexObjectDetector - Enforces ID-based navigation (prevents passing complex objects)
  * 4. ViewModelLifecycleDetector - Ensures resources are cancelled in onCleared()
  * 5. PrintStackTraceDetector - Prevents printStackTrace() usage (use ErrorLogger instead)
- * 6. FirebaseInUILayerDetector - Prevents Firebase imports in UI layer (use domain abstractions)
- * 7. StateFlowValueAssignmentDetector - Enforces .update {} pattern for thread-safe StateFlow mutations
- * 8. NullableViewModelVarDetector - Prevents nullable mutable vars in ViewModels (use StateFlow)
+ * 6. LogMethodDetector - Prevents android.util.Log usage (use ErrorLogger instead)
+ * 7. FirebaseInUILayerDetector - Prevents Firebase imports in UI layer (use domain abstractions)
+ * 8. StateFlowValueAssignmentDetector - Enforces .update {} pattern for thread-safe StateFlow mutations
+ * 9. NullableViewModelVarDetector - Prevents nullable mutable vars in ViewModels (use StateFlow)
  */
 class SSBMaxIssueRegistry : IssueRegistry() {
 
@@ -29,6 +30,7 @@ class SSBMaxIssueRegistry : IssueRegistry() {
         NavigationComplexObjectDetector.ISSUE,
         ViewModelLifecycleDetector.ISSUE,
         PrintStackTraceDetector.ISSUE,
+        LogMethodDetector.ISSUE,
         FirebaseInUILayerDetector.ISSUE,
         StateFlowValueAssignmentDetector.ISSUE,
         // StateFlow Migration - Phase 4 enforcement

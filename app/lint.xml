@@ -17,4 +17,15 @@
         <!-- Allow in lint test files -->
         <ignore path="**/lint/src/test/**" />
     </issue>
+
+    <!-- Enforce ErrorLogger usage - prevent android.util.Log direct usage -->
+    <issue id="DirectLogUsage" severity="error">
+        <!-- Allow in test files where direct logging might be needed -->
+        <ignore path="**/test/**" />
+        <ignore path="**/androidTest/**" />
+        <!-- Allow in lint test files -->
+        <ignore path="**/lint/src/test/**" />
+        <!-- Allow in ErrorLogger itself (it uses Log internally) -->
+        <ignore path="**/ErrorLogger.kt" />
+    </issue>
 </lint>
