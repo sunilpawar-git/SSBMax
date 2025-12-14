@@ -174,12 +174,15 @@ class CloudGeminiAIService @Inject constructor() : AIService {
     }
     
     /**
-     * Call Gemini directly (not supported in cloud implementation)
-     * This is only used by GeminiAIService for GTO analysis
+     * Analyze GTO response (not yet implemented in cloud)
+     * Use GeminiAIService for GTO analysis with direct API access
      */
-    override suspend fun callGeminiDirect(prompt: String): Result<String> {
-        Log.e(TAG, "Direct Gemini calls not supported in CloudGemini implementation")
-        return Result.failure(UnsupportedOperationException("Use GeminiAIService for direct API calls"))
+    override suspend fun analyzeGTOResponse(
+        prompt: String,
+        testType: com.ssbmax.core.domain.model.gto.GTOTestType
+    ): Result<com.ssbmax.core.domain.service.ResponseAnalysis> {
+        Log.e(TAG, "GTO analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for GTO analysis"))
     }
 
    /**

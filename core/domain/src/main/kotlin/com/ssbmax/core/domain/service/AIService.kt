@@ -84,15 +84,23 @@ interface AIService {
     ): Result<String>
     
     /**
-     * Call Gemini API directly with custom prompt
+     * Analyze GTO test response and generate OLQ scores
      * 
-     * For specialized use cases like GTO analysis where custom JSON formats are needed.
-     * Returns raw text response from Gemini.
+     * Similar to analyzeResponse() but for GTO tests (GPE, GD, Lecturette, etc.)
+     * Uses specialized prompts for tactical/group scenarios while maintaining
+     * the same ResponseAnalysis output format.
      * 
-     * @param prompt Custom prompt text
-     * @return Raw text response from Gemini
+     * The caller (GTOAnalysisWorker) generates the GTO-specific prompt using
+     * GTOAnalysisPrompts, then passes it here for analysis.
+     * 
+     * @param prompt Pre-generated GTO analysis prompt
+     * @param testType The type of GTO test (for logging)
+     * @return OLQ scores with confidence and reasoning
      */
-    suspend fun callGeminiDirect(prompt: String): Result<String>
+    suspend fun analyzeGTOResponse(
+        prompt: String,
+        testType: com.ssbmax.core.domain.model.gto.GTOTestType
+    ): Result<ResponseAnalysis>
 
     /**
      * Health check for AI service availability

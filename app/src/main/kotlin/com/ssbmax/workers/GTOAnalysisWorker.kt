@@ -43,7 +43,13 @@ class GTOAnalysisWorker @AssistedInject constructor(
     companion object {
         private const val TAG = "GTOAnalysisWorker"
         const val KEY_SUBMISSION_ID = "submission_id"
-        private const val API_CALL_DELAY_MS = 500L // Delay between API calls
+        const val KEY_TEST_TYPE = "test_type"
+        
+        // Retry configuration
+        private const val MAX_AI_RETRIES = 3
+        
+        // API call delays
+        private const val API_CALL_DELAY_MS = 1000L
         private const val FALLBACK_CONFIDENCE = 30 // Low confidence for fallback scores
     }
 
@@ -91,12 +97,16 @@ class GTOAnalysisWorker @AssistedInject constructor(
 
             // 3. Analyze with AI
             Log.d(TAG, "   Step 3: Analyzing with AI...")
-            val prompt = generateAnalysisPrompt(submission)
-            val analysisResult = analyzeSubmissionWithRetry(prompt, submission.testType)
+            
+            // Analyze with retries
+            val olqScores = analyzeSubmissionWithRetry(
+                submission = submission,
+                testType = submission.testType
+            )
 
-            if (analysisResult != null) {
+            if (olqScores != null) {
                 // Update submission with OLQ scores
-                gtoRepository.updateSubmissionOLQScores(submissionId, analysisResult)
+                gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
                 Log.d(TAG, "   ✅ Analysis complete and saved")
 
                 // Send notification
@@ -171,30 +181,36 @@ class GTOAnalysisWorker @AssistedInject constructor(
      * Analyze submission with retry logic
      */
     private suspend fun analyzeSubmissionWithRetry(
-        prompt: String,
-        testType: GTOTestType,
-        maxRetries: Int = 3
+        submission: GTOSubmission,
+        testType: GTOTestType
     ): Map<OLQ, OLQScore>? {
-        repeat(maxRetries) { attempt ->
-            try {
-                Log.d(TAG, "      AI attempt ${attempt + 1}/$maxRetries...")
-                val olqScores = analyzeWithGemini(prompt, testType)
-
-                if (olqScores != null && olqScores.size == 15) {
-                    Log.d(TAG, "      ✅ AI analysis successful")
-                    return olqScores
-                }
-
-                Log.w(TAG, "      ⚠️ AI returned incomplete scores (${olqScores?.size ?: 0}/15)")
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "AI analysis attempt ${attempt + 1} failed")
-                Log.e(TAG, "      ❌ AI attempt ${attempt + 1} failed", e)
+        repeat(MAX_AI_RETRIES) { attempt ->
+            Log.d(TAG, "   AI attempt ${attempt + 1}/$MAX_AI_RETRIES...")
+            
+            // Analyze with Gemini (same pattern as Interview tests)
+            val olqScores = analyzeWithGemini(
+                submission = submission,
+                testType = testType
+            )
+            
+            if (olqScores != null && olqScores.size == OLQ.entries.size) {
+                // Success - all OLQs scored
+                return olqScores
             }
-
-            if (attempt < maxRetries - 1) {
-                val backoffDelay = API_CALL_DELAY_MS * (attempt + 1) * 2
-                Log.d(TAG, "      Waiting ${backoffDelay}ms before retry...")
-                delay(backoffDelay)
+            
+            if (olqScores != null && olqScores.size >= OLQ.entries.size - 1) {
+                // Acceptable - 14/15 OLQs (log warning but use it)
+                Log.w(TAG, "   ⚠️ AI returned incomplete scores (${olqScores.size}/${OLQ.entries.size})")
+                return olqScores
+            }
+            
+            Log.w(TAG, "   ⚠️ AI returned incomplete scores (${olqScores?.size ?: 0}/${OLQ.entries.size})")
+            
+            // Wait before retry
+            if (attempt < MAX_AI_RETRIES - 1) {
+                val delayMs = 1000L * (attempt + 1)
+                Log.d(TAG, "   Waiting ${delayMs}ms before retry...")
+                delay(delayMs)
             }
         }
 
@@ -206,43 +222,50 @@ class GTOAnalysisWorker @AssistedInject constructor(
     }
 
     /**
-     * Analyze with Gemini using direct API call
+     * Analyze with Gemini using clean AIService pattern
      * 
-     * Calls Gemini API directly with GTO-specific prompt and parses the JSON response.
-     * The GTO prompts return a different JSON format than interview analysis:
-     * {
-     *   "olqScores": {
-     *     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "..."},
-     *     ...
-     *   }
-     * }
+     * Uses the same clean approach as Interview tests:
+     * aiService.analyzeResponse() for interviews
+     * aiService.analyzeGTOResponse() for GTO tests
+     * 
+     * This eliminates custom JSON parsing and workarounds.
      */
     private suspend fun analyzeWithGemini(
-        prompt: String,
+        submission: GTOSubmission,
         testType: GTOTestType
     ): Map<OLQ, OLQScore>? {
         return try {
             Log.d(TAG, "🤖 Calling Gemini AI for $testType analysis")
             
-            // Call Gemini API directly
-            val response = aiService.callGeminiDirect(prompt)
+            // Generate GTO-specific prompt (worker has access to GTOAnalysisPrompts)
+            val prompt = GTOAnalysisPrompts.generateAnalysisPrompt(submission)
             
-            if (response.isFailure) {
+            // Call AI service with prompt
+            val analysisResult = aiService.analyzeGTOResponse(
+                prompt = prompt,
+                testType = testType
+            )
+            
+            if (analysisResult.isFailure) {
                 ErrorLogger.log(
-                    response.exceptionOrNull() ?: Exception("Unknown error"),
+                    analysisResult.exceptionOrNull() ?: Exception("Unknown error"),
                     "Gemini analysis failed for $testType"
                 )
                 return null
             }
             
-            // Parse GTO-specific JSON format
-            val jsonText = response.getOrNull() ?: return null
-            val olqScores = parseGTOAnalysisResponse(jsonText)
+            val analysis = analysisResult.getOrNull() ?: return null
             
-            if (olqScores != null) {
-                Log.d(TAG, "✅ Gemini analysis complete: ${olqScores.size} OLQ scores")
+            // Convert ResponseAnalysis to OLQScore map (same as Interview pattern)
+            val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
+                OLQScore(
+                    score = scoreWithReasoning.score.toInt(),
+                    confidence = analysis.overallConfidence,
+                    reasoning = scoreWithReasoning.reasoning
+                )
             }
             
+            Log.d(TAG, "✅ Gemini analysis complete: ${olqScores.size} OLQ scores (confidence: ${analysis.overallConfidence}%)")
             olqScores
             
         } catch (e: Exception) {
@@ -250,66 +273,7 @@ class GTOAnalysisWorker @AssistedInject constructor(
             null
         }
     }
-    
-    /**
-     * Parse GTO analysis JSON response
-     * 
-     * Expected format:
-     * {
-     *   "olqScores": {
-     *     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "..."},
-     *     "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-     *     ...
-     *   }
-     * }
-     */
-    private fun parseGTOAnalysisResponse(jsonText: String): Map<OLQ, OLQScore>? {
-        return try {
-            // Extract JSON from markdown code blocks if present
-            val cleanJson = when {
-                "```json" in jsonText -> jsonText
-                    .substringAfter("```json")
-                    .substringBefore("```")
-                    .trim()
-                "```" in jsonText -> jsonText
-                    .substringAfter("```")
-                    .substringBefore("```")
-                    .trim()
-                else -> jsonText.trim()
-            }
-            
-            val json = org.json.JSONObject(cleanJson)
-            val olqScoresJson = json.getJSONObject("olqScores")
-            val olqScores = mutableMapOf<OLQ, OLQScore>()
-            
-            // Iterate through all OLQ keys
-            olqScoresJson.keys().forEach { olqKey ->
-                // Match by enum name
-                val olq = OLQ.entries.find { it.name == olqKey }
-                
-                if (olq != null) {
-                    val scoreObj = olqScoresJson.getJSONObject(olqKey)
-                    val score = scoreObj.getInt("score")
-                    val confidence = scoreObj.optInt("confidence", 50)
-                    val reasoning = scoreObj.optString("reasoning", "")
-                    
-                    olqScores[olq] = OLQScore(
-                        score = score,
-                        confidence = confidence,
-                        reasoning = reasoning
-                    )
-                }
-            }
-            
-            Log.d(TAG, "✅ Parsed ${olqScores.size} OLQ scores from GTO analysis")
-            olqScores.takeIf { it.isNotEmpty() }
-            
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to parse GTO analysis JSON")
-            Log.e(TAG, "JSON parsing failed. Response: ${jsonText.take(500)}", e)
-            null
-        }
-    }
+
 
     /**
      * Generate fallback OLQ scores (neutral 6/10 for all)

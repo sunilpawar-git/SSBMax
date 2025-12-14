@@ -231,19 +231,96 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
         }
     }
     
-    override suspend fun callGeminiDirect(prompt: String): Result<String> = withContext(Dispatchers.IO) {
+    override suspend fun analyzeGTOResponse(
+        prompt: String,
+        testType: com.ssbmax.core.domain.model.gto.GTOTestType
+    ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "🔥 Direct Gemini call - prompt length: ${prompt.length}")
+            Log.d(TAG, "🎯 Analyzing GTO $testType response")
             withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                Log.d(TAG, "📤 Sending GTO analysis request to Gemini...")
+                val startTime = System.currentTimeMillis()
                 val response = model.generateContent(prompt)
-                val text = response.text ?: return@withTimeout Result.failure(
-                    IllegalStateException("No response text from Gemini")
-                )
-                Log.d(TAG, "✅ Direct call successful - response length: ${text.length}")
-                Result.success(text)
+                val duration = System.currentTimeMillis() - startTime
+                
+                Log.d(TAG, "✅ Received GTO analysis response in ${duration}ms")
+                
+                // Parse GTO response to ResponseAnalysis format
+                parseGTOAnalysisResponse(response.text ?: "")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Direct Gemini call failed", e)
+            Log.e(TAG, "❌ Failed to analyze GTO response", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Parse GTO-specific JSON response to standard ResponseAnalysis format
+     * 
+     * GTO uses different JSON structure:
+     * {
+     *   "olqScores": {
+     *     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "..."},
+     *     ...
+     *   }
+     * }
+     */
+    private fun parseGTOAnalysisResponse(jsonText: String): Result<ResponseAnalysis> {
+        return try {
+            if (jsonText.isBlank()) {
+                return Result.failure(IllegalStateException("Empty response from Gemini"))
+            }
+            
+            // Extract JSON from markdown code blocks if present
+            val cleanJson = extractJsonFromResponse(jsonText)
+            val json = org.json.JSONObject(cleanJson)
+            
+            val olqScoresJson = json.getJSONObject("olqScores")
+            val olqScores = mutableMapOf<OLQ, OLQScoreWithReasoning>()
+            
+            // Parse each OLQ score
+            olqScoresJson.keys().forEach { olqKey ->
+                // Match by enum name
+                val olq = OLQ.entries.find { it.name == olqKey }
+                
+                if (olq != null) {
+                    val scoreObj = olqScoresJson.getJSONObject(olqKey)
+                    val score = scoreObj.optDouble("score", 6.0).toFloat()
+                    val confidence = scoreObj.optInt("confidence", 50)
+                    val reasoning = scoreObj.optString("reasoning", "")
+                    
+                    olqScores[olq] = OLQScoreWithReasoning(
+                        olq = olq,
+                        score = score,
+                        reasoning = reasoning,
+                        evidence = emptyList() // GTO doesn't provide evidence field
+                    )
+                }
+            }
+            
+            if (olqScores.isEmpty()) {
+                return Result.failure(IllegalStateException("No OLQ scores parsed from response"))
+            }
+            
+            // Calculate average confidence
+            val avgConfidence = olqScores.values
+                .mapNotNull { it.score } // Access score directly from OLQScoreWithReasoning
+                .average()
+                .toInt()
+                .coerceIn(0, 100)
+            
+            val analysis = ResponseAnalysis(
+                olqScores = olqScores,
+                overallConfidence = avgConfidence,
+                keyInsights = emptyList(), // Not provided in GTO response
+                suggestedFollowUp = null
+            )
+            
+            Log.d(TAG, "✅ Parsed ${olqScores.size} OLQ scores from GTO analysis")
+            Result.success(analysis)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse GTO analysis response", e)
             Result.failure(e)
         }
     }
