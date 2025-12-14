@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.ssbmax.core.data.remote
 
 import android.content.Context
@@ -25,6 +26,7 @@ import javax.inject.Singleton
  * Handles Google Sign-In and Firebase Auth operations
  */
 @Singleton
+@Suppress("DEPRECATION")
 class FirebaseAuthService @Inject constructor(
     @ApplicationContext private val context: Context
 ) {

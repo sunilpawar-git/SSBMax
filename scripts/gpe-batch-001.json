@@ -1,129 +1,31 @@
 {
   "batch_id": "batch_001",
   "version": "1.0.0",
-  "image_count": 9,
+  "image_count": 1,
   "uploaded_at": {
-    "_seconds": 1765646680,
-    "_nanoseconds": 435000000
+    "_seconds": 1765707231,
+    "_nanoseconds": 523000000
   },
   "description": "GPE tactical scenario images - Base batch",
   "images": [
     {
-      "id": "gpe_001",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/1733733185.jpg",
-      "scenario": "River crossing with limited resources",
-      "imageDescription": "Tactical scenario showing a river with available resources for crossing",
-      "resources": "[\"2 planks\", \"3 ropes\", \"1 barrel\", \"4 logs\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "MEDIUM"
-    },
-    {
-      "id": "gpe_002",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/9f46fa85c797c595f8e411ad8394b69b.jpg",
-      "scenario": "Mountain terrain navigation",
-      "imageDescription": "Navigate through mountainous terrain with obstacles",
-      "resources": "[\"1 rope\", \"2 hooks\", \"3 wooden poles\"]",
+      "id": "gpe_generated_001",
+      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/gpe_gen_map.png",
+      "scenario": "You are a group of 8 students from Government College, returning from a nature camp in the forest. You are currently at the 'Rest House' (marked on likely map). It is 1400 hrs. The last bus to the city leaves from the 'Bus Stop' at 1700 hrs, which is 15 km away.\n\nWhile resting, a local villager rushes to you and informs:\n1. A massive fire has broken out in the forest (North side) and is spreading towards the 'Tribal Settlement'. The villagers need immediate evacuation.\n2. He saw a group of suspicious men planting explosives under the 'Railway Bridge' (as shown in map). A passenger train is due to pass in 45 minutes.\n3. One of his friends has been bitten by a poisonous snake and is unconscious at the 'Old Temple' (East side).\n4. Your own college van has a flat tire and the driver is missing.\n\nResources available:\n- 1 Jeep (can carry 4 people, speed 40 kmph on road, 20 kmph on track)\n- 1 Motorboat at the river bank (capacity 3, speed 15 kmph)\n- A bundle of rope, a first aid kit, and 2 flashlights.\n- No mobile network coverage.\n\nTask:\nIdentify the problems, prioritize them, and produce a plan to handle all situations effectively and reach the Bus Stop by 1700 hrs to catch your bus.",
+      "imageDescription": "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads.",
+      "resources": [
+        "Jeep",
+        "Motorboat",
+        "Rope",
+        "First Aid Kit",
+        "Flashlights"
+      ],
       "viewingTimeSeconds": 60,
       "planningTimeSeconds": 1740,
       "minCharacters": 500,
       "maxCharacters": 2000,
       "category": "Tactical",
       "difficulty": "HARD"
-    },
-    {
-      "id": "gpe_003",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE-4.jpg",
-      "scenario": "Urban obstacle course",
-      "imageDescription": "Navigate through urban obstacles with team",
-      "resources": "[\"2 ladders\", \"4 ropes\", \"1 plank\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "MEDIUM"
-    },
-    {
-      "id": "gpe_004",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE.jpg",
-      "scenario": "Bridge construction challenge",
-      "imageDescription": "Build a bridge across a gap using available materials",
-      "resources": "[\"3 planks\", \"2 ropes\", \"4 bamboo sticks\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "HARD"
-    },
-    {
-      "id": "gpe_005",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-4-2-2048.jpg",
-      "scenario": "Wall climbing exercise",
-      "imageDescription": "Scale a wall using limited equipment",
-      "resources": "[\"2 ropes\", \"1 ladder\", \"3 wooden blocks\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "MEDIUM"
-    },
-    {
-      "id": "gpe_006",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-7.jpg",
-      "scenario": "Rescue operation simulation",
-      "imageDescription": "Rescue team members from difficult terrain",
-      "resources": "[\"1 stretcher\", \"3 ropes\", \"2 planks\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "HARD"
-    },
-    {
-      "id": "gpe_007",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-Map-1-1-scaled.jpg",
-      "scenario": "Supply transport challenge",
-      "imageDescription": "Transport supplies across obstacles",
-      "resources": "[\"2 barrels\", \"4 ropes\", \"3 planks\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "MEDIUM"
-    },
-    {
-      "id": "gpe_008",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/gpe1.jpg",
-      "scenario": "Trench crossing exercise",
-      "imageDescription": "Cross a trench using available materials",
-      "resources": "[\"2 planks\", \"2 ropes\", \"1 ladder\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "EASY"
-    },
-    {
-      "id": "gpe_009",
-      "imageUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/map-reading.jpeg",
-      "scenario": "Team coordination task",
-      "imageDescription": "Coordinate team movement through obstacles",
-      "resources": "[\"3 ropes\", \"2 poles\", \"1 plank\"]",
-      "viewingTimeSeconds": 60,
-      "planningTimeSeconds": 1740,
-      "minCharacters": 500,
-      "maxCharacters": 2000,
-      "category": "Tactical",
-      "difficulty": "MEDIUM"
     }
   ]
 }

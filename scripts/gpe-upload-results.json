@@ -1,56 +1,8 @@
 [
   {
-    "fileName": "1733733185.jpg",
-    "storagePath": "gpe_images/1733733185.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/1733733185.jpg",
+    "fileName": "gpe_gen_map.png",
+    "storagePath": "gpe_images/gpe_gen_map.png",
+    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/gpe_gen_map.png",
     "index": 1
-  },
-  {
-    "fileName": "9f46fa85c797c595f8e411ad8394b69b.jpg",
-    "storagePath": "gpe_images/9f46fa85c797c595f8e411ad8394b69b.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/9f46fa85c797c595f8e411ad8394b69b.jpg",
-    "index": 2
-  },
-  {
-    "fileName": "GPE-4.jpg",
-    "storagePath": "gpe_images/GPE-4.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE-4.jpg",
-    "index": 3
-  },
-  {
-    "fileName": "GPE.jpg",
-    "storagePath": "gpe_images/GPE.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/GPE.jpg",
-    "index": 4
-  },
-  {
-    "fileName": "Group-Planning-Exercise-4-2-2048.jpg",
-    "storagePath": "gpe_images/Group-Planning-Exercise-4-2-2048.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-4-2-2048.jpg",
-    "index": 5
-  },
-  {
-    "fileName": "Group-Planning-Exercise-7.jpg",
-    "storagePath": "gpe_images/Group-Planning-Exercise-7.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-7.jpg",
-    "index": 6
-  },
-  {
-    "fileName": "Group-Planning-Exercise-Map-1-1-scaled.jpg",
-    "storagePath": "gpe_images/Group-Planning-Exercise-Map-1-1-scaled.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/Group-Planning-Exercise-Map-1-1-scaled.jpg",
-    "index": 7
-  },
-  {
-    "fileName": "gpe1.jpg",
-    "storagePath": "gpe_images/gpe1.jpg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/gpe1.jpg",
-    "index": 8
-  },
-  {
-    "fileName": "map-reading.jpeg",
-    "storagePath": "gpe_images/map-reading.jpeg",
-    "publicUrl": "https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/gpe_images/map-reading.jpeg",
-    "index": 9
   }
 ]

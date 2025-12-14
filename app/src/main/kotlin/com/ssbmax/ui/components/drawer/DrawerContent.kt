@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -49,7 +50,7 @@ fun DrawerContent(
             isHomeButton = true
         )
 
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // SSB Tests Section
         DrawerSectionHeader(stringResource(R.string.drawer_ssb_tests))
@@ -114,7 +115,7 @@ fun DrawerContent(
             onClick = { onNavigateToTopic("medicals") }
         )
 
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Quick Access Section
         DrawerSectionHeader(stringResource(R.string.drawer_quick_access))
@@ -131,7 +132,7 @@ fun DrawerContent(
             onClick = onNavigateToMyBatches
         )
 
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Account Section
         DrawerSectionHeader(stringResource(R.string.drawer_account))
@@ -144,7 +145,7 @@ fun DrawerContent(
         )
 
         DrawerMenuItem(
-            icon = Icons.Default.Logout,
+            icon = Icons.AutoMirrored.Filled.Logout,
             title = stringResource(R.string.drawer_sign_out),
             onClick = onSignOut
         )

@@ -132,6 +132,7 @@ class TestSubmissionRepositoryImpl @Inject constructor(
         )
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toTestSubmission(): TestSubmission? {
         return try {
             TestSubmission(
@@ -157,6 +158,7 @@ class TestSubmissionRepositoryImpl @Inject constructor(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun Map<String, Any?>.toTestResponse(): com.ssbmax.core.domain.model.TestResponse? {
         return try {
             val questionId = this["questionId"] as? String ?: return null

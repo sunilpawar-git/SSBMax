@@ -112,7 +112,7 @@ fun GPEReviewPhase(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Divider()
+                HorizontalDivider()
 
                 Text(
                     text = stringResource(R.string.character_count_simple, charactersCount),

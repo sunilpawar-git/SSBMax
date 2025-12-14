@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,15 +50,8 @@ fun SubscriptionManagementScreen(
             TopAppBar(
                 title = { Text("Subscription & Billing") },
                 navigationIcon = {
-                    IconButton(onClick = { 
-                        Log.d(TAG, "Back button clicked, navigating back")
-                        try {
-                            onNavigateBack()
-                        } catch (e: Exception) {
-                            Log.e(TAG, "ERROR during navigation back", e)
-                        }
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

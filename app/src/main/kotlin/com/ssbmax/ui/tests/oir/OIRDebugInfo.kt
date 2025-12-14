@@ -117,7 +117,7 @@ fun OIRDebugInfoScreen(
     ) {
         Text("OIR Cache Debug Info", style = MaterialTheme.typography.headlineMedium)
         
-        Divider()
+        HorizontalDivider()
         
         // Authentication
         Card {

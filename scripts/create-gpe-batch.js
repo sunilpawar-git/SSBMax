@@ -28,76 +28,33 @@ async function createGPEBatch() {
 
         console.log(`📊 Creating batch with ${uploadedImages.length} images\n`);
 
-        // GPE scenarios (you can customize these)
-        const scenarios = [
-            {
-                scenario: "River crossing with limited resources",
-                description: "Tactical scenario showing a river with available resources for crossing",
-                resources: '["2 planks", "3 ropes", "1 barrel", "4 logs"]',
-                difficulty: "MEDIUM"
-            },
-            {
-                scenario: "Mountain terrain navigation",
-                description: "Navigate through mountainous terrain with obstacles",
-                resources: '["1 rope", "2 hooks", "3 wooden poles"]',
-                difficulty: "HARD"
-            },
-            {
-                scenario: "Urban obstacle course",
-                description: "Navigate through urban obstacles with team",
-                resources: '["2 ladders", "4 ropes", "1 plank"]',
-                difficulty: "MEDIUM"
-            },
-            {
-                scenario: "Bridge construction challenge",
-                description: "Build a bridge across a gap using available materials",
-                resources: '["3 planks", "2 ropes", "4 bamboo sticks"]',
-                difficulty: "HARD"
-            },
-            {
-                scenario: "Wall climbing exercise",
-                description: "Scale a wall using limited equipment",
-                resources: '["2 ropes", "1 ladder", "3 wooden blocks"]',
-                difficulty: "MEDIUM"
-            },
-            {
-                scenario: "Rescue operation simulation",
-                description: "Rescue team members from difficult terrain",
-                resources: '["1 stretcher", "3 ropes", "2 planks"]',
-                difficulty: "HARD"
-            },
-            {
-                scenario: "Supply transport challenge",
-                description: "Transport supplies across obstacles",
-                resources: '["2 barrels", "4 ropes", "3 planks"]',
-                difficulty: "MEDIUM"
-            },
-            {
-                scenario: "Trench crossing exercise",
-                description: "Cross a trench using available materials",
-                resources: '["2 planks", "2 ropes", "1 ladder"]',
-                difficulty: "EASY"
-            },
-            {
-                scenario: "Team coordination task",
-                description: "Coordinate team movement through obstacles",
-                resources: '["3 ropes", "2 poles", "1 plank"]',
-                difficulty: "MEDIUM"
-            },
-            {
-                scenario: "Strategic planning scenario",
-                description: "Plan and execute a tactical movement",
-                resources: '["2 ladders", "3 ropes", "2 planks"]',
-                difficulty: "HARD"
-            }
-        ];
+        // Specific generated scenario
+        const scenarioData = {
+            scenario: `You are a group of 8 students from Government College, returning from a nature camp in the forest. You are currently at the 'Rest House' (marked on likely map). It is 1400 hrs. The last bus to the city leaves from the 'Bus Stop' at 1700 hrs, which is 15 km away.
+
+While resting, a local villager rushes to you and informs:
+1. A massive fire has broken out in the forest (North side) and is spreading towards the 'Tribal Settlement'. The villagers need immediate evacuation.
+2. He saw a group of suspicious men planting explosives under the 'Railway Bridge' (as shown in map). A passenger train is due to pass in 45 minutes.
+3. One of his friends has been bitten by a poisonous snake and is unconscious at the 'Old Temple' (East side).
+4. Your own college van has a flat tire and the driver is missing.
+
+Resources available:
+- 1 Jeep (can carry 4 people, speed 40 kmph on road, 20 kmph on track)
+- 1 Motorboat at the river bank (capacity 3, speed 15 kmph)
+- A bundle of rope, a first aid kit, and 2 flashlights.
+- No mobile network coverage.
+
+Task:
+Identify the problems, prioritize them, and produce a plan to handle all situations effectively and reach the Bus Stop by 1700 hrs to catch your bus.`,
+            description: "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads.",
+            resources: ["Jeep", "Motorboat", "Rope", "First Aid Kit", "Flashlights"],
+            difficulty: "HARD"
+        };
 
         // Create images array for batch
         const images = uploadedImages.map((img, index) => {
-            const scenarioData = scenarios[index % scenarios.length];
-
             return {
-                id: `gpe_${String(index + 1).padStart(3, '0')}`,
+                id: `gpe_generated_${String(index + 1).padStart(3, '0')}`,
                 imageUrl: img.publicUrl,
                 scenario: scenarioData.scenario,
                 imageDescription: scenarioData.description,

@@ -197,9 +197,7 @@ class SubscriptionManager @Inject constructor(
                     TestType.SD -> "sdTestsUsed"
                 }
                 
-                if (fieldName != null) {
                     transaction.update(docRef, fieldName, com.google.firebase.firestore.FieldValue.increment(1))
-                }
             }.await()
             
             // After successful Firestore transaction, update local Room DB

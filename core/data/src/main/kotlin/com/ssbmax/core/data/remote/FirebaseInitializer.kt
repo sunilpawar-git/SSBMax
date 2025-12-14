@@ -25,8 +25,11 @@ class FirebaseInitializer @Inject constructor() {
         // Enable offline persistence
         // Data will be cached locally and synced when online
         val settings = FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(true)
-            .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+            .setLocalCacheSettings(
+                com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
+                    .setSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                    .build()
+            )
             .build()
         
         firestore.firestoreSettings = settings

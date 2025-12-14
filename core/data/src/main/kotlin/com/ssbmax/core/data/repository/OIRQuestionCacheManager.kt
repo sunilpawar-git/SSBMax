@@ -85,6 +85,7 @@ class OIRQuestionCacheManager @Inject constructor(
     /**
      * Download a specific batch from Firestore
      */
+    @Suppress("UNCHECKED_CAST")
     suspend fun downloadBatch(batchId: String): Result<Unit> {
         return try {
             Log.d(TAG, "Downloading batch: $batchId")
@@ -378,6 +379,7 @@ class OIRQuestionCacheManager @Inject constructor(
     /**
      * Convert Firestore map to entity
      */
+    @Suppress("UNCHECKED_CAST")
     private fun convertToEntity(
         questionMap: Map<String, Any>,
         batchId: String,

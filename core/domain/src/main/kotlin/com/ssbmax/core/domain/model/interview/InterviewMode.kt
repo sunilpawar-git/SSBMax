@@ -45,6 +45,7 @@ enum class InterviewMode {
     VOICE_BASED;
 
     val displayName: String
+        @Suppress("DEPRECATION")
         get() = when (this) {
             TEXT_BASED -> "Interview (Legacy)"
             VOICE_BASED -> "Interview"

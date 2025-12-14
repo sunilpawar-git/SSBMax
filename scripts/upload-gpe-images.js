@@ -18,62 +18,54 @@ async function uploadGPEImages() {
     try {
         console.log('📤 Starting GPE image upload...\n');
 
-        const gpeImagesPath = '/Users/sunil/Downloads/GPE Pics';
+        // Target the specific generated asset
+        const localPath = path.join(__dirname, '../app/src/main/assets/gpe_gen_map.png');
+        const fileName = 'gpe_gen_map.png';
 
-        // Check if directory exists
-        if (!fs.existsSync(gpeImagesPath)) {
-            throw new Error(`Directory not found: ${gpeImagesPath}`);
+        // Check if file exists
+        if (!fs.existsSync(localPath)) {
+            throw new Error(`Generated map not found at: ${localPath}`);
         }
 
-        // Get all image files
-        const files = fs.readdirSync(gpeImagesPath)
-            .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file))
-            .sort();
-
-        console.log(`📊 Found ${files.length} images to upload\n`);
+        console.log(`📊 Found generated map to upload\n`);
 
         const uploadedImages = [];
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const localPath = path.join(gpeImagesPath, file);
-            const storagePath = `gpe_images/${file}`;
+        const storagePath = `gpe_images/${fileName}`;
 
-            console.log(`[${i + 1}/${files.length}] Uploading ${file}...`);
+        console.log(`Uploading ${fileName}...`);
 
-            try {
-                // Upload to Firebase Storage
-                await bucket.upload(localPath, {
-                    destination: storagePath,
+        try {
+            // Upload to Firebase Storage
+            await bucket.upload(localPath, {
+                destination: storagePath,
+                metadata: {
+                    contentType: 'image/png', // It's a PNG
                     metadata: {
-                        contentType: 'image/jpeg',
-                        metadata: {
-                            firebaseStorageDownloadTokens: require('uuid').v4()
-                        }
+                        firebaseStorageDownloadTokens: require('uuid').v4()
                     }
-                });
+                }
+            });
 
-                // Make file publicly accessible
-                await bucket.file(storagePath).makePublic();
+            // Make file publicly accessible
+            await bucket.file(storagePath).makePublic();
 
-                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
 
-                uploadedImages.push({
-                    fileName: file,
-                    storagePath: storagePath,
-                    publicUrl: publicUrl,
-                    index: i + 1
-                });
+            uploadedImages.push({
+                fileName: fileName,
+                storagePath: storagePath,
+                publicUrl: publicUrl,
+                index: 1
+            });
 
-                console.log(`   ✅ Uploaded: ${publicUrl}\n`);
-            } catch (error) {
-                console.error(`   ❌ Failed to upload ${file}:`, error.message);
-            }
+            console.log(`   ✅ Uploaded: ${publicUrl}\n`);
+        } catch (error) {
+            console.error(`   ❌ Failed to upload ${fileName}:`, error.message);
+            throw error;
         }
 
         console.log('\n🎉 Upload complete!\n');
-        console.log('📊 Summary:');
-        console.log(`   ✅ ${uploadedImages.length}/${files.length} images uploaded\n`);
 
         // Save upload results to JSON for creating batch file
         const resultsPath = path.join(__dirname, 'gpe-upload-results.json');

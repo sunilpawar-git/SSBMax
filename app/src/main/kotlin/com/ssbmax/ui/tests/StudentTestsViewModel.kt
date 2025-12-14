@@ -1,6 +1,18 @@
+
 package com.ssbmax.ui.tests
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.TestStatus
@@ -146,7 +158,7 @@ class StudentTestsViewModel @Inject constructor(
                     TestOverviewItem(
                         type = TestType.GTO_PGT,
                         name = "Progressive Group Task",
-                        icon = Icons.Default.TrendingUp,
+                        icon = Icons.AutoMirrored.Filled.TrendingUp,
                         category = "GTO",
                         durationMinutes = 45,
                         questionCount = 1,
@@ -156,7 +168,7 @@ class StudentTestsViewModel @Inject constructor(
                     TestOverviewItem(
                         type = TestType.GTO_GOR,
                         name = "Group Obstacle Race",
-                        icon = Icons.Default.DirectionsRun,
+                        icon = Icons.AutoMirrored.Filled.DirectionsRun,
                         category = "GTO",
                         durationMinutes = 60,
                         questionCount = 1,

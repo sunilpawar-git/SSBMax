@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,7 +75,7 @@ fun InstructionsPhase(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     InstructionItem(
-                        icon = Icons.Default.ListAlt,
+                        icon = Icons.AutoMirrored.Filled.ListAlt,
                         title = "4 Topic Choices",
                         description = "Select 1 topic from 4 options"
                     )
@@ -97,7 +99,7 @@ fun InstructionsPhase(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     InstructionItem(
-                        icon = Icons.Default.VolumeUp,
+                        icon = Icons.AutoMirrored.Filled.VolumeUp,
                         title = "White Noise",
                         description = "Background noise simulates real GTO environment"
                     )

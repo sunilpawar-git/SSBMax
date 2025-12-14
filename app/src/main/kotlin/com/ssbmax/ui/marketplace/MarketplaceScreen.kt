@@ -257,7 +257,7 @@ fun FiltersSection(
                     FilterChip(
                         selected = filterPriceRange == range,
                         onClick = { onPriceRangeChange(if (filterPriceRange == range) null else range) },
-                        label = { Text(range.name.lowercase().capitalize()) }
+                        label = { Text(range.name.split("_").joinToString(" ") { it.lowercase().replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase() else char.toString() } }) }
                     )
                 }
             }

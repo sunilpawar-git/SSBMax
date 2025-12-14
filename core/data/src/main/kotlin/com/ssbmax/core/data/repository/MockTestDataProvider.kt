@@ -339,5 +339,39 @@ object MockTestDataProvider {
             )
         )
     }
+    /**
+     * Mock GPE Questions - 1 sample scenario
+     * Uses generated map from assets
+     */
+    fun getGPEQuestions(): List<GPEQuestion> {
+        return listOf(
+            GPEQuestion(
+                id = "gpe_generated_1",
+                imageUrl = "file:///android_asset/gpe_gen_map.png",
+                scenario = """
+                    You are a group of 8 students from Government College, returning from a nature camp in the forest. You are currently at the 'Rest House' (marked on likely map). It is 1400 hrs. The last bus to the city leaves from the 'Bus Stop' at 1700 hrs, which is 15 km away.
+                    
+                    While resting, a local villager rushes to you and informs:
+                    1. A massive fire has broken out in the forest (North side) and is spreading towards the 'Tribal Settlement'. The villagers need immediate evacuation.
+                    2. He saw a group of suspicious men planting explosives under the 'Railway Bridge' (as shown in map). A passenger train is due to pass in 45 minutes.
+                    3. One of his friends has been bitten by a poisonous snake and is unconscious at the 'Old Temple' (East side).
+                    4. Your own college van has a flat tire and the driver is missing.
+                    
+                    Resources available:
+                    - 1 Jeep (can carry 4 people, speed 40 kmph on road, 20 kmph on track)
+                    - 1 Motorboat at the river bank (capacity 3, speed 15 kmph)
+                    - A bundle of rope, a first aid kit, and 2 flashlights.
+                    - No mobile network coverage.
+                    
+                    Task:
+                    Identify the problems, prioritize them, and produce a plan to handle all situations effectively and reach the Bus Stop by 1700 hrs to catch your bus.
+                """.trimIndent(),
+                imageDescription = "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads.",
+                resources = listOf("Jeep", "Motorboat", "Rope", "First Aid Kit", "Flashlights"),
+                viewingTimeSeconds = 60,
+                planningTimeSeconds = 1740 // 29 mins
+            )
+        )
+    }
 }
 

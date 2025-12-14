@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ssbmax.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import coil.imageLoader
 
 /**
  * GPE Image Viewing Phase
@@ -26,7 +30,6 @@ fun GPEImageViewingPhase(
     timeRemainingSeconds: Int
 ) {
     android.util.Log.d("GPETestScreen", "🎨 ImageViewingPhase recomposed with imageUrl: $imageUrl")
-    android.util.Log.d("GPETestScreen", "🎨 imageUrl length: ${imageUrl.length}, isEmpty: ${imageUrl.isEmpty()}")
 
     Column(
         modifier = Modifier
@@ -102,7 +105,17 @@ fun GPEImageViewingPhase(
                         model = imageRequest,
                         contentDescription = stringResource(R.string.gpe_test_image),
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Fit,
+                        onLoading = {
+                            android.util.Log.d("GPETestScreen", "⏳ State: Loading")
+                        },
+                        onSuccess = {
+                            android.util.Log.d("GPETestScreen", "✅ State: Success")
+                        },
+                        onError = { state ->
+                            android.util.Log.e("GPETestScreen", "❌ State: Error: ${state.result.throwable.message}")
+                        },
+                        error = rememberVectorPainter(Icons.Filled.BrokenImage)
                     )
                 }
             }
@@ -111,7 +124,7 @@ fun GPEImageViewingPhase(
         LinearProgressIndicator(
             progress = { timeRemainingSeconds / 60f }, // 60 seconds for GPE
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

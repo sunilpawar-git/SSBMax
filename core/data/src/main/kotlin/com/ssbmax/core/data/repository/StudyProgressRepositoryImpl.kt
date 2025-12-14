@@ -211,6 +211,7 @@ class StudyProgressRepositoryImpl @Inject constructor(
 }
 
 // Extension functions for Firestore conversions
+@Suppress("UNCHECKED_CAST")
 private fun com.google.firebase.firestore.DocumentSnapshot.toStudyProgress(): StudyProgress? {
     return try {
         StudyProgress(

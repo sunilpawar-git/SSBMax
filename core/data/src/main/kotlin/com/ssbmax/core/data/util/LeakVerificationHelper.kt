@@ -244,15 +244,7 @@ object LeakVerificationHelper {
 /**
  * Extension functions for MemoryLeakTracker (internal access)
  */
-private fun MemoryLeakTracker.getActiveViewModelCount(): Int {
-    // This would need to be added to MemoryLeakTracker if we want external access
-    return 0 // Placeholder
-}
 
-private fun MemoryLeakTracker.getActiveJobCount(): Int {
-    // This would need to be added to MemoryLeakTracker if we want external access
-    return 0 // Placeholder
-}
 
 private fun MemoryLeakTracker.getMemoryUsageString(): String {
     val runtime = Runtime.getRuntime()

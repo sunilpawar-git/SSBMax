@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -243,7 +245,7 @@ fun getIconForType(iconType: SSBInfoIcon): ImageVector {
         SSBInfoIcon.SUCCESS -> Icons.Default.Star
         SSBInfoIcon.CALENDAR -> Icons.Default.CalendarMonth
         SSBInfoIcon.MEDAL -> Icons.Default.MilitaryTech
-        SSBInfoIcon.BOOK -> Icons.Default.MenuBook
+        SSBInfoIcon.BOOK -> Icons.AutoMirrored.Filled.MenuBook
     }
 }
 

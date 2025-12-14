@@ -40,8 +40,11 @@ class FirestoreContentSource @Inject constructor(
         if (ContentFeatureFlags.enableOfflinePersistence) {
             try {
                 val settings = FirebaseFirestoreSettings.Builder()
-                    .setPersistenceEnabled(true)
-                    .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                    .setLocalCacheSettings(
+                        com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
+                            .setSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                            .build()
+                    )
                     .build()
                 firestore.firestoreSettings = settings
                 Log.d(TAG, "✓ Firestore offline persistence enabled")

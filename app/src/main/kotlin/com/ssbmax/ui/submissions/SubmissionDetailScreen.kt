@@ -195,7 +195,7 @@ private fun ScoreCard(
                 }
                 
                 if (!score.isAIGenerated && score.gradedBy != null) {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(
                         text = "Graded by: ${score.gradedBy}",
                         style = MaterialTheme.typography.bodyMedium
@@ -227,7 +227,7 @@ private fun FeedbackCard(score: ScoreDetails) {
                     style = MaterialTheme.typography.bodyMedium
                 )
                 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
             
             if (score.strengths.isNotEmpty()) {
@@ -255,7 +255,7 @@ private fun FeedbackCard(score: ScoreDetails) {
             
             if (score.areasForImprovement.isNotEmpty()) {
                 if (score.strengths.isNotEmpty()) {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 }
                 
                 Text(

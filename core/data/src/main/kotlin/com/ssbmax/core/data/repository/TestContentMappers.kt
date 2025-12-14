@@ -7,6 +7,7 @@ import com.ssbmax.core.domain.model.*
  * Extracted to keep TestContentRepositoryImpl under 300 lines
  */
 
+@Suppress("UNCHECKED_CAST")
 internal fun Map<String, Any?>.toOIRQuestion(): OIRQuestion? {
     return try {
         OIRQuestion(
@@ -37,6 +38,7 @@ internal fun Map<String, Any?>.toOIROption(): OIROption? {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 internal fun Map<String, Any?>.toPPDTQuestion(): PPDTQuestion? {
     return try {
         PPDTQuestion(

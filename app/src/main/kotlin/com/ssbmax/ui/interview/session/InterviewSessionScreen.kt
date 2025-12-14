@@ -222,7 +222,7 @@ fun InterviewSessionScreen(
                             imageVector = if (uiState.isTTSMuted)
                                 Icons.Default.VolumeOff
                             else
-                                Icons.Default.VolumeUp,
+                                Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = if (uiState.isTTSMuted)
                                 stringResource(R.string.cd_unmute_tts)
                             else

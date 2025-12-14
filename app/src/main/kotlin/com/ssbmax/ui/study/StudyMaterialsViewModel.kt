@@ -1,6 +1,7 @@
 package com.ssbmax.ui.study
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -70,7 +71,7 @@ class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
                     StudyCategoryItem(
                         type = StudyCategory.PIQ_PREP,
                         title = "PIQ Form Guide",
-                        icon = Icons.Default.Assignment,
+                        icon = Icons.AutoMirrored.Filled.Assignment,
                         articleCount = 15,
                         isPremium = false,
                         backgroundColor = Color(0xFFF3E5F5), // Light purple background

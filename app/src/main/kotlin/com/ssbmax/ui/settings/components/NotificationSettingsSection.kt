@@ -1,8 +1,10 @@
+
 package com.ssbmax.ui.settings.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -172,7 +174,7 @@ private fun NotificationSettingsSectionContent(
                 SettingsSwitchItem(
                     title = stringResource(R.string.notification_feedback_title),
                     description = stringResource(R.string.notification_feedback_description),
-                    icon = Icons.Default.Comment,
+                    icon = Icons.AutoMirrored.Filled.Comment,
                     checked = preferences.enableFeedbackNotifications,
                     onCheckedChange = onToggleFeedbackAvailable
                 )
