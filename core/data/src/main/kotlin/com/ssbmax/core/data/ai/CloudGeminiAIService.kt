@@ -172,8 +172,17 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         Log.w(TAG, "Feedback generation not yet implemented in cloud - using mock")
         Result.success("Mock feedback: Your performance was good overall.")
     }
-
+    
     /**
+     * Call Gemini directly (not supported in cloud implementation)
+     * This is only used by GeminiAIService for GTO analysis
+     */
+    override suspend fun callGeminiDirect(prompt: String): Result<String> {
+        Log.e(TAG, "Direct Gemini calls not supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for direct API calls"))
+    }
+
+   /**
      * Health check (check if user is authenticated)
      */
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {

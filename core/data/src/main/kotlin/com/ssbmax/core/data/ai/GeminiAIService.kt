@@ -230,6 +230,23 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
             Result.failure(e)
         }
     }
+    
+    override suspend fun callGeminiDirect(prompt: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "🔥 Direct Gemini call - prompt length: ${prompt.length}")
+            withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                val response = model.generateContent(prompt)
+                val text = response.text ?: return@withTimeout Result.failure(
+                    IllegalStateException("No response text from Gemini")
+                )
+                Log.d(TAG, "✅ Direct call successful - response length: ${text.length}")
+                Result.success(text)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Direct Gemini call failed", e)
+            Result.failure(e)
+        }
+    }
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {

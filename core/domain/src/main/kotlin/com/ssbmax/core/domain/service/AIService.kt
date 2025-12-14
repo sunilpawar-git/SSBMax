@@ -82,6 +82,17 @@ interface AIService {
         responses: List<String>,
         olqScores: Map<OLQ, Float>
     ): Result<String>
+    
+    /**
+     * Call Gemini API directly with custom prompt
+     * 
+     * For specialized use cases like GTO analysis where custom JSON formats are needed.
+     * Returns raw text response from Gemini.
+     * 
+     * @param prompt Custom prompt text
+     * @return Raw text response from Gemini
+     */
+    suspend fun callGeminiDirect(prompt: String): Result<String>
 
     /**
      * Health check for AI service availability

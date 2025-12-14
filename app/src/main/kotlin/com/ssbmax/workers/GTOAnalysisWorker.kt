@@ -206,10 +206,16 @@ class GTOAnalysisWorker @AssistedInject constructor(
     }
 
     /**
-     * Analyze with Gemini using the AI service
+     * Analyze with Gemini using direct API call
      * 
-     * Sends the GTO-specific prompt to Gemini and parses the OLQ scores
-     * from the JSON response. Returns null on failure to trigger fallback.
+     * Calls Gemini API directly with GTO-specific prompt and parses the JSON response.
+     * The GTO prompts return a different JSON format than interview analysis:
+     * {
+     *   "olqScores": {
+     *     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "..."},
+     *     ...
+     *   }
+     * }
      */
     private suspend fun analyzeWithGemini(
         prompt: String,
@@ -218,50 +224,89 @@ class GTOAnalysisWorker @AssistedInject constructor(
         return try {
             Log.d(TAG, "🤖 Calling Gemini AI for $testType analysis")
             
-            // Use the generative model directly to analyze GTO response
-            // We create a temporary InterviewQuestion as a wrapper since
-            // AIService's analyzeResponse expects one. For GTO, we pass
-            // the full prompt as both question and response context.
-            val dummyQuestion = com.ssbmax.core.domain.model.interview.InterviewQuestion(
-                id = "gto_$testType",
-                questionText = "Analyze GTO $testType performance",
-                expectedOLQs = OLQ.entries,
-                context = null,
-                source = com.ssbmax.core.domain.model.interview.QuestionSource.AI_GENERATED
-            )
+            // Call Gemini API directly
+            val response = aiService.callGeminiDirect(prompt)
             
-            // Call AI service with the GTO prompt as the "response"
-            // This allows us to reuse the existing analyzeResponse infrastructure
-            val analysisResult = aiService.analyzeResponse(
-                question = dummyQuestion,
-                response = prompt,
-                responseMode = "text"
-            )
-            
-            if (analysisResult.isFailure) {
+            if (response.isFailure) {
                 ErrorLogger.log(
-                    analysisResult.exceptionOrNull() ?: Exception("Unknown error"),
+                    response.exceptionOrNull() ?: Exception("Unknown error"),
                     "Gemini analysis failed for $testType"
                 )
                 return null
             }
             
-            val analysis = analysisResult.getOrNull() ?: return null
+            // Parse GTO-specific JSON format
+            val jsonText = response.getOrNull() ?: return null
+            val olqScores = parseGTOAnalysisResponse(jsonText)
             
-            // Convert OLQScoreWithReasoning to OLQScore
-            val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
-                OLQScore(
-                    score = scoreWithReasoning.score.toInt(),
-                    confidence = analysis.overallConfidence,
-                    reasoning = scoreWithReasoning.reasoning
-                )
+            if (olqScores != null) {
+                Log.d(TAG, "✅ Gemini analysis complete: ${olqScores.size} OLQ scores")
             }
             
-            Log.d(TAG, "✅ Gemini analysis complete: ${olqScores.size} OLQ scores (confidence: ${analysis.overallConfidence}%)")
             olqScores
             
         } catch (e: Exception) {
             ErrorLogger.log(e, "Gemini API call failed for $testType")
+            null
+        }
+    }
+    
+    /**
+     * Parse GTO analysis JSON response
+     * 
+     * Expected format:
+     * {
+     *   "olqScores": {
+     *     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "..."},
+     *     "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
+     *     ...
+     *   }
+     * }
+     */
+    private fun parseGTOAnalysisResponse(jsonText: String): Map<OLQ, OLQScore>? {
+        return try {
+            // Extract JSON from markdown code blocks if present
+            val cleanJson = when {
+                "```json" in jsonText -> jsonText
+                    .substringAfter("```json")
+                    .substringBefore("```")
+                    .trim()
+                "```" in jsonText -> jsonText
+                    .substringAfter("```")
+                    .substringBefore("```")
+                    .trim()
+                else -> jsonText.trim()
+            }
+            
+            val json = org.json.JSONObject(cleanJson)
+            val olqScoresJson = json.getJSONObject("olqScores")
+            val olqScores = mutableMapOf<OLQ, OLQScore>()
+            
+            // Iterate through all OLQ keys
+            olqScoresJson.keys().forEach { olqKey ->
+                // Match by enum name
+                val olq = OLQ.entries.find { it.name == olqKey }
+                
+                if (olq != null) {
+                    val scoreObj = olqScoresJson.getJSONObject(olqKey)
+                    val score = scoreObj.getInt("score")
+                    val confidence = scoreObj.optInt("confidence", 50)
+                    val reasoning = scoreObj.optString("reasoning", "")
+                    
+                    olqScores[olq] = OLQScore(
+                        score = score,
+                        confidence = confidence,
+                        reasoning = reasoning
+                    )
+                }
+            }
+            
+            Log.d(TAG, "✅ Parsed ${olqScores.size} OLQ scores from GTO analysis")
+            olqScores.takeIf { it.isNotEmpty() }
+            
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to parse GTO analysis JSON")
+            Log.e(TAG, "JSON parsing failed. Response: ${jsonText.take(500)}", e)
             null
         }
     }
