@@ -59,12 +59,27 @@ Evaluate the candidate's response against ALL 15 Officer-Like Qualities (OLQs):
 - 8: Below Average (lowest acceptable)
 - 9-10: Poor (usually rejected)
 
-Return JSON format:
+**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
+Do NOT include any text like "Here is the analysis" or explanations.
+Return ONLY the JSON object with exact enum names:
+
 {
   "olqScores": {
     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "Clear analytical thinking demonstrated"},
     "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical arguments presented"},
-    ... (all 15 OLQs)
+    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
+    "POWER_OF_EXPRESSION": {"score": 5, "confidence": 85, "reasoning": "..."},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "..."},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
+    "INITIATIVE": {"score": 5, "confidence": 85, "reasoning": "..."},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "..."},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "..."},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "..."},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "..."}
   }
 }
         """.trimIndent()
@@ -140,7 +155,7 @@ Return ONLY the JSON object below:
     "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Proactive leadership demonstrated"},
     "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive choices made"},
     "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick tactical assessment"},
-    "ABILITY_TO_INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership approach shown"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership approach shown"},
     "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Creative solutions proposed"},
     "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm execution plan"},
     "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Calculated risks considered"},
