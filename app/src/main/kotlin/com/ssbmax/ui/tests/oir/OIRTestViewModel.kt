@@ -94,8 +94,9 @@ class OIRTestViewModel @Inject constructor(
             // Get current user - SECURITY: Require authentication
             val user = observeCurrentUser().first()
             val userId = user?.id ?: run {
-                android.util.Log.e("OIRTestViewModel", "🚨 SECURITY: Unauthenticated test access attempt blocked")
-                
+                val exception = Exception("Unauthenticated OIR test access attempt")
+                ErrorLogger.log(exception, "SECURITY: Unauthenticated test access attempt blocked")
+
                 // SECURITY: Log unauthenticated access attempt to Firebase Analytics
                 securityLogger.logUnauthenticatedAccess(
                     testType = TestType.OIR,
@@ -138,7 +139,7 @@ class OIRTestViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("OIRTestViewModel", "Error checking eligibility", e)
+                ErrorLogger.log(e, "Exception checking OIR test eligibility")
                 // Continue anyway in case of error
             }
             
@@ -180,7 +181,8 @@ class OIRTestViewModel @Inject constructor(
                 // 🔍 VALIDATE ALL QUESTIONS - Catch data corruption early!
                 android.util.Log.d("OIRTestViewModel", "🔍 Validating ${questions.size} questions...")
                 val validatedQuestions = OIRQuestionValidator.validateAndFilter(questions) { invalidResult ->
-                    android.util.Log.e("OIRTestViewModel", "❌ INVALID QUESTION DETECTED:\n${invalidResult.toLogString()}")
+                    val exception = Exception("Invalid OIR question detected: ${invalidResult.questionId}")
+                    ErrorLogger.log(exception, "OIR question validation failed: ${invalidResult.toLogString()}")
                 }
                 
                 if (validatedQuestions.size < questions.size) {
@@ -216,7 +218,7 @@ class OIRTestViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e // Don't catch cancellation
             } catch (e: Exception) {
-                android.util.Log.e("OIRTestViewModel", "Failed to load test", e)
+                ErrorLogger.log(e, "Exception loading OIR test")
                 _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
@@ -230,12 +232,14 @@ class OIRTestViewModel @Inject constructor(
         android.util.Log.d("OIRTestViewModel", "🟢 selectOption() called: optionId=$optionId")
         
         val session = _uiState.value.session ?: run {
-            android.util.Log.e("OIRTestViewModel", "❌ session is null in selectOption!")
+            val exception = Exception("Session is null in selectOption")
+            ErrorLogger.log(exception, "OIR test session null during option selection")
             return
         }
-        
+
         val question = session.currentQuestion ?: run {
-            android.util.Log.e("OIRTestViewModel", "❌ currentQuestion is null in selectOption!")
+            val exception = Exception("Current question is null in selectOption")
+            ErrorLogger.log(exception, "OIR current question null during option selection")
             return
         }
         
@@ -246,7 +250,8 @@ class OIRTestViewModel @Inject constructor(
         // 🔍 RUNTIME VALIDATION - Double-check question integrity before scoring
         val validationResult = OIRQuestionValidator.validate(question)
         if (!validationResult.isValid) {
-            android.util.Log.e("OIRTestViewModel", "❌ FATAL: Invalid question detected during answer selection!\n${validationResult.toLogString()}")
+            val exception = Exception("Invalid question detected during runtime validation: ${question.id}")
+            ErrorLogger.log(exception, "OIR question runtime validation failed: ${validationResult.toLogString()}")
             // Still allow the answer, but log the critical error
         }
         
@@ -317,7 +322,8 @@ class OIRTestViewModel @Inject constructor(
         _uiState.update { it.copy(isTimerActive = false) }
         
         val session = _uiState.value.session ?: run {
-            android.util.Log.e("OIRTestViewModel", "❌ session is null in submitTest!")
+            val exception = Exception("Session is null in submitTest")
+            ErrorLogger.log(exception, "OIR test session null during test submission")
             return
         }
         
@@ -471,9 +477,9 @@ class OIRTestViewModel @Inject constructor(
         
         // Safety check: if currentQuestion is null, we've gone past the last question
         if (currentQuestion == null) {
-            android.util.Log.e("OIRTestViewModel", "⚠️ currentQuestion is null at index ${session.currentQuestionIndex}/${session.questions.size}")
-            android.util.Log.e("OIRTestViewModel", "   This should NOT happen! Index should be 0..${session.questions.size - 1}")
-            
+            val exception = Exception("Current question null at invalid index: ${session.currentQuestionIndex}/${session.questions.size}")
+            ErrorLogger.log(exception, "OIR test data inconsistency: currentQuestion is null")
+
             // Log all question IDs to debug
             session.questions.forEachIndexed { index, q ->
                 android.util.Log.d("OIRTestViewModel", "   Question[$index]: id=${q.id}")
@@ -568,8 +574,8 @@ class OIRTestViewModel @Inject constructor(
             val correctOption = question.options.find { it.id == question.correctAnswerId }
             
             if (correctOption == null) {
-                android.util.Log.e("OIRTestViewModel", "❌ FATAL: Question ${question.id} has correctAnswerId='${question.correctAnswerId}' but no matching option!")
-                android.util.Log.e("OIRTestViewModel", "   Available options: ${question.options.joinToString { "${it.id}: ${it.text.take(50)}" }}")
+                val exception = Exception("Question ${question.id} has invalid correctAnswerId: ${question.correctAnswerId}")
+                ErrorLogger.log(exception, "OIR question data validation failed: correctAnswerId not found in options")
                 return@mapNotNull null // Skip this question instead of crashing
             }
             

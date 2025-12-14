@@ -133,7 +133,7 @@ class AuthRepositoryImpl @Inject constructor(
                 android.util.Log.e("AuthRepositoryImpl", "Firebase sign-in failed: ${error.message}", error)
                 return Result.failure(error)
             }
-            
+
             val firebaseUser = firebaseResult.getOrNull()
             if (firebaseUser == null) {
                 android.util.Log.e("AuthRepositoryImpl", "Firebase user is null after sign-in")
