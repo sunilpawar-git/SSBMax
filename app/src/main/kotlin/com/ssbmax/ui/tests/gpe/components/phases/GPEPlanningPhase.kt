@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 
 /**
  * GPE Planning Phase
@@ -23,8 +25,10 @@ fun GPEPlanningPhase(
     maxCharacters: Int,
     timeRemainingSeconds: Int,
     scenario: String,
-    resources: List<String>
+    resources: List<String>,
+    imageUrl: String
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,6 +36,27 @@ fun GPEPlanningPhase(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Map Image Card
+        if (imageUrl.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 250.dp), // Limit height to allow space for other content
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = stringResource(R.string.gpe_test_image),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    error = androidx.compose.ui.graphics.vector.rememberVectorPainter(androidx.compose.material.icons.Icons.Filled.BrokenImage)
+                )
+            }
+        }
+
         // Scenario reminder card
         Card(
             modifier = Modifier.fillMaxWidth(),

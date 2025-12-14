@@ -347,6 +347,7 @@ class GPETestViewModel @Inject constructor(
                         // Mark as submitted using thread-safe .update {} with CURRENT state
                         _uiState.update { currentState ->
                             currentState.copy(
+                                currentPhase = GPEPhase.SUBMITTED,  // ← Update root-level phase (what UI reads)
                                 session = currentState.session?.copy(
                                     currentPhase = GPEPhase.SUBMITTED,
                                     isCompleted = true

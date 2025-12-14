@@ -111,7 +111,8 @@ fun GPETestScreen(
                             maxCharacters = uiState.maxCharacters,
                             timeRemainingSeconds = uiState.timeRemainingSeconds,
                             scenario = uiState.scenario,
-                            resources = uiState.resources
+                            resources = uiState.resources,
+                            imageUrl = uiState.imageUrl
                         )
                         GPEPhase.REVIEW -> GPEReviewPhase(
                             imageUrl = uiState.imageUrl,
