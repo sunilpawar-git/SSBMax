@@ -66,6 +66,19 @@ fun GDTestScreen(
         }
     }
     
+    // Navigate to result screen when submission is complete
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) {
+            val submissionId = uiState.submissionId
+            if (!submissionId.isNullOrBlank()) {
+                android.util.Log.d("GDTestScreen", "✅ Test submitted, navigating to result screen")
+                android.util.Log.d("GDTestScreen", "   - Submission ID: $submissionId")
+                android.util.Log.d("GDTestScreen", "   - Subscription type: ${uiState.subscriptionType}")
+                onTestComplete(submissionId, uiState.subscriptionType)
+            }
+        }
+    }
+    
     // Cleanup on exit
     DisposableEffect(Unit) {
         onDispose {

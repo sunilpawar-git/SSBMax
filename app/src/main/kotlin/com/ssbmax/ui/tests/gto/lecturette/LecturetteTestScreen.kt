@@ -70,6 +70,19 @@ fun LecturetteTestScreen(
         }
     }
     
+    // Navigate to result screen when submission is complete
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) {
+            val submissionId = uiState.submissionId
+            if (!submissionId.isNullOrBlank()) {
+                android.util.Log.d("LecturetteTestScreen", "✅ Test submitted, navigating to result screen")
+                android.util.Log.d("LecturetteTestScreen", "   - Submission ID: $submissionId")
+                android.util.Log.d("LecturetteTestScreen", "   - Subscription type: ${uiState.subscriptionType}")
+                onTestComplete(submissionId, uiState.subscriptionType)
+            }
+        }
+    }
+    
     
     // Cleanup on exit
     DisposableEffect(Unit) {
