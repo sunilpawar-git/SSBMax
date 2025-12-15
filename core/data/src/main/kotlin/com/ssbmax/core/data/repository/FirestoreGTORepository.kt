@@ -804,6 +804,15 @@ class FirestoreGTORepository @Inject constructor(
             )
         }
         
+        // Robustness fix: If OLQ scores are present but status says PENDING/ANALYZING, 
+        // infer COMPLETED to prevent UI getting stuck.
+        val finalStatus = if (olqScores.isNotEmpty() && (status == GTOSubmissionStatus.PENDING_ANALYSIS || status == GTOSubmissionStatus.ANALYZING)) {
+            Log.w(TAG, "⚠️ Inferred COMPLETED status from presence of ${olqScores.size} OLQ scores (original status: $status)")
+            GTOSubmissionStatus.COMPLETED
+        } else {
+            status
+        }
+        
         return when (testType) {
             GTOTestType.GROUP_DISCUSSION -> GTOSubmission.GDSubmission(
                 id = id,
@@ -814,7 +823,7 @@ class FirestoreGTORepository @Inject constructor(
                 wordCount = ((data["wordCount"] as? Number)?.toInt()) ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.GROUP_PLANNING_EXERCISE -> GTOSubmission.GPESubmission(
@@ -827,7 +836,7 @@ class FirestoreGTORepository @Inject constructor(
                 characterCount = ((data["characterCount"] as? Number)?.toInt()) ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.LECTURETTE -> GTOSubmission.LecturetteSubmission(
@@ -840,7 +849,7 @@ class FirestoreGTORepository @Inject constructor(
                 wordCount = ((data["wordCount"] as? Number)?.toInt()) ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.PROGRESSIVE_GROUP_TASK -> GTOSubmission.PGTSubmission(
@@ -851,7 +860,7 @@ class FirestoreGTORepository @Inject constructor(
                 solutions = parseObstacleSolutionList(data["solutions"]),
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.HALF_GROUP_TASK -> GTOSubmission.HGTSubmission(
@@ -863,7 +872,7 @@ class FirestoreGTORepository @Inject constructor(
                 leadershipDecisions = data["leadershipDecisions"] as? String ?: "",
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.GROUP_OBSTACLE_RACE -> GTOSubmission.GORSubmission(
@@ -874,7 +883,7 @@ class FirestoreGTORepository @Inject constructor(
                 coordinationStrategy = data["coordinationStrategy"] as? String ?: "",
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.INDIVIDUAL_OBSTACLES -> GTOSubmission.IOSubmission(
@@ -885,7 +894,7 @@ class FirestoreGTORepository @Inject constructor(
                 approach = data["approach"] as? String ?: "",
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
             GTOTestType.COMMAND_TASK -> GTOSubmission.CTSubmission(
@@ -898,7 +907,7 @@ class FirestoreGTORepository @Inject constructor(
                 resourceAllocation = data["resourceAllocation"] as? String ?: "",
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
-                status = status,
+                status = finalStatus,
                 olqScores = olqScores
             )
         }
