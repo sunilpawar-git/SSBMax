@@ -45,7 +45,12 @@
       "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt\" )",
       "Bash(\"/Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/gpe/GPETestViewModel.kt\")",
       "Bash(do)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew compileDebugKotlin:*)",
+      "Bash(./gradlew :core:data:compileDebugKotlin:*)",
+      "Bash(./gradlew clean compileDebugKotlin:*)",
+      "Bash(./gradlew :app:compileDebugKotlin:*)"
     ],
     "deny": [],
     "ask": []

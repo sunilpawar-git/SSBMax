@@ -702,12 +702,12 @@ context.showToast(R.string.error_network)
 ## 🔧 DEVELOPMENT WORKFLOW
 
 ### Build System
-- **IMPORTANT**: Always use `./gradle.sh` wrapper script for all Gradle commands on macOS
-- This project uses a custom Gradle wrapper for consistency across development environments
+- **IMPORTANT**: Always use `./gradlew` wrapper script for all Gradle commands
+- This project uses the standard Gradle wrapper for consistency across development environments
 - Examples:
-  - `./gradle.sh build` instead of `./gradlew build`
-  - `./gradle.sh test` instead of `./gradlew test`
-  - `./gradle.sh assembleDebug` instead of `./gradlew assembleDebug`
+  - `./gradlew build`
+  - `./gradlew test`
+  - `./gradlew assembleDebug`
 
 ### Error Handling Standards
 

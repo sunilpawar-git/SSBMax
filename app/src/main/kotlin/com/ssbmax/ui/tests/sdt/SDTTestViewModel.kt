@@ -2,11 +2,19 @@ package com.ssbmax.ui.tests.sdt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.SDTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -32,7 +40,8 @@ class SDTTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SDTTestUiState())
@@ -221,7 +230,9 @@ class SDTTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = SDTTestScoring.generateMockAIScore(state.responses)
+                    aiPreliminaryScore = SDTTestScoring.generateMockAIScore(state.responses),
+                    analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+                    olqResult = null
                 )
 
                 val scorePercentage = if (submission.totalResponses > 0)
@@ -231,6 +242,13 @@ class SDTTestViewModel @Inject constructor(
                 subscriptionManager.recordTestUsage(TestType.SD, currentUserId)
 
                 submitSDTTest(submission, null).onSuccess { submissionId ->
+                    android.util.Log.d(TAG, "✅ Submission successful! ID: $submissionId")
+
+                    // Enqueue SDTAnalysisWorker for OLQ analysis
+                    android.util.Log.d(TAG, "📍 Enqueueing SDTAnalysisWorker...")
+                    enqueueSDTAnalysisWorker(submissionId)
+                    android.util.Log.d(TAG, "✅ SDTAnalysisWorker enqueued successfully")
+
                     _uiState.update { it.copy(isLoading = false, isSubmitted = true,
                         submissionId = submissionId, subscriptionType = subscriptionType,
                         phase = SDTPhase.SUBMITTED) }
@@ -271,6 +289,26 @@ class SDTTestViewModel @Inject constructor(
     }
 
     // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
+
+    /**
+     * Enqueue SDTAnalysisWorker for background OLQ analysis
+     */
+    private fun enqueueSDTAnalysisWorker(submissionId: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<SDTAnalysisWorker>()
+            .setInputData(workDataOf(SDTAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "sdt_analysis_$submissionId",
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
+    }
 
     override fun onCleared() {
         super.onCleared()

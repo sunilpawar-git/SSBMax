@@ -185,6 +185,42 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for GTO analysis"))
     }
 
+    /**
+     * Analyze TAT response (not yet implemented in cloud)
+     * Use GeminiAIService for psychology test analysis with direct API access
+     */
+    override suspend fun analyzeTATResponse(prompt: String): Result<ResponseAnalysis> {
+        Log.e(TAG, "TAT analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
+    /**
+     * Analyze WAT response (not yet implemented in cloud)
+     * Use GeminiAIService for psychology test analysis with direct API access
+     */
+    override suspend fun analyzeWATResponse(prompt: String): Result<ResponseAnalysis> {
+        Log.e(TAG, "WAT analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
+    /**
+     * Analyze SRT response (not yet implemented in cloud)
+     * Use GeminiAIService for psychology test analysis with direct API access
+     */
+    override suspend fun analyzeSRTResponse(prompt: String): Result<ResponseAnalysis> {
+        Log.e(TAG, "SRT analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
+    /**
+     * Analyze SD response (not yet implemented in cloud)
+     * Use GeminiAIService for psychology test analysis with direct API access
+     */
+    override suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis> {
+        Log.e(TAG, "SD analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
    /**
      * Health check (check if user is authenticated)
      */

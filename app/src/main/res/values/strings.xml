@@ -838,7 +838,7 @@
     <string name="sdt_result_valid_responses">Valid Responses: %d</string>
 
     <!-- AI Score -->
-    <string name="sdt_result_ai_score_title">AI Preliminary Score</string>
+    <string name="sdt_result_ai_score_title">AI Preliminary Score (Legacy)</string>
     <string name="sdt_result_overall_score">Overall: %d/100</string>
     <string name="sdt_result_score_format">%d/25</string>
 
@@ -1211,5 +1211,26 @@
     <string name="review_submission">Review Your Submission</string>
     <string name="edit">Edit</string>
     <string name="review_before_submit_message">Please review your response carefully before submitting. You cannot make changes after submission.</string>
+
+    <!-- Psychology Test Notifications -->
+    <string name="notification_tat_complete_title">TAT Results Ready!</string>
+    <string name="notification_tat_complete_body">Your TAT analysis is complete. Tap to view your OLQ assessment.</string>
+    <string name="notification_tat_failed_title">TAT Analysis Issue</string>
+    <string name="notification_tat_failed_body">We couldn\'t complete the TAT analysis. Please try again later.</string>
+
+    <string name="notification_wat_complete_title">WAT Results Ready!</string>
+    <string name="notification_wat_complete_body">Your WAT analysis is complete. Tap to view your OLQ assessment.</string>
+    <string name="notification_wat_failed_title">WAT Analysis Issue</string>
+    <string name="notification_wat_failed_body">We couldn\'t complete the WAT analysis. Please try again later.</string>
+
+    <string name="notification_srt_complete_title">SRT Results Ready!</string>
+    <string name="notification_srt_complete_body">Your SRT analysis is complete. Tap to view your OLQ assessment.</string>
+    <string name="notification_srt_failed_title">SRT Analysis Issue</string>
+    <string name="notification_srt_failed_body">We couldn\'t complete the SRT analysis. Please try again later.</string>
+
+    <string name="notification_sdt_complete_title">Self Description Results Ready!</string>
+    <string name="notification_sdt_complete_body">Your Self Description analysis is complete. Tap to view your OLQ assessment.</string>
+    <string name="notification_sdt_failed_title">Self Description Analysis Issue</string>
+    <string name="notification_sdt_failed_body">We couldn\'t complete the Self Description analysis. Please try again later.</string>
 
 </resources>

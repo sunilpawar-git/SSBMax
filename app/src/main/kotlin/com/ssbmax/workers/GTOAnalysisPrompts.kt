@@ -24,62 +24,83 @@ object GTOAnalysisPrompts {
         return """
 You are analyzing a Group Discussion response for SSB GTO assessment.
 
-**Topic**: ${submission.topic}
-**Candidate Response**: 
+═══════════════════════════════════════════════════════════════════════════════
+GD SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Topic: ${submission.topic}
+
+Candidate Response:
 ${submission.response}
 
-**Word Count**: ${submission.wordCount}
-**Time Spent**: ${submission.timeSpent} seconds
+Word Count: ${submission.wordCount}
+Time Spent: ${submission.timeSpent} seconds
 
-Evaluate the candidate's response against ALL 15 Officer-Like Qualities (OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════
 
-1. **Effective Intelligence**: Clarity, logic, analytical thinking
-2. **Reasoning Ability**: Problem-solving approach
-3. **Organizing Ability**: Structure of arguments
-4. **Power of Expression**: Articulation, communication clarity
-5. **Social Adjustment**: Respect for diverse views
-6. **Cooperation**: Collaborative tone
-7. **Sense of Responsibility**: Accountability in arguments
-8. **Initiative**: Leadership potential in discussion
-9. **Self Confidence**: Conviction in opinions
-10. **Speed of Decision**: Decisiveness in stance
-11. **Ability to Influence Group**: Persuasiveness
-12. **Liveliness**: Energy and enthusiasm
-13. **Determination**: Firmness in viewpoint
-14. **Courage**: Willingness to take bold positions
-15. **Stamina**: Sustained quality throughout
+1. EFFECTIVE_INTELLIGENCE: Clarity, logic, analytical thinking
+2. REASONING_ABILITY: Problem-solving approach
+3. ORGANIZING_ABILITY: Structure of arguments
+4. POWER_OF_EXPRESSION: Articulation, communication clarity
+5. SOCIAL_ADJUSTMENT: Respect for diverse views
+6. COOPERATION: Collaborative tone
+7. SENSE_OF_RESPONSIBILITY: Accountability in arguments
+8. INITIATIVE: Leadership potential in discussion
+9. SELF_CONFIDENCE: Conviction in opinions
+10. SPEED_OF_DECISION: Decisiveness in stance
+11. INFLUENCE_GROUP: Persuasiveness
+12. LIVELINESS: Energy and enthusiasm
+13. DETERMINATION: Firmness in viewpoint
+14. COURAGE: Willingness to take bold positions
+15. STAMINA: Sustained quality throughout
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional (rare, outstanding)
-- 4: Excellent (top tier)
-- 5: Very Good (best common score)
-- 6: Good (above average)
-- 7: Average (typical performance)
-- 8: Below Average (lowest acceptable)
-- 9-10: Poor (usually rejected)
+═══════════════════════════════════════════════════════════════════════════════
+SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+═══════════════════════════════════════════════════════════════════════════════
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Do NOT include any text like "Here is the analysis" or explanations.
-Return ONLY the JSON object with exact enum names:
+1-3: Exceptional (rare, outstanding)
+4: Excellent (top tier)
+5: Very Good (best common score)
+6: Good (above average)
+7: Average (typical performance)
+8: Below Average (lowest acceptable)
+9-10: Poor (usually rejected)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
     "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "Clear analytical thinking demonstrated"},
     "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical arguments presented"},
-    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "INITIATIVE": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "..."},
-    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "..."},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "..."}
+    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Well-structured response"},
+    "POWER_OF_EXPRESSION": {"score": 5, "confidence": 85, "reasoning": "Excellent articulation"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate respect for diverse views"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative tone evident"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Accountable in arguments"},
+    "INITIATIVE": {"score": 5, "confidence": 85, "reasoning": "Strong leadership potential"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Conviction in opinions shown"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Decisive stance taken"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Persuasive approach"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Moderate energy level"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm viewpoint maintained"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Willing to take bold positions"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained quality throughout"}
   }
 }
         """.trimIndent()
@@ -88,23 +109,31 @@ Return ONLY the JSON object with exact enum names:
     private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String {
         val solutionSection = if (!submission.solution.isNullOrBlank()) {
             """
-            
-            **Ideal/Suggested Scenario Solution**:
-            ${submission.solution}
+
+Ideal/Suggested Scenario Solution:
+${submission.solution}
             """
         } else ""
 
         return """
 You are analyzing a Group Planning Exercise (GPE) response for SSB GTO assessment.
 
-**Scenario**: ${submission.scenario}${solutionSection}
-**Candidate's Tactical Plan**:
+═══════════════════════════════════════════════════════════════════════════════
+GPE SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Scenario: ${submission.scenario}${solutionSection}
+
+Candidate's Tactical Plan:
 ${submission.plan}
 
-**Character Count**: ${submission.characterCount}
-**Time Spent**: ${submission.timeSpent} seconds
+Character Count: ${submission.characterCount}
+Time Spent: ${submission.timeSpent} seconds
 
-**GPE Assessment Focus**:
+═══════════════════════════════════════════════════════════════════════════════
+GPE ASSESSMENT FOCUS:
+═══════════════════════════════════════════════════════════════════════════════
+
 The Group Planning Exercise tests a candidate's ability to:
 1. Analyze a tactical military scenario
 2. Develop a practical action plan
@@ -112,45 +141,64 @@ The Group Planning Exercise tests a candidate's ability to:
 4. Demonstrate leadership qualities
 5. Consider contingencies and risks
 
-Evaluate the candidate's tactical planning against ALL 15 Officer-Like Qualities (OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════
 
-1. **Effective Intelligence**: Clarity of situation analysis, understanding of tactical requirements
-2. **Reasoning Ability**: Logical approach to problem-solving, tactical thinking
-3. **Organizing Ability**: Resource allocation, task sequencing, team coordination
-4. **Power of Expression**: Clarity of plan communication
-5. **Social Adjustment**: Team consideration in planning
-6. **Cooperation**: Collaborative approach in resource sharing
-7. **Sense of Responsibility**: Accountability for mission success
-8. **Initiative**: Leadership in solution design, proactive thinking
-9. **Self Confidence**: Decisiveness in choices
-10. **Speed of Decision**: Quick assessment and planning
-11. **Ability to Influence Group**: Persuasive leadership approach
-12. **Liveliness**: Dynamic and creative solutions
-13. **Determination**: Firmness in execution plan
-14. **Courage**: Willingness to take calculated risks
-15. **Stamina**: Sustained quality and thoroughness
+1. EFFECTIVE_INTELLIGENCE: Clarity of situation analysis, understanding of tactical requirements
+2. REASONING_ABILITY: Logical approach to problem-solving, tactical thinking
+3. ORGANIZING_ABILITY: Resource allocation, task sequencing, team coordination
+4. POWER_OF_EXPRESSION: Clarity of plan communication
+5. SOCIAL_ADJUSTMENT: Team consideration in planning
+6. COOPERATION: Collaborative approach in resource sharing
+7. SENSE_OF_RESPONSIBILITY: Accountability for mission success
+8. INITIATIVE: Leadership in solution design, proactive thinking
+9. SELF_CONFIDENCE: Decisiveness in choices
+10. SPEED_OF_DECISION: Quick assessment and planning
+11. INFLUENCE_GROUP: Persuasive leadership approach
+12. LIVELINESS: Dynamic and creative solutions
+13. DETERMINATION: Firmness in execution plan
+14. COURAGE: Willingness to take calculated risks
+15. STAMINA: Sustained quality and thoroughness
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional (rare, outstanding tactical planning)
-- 4: Excellent (top tier leadership)
-- 5: Very Good (best common score for officers)
-- 6: Good (above average)
-- 7: Average (typical performance)
-- 8: Below Average (lowest acceptable)
-- 9-10: Poor (usually rejected)
+═══════════════════════════════════════════════════════════════════════════════
+SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+═══════════════════════════════════════════════════════════════════════════════
 
-**Evaluation Criteria**:
+1-3: Exceptional (rare, outstanding tactical planning)
+4: Excellent (top tier leadership)
+5: Very Good (best common score for officers)
+6: Good (above average)
+7: Average (typical performance)
+8: Below Average (lowest acceptable)
+9-10: Poor (usually rejected)
+
+═══════════════════════════════════════════════════════════════════════════════
+EVALUATION CHECKLIST:
+═══════════════════════════════════════════════════════════════════════════════
+
 - Does the plan address the tactical scenario comprehensively?
 - Are resources (personnel, equipment, time) allocated effectively?
 - Does the plan show leadership and initiative?
 - Is there consideration of contingencies and risks?
 - Is the plan practical and achievable?
-- **Compare against the Ideal Solution provided (if any) for accuracy and completeness.**
+- Compare against the Ideal Solution provided (if any) for accuracy
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Do NOT include any text like "Here is the analysis" or explanations.
-Return ONLY the JSON object below:
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
@@ -178,15 +226,23 @@ Return ONLY the JSON object below:
         return """
 You are analyzing a Lecturette (3-minute speech) for SSB GTO assessment.
 
-**Topic Chosen**: ${submission.selectedTopic}
-**Available Topics**: ${submission.topicChoices.joinToString(", ")}
-**Speech Transcript**: 
+═══════════════════════════════════════════════════════════════════════════════
+LECTURETTE SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Topic Chosen: ${submission.selectedTopic}
+Available Topics: ${submission.topicChoices.joinToString(", ")}
+
+Speech Transcript:
 ${submission.speechTranscript}
 
-**Word Count**: ${submission.wordCount}
-**Time Spent**: ${submission.timeSpent} seconds
+Word Count: ${submission.wordCount}
+Time Spent: ${submission.timeSpent} seconds
 
-**Lecturette Assessment Focus**:
+═══════════════════════════════════════════════════════════════════════════════
+LECTURETTE ASSESSMENT FOCUS:
+═══════════════════════════════════════════════════════════════════════════════
+
 A Lecturette tests a candidate's ability to:
 1. Speak coherently on a chosen topic for 3 minutes
 2. Demonstrate subject knowledge and quick thinking
@@ -194,37 +250,53 @@ A Lecturette tests a candidate's ability to:
 4. Engage and persuade the group
 5. Display leadership qualities through verbal communication
 
-Evaluate the candidate's speech against ALL 15 Officer-Like Qualities (OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
+═══════════════════════════════════════════════════════════════════════════════
 
-1. **Effective Intelligence**: Clarity of thought, depth of topic understanding, analytical insights
-2. **Reasoning Ability**: Logical flow of arguments, coherent structure
-3. **Organizing Ability**: Speech structure, time management, point sequencing
-4. **Power of Expression**: Fluency, articulation, vocabulary, communication clarity
-5. **Social Adjustment**: Audience awareness, appropriate tone
-6. **Cooperation**: Collaborative spirit in communication
-7. **Sense of Responsibility**: Ownership of views, accountability in statements
-8. **Initiative**: Leadership in topic selection, original insights
-9. **Self Confidence**: Conviction, poise, self-assurance in delivery
-10. **Speed of Decision**: Quick thinking, topic choice decisiveness
-11. **Ability to Influence Group**: Persuasiveness, engagement, impact
-12. **Liveliness**: Energy, enthusiasm, dynamism in delivery
-13. **Determination**: Firmness in viewpoint, persistence in message
-14. **Courage**: Willingness to express bold/original views
-15. **Stamina**: Sustained quality and energy throughout 3 minutes
+1. EFFECTIVE_INTELLIGENCE: Clarity of thought, depth of topic understanding, analytical insights
+2. REASONING_ABILITY: Logical flow of arguments, coherent structure
+3. ORGANIZING_ABILITY: Speech structure, time management, point sequencing
+4. POWER_OF_EXPRESSION: Fluency, articulation, vocabulary, communication clarity
+5. SOCIAL_ADJUSTMENT: Audience awareness, appropriate tone
+6. COOPERATION: Collaborative spirit in communication
+7. SENSE_OF_RESPONSIBILITY: Ownership of views, accountability in statements
+8. INITIATIVE: Leadership in topic selection, original insights
+9. SELF_CONFIDENCE: Conviction, poise, self-assurance in delivery
+10. SPEED_OF_DECISION: Quick thinking, topic choice decisiveness
+11. INFLUENCE_GROUP: Persuasiveness, engagement, impact
+12. LIVELINESS: Energy, enthusiasm, dynamism in delivery
+13. DETERMINATION: Firmness in viewpoint, persistence in message
+14. COURAGE: Willingness to express bold/original views
+15. STAMINA: Sustained quality and energy throughout 3 minutes
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional (rare, outstanding speakers)
-- 4: Excellent (top tier communication)
-- 5: Very Good (best common score for officers)
-- 6: Good (above average)
-- 7: Average (typical performance)
-- 8: Below Average (lowest acceptable)
-- 9-10: Poor (usually rejected)
+═══════════════════════════════════════════════════════════════════════════════
+SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+═══════════════════════════════════════════════════════════════════════════════
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Do NOT include any text like "Here is the analysis" or explanations.
-Return ONLY the JSON object with exact enum names:
+1-3: Exceptional (rare, outstanding speakers)
+4: Excellent (top tier communication)
+5: Very Good (best common score for officers)
+6: Good (above average)
+7: Average (typical performance)
+8: Below Average (lowest acceptable)
+9-10: Poor (usually rejected)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
@@ -250,45 +322,63 @@ Return ONLY the JSON object with exact enum names:
     
     private fun generatePGTPrompt(submission: GTOSubmission.PGTSubmission): String {
         val solutionsText = submission.solutions.joinToString("\n\n") { solution ->
-            "**Obstacle ${solution.obstacleId}**: ${solution.solutionText}"
+            "Obstacle ${solution.obstacleId}: ${solution.solutionText}"
         }
-        
+
         return """
 You are analyzing a Progressive Group Task response for SSB GTO assessment.
 
-**Obstacles**: ${submission.obstacles.size} progressive challenges
-**Candidate's Solutions**: 
+═══════════════════════════════════════════════════════════════════════════════
+PGT SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Obstacles: ${submission.obstacles.size} progressive challenges
+
+Candidate's Solutions:
 $solutionsText
 
-**Time Spent**: ${submission.timeSpent} seconds
+Time Spent: ${submission.timeSpent} seconds
 
-Evaluate the candidate's problem-solving across progressively difficult obstacles against ALL 15 OLQs.
+═══════════════════════════════════════════════════════════════════════════════
+SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+═══════════════════════════════════════════════════════════════════════════════
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional, 4: Excellent, 5: Very Good
-- 6: Good, 7: Average, 8: Below Average, 9-10: Poor
+1-3: Exceptional, 4: Excellent, 5: Very Good
+6: Good, 7: Average, 8: Below Average, 9-10: Poor
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Return ONLY the JSON object with exact enum names (all 15 OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "INITIATIVE": {"score": 6, "confidence": 85, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "..."},
-    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "..."},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "..."}
+    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "Problem-solving approach analyzed"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical thinking demonstrated"},
+    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Systematic approach shown"},
+    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "Communication clarity adequate"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Team dynamics considered"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative approach evident"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Accountability shown"},
+    "INITIATIVE": {"score": 6, "confidence": 85, "reasoning": "Proactive solutions provided"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive actions taken"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Timely decisions made"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership potential shown"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Energy level adequate"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Persistence demonstrated"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Willingness to tackle challenges"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained effort throughout"}
   }
 }
         """.trimIndent()
@@ -298,170 +388,206 @@ Return ONLY the JSON object with exact enum names (all 15 OLQs):
         return """
 You are analyzing a Half Group Task response for SSB GTO assessment.
 
-**Obstacle**: ${submission.obstacle.name} - ${submission.obstacle.description}
-**Solution**: ${submission.solution.solutionText}
-**Leadership Decisions**: ${submission.leadershipDecisions}
+═══════════════════════════════════════════════════════════════════════════════
+HGT SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
 
-**Time Spent**: ${submission.timeSpent} seconds
+Obstacle: ${submission.obstacle.name} - ${submission.obstacle.description}
+Solution: ${submission.solution.solutionText}
+Leadership Decisions: ${submission.leadershipDecisions}
+Time Spent: ${submission.timeSpent} seconds
 
-Focus on leadership qualities: Initiative, Organizing Ability, Ability to Influence Group.
-Evaluate ALL 15 OLQs.
+Focus: Leadership qualities (Initiative, Organizing Ability, Influence Group)
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional, 4: Excellent, 5: Very Good
-- 6: Good, 7: Average, 8: Below Average, 9-10: Poor
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════════════════════
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Return ONLY the JSON object with exact enum names (all 15 OLQs):
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json markers)
+3. ALL 15 OLQs MUST be present
+4. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+5. Your response should START with { and END with }
+6. SSB Scoring: 1-10 where LOWER is BETTER
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT:
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "..."},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "..."}
+    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "Analytical approach shown"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical thinking demonstrated"},
+    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "Excellent leadership coordination"},
+    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "Clear communication"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Team awareness adequate"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative approach"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Accountability shown"},
+    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Strong proactive leadership"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive actions"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Timely decisions"},
+    "INFLUENCE_GROUP": {"score": 5, "confidence": 85, "reasoning": "Strong group influence"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Moderate energy"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Persistent effort"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Willing to take risks"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained performance"}
   }
 }
         """.trimIndent()
     }
-    
+
     private fun generateGORPrompt(submission: GTOSubmission.GORSubmission): String {
         return """
 You are analyzing a Group Obstacle Race response for SSB GTO assessment.
 
-**Obstacles**: ${submission.obstacles.size} team obstacles
-**Coordination Strategy**: 
+═══════════════════════════════════════════════════════════════════════════════
+GOR SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Obstacles: ${submission.obstacles.size} team obstacles
+Coordination Strategy:
 ${submission.coordinationStrategy}
+Time Spent: ${submission.timeSpent} seconds
 
-**Time Spent**: ${submission.timeSpent} seconds
+Focus: Teamwork qualities (Cooperation, Social Adjustment, Organizing Ability, Stamina)
 
-Focus on teamwork: Cooperation, Social Adjustment, Organizing Ability, Stamina.
-Evaluate ALL 15 OLQs.
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════════════════════
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional, 4: Excellent, 5: Very Good
-- 6: Good, 7: Average, 8: Below Average, 9-10: Poor
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json markers)
+3. ALL 15 OLQs MUST be present
+4. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+5. Your response should START with { and END with }
+6. SSB Scoring: 1-10 where LOWER is BETTER
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Return ONLY the JSON object with exact enum names (all 15 OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT:
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "COOPERATION": {"score": 5, "confidence": 90, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "INITIATIVE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "LIVELINESS": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "STAMINA": {"score": 5, "confidence": 85, "reasoning": "..."}
+    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 75, "reasoning": "Tactical thinking shown"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical approach"},
+    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "Excellent team coordination"},
+    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "Communication adequate"},
+    "SOCIAL_ADJUSTMENT": {"score": 5, "confidence": 85, "reasoning": "Strong team integration"},
+    "COOPERATION": {"score": 5, "confidence": 90, "reasoning": "Exceptional teamwork"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Reliable team player"},
+    "INITIATIVE": {"score": 6, "confidence": 80, "reasoning": "Proactive support"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Confident actions"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick thinking"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 75, "reasoning": "Team influence shown"},
+    "LIVELINESS": {"score": 6, "confidence": 75, "reasoning": "Good energy level"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Persistent effort"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Physical challenges faced"},
+    "STAMINA": {"score": 5, "confidence": 85, "reasoning": "Excellent endurance"}
   }
 }
         """.trimIndent()
     }
-    
+
     private fun generateIOPrompt(submission: GTOSubmission.IOSubmission): String {
         return """
 You are analyzing Individual Obstacles response for SSB GTO assessment.
 
-**Obstacles**: ${submission.obstacles.size} individual challenges
-**Overall Approach**: 
+═══════════════════════════════════════════════════════════════════════════════
+IO SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
+
+Obstacles: ${submission.obstacles.size} individual challenges
+Overall Approach:
 ${submission.approach}
+Time Spent: ${submission.timeSpent} seconds
 
-**Time Spent**: ${submission.timeSpent} seconds
+Focus: Individual qualities (Courage, Determination, Self Confidence, Stamina)
 
-Focus on individual qualities: Courage, Determination, Self Confidence, Stamina.
-Evaluate ALL 15 OLQs.
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════════════════════
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional, 4: Excellent, 5: Very Good
-- 6: Good, 7: Average, 8: Below Average, 9-10: Poor
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json markers)
+3. ALL 15 OLQs MUST be present
+4. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+5. Your response should START with { and END with }
+6. SSB Scoring: 1-10 where LOWER is BETTER
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Return ONLY the JSON object with exact enum names (all 15 OLQs):
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT:
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "COOPERATION": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "INITIATIVE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "LIVELINESS": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "DETERMINATION": {"score": 5, "confidence": 90, "reasoning": "..."},
-    "COURAGE": {"score": 5, "confidence": 90, "reasoning": "..."},
-    "STAMINA": {"score": 5, "confidence": 85, "reasoning": "..."}
+    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 75, "reasoning": "Problem-solving shown"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Tactical thinking"},
+    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Planning evident"},
+    "POWER_OF_EXPRESSION": {"score": 7, "confidence": 70, "reasoning": "Communication basic"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Individual task focus"},
+    "COOPERATION": {"score": 7, "confidence": 70, "reasoning": "Not applicable to IO"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Personal accountability"},
+    "INITIATIVE": {"score": 6, "confidence": 80, "reasoning": "Self-directed approach"},
+    "SELF_CONFIDENCE": {"score": 5, "confidence": 85, "reasoning": "Strong self-assurance"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick decisions"},
+    "INFLUENCE_GROUP": {"score": 7, "confidence": 70, "reasoning": "Not applicable to IO"},
+    "LIVELINESS": {"score": 7, "confidence": 70, "reasoning": "Moderate energy"},
+    "DETERMINATION": {"score": 5, "confidence": 90, "reasoning": "Exceptional persistence"},
+    "COURAGE": {"score": 5, "confidence": 90, "reasoning": "Strong physical courage"},
+    "STAMINA": {"score": 5, "confidence": 85, "reasoning": "Excellent endurance"}
   }
 }
         """.trimIndent()
     }
-    
+
     private fun generateCTPrompt(submission: GTOSubmission.CTSubmission): String {
         return """
 You are analyzing a Command Task response for SSB GTO assessment.
 
-**Scenario**: ${submission.scenario}
-**Obstacle**: ${submission.obstacle.name}
-**Command Decisions**: ${submission.commandDecisions}
-**Resource Allocation**: ${submission.resourceAllocation}
+═══════════════════════════════════════════════════════════════════════════════
+CT SUBMISSION DATA:
+═══════════════════════════════════════════════════════════════════════════════
 
-**Time Spent**: ${submission.timeSpent} seconds
+Scenario: ${submission.scenario}
+Obstacle: ${submission.obstacle.name}
+Command Decisions: ${submission.commandDecisions}
+Resource Allocation: ${submission.resourceAllocation}
+Time Spent: ${submission.timeSpent} seconds
 
-Focus on command qualities: Initiative, Organizing Ability, Speed of Decision, Courage.
-Evaluate ALL 15 OLQs.
+Focus: Command qualities (Initiative, Organizing Ability, Speed of Decision, Courage)
 
-**SSB Scoring Convention (CRITICAL)**:
-- Scale: 1-10 where LOWER is BETTER
-- 1-3: Exceptional, 4: Excellent, 5: Very Good
-- 6: Good, 7: Average, 8: Below Average, 9-10: Poor
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════════════════════
 
-**CRITICAL: Your response MUST be ONLY valid JSON with NO explanatory text before or after.**
-Return ONLY the JSON object with exact enum names (all 15 OLQs):
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json markers)
+3. ALL 15 OLQs MUST be present
+4. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+5. Your response should START with { and END with }
+6. SSB Scoring: 1-10 where LOWER is BETTER
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT:
+═══════════════════════════════════════════════════════════════════════════════
 
 {
   "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "POWER_OF_EXPRESSION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "SENSE_OF_RESPONSIBILITY": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "..."},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "SPEED_OF_DECISION": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 75, "reasoning": "..."},
-    "LIVELINESS": {"score": 7, "confidence": 70, "reasoning": "..."},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "..."},
-    "COURAGE": {"score": 5, "confidence": 85, "reasoning": "..."},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "..."}
+    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 80, "reasoning": "Tactical analysis shown"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical command decisions"},
+    "ORGANIZING_ABILITY": {"score": 5, "confidence": 85, "reasoning": "Excellent resource management"},
+    "POWER_OF_EXPRESSION": {"score": 6, "confidence": 75, "reasoning": "Clear instructions"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Team dynamics considered"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative leadership"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 5, "confidence": 85, "reasoning": "Strong mission ownership"},
+    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Proactive command approach"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive leadership"},
+    "SPEED_OF_DECISION": {"score": 5, "confidence": 85, "reasoning": "Quick tactical decisions"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 75, "reasoning": "Command authority shown"},
+    "LIVELINESS": {"score": 7, "confidence": 70, "reasoning": "Moderate energy"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Persistent execution"},
+    "COURAGE": {"score": 5, "confidence": 85, "reasoning": "Bold command decisions"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained focus"}
   }
 }
         """.trimIndent()

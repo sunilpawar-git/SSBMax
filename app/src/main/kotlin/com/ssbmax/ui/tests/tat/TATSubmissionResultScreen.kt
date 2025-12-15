@@ -14,6 +14,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.interview.OLQCategory
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.ui.tests.gto.common.AnalyzingCard
+import com.ssbmax.ui.tests.gto.common.AnalysisFailedCard
+import com.ssbmax.ui.tests.gto.common.OverallScoreCard
+import com.ssbmax.ui.tests.gto.common.OLQScoreCard
 
 /**
  * TAT Submission Result Screen - Shows AI score and pending instructor review
@@ -91,7 +97,162 @@ fun TATSubmissionResultScreen(
                         }
                     }
                     
-                    // AI Preliminary Score
+                    // OLQ Analysis Status and Results (Phase 3)
+                    val submission = uiState.submission!!
+                    when (submission.analysisStatus) {
+                        AnalysisStatus.PENDING_ANALYSIS -> {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(20.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Default.Schedule, null, modifier = Modifier.size(32.dp))
+                                        Column {
+                                            Text(
+                                                "OLQ Analysis Pending",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                "Your submission will be analyzed shortly.",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        AnalysisStatus.ANALYZING -> {
+                            item { AnalyzingCard(message = "Analyzing Your TAT Responses...") }
+                        }
+                        AnalysisStatus.FAILED -> {
+                            item { AnalysisFailedCard() }
+                        }
+                        AnalysisStatus.COMPLETED -> {
+                            submission.olqResult?.let { result ->
+                                // Overall Score Card
+                                item {
+                                    OverallScoreCard(
+                                        overallScore = result.overallScore,
+                                        overallRating = result.overallRating,
+                                        aiConfidence = result.aiConfidence
+                                    )
+                                }
+
+                                // Strengths
+                                if (result.strengths.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            "Top Strengths",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    items(result.strengths) { strength ->
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.tertiary)
+                                                Text(strength, style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // All OLQ Scores by Category
+                                item {
+                                    Text(
+                                        "Officer-Like Qualities Assessment",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                OLQCategory.entries.forEach { category ->
+                                    val olqsInCategory = result.olqScores.filter { it.key.category == category }
+                                    if (olqsInCategory.isNotEmpty()) {
+                                        item {
+                                            Text(
+                                                category.displayName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                        items(olqsInCategory.entries.toList()) { (olq, score) ->
+                                            OLQScoreCard(olq = olq, score = score, isStrength = null)
+                                        }
+                                    }
+                                }
+
+                                // Weaknesses / Areas for Improvement
+                                if (result.weaknesses.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            "Areas for Improvement",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    items(result.weaknesses) { weakness ->
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.error)
+                                                Text(weakness, style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Recommendations
+                                if (result.recommendations.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            "Recommendations",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    items(result.recommendations) { recommendation ->
+                                        Card(modifier = Modifier.fillMaxWidth()) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(Icons.Default.Lightbulb, null, tint = MaterialTheme.colorScheme.primary)
+                                                Text(recommendation, style = MaterialTheme.typography.bodyLarge)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // AI Preliminary Score (kept for backward compatibility)
                     uiState.submission!!.aiPreliminaryScore?.let { aiScore ->
                         item {
                             Card(modifier = Modifier.fillMaxWidth()) {
@@ -105,7 +266,7 @@ fun TATSubmissionResultScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            "AI Preliminary Score",
+                                            "AI Preliminary Score (Legacy)",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -116,15 +277,15 @@ fun TATSubmissionResultScreen(
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
-                                    
+
                                     HorizontalDivider()
-                                    
+
                                     ScoreBreakdown("Thematic Perception", aiScore.thematicPerceptionScore, 20f)
                                     ScoreBreakdown("Imagination", aiScore.imaginationScore, 20f)
                                     ScoreBreakdown("Character Depiction", aiScore.characterDepictionScore, 20f)
                                     ScoreBreakdown("Emotional Tone", aiScore.emotionalToneScore, 20f)
                                     ScoreBreakdown("Narrative Structure", aiScore.narrativeStructureScore, 20f)
-                                    
+
                                     aiScore.feedback?.let { feedback ->
                                         HorizontalDivider()
                                         Text(

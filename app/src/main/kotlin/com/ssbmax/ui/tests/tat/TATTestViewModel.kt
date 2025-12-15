@@ -2,15 +2,24 @@ package com.ssbmax.ui.tests.tat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.TATAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -26,7 +35,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
  * ViewModel for TAT Test Screen
@@ -47,7 +55,8 @@ class TATTestViewModel @Inject constructor(
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val generateTATAIScore: GenerateTATAIScoreUseCase,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TATTestUiState())
@@ -366,7 +375,9 @@ class TATTestViewModel @Inject constructor(
                     stories = state.responses,
                     totalTimeTakenMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt(),
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateTATAIScore(state.responses)
+                    aiPreliminaryScore = generateTATAIScore(state.responses),
+                    analysisStatus = AnalysisStatus.PENDING_ANALYSIS,  // OLQ analysis will be done by worker
+                    olqResult = null  // Will be populated by worker
                 )
                 android.util.Log.d("TATTestViewModel", "✅ Submission created with ${submission.stories.size} stories")
                 
@@ -376,7 +387,12 @@ class TATTestViewModel @Inject constructor(
                 
                 result.onSuccess { submissionId ->
                     android.util.Log.d("TATTestViewModel", "✅ Submission successful! ID: $submissionId")
-                    
+
+                    // Enqueue TATAnalysisWorker for OLQ analysis
+                    android.util.Log.d("TATTestViewModel", "📍 Step 4a: Enqueueing TATAnalysisWorker...")
+                    enqueueTATAnalysisWorker(submissionId)
+                    android.util.Log.d("TATTestViewModel", "✅ TATAnalysisWorker enqueued successfully")
+
                     // Calculate score for analytics (stories with >150 chars are "valid")
                     val validCount = submission.stories.count { it.charactersCount >= 150 }
                     val totalCount = submission.stories.size
@@ -516,15 +532,35 @@ class TATTestViewModel @Inject constructor(
     // Removed: Mock question generation (tests now loaded from cloud)
     // Removed: AI score generation moved to GenerateTATAIScoreUseCase
     
+    /**
+     * Enqueue TATAnalysisWorker for background OLQ analysis
+     */
+    private fun enqueueTATAnalysisWorker(submissionId: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<TATAnalysisWorker>()
+            .setInputData(workDataOf(TATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "tat_analysis_$submissionId",
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
 
         // PHASE 2: Timers auto-cancelled by viewModelScope
         android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
-        
+
         // Cancel navigation events channel
         _navigationEvents.close()
-        
+
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("TATTestViewModel")
 
@@ -585,7 +621,7 @@ data class TATTestUiState(
     
     val canMoveToPreviousQuestion: Boolean
         get() = currentQuestionIndex > 0 && phase == TATPhase.WRITING
-    
+
     val canSubmitTest: Boolean
         get() = completedStories >= 11 // Allow submission after 11 stories minimum
 }

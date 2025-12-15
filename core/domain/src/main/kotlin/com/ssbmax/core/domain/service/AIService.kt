@@ -85,14 +85,14 @@ interface AIService {
     
     /**
      * Analyze GTO test response and generate OLQ scores
-     * 
+     *
      * Similar to analyzeResponse() but for GTO tests (GPE, GD, Lecturette, etc.)
      * Uses specialized prompts for tactical/group scenarios while maintaining
      * the same ResponseAnalysis output format.
-     * 
+     *
      * The caller (GTOAnalysisWorker) generates the GTO-specific prompt using
      * GTOAnalysisPrompts, then passes it here for analysis.
-     * 
+     *
      * @param prompt Pre-generated GTO analysis prompt
      * @param testType The type of GTO test (for logging)
      * @return OLQ scores with confidence and reasoning
@@ -101,6 +101,64 @@ interface AIService {
         prompt: String,
         testType: com.ssbmax.core.domain.model.gto.GTOTestType
     ): Result<ResponseAnalysis>
+
+    /**
+     * Analyze TAT (Thematic Apperception Test) submission for OLQ scores
+     *
+     * Analyzes 11-12 TAT stories to assess Officer-Like Qualities based on:
+     * - Character behaviors (proactive vs reactive)
+     * - Story themes (leadership, helping, courage)
+     * - Optimism vs pessimism in endings
+     * - Problem-solving approaches
+     *
+     * @param prompt Pre-generated TAT analysis prompt from PsychologyTestPrompts
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeTATResponse(prompt: String): Result<ResponseAnalysis>
+
+    /**
+     * Analyze WAT (Word Association Test) submission for OLQ scores
+     *
+     * Analyzes 60 word associations to assess Officer-Like Qualities based on:
+     * - Positive/negative/neutral ratio
+     * - Response speed patterns
+     * - Creativity and uniqueness
+     * - Thematic patterns (helping, leadership, courage)
+     *
+     * @param prompt Pre-generated WAT analysis prompt from PsychologyTestPrompts
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeWATResponse(prompt: String): Result<ResponseAnalysis>
+
+    /**
+     * Analyze SRT (Situation Reaction Test) submission for OLQ scores
+     *
+     * Analyzes 60 situation reactions to assess Officer-Like Qualities based on:
+     * - Proactive vs reactive responses
+     * - Helping behaviors vs selfishness
+     * - Leadership and taking charge
+     * - Courage vs avoidance
+     * - Quick decision-making
+     *
+     * @param prompt Pre-generated SRT analysis prompt from PsychologyTestPrompts
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeSRTResponse(prompt: String): Result<ResponseAnalysis>
+
+    /**
+     * Analyze SD (Self Description) submission for OLQ scores
+     *
+     * Analyzes self-description (4 perspectives) to assess Officer-Like Qualities based on:
+     * - Self-awareness and maturity
+     * - Optimism vs pessimism
+     * - Goal-orientation
+     * - Consistency across perspectives
+     * - Acknowledgment of weaknesses
+     *
+     * @param prompt Pre-generated SD analysis prompt from PsychologyTestPrompts
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
 
     /**
      * Health check for AI service availability

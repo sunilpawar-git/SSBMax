@@ -179,6 +179,7 @@ class GTOAnalysisWorker @AssistedInject constructor(
 
     /**
      * Analyze submission with retry logic
+     * Enhanced validation: accepts 14-15 OLQs, fills missing ones with neutral score
      */
     private suspend fun analyzeSubmissionWithRetry(
         submission: GTOSubmission,
@@ -186,35 +187,64 @@ class GTOAnalysisWorker @AssistedInject constructor(
     ): Map<OLQ, OLQScore>? {
         repeat(MAX_AI_RETRIES) { attempt ->
             Log.d(TAG, "   AI attempt ${attempt + 1}/$MAX_AI_RETRIES...")
-            
+
             // Analyze with Gemini (same pattern as Interview tests)
             val olqScores = analyzeWithGemini(
                 submission = submission,
                 testType = testType
             )
-            
-            if (olqScores != null && olqScores.size == OLQ.entries.size) {
-                // Success - all OLQs scored
-                return olqScores
+
+            // Detailed logging
+            Log.d(TAG, "   Attempt ${attempt + 1}: Received ${olqScores?.size ?: 0}/15 OLQs")
+
+            if (olqScores != null) {
+                val missingOLQs = OLQ.entries.filter { it !in olqScores.keys }
+                if (missingOLQs.isNotEmpty()) {
+                    Log.w(TAG, "   Missing OLQs: ${missingOLQs.joinToString { it.name }}")
+                }
             }
-            
-            if (olqScores != null && olqScores.size >= OLQ.entries.size - 1) {
-                // Acceptable - 14/15 OLQs (log warning but use it)
-                Log.w(TAG, "   ⚠️ AI returned incomplete scores (${olqScores.size}/${OLQ.entries.size})")
-                return olqScores
+
+            // Accept if we have 14-15 OLQs (allow 1 missing)
+            if (olqScores != null && olqScores.size >= 14) {
+                return if (olqScores.size == 15) {
+                    Log.d(TAG, "   ✅ All 15 OLQs received")
+                    olqScores
+                } else {
+                    Log.w(TAG, "   ⚠️ Filling ${15 - olqScores.size} missing OLQ(s) with neutral scores")
+                    fillMissingOLQs(olqScores)
+                }
             }
-            
-            Log.w(TAG, "   ⚠️ AI returned incomplete scores (${olqScores?.size ?: 0}/${OLQ.entries.size})")
-            
-            // Wait before retry
+
+            Log.w(TAG, "   ⚠️ Insufficient OLQs (${olqScores?.size ?: 0}/15 - need at least 14)")
+
+            // Exponential backoff before retry
             if (attempt < MAX_AI_RETRIES - 1) {
-                val delayMs = 1000L * (attempt + 1)
+                val delayMs = 1000L * (attempt + 1) * 2 // Exponential backoff
                 Log.d(TAG, "   Waiting ${delayMs}ms before retry...")
                 delay(delayMs)
             }
         }
 
         return null
+    }
+
+    /**
+     * Fill missing OLQs with neutral scores (6/10)
+     * This ensures we always have all 15 OLQs for consistency
+     */
+    private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
+        val mutable = scores.toMutableMap()
+        OLQ.entries.forEach { olq ->
+            if (olq !in mutable) {
+                mutable[olq] = OLQScore(
+                    score = 6, // Neutral "Good" score
+                    confidence = 30,
+                    reasoning = "AI did not assess this OLQ - neutral score assigned"
+                )
+                Log.d(TAG, "      Filled missing OLQ: ${olq.name} with score 6")
+            }
+        }
+        return mutable
     }
 
     private fun generateAnalysisPrompt(submission: GTOSubmission): String {

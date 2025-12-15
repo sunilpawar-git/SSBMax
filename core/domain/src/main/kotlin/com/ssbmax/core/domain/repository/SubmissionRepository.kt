@@ -109,5 +109,125 @@ interface SubmissionRepository {
      * Get latest PPDT submission for user
      */
     suspend fun getLatestPPDTSubmission(userId: String): Result<PPDTSubmission?>
+
+    // ===========================
+    // TAT OLQ Analysis Methods
+    // ===========================
+
+    /**
+     * Get TAT submission by ID
+     */
+    suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?>
+
+    /**
+     * Update TAT analysis status
+     */
+    suspend fun updateTATAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit>
+
+    /**
+     * Update TAT OLQ result
+     */
+    suspend fun updateTATOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit>
+
+    /**
+     * Observe TAT submission in real-time
+     */
+    fun observeTATSubmission(submissionId: String): Flow<TATSubmission?>
+
+    // ===========================
+    // WAT OLQ Analysis Methods
+    // ===========================
+
+    /**
+     * Get WAT submission by ID
+     */
+    suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?>
+
+    /**
+     * Update WAT analysis status
+     */
+    suspend fun updateWATAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit>
+
+    /**
+     * Update WAT OLQ result
+     */
+    suspend fun updateWATOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit>
+
+    /**
+     * Observe WAT submission in real-time
+     */
+    fun observeWATSubmission(submissionId: String): Flow<WATSubmission?>
+
+    // ===========================
+    // SRT OLQ Analysis Methods
+    // ===========================
+
+    /**
+     * Get SRT submission by ID
+     */
+    suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?>
+
+    /**
+     * Update SRT analysis status
+     */
+    suspend fun updateSRTAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit>
+
+    /**
+     * Update SRT OLQ result
+     */
+    suspend fun updateSRTOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit>
+
+    /**
+     * Observe SRT submission in real-time
+     */
+    fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?>
+
+    // ===========================
+    // SDT OLQ Analysis Methods
+    // ===========================
+
+    /**
+     * Get SDT submission by ID
+     */
+    suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?>
+
+    /**
+     * Update SDT analysis status
+     */
+    suspend fun updateSDTAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit>
+
+    /**
+     * Update SDT OLQ result
+     */
+    suspend fun updateSDTOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit>
+
+    /**
+     * Observe SDT submission in real-time
+     */
+    fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?>
 }
 

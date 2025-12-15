@@ -242,9 +242,9 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
                 val startTime = System.currentTimeMillis()
                 val response = model.generateContent(prompt)
                 val duration = System.currentTimeMillis() - startTime
-                
+
                 Log.d(TAG, "✅ Received GTO analysis response in ${duration}ms")
-                
+
                 // Parse GTO response to ResponseAnalysis format
                 parseGTOAnalysisResponse(response.text ?: "")
             }
@@ -253,6 +253,90 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
             Result.failure(e)
         }
     }
+
+    override suspend fun analyzeTATResponse(prompt: String): Result<ResponseAnalysis> =
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "📖 Analyzing TAT submission")
+                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending TAT analysis request to Gemini...")
+                    val startTime = System.currentTimeMillis()
+                    val response = model.generateContent(prompt)
+                    val duration = System.currentTimeMillis() - startTime
+
+                    Log.d(TAG, "✅ Received TAT analysis response in ${duration}ms")
+
+                    // Parse psychology test response (same format as GTO)
+                    parseGTOAnalysisResponse(response.text ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to analyze TAT response", e)
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun analyzeWATResponse(prompt: String): Result<ResponseAnalysis> =
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "💬 Analyzing WAT submission")
+                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending WAT analysis request to Gemini...")
+                    val startTime = System.currentTimeMillis()
+                    val response = model.generateContent(prompt)
+                    val duration = System.currentTimeMillis() - startTime
+
+                    Log.d(TAG, "✅ Received WAT analysis response in ${duration}ms")
+
+                    // Parse psychology test response (same format as GTO)
+                    parseGTOAnalysisResponse(response.text ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to analyze WAT response", e)
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun analyzeSRTResponse(prompt: String): Result<ResponseAnalysis> =
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "⚡ Analyzing SRT submission")
+                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending SRT analysis request to Gemini...")
+                    val startTime = System.currentTimeMillis()
+                    val response = model.generateContent(prompt)
+                    val duration = System.currentTimeMillis() - startTime
+
+                    Log.d(TAG, "✅ Received SRT analysis response in ${duration}ms")
+
+                    // Parse psychology test response (same format as GTO)
+                    parseGTOAnalysisResponse(response.text ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to analyze SRT response", e)
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis> =
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "🪞 Analyzing SD (Self Description) submission")
+                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending SD analysis request to Gemini...")
+                    val startTime = System.currentTimeMillis()
+                    val response = model.generateContent(prompt)
+                    val duration = System.currentTimeMillis() - startTime
+
+                    Log.d(TAG, "✅ Received SD analysis response in ${duration}ms")
+
+                    // Parse psychology test response (same format as GTO)
+                    parseGTOAnalysisResponse(response.text ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to analyze SD response", e)
+                Result.failure(e)
+            }
+        }
     
     /**
      * Parse GTO-specific JSON response to standard ResponseAnalysis format

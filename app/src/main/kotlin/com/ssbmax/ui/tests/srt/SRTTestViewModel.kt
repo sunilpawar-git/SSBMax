@@ -2,12 +2,20 @@ package com.ssbmax.ui.tests.srt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.SRTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +39,8 @@ class SRTTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val workManager: WorkManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SRTTestUiState())
@@ -280,7 +289,9 @@ class SRTTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateMockAIScore(state.responses)
+                    aiPreliminaryScore = generateMockAIScore(state.responses),
+                    analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+                    olqResult = null
                 )
                 
                 // Calculate score for analytics (valid responses / total)
@@ -305,8 +316,15 @@ class SRTTestViewModel @Inject constructor(
                 
                 // Submit to Firestore
                 val result = submitSRTTest(submission, batchId = null)
-                
+
                 result.onSuccess { submissionId ->
+                    android.util.Log.d("SRTTestViewModel", "✅ Submission successful! ID: $submissionId")
+
+                    // Enqueue SRTAnalysisWorker for OLQ analysis
+                    android.util.Log.d("SRTTestViewModel", "📍 Enqueueing SRTAnalysisWorker...")
+                    enqueueSRTAnalysisWorker(submissionId)
+                    android.util.Log.d("SRTTestViewModel", "✅ SRTAnalysisWorker enqueued successfully")
+
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
@@ -314,7 +332,7 @@ class SRTTestViewModel @Inject constructor(
                         subscriptionType = subscriptionType,
                         phase = SRTPhase.SUBMITTED
                     ) }
-                    
+
                     // Emit navigation event (one-time, consumed by screen)
                     _navigationEvents.trySend(
                         TestNavigationEvent.NavigateToResult(
@@ -403,6 +421,26 @@ class SRTTestViewModel @Inject constructor(
         )
     }
     
+    /**
+     * Enqueue SRTAnalysisWorker for background OLQ analysis
+     */
+    private fun enqueueSRTAnalysisWorker(submissionId: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<SRTAnalysisWorker>()
+            .setInputData(workDataOf(SRTAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "srt_analysis_$submissionId",
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
         _navigationEvents.close()

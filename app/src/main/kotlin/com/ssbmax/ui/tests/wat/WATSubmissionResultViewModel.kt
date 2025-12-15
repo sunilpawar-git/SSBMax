@@ -3,6 +3,10 @@ package com.ssbmax.ui.tests.wat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.core.domain.model.interview.OLQScore
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -122,6 +126,18 @@ class WATSubmissionResultViewModel @Inject constructor(
                 )
             }
 
+            // Parse OLQ analysis result if present (Phase 3)
+            val analysisStatusStr = submissionData["analysisStatus"] as? String
+                ?: AnalysisStatus.PENDING_ANALYSIS.name
+            val analysisStatus = try {
+                AnalysisStatus.valueOf(analysisStatusStr)
+            } catch (e: Exception) {
+                AnalysisStatus.PENDING_ANALYSIS
+            }
+
+            val olqResultData = submissionData["olqResult"] as? Map<*, *>
+            val olqResult = olqResultData?.let { parseOLQResult(it) }
+
             WATSubmission(
                 id = submissionData["id"] as? String ?: data["id"] as? String ?: "",
                 userId = submissionData["userId"] as? String ?: data["userId"] as? String ?: "",
@@ -136,10 +152,61 @@ class WATSubmissionResultViewModel @Inject constructor(
                 aiPreliminaryScore = aiScore,
                 instructorScore = instructorScore,
                 gradedByInstructorId = data["gradedByInstructorId"] as? String,
-                gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
+                gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+                analysisStatus = analysisStatus,
+                olqResult = olqResult
             )
         } catch (e: Exception) {
             ErrorLogger.logTestError(e, "Error parsing WAT submission data", "WAT")
+            null
+        }
+    }
+
+    /**
+     * Parse OLQ analysis result from Firestore document data
+     */
+    private fun parseOLQResult(data: Map<*, *>): OLQAnalysisResult? {
+        return try {
+            val submissionId = data["submissionId"] as? String ?: return null
+            val testTypeStr = data["testType"] as? String ?: return null
+            val testType = TestType.valueOf(testTypeStr)
+
+            // Parse OLQ scores map
+            val olqScoresData = data["olqScores"] as? Map<*, *> ?: return null
+            val olqScores = olqScoresData.mapNotNull { (key, value) ->
+                val olqName = key as? String ?: return@mapNotNull null
+                val olq = try {
+                    OLQ.valueOf(olqName)
+                } catch (e: Exception) {
+                    return@mapNotNull null
+                }
+
+                val scoreData = value as? Map<*, *> ?: return@mapNotNull null
+                val score = OLQScore(
+                    score = (scoreData["score"] as? Number)?.toInt() ?: return@mapNotNull null,
+                    confidence = (scoreData["confidence"] as? Number)?.toInt() ?: 0,
+                    reasoning = scoreData["reasoning"] as? String ?: ""
+                )
+
+                olq to score
+            }.toMap()
+
+            if (olqScores.size < 14) return null  // Need at least 14 OLQs
+
+            OLQAnalysisResult(
+                submissionId = submissionId,
+                testType = testType,
+                olqScores = olqScores,
+                overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 0f,
+                overallRating = data["overallRating"] as? String ?: "",
+                strengths = (data["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                weaknesses = (data["weaknesses"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                recommendations = (data["recommendations"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: 0L,
+                aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0
+            )
+        } catch (e: Exception) {
+            ErrorLogger.logTestError(e, "Error parsing OLQ result", "WAT")
             null
         }
     }

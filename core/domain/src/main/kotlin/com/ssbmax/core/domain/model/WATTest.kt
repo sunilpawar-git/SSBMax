@@ -1,5 +1,7 @@
 package com.ssbmax.core.domain.model
 
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import java.util.UUID
 
 /**
@@ -49,7 +51,10 @@ data class WATSubmission(
     val aiPreliminaryScore: WATAIScore? = null,
     val instructorScore: WATInstructorScore? = null,
     val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null
+    val gradingTimestamp: Long? = null,
+    // OLQ-based analysis fields (Phase 1)
+    val analysisStatus: AnalysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+    val olqResult: OLQAnalysisResult? = null
 ) {
     val totalResponses: Int get() = responses.size
     val validResponses: Int get() = responses.count { it.isValidResponse }

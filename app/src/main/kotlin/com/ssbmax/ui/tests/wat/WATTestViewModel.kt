@@ -2,13 +2,21 @@ package com.ssbmax.ui.tests.wat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.WATAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -43,7 +51,8 @@ class WATTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val workManager: WorkManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WATTestUiState())
@@ -312,7 +321,9 @@ class WATTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateMockAIScore(state.responses)
+                    aiPreliminaryScore = generateMockAIScore(state.responses),
+                    analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+                    olqResult = null
                 )
                 
                 // Calculate score for analytics (valid responses / total)
@@ -337,8 +348,15 @@ class WATTestViewModel @Inject constructor(
                 
                 // Submit to Firestore (but also store locally to bypass permission issues)
                 val result = submitWATTest(submission, batchId = null)
-                
+
                 result.onSuccess { submissionId ->
+                    android.util.Log.d("WATTestViewModel", "✅ Submission successful! ID: $submissionId")
+
+                    // Enqueue WATAnalysisWorker for OLQ analysis
+                    android.util.Log.d("WATTestViewModel", "📍 Enqueueing WATAnalysisWorker...")
+                    enqueueWATAnalysisWorker(submissionId)
+                    android.util.Log.d("WATTestViewModel", "✅ WATAnalysisWorker enqueued successfully")
+
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
@@ -347,7 +365,7 @@ class WATTestViewModel @Inject constructor(
                         submission = submission,  // Store locally to show results directly
                         phase = WATPhase.SUBMITTED
                     ) }
-                    
+
                     // Emit navigation event (one-time, consumed by screen)
                     _navigationEvents.trySend(
                         TestNavigationEvent.NavigateToResult(
@@ -486,15 +504,35 @@ class WATTestViewModel @Inject constructor(
         )
     }
     
+    /**
+     * Enqueue WATAnalysisWorker for background OLQ analysis
+     */
+    private fun enqueueWATAnalysisWorker(submissionId: String) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<WATAnalysisWorker>()
+            .setInputData(workDataOf(WATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "wat_analysis_$submissionId",
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
 
         // PHASE 2: Timers auto-cancelled by viewModelScope
         android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
-        
+
         // Cancel navigation events channel
         _navigationEvents.close()
-        
+
         // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("WATTestViewModel")
 

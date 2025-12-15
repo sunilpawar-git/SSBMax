@@ -1009,6 +1009,757 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             instructorReview = instructorReview
         )
     }
+
+    // ===========================
+    // TAT OLQ Analysis Methods
+    // ===========================
+
+    override suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?> {
+        return try {
+            Log.d(TAG, "📖 Fetching TAT submission: $submissionId")
+            val document = submissionsCollection.document(submissionId).get().await()
+
+            if (!document.exists()) {
+                Log.w(TAG, "⚠️ TAT submission not found: $submissionId")
+                return Result.success(null)
+            }
+
+            val data = document.get(FIELD_DATA) as? Map<*, *>
+            if (data == null) {
+                Log.e(TAG, "❌ TAT submission data is null")
+                return Result.success(null)
+            }
+
+            val submission = parseTATSubmission(data)
+            Log.d(TAG, "✅ TAT submission fetched successfully")
+            Result.success(submission)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to fetch TAT submission", e)
+            Result.failure(Exception("Failed to fetch TAT submission: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateTATAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit> {
+        return try {
+            Log.d(TAG, "📝 Updating TAT analysis status: $submissionId -> $status")
+            submissionsCollection.document(submissionId)
+                .update("data.analysisStatus", status.name)
+                .await()
+            Log.d(TAG, "✅ TAT analysis status updated")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to update TAT analysis status", e)
+            Result.failure(Exception("Failed to update TAT analysis status: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateTATOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit> {
+        return try {
+            Log.d(TAG, "📝 Updating TAT OLQ result: $submissionId")
+            val olqResultMap = mapOf(
+                "submissionId" to olqResult.submissionId,
+                "testType" to olqResult.testType.name,
+                "olqScores" to olqResult.olqScores.mapKeys { it.key.name }.mapValues { (_, score) ->
+                    mapOf(
+                        "score" to score.score,
+                        "confidence" to score.confidence,
+                        "reasoning" to score.reasoning
+                    )
+                },
+                "overallScore" to olqResult.overallScore,
+                "overallRating" to olqResult.overallRating,
+                "strengths" to olqResult.strengths,
+                "weaknesses" to olqResult.weaknesses,
+                "recommendations" to olqResult.recommendations,
+                "analyzedAt" to olqResult.analyzedAt,
+                "aiConfidence" to olqResult.aiConfidence
+            )
+
+            submissionsCollection.document(submissionId)
+                .update(
+                    "data.olqResult", olqResultMap,
+                    "data.analysisStatus", com.ssbmax.core.domain.model.scoring.AnalysisStatus.COMPLETED.name
+                )
+                .await()
+            Log.d(TAG, "✅ TAT OLQ result updated")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to update TAT OLQ result", e)
+            Result.failure(Exception("Failed to update TAT OLQ result: ${e.message}", e))
+        }
+    }
+
+    override fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> = callbackFlow {
+        Log.d(TAG, "👀 Observing TAT submission: $submissionId")
+        val listener = submissionsCollection.document(submissionId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "❌ Error observing TAT submission", error)
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null || !snapshot.exists()) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+                try {
+                    val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                    val submission = if (data != null) parseTATSubmission(data) else null
+                    trySend(submission)
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Failed to parse TAT submission", e)
+                }
+            }
+        awaitClose { listener.remove() }
+    }
+
+    // WAT, SRT, SDT methods follow same pattern
+    override suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> {
+        return try {
+            val document = submissionsCollection.document(submissionId).get().await()
+            if (!document.exists()) return Result.success(null)
+            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(parseWATSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch WAT submission: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateWATAnalysisStatus(submissionId: String, status: com.ssbmax.core.domain.model.scoring.AnalysisStatus): Result<Unit> {
+        return try {
+            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update WAT status: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateWATOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
+        return updateOLQResult(submissionId, olqResult)
+    }
+
+    override fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> = callbackFlow {
+        val listener = submissionsCollection.document(submissionId).addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null || !snapshot.exists()) { trySend(null); return@addSnapshotListener }
+            try {
+                val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                trySend(if (data != null) parseWATSubmission(data) else null)
+            } catch (e: Exception) { }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> {
+        return try {
+            val document = submissionsCollection.document(submissionId).get().await()
+            if (!document.exists()) return Result.success(null)
+            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(parseSRTSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch SRT submission: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateSRTAnalysisStatus(submissionId: String, status: com.ssbmax.core.domain.model.scoring.AnalysisStatus): Result<Unit> {
+        return try {
+            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update SRT status: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateSRTOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
+        return updateOLQResult(submissionId, olqResult)
+    }
+
+    override fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> = callbackFlow {
+        val listener = submissionsCollection.document(submissionId).addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null || !snapshot.exists()) { trySend(null); return@addSnapshotListener }
+            try {
+                val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                trySend(if (data != null) parseSRTSubmission(data) else null)
+            } catch (e: Exception) { }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> {
+        return try {
+            val document = submissionsCollection.document(submissionId).get().await()
+            if (!document.exists()) return Result.success(null)
+            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(parseSDTSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch SDT submission: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateSDTAnalysisStatus(submissionId: String, status: com.ssbmax.core.domain.model.scoring.AnalysisStatus): Result<Unit> {
+        return try {
+            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update SDT status: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updateSDTOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
+        return updateOLQResult(submissionId, olqResult)
+    }
+
+    override fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> = callbackFlow {
+        val listener = submissionsCollection.document(submissionId).addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null || !snapshot.exists()) { trySend(null); return@addSnapshotListener }
+            try {
+                val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                trySend(if (data != null) parseSDTSubmission(data) else null)
+            } catch (e: Exception) { }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    private suspend fun updateOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
+        return try {
+            val olqResultMap = mapOf(
+                "submissionId" to olqResult.submissionId,
+                "testType" to olqResult.testType.name,
+                "olqScores" to olqResult.olqScores.mapKeys { it.key.name }.mapValues { (_, score) ->
+                    mapOf("score" to score.score, "confidence" to score.confidence, "reasoning" to score.reasoning)
+                },
+                "overallScore" to olqResult.overallScore,
+                "overallRating" to olqResult.overallRating,
+                "strengths" to olqResult.strengths,
+                "weaknesses" to olqResult.weaknesses,
+                "recommendations" to olqResult.recommendations,
+                "analyzedAt" to olqResult.analyzedAt,
+                "aiConfidence" to olqResult.aiConfidence
+            )
+            submissionsCollection.document(submissionId)
+                .update("data.olqResult", olqResultMap, "data.analysisStatus", com.ssbmax.core.domain.model.scoring.AnalysisStatus.COMPLETED.name)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
+        }
+    }
+
+    // ===========================
+    // Parsing Helper Methods
+    // ===========================
+
+    /**
+     * Parse TAT submission from Firestore data map
+     */
+    private fun parseTATSubmission(data: Map<*, *>): TATSubmission {
+        // Parse stories
+        val storiesList = data["stories"] as? List<*> ?: emptyList<Any>()
+        val stories = storiesList.mapNotNull { storyData ->
+            (storyData as? Map<*, *>)?.let {
+                TATStoryResponse(
+                    questionId = it["questionId"] as? String ?: "",
+                    story = it["story"] as? String ?: "",
+                    charactersCount = (it["charactersCount"] as? Number)?.toInt() ?: 0,
+                    viewingTimeTakenSeconds = (it["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                    writingTimeTakenSeconds = (it["writingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+                )
+            }
+        }
+
+        // Parse AI score if present
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            // Parse story-wise analysis
+            val storyAnalysisList = it["storyWiseAnalysis"] as? List<*> ?: emptyList<Any>()
+            val storyWiseAnalysis = storyAnalysisList.mapNotNull { analysisData ->
+                (analysisData as? Map<*, *>)?.let { analysis ->
+                    StoryAnalysis(
+                        questionId = analysis["questionId"] as? String ?: "",
+                        sequenceNumber = (analysis["sequenceNumber"] as? Number)?.toInt() ?: 0,
+                        score = (analysis["score"] as? Number)?.toFloat() ?: 0f,
+                        themes = (analysis["themes"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
+                        sentimentScore = (analysis["sentimentScore"] as? Number)?.toFloat() ?: 0f,
+                        keyInsights = (analysis["keyInsights"] as? List<*>)?.mapNotNull { k -> k as? String } ?: emptyList()
+                    )
+                }
+            }
+
+            TATAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
+                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
+                narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String,
+                storyWiseAnalysis = storyWiseAnalysis,
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
+            )
+        }
+
+        // Parse instructor score if present
+        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
+        val instructorScore = instructorScoreMap?.let {
+            TATInstructorScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
+                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
+                narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                storyWiseComments = (it["storyWiseComments"] as? Map<*, *>)?.mapNotNull { (k, v) ->
+                    (k as? String)?.let { key -> key to (v as? String ?: "") }
+                }?.toMap() ?: emptyMap(),
+                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+            )
+        }
+
+        // Parse OLQ result if present
+        val olqResultMap = data["olqResult"] as? Map<*, *>
+        val olqResult = parseOLQResult(olqResultMap)
+
+        // Parse analysis status
+        val analysisStatusStr = data["analysisStatus"] as? String
+        val analysisStatus = try {
+            if (analysisStatusStr != null) {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.valueOf(analysisStatusStr)
+            } else {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+            }
+        } catch (e: Exception) {
+            com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+        }
+
+        return TATSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            stories = stories,
+            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = try {
+                SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW")
+            } catch (e: Exception) {
+                SubmissionStatus.SUBMITTED_PENDING_REVIEW
+            },
+            aiPreliminaryScore = aiPreliminaryScore,
+            instructorScore = instructorScore,
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
+        )
+    }
+
+    /**
+     * Parse WAT submission from Firestore data map
+     */
+    private fun parseWATSubmission(data: Map<*, *>): WATSubmission {
+        // Parse responses
+        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
+        val responses = responsesList.mapNotNull { responseData ->
+            (responseData as? Map<*, *>)?.let {
+                WATWordResponse(
+                    wordId = it["wordId"] as? String ?: "",
+                    word = it["word"] as? String ?: "",
+                    response = it["response"] as? String ?: "",
+                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    isSkipped = it["isSkipped"] as? Boolean ?: false
+                )
+            }
+        }
+
+        // Parse AI score if present
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            WATAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
+                creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
+                speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
+                relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String,
+                positiveWords = (it["positiveWords"] as? Number)?.toInt() ?: 0,
+                negativeWords = (it["negativeWords"] as? Number)?.toInt() ?: 0,
+                neutralWords = (it["neutralWords"] as? Number)?.toInt() ?: 0,
+                uniqueResponsesCount = (it["uniqueResponsesCount"] as? Number)?.toInt() ?: 0,
+                repeatedPatterns = (it["repeatedPatterns"] as? List<*>)?.mapNotNull { p -> p as? String } ?: emptyList(),
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
+            )
+        }
+
+        // Parse instructor score if present
+        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
+        val instructorScore = instructorScoreMap?.let {
+            WATInstructorScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
+                creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
+                speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
+                relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                notableResponses = (it["notableResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+            )
+        }
+
+        // Parse OLQ result if present
+        val olqResultMap = data["olqResult"] as? Map<*, *>
+        val olqResult = parseOLQResult(olqResultMap)
+
+        // Parse analysis status
+        val analysisStatusStr = data["analysisStatus"] as? String
+        val analysisStatus = try {
+            if (analysisStatusStr != null) {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.valueOf(analysisStatusStr)
+            } else {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+            }
+        } catch (e: Exception) {
+            com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+        }
+
+        return WATSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            responses = responses,
+            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = try {
+                SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW")
+            } catch (e: Exception) {
+                SubmissionStatus.SUBMITTED_PENDING_REVIEW
+            },
+            aiPreliminaryScore = aiPreliminaryScore,
+            instructorScore = instructorScore,
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
+        )
+    }
+
+    /**
+     * Parse SRT submission from Firestore data map
+     */
+    private fun parseSRTSubmission(data: Map<*, *>): SRTSubmission {
+        // Parse responses
+        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
+        val responses = responsesList.mapNotNull { responseData ->
+            (responseData as? Map<*, *>)?.let {
+                SRTSituationResponse(
+                    situationId = it["situationId"] as? String ?: "",
+                    situation = it["situation"] as? String ?: "",
+                    response = it["response"] as? String ?: "",
+                    charactersCount = (it["charactersCount"] as? Number)?.toInt() ?: 0,
+                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    isSkipped = it["isSkipped"] as? Boolean ?: false
+                )
+            }
+        }
+
+        // Parse AI score if present
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            // Parse category-wise scores
+            val categoryWiseScoresMap = it["categoryWiseScores"] as? Map<*, *> ?: emptyMap<Any, Any>()
+            val categoryWiseScores = categoryWiseScoresMap.mapNotNull { (k, v) ->
+                try {
+                    val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
+                    val score = (v as? Number)?.toFloat() ?: 0f
+                    category to score
+                } catch (e: Exception) {
+                    null
+                }
+            }.toMap()
+
+            // Parse response quality
+            val responseQualityStr = it["responseQuality"] as? String
+            val responseQuality = try {
+                if (responseQualityStr != null) {
+                    ResponseQuality.valueOf(responseQualityStr)
+                } else {
+                    ResponseQuality.AVERAGE
+                }
+            } catch (e: Exception) {
+                ResponseQuality.AVERAGE
+            }
+
+            SRTAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
+                decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
+                practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
+                initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
+                socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String,
+                categoryWiseScores = categoryWiseScores,
+                positiveTraits = (it["positiveTraits"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
+                concerningPatterns = (it["concerningPatterns"] as? List<*>)?.mapNotNull { c -> c as? String } ?: emptyList(),
+                responseQuality = responseQuality,
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
+            )
+        }
+
+        // Parse instructor score if present
+        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
+        val instructorScore = instructorScoreMap?.let {
+            // Parse category-wise comments
+            val categoryWiseCommentsMap = it["categoryWiseComments"] as? Map<*, *> ?: emptyMap<Any, Any>()
+            val categoryWiseComments = categoryWiseCommentsMap.mapNotNull { (k, v) ->
+                try {
+                    val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
+                    val comment = v as? String ?: ""
+                    category to comment
+                } catch (e: Exception) {
+                    null
+                }
+            }.toMap()
+
+            SRTInstructorScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
+                decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
+                practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
+                initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
+                socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                categoryWiseComments = categoryWiseComments,
+                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+            )
+        }
+
+        // Parse OLQ result if present
+        val olqResultMap = data["olqResult"] as? Map<*, *>
+        val olqResult = parseOLQResult(olqResultMap)
+
+        // Parse analysis status
+        val analysisStatusStr = data["analysisStatus"] as? String
+        val analysisStatus = try {
+            if (analysisStatusStr != null) {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.valueOf(analysisStatusStr)
+            } else {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+            }
+        } catch (e: Exception) {
+            com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+        }
+
+        return SRTSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            responses = responses,
+            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = try {
+                SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW")
+            } catch (e: Exception) {
+                SubmissionStatus.SUBMITTED_PENDING_REVIEW
+            },
+            aiPreliminaryScore = aiPreliminaryScore,
+            instructorScore = instructorScore,
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
+        )
+    }
+
+    /**
+     * Parse SDT submission from Firestore data map
+     */
+    private fun parseSDTSubmission(data: Map<*, *>): SDTSubmission {
+        // Parse responses
+        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
+        val responses = responsesList.mapNotNull { responseData ->
+            (responseData as? Map<*, *>)?.let {
+                SDTQuestionResponse(
+                    questionId = it["questionId"] as? String ?: "",
+                    question = it["question"] as? String ?: "",
+                    answer = it["answer"] as? String ?: "",
+                    wordCount = (it["wordCount"] as? Number)?.toInt() ?: 0,
+                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    isSkipped = it["isSkipped"] as? Boolean ?: false
+                )
+            }
+        }
+
+        // Parse AI score if present
+        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
+        val aiPreliminaryScore = aiScoreMap?.let {
+            // Parse question-wise analysis
+            val questionAnalysisList = it["questionWiseAnalysis"] as? List<*> ?: emptyList<Any>()
+            val questionWiseAnalysis = questionAnalysisList.mapNotNull { analysisData ->
+                (analysisData as? Map<*, *>)?.let { analysis ->
+                    QuestionAnalysis(
+                        questionId = analysis["questionId"] as? String ?: "",
+                        sequenceNumber = (analysis["sequenceNumber"] as? Number)?.toInt() ?: 0,
+                        score = (analysis["score"] as? Number)?.toFloat() ?: 0f,
+                        themes = (analysis["themes"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
+                        sentimentScore = (analysis["sentimentScore"] as? Number)?.toFloat() ?: 0f,
+                        keyInsights = (analysis["keyInsights"] as? List<*>)?.mapNotNull { k -> k as? String } ?: emptyList()
+                    )
+                }
+            }
+
+            // Parse response quality
+            val responseQualityStr = it["responseQuality"] as? String
+            val responseQuality = try {
+                if (responseQualityStr != null) {
+                    ResponseQuality.valueOf(responseQualityStr)
+                } else {
+                    ResponseQuality.AVERAGE
+                }
+            } catch (e: Exception) {
+                ResponseQuality.AVERAGE
+            }
+
+            SDTAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+                socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+                introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String,
+                positiveTraits = (it["positiveTraits"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
+                concerningPatterns = (it["concerningPatterns"] as? List<*>)?.mapNotNull { c -> c as? String } ?: emptyList(),
+                responseQuality = responseQuality,
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList(),
+                questionWiseAnalysis = questionWiseAnalysis
+            )
+        }
+
+        // Parse instructor score if present
+        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
+        val instructorScore = instructorScoreMap?.let {
+            SDTInstructorScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
+                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+                socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+                introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+            )
+        }
+
+        // Parse OLQ result if present
+        val olqResultMap = data["olqResult"] as? Map<*, *>
+        val olqResult = parseOLQResult(olqResultMap)
+
+        // Parse analysis status
+        val analysisStatusStr = data["analysisStatus"] as? String
+        val analysisStatus = try {
+            if (analysisStatusStr != null) {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.valueOf(analysisStatusStr)
+            } else {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+            }
+        } catch (e: Exception) {
+            com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+        }
+
+        return SDTSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            responses = responses,
+            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = try {
+                SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW")
+            } catch (e: Exception) {
+                SubmissionStatus.SUBMITTED_PENDING_REVIEW
+            },
+            aiPreliminaryScore = aiPreliminaryScore,
+            instructorScore = instructorScore,
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
+        )
+    }
+
+    /**
+     * Parse OLQ analysis result from Firestore data map
+     */
+    private fun parseOLQResult(data: Map<*, *>?): com.ssbmax.core.domain.model.scoring.OLQAnalysisResult? {
+        if (data == null) return null
+
+        return try {
+            // Parse test type
+            val testTypeStr = data["testType"] as? String ?: return null
+            val testType = TestType.valueOf(testTypeStr)
+
+            // Parse OLQ scores
+            val olqScoresMap = data["olqScores"] as? Map<*, *> ?: emptyMap<Any, Any>()
+            val olqScores = olqScoresMap.mapNotNull { (k, v) ->
+                try {
+                    val olq = com.ssbmax.core.domain.model.interview.OLQ.valueOf(k as? String ?: "")
+                    val scoreMap = v as? Map<*, *> ?: return@mapNotNull null
+                    val score = com.ssbmax.core.domain.model.interview.OLQScore(
+                        score = (scoreMap["score"] as? Number)?.toInt() ?: 5,
+                        confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
+                        reasoning = scoreMap["reasoning"] as? String ?: ""
+                    )
+                    olq to score
+                } catch (e: Exception) {
+                    null
+                }
+            }.toMap()
+
+            com.ssbmax.core.domain.model.scoring.OLQAnalysisResult(
+                submissionId = data["submissionId"] as? String ?: "",
+                testType = testType,
+                olqScores = olqScores,
+                overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 5f,
+                overallRating = data["overallRating"] as? String ?: "",
+                strengths = (data["strengths"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                weaknesses = (data["weaknesses"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                recommendations = (data["recommendations"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
 
 /**

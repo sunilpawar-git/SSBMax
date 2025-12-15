@@ -271,5 +271,103 @@ class NotificationHelper @Inject constructor(
             ErrorLogger.log(e, "Failed to show GTO analysis complete notification")
         }
     }
+
+    // ===========================
+    // Psychology Test Notifications
+    // ===========================
+
+    fun showTATResultsReadyNotification(submissionId: String) {
+        showPsychologyTestResultNotification(submissionId, "TAT", R.string.notification_tat_complete_title, R.string.notification_tat_complete_body)
+    }
+
+    fun showTATAnalysisFailedNotification(submissionId: String) {
+        showPsychologyTestFailedNotification(submissionId, "TAT", R.string.notification_tat_failed_title, R.string.notification_tat_failed_body)
+    }
+
+    fun showWATResultsReadyNotification(submissionId: String) {
+        showPsychologyTestResultNotification(submissionId, "WAT", R.string.notification_wat_complete_title, R.string.notification_wat_complete_body)
+    }
+
+    fun showWATAnalysisFailedNotification(submissionId: String) {
+        showPsychologyTestFailedNotification(submissionId, "WAT", R.string.notification_wat_failed_title, R.string.notification_wat_failed_body)
+    }
+
+    fun showSRTResultsReadyNotification(submissionId: String) {
+        showPsychologyTestResultNotification(submissionId, "SRT", R.string.notification_srt_complete_title, R.string.notification_srt_complete_body)
+    }
+
+    fun showSRTAnalysisFailedNotification(submissionId: String) {
+        showPsychologyTestFailedNotification(submissionId, "SRT", R.string.notification_srt_failed_title, R.string.notification_srt_failed_body)
+    }
+
+    fun showSDTResultsReadyNotification(submissionId: String) {
+        showPsychologyTestResultNotification(submissionId, "SDT", R.string.notification_sdt_complete_title, R.string.notification_sdt_complete_body)
+    }
+
+    fun showSDTAnalysisFailedNotification(submissionId: String) {
+        showPsychologyTestFailedNotification(submissionId, "SDT", R.string.notification_sdt_failed_title, R.string.notification_sdt_failed_body)
+    }
+
+    private fun showPsychologyTestResultNotification(submissionId: String, testType: String, titleResId: Int, bodyResId: Int) {
+        try {
+            val deepLink = "ssbmax://test/${testType.lowercase()}/result/$submissionId"
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("deepLink", deepLink)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                submissionId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID_INTERVIEW)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle(context.getString(titleResId))
+                .setContentText(context.getString(bodyResId))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            notificationManager?.notify(submissionId.hashCode(), notification)
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to show $testType result notification")
+        }
+    }
+
+    private fun showPsychologyTestFailedNotification(submissionId: String, testType: String, titleResId: Int, bodyResId: Int) {
+        try {
+            val deepLink = "ssbmax://tests/psychology"
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("deepLink", deepLink)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                submissionId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, CHANNEL_ID_INTERVIEW)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle(context.getString(titleResId))
+                .setContentText(context.getString(bodyResId))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            notificationManager?.notify(submissionId.hashCode(), notification)
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to show $testType failed notification")
+        }
+    }
 }
 
