@@ -61,6 +61,10 @@ object TestResultHandler {
             TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
             TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
             TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
+            // GTO Tests - Route to specific GTO result screens
+            TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
+            TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
+            TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
             else -> SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)
         }
         navController.navigate(route) {
