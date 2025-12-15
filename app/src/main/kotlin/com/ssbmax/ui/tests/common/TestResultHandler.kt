@@ -29,10 +29,11 @@ object TestResultHandler {
         android.util.Log.d("TestResultHandler", "   - subscriptionType: $subscriptionType")
         android.util.Log.d("TestResultHandler", "   - testType: $testType")
         
-        // Special handling for OIR, PPDT, TAT, WAT, PIQ: Show results directly 
-        // (bypasses Firestore to avoid permission issues during development)
+        // Special handling for OIR, PPDT, TAT, WAT, PIQ, and GTO tests: Show results directly for all users
+        // (bypasses Firestore permission issues during development + GTO tests always use AI analysis)
         if (testType == TestType.OIR || testType == TestType.PPDT || 
-            testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ) {
+            testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ ||
+            testType == TestType.GTO_GD || testType == TestType.GTO_LECTURETTE || testType == TestType.GTO_GPE) {
             android.util.Log.d("TestResultHandler", "   → Special handling, navigating directly to result")
             navigateToResult(submissionId, testType, navController)
             return
