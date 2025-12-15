@@ -259,6 +259,10 @@ class FirestoreGTORepository @Inject constructor(
         olqScores: Map<OLQ, OLQScore>
     ): Result<Unit> {
         return try {
+            Log.d(TAG, "📝 Updating OLQ scores for submission: $submissionId")
+            Log.d(TAG, "   - OLQ scores count: ${olqScores.size}")
+            Log.d(TAG, "   - Setting status to: ${GTOSubmissionStatus.COMPLETED.name}")
+            
             val scoresMap = olqScores.mapKeys { it.key.name }.mapValues { entry ->
                 mapOf(
                     "score" to entry.value.score,
@@ -277,9 +281,13 @@ class FirestoreGTORepository @Inject constructor(
                 )
                 .await()
             
+            Log.d(TAG, "✅ Successfully updated OLQ scores in Firestore")
+            Log.d(TAG, "   - Collection: $COLLECTION_GTO_SUBMISSIONS")
+            Log.d(TAG, "   - Document: $submissionId")
+            
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update submission OLQ scores", e)
+            Log.e(TAG, "❌ Failed to update submission OLQ scores", e)
             Result.failure(e)
         }
     }

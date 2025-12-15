@@ -55,9 +55,13 @@ class GDResultViewModel @Inject constructor(
             try {
                 // Observe submission for real-time status updates
                 gtoRepository.observeSubmission(submissionId).collect { submission ->
-                    android.util.Log.d(TAG, "📊 Submission update received: ${submission?.status}")
+                    android.util.Log.d(TAG, "🔄 Firestore snapshot received for: $submissionId")
+                    android.util.Log.d(TAG, "   - Submission exists: ${submission != null}")
+                    android.util.Log.d(TAG, "   - Status: ${submission?.status}")
+                    android.util.Log.d(TAG, "   - OLQ scores count: ${submission?.olqScores?.size ?: 0}")
                     
                     if (submission == null) {
+                        android.util.Log.e(TAG, "❌ Submission not found in snapshot")
                         _uiState.update { it.copy(
                             isLoading = false,
                             error = "Submission not found"
@@ -66,6 +70,7 @@ class GDResultViewModel @Inject constructor(
                     }
                     
                     // Update UI with submission data
+                    android.util.Log.d(TAG, "📊 Updating UI state with submission data")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isLoading = false,
@@ -74,13 +79,22 @@ class GDResultViewModel @Inject constructor(
                         )
                     }
                     
+                    android.util.Log.d(TAG, "🔍 Checking if analysis is completed...")
+                    android.util.Log.d(TAG, "   - submission.status: ${submission.status}")
+                    android.util.Log.d(TAG, "   - GTOSubmissionStatus.COMPLETED: ${GTOSubmissionStatus.COMPLETED}")
+                    android.util.Log.d(TAG, "   - Equals? ${submission.status == GTOSubmissionStatus.COMPLETED}")
+                    
                     // If analysis is completed, load the result with OLQ scores
                     if (submission.status == GTOSubmissionStatus.COMPLETED) {
+                        android.util.Log.d(TAG, "✅ Status is COMPLETED, loading result...")
                         loadResult(submissionId)
+                    } else {
+                        android.util.Log.d(TAG, "⏳ Status is ${submission.status}, waiting for completion...")
                     }
                 }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Failed to load GD submission")
+                android.util.Log.e(TAG, "❌ Exception while observing submission", e)
                 _uiState.update { it.copy(
                     isLoading = false,
                     error = "Failed to load submission. Please try again."
