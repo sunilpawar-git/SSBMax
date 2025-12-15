@@ -24,21 +24,30 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
+        android.util.Log.d("TestResultHandler", "🚀 handleTestSubmission called")
+        android.util.Log.d("TestResultHandler", "   - submissionId: $submissionId")
+        android.util.Log.d("TestResultHandler", "   - subscriptionType: $subscriptionType")
+        android.util.Log.d("TestResultHandler", "   - testType: $testType")
+        
         // Special handling for OIR, PPDT, TAT, WAT, PIQ: Show results directly 
         // (bypasses Firestore to avoid permission issues during development)
         if (testType == TestType.OIR || testType == TestType.PPDT || 
             testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ) {
+            android.util.Log.d("TestResultHandler", "   → Special handling, navigating directly to result")
             navigateToResult(submissionId, testType, navController)
             return
         }
         
+        android.util.Log.d("TestResultHandler", "   → Standard routing based on subscription: $subscriptionType")
         when (subscriptionType) {
             SubscriptionType.PREMIUM -> {
+                android.util.Log.d("TestResultHandler", "   → PREMIUM user, immediate AI results")
                 // Premium users get immediate AI-graded results
                 navigateToResult(submissionId, testType, navController)
             }
             SubscriptionType.PRO,
             SubscriptionType.FREE -> {
+                android.util.Log.d("TestResultHandler", "   → PRO/FREE user, pending manual grading")
                 // Pro and free users wait for manual grading
                 navigateToPendingReview(submissionId, navController)
             }
@@ -53,6 +62,9 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
+        android.util.Log.d("TestResultHandler", "📍 navigateToResult called")
+        android.util.Log.d("TestResultHandler", "   - testType: $testType")
+        
         val route = when (testType) {
             TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId)
             TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
@@ -67,6 +79,9 @@ object TestResultHandler {
             TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
             else -> SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)
         }
+        
+        android.util.Log.d("TestResultHandler", "   → Navigating to: $route")
+        
         navController.navigate(route) {
             // Clear test screen from back stack
             popUpTo(navController.graph.startDestinationId) {
