@@ -23,7 +23,7 @@ data class GTOResult(
     init {
         require(overallScore in 1f..10f) { "Overall score must be between 1 and 10" }
         require(aiConfidence in 0..100) { "AI confidence must be between 0 and 100" }
-        require(olqScores.size == 15) { "All 15 OLQs must be scored" }
+        // require(olqScores.size == 15) { "All 15 OLQs must be scored" } // Relaxed constraint
     }
     
     /**

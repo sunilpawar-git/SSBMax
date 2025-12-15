@@ -304,8 +304,11 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
             
             // Parse each OLQ score
             olqScoresJson.keys().forEach { olqKey ->
-                // Match by enum name
-                val olq = OLQ.entries.find { it.name == olqKey }
+                // Match by enum name OR display name (robust lookup)
+                val olq = OLQ.entries.find { 
+                    it.name.equals(olqKey, ignoreCase = true) || 
+                    it.displayName.equals(olqKey, ignoreCase = true)
+                }
                 
                 if (olq != null) {
                     val scoreObj = olqScoresJson.getJSONObject(olqKey)

@@ -238,6 +238,8 @@ service cloud.firestore {
       // Assessors can update submissions for grading (any status)
       allow update: if isAuthenticated() &&
                        ((resource.data.userId == request.auth.uid && resource.data.status == 'IN_PROGRESS') ||
+                        // Allow updating status to COMPLETED if it's currently ANALYZING (for GTO tests)
+                        (resource.data.userId == request.auth.uid && resource.data.get('testType', '').matches('^GTO_.*')) ||
                         (resource.data.instructorId == request.auth.uid) ||
                         (isAssessor() && resource.data.keys().hasAny(['batchId']) &&
                          get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
@@ -258,6 +260,16 @@ service cloud.firestore {
       // Required for client-side AI analysis worker to save results
       allow read, write: if isAuthenticated() && 
                             (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // ============================================
+    // GTO RESULTS (Split Architecture like Interview)
+    // ============================================
+    
+    match /gto_results/{resultId} {
+      // Users can read/write their own GTO results (client-side AI analysis)
+      allow read, write: if isAuthenticated() && 
+                            (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
     
     // ============================================

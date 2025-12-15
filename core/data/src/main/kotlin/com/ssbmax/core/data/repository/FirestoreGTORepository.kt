@@ -39,6 +39,7 @@ class FirestoreGTORepository @Inject constructor(
         // Collection paths
         private const val COLLECTION_TEST_CONTENT = "test_content"
         private const val COLLECTION_GTO_SUBMISSIONS = "submissions"  // Changed from gto_submissions to match other tests
+        private const val COLLECTION_GTO_RESULTS = "gto_results" // New collection for detailed results
         private const val COLLECTION_USER_GTO_PROGRESS = "user_progress"
         
         // Subcollection paths
@@ -261,8 +262,8 @@ class FirestoreGTORepository @Inject constructor(
         return try {
             Log.d(TAG, "📝 Updating OLQ scores for submission: $submissionId")
             Log.d(TAG, "   - OLQ scores count: ${olqScores.size}")
-            Log.d(TAG, "   - Setting status to: ${GTOSubmissionStatus.COMPLETED.name}")
             
+            // 1. Create the result object to store in gto_results
             val scoresMap = olqScores.mapKeys { it.key.name }.mapValues { entry ->
                 mapOf(
                     "score" to entry.value.score,
@@ -271,19 +272,67 @@ class FirestoreGTORepository @Inject constructor(
                 )
             }
             
-            firestore.collection(COLLECTION_GTO_SUBMISSIONS)
+            val overallScore = olqScores.values.map { it.score }.average().toFloat()
+            val aiConfidence = olqScores.values.map { it.confidence }.average().toInt()
+            
+            // We need to fetch the submission first to get userId and testType
+            // But since we don't want to block, we can just store the scores and let getTestResult handle the join
+            // OR better: validation is done before calling this.
+            // Let's rely on the caller passing valid data.
+            
+            // To ensure we have userId, we might need to fetch the submission. 
+            // However, this method signature doesn't include userId.
+            // Let's fetch the submission to ensure validity and get metadata.
+            val submissionSnapshot = firestore.collection(COLLECTION_GTO_SUBMISSIONS)
                 .document(submissionId)
-                .update(
-                    mapOf(
-                        FIELD_OLQ_SCORES to scoresMap,
-                        FIELD_STATUS to GTOSubmissionStatus.COMPLETED.name
-                    )
-                )
+                .get()
                 .await()
+                
+            if (!submissionSnapshot.exists()) {
+                return Result.failure(Exception("Submission not found: $submissionId"))
+            }
+            
+            val userId = submissionSnapshot.getString(FIELD_USER_ID) ?: ""
+            val testTypeStr = submissionSnapshot.getString(FIELD_TEST_TYPE) ?: "GROUP_DISCUSSION"
+            
+            // Map to GTOTestType
+            val testType = try {
+                 when (testTypeStr) {
+                    "GTO_GD", "GROUP_DISCUSSION" -> GTOTestType.GROUP_DISCUSSION
+                    "GTO_LECTURETTE", "LECTURETTE" -> GTOTestType.LECTURETTE
+                    "GTO_GPE", "GROUP_PLANNING_EXERCISE" -> GTOTestType.GROUP_PLANNING_EXERCISE
+                    else -> GTOTestType.GROUP_DISCUSSION // Fallback
+                }
+            } catch (e: Exception) {
+                GTOTestType.GROUP_DISCUSSION
+            }
+
+            val resultData = mapOf(
+                "submissionId" to submissionId,
+                "userId" to userId,
+                "testType" to testType.name,
+                "olqScores" to scoresMap,
+                "overallScore" to overallScore,
+                "overallRating" to calculateRating(overallScore),
+                "aiConfidence" to aiConfidence,
+                "analyzedAt" to System.currentTimeMillis()
+            )
+
+            // Batch write:
+            // 1. Write result to gto_results
+            // 2. Update submission status to COMPLETED
+            
+            firestore.runBatch { batch ->
+                val resultRef = firestore.collection(COLLECTION_GTO_RESULTS).document(submissionId) // Use same ID
+                batch.set(resultRef, resultData)
+                
+                val submissionRef = firestore.collection(COLLECTION_GTO_SUBMISSIONS).document(submissionId)
+                batch.update(submissionRef, FIELD_STATUS, GTOSubmissionStatus.COMPLETED.name)
+            }.await()
             
             Log.d(TAG, "✅ Successfully updated OLQ scores in Firestore")
-            Log.d(TAG, "   - Collection: $COLLECTION_GTO_SUBMISSIONS")
-            Log.d(TAG, "   - Document: $submissionId")
+            Log.d(TAG, "   - Result stored in: $COLLECTION_GTO_RESULTS/$submissionId")
+            Log.d(TAG, "   - Submission status updated to: ${GTOSubmissionStatus.COMPLETED.name}")
             
             Result.success(Unit)
         } catch (e: Exception) {
@@ -540,7 +589,61 @@ class FirestoreGTORepository @Inject constructor(
     
     override suspend fun getTestResult(submissionId: String): Result<GTOResult> {
         return try {
-            val submission = getSubmission(submissionId).getOrThrow()
+            // First try to get from gto_results (New Architecture)
+            val resultDoc = firestore.collection(COLLECTION_GTO_RESULTS)
+                .document(submissionId)
+                .get()
+                .await()
+                
+            if (resultDoc.exists()) {
+                // Map from result document
+                val data = resultDoc.data ?: emptyMap()
+                val testTypeStr = data["testType"] as? String ?: return Result.failure(Exception("Missing test type"))
+                val testType = GTOTestType.valueOf(testTypeStr)
+                
+                @Suppress("UNCHECKED_CAST")
+                val scoresMap = (data["olqScores"] as? Map<String, Map<String, Any>>) ?: emptyMap()
+                
+                // Safely map OLQ scores
+                val parsedScores = scoresMap.mapNotNull { (key, value) ->
+                    try {
+                        val olq = OLQ.valueOf(key)
+                        val score = (value["score"] as? Number)?.toInt() ?: 0
+                        val confidence = (value["confidence"] as? Number)?.toInt() ?: 0
+                        val reasoning = value["reasoning"] as? String ?: ""
+                        olq to OLQScore(score, confidence, reasoning)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing OLQ score: $key", e)
+                        null
+                    }
+                }.toMap()
+                
+                // Fill missing OLQs with default zero values to satisfy UI requirements
+                val olqScores = OLQ.values().associateWith { olq ->
+                    parsedScores[olq] ?: OLQScore(
+                        score = 0,
+                        confidence = 0,
+                        reasoning = "Not analyzed"
+                    )
+                }
+                
+                val result = GTOResult(
+                    submissionId = submissionId,
+                    userId = data["userId"] as? String ?: "",
+                    testType = testType,
+                    olqScores = olqScores,
+                    overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 0f,
+                    overallRating = data["overallRating"] as? String ?: "",
+                    aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0,
+                    analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+                )
+                
+                return Result.success(result)
+            }
+            
+            // Fallback: Check old location in submissions collection
+            Log.w(TAG, "Result not found in $COLLECTION_GTO_RESULTS, checking legacy location...")
+             val submission = getSubmission(submissionId).getOrThrow()
             
             if (submission.status != GTOSubmissionStatus.COMPLETED) {
                 return Result.failure(Exception("Submission not yet analyzed"))
