@@ -250,6 +250,17 @@ service cloud.firestore {
     }
     
     // ============================================
+    // GTO SUBMISSIONS (For Client-Side AI Analysis)
+    // ============================================
+    
+    match /gto_submissions/{submissionId} {
+      // Users can read/write their own GTO submissions
+      // Required for client-side AI analysis worker to save results
+      allow read, write: if isAuthenticated() && 
+                            (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // ============================================
     // AI GRADING RESULTS (Premium AI Feature)
     // ============================================
     

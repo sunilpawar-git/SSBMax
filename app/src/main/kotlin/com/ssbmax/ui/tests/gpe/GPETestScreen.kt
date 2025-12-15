@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -121,14 +122,27 @@ fun GPETestScreen(
                             charactersCount = uiState.charactersCount,
                             onEdit = { viewModel.returnToPlanning() }
                         )
-                        GPEPhase.SUBMITTED -> {
-                            GTOSubmissionSuccessScreen(
-                                testName = "Group Planning Exercise",
-                                onNavigateHome = onNavigateBack
-                            )
+                            GPEPhase.SUBMITTED -> {
+                            // Show loading/success state briefly before navigation kicks in
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // Navigate to result screen when submission is complete
+    LaunchedEffect(uiState.isSubmitted, uiState.submissionId) {
+        if (uiState.isSubmitted) {
+            val submissionId = uiState.submissionId
+            val subscriptionType = uiState.subscriptionType
+            
+            if (!submissionId.isNullOrBlank() && subscriptionType != null) {
+                android.util.Log.d("GPETestScreen", "✅ Test submitted, navigating to result screen")
+                onTestComplete(submissionId, subscriptionType)
             }
         }
     }
