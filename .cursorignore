@@ -25,6 +25,7 @@ docs/**/*.md
 !docs/implementation/PGT_PRD.md
 !docs/memory-profiling-guidelines.md
 !docs/architecture/SSBMax_Quality_Framework.md
+!docs/architecture/Unified_OLQ_Implementation_Guide.md
 
 # Build/log documentation - prevent AI from creating these
 *BUILD*.md
@@ -32,7 +33,6 @@ docs/**/*.md
 *COMPLETE*.md
 *SUMMARY*.md
 *REPORT*.md
-*GUIDE*.md
 *STATUS*.md
 *PROGRESS*.md
 *FIX*.md
@@ -48,6 +48,9 @@ docs/**/*.md
 *REFACTOR*.md
 *UPDATE*.md
 *CHANGES*.md
+
+# Allow specific architecture guide documents
+!docs/architecture/*_Guide.md
 
 # ============================================
 # BUILD ARTIFACTS

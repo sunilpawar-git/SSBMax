@@ -1,0 +1,1316 @@
+# Unified OLQ Scoring System - Implementation Plan
+
+## Executive Summary
+
+This plan unifies OLQ (Officer-Like Qualities) scoring across all SSB tests by:
+1. Converting Psychology tests (TAT, WAT, SRT, Self Description) to OLQ-based scoring
+2. Fixing GTO tests OLQ scoring (infrastructure exists but results not shown to users)
+3. Creating unified OLQ scoring infrastructure with test-specific prompts
+4. Building Home Screen dashboard showing all test results in 2-column layout
+5. Implementing historic results view with 6-month retention policy
+
+**Key Decisions from User**:
+- Psychology tests → Convert to OLQ scoring (remove test-specific scores)
+- Dashboard → Two columns: Phase 1 (OIR, PPDT) | Phase 2 (Psychology, GTO, Interview)
+- Implementation → Infrastructure-first approach
+- Data retention → Archive after 6 months
+
+---
+
+## Current State Analysis
+
+### ✅ Working Reference (Interview Test - 100% Complete)
+- **Worker**: `app/src/main/kotlin/com/ssbmax/workers/InterviewAnalysisWorker.kt`
+- **Pattern**: Async analysis → Notification → Result display with OLQ scores
+- **Key Features**: Retry logic, fallback scores, process-death safe
+
+### ⚠️ Partially Working (GTO Tests)
+- **Worker**: `app/src/main/kotlin/com/ssbmax/workers/GTOAnalysisWorker.kt` (exists)
+- **Issue**: OLQ scores "not shown to user" - likely Gemini prompt not enforcing JSON
+- **Fix Needed**: Strengthen prompt structure, add validation/retry logic
+
+### ❌ Not Implemented (Psychology Tests)
+- **TAT/WAT/SRT/SD**: Use test-specific scoring, no OLQ analysis
+- **Need**: Background workers, OLQ prompts, result screens with OLQ display
+- **Reference**: Follow Interview Test pattern exactly
+
+### ✅ Existing Infrastructure to Leverage
+- `AIService` interface with Gemini integration
+- OLQ domain models (15 qualities, 4 categories)
+- WorkManager pattern proven in Interview/GTO
+- ID-based navigation (process-death safe)
+- NotificationHelper for delayed results
+
+---
+
+## Phase-by-Phase Implementation
+
+## Phase 1: Infrastructure Setup (3-4 days)
+
+**Goal**: Create shared OLQ scoring infrastructure
+
+### 1.1 Create Unified OLQ Models
+
+**NEW FILE**: `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/scoring/UnifiedOLQResult.kt`
+
+```kotlin
+data class OLQAnalysisResult(
+    val submissionId: String,
+    val testType: TestType,
+    val olqScores: Map<OLQ, OLQScore>,
+    val overallScore: Float,  // 1-10 SSB scale
+    val overallRating: String,
+    val strengths: List<String>,
+    val weaknesses: List<String>,
+    val recommendations: List<String>,
+    val analyzedAt: Long,
+    val aiConfidence: Int
+)
+
+enum class AnalysisStatus {
+    PENDING_ANALYSIS,
+    ANALYZING,
+    COMPLETED,
+    FAILED
+}
+```
+
+### 1.2 Create Psychology Test Prompt Generator
+
+**NEW FILE**: `core/data/src/main/kotlin/com/ssbmax/core/data/ai/prompts/PsychologyTestPrompts.kt`
+
+**Pattern**: Follow `SSBInterviewPrompts.kt` structure
+
+```kotlin
+object PsychologyTestPrompts {
+
+    fun generateTATAnalysisPrompt(submission: TATSubmission): String {
+        // Analyze 12 TAT stories for OLQ patterns
+        // Focus: Character heroes, positive endings, problem-solving
+        // Return: JSON with all 15 OLQs scored (1-10 scale)
+    }
+
+    fun generateWATAnalysisPrompt(submission: WATSubmission): String {
+        // Analyze 60 word associations for OLQ indicators
+        // Focus: Observational statements, Avoid Personal statements, facts & idioms. Look for positive/negative ratio, speed, creativity
+    }
+
+    fun generateSRTAnalysisPrompt(submission: SRTSubmission): String {
+        // Analyze 60 situation reactions for OLQ evidence
+        // Focus: Proactive responses, helping others, leadership
+    }
+
+    fun generateSDAnalysisPrompt(submission: SDSubmission): String {
+        // Analyze self-description for OLQ self-awareness
+        // Focus: Maturity, goal-orientation, optimism
+    }
+}
+```
+
+**CRITICAL**: All prompts MUST enforce JSON-only responses:
+```
+**CRITICAL INSTRUCTIONS**:
+1. Return ONLY a single JSON object
+2. NO markdown (no ```json markers)
+3. NO explanatory text before or after
+4. ALL 15 OLQs MUST be present
+5. Use EXACT enum names (EFFECTIVE_INTELLIGENCE, not "Effective Intelligence")
+6. Your response should START with { and END with }
+```
+
+### 1.3 Expand AIService Interface
+
+**MODIFY**: `core/domain/src/main/kotlin/com/ssbmax/core/domain/service/AIService.kt`
+
+Add methods:
+```kotlin
+suspend fun analyzeTATResponse(prompt: String): Result<ResponseAnalysis>
+suspend fun analyzeWATResponse(prompt: String): Result<ResponseAnalysis>
+suspend fun analyzeSRTResponse(prompt: String): Result<ResponseAnalysis>
+suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
+```
+
+**IMPLEMENT**: `core/data/src/main/kotlin/com/ssbmax/core/data/ai/GeminiAIService.kt`
+
+Follow existing `analyzeGTOResponse()` pattern (lines 234-256)
+
+### 1.4 Update Submission Models
+
+**MODIFY FILES**:
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/TATTest.kt`
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/WATTest.kt`
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/SRTTest.kt`
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/SDTTest.kt`
+
+Add to each submission model:
+```kotlin
+data class TATSubmission(
+    // ... existing fields ...
+    val status: AnalysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+    val olqResult: OLQAnalysisResult? = null
+)
+```
+
+**Validation**: `./gradle.sh build` succeeds with new models
+
+---
+
+## Phase 2: Fix GTO Tests OLQ Scoring (2-3 days)
+
+**Goal**: Debug and fix existing GTO OLQ scoring that's "not shown to user"
+
+### 2.1 Fix GTO Prompt Structure
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/workers/GTOAnalysisPrompts.kt`
+
+**All 8 test prompts** (GD, GPE, Lecturette, PGT, HGT, GOR, IO, CT):
+
+```kotlin
+// Strengthen JSON enforcement in every prompt
+fun generateGDPrompt(submission: GTOSubmission): String {
+    return """
+**CRITICAL INSTRUCTIONS - READ CAREFULLY**:
+1. Return ONLY a single JSON object
+2. NO markdown (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+
+Example format:
+{
+  "olqScores": {
+    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 85, "reasoning": "..."},
+    "REASONING_ABILITY": {"score": 6, "confidence": 80, "reasoning": "..."},
+    ... (all 15 OLQs)
+  }
+}
+"""
+}
+```
+
+### 2.2 Add Validation and Retry Logic
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/workers/GTOAnalysisWorker.kt`
+
+Add after line 100:
+
+```kotlin
+private suspend fun analyzeSubmissionWithRetry(
+    submission: GTOSubmission,
+    testType: GTOTestType
+): Map<OLQ, OLQScore>? {
+    repeat(MAX_AI_RETRIES) { attempt ->
+        val olqScores = analyzeWithGemini(submission, testType)
+
+        // Detailed logging
+        Log.d(TAG, "Attempt ${attempt + 1}: Received ${olqScores?.size ?: 0}/15 OLQs")
+
+        if (olqScores != null) {
+            val missingOLQs = OLQ.entries.filter { it !in olqScores.keys }
+            if (missingOLQs.isNotEmpty()) {
+                Log.w(TAG, "Missing OLQs: ${missingOLQs.joinToString { it.name }}")
+            }
+        }
+
+        // Accept if we have 14-15 OLQs (allow 1 missing)
+        if (olqScores != null && olqScores.size >= 14) {
+            return if (olqScores.size == 15) {
+                olqScores
+            } else {
+                fillMissingOLQs(olqScores)  // Fill with neutral score (6)
+            }
+        }
+
+        // Exponential backoff
+        if (attempt < MAX_AI_RETRIES - 1) {
+            delay(1000L * (attempt + 1) * 2)
+        }
+    }
+    return null
+}
+
+private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
+    val mutable = scores.toMutableMap()
+    OLQ.entries.forEach { olq ->
+        if (olq !in mutable) {
+            mutable[olq] = OLQScore(
+                score = 6,
+                confidence = 30,
+                reasoning = "AI did not assess this OLQ - neutral score assigned"
+            )
+        }
+    }
+    return mutable
+}
+```
+
+### 2.3 Verify Result Screens Display OLQ Scores
+
+**CHECK FILES**:
+- `app/src/main/kotlin/com/ssbmax/ui/tests/gto/gd/GDResultScreen.kt`
+- Similar for Lecturette, GPE result screens
+
+Ensure UI displays `result.olqScores` map with all 15 qualities
+
+**Validation**:
+- Complete GD test → verify PENDING_ANALYSIS
+- Wait for notification
+- Open result → verify all 15 OLQ scores shown
+- Test with other GTO tests
+
+---
+
+## Phase 3: Convert Psychology Tests to OLQ Scoring (8-10 days)
+
+**Goal**: Implement OLQ scoring for TAT, WAT, SRT, SD tests
+
+### Pattern for Each Test (Use TAT as Example)
+
+#### 3.1 TAT Test Implementation
+
+**Step 1: Create Worker**
+
+**NEW FILE**: `app/src/main/kotlin/com/ssbmax/workers/TATAnalysisWorker.kt`
+
+```kotlin
+@HiltWorker
+class TATAnalysisWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val submissionRepository: SubmissionRepository,
+    private val aiService: AIService,
+    private val notificationHelper: NotificationHelper
+) : CoroutineWorker(context, params) {
+
+    companion object {
+        const val KEY_SUBMISSION_ID = "submission_id"
+        private const val TAG = "TATAnalysisWorker"
+    }
+
+    override suspend fun doWork(): Result {
+        val submissionId = inputData.getString(KEY_SUBMISSION_ID) ?: return Result.failure()
+
+        Log.d(TAG, "🔄 Starting TAT analysis for: $submissionId")
+
+        return try {
+            // 1. Get submission
+            val submission = submissionRepository.getTATSubmission(submissionId).getOrNull()
+                ?: return Result.failure()
+
+            // 2. Verify PENDING_ANALYSIS status
+            if (submission.status != AnalysisStatus.PENDING_ANALYSIS) {
+                return Result.success()  // Already processed
+            }
+
+            // 3. Update to ANALYZING
+            submissionRepository.updateTATStatus(submissionId, AnalysisStatus.ANALYZING)
+
+            // 4. Generate prompt
+            val prompt = PsychologyTestPrompts.generateTATAnalysisPrompt(submission)
+
+            // 5. Call Gemini AI
+            val analysisResult = aiService.analyzeTATResponse(prompt)
+
+            // 6. Parse OLQ scores
+            val olqScores = analysisResult.getOrNull()?.olqScores
+                ?: return handleAnalysisFailure(submissionId)
+
+            // 7. Update submission with OLQ result
+            val olqResult = OLQAnalysisResult(
+                submissionId = submissionId,
+                testType = TestType.TAT,
+                olqScores = olqScores,
+                overallScore = olqScores.values.map { it.score }.average().toFloat(),
+                // ... other fields
+            )
+            submissionRepository.updateTATOLQResult(submissionId, olqResult)
+            submissionRepository.updateTATStatus(submissionId, AnalysisStatus.COMPLETED)
+
+            // 8. Send notification
+            notificationHelper.showTATResultsReadyNotification(submissionId)
+
+            Log.d(TAG, "✅ TAT analysis completed")
+            Result.success()
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "TAT analysis failed")
+            handleAnalysisFailure(submissionId)
+            Result.failure()
+        }
+    }
+
+    private suspend fun handleAnalysisFailure(submissionId: String): Result {
+        submissionRepository.updateTATStatus(submissionId, AnalysisStatus.FAILED)
+        return Result.failure()
+    }
+}
+```
+
+**Step 2: Modify Test ViewModel**
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt`
+
+Around lines 324-443 in `submitTest()`:
+
+```kotlin
+fun submitTest() {
+    viewModelScope.launch {
+        // ... existing auth checks ...
+
+        // Create submission with PENDING_ANALYSIS status
+        val submission = TATSubmission(
+            userId = currentUserId,
+            stories = state.responses,
+            status = AnalysisStatus.PENDING_ANALYSIS,  // NEW
+            submittedAt = System.currentTimeMillis()
+        )
+
+        // Submit to Firestore
+        val result = submitTATTest(submission)
+
+        result.onSuccess { submissionId ->
+            // Enqueue TATAnalysisWorker
+            enqueueTATAnalysisWorker(submissionId)
+
+            _uiState.update { it.copy(
+                isLoading = false,
+                isSubmitted = true,
+                submissionId = submissionId,
+                isResultPending = true  // NEW - shows pending state
+            ) }
+
+            _navigationEvents.trySend(
+                TestNavigationEvent.NavigateToPendingResult(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.TAT
+                )
+            )
+        }
+    }
+}
+
+private fun enqueueTATAnalysisWorker(submissionId: String) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+    val workRequest = OneTimeWorkRequestBuilder<TATAnalysisWorker>()
+        .setInputData(workDataOf(TATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+        .setConstraints(constraints)
+        .build()
+
+    workManager.enqueueUniqueWork(
+        "tat_analysis_$submissionId",
+        ExistingWorkPolicy.KEEP,
+        workRequest
+    )
+}
+```
+
+**Step 3: Update Result ViewModel**
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModel.kt`
+
+```kotlin
+@HiltViewModel
+class TATSubmissionResultViewModel @Inject constructor(
+    private val submissionRepository: SubmissionRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(TATResultUiState())
+    val uiState: StateFlow<TATResultUiState> = _uiState.asStateFlow()
+
+    fun loadSubmission(submissionId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            // Observe submission for real-time status updates
+            submissionRepository.observeTATSubmission(submissionId).collect { submission ->
+                if (submission == null) {
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        error = "Submission not found"
+                    ) }
+                    return@collect
+                }
+
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    submission = submission,
+                    status = submission.status
+                ) }
+
+                // Load OLQ result if complete
+                if (submission.status == AnalysisStatus.COMPLETED) {
+                    _uiState.update { it.copy(olqResult = submission.olqResult) }
+                }
+            }
+        }
+    }
+}
+
+data class TATResultUiState(
+    val isLoading: Boolean = true,
+    val submission: TATSubmission? = null,
+    val status: AnalysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+    val olqResult: OLQAnalysisResult? = null,
+    val error: String? = null
+)
+```
+
+**Step 4: Update Result Screen UI**
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultScreen.kt`
+
+```kotlin
+@Composable
+fun TATSubmissionResultScreen(...) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    when {
+        uiState.isLoading -> CircularProgressIndicator()
+
+        uiState.status == AnalysisStatus.PENDING_ANALYSIS ||
+        uiState.status == AnalysisStatus.ANALYZING -> {
+            // Show pending state
+            PendingAnalysisCard(testType = "TAT")
+        }
+
+        uiState.status == AnalysisStatus.COMPLETED && uiState.olqResult != null -> {
+            // Show OLQ results
+            OLQResultCard(
+                olqResult = uiState.olqResult!!,
+                stories = uiState.submission?.stories
+            )
+        }
+
+        uiState.status == AnalysisStatus.FAILED -> {
+            AnalysisFailedCard(onRetry = { viewModel.retryAnalysis() })
+        }
+    }
+}
+
+@Composable
+private fun OLQResultCard(olqResult: OLQAnalysisResult, stories: List<Story>?) {
+    Column {
+        // Overall score card
+        OverallScoreSection(
+            score = olqResult.overallScore,
+            rating = olqResult.overallRating
+        )
+
+        // 15 OLQ scores
+        OLQScoresSection(
+            olqScores = olqResult.olqScores,
+            strengths = olqResult.strengths,
+            weaknesses = olqResult.weaknesses
+        )
+
+        // Original stories (expandable)
+        StoriesSection(stories = stories)
+    }
+}
+```
+
+**Step 5: Add Notifications**
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/notifications/NotificationHelper.kt`
+
+```kotlin
+fun showTATResultsReadyNotification(submissionId: String) {
+    val deepLink = "ssbmax://test/tat/result/$submissionId"
+
+    val notification = NotificationCompat.Builder(context, "psychology_results")
+        .setContentTitle("TAT Results Ready")
+        .setContentText("Your TAT analysis is complete. View your OLQ scores!")
+        .setSmallIcon(R.drawable.ic_notification)
+        .setContentIntent(createDeepLinkPendingIntent(deepLink))
+        .build()
+
+    notificationManager.notify(submissionId.hashCode(), notification)
+}
+```
+
+**Step 6: Unit Tests**
+
+**NEW FILE**: `app/src/test/kotlin/com/ssbmax/workers/TATAnalysisWorkerTest.kt`
+
+```kotlin
+class TATAnalysisWorkerTest {
+    @Test
+    fun `worker should analyze TAT submission and update with OLQ scores`() {
+        // Test worker flow
+    }
+
+    @Test
+    fun `worker should handle Gemini API failures with retries`() {
+        // Test retry logic
+    }
+
+    @Test
+    fun `worker should send notification when analysis completes`() {
+        // Test notification
+    }
+}
+```
+
+**MODIFY**: `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt`
+
+Add tests:
+- `submitTest_shouldEnqueueTATAnalysisWorker`
+- `submitTest_shouldNavigateToPendingResult`
+
+#### 3.2 WAT Test Implementation
+
+**Repeat Steps 1-6 above** with WAT-specific files:
+- `workers/WATAnalysisWorker.kt`
+- Modify `ui/tests/wat/WATTestViewModel.kt`
+- Modify `ui/tests/wat/WATSubmissionResultViewModel.kt`
+- Create WAT result screen UI
+- Add `showWATResultsReadyNotification()`
+- Create `WATAnalysisWorkerTest.kt`
+
+**WAT Prompt Focus**:
+- 60 word associations analyzed for patterns
+- Positive/negative ratio indicates emotional maturity
+- Quick relevant responses indicate SPEED_OF_DECISION
+- Creative associations indicate INITIATIVE
+
+#### 3.3 SRT Test Implementation
+
+**Repeat Steps 1-6** for SRT test
+
+**SRT Prompt Focus**:
+- 60 situation reactions analyzed
+- Proactive responses indicate INITIATIVE, SPEED_OF_DECISION
+- Helping others indicates COOPERATION, SOCIAL_ADJUSTMENT
+- Taking charge indicates INFLUENCE_GROUP, ORGANIZING_ABILITY
+- Standing up for right indicates COURAGE, SENSE_OF_RESPONSIBILITY
+
+#### 3.4 Self Description Test Implementation
+
+**Repeat Steps 1-6** for SD test
+
+**SD Prompt Focus**:
+- Self-awareness indicates EFFECTIVE_INTELLIGENCE
+- Acknowledging weaknesses indicates maturity, SENSE_OF_RESPONSIBILITY
+- Optimistic self-view indicates SELF_CONFIDENCE, LIVELINESS
+- Goal-oriented language indicates DETERMINATION, INITIATIVE
+
+**Validation for Phase 3**:
+- [ ] Build succeeds: `./gradle.sh build`
+- [ ] All unit tests pass: `./gradle.sh test --tests "*Psychology*"`
+- [ ] Each test (TAT/WAT/SRT/SD) shows PENDING → ANALYZING → COMPLETED flow
+- [ ] Notifications received for all 4 tests
+- [ ] Result screens display all 15 OLQ scores
+- [ ] Process death recovery works (kill app, reopen, result appears)
+
+---
+
+## Phase 4: Unified Dashboard on Home Screen (3-4 days)
+
+**Goal**: Build OLQ dashboard showing all test results in 2-column layout
+
+### 4.1 Create Dashboard Data Models
+
+**NEW FILE**: `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/dashboard/OLQDashboard.kt`
+
+```kotlin
+data class OLQDashboardData(
+    val userId: String,
+    val phase1Results: Phase1Results,
+    val phase2Results: Phase2Results
+) {
+    data class Phase1Results(
+        val oirResult: OIRTestResult?,   // Keep existing scoring
+        val ppdtResult: PPDTSubmission?  // Keep existing scoring
+    )
+
+    data class Phase2Results(
+        val tatResult: OLQAnalysisResult?,
+        val watResult: OLQAnalysisResult?,
+        val srtResult: OLQAnalysisResult?,
+        val sdResult: OLQAnalysisResult?,
+        val gtoResults: Map<GTOTestType, OLQAnalysisResult>,  // 8 GTO tests
+        val interviewResult: InterviewResult?
+    )
+
+    // Calculate average OLQ score across all Phase 2 tests
+    fun getAverageOLQScore(olq: OLQ): Float? {
+        val scores = mutableListOf<Float>()
+
+        phase2Results.tatResult?.olqScores?.get(olq)?.score?.let { scores.add(it) }
+        phase2Results.watResult?.olqScores?.get(olq)?.score?.let { scores.add(it) }
+        phase2Results.srtResult?.olqScores?.get(olq)?.score?.let { scores.add(it) }
+        phase2Results.sdResult?.olqScores?.get(olq)?.score?.let { scores.add(it) }
+
+        phase2Results.gtoResults.values.forEach { gtoResult ->
+            gtoResult.olqScores[olq]?.score?.let { scores.add(it) }
+        }
+
+        phase2Results.interviewResult?.olqScores?.get(olq)?.score?.let { scores.add(it) }
+
+        return if (scores.isNotEmpty()) scores.average().toFloat() else null
+    }
+
+    val topOLQs: List<Pair<OLQ, Float>>
+        get() = OLQ.entries
+            .mapNotNull { olq -> getAverageOLQScore(olq)?.let { olq to it } }
+            .sortedBy { it.second }  // Lower is better
+            .take(3)
+
+    val improvementOLQs: List<Pair<OLQ, Float>>
+        get() = OLQ.entries
+            .mapNotNull { olq -> getAverageOLQScore(olq)?.let { olq to it } }
+            .sortedByDescending { it.second }  // Higher needs improvement
+            .take(3)
+}
+```
+
+### 4.2 Create Dashboard Use Case
+
+**NEW FILE**: `core/domain/src/main/kotlin/com/ssbmax/core/domain/usecase/dashboard/GetOLQDashboardUseCase.kt`
+
+```kotlin
+@Singleton
+class GetOLQDashboardUseCase @Inject constructor(
+    private val submissionRepository: SubmissionRepository,
+    private val interviewRepository: InterviewRepository,
+    private val gtoRepository: GTORepository
+) {
+    suspend operator fun invoke(userId: String): Result<OLQDashboardData> {
+        return try {
+            // Fetch latest result for each test type
+            val oirResult = submissionRepository.getLatestOIRResult(userId).getOrNull()
+            val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
+            val tatResult = submissionRepository.getLatestTATOLQResult(userId).getOrNull()
+            val watResult = submissionRepository.getLatestWATOLQResult(userId).getOrNull()
+            val srtResult = submissionRepository.getLatestSRTOLQResult(userId).getOrNull()
+            val sdResult = submissionRepository.getLatestSDOLQResult(userId).getOrNull()
+            val interviewResult = interviewRepository.getLatestResult(userId).getOrNull()
+
+            // Fetch all 8 GTO results
+            val gtoResults = GTOTestType.entries.associateWith { testType ->
+                gtoRepository.getLatestResult(userId, testType).getOrNull()
+            }.filterValues { it != null }.mapValues { it.value!! }
+
+            val dashboard = OLQDashboardData(
+                userId = userId,
+                phase1Results = OLQDashboardData.Phase1Results(
+                    oirResult = oirResult,
+                    ppdtResult = ppdtResult
+                ),
+                phase2Results = OLQDashboardData.Phase2Results(
+                    tatResult = tatResult,
+                    watResult = watResult,
+                    srtResult = srtResult,
+                    sdResult = sdResult,
+                    gtoResults = gtoResults,
+                    interviewResult = interviewResult
+                )
+            )
+
+            Result.success(dashboard)
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to load OLQ dashboard")
+            Result.failure(e)
+        }
+    }
+}
+```
+
+### 4.3 Update Student Home ViewModel
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModel.kt`
+
+```kotlin
+@HiltViewModel
+class StudentHomeViewModel @Inject constructor(
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val getOLQDashboard: GetOLQDashboardUseCase
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(StudentHomeUiState())
+    val uiState: StateFlow<StudentHomeUiState> = _uiState.asStateFlow()
+
+    init {
+        loadDashboard()
+    }
+
+    private fun loadDashboard() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingDashboard = true) }
+
+            val userId = observeCurrentUser().first()?.id
+            if (userId == null) {
+                _uiState.update { it.copy(
+                    isLoadingDashboard = false,
+                    dashboardError = "Please login to view progress"
+                ) }
+                return@launch
+            }
+
+            getOLQDashboard(userId)
+                .onSuccess { dashboard ->
+                    _uiState.update { it.copy(
+                        isLoadingDashboard = false,
+                        dashboard = dashboard
+                    ) }
+                }
+                .onFailure { error ->
+                    ErrorLogger.log(error, "Dashboard load failed")
+                    _uiState.update { it.copy(
+                        isLoadingDashboard = false,
+                        dashboardError = error.message
+                    ) }
+                }
+        }
+    }
+
+    fun refreshDashboard() = loadDashboard()
+}
+
+data class StudentHomeUiState(
+    // ... existing fields ...
+    val isLoadingDashboard: Boolean = false,
+    val dashboard: OLQDashboardData? = null,
+    val dashboardError: String? = null
+)
+```
+
+### 4.4 Create Dashboard UI Component
+
+**NEW FILE**: `app/src/main/kotlin/com/ssbmax/ui/home/student/components/OLQDashboardCard.kt`
+
+```kotlin
+@Composable
+fun OLQDashboardCard(
+    dashboard: OLQDashboardData,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.dashboard_your_progress),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Two-column layout as requested
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Column 1: Phase 1 Tests (OIR, PPDT)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.phase_1_tests),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TestScoreChip("OIR", dashboard.phase1Results.oirResult?.overallScore)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TestScoreChip("PPDT", dashboard.phase1Results.ppdtResult?.aiPreliminaryScore?.overallScore)
+                }
+
+                // Column 2: Phase 2 Tests (Psychology + GTO + Interview)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.phase_2_tests),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Psychology Tests
+                    TestScoreChip("TAT", dashboard.phase2Results.tatResult?.overallScore)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TestScoreChip("WAT", dashboard.phase2Results.watResult?.overallScore)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TestScoreChip("SRT", dashboard.phase2Results.srtResult?.overallScore)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TestScoreChip("SD", dashboard.phase2Results.sdResult?.overallScore)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // GTO Tests (8 tests)
+                    dashboard.phase2Results.gtoResults.forEach { (testType, result) ->
+                        TestScoreChip(testType.displayName, result.overallScore)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+
+                    // Interview
+                    TestScoreChip("Interview", dashboard.phase2Results.interviewResult?.averageOLQScore)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Top 3 Strengths
+            OLQStrengthsSection(
+                title = stringResource(R.string.your_strengths),
+                olqs = dashboard.topOLQs,
+                color = Color(0xFF4CAF50)  // Green
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Areas for Improvement
+            OLQStrengthsSection(
+                title = stringResource(R.string.areas_improvement),
+                olqs = dashboard.improvementOLQs,
+                color = Color(0xFFFFC107)  // Yellow
+            )
+        }
+    }
+}
+
+@Composable
+private fun TestScoreChip(testName: String, score: Float?) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = when {
+            score == null -> MaterialTheme.colorScheme.surfaceVariant
+            score <= 5f -> Color(0xFF4CAF50)  // Green - Good
+            score <= 7f -> Color(0xFFFFC107)  // Yellow - Average
+            else -> Color(0xFFF44336)  // Red - Needs work
+        }
+    ) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = testName,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White
+            )
+            Text(
+                text = score?.let { "%.1f".format(it) } ?: "—",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun OLQStrengthsSection(
+    title: String,
+    olqs: List<Pair<OLQ, Float>>,
+    color: Color
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        olqs.forEach { (olq, score) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = olq.displayName,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = color.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = "%.1f".format(score),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = color,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
+### 4.5 Integrate Dashboard into Home Screen
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/ui/home/student/StudentHomeScreen.kt`
+
+Add after existing progress ribbon (around line 150):
+
+```kotlin
+// OLQ Dashboard Card
+if (uiState.isLoadingDashboard) {
+    CircularProgressIndicator(
+        modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp)
+    )
+} else if (uiState.dashboard != null) {
+    OLQDashboardCard(
+        dashboard = uiState.dashboard!!,
+        modifier = Modifier.padding(16.dp)
+    )
+} else if (uiState.dashboardError != null) {
+    Text(
+        text = uiState.dashboardError!!,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(16.dp)
+    )
+}
+```
+
+**Validation for Phase 4**:
+- [ ] Dashboard shows 2-column layout
+- [ ] Column 1: OIR & PPDT results
+- [ ] Column 2: 4 Psychology + 8 GTO + Interview results
+- [ ] Color-coded scores (green ≤5, yellow 6-7, red ≥8)
+- [ ] Top 3 strengths displayed (lowest scores)
+- [ ] Top 3 improvement areas displayed (highest scores)
+- [ ] Pull-to-refresh updates dashboard
+- [ ] Empty state: "Complete tests to see progress"
+
+---
+
+## Phase 5: Historic Results & Archival (3 days)
+
+**Goal**: Implement historic results view with 6-month retention
+
+### 5.1 Create Historic Results Use Case
+
+**NEW FILE**: `core/domain/src/main/kotlin/com/ssbmax/core/domain/usecase/results/GetHistoricResultsUseCase.kt`
+
+```kotlin
+@Singleton
+class GetHistoricResultsUseCase @Inject constructor(
+    private val submissionRepository: SubmissionRepository
+) {
+    suspend operator fun invoke(
+        userId: String,
+        testType: TestType? = null
+    ): Result<List<HistoricResult>> {
+        return try {
+            val sixMonthsAgo = Instant.now().minus(180, ChronoUnit.DAYS).toEpochMilli()
+
+            val submissions = submissionRepository.getSubmissions(
+                userId = userId,
+                testType = testType,
+                since = sixMonthsAgo
+            ).getOrThrow()
+
+            val historicResults = submissions
+                .filter { it.status == AnalysisStatus.COMPLETED }
+                .map { submission ->
+                    HistoricResult(
+                        submissionId = submission.id,
+                        testType = submission.testType,
+                        submittedAt = submission.submittedAt,
+                        overallScore = submission.olqResult?.overallScore,
+                        rating = submission.olqResult?.overallRating
+                    )
+                }
+                .sortedByDescending { it.submittedAt }
+
+            Result.success(historicResults)
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to load historic results")
+            Result.failure(e)
+        }
+    }
+}
+
+data class HistoricResult(
+    val submissionId: String,
+    val testType: TestType,
+    val submittedAt: Long,
+    val overallScore: Float?,
+    val rating: String?
+)
+```
+
+### 5.2 Create Archival Worker
+
+**NEW FILE**: `app/src/main/kotlin/com/ssbmax/workers/ArchivalWorker.kt`
+
+```kotlin
+@HiltWorker
+class ArchivalWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val submissionRepository: SubmissionRepository
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result {
+        Log.d(TAG, "📦 Starting archival worker")
+
+        return try {
+            val sixMonthsAgo = Instant.now().minus(180, ChronoUnit.DAYS).toEpochMilli()
+
+            // Archive submissions older than 6 months
+            val archivedCount = submissionRepository.archiveOldSubmissions(sixMonthsAgo)
+
+            Log.d(TAG, "✅ Archived $archivedCount submissions")
+
+            Result.success()
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Archival worker failed")
+            Result.failure()
+        }
+    }
+
+    companion object {
+        private const val TAG = "ArchivalWorker"
+
+        fun schedule(workManager: WorkManager) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresCharging(true)
+                .build()
+
+            val archivalRequest = PeriodicWorkRequestBuilder<ArchivalWorker>(
+                repeatInterval = 1,
+                repeatIntervalTimeUnit = TimeUnit.DAYS
+            )
+                .setConstraints(constraints)
+                .setInitialDelay(1, TimeUnit.HOURS)
+                .build()
+
+            workManager.enqueueUniquePeriodicWork(
+                "archival_worker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                archivalRequest
+            )
+        }
+    }
+}
+```
+
+### 5.3 Implement Archive Repository Method
+
+**MODIFY**: `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubmissionRepositoryImpl.kt`
+
+```kotlin
+override suspend fun archiveOldSubmissions(beforeTimestamp: Long): Int {
+    return withContext(Dispatchers.IO) {
+        try {
+            val oldSubmissions = firestore
+                .collection("submissions")
+                .whereLessThan("submittedAt", beforeTimestamp)
+                .get()
+                .await()
+
+            var archivedCount = 0
+
+            oldSubmissions.documents.forEach { doc ->
+                // Copy to archive collection
+                firestore.collection("submissions_archive")
+                    .document(doc.id)
+                    .set(doc.data ?: emptyMap())
+                    .await()
+
+                // Delete from main collection
+                doc.reference.delete().await()
+
+                archivedCount++
+            }
+
+            archivedCount
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Archive operation failed")
+            0
+        }
+    }
+}
+```
+
+### 5.4 Schedule Archival on App Startup
+
+**MODIFY**: `app/src/main/kotlin/com/ssbmax/SSBMaxApplication.kt`
+
+```kotlin
+override fun onCreate() {
+    super.onCreate()
+
+    // ... existing initialization ...
+
+    // Schedule daily archival worker
+    ArchivalWorker.schedule(workManager)
+}
+```
+
+**Validation for Phase 5**:
+- [ ] Historic results screen shows last 6 months
+- [ ] Results grouped by test type
+- [ ] Clicking result navigates to detailed view
+- [ ] Archival worker runs daily (test by mocking timestamp)
+- [ ] Old submissions moved to `submissions_archive` collection
+
+---
+
+## Critical Files Summary
+
+### Phase 1 - Infrastructure (Create)
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/scoring/UnifiedOLQResult.kt`
+- `core/data/src/main/kotlin/com/ssbmax/core/data/ai/prompts/PsychologyTestPrompts.kt`
+
+### Phase 2 - GTO Fix (Modify)
+- `app/src/main/kotlin/com/ssbmax/workers/GTOAnalysisPrompts.kt`
+- `app/src/main/kotlin/com/ssbmax/workers/GTOAnalysisWorker.kt`
+
+### Phase 3 - Psychology Tests (Create + Modify per test)
+**TAT**:
+- `app/src/main/kotlin/com/ssbmax/workers/TATAnalysisWorker.kt` (NEW)
+- `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt` (MODIFY lines 324-443)
+- `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModel.kt` (MODIFY)
+- `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultScreen.kt` (MODIFY)
+
+**WAT, SRT, SD**: Similar pattern
+
+### Phase 4 - Dashboard (Create + Modify)
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/dashboard/OLQDashboard.kt` (NEW)
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/usecase/dashboard/GetOLQDashboardUseCase.kt` (NEW)
+- `app/src/main/kotlin/com/ssbmax/ui/home/student/components/OLQDashboardCard.kt` (NEW)
+- `app/src/main/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModel.kt` (MODIFY)
+- `app/src/main/kotlin/com/ssbmax/ui/home/student/StudentHomeScreen.kt` (MODIFY line ~150)
+
+### Phase 5 - Archival (Create + Modify)
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/usecase/results/GetHistoricResultsUseCase.kt` (NEW)
+- `app/src/main/kotlin/com/ssbmax/workers/ArchivalWorker.kt` (NEW)
+- `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubmissionRepositoryImpl.kt` (MODIFY)
+
+---
+
+## Testing Strategy
+
+### Unit Tests Per Phase
+
+**Phase 1**: Test prompt generation, model creation
+**Phase 2**: Test GTO worker retry logic, JSON parsing
+**Phase 3**: Test TAT/WAT/SRT/SD workers, ViewModels, result screens
+**Phase 4**: Test dashboard use case, aggregation logic
+**Phase 5**: Test archival worker, historic results query
+
+**Run tests**: `./gradle.sh test`
+
+### Integration Tests
+
+**NEW FILE**: `app/src/androidTest/kotlin/com/ssbmax/integration/OLQScoringIntegrationTest.kt`
+
+Test complete flow:
+1. Submit test → PENDING_ANALYSIS
+2. Worker processes → COMPLETED
+3. Notification received
+4. Result screen shows 15 OLQ scores
+5. Dashboard updates
+
+### Manual Testing Checklist
+
+Per test type (TAT, WAT, SRT, SD, 8 GTO tests):
+- [ ] Complete test successfully
+- [ ] Verify PENDING_ANALYSIS in Firestore
+- [ ] Wait for notification
+- [ ] Open result from notification
+- [ ] Verify all 15 OLQ scores displayed
+- [ ] Test process death (kill app, reopen, verify continues)
+
+---
+
+## Edge Cases & Error Handling
+
+### 1. AI Analysis Failures
+- Retry 3 times with exponential backoff
+- Fallback to neutral scores (6) if all fail
+- Send notification: "Analysis completed with limited accuracy"
+
+### 2. Process Death During Analysis
+- WorkManager persists work
+- Analysis continues in background
+- User reopens app → observes Firestore → sees COMPLETED
+
+### 3. Offline Submission
+- Save to local Room database
+- WorkManager waits for network
+- Syncs to Firestore when online
+
+### 4. Missing OLQs in AI Response
+- Accept if ≥14 OLQs (fill missing with score 6)
+- Retry if <14 OLQs
+- After 3 retries: use all neutral scores
+
+### 5. Dashboard with No Data
+- Show empty state: "Complete tests to see your OLQ profile"
+- Provide "Start Test" CTA buttons
+
+---
+
+## Success Criteria
+
+### Overall Success
+- [ ] Zero build breaks across all phases
+- [ ] Unit test coverage ≥80% for new code
+- [ ] Integration tests pass
+- [ ] All Psychology tests use OLQ scoring
+- [ ] All GTO tests show OLQ scores
+- [ ] Dashboard displays 2-column layout correctly
+- [ ] Historic results show last 6 months
+- [ ] Archival policy implemented
+- [ ] Process-death recovery works
+- [ ] Notifications received for all test types
+- [ ] Crashlytics shows <5% OLQ analysis failure rate
+
+---
+
+## Timeline Estimate
+
+| Phase | Tasks | Estimated Time |
+|-------|-------|----------------|
+| **Phase 1** | Infrastructure setup | 3-4 days |
+| **Phase 2** | Fix GTO OLQ scoring | 2-3 days |
+| **Phase 3.1** | TAT OLQ integration | 3 days |
+| **Phase 3.2** | WAT OLQ integration | 2 days |
+| **Phase 3.3** | SRT OLQ integration | 2 days |
+| **Phase 3.4** | SD OLQ integration | 2 days |
+| **Phase 4** | Dashboard implementation | 3-4 days |
+| **Phase 5** | Historic results & archival | 3 days |
+| **Testing** | Integration & manual testing | 3 days |
+| **Total** | | **23-28 days** |
+
+**Estimated Duration: 4-5 weeks**
+
+---
+
+## Risk Mitigation
+
+1. **Gemini API Rate Limits**: Exponential backoff, queue management
+2. **Inconsistent OLQ Scores**: Standardize prompts, use same OLQ definitions
+3. **High Firestore Costs**: Cache dashboard locally, pagination for historic results
+4. **Worker Failures**: Built-in WorkManager retries, manual retry button in UI
+5. **Complex State Management**: Single use case for aggregation, cache in ViewModel
+
+---
+
+## Next Steps
+
+1. Create new branch: `git checkout -b unified-olq-scoring`
+2. Start Phase 1: Infrastructure setup
+3. After each phase: Verify build succeeds with `./gradle.sh build`
+4. Commit after each successful phase
+5. Test thoroughly before moving to next phase
+
+This plan ensures no build breaks, follows existing architecture patterns (MVVM, WorkManager, ID-based navigation), and maintains SSBMax's high-quality standards.
