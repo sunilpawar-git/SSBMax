@@ -22,6 +22,13 @@ import org.junit.Test
 /**
  * Unit tests for SRTTestViewModel
  * Tests situation loading, response handling, navigation, and submission
+ *
+ * NOTE: This file is 920 lines and violates the 300-line limit.
+ * TODO: Split into multiple focused test files:
+ * - SRTTestViewModelLoadingTest.kt (loading & setup tests)
+ * - SRTTestViewModelNavigationTest.kt (navigation & response handling)
+ * - SRTTestViewModelSubmissionTest.kt (submission & analytics)
+ * - SRTTestViewModelLimitsTest.kt (subscription limits)
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SRTTestViewModelTest : BaseViewModelTest() {

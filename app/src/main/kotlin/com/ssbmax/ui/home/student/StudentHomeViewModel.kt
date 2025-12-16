@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 /**
@@ -27,7 +28,8 @@ class StudentHomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository,
-    private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository
+    private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -37,6 +39,7 @@ class StudentHomeViewModel @Inject constructor(
         observeUserProfile()
         observeTestProgress()
         observeRecentResults()
+        loadDashboard()
     }
     
     private fun observeUserProfile() {
@@ -188,6 +191,54 @@ class StudentHomeViewModel @Inject constructor(
         observeUserProfile()
         observeTestProgress()
         observeRecentResults()
+        loadDashboard()
+    }
+    
+    private fun loadDashboard() {
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isLoadingDashboard = true, dashboardError = null) }
+                
+                val userId = authRepository.currentUser.value?.id
+                if (userId == null) {
+                    _uiState.update { it.copy(
+                        isLoadingDashboard = false,
+                        dashboardError = "Please login to view progress"
+                    ) }
+                    return@launch
+                }
+                
+                // PHASE 5: Add 10-second timeout to prevent infinite loading
+                withTimeout(10_000) {
+                    getOLQDashboard(userId)
+                        .onSuccess { processedData ->
+                            _uiState.update { it.copy(
+                                isLoadingDashboard = false,
+                                dashboard = processedData,
+                                dashboardError = null
+                            ) }
+                        }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(
+                                isLoadingDashboard = false,
+                                dashboardError = error.message ?: "Failed to load dashboard"
+                            ) }
+                        }
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                // PHASE 5: Handle timeout gracefully
+                _uiState.update { it.copy(
+                    isLoadingDashboard = false,
+                    dashboardError = "Dashboard timed out. Please retry."
+                ) }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Unexpected error in loadDashboard")
+                _uiState.update { it.copy(
+                    isLoadingDashboard = false,
+                    dashboardError = "Unexpected error: ${e.message}"
+                ) }
+            }
+        }
     }
 }
 
@@ -204,6 +255,9 @@ data class StudentHomeUiState(
     val phase2Progress: com.ssbmax.core.domain.model.Phase2Progress? = null,
     val recentResults: List<com.ssbmax.core.domain.model.scoring.OLQAnalysisResult> = emptyList(),
     val overallOLQProfile: Map<com.ssbmax.core.domain.model.interview.OLQ, Float> = emptyMap(),
-    val error: String? = null
+    val error: String? = null,
+    // Dashboard state (PERFORMANCE: using ProcessedDashboardData with pre-computed aggregations)
+    val isLoadingDashboard: Boolean = false,
+    val dashboard: com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData? = null,
+    val dashboardError: String? = null
 )
-

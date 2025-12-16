@@ -1760,6 +1760,75 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             null
         }
     }
+    
+    // ===========================
+    // Archival Methods
+    // ===========================
+    
+    /**
+     * Archive submissions older than the specified timestamp
+     * Moves data to archived_submissions collection and deletes from main collection
+     * 
+     * @param beforeTimestamp Unix timestamp - submissions before this will be archived
+     * @return Number of submissions successfully archived
+     */
+    override suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int> {
+        return try {
+            Log.d(TAG, "Starting archival for submissions before $beforeTimestamp")
+            
+            // Query all submissions older than timestamp using collection group
+            val submissionsSnapshot = firestore.collectionGroup("submissions")
+                .whereLessThan("submittedAt", beforeTimestamp)
+                .get()
+                .await()
+            
+            if (submissionsSnapshot.isEmpty) {
+                Log.d(TAG, "No submissions to archive")
+                return Result.success(0)
+            }
+            
+            var archivedCount = 0
+            val failedArchives = mutableListOf<String>()
+            
+            // Archive each submission
+            submissionsSnapshot.documents.forEach { doc ->
+                try {
+                    // Get submission data
+                    val submissionData = doc.data ?: emptyMap()
+                    val submissionId = submissionData["id"] as? String ?: doc.id
+                    
+                    // Move to archived_submissions collection
+                    firestore.collection("archived_submissions")
+                        .document(submissionId)
+                        .set(submissionData)
+                        .await()
+                    
+                    // Delete from original collection
+                    doc.reference.delete().await()
+                    
+                    archivedCount++
+                    
+                    if (archivedCount % 10 == 0) {
+                        Log.d(TAG, "Archived $archivedCount submissions so far...")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to archive submission ${doc.id}", e)
+                    failedArchives.add(doc.id)
+                }
+            }
+            
+            Log.d(TAG, "✅ Archival complete: $archivedCount archived, ${failedArchives.size} failed")
+            
+            if (failedArchives.isNotEmpty()) {
+                Log.w(TAG, "Failed to archive: ${failedArchives.joinToString()}")
+            }
+            
+            Result.success(archivedCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Archival failed", e)
+            Result.failure(e)
+        }
+    }
 }
 
 /**

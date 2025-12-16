@@ -43,6 +43,9 @@ class SSBMaxApplication : Application(), Configuration.Provider {
 
         // Schedule periodic cleanup of expired question cache
         scheduleQuestionCacheCleanup()
+        
+        // Schedule daily archival of old submissions (6+ months)
+        com.ssbmax.workers.ArchivalWorker.schedule(WorkManager.getInstance(this))
 
         Log.d(TAG, "✅ SSBMax Application initialized")
     }

@@ -229,5 +229,18 @@ interface SubmissionRepository {
      * Observe SDT submission in real-time
      */
     fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?>
+    
+    // ===========================
+    // Archival Methods
+    // ===========================
+    
+    /**
+     * Archive submissions older than the specified timestamp
+     * Moves data to archived_submissions collection and deletes from main collection
+     * 
+     * @param beforeTimestamp Unix timestamp - submissions before this will be archived
+     * @return Number of submissions successfully archived
+     */
+    suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int>
 }
 

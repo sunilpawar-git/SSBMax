@@ -24,6 +24,7 @@ docs/**/*.md
 !docs/implementation/GPE_PRD.md
 !docs/implementation/PGT_PRD.md
 !docs/memory-profiling-guidelines.md
+!docs/architecture/SSBMax_Quality_Framework.md
 
 # Build/log documentation - prevent AI from creating these
 *BUILD*.md

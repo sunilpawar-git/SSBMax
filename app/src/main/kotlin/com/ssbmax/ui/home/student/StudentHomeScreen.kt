@@ -195,6 +195,64 @@ fun StudentHomeScreen(
                 SectionDivider()
             }
             
+            // OLQ Dashboard
+            item {
+                SectionHeader(
+                    icon = "🎯",
+                    title = "OLQ Dashboard",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            
+            item {
+                when {
+                    uiState.isLoadingDashboard -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    
+                    uiState.dashboard != null -> {
+                        com.ssbmax.ui.home.student.components.OLQDashboardCard(
+                            processedData = uiState.dashboard!!, // Now using ProcessedDashboardData
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    uiState.dashboard == null && !uiState.isLoadingDashboard -> {
+                        com.ssbmax.ui.home.student.components.EmptyDashboardState(
+                            modifier = Modifier.fillMaxWidth(),
+                            onStartTestClick = onNavigateToStudy
+                        )
+                    }
+                    
+                    uiState.dashboardError != null -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Text(
+                                text = uiState.dashboardError ?: "Failed to load dashboard",
+                                modifier = Modifier.padding(16.dp),
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Section Divider
+            item {
+                SectionDivider()
+            }
+            
             // Quick Actions
             item {
                 SectionHeader(
