@@ -60,7 +60,7 @@ class GeminiAIService @Inject constructor(
         // Timeout values (milliseconds) per guidelines
         // Increased for high-latency networks and comprehensive prompts
         private const val QUESTION_GENERATION_TIMEOUT = 45_000L  // 45 seconds (increased for larger prompts)
-        private const val RESPONSE_ANALYSIS_TIMEOUT = 25_000L    // 25 seconds
+        private const val RESPONSE_ANALYSIS_TIMEOUT = 60_000L    // 60 seconds (increased for GTO long-form responses)
         private const val FEEDBACK_GENERATION_TIMEOUT = 40_000L  // 40 seconds
         private const val HEALTH_CHECK_TIMEOUT = 10_000L         // 10 seconds
     }

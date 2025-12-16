@@ -320,14 +320,19 @@ class FirestoreGTORepository @Inject constructor(
 
             // Batch write:
             // 1. Write result to gto_results
-            // 2. Update submission status to COMPLETED
+            // 2. Update submission status to COMPLETED (use set with merge for safety)
             
             firestore.runBatch { batch ->
                 val resultRef = firestore.collection(COLLECTION_GTO_RESULTS).document(submissionId) // Use same ID
                 batch.set(resultRef, resultData)
                 
                 val submissionRef = firestore.collection(COLLECTION_GTO_SUBMISSIONS).document(submissionId)
-                batch.update(submissionRef, FIELD_STATUS, GTOSubmissionStatus.COMPLETED.name)
+                // Use set() with merge instead of update() - safer for batch operations
+                batch.set(
+                    submissionRef, 
+                    mapOf(FIELD_STATUS to GTOSubmissionStatus.COMPLETED.name),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
             }.await()
             
             Log.d(TAG, "✅ Successfully updated OLQ scores in Firestore")
@@ -924,14 +929,21 @@ class FirestoreGTORepository @Inject constructor(
             status
         }
         
+        // Extract nested data field if it exists (used by SubmissionRepository)
+        // SubmissionRepository stores test-specific data in a "data" nested object
+        @Suppress("UNCHECKED_CAST")
+        val nestedData = (data["data"] as? Map<String, Any>) ?: emptyMap()
+        val hasNestedData = nestedData.isNotEmpty()
+        
         return when (testType) {
             GTOTestType.GROUP_DISCUSSION -> GTOSubmission.GDSubmission(
                 id = id,
                 userId = userId,
                 testId = testId,
-                topic = data["topic"] as? String ?: "",
-                response = data["response"] as? String ?: "",
-                wordCount = ((data["wordCount"] as? Number)?.toInt()) ?: 0,
+                // Read from nested data if available, otherwise fall back to root level (legacy)
+                topic = (if (hasNestedData) nestedData["topic"] else data["topic"]) as? String ?: "",
+                response = (if (hasNestedData) nestedData["response"] else data["response"]) as? String ?: "",
+                wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
                 status = finalStatus,
@@ -941,10 +953,10 @@ class FirestoreGTORepository @Inject constructor(
                 id = id,
                 userId = userId,
                 testId = testId,
-                imageUrl = data["imageUrl"] as? String ?: "",
-                scenario = data["scenario"] as? String ?: "",
-                plan = data["plan"] as? String ?: "",
-                characterCount = ((data["characterCount"] as? Number)?.toInt()) ?: 0,
+                imageUrl = (if (hasNestedData) nestedData["imageUrl"] else data["imageUrl"]) as? String ?: "",
+                scenario = (if (hasNestedData) nestedData["scenario"] else data["scenario"]) as? String ?: "",
+                plan = (if (hasNestedData) nestedData["plan"] else data["plan"]) as? String ?: "",
+                characterCount = ((if (hasNestedData) nestedData["characterCount"] else data["characterCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
                 status = finalStatus,
@@ -954,10 +966,10 @@ class FirestoreGTORepository @Inject constructor(
                 id = id,
                 userId = userId,
                 testId = testId,
-                topicChoices = (data["topicChoices"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                selectedTopic = data["selectedTopic"] as? String ?: "",
-                speechTranscript = data["speechTranscript"] as? String ?: "",
-                wordCount = ((data["wordCount"] as? Number)?.toInt()) ?: 0,
+                topicChoices = ((if (hasNestedData) nestedData["topicChoices"] else data["topicChoices"]) as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                selectedTopic = (if (hasNestedData) nestedData["selectedTopic"] else data["selectedTopic"]) as? String ?: "",
+                speechTranscript = (if (hasNestedData) nestedData["speechTranscript"] else data["speechTranscript"]) as? String ?: "",
+                wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = timeSpent,
                 status = finalStatus,

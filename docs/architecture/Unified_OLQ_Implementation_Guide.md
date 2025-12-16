@@ -1,6 +1,6 @@
 # Unified OLQ Implementation - Complete System Guide
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: December 16, 2025  
 **Status**: ✅ Implemented & Operational  
 **Purpose**: Reference guide for debugging, maintenance, and feature enhancement
@@ -27,10 +27,11 @@
 
 SSBMax now has a **Unified OLQ (Officer-Like Qualities) Assessment System** that:
 
-1. **Converts all SSB tests** (except OIR & PIQ) to use standardized 15-OLQ scoring
-2. **Provides a central dashboard** showing all test results in one place
-3. **Uses background processing** (WorkManager) for AI analysis via Gemini
-4. **Ensures process-death safety** through ID-based navigation and Firestore persistence
+1. **Converts all SSB tests** (except OIR & PIQ) to use standardized 15-OLQ scoring.
+2. **Provides a central dashboard** showing all test results in one place.
+3. **Uses background processing** (WorkManager) for AI analysis via Gemini.
+4. **Ensures process-death safety** through ID-based navigation and Firestore persistence.
+5. **Implements data archival** to manage long-term storage and performance.
 
 ### Test Coverage
 
@@ -100,12 +101,17 @@ Dashboard aggregates all test results
 - Enforces strict JSON-only responses
 - Requires all 15 OLQs or analysis fails
 
+**GTOAnalysisPrompts.kt** (500+ lines)
+- Strengthened prompts for all 8 GTO tests
+- Enforces strict JSON-only responses
+
 **Analysis Workers** (WorkManager background processing)
 - TATAnalysisWorker
 - WATAnalysisWorker
 - SRTAnalysisWorker
 - SDTAnalysisWorker
-- GTOAnalysisWorker (existing)
+- GTOAnalysisWorker (with retry & missing OLQ handling)
+- ArchivalWorker (data maintenance)
 
 ### 3. Dashboard System
 
@@ -118,6 +124,16 @@ Dashboard aggregates all test results
 - Material 3 UI component
 - Two-column layout: Phase 1 | Phase 2
 - Color-coded scores: Green (≤5), Amber (6-7), Red (≥8)
+
+### 4. Historic & Archival System
+
+**GetHistoricResultsUseCase.kt**
+- Fetches results from last 6 months
+- Filters by test type
+
+**ArchivalWorker.kt**
+- Runs daily (when charging + connected)
+- Moves older submissions to `submissions_archive` collection
 
 ---
 
@@ -180,16 +196,18 @@ OLQDashboardCard: Display results
 
 ## 📚 Critical Files Reference
 
-| Component | Path | Lines | Purpose |
-|-----------|------|-------|---------|
-| **Unified OLQ Model** | `core/domain/model/scoring/UnifiedOLQResult.kt` | 31 | OLQ result structure |
-| **OLQ Definitions** | `core/domain/model/interview/OLQ.kt` | 87 | 15 OLQ enum |
-| **Dashboard Model** | `core/domain/model/dashboard/OLQDashboard.kt` | 53+ | Dashboard structure |
-| **Dashboard Use Case** | `core/domain/usecase/dashboard/GetOLQDashboardUseCase.kt` | 192 | Fetch & aggregate |
-| **AI Prompts** | `core/data/ai/prompts/PsychologyTestPrompts.kt` | 463 | Gemini prompts |
-| **TAT Worker** | `app/workers/TATAnalysisWorker.kt` | 104+ | TAT analysis |
-| **Dashboard UI** | `app/ui/home/student/components/OLQDashboardCard.kt` | 366 | Dashboard card |
-| **Home ViewModel** | `app/ui/home/student/StudentHomeViewModel.kt` | 263 | Home logic |
+| Component | Path | Purpose |
+|-----------|------|---------|
+| **Unified OLQ Model** | `core/domain/model/scoring/UnifiedOLQResult.kt` | OLQ result structure |
+| **OLQ Definitions** | `core/domain/model/interview/OLQ.kt` | 15 OLQ enum |
+| **Dashboard Model** | `core/domain/model/dashboard/OLQDashboard.kt` | Dashboard structure |
+| **Dashboard Use Case** | `core/domain/usecase/dashboard/GetOLQDashboardUseCase.kt` | Fetch & aggregate |
+| **AI Prompts** | `core/data/ai/prompts/PsychologyTestPrompts.kt` | Gemini prompts |
+| **GTO Prompts** | `app/workers/GTOAnalysisPrompts.kt` | GTO Gemini prompts |
+| **TAT Worker** | `app/workers/TATAnalysisWorker.kt` | TAT analysis |
+| **Dashboard UI** | `app/ui/home/student/components/OLQDashboardCard.kt` | Dashboard card |
+| **Home ViewModel** | `app/ui/home/student/StudentHomeViewModel.kt` | Home logic |
+| **Archival Worker** | `app/workers/ArchivalWorker.kt` | Data maintenance |
 
 ---
 
@@ -202,86 +220,45 @@ OLQDashboardCard: Display results
 ✅ Dashboard integration  
 ✅ Notifications  
 
-**Evidence**: Screenshot shows Interview score 7.3
-
 ### 2. Dashboard (Working)
 ✅ Two-column layout  
-✅ Test completion counter ("2/15 Tests")  
+✅ Test completion counter  
 ✅ Color-coded scores  
 ✅ Overall average  
 ✅ Top 3 strengths  
 ✅ Empty states ("—" for incomplete)  
 
-**Evidence**: Screenshot matches implementation
-
-### 3. Psychology Tests (Infrastructure Complete)
+### 3. Psychology Tests (Complete)
 ✅ Workers created (TAT, WAT, SRT, SD)  
 ✅ Prompts with OLQ analysis  
 ✅ Models updated  
-⚠️ Not yet tested with real submissions
+✅ ViewModels integrate workers
+
+### 4. GTO Tests (Complete)
+✅ Unified OLQ scoring
+✅ Robust prompts with JSON enforcement
+✅ Retry logic and error handling
+
+### 5. Archival (Complete)
+✅ Background worker
+✅ Repository implementation
+✅ Historic results query
 
 ---
 
 ## 🐛 Common Issues & Solutions
 
 ### Issue 1: Dashboard Shows Empty State
-
-**Symptom**: Shows "Start Journey" despite completed tests
-
-**Debug Steps**:
-```kotlin
-// Add to StudentHomeViewModel.loadDashboard()
-Log.d("Dashboard", "User ID: $userId")
-Log.d("Dashboard", "Completed: ${processedData.dashboard.completedTestsCount}")
-```
-
-**Possible Causes**:
-- Timeout (10-second limit)
-- Repository returning nulls
-- Firestore path mismatch
+**Symptom**: Shows "Start Journey" despite completed tests  
+**Solution**: Check processed data count using logs in `GetOLQDashboardUseCase`.
 
 ### Issue 2: Test Stuck in PENDING_ANALYSIS
-
-**Symptom**: "Analyzing..." never completes
-
-**Debug Steps**:
-```bash
-adb logcat | grep "TATAnalysisWorker"
-```
-
-**Possible Causes**:
-- WorkManager not executing
-- Gemini API failure
-- < 15 OLQs returned
-
-**Solution**: Check worker logs, verify API key, strengthen prompts
+**Symptom**: "Analyzing..." never completes  
+**Solution**: Check `TATAnalysisWorker` logs. Ensure Gemini API key is valid.
 
 ### Issue 3: Gemini Returns < 15 OLQs
-
-**Symptom**: "AI returned 12/15 OLQs" in logs
-
-**Solution**: Implement fallback pattern
-```kotlin
-private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
-    val mutable = scores.toMutableMap()
-    OLQ.entries.forEach { olq ->
-        if (olq !in mutable) {
-            mutable[olq] = OLQScore(
-                score = 6,  // Neutral
-                confidence = 30,
-                reasoning = "AI did not assess - neutral assigned"
-            )
-        }
-    }
-    return mutable
-}
-```
-
-### Issue 4: PPDT Shows 76.0 (Not a Bug)
-
-**Status**: ✅ Expected behavior
-
-**Explanation**: PPDT is Phase 1 with 0-100 scale, not OLQ-based
+**Symptom**: "AI returned 12/15 OLQs" in logs  
+**Solution**: The system currently autofills missing OLQs with a neutral score (6) to prevent crashes, as implemented in `GTOAnalysisWorker` and others.
 
 ---
 
@@ -303,84 +280,31 @@ private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
 - [ ] Verify overall average
 - [ ] Verify top 3 strengths/improvements
 
-### Unit Test Targets
-
-```kotlin
-// TATAnalysisWorkerTest
-@Test fun `worker creates OLQ result`()
-@Test fun `worker retries on failure`()
-@Test fun `worker fills missing OLQs`()
-
-// GetOLQDashboardUseCaseTest
-@Test fun `aggregates all results`()
-@Test fun `calculates correct average`()
-```
-
 ---
 
 ## 🚀 Future Enhancements
 
 ### High Priority
-1. **Strengthen GTO Prompts** - Add stricter JSON enforcement
-2. **Historic Results** - Show last 6 months with archival
-3. **OLQ Trends** - Track improvement over time
+1. **OLQ Trends** - Track improvement over time
+2. **Detailed Insights** - Per-OLQ explanations
 
 ### Medium Priority
-4. **Detailed Insights** - Per-OLQ explanations
-5. **Performance** - Dashboard caching
-6. **Rich Notifications** - Score previews
-
----
-
-## 📝 Debug Quick Reference
-
-### Logcat Filters
-```bash
-adb logcat | grep "TATAnalysisWorker"
-adb logcat | grep "Dashboard"
-adb logcat | grep -E "(OLQ|Analysis)"
-```
-
-### Firestore Queries
-```javascript
-// Pending analyses
-users/{userId}/test_submissions/**
-  where analysisStatus == "PENDING_ANALYSIS"
-
-// Last 7 days
-where submittedAt >= timestamp.now() - 7 days
-```
-
-### Key Constants
-```kotlin
-// Scoring
-1-3: Exceptional
-4-5: Good
-6-7: Average
-8-10: Poor
-
-// Analysis Flow
-PENDING_ANALYSIS → ANALYZING → COMPLETED
-
-// Retry
-MAX_AI_RETRIES = 3
-RETRY_DELAY_MS = 2000L
-```
+3. **Performance** - Dashboard caching
+4. **Rich Notifications** - Score previews
 
 ---
 
 ## 🎯 Implementation Status
 
 **Phase 1 (Infrastructure)**: ✅ 100% Complete  
-**Phase 2 (GTO Fix)**: ⚠️ 70% (needs prompt strengthening)  
+**Phase 2 (GTO Fix)**: ✅ 100% Complete  
 **Phase 3 (Psychology)**: ✅ 100% Complete  
 **Phase 4 (Dashboard)**: ✅ 100% Complete  
-**Phase 5 (Historic)**: ❌ 0% (future)  
+**Phase 5 (Historic)**: ✅ 100% Complete  
 
-**Overall**: 18/20 components (90%)
+**Overall**: 100% Completed
 
 ---
 
 **Last Updated**: December 16, 2025  
-**Version**: 1.0
-
+**Version**: 1.1

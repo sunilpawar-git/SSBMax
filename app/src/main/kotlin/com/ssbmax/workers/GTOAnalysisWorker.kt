@@ -106,8 +106,23 @@ class GTOAnalysisWorker @AssistedInject constructor(
 
             if (olqScores != null) {
                 // Update submission with OLQ scores
-                gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
-                Log.d(TAG, "   ✅ Analysis complete and saved")
+                val updateResult = gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
+                
+                if (updateResult.isFailure) {
+                    // Firestore update failed - log error and retry
+                    val error = updateResult.exceptionOrNull()
+                    Log.e(TAG, "❌ Failed to save OLQ scores to Firestore", error)
+                    ErrorLogger.log(
+                        error ?: Exception("Unknown Firestore error"),
+                        "Failed to update submission OLQ scores in Firestore"
+                    )
+                    
+                    // Mark as failed so WorkManager can retry
+                    gtoRepository.updateSubmissionStatus(submissionId, GTOSubmissionStatus.FAILED)
+                    return Result.retry()
+                }
+                
+                Log.d(TAG, "   ✅ Analysis complete and saved to Firestore")
 
                 // Send notification
                 val duration = (System.currentTimeMillis() - startTime) / 1000

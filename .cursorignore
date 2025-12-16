@@ -276,7 +276,6 @@ snapshots/
 # VERSIONING
 # ============================================
 # Git internal files
-.git/
 .gitattributes
 .gitmodules
 
