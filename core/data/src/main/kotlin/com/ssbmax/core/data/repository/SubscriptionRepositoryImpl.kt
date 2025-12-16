@@ -28,7 +28,11 @@ class SubscriptionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSubscriptionTier(userId: String): Result<SubscriptionTier> {
-        return try {
+        return RepositoryErrorHandler.executeWithDefault(
+            tag = TAG,
+            operationName = "load subscription tier for user $userId",
+            defaultValue = SubscriptionTier.FREE
+        ) {
             val doc = firestore.collection("users")
                 .document(userId)
                 .collection("data")
@@ -44,10 +48,7 @@ class SubscriptionRepositoryImpl @Inject constructor(
             }
 
             Log.d(TAG, "Loaded subscription tier for user $userId: $tier")
-            Result.success(tier)
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to load subscription tier for user $userId, defaulting to FREE", e)
-            Result.success(SubscriptionTier.FREE) // Default to FREE on error
+            tier
         }
     }
 
@@ -156,7 +157,11 @@ class SubscriptionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateSubscriptionTier(userId: String, tier: SubscriptionTier): Result<Unit> {
-        return try {
+        return RepositoryErrorHandler.executeWithMessage(
+            tag = TAG,
+            operationName = "update subscription tier for user $userId to $tier",
+            errorMessage = "Failed to update subscription tier"
+        ) {
             firestore.collection("users")
                 .document(userId)
                 .collection("data")
@@ -165,10 +170,6 @@ class SubscriptionRepositoryImpl @Inject constructor(
                 .await()
 
             Log.d(TAG, "Updated subscription tier for user $userId to $tier")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to update subscription tier for user $userId", e)
-            Result.failure(Exception("Failed to update subscription tier: ${e.message}", e))
         }
     }
 

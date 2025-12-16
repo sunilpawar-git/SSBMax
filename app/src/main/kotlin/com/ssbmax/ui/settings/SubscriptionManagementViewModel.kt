@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import com.ssbmax.utils.DateFormatter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 /**
@@ -66,7 +66,7 @@ class SubscriptionManagementViewModel @Inject constructor(
                 val expiresAt = if (tier != SubscriptionTier.FREE) {
                     val calendar = Calendar.getInstance()
                     calendar.add(Calendar.MONTH, 1)
-                    SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(calendar.time)
+                    DateFormatter.formatFullDate(calendar.time)
                 } else {
                     null
                 }

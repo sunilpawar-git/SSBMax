@@ -17,9 +17,7 @@ import com.ssbmax.core.domain.model.Phase2Progress
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestProgress
 import com.ssbmax.core.domain.model.TestStatus
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.ssbmax.utils.DateFormatter
 
 /**
  * Phase Progress Ribbon Component
@@ -312,9 +310,7 @@ private fun TestProgressItem(
             
             // Simplified status text - just show "Completed on {date}" or "Not Attempted"
             val statusText = testProgress.lastAttemptDate?.let { lastAttemptDate ->
-                val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                val dateStr = dateFormat.format(Date(lastAttemptDate))
-                "Completed on $dateStr"
+                "Completed on ${DateFormatter.formatFullDate(lastAttemptDate)}"
             } ?: "Not Attempted"
             
             Text(

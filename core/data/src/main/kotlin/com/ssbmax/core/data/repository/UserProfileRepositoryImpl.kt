@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.domain.model.EntryType
 import com.ssbmax.core.domain.model.Gender
@@ -50,21 +51,24 @@ class UserProfileRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveUserProfile(profile: UserProfile): Result<Unit> {
-        return try {
+        return RepositoryErrorHandler.execute(
+            tag = "UserProfileRepoImpl",
+            operationName = "save user profile for ${profile.userId}"
+        ) {
             val docRef = firestore.collection(USERS_COLLECTION)
                 .document(profile.userId)
                 .collection("data")
                 .document(PROFILE_DOCUMENT)
 
             docRef.set(profile.toMap()).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun updateUserProfile(profile: UserProfile): Result<Unit> {
-        return try {
+        return RepositoryErrorHandler.execute(
+            tag = "UserProfileRepoImpl",
+            operationName = "update user profile for ${profile.userId}"
+        ) {
             val docRef = firestore.collection(USERS_COLLECTION)
                 .document(profile.userId)
                 .collection("data")
@@ -72,9 +76,6 @@ class UserProfileRepositoryImpl @Inject constructor(
 
             val updatedProfile = profile.copy(updatedAt = System.currentTimeMillis())
             docRef.set(updatedProfile.toMap()).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 

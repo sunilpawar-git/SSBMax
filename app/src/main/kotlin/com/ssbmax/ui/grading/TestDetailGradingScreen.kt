@@ -46,9 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.R
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.ssbmax.utils.DateFormatter
 
 /**
  * Test Detail Grading Screen for Assessors
@@ -224,7 +222,7 @@ private fun SubmissionInfoCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = formatDate(submittedAt),
+                    text = DateFormatter.formatDateTime(submittedAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -382,7 +380,3 @@ private fun ErrorState(message: String, modifier: Modifier = Modifier) {
     }
 }
 
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
-    return sdf.format(Date(timestamp))
-}
