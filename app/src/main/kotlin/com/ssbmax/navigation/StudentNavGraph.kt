@@ -49,6 +49,34 @@ fun NavGraphBuilder.studentNavGraph(
             onNavigateToAnalytics = {
                 navController.navigate(SSBMaxDestinations.Analytics.route)
             },
+            onNavigateToResult = { testType, submissionId ->
+                val route = when (testType) {
+                    // Phase 1
+                    com.ssbmax.core.domain.model.TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId) // OIR uses sessionId as submissionId
+                    com.ssbmax.core.domain.model.TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
+                    
+                    // Phase 2 - Psychology
+                    com.ssbmax.core.domain.model.TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
+                    
+                    // GTO
+                    com.ssbmax.core.domain.model.TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
+                    com.ssbmax.core.domain.model.TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
+                    
+                    // Interview
+                    com.ssbmax.core.domain.model.TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(submissionId)
+                    
+                    else -> null
+                }
+                
+                if (route != null) {
+                    navController.navigate(route)
+                }
+            },
             onOpenDrawer = onOpenDrawer
         )
     }

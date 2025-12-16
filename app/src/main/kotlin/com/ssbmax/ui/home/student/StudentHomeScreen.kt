@@ -49,6 +49,7 @@ fun StudentHomeScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToMarketplace: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToResult: (TestType, String) -> Unit,
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -155,7 +156,7 @@ fun StudentHomeScreen(
                             val result = uiState.recentResults[index]
                             ResultCard(
                                 result = result,
-                                onClick = { /* Navigate to analytics or result details */ }
+                                onClick = { onNavigateToResult(result.testType, result.submissionId) }
                             )
                         }
                     }
