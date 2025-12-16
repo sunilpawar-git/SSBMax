@@ -232,5 +232,11 @@ abstract class RepositoryModule {
     abstract fun bindGTORepository(
         impl: FirestoreGTORepository
     ): GTORepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUnifiedResultRepository(
+        impl: com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
+    ): com.ssbmax.core.domain.repository.UnifiedResultRepository
 }
 

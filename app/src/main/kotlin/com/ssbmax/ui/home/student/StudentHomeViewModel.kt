@@ -26,7 +26,8 @@ import javax.inject.Inject
 class StudentHomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository
+    private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository,
+    private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -35,6 +36,7 @@ class StudentHomeViewModel @Inject constructor(
     init {
         observeUserProfile()
         observeTestProgress()
+        observeRecentResults()
     }
     
     private fun observeUserProfile() {
@@ -147,10 +149,45 @@ class StudentHomeViewModel @Inject constructor(
         }
     }
     
+    private fun observeRecentResults() {
+        viewModelScope.launch {
+            try {
+                val userId = authRepository.currentUser.value?.id ?: return@launch
+                
+                kotlinx.coroutines.flow.combine(
+                    unifiedResultRepository.getRecentResults(userId, limit = 5),
+                    unifiedResultRepository.getOverallOLQProfile(userId)
+                ) { recentResults, olqProfile ->
+                    Pair(recentResults, olqProfile)
+                }
+                    .catch { error ->
+                        ErrorLogger.logWithUser(error, "Failed to load recent results", userId)
+                        emit(Pair(emptyList(), emptyMap()))
+                    }
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.WhileSubscribed(5000),
+                        initialValue = Pair(emptyList(), emptyMap())
+                    )
+                    .collect { (results, profile) ->
+                        _uiState.update {
+                            it.copy(
+                                recentResults = results,
+                                overallOLQProfile = profile
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Unexpected error in observeRecentResults")
+            }
+        }
+    }
+    
     fun refreshProgress() {
         // Flows are already observing, just re-trigger by reinitializing observers
         observeUserProfile()
         observeTestProgress()
+        observeRecentResults()
     }
 }
 
@@ -165,6 +202,8 @@ data class StudentHomeUiState(
     val notificationCount: Int = 0,
     val phase1Progress: com.ssbmax.core.domain.model.Phase1Progress? = null,
     val phase2Progress: com.ssbmax.core.domain.model.Phase2Progress? = null,
+    val recentResults: List<com.ssbmax.core.domain.model.scoring.OLQAnalysisResult> = emptyList(),
+    val overallOLQProfile: Map<com.ssbmax.core.domain.model.interview.OLQ, Float> = emptyMap(),
     val error: String? = null
 )
 

@@ -2,9 +2,12 @@ package com.ssbmax.ui.home.student
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +32,7 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.ui.home.student.components.ResultCard
 
 /**
  * Student Home Screen with Phase Progress Ribbon
@@ -129,6 +133,38 @@ fun StudentHomeScreen(
             // Section Divider
             item {
                 SectionDivider()
+            }
+            
+            // Recent Performance Section
+            if (uiState.recentResults.isNotEmpty()) {
+                item {
+                    SectionHeader(
+                        icon = "📊",
+                        title = stringResource(R.string.section_recent_performance),
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                
+                item {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 0.dp)
+                    ) {
+                        items(uiState.recentResults.size) { index ->
+                            val result = uiState.recentResults[index]
+                            ResultCard(
+                                result = result,
+                                onClick = { /* Navigate to analytics or result details */ }
+                            )
+                        }
+                    }
+                }
+                
+                // Section Divider after Recent Performance
+                item {
+                    SectionDivider()
+                }
             }
             
             // Progress Ribbon Header

@@ -93,6 +93,7 @@
 
     <!-- Sections -->
     <string name="section_your_progress">Your Progress</string>
+    <string name="section_recent_performance">Recent Performance</string>
     <string name="section_quick_actions">Quick Actions</string>
 
     <!-- Quick Actions -->
@@ -100,6 +101,27 @@
     <string name="action_join_batch">Join Batch</string>
     <string name="action_view_analytics">View Analytics</string>
     <string name="action_study_materials">Study Materials</string>
+    
+    <!-- Result Card -->
+    <string name="result_top_strength">Top Strength</string>
+    <string name="result_not_available">N/A</string>
+    
+    <!-- Date Formatting -->
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="date_days_ago">%1$d days ago</string>
+    
+    <!-- Phase Progress -->
+    <string name="phase_progress_title">SSB Preparation Progress</string>
+    <string name="phase_1_title">PHASE 1</string>
+    <string name="phase_1_subtitle">Screening</string>
+    <string name="phase_2_title">PHASE 2</string>
+    <string name="phase_2_subtitle">Assessment</string>
+    <string name="progress_no_tests">No tests attempted yet</string>
+    <string name="progress_view_all">View All Tests</string>
+    <string name="progress_psychology">Psychology Tests</string>
+    <string name="progress_gto">GTO Tasks</string>
+    <string name="progress_interview">Interview</string>
 
     <!-- ============================================ -->
     <!-- INSTRUCTOR HOME SCREEN -->
