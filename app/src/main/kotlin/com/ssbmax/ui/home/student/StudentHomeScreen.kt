@@ -220,6 +220,27 @@ fun StudentHomeScreen(
                     uiState.dashboard != null -> {
                         com.ssbmax.ui.home.student.components.OLQDashboardCard(
                             processedData = uiState.dashboard!!, // Now using ProcessedDashboardData
+                            onNavigateToGTOResult = { submissionId ->
+                                // Map submissionId to TestType for navigation
+                                // Find which GTO test this belongs to by checking the submissionId in gtoResults
+                                val gtoTestType = uiState.dashboard!!.dashboard.phase2Results.gtoResults
+                                    .entries.firstOrNull { it.value.submissionId == submissionId }
+                                    ?.key
+                                
+                                val testType = when (gtoTestType) {
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_DISCUSSION -> TestType.GTO_GD
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE -> TestType.GTO_GPE
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.LECTURETTE -> TestType.GTO_LECTURETTE
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.PROGRESSIVE_GROUP_TASK -> TestType.GTO_PGT
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.HALF_GROUP_TASK -> TestType.GTO_HGT
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_OBSTACLE_RACE -> TestType.GTO_GOR
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.INDIVIDUAL_OBSTACLES -> TestType.GTO_IO
+                                    com.ssbmax.core.domain.model.gto.GTOTestType.COMMAND_TASK -> TestType.GTO_CT
+                                    null -> return@OLQDashboardCard
+                                }
+                                
+                                onNavigateToResult(testType, submissionId)
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

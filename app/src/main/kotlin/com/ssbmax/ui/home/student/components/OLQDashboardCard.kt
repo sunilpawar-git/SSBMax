@@ -1,5 +1,6 @@
 package com.ssbmax.ui.home.student.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,8 +22,8 @@ import com.ssbmax.ui.theme.SSBScoreColors
 @Composable
 fun OLQDashboardCard(
     processedData: ProcessedDashboardData,
-    modifier: Modifier = Modifier,
-    onTestClick: (String) -> Unit = {}
+    onNavigateToGTOResult: (submissionId: String) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val dashboard = processedData.dashboard // Extract for convenience
 
@@ -124,7 +125,11 @@ fun OLQDashboardCard(
                     )
                     
                     dashboard.phase2Results.gtoResults.forEach { (testType, result) ->
-                        TestScoreChip(testType.displayName, result.overallScore)
+                        TestScoreChip(
+                            testName = testType.displayName,
+                            score = result.overallScore,
+                            onClick = { onNavigateToGTOResult(result.submissionId) }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -199,10 +204,17 @@ fun OLQDashboardCard(
 private fun TestScoreChip(
     testName: String,
     score: Float?,
-    isOLQBased: Boolean = true
+    isOLQBased: Boolean = true,
+    onClick: (() -> Unit)? = null
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null && score != null) {
+                    Modifier.clickable(onClick = onClick)
+                } else Modifier
+            ),
         shape = RoundedCornerShape(8.dp),
         color = when {
             score == null -> MaterialTheme.colorScheme.surfaceVariant

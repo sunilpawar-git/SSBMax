@@ -355,8 +355,20 @@ class FirestoreGTORepository @Inject constructor(
                 .whereEqualTo(FIELD_USER_ID, userId)
                 .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
             
+            // Map GTOTestType to TestType for querying
+            // SubmissionRepository stores testType as TestType.GTO_GD, not GTOTestType.GROUP_DISCUSSION
             if (testType != null) {
-                query = query.whereEqualTo(FIELD_TEST_TYPE, testType.name)
+                val firestoreTestTypeName = when (testType) {
+                    GTOTestType.GROUP_DISCUSSION -> "GTO_GD"
+                    GTOTestType.GROUP_PLANNING_EXERCISE -> "GTO_GPE"
+                    GTOTestType.LECTURETTE -> "GTO_LECTURETTE"
+                    GTOTestType.PROGRESSIVE_GROUP_TASK -> "GTO_PGT"
+                    GTOTestType.HALF_GROUP_TASK -> "GTO_HGT"
+                    GTOTestType.GROUP_OBSTACLE_RACE -> "GTO_GOR"
+                    GTOTestType.INDIVIDUAL_OBSTACLES -> "GTO_IO"
+                    GTOTestType.COMMAND_TASK -> "GTO_CT"
+                }
+                query = query.whereEqualTo(FIELD_TEST_TYPE, firestoreTestTypeName)
             }
             
             val snapshot = query.get().await()
@@ -945,7 +957,8 @@ class FirestoreGTORepository @Inject constructor(
                 response = (if (hasNestedData) nestedData["response"] else data["response"]) as? String ?: "",
                 wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
-                timeSpent = timeSpent,
+                // Fix: Read timeSpent from nested data, same as wordCount
+                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
                 status = finalStatus,
                 olqScores = olqScores
             )
@@ -958,7 +971,7 @@ class FirestoreGTORepository @Inject constructor(
                 plan = (if (hasNestedData) nestedData["plan"] else data["plan"]) as? String ?: "",
                 characterCount = ((if (hasNestedData) nestedData["characterCount"] else data["characterCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
-                timeSpent = timeSpent,
+                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
                 status = finalStatus,
                 olqScores = olqScores
             )
@@ -971,7 +984,7 @@ class FirestoreGTORepository @Inject constructor(
                 speechTranscript = (if (hasNestedData) nestedData["speechTranscript"] else data["speechTranscript"]) as? String ?: "",
                 wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
-                timeSpent = timeSpent,
+                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
                 status = finalStatus,
                 olqScores = olqScores
             )

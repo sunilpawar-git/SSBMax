@@ -217,8 +217,10 @@ service cloud.firestore {
     match /submissions/{submissionId} {
       // Students can read their own submissions
       // Assessors can read submissions assigned to them or for their batches
+      // NOTE: userId should always be at root level for all submission types
       allow read: if isAuthenticated() && 
-                     (resource.data.userId == request.auth.uid || 
+                     (resource == null ||  // Allow reading if resource doesn't exist yet
+                      resource.data.userId == request.auth.uid || 
                       resource.data.instructorId == request.auth.uid ||
                       (isAssessor() && resource.data.keys().hasAny(['batchId']) && 
                        get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));

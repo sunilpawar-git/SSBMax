@@ -283,6 +283,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                     "solution" to submission.solution,
                     "plan" to submission.plan,
                     "characterCount" to submission.characterCount,
+                    "timeSpent" to submission.timeSpent, // Fix: Add missing timeSpent field
                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
                         mapOf(
                             "score" to entry.value.score,
@@ -325,6 +326,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                     "topic" to submission.topic,
                     "response" to submission.response,
                     "wordCount" to submission.wordCount,
+                    "timeSpent" to submission.timeSpent, // Fix: Add missing timeSpent field
                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
                         mapOf(
                             "score" to entry.value.score,
@@ -368,6 +370,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                     "selectedTopic" to submission.selectedTopic,
                     "speechTranscript" to submission.speechTranscript,
                     "wordCount" to submission.wordCount,
+                    "timeSpent" to submission.timeSpent, // Fix: Add missing timeSpent field
                      "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
                         mapOf(
                             "score" to entry.value.score,
