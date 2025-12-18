@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,6 +47,10 @@ class SDTTestViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SDTTestUiState())
     val uiState: StateFlow<SDTTestUiState> = _uiState.asStateFlow()
+
+    // Navigation events (one-time events, consumed on collection)
+    private val _navigationEvents = kotlinx.coroutines.channels.Channel<com.ssbmax.ui.tests.common.TestNavigationEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
 
     // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
@@ -239,7 +244,6 @@ class SDTTestViewModel @Inject constructor(
                     (submission.validResponses.toFloat() / submission.totalResponses) * 100 else 0f
                 difficultyManager.recordPerformance("SDT", "MEDIUM", scorePercentage,
                     submission.validResponses, submission.totalResponses, (totalTimeMinutes * 60).toFloat())
-                subscriptionManager.recordTestUsage(TestType.SD, currentUserId)
 
                 submitSDTTest(submission, null).onSuccess { submissionId ->
                     android.util.Log.d(TAG, "✅ Submission successful! ID: $submissionId")
@@ -249,9 +253,23 @@ class SDTTestViewModel @Inject constructor(
                     enqueueSDTAnalysisWorker(submissionId)
                     android.util.Log.d(TAG, "✅ SDTAnalysisWorker enqueued successfully")
 
+                    // Record test usage for subscription tracking (with submissionId for idempotency)
+                    android.util.Log.d(TAG, "📍 Recording test usage for subscription...")
+                    subscriptionManager.recordTestUsage(TestType.SD, currentUserId, submissionId)
+                    android.util.Log.d(TAG, "✅ Test usage recorded successfully!")
+
                     _uiState.update { it.copy(isLoading = false, isSubmitted = true,
                         submissionId = submissionId, subscriptionType = subscriptionType,
+                        submission = submission,  // Store locally to show results directly
                         phase = SDTPhase.SUBMITTED) }
+
+                    // Emit navigation event (one-time, consumed by screen)
+                    _navigationEvents.trySend(
+                        com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
                 }.onFailure { error ->
                     ErrorLogger.logTestError(error, "SDT test submission failed", "SDT", currentUserId)
                     _uiState.update { it.copy(isLoading = false, error = "Failed to submit: ${error.message}") }
@@ -313,6 +331,7 @@ class SDTTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         // PHASE 2: Timer auto-cancelled by viewModelScope
+        _navigationEvents.close()
     }
 }
 
@@ -339,7 +358,8 @@ data class SDTTestUiState(
     val resetsAt: String = "",
     // PHASE 1: New StateFlow fields (replacing nullable vars)
     val isTimerActive: Boolean = false,
-    val timerStartTime: Long = 0L
+    val timerStartTime: Long = 0L,
+    val submission: SDTSubmission? = null
 ) {
     val currentQuestion: SDTQuestion?
         get() = questions.getOrNull(currentQuestionIndex)

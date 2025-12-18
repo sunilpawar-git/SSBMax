@@ -1034,39 +1034,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         submissionId: String,
         olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
     ): Result<Unit> {
-        return try {
-            Log.d(TAG, "📝 Updating TAT OLQ result: $submissionId")
-            val olqResultMap = mapOf(
-                "submissionId" to olqResult.submissionId,
-                "testType" to olqResult.testType.name,
-                "olqScores" to olqResult.olqScores.mapKeys { it.key.name }.mapValues { (_, score) ->
-                    mapOf(
-                        "score" to score.score,
-                        "confidence" to score.confidence,
-                        "reasoning" to score.reasoning
-                    )
-                },
-                "overallScore" to olqResult.overallScore,
-                "overallRating" to olqResult.overallRating,
-                "strengths" to olqResult.strengths,
-                "weaknesses" to olqResult.weaknesses,
-                "recommendations" to olqResult.recommendations,
-                "analyzedAt" to olqResult.analyzedAt,
-                "aiConfidence" to olqResult.aiConfidence
-            )
-
-            submissionsCollection.document(submissionId)
-                .update(
-                    "data.olqResult", olqResultMap,
-                    "data.analysisStatus", com.ssbmax.core.domain.model.scoring.AnalysisStatus.COMPLETED.name
-                )
-                .await()
-            Log.d(TAG, "✅ TAT OLQ result updated")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to update TAT OLQ result", e)
-            Result.failure(Exception("Failed to update TAT OLQ result: ${e.message}", e))
-        }
+        return updateOLQResult(submissionId, olqResult)
     }
 
     override fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> = callbackFlow {

@@ -310,10 +310,6 @@ class SRTTestViewModel @Inject constructor(
                 )
                 android.util.Log.d("SRTTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
                 
-                // Record test usage for subscription tracking
-                subscriptionManager.recordTestUsage(TestType.SRT, currentUserId)
-                android.util.Log.d("SRTTestViewModel", "📝 Recorded test usage for subscription tracking")
-                
                 // Submit to Firestore
                 val result = submitSRTTest(submission, batchId = null)
 
@@ -325,11 +321,17 @@ class SRTTestViewModel @Inject constructor(
                     enqueueSRTAnalysisWorker(submissionId)
                     android.util.Log.d("SRTTestViewModel", "✅ SRTAnalysisWorker enqueued successfully")
 
+                    // Record test usage for subscription tracking (with submissionId for idempotency)
+                    android.util.Log.d("SRTTestViewModel", "📍 Recording test usage for subscription...")
+                    subscriptionManager.recordTestUsage(TestType.SRT, currentUserId, submissionId)
+                    android.util.Log.d("SRTTestViewModel", "✅ Test usage recorded successfully!")
+
                     _uiState.update { it.copy(
                         isLoading = false,
                         isSubmitted = true,
                         submissionId = submissionId,
                         subscriptionType = subscriptionType,
+                        submission = submission,  // Store locally to show results directly
                         phase = SRTPhase.SUBMITTED
                     ) }
 
@@ -355,33 +357,6 @@ class SRTTestViewModel @Inject constructor(
         }
     }
     
-    private fun generateMockSituations(): List<SRTSituation> {
-        val situations = listOf(
-            "You are the captain of your college team. During an important match, you notice that your best player is not feeling well but insists on playing." to SRTCategory.LEADERSHIP,
-            "You witness a senior colleague taking credit for your junior's work in a meeting." to SRTCategory.ETHICAL_DILEMMA,
-            "While traveling alone at night, you see an elderly person who has fallen and needs help." to SRTCategory.RESPONSIBILITY,
-            "Your team is losing a crucial match, and team morale is very low." to SRTCategory.TEAMWORK,
-            "You discover that your close friend has been cheating in exams." to SRTCategory.ETHICAL_DILEMMA,
-            "During a group trek, one member gets injured and cannot walk." to SRTCategory.CRISIS_MANAGEMENT,
-            "You have to choose between attending an important family function or a crucial team practice." to SRTCategory.DECISION_MAKING,
-            "A stranger asks you to lend them money for emergency medical treatment." to SRTCategory.INTERPERSONAL,
-            "You see a group of people harassing someone on the street." to SRTCategory.COURAGE,
-            "Your subordinate makes a serious mistake that could impact the entire project." to SRTCategory.LEADERSHIP
-        )
-        
-        // Repeat and shuffle to get 60 situations
-        return (situations + situations + situations + situations + situations + situations)
-            .take(60)
-            .mapIndexed { index, (situation, category) ->
-                SRTSituation(
-                    id = "srt_s_${index + 1}",
-                    situation = "$situation What would you do?",
-                    sequenceNumber = index + 1,
-                    category = category,
-                    timeAllowedSeconds = 30
-                )
-            }
-    }
     
 
     
@@ -434,7 +409,8 @@ data class SRTTestUiState(
     val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+    val submission: SRTSubmission? = null
 ) {
     val currentSituation: SRTSituation?
         get() = situations.getOrNull(currentSituationIndex)

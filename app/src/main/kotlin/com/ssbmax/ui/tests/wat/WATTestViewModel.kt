@@ -342,16 +342,17 @@ class WATTestViewModel @Inject constructor(
                 )
                 android.util.Log.d("WATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
                 
-                // Record test usage for subscription tracking
-                subscriptionManager.recordTestUsage(TestType.WAT, currentUserId)
-                android.util.Log.d("WATTestViewModel", "📝 Recorded test usage for subscription tracking")
-                
                 // Submit to Firestore (but also store locally to bypass permission issues)
                 val result = submitWATTest(submission, batchId = null)
 
                 result.onSuccess { submissionId ->
                     android.util.Log.d("WATTestViewModel", "✅ Submission successful! ID: $submissionId")
 
+                    // Record test usage for subscription tracking (with submissionId for idempotency)
+                    android.util.Log.d("WATTestViewModel", "📍 Recording test usage for subscription...")
+                    subscriptionManager.recordTestUsage(TestType.WAT, currentUserId, submissionId)
+                    android.util.Log.d("WATTestViewModel", "✅ Test usage recorded successfully!")
+                    
                     // Enqueue WATAnalysisWorker for OLQ analysis
                     android.util.Log.d("WATTestViewModel", "📍 Enqueueing WATAnalysisWorker...")
                     enqueueWATAnalysisWorker(submissionId)
@@ -374,24 +375,11 @@ class WATTestViewModel @Inject constructor(
                         )
                     )
                 }.onFailure { error ->
-                    // Even if Firestore fails, store locally and show results
-                    val submissionId = submission.id
+                    ErrorLogger.log(error, "Failed to submit WAT test for user: $currentUserId")
                     _uiState.update { it.copy(
                         isLoading = false,
-                        isSubmitted = true,
-                        submissionId = submissionId,
-                        subscriptionType = subscriptionType,
-                        submission = submission,  // Store locally to show results directly
-                        phase = WATPhase.SUBMITTED
+                        error = "Failed to submit: ${error.message}"
                     ) }
-                    
-                    // Emit navigation event even on partial failure
-                    _navigationEvents.trySend(
-                        TestNavigationEvent.NavigateToResult(
-                            submissionId = submissionId,
-                            subscriptionType = subscriptionType
-                        )
-                    )
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
@@ -441,26 +429,6 @@ class WATTestViewModel @Inject constructor(
     
     // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
     
-    private fun generateMockWords(): List<WATWord> {
-        val commonWords = listOf(
-            "Friend", "Success", "Failure", "Army", "Courage", "Fear", "Leader", "Team",
-            "Challenge", "Victory", "Defeat", "Mother", "Father", "Love", "Hate", "War",
-            "Peace", "Fight", "Help", "Sacrifice", "Duty", "Honor", "Brave", "Weak",
-            "Strong", "Win", "Lose", "Run", "Stand", "Fall", "Rise", "Dark", "Light",
-            "Night", "Day", "Fast", "Slow", "Good", "Bad", "Right", "Wrong", "Truth",
-            "Lie", "Future", "Past", "Present", "Hope", "Dream", "Goal", "Path", "Choice",
-            "Difficult", "Easy", "Hard", "Soft", "Hot", "Cold", "High", "Low", "Up", "Down"
-        )
-        
-        return commonWords.shuffled().take(60).mapIndexed { index, word ->
-            WATWord(
-                id = "wat_w_${index + 1}",
-                word = word,
-                sequenceNumber = index + 1,
-                timeAllowedSeconds = 15
-            )
-        }
-    }
     
 
     
