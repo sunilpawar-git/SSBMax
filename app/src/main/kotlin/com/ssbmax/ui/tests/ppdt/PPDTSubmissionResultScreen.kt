@@ -146,44 +146,7 @@ fun PPDTSubmissionResultScreen(
                         }
                     }
                     
-                    // AI Preliminary Score (if available)
-                    uiState.submission!!.aiPreliminaryScore?.let { aiScore ->
-                        item {
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            "AI Preliminary Analysis",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            "${aiScore.overallScore.toInt()}/100",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    
-                                    HorizontalDivider()
-                                    
-                                    aiScore.feedback?.let { feedback ->
-                                        Text(
-                                            feedback,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+
                     
                     // Status card
                     if (uiState.submission!!.status == SubmissionStatus.SUBMITTED_PENDING_REVIEW) {

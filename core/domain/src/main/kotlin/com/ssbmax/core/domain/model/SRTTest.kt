@@ -85,7 +85,6 @@ data class SRTSubmission(
     val totalTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-    val aiPreliminaryScore: SRTAIScore? = null,
     val instructorScore: SRTInstructorScore? = null,
     val gradedByInstructorId: String? = null,
     val gradingTimestamp: Long? = null,
@@ -101,44 +100,7 @@ data class SRTSubmission(
     val isComplete: Boolean get() = responses.size == 60
 }
 
-/**
- * AI-generated preliminary score for SRT
- */
-data class SRTAIScore(
-    val overallScore: Float, // 0-100
-    val leadershipScore: Float, // 0-20
-    val decisionMakingScore: Float, // 0-20
-    val practicalityScore: Float, // 0-20
-    val initiativeScore: Float, // 0-20
-    val socialResponsibilityScore: Float, // 0-20
-    val feedback: String? = null,
-    val categoryWiseScores: Map<SRTCategory, Float> = emptyMap(),
-    val positiveTraits: List<String> = emptyList(), // Identified positive qualities
-    val concerningPatterns: List<String> = emptyList(), // Red flags
-    val responseQuality: ResponseQuality,
-    val strengths: List<String> = emptyList(),
-    val areasForImprovement: List<String> = emptyList()
-)
 
-/**
- * Quality assessment of responses
- */
-enum class ResponseQuality {
-    EXCELLENT,      // Thoughtful, practical, shows leadership
-    GOOD,           // Reasonable, appropriate
-    AVERAGE,        // Acceptable but unremarkable
-    BELOW_AVERAGE,  // Passive, impractical
-    CONCERNING;     // Inappropriate, violent, unethical
-    
-    val displayName: String
-        get() = when (this) {
-            EXCELLENT -> "Excellent"
-            GOOD -> "Good"
-            AVERAGE -> "Average"
-            BELOW_AVERAGE -> "Below Average"
-            CONCERNING -> "Needs Attention"
-        }
-}
 
 /**
  * Instructor's final grading for SRT

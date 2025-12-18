@@ -89,36 +89,8 @@ class SRTSubmissionResultViewModel @Inject constructor(
                 )
             }
 
-            // Parse AI score if present
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                // Parse ResponseQuality enum
-                val responseQualityStr = it["responseQuality"] as? String
-                val responseQuality = try {
-                    if (responseQualityStr != null) {
-                        ResponseQuality.valueOf(responseQualityStr)
-                    } else {
-                        ResponseQuality.AVERAGE
-                    }
-                } catch (e: Exception) {
-                    ResponseQuality.AVERAGE
-                }
 
-                SRTAIScore(
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
-                    decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
-                    practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
-                    initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
-                    socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String,
-                    positiveTraits = (it["positiveTraits"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    concerningPatterns = (it["concerningPatterns"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    responseQuality = responseQuality,
-                    strengths = (it["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                )
-            }
+
 
             // Parse instructor score if present
             val instructorScoreData = submissionData["instructorScore"] as? Map<*, *>
@@ -160,7 +132,7 @@ class SRTSubmissionResultViewModel @Inject constructor(
                 status = SubmissionStatus.valueOf(
                     data["status"] as? String ?: SubmissionStatus.SUBMITTED_PENDING_REVIEW.name
                 ),
-                aiPreliminaryScore = aiScore,
+
                 instructorScore = instructorScore,
                 gradedByInstructorId = data["gradedByInstructorId"] as? String,
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),

@@ -129,7 +129,6 @@ class PPDTSubmissionResultViewModel @Inject constructor(
                 status = SubmissionStatus.valueOf(
                     data["status"] as? String ?: SubmissionStatus.SUBMITTED_PENDING_REVIEW.name
                 ),
-                aiPreliminaryScore = aiScore,
                 instructorReview = instructorReview
             )
         } catch (e: Exception) {

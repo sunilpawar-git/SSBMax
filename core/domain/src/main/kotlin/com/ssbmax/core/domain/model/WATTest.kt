@@ -48,7 +48,6 @@ data class WATSubmission(
     val totalTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-    val aiPreliminaryScore: WATAIScore? = null,
     val instructorScore: WATInstructorScore? = null,
     val gradedByInstructorId: String? = null,
     val gradingTimestamp: Long? = null,
@@ -63,25 +62,7 @@ data class WATSubmission(
     val isComplete: Boolean get() = responses.size == 60
 }
 
-/**
- * AI-generated preliminary score for WAT
- */
-data class WATAIScore(
-    val overallScore: Float, // 0-100
-    val positivityScore: Float, // 0-20
-    val creativityScore: Float, // 0-20
-    val speedScore: Float, // 0-20 (based on avg response time)
-    val relevanceScore: Float, // 0-20 (how relevant responses are)
-    val emotionalMaturityScore: Float, // 0-20
-    val feedback: String? = null,
-    val positiveWords: Int, // Count of positive associations
-    val negativeWords: Int, // Count of negative associations
-    val neutralWords: Int, // Count of neutral associations
-    val uniqueResponsesCount: Int, // How many unique responses
-    val repeatedPatterns: List<String> = emptyList(), // Common themes
-    val strengths: List<String> = emptyList(),
-    val areasForImprovement: List<String> = emptyList()
-)
+
 
 /**
  * Instructor's final grading for WAT

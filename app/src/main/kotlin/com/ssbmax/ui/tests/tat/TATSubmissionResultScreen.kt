@@ -252,53 +252,6 @@ fun TATSubmissionResultScreen(
                         }
                     }
 
-                    // AI Preliminary Score (kept for backward compatibility)
-                    uiState.submission!!.aiPreliminaryScore?.let { aiScore ->
-                        item {
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            "AI Preliminary Score (Legacy)",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            "${aiScore.overallScore.toInt()}/100",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-
-                                    HorizontalDivider()
-
-                                    ScoreBreakdown("Thematic Perception", aiScore.thematicPerceptionScore, 20f)
-                                    ScoreBreakdown("Imagination", aiScore.imaginationScore, 20f)
-                                    ScoreBreakdown("Character Depiction", aiScore.characterDepictionScore, 20f)
-                                    ScoreBreakdown("Emotional Tone", aiScore.emotionalToneScore, 20f)
-                                    ScoreBreakdown("Narrative Structure", aiScore.narrativeStructureScore, 20f)
-
-                                    aiScore.feedback?.let { feedback ->
-                                        HorizontalDivider()
-                                        Text(
-                                            "Feedback",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(feedback)
-                                    }
-                                }
-                            }
-                        }
-                    }
                     
                     // Status card
                     if (uiState.submission!!.status == SubmissionStatus.SUBMITTED_PENDING_REVIEW) {

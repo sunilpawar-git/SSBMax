@@ -776,23 +776,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         }
 
         // Parse AI score
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            PIQAIScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                personalInfoScore = (it["personalInfoScore"] as? Number)?.toFloat() ?: 0f,
-                familyInfoScore = (it["familyInfoScore"] as? Number)?.toFloat() ?: 0f,
-                motivationScore = (it["motivationScore"] as? Number)?.toFloat() ?: 0f,
-                selfAssessmentScore = (it["selfAssessmentScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                completenessPercentage = (it["completenessPercentage"] as? Number)?.toInt() ?: 0,
-                clarityScore = (it["clarityScore"] as? Number)?.toFloat() ?: 0f,
-                consistencyScore = (it["consistencyScore"] as? Number)?.toFloat() ?: 0f,
-                analysisTimestamp = (it["analysisTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
-            )
-        }
+
 
         return PIQSubmission(
             id = data["id"] as? String ?: "",
@@ -864,7 +848,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             lastModifiedAt = (data["lastModifiedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            aiPreliminaryScore = aiPreliminaryScore
+
         )
     }
 
@@ -955,20 +939,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
     @Suppress("UNCHECKED_CAST")
     private fun parsePPDTSubmission(data: Map<*, *>): PPDTSubmission {
         // Parse AI score
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            PPDTAIScore(
-                perceptionScore = (it["perceptionScore"] as? Number)?.toFloat() ?: 0f,
-                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                narrationScore = (it["narrationScore"] as? Number)?.toFloat() ?: 0f,
-                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList()
-            )
-        }
+
 
         // Parse instructor review (if available)
         val instructorReviewMap = data["instructorReview"] as? Map<*, *>
@@ -1008,7 +979,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             writingTimeTakenMinutes = (data["writingTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
             submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
             status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
-            aiPreliminaryScore = aiPreliminaryScore,
+
             instructorReview = instructorReview
         )
     }
@@ -1277,36 +1248,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         }
 
         // Parse AI score if present
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            // Parse story-wise analysis
-            val storyAnalysisList = it["storyWiseAnalysis"] as? List<*> ?: emptyList<Any>()
-            val storyWiseAnalysis = storyAnalysisList.mapNotNull { analysisData ->
-                (analysisData as? Map<*, *>)?.let { analysis ->
-                    StoryAnalysis(
-                        questionId = analysis["questionId"] as? String ?: "",
-                        sequenceNumber = (analysis["sequenceNumber"] as? Number)?.toInt() ?: 0,
-                        score = (analysis["score"] as? Number)?.toFloat() ?: 0f,
-                        themes = (analysis["themes"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
-                        sentimentScore = (analysis["sentimentScore"] as? Number)?.toFloat() ?: 0f,
-                        keyInsights = (analysis["keyInsights"] as? List<*>)?.mapNotNull { k -> k as? String } ?: emptyList()
-                    )
-                }
-            }
 
-            TATAIScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
-                narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String,
-                storyWiseAnalysis = storyWiseAnalysis,
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
-            )
-        }
 
         // Parse instructor score if present
         val instructorScoreMap = data["instructorScore"] as? Map<*, *>
@@ -1357,7 +1299,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             } catch (e: Exception) {
                 SubmissionStatus.SUBMITTED_PENDING_REVIEW
             },
-            aiPreliminaryScore = aiPreliminaryScore,
+
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -1386,25 +1328,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         }
 
         // Parse AI score if present
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            WATAIScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
-                speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
-                relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String,
-                positiveWords = (it["positiveWords"] as? Number)?.toInt() ?: 0,
-                negativeWords = (it["negativeWords"] as? Number)?.toInt() ?: 0,
-                neutralWords = (it["neutralWords"] as? Number)?.toInt() ?: 0,
-                uniqueResponsesCount = (it["uniqueResponsesCount"] as? Number)?.toInt() ?: 0,
-                repeatedPatterns = (it["repeatedPatterns"] as? List<*>)?.mapNotNull { p -> p as? String } ?: emptyList(),
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
-            )
-        }
+
 
         // Parse instructor score if present
         val instructorScoreMap = data["instructorScore"] as? Map<*, *>
@@ -1454,7 +1378,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             } catch (e: Exception) {
                 SubmissionStatus.SUBMITTED_PENDING_REVIEW
             },
-            aiPreliminaryScore = aiPreliminaryScore,
+
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -1484,48 +1408,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         }
 
         // Parse AI score if present
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            // Parse category-wise scores
-            val categoryWiseScoresMap = it["categoryWiseScores"] as? Map<*, *> ?: emptyMap<Any, Any>()
-            val categoryWiseScores = categoryWiseScoresMap.mapNotNull { (k, v) ->
-                try {
-                    val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
-                    val score = (v as? Number)?.toFloat() ?: 0f
-                    category to score
-                } catch (e: Exception) {
-                    null
-                }
-            }.toMap()
 
-            // Parse response quality
-            val responseQualityStr = it["responseQuality"] as? String
-            val responseQuality = try {
-                if (responseQualityStr != null) {
-                    ResponseQuality.valueOf(responseQualityStr)
-                } else {
-                    ResponseQuality.AVERAGE
-                }
-            } catch (e: Exception) {
-                ResponseQuality.AVERAGE
-            }
-
-            SRTAIScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
-                decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
-                practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
-                initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
-                socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String,
-                categoryWiseScores = categoryWiseScores,
-                positiveTraits = (it["positiveTraits"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
-                concerningPatterns = (it["concerningPatterns"] as? List<*>)?.mapNotNull { c -> c as? String } ?: emptyList(),
-                responseQuality = responseQuality,
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
-            )
-        }
 
         // Parse instructor score if present
         val instructorScoreMap = data["instructorScore"] as? Map<*, *>
@@ -1588,7 +1471,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             } catch (e: Exception) {
                 SubmissionStatus.SUBMITTED_PENDING_REVIEW
             },
-            aiPreliminaryScore = aiPreliminaryScore,
+
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -1618,50 +1501,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         }
 
         // Parse AI score if present
-        val aiScoreMap = data["aiPreliminaryScore"] as? Map<*, *>
-        val aiPreliminaryScore = aiScoreMap?.let {
-            // Parse question-wise analysis
-            val questionAnalysisList = it["questionWiseAnalysis"] as? List<*> ?: emptyList<Any>()
-            val questionWiseAnalysis = questionAnalysisList.mapNotNull { analysisData ->
-                (analysisData as? Map<*, *>)?.let { analysis ->
-                    QuestionAnalysis(
-                        questionId = analysis["questionId"] as? String ?: "",
-                        sequenceNumber = (analysis["sequenceNumber"] as? Number)?.toInt() ?: 0,
-                        score = (analysis["score"] as? Number)?.toFloat() ?: 0f,
-                        themes = (analysis["themes"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
-                        sentimentScore = (analysis["sentimentScore"] as? Number)?.toFloat() ?: 0f,
-                        keyInsights = (analysis["keyInsights"] as? List<*>)?.mapNotNull { k -> k as? String } ?: emptyList()
-                    )
-                }
-            }
 
-            // Parse response quality
-            val responseQualityStr = it["responseQuality"] as? String
-            val responseQuality = try {
-                if (responseQualityStr != null) {
-                    ResponseQuality.valueOf(responseQualityStr)
-                } else {
-                    ResponseQuality.AVERAGE
-                }
-            } catch (e: Exception) {
-                ResponseQuality.AVERAGE
-            }
-
-            SDTAIScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String,
-                positiveTraits = (it["positiveTraits"] as? List<*>)?.mapNotNull { t -> t as? String } ?: emptyList(),
-                concerningPatterns = (it["concerningPatterns"] as? List<*>)?.mapNotNull { c -> c as? String } ?: emptyList(),
-                responseQuality = responseQuality,
-                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList(),
-                questionWiseAnalysis = questionWiseAnalysis
-            )
-        }
 
         // Parse instructor score if present
         val instructorScoreMap = data["instructorScore"] as? Map<*, *>
@@ -1710,7 +1550,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             } catch (e: Exception) {
                 SubmissionStatus.SUBMITTED_PENDING_REVIEW
             },
-            aiPreliminaryScore = aiPreliminaryScore,
+
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -1910,19 +1750,7 @@ private fun PPDTSubmission.toMap(): Map<String, Any?> {
         "writingTimeTakenMinutes" to writingTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.let {
-            mapOf(
-                "perceptionScore" to it.perceptionScore,
-                "imaginationScore" to it.imaginationScore,
-                "narrationScore" to it.narrationScore,
-                "characterDepictionScore" to it.characterDepictionScore,
-                "positivityScore" to it.positivityScore,
-                "overallScore" to it.overallScore,
-                "feedback" to it.feedback,
-                "strengths" to it.strengths,
-                "areasForImprovement" to it.areasForImprovement
-            )
-        },
+
         "instructorReview" to instructorReview?.let {
             mapOf(
                 "reviewId" to it.reviewId,
@@ -1954,7 +1782,7 @@ private fun TATSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.toMap(),
+
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp
@@ -1972,19 +1800,7 @@ private fun TATStoryResponse.toMap(): Map<String, Any?> {
     )
 }
 
-private fun TATAIScore.toMap(): Map<String, Any?> {
-    return mapOf(
-        "overallScore" to overallScore,
-        "thematicPerceptionScore" to thematicPerceptionScore,
-        "imaginationScore" to imaginationScore,
-        "characterDepictionScore" to characterDepictionScore,
-        "emotionalToneScore" to emotionalToneScore,
-        "narrativeStructureScore" to narrativeStructureScore,
-        "feedback" to feedback,
-        "strengths" to strengths,
-        "areasForImprovement" to areasForImprovement
-    )
-}
+
 
 private fun TATInstructorScore.toMap(): Map<String, Any?> {
     return mapOf(
@@ -2012,7 +1828,7 @@ private fun WATSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.toMap(),
+
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp
@@ -2030,24 +1846,7 @@ private fun WATWordResponse.toMap(): Map<String, Any?> {
     )
 }
 
-private fun WATAIScore.toMap(): Map<String, Any?> {
-    return mapOf(
-        "overallScore" to overallScore,
-        "positivityScore" to positivityScore,
-        "creativityScore" to creativityScore,
-        "speedScore" to speedScore,
-        "relevanceScore" to relevanceScore,
-        "emotionalMaturityScore" to emotionalMaturityScore,
-        "feedback" to feedback,
-        "positiveWords" to positiveWords,
-        "negativeWords" to negativeWords,
-        "neutralWords" to neutralWords,
-        "uniqueResponsesCount" to uniqueResponsesCount,
-        "repeatedPatterns" to repeatedPatterns,
-        "strengths" to strengths,
-        "areasForImprovement" to areasForImprovement
-    )
-}
+
 
 private fun WATInstructorScore.toMap(): Map<String, Any?> {
     return mapOf(
@@ -2073,7 +1872,7 @@ private fun SRTSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.toMap(),
+
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp
@@ -2092,23 +1891,6 @@ private fun SRTSituationResponse.toMap(): Map<String, Any?> {
     )
 }
 
-private fun SRTAIScore.toMap(): Map<String, Any?> {
-    return mapOf(
-        "overallScore" to overallScore,
-        "leadershipScore" to leadershipScore,
-        "decisionMakingScore" to decisionMakingScore,
-        "practicalityScore" to practicalityScore,
-        "initiativeScore" to initiativeScore,
-        "socialResponsibilityScore" to socialResponsibilityScore,
-        "feedback" to feedback,
-        "categoryWiseScores" to categoryWiseScores.mapKeys { it.key.name },
-        "positiveTraits" to positiveTraits,
-        "concerningPatterns" to concerningPatterns,
-        "responseQuality" to responseQuality.name,
-        "strengths" to strengths,
-        "areasForImprovement" to areasForImprovement
-    )
-}
 
 private fun SRTInstructorScore.toMap(): Map<String, Any?> {
     return mapOf(
@@ -2140,7 +1922,6 @@ private fun SDTSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.toMap(),
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp
@@ -2159,33 +1940,7 @@ private fun SDTQuestionResponse.toMap(): Map<String, Any?> {
     )
 }
 
-private fun SDTAIScore.toMap(): Map<String, Any?> {
-    return mapOf(
-        "overallScore" to overallScore,
-        "selfAwarenessScore" to selfAwarenessScore,
-        "emotionalMaturityScore" to emotionalMaturityScore,
-        "socialPerceptionScore" to socialPerceptionScore,
-        "introspectionScore" to introspectionScore,
-        "feedback" to feedback,
-        "positiveTraits" to positiveTraits,
-        "concerningPatterns" to concerningPatterns,
-        "responseQuality" to responseQuality.name,
-        "strengths" to strengths,
-        "areasForImprovement" to areasForImprovement,
-        "questionWiseAnalysis" to questionWiseAnalysis.map { it.toMap() }
-    )
-}
 
-private fun QuestionAnalysis.toMap(): Map<String, Any?> {
-    return mapOf(
-        "questionId" to questionId,
-        "sequenceNumber" to sequenceNumber,
-        "score" to score,
-        "themes" to themes,
-        "sentimentScore" to sentimentScore,
-        "keyInsights" to keyInsights
-    )
-}
 
 private fun SDTInstructorScore.toMap(): Map<String, Any?> {
     return mapOf(
@@ -2218,19 +1973,6 @@ private fun GPESubmission.toMap(): Map<String, Any?> {
         "planningTimeTakenMinutes" to planningTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
-        "aiPreliminaryScore" to aiPreliminaryScore?.let {
-            mapOf(
-                "situationAnalysisScore" to it.situationAnalysisScore,
-                "planningQualityScore" to it.planningQualityScore,
-                "leadershipScore" to it.leadershipScore,
-                "resourceUtilizationScore" to it.resourceUtilizationScore,
-                "practicalityScore" to it.practicalityScore,
-                "overallScore" to it.overallScore,
-                "feedback" to it.feedback,
-                "strengths" to it.strengths,
-                "areasForImprovement" to it.areasForImprovement
-            )
-        },
         "instructorReview" to instructorReview?.let {
             mapOf(
                 "reviewId" to it.reviewId,

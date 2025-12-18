@@ -155,12 +155,7 @@ abstract class RepositoryModule {
         impl: com.ssbmax.core.data.remote.FirestoreSubmissionRepository
     ): com.ssbmax.core.domain.repository.SubmissionRepository
     
-    @Binds
-    @Singleton
-    abstract fun bindAIScoringService(
-        impl: com.ssbmax.core.data.service.MockAIScoringService
-    ): com.ssbmax.core.domain.service.AIScoringService
-    
+
     @Binds
     @Singleton
     abstract fun bindNotificationRepository(

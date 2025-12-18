@@ -1,0 +1,860 @@
+# Unified OLQ System - Complete Implementation Plan
+
+**Version**: 2.0  
+**Date**: December 18, 2025  
+**Status**: 📋 Planning  
+**Framework**: SSBMax Quality Framework Compliant
+
+---
+
+## 📊 Current State
+
+✅ **Completed:**
+- Psychology tests (TAT, WAT, SRT, SD) - OLQ scoring functional
+- GTO tests (8 tests) - OLQ scoring functional
+- Interview test - OLQ scoring functional
+- Basic OLQ Dashboard - Operational
+- Legacy 76/100 scoring - **REMOVED** (~1,700 lines cleaned)
+
+⚠️ **Remaining:**
+- PPDT - Still using test-specific scoring (not OLQ)
+- Dashboard - Basic functionality only, needs enhancement
+- Result screens - Inconsistent formatting across tests
+- Analytics - No trends/historical analysis
+
+**Coverage**: 13/15 tests (87%) → Target: 14/15 (93%)
+
+---
+
+## 🎯 Implementation Roadmap
+
+### Phase 1: PPDT OLQ Conversion
+**Priority**: 🔴 CRITICAL  
+**Duration**: 3-4 hours  
+**Goal**: Complete OLQ scoring for all psychology tests
+
+### Phase 2: Enhanced OLQ Dashboard
+**Priority**: 🟠 HIGH  
+**Duration**: 8-10 hours  
+**Goal**: Rich, insightful dashboard with visualizations
+
+### Phase 3: Result Screen Standardization
+**Priority**: 🟡 MEDIUM  
+**Duration**: 6-8 hours  
+**Goal**: Consistent UX across all test result screens
+
+### Phase 4: OLQ Trends & Analytics
+**Priority**: 🟢 LOW  
+**Duration**: 10-12 hours  
+**Goal**: Track improvement over time with analytics
+
+---
+
+## 📋 PHASE 1: PPDT OLQ Conversion
+
+### Overview
+Convert PPDT from test-specific scoring to unified OLQ scoring, achieving 93% coverage (14/15 tests).
+
+### Pre-Implementation Checklist
+
+#### Architecture Compliance
+- [ ] Domain Layer Isolation - OLQ models already in domain, no Android deps needed
+- [ ] String Resources - All UI text will use `stringResource(R.string.*)`
+- [ ] Navigation Pattern - ID-based navigation already established
+- [ ] StateFlow Updates - Will use `.update {}` pattern throughout
+- [ ] Error Handling - Domain returns `Result<T>`, presentation uses ErrorLogger
+
+#### Code Organization
+- [ ] File Size - PPDTAnalysisWorker estimated ~200 lines (under 300 limit)
+- [ ] Component Extraction - Result screen updates will extract OLQ section as component
+- [ ] Magic Numbers - Will use named constants for OLQ count validation
+- [ ] Single Responsibility - Each component has clear, single purpose
+
+#### SSBMax-Specific Rules
+- [ ] Subscription Limits - PPDT already integrated with SubscriptionManager
+- [ ] Firebase Paths - Using existing `ppdt_submissions` collection
+- [ ] Test Patterns - Following established ID-based navigation
+- [ ] Compose Performance - Lists will use `key = { it.id }`
+
+#### Quality Debt Prevention
+- [ ] No commented code - All legacy code removed in cleanup
+- [ ] Complete implementation - Will implement full end-to-end flow
+- [ ] Memory Leaks - ViewModels use viewModelScope, flows use collectAsStateWithLifecycle
+- [ ] Accessibility - Content descriptions for all new UI elements
+
+### Implementation Tasks
+
+#### Task 1.1: Create PPDT Analysis Worker
+**File**: `app/src/main/kotlin/com/ssbmax/workers/PPDTAnalysisWorker.kt`  
+**Estimated**: 1.5 hours
+
+```kotlin
+// Architecture Pattern (matches existing workers)
+class PPDTAnalysisWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val submissionRepository: SubmissionRepository,
+    private val geminiService: GeminiAIService,
+    private val notificationHelper: NotificationHelper
+) : CoroutineWorker(context, params) {
+    
+    override suspend fun doWork(): Result {
+        // 1. Fetch PPDT submission by ID
+        // 2. Update status to ANALYZING
+        // 3. Generate Gemini prompt (perception, imagination, narration, etc.)
+        // 4. Call Gemini API with 3 retries
+        // 5. Parse and validate 15 OLQ scores
+        // 6. Create OLQAnalysisResult
+        // 7. Update submission with OLQ result
+        // 8. Send notification
+        // 9. Return Result.success()
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ Uses domain `Result<T>` for operations
+- ✅ ErrorLogger for exception logging
+- ✅ Named constants for retry count, timeouts
+- ✅ Comprehensive error handling
+
+#### Task 1.2: Add PPDT OLQ Prompts
+**File**: [core/data/src/main/kotlin/com/ssbmax/core/data/ai/prompts/PsychologyTestPrompts.kt](file:///Users/sunil/Downloads/SSBMax/core/data/src/main/kotlin/com/ssbmax/core/data/ai/prompts/PsychologyTestPrompts.kt)  
+**Estimated**: 1 hour
+
+```kotlin
+fun generatePPDTPrompt(submission: PPDTSubmission): String {
+    return """
+    Analyze this PPDT story for Officer-Like Qualities.
+    
+    Story: ${submission.story}
+    Characters: ${submission.charactersCount}
+    
+    CRITICAL: Return ONLY valid JSON with ALL 15 OLQs scored 1-10.
+    
+    {
+      "olqScores": {
+        "EFFECTIVE_INTELLIGENCE": { "score": X, "confidence": Y, "reasoning": "..." },
+        // ... all 15 OLQs
+      },
+      "overallScore": X.X,
+      "overallRating": "...",
+      "strengths": [...],
+      "weaknesses": [...],
+      "recommendations": [...]
+    }
+    """.trimIndent()
+}
+```
+
+**Quality Checks**:
+- ✅ JSON-only enforcement (matches TAT/WAT/SRT pattern)
+- ✅ All 15 OLQs explicitly required
+- ✅ Clear scoring criteria (1-10 scale, lower is better)
+
+#### Task 1.3: Update PPDT ViewModel
+**File**: [app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModel.kt](file:///Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModel.kt)  
+**Estimated**: 30 minutes
+
+**Changes**:
+1. Import PPDTAnalysisWorker
+2. After successful submission, enqueue worker:
+```kotlin
+private fun enqueuePPDTAnalysisWorker(submissionId: String) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+    
+    val workRequest = OneTimeWorkRequestBuilder<PPDTAnalysisWorker>()
+        .setInputData(workDataOf(PPDTAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+        .setConstraints(constraints)
+        .build()
+    
+    workManager.enqueueUniqueWork(
+        "ppdt_analysis_$submissionId",
+        ExistingWorkPolicy.KEEP,
+        workRequest
+    )
+}
+```
+
+**Quality Checks**:
+- ✅ Follows existing pattern (TAT/WAT/SRT)
+- ✅ Unique work name prevents duplicates
+- ✅ Network constraint required for Gemini API
+
+#### Task 1.4: Update PPDT Result Screen
+**File**: [app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultScreen.kt](file:///Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultScreen.kt)  
+**Estimated**: 1 hour
+
+**Changes**:
+1. Add OLQ scores section (extract as `OLQScoresCard` component)
+2. Show "Analyzing..." state when `analysisStatus == PENDING_ANALYSIS`
+3. Display all 15 OLQ scores when `analysisStatus == COMPLETED`
+
+```kotlin
+// New component
+@Composable
+fun OLQScoresCard(
+    olqResult: OLQAnalysisResult,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.olq_analysis_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            
+            // Overall score
+            OverallScoreRow(olqResult.overallScore, olqResult.overallRating)
+            
+            // 15 OLQ scores in grid
+            OLQScoreGrid(olqResult.olqScores)
+            
+            // Strengths/Weaknesses
+            InsightsSection(olqResult.strengths, olqResult.weaknesses)
+        }
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ All text uses `stringResource(R.string.*)`
+- ✅ Component extracted (< 50 lines per composable)
+- ✅ Proper accessibility (content descriptions)
+
+### Verification Criteria
+
+#### Functional Testing
+- [ ] PPDT test completes successfully
+- [ ] Submission created with `analysisStatus = PENDING_ANALYSIS`
+- [ ] PPDTAnalysisWorker enqueued
+- [ ] Worker processes in background (check logs)
+- [ ] Gemini returns all 15 OLQ scores
+- [ ] Submission updated with `olqResult` and `analysisStatus = COMPLETED`
+- [ ] Notification sent with deep link
+- [ ] Result screen displays all 15 OLQ scores
+- [ ] Dashboard updates with PPDT result
+- [ ] Process death recovery works (kill app during analysis)
+
+#### Code Quality
+- [ ] `./gradlew lint` passes - no new errors
+- [ ] `./gradlew test` passes - unit tests added
+- [ ] `./gradlew build` succeeds
+- [ ] No files > 300 lines
+- [ ] All user-facing text uses string resources
+- [ ] No hardcoded strings detected
+- [ ] No `printStackTrace()` calls
+- [ ] StateFlow uses `.update {}` pattern
+
+#### Architecture
+- [ ] Domain layer has no Android dependencies
+- [ ] ErrorLogger only in data/presentation layers
+- [ ] Navigation uses IDs only
+- [ ] Firestore rules allow PPDT result updates
+
+### Success Metrics
+- **Coverage**: 14/15 tests (93%) using OLQ
+- **Build**: Clean build, 0 lint errors
+- **Performance**: Worker completes in < 30 seconds
+- **UX**: Seamless background processing
+
+---
+
+## 📋 PHASE 2: Enhanced OLQ Dashboard
+
+### Overview
+Transform basic dashboard into rich, insightful analytics center with visualizations, detailed breakdowns, and actionable insights.
+
+### Pre-Implementation Checklist
+
+#### Architecture Compliance
+- [ ] Domain Layer - New use cases for detailed analytics (no Android deps)
+- [ ] String Resources - All dashboard text uses string resources
+- [ ] Navigation - Deep links to detail screens use IDs
+- [ ] StateFlow - Dashboard ViewModel uses `.update {}` pattern
+- [ ] Error Handling - Use cases return `Result<T>`, ViewModel uses ErrorLogger
+
+#### Code Organization
+- [ ] File Size - Split dashboard into multiple components (< 300 lines each)
+- [ ] Component Extraction - Radar chart, trend charts as separate components
+- [ ] Magic Numbers - Chart dimensions, colors as named constants
+- [ ] Single Responsibility - Each screen/component has clear purpose
+
+#### SSBMax-Specific
+- [ ] Firebase Paths - Querying existing submission collections
+- [ ] Compose Performance - Charts use `remember` and `derivedStateOf`
+- [ ] Memory - Large datasets paginated, not loaded all at once
+
+### Implementation Tasks
+
+#### Task 2.1: OLQ Detail Screen
+**File**: `app/src/main/kotlin/com/ssbmax/ui/olq/OLQDetailScreen.kt`  
+**Estimated**: 3 hours
+
+**Features**:
+1. Tap any test in dashboard → navigate to detail screen
+2. Show all 15 OLQ scores with descriptions
+3. Radar chart visualization
+4. Per-OLQ AI reasoning
+5. Category breakdown (Intellectual, Social, Dynamic, Character)
+
+**Components**:
+```kotlin
+@Composable
+fun OLQDetailScreen(
+    submissionId: String,
+    onNavigateBack: () -> Unit
+) {
+    // ViewModel fetches submission by ID
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Column {
+        // Test header (test name, date, overall score)
+        TestHeaderSection(uiState.submission)
+        
+        // Radar chart showing all 15 OLQs
+        OLQRadarChart(uiState.olqScores)
+        
+        // Category breakdown
+        OLQCategorySection(uiState.olqScores)
+        
+        // Individual OLQ cards with descriptions
+        OLQScoresList(uiState.olqScores)
+        
+        // AI insights
+        InsightsSection(uiState.strengths, uiState.weaknesses)
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ Navigation uses submissionId (ID-based)
+- ✅ All text uses string resources
+- ✅ Components < 50 lines each
+- ✅ Radar chart library dependency reviewed for compatibility
+
+#### Task 2.2: Enhanced Dashboard Card
+**File**: [app/src/main/kotlin/com/ssbmax/ui/home/student/components/OLQDashboardCard.kt](file:///Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/home/student/components/OLQDashboardCard.kt)  
+**Estimated**: 2 hours
+
+**Enhancements**:
+1. Pull-to-refresh
+2. Filter by test category (Psychology, GTO, Interview)
+3. Sort by date/score
+4. Quick actions (view detail, retake test)
+
+**Changes**:
+```kotlin
+@Composable
+fun OLQDashboardCard(
+    dashboard: OLQDashboard,
+    onRefresh: () -> Unit,
+    onTestClick: (String, TestType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var selectedFilter by remember { mutableStateOf(TestFilter.ALL) }
+    
+    Card(modifier = modifier) {
+        Column {
+            // Filter chips
+            FilterChipRow(selectedFilter) { selectedFilter = it }
+            
+            // Pull-to-refresh wrapper
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(isRefreshing),
+                onRefresh = onRefresh
+            ) {
+                // Existing dashboard content (filtered)
+                DashboardContent(
+                    tests = dashboard.filterByCategory(selectedFilter),
+                    onTestClick = onTestClick
+                )
+            }
+        }
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ SwipeRefresh properly scoped with remember
+- ✅ Filter state managed correctly
+- ✅ All strings use resources
+
+#### Task 2.3: Consolidated OLQ Profile Screen
+**File**: `app/src/main/kotlin/com/ssbmax/ui/olq/OLQProfileScreen.kt`  
+**Estimated**: 3 hours
+
+**Features**:
+1. Aggregate OLQ profile across ALL completed tests
+2. Overall OLQ radar chart
+3. Strongest 5 OLQs
+4. Weakest 5 OLQs
+5. Personalized recommendations
+6. Export as PDF
+
+**Use Case**:
+```kotlin
+// New domain use case
+class GetConsolidatedOLQProfileUseCase @Inject constructor(
+    private val submissionRepository: SubmissionRepository
+) {
+    suspend operator fun invoke(userId: String): Result<OLQProfile> = try {
+        // 1. Fetch all OLQ-based submissions
+        // 2. Aggregate OLQ scores (average across all tests)
+        // 3. Identify top/bottom OLQs
+        // 4. Generate recommendations
+        Result.success(profile)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ Use case in domain layer (no Android deps)
+- ✅ Returns `Result<T>`
+- ✅ ViewModel uses ErrorLogger for errors
+- ✅ PDF export uses proper file permissions
+
+### Verification Criteria
+
+#### Functional Testing
+- [ ] Dashboard refreshes on pull-to-refresh
+- [ ] Filter by category works correctly
+- [ ] Tap test → navigate to detail screen
+- [ ] Detail screen shows all 15 OLQs
+- [ ] Radar chart renders correctly
+- [ ] Category breakdown accurate
+- [ ] Profile screen aggregates all tests correctly
+- [ ] Top 5 strengths/weaknesses displayed
+- [ ] PDF export works
+- [ ] Deep links from notifications work
+
+#### Code Quality
+- [ ] All new files < 300 lines
+- [ ] All composables < 50 lines
+- [ ] String resources for all UI text
+- [ ] No hardcoded colors (use theme)
+- [ ] Proper accessibility
+- [ ] Build passes, lint clean
+
+#### Performance
+- [ ] Dashboard loads in < 1 second
+- [ ] Radar chart renders smoothly
+- [ ] No ANR during aggregation
+- [ ] Pagination for large datasets
+
+### Success Metrics
+- **User Engagement**: Time on dashboard +50%
+- **Insights**: Users can identify top 3 strengths
+- **Performance**: Dashboard load < 1s
+- **Quality**: 0 lint errors, 0 crashes
+
+---
+
+## 📋 PHASE 3: Result Screen Standardization
+
+### Overview
+Create reusable OLQ components for consistent UX across all test result screens (TAT, WAT, SRT, SD, GTO, Interview).
+
+### Pre-Implementation Checklist
+
+#### Architecture Compliance
+- [ ] String Resources - All component text uses string resources
+- [ ] Component Reusability - Extract common patterns
+- [ ] Theme Consistency - Use MaterialTheme colors/typography
+- [ ] Accessibility - Content descriptions for all elements
+
+#### Code Organization
+- [ ] Shared Components - Create in `app/ui/components/olq/` package
+- [ ] File Size - Each component < 200 lines
+- [ ] Documentation - KDoc for public components
+
+### Implementation Tasks
+
+#### Task 3.1: Create Standard OLQ Components
+**Files**: `app/src/main/kotlin/com/ssbmax/ui/components/olq/`  
+**Estimated**: 2 hours
+
+**Components**:
+```kotlin
+// OLQResultCard.kt - Main container
+@Composable
+fun OLQResultCard(
+    olqResult: OLQAnalysisResult,
+    modifier: Modifier = Modifier
+)
+
+// OLQScoreGrid.kt - 15 OLQ scores in grid
+@Composable
+fun OLQScoreGrid(
+    scores: Map<OLQ, OLQScore>,
+    modifier: Modifier = Modifier
+)
+
+// OLQInsightsSection.kt - Strengths/Weaknesses
+@Composable  
+fun OLQInsightsSection(
+    strengths: List<String>,
+    weaknesses: List<String>,
+    recommendations: List<String>,
+    modifier: Modifier = Modifier
+)
+
+// OLQAnalyzingState.kt - Loading state
+@Composable
+fun OLQAnalyzingState(
+    analysisStatus: AnalysisStatus,
+    modifier: Modifier = Modifier
+)
+```
+
+**Quality Checks**:
+- ✅ Each component < 100 lines
+- ✅ All text uses string resources
+- ✅ Proper Material 3 theming
+- ✅ KDoc documentation
+- ✅ Preview functions for each component
+
+#### Task 3.2: Migrate Existing Result Screens
+**Files**: Update all result screens  
+**Estimated**: 4 hours
+
+**Screens to Update**:
+1. TATSubmissionResultScreen
+2. WATSubmissionResultScreen
+3. SRTSubmissionResultScreen
+4. SDTSubmissionResultScreen
+5. PPDTSubmissionResultScreen (if Phase 1 complete)
+6. GTO test result screens (8 screens)
+7. InterviewSubmissionResultScreen
+
+**Migration Pattern**:
+```kotlin
+// Before (inconsistent)
+Card {
+    Column {
+        Text("OLQ Analysis")
+        // Custom implementation for each test
+    }
+}
+
+// After (standardized)
+OLQResultCard(
+    olqResult = submission.olqResult ?: return,
+    modifier = Modifier.fillMaxWidth()
+)
+```
+
+**Quality Checks**:
+- ✅ All screens use same components
+- ✅ Consistent spacing/padding
+- ✅ Same color scheme across tests
+- ✅ Reduced code duplication
+
+### Verification Criteria
+
+#### Visual Consistency
+- [ ] All result screens have identical OLQ section layout
+- [ ] Colors match Material 3 theme
+- [ ] Typography consistent
+- [ ] Spacing/padding uniform
+
+#### Code Quality
+- [ ] Reduced duplication (estimated 40% less code)
+- [ ] All components documented
+- [ ] Preview functions work
+- [ ] Lint clean
+
+#### Functional
+- [ ] All screens still display correctly
+- [ ] No regressions in existing features
+- [ ] Accessibility maintained
+
+### Success Metrics
+- **Code Reduction**: 40% less duplicate code
+- **Consistency**: 100% visual consistency across screens
+- **Maintainability**: Single point of change for OLQ UI
+
+---
+
+## 📋 PHASE 4: OLQ Trends & Analytics
+
+### Overview
+Track OLQ improvement over time with line charts, progress indicators, and historical comparisons.
+
+### Pre-Implementation Checklist
+
+#### Architecture Compliance
+- [ ] Domain - Historical data use cases (no Android deps)
+- [ ] String Resources - All analytics text uses resources
+- [ ] Performance - Large datasets paginated
+- [ ] Caching - Reduce Firestore reads
+
+#### Code Organization
+- [ ] Charting Library - Evaluate options (Vico, MPAndroidChart)
+- [ ] Data Processing - Efficient aggregation algorithms
+- [ ] File Size - Split into multiple screens
+
+### Implementation Tasks
+
+#### Task 4.1: OLQ Trends Use Case
+**File**: `core/domain/src/.../usecase/analytics/GetOLQTrendsUseCase.kt`  
+**Estimated**: 2 hours
+
+```kotlin
+class GetOLQTrendsUseCase @Inject constructor(
+    private val submissionRepository: SubmissionRepository
+) {
+    suspend operator fun invoke(
+        userId: String,
+        olq: OLQ,
+        timeRange: TimeRange
+    ): Result<OLQTrend> = try {
+        // 1. Fetch all submissions in time range
+        // 2. Extract OLQ scores for specific OLQ
+        // 3. Calculate trend (improving/declining/stable)
+        // 4. Compute statistics (avg, min, max)
+        Result.success(trend)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ Domain layer (no Android deps)
+- ✅ Returns `Result<T>`
+- ✅ Efficient querying (indexed timestamps)
+- ✅ Paginated for large datasets
+
+#### Task 4.2: OLQ Trends Screen
+**File**: `app/src/main/kotlin/com/ssbmax/ui/analytics/OLQTrendsScreen.kt`  
+**Estimated**: 4 hours
+
+**Features**:
+1. Select OLQ to track
+2. Time range selector (1 month, 3 months, 6 months, all time)
+3. Line chart showing score progression
+4. Trend indicator (↗️ improving, ↘️ declining, → stable)
+5. Statistics (average, best, worst)
+6. Comparison: first vs latest test
+
+**Components**:
+```kotlin
+@Composable
+fun OLQTrendsScreen(
+    userId: String,
+    onNavigateBack: () -> Unit
+) {
+    var selectedOLQ by remember { mutableStateOf(OLQ.EFFECTIVE_INTELLIGENCE) }
+    var timeRange by remember { mutableStateOf(TimeRange.THREE_MONTHS) }
+    
+    Column {
+        // OLQ selector dropdown
+        OLQSelector(selectedOLQ) { selectedOLQ = it }
+        
+        // Time range chips
+        TimeRangeChips(timeRange) { timeRange = it }
+        
+        // Line chart
+        OLQTrendChart(trend = uiState.trend)
+        
+        // Statistics cards
+        TrendStatistics(uiState.statistics)
+        
+        // Comparison card
+        FirstVsLatestCard(uiState.comparison)
+    }
+}
+```
+
+**Quality Checks**:
+- ✅ Chart library performance tested
+- ✅ Smooth scrolling/zooming
+- ✅ Proper state management
+- ✅ All text uses resources
+
+#### Task 4.3: Dashboard Trends Widget
+**File**: Update [OLQDashboardCard.kt](file:///Users/sunil/Downloads/SSBMax/app/src/main/kotlin/com/ssbmax/ui/home/student/components/OLQDashboardCard.kt)  
+**Estimated**: 2 hours
+
+**Features**:
+1. Mini trend sparklines for top 3 OLQs
+2. "View Full Trends" button
+3. Quick insights ("Leadership improving!")
+
+**Quality Checks**:
+- ✅ Lightweight sparklines (no heavy charting lib for dashboard)
+- ✅ Performance optimized
+- ✅ Cached data
+
+#### Task 4.4: Comparison Feature
+**File**: `app/src/main/kotlin/com/ssbmax/ui/analytics/CompareTestsScreen.kt`  
+**Estimated**: 2 hours
+
+**Features**:
+1. Select 2 submissions to compare
+2. Side-by-side OLQ comparison
+3. Highlight improvements/regressions
+4. Overall score comparison
+
+### Verification Criteria
+
+#### Functional Testing
+- [ ] Trends screen loads historical data
+- [ ] Line chart displays correctly
+- [ ] Time range filter works
+- [ ] Trend calculation accurate
+- [ ] Statistics correct
+- [ ] Comparison shows differences
+- [ ] Dashboard sparklines render
+
+#### Performance
+- [ ] Trends load in < 2 seconds
+- [ ] Chart renders smoothly
+- [ ] No lag when changing time range
+- [ ] Efficient Firestore queries
+
+#### Code Quality
+- [ ] All files < 300 lines
+- [ ] String resources used
+- [ ] Lint clean
+- [ ] Tests passing
+
+### Success Metrics
+- **User Engagement**: 60% of users view trends weekly
+- **Insight**: Users can track improvement
+- **Performance**: Trends load < 2s
+- **Accuracy**: 100% correct calculations
+
+---
+
+## 🚀 ROLLOUT PLAN
+
+### Phase 1: PPDT OLQ (Sprint 1 - Week 1)
+**Days 1-2**: Implementation  
+**Day 3**: Testing & QA  
+**Day 4**: User acceptance testing  
+**Day 5**: Deploy to production
+
+**Rollout**: 
+- Beta users first (10%)
+- Monitor for 48 hours
+- Full rollout if no issues
+
+### Phase 2: Enhanced Dashboard (Sprint 2 - Week 2-3)
+**Week 2**: Detail screen + Enhanced dashboard card  
+**Week 3**: Consolidated profile + PDF export
+
+**Rollout**:
+- Soft launch (25% users)
+- Gather feedback
+- Iterate based on UX
+- Full rollout after 1 week
+
+### Phase 3: Standardization (Sprint 3 - Week 4)
+**Week 4**: Create components + Migrate screens
+
+**Rollout**:
+- Internal testing first
+- No user-facing changes (visual consistency)
+- Deploy all at once
+
+### Phase 4: Analytics (Sprint 4 - Week 5-6)
+**Week 5**: Trends use case + Trends screen  
+**Week 6**: Comparison + Dashboard widgets
+
+**Rollout**:
+- Power users first (Premium tier)
+- Collect feedback
+- Optimize performance
+- Full rollout to all tiers
+
+---
+
+## ✅ ACCEPTANCE CRITERIA
+
+### Must Have (MVP)
+- ✅ PPDT uses OLQ scoring
+- ✅ Dashboard shows all OLQ tests
+- ✅ Detail screen for each test
+- ✅ Consistent result screen UX
+
+### Should Have (Nice to Have)
+- ✅ Trends over time
+- ✅ Comparison feature
+- ✅ PDF export
+- ✅ Consolidated profile
+
+### Could Have (Future)
+- ⬜ AI coaching recommendations
+- ⬜ Peer comparison (anonymized)
+- ⬜ Gamification badges
+- ⬜ Social sharing
+
+---
+
+## 🎯 SUCCESS METRICS
+
+### Technical
+- **Build**: 0 lint errors, 0 test failures
+- **Performance**: All screens load < 2s
+- **Coverage**: 14/15 tests (93%) using OLQ
+- **Code Quality**: All files < 300 lines
+
+### User Experience
+- **Engagement**: Dashboard views +40%
+- **Retention**: Weekly active users +25%
+- **Satisfaction**: NPS score > 8/10
+- **Insight**: 70% users can name their top 3 OLQs
+
+### Business
+- **Premium Conversion**: +15% (analytics feature)
+- **Test Completion**: +20% (better insights = more motivation)
+- **Support Tickets**: -30% (clearer UX)
+
+---
+
+## 🚨 RISK MITIGATION
+
+### Risk 1: Gemini API Failures
+**Mitigation**: 
+- 3 retry attempts
+- Fallback to neutral scores if all retries fail
+- Clear error messaging to users
+
+### Risk 2: Performance Issues
+**Mitigation**:
+- Pagination for large datasets
+- Caching dashboard data
+- Background processing for analytics
+- Performance testing before rollout
+
+### Risk 3: User Confusion
+**Mitigation**:
+- Onboarding tutorial for dashboard/trends
+- Tooltips explaining OLQs
+- Clear "What is this?" help sections
+
+### Risk 4: Data Migration
+**Mitigation**:
+- No migration needed (backward compatible)
+- Old submissions still readable
+- Graceful handling of missing OLQ data
+
+---
+
+## 📚 REFERENCES
+
+- [SSBMax Quality Framework](file:///Users/sunil/Downloads/SSBMax/docs/architecture/SSBMax_Quality_Framework.md)
+- [Unified OLQ Implementation Guide](file:///Users/sunil/Downloads/SSBMax/docs/architecture/Unified_OLQ_Implementation_Guide.md)
+- Material 3 Design Guidelines
+- Compose Best Practices
+- Firebase Firestore Best Practices
+
+---
+
+**READY TO IMPLEMENT**: With this plan, we'll achieve 93% OLQ coverage with a world-class analytics dashboard, following ZERO tech debt principles. 🚀

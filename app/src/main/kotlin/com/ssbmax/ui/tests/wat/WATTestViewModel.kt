@@ -321,7 +321,7 @@ class WATTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateMockAIScore(state.responses),
+
                     analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
                     olqResult = null
                 )
@@ -462,47 +462,7 @@ class WATTestViewModel @Inject constructor(
         }
     }
     
-    private fun generateMockAIScore(responses: List<WATWordResponse>): WATAIScore {
-        val validResponses = responses.filter { it.isValidResponse }
-        
-        // Simple sentiment analysis (mock)
-        val positiveWords = listOf("success", "win", "good", "happy", "love", "help", "friend")
-        val negativeWords = listOf("fail", "lose", "bad", "sad", "hate", "hurt", "enemy")
-        
-        val positiveCount = validResponses.count { response ->
-            positiveWords.any { response.response.contains(it, ignoreCase = true) }
-        }
-        val negativeCount = validResponses.count { response ->
-            negativeWords.any { response.response.contains(it, ignoreCase = true) }
-        }
-        val neutralCount = validResponses.size - positiveCount - negativeCount
-        
-        val uniqueResponses = validResponses.map { it.response.lowercase() }.toSet().size
-        
-        return WATAIScore(
-            overallScore = 75f,
-            positivityScore = 16f,
-            creativityScore = 15f,
-            speedScore = 15f,
-            relevanceScore = 14f,
-            emotionalMaturityScore = 15f,
-            feedback = "Good spontaneity and positive associations. Shows emotional maturity.",
-            positiveWords = positiveCount,
-            negativeWords = negativeCount,
-            neutralWords = neutralCount,
-            uniqueResponsesCount = uniqueResponses,
-            repeatedPatterns = listOf("Leadership themes", "Action-oriented"),
-            strengths = listOf(
-                "Positive outlook",
-                "Quick responses",
-                "Unique associations"
-            ),
-            areasForImprovement = listOf(
-                "Be more creative with associations",
-                "Avoid negative responses when possible"
-            )
-        )
-    }
+
     
     /**
      * Enqueue WATAnalysisWorker for background OLQ analysis

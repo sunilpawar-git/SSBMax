@@ -230,7 +230,7 @@ class SDTTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = SDTTestScoring.generateMockAIScore(state.responses),
+
                     analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
                     olqResult = null
                 )

@@ -50,7 +50,6 @@ data class SDTSubmission(
     val totalTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-    val aiPreliminaryScore: SDTAIScore? = null,
     val instructorScore: SDTInstructorScore? = null,
     val gradedByInstructorId: String? = null,
     val gradingTimestamp: Long? = null,
@@ -66,35 +65,7 @@ data class SDTSubmission(
     val isComplete: Boolean get() = responses.size == 4
 }
 
-/**
- * AI-generated preliminary score for SDT
- */
-data class SDTAIScore(
-    val overallScore: Float, // 0-100
-    val selfAwarenessScore: Float, // 0-25
-    val emotionalMaturityScore: Float, // 0-25
-    val socialPerceptionScore: Float, // 0-25
-    val introspectionScore: Float, // 0-25
-    val feedback: String? = null,
-    val positiveTraits: List<String> = emptyList(), // Identified positive qualities
-    val concerningPatterns: List<String> = emptyList(), // Red flags (e.g., overly negative, arrogant)
-    val responseQuality: ResponseQuality,
-    val strengths: List<String> = emptyList(),
-    val areasForImprovement: List<String> = emptyList(),
-    val questionWiseAnalysis: List<QuestionAnalysis> = emptyList()
-)
 
-/**
- * Per-question analysis
- */
-data class QuestionAnalysis(
-    val questionId: String,
-    val sequenceNumber: Int,
-    val score: Float, // 0-25
-    val themes: List<String>, // Identified themes (e.g., "Leadership", "Humility", "Confidence")
-    val sentimentScore: Float, // -1.0 (negative) to 1.0 (positive)
-    val keyInsights: List<String>
-)
 
 /**
  * Instructor's final grading for SDT

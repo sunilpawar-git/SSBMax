@@ -88,22 +88,6 @@ class TATSubmissionResultViewModel @Inject constructor(
                 )
             }
 
-            // Parse AI score if present
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                TATAIScore(
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                    imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                    characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                    emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
-                    narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String,
-                    strengths = (it["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                )
-            }
-
             // Parse instructor score if present
             val instructorScoreData = submissionData["instructorScore"] as? Map<*, *>
             val instructorScore = instructorScoreData?.let {
@@ -144,7 +128,7 @@ class TATSubmissionResultViewModel @Inject constructor(
                 status = SubmissionStatus.valueOf(
                     data["status"] as? String ?: SubmissionStatus.SUBMITTED_PENDING_REVIEW.name
                 ),
-                aiPreliminaryScore = aiScore,
+
                 instructorScore = instructorScore,
                 gradedByInstructorId = data["gradedByInstructorId"] as? String,
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),

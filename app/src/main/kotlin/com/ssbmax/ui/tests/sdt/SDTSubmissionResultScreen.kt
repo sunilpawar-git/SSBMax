@@ -238,59 +238,6 @@ private fun ResultContent(
             }
         }
 
-        // AI Preliminary Score (Legacy)
-        submission.aiPreliminaryScore?.let { aiScore ->
-            item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.sdt_result_ai_score_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text(stringResource(R.string.sdt_result_overall_score, aiScore.overallScore.toInt()), style = MaterialTheme.typography.titleLarge)
-                        HorizontalDivider()
-                        ScoreRow(stringResource(R.string.sdt_result_self_awareness), aiScore.selfAwarenessScore)
-                        ScoreRow(stringResource(R.string.sdt_result_emotional_maturity), aiScore.emotionalMaturityScore)
-                        ScoreRow(stringResource(R.string.sdt_result_social_perception), aiScore.socialPerceptionScore)
-                        ScoreRow(stringResource(R.string.sdt_result_introspection), aiScore.introspectionScore)
-                        aiScore.feedback?.let {
-                            HorizontalDivider()
-                            Text(it, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-
-            if (aiScore.strengths.isNotEmpty()) {
-                item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.sdt_result_strengths_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            aiScore.strengths.forEach { strength ->
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(stringResource(R.string.sdt_result_bullet))
-                                    Text(strength)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (aiScore.areasForImprovement.isNotEmpty()) {
-                item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.sdt_result_improvement_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            aiScore.areasForImprovement.forEach { area ->
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(stringResource(R.string.sdt_result_bullet))
-                                    Text(area)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         items(submission.responses) { response ->
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

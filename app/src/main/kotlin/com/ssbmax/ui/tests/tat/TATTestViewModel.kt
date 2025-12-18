@@ -16,7 +16,7 @@ import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
-import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
+
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.TATAnalysisWorker
@@ -54,7 +54,7 @@ class TATTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val generateTATAIScore: GenerateTATAIScoreUseCase,
+
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: WorkManager
 ) : ViewModel() {
@@ -375,7 +375,6 @@ class TATTestViewModel @Inject constructor(
                     stories = state.responses,
                     totalTimeTakenMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt(),
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateTATAIScore(state.responses),
                     analysisStatus = AnalysisStatus.PENDING_ANALYSIS,  // OLQ analysis will be done by worker
                     olqResult = null  // Will be populated by worker
                 )

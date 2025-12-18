@@ -48,7 +48,6 @@ data class TATSubmission(
     val totalTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-    val aiPreliminaryScore: TATAIScore? = null,
     val instructorScore: TATInstructorScore? = null,
     val gradedByInstructorId: String? = null,
     val gradingTimestamp: Long? = null,
@@ -61,33 +60,7 @@ data class TATSubmission(
     val averageStoryLength: Int get() = stories.map { it.charactersCount }.average().toInt()
 }
 
-/**
- * AI-generated preliminary score for TAT
- */
-data class TATAIScore(
-    val overallScore: Float, // 0-100
-    val thematicPerceptionScore: Float, // 0-20
-    val imaginationScore: Float, // 0-20
-    val characterDepictionScore: Float, // 0-20
-    val emotionalToneScore: Float, // 0-20
-    val narrativeStructureScore: Float, // 0-20
-    val feedback: String? = null,
-    val storyWiseAnalysis: List<StoryAnalysis> = emptyList(),
-    val strengths: List<String> = emptyList(),
-    val areasForImprovement: List<String> = emptyList()
-)
 
-/**
- * Per-story analysis from AI
- */
-data class StoryAnalysis(
-    val questionId: String,
-    val sequenceNumber: Int,
-    val score: Float, // 0-100 for this story
-    val themes: List<String>, // Identified themes (leadership, courage, etc.)
-    val sentimentScore: Float, // -1 to +1 (negative to positive)
-    val keyInsights: List<String>
-)
 
 /**
  * Instructor's final grading for TAT

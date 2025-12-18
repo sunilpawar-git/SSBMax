@@ -22,7 +22,7 @@ import com.ssbmax.ui.theme.SSBScoreColors
 @Composable
 fun OLQDashboardCard(
     processedData: ProcessedDashboardData,
-    onNavigateToGTOResult: (submissionId: String) -> Unit = {},
+    onNavigateToResult: (TestType, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val dashboard = processedData.dashboard // Extract for convenience
@@ -81,13 +81,23 @@ fun OLQDashboardCard(
                     TestScoreChip(
                         testName = "OIR",
                         score = dashboard.phase1Results.oirResult?.percentageScore,
-                        isOLQBased = false
+                        isOLQBased = false,
+                        onClick = { 
+                            dashboard.phase1Results.oirResult?.let { 
+                                onNavigateToResult(TestType.OIR, it.sessionId) 
+                            }
+                        }
                     )
 
                     TestScoreChip(
                         testName = "PPDT",
-                        score = dashboard.phase1Results.ppdtResult?.aiPreliminaryScore?.overallScore,
-                        isOLQBased = false
+                        score = dashboard.phase1Results.ppdtResult?.finalScore,
+                        isOLQBased = false,
+                        onClick = {
+                            dashboard.phase1Results.ppdtResult?.let {
+                                onNavigateToResult(TestType.PPDT, it.submissionId)
+                            }
+                        }
                     )
                 }
 
@@ -110,10 +120,42 @@ fun OLQDashboardCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
-                    TestScoreChip("TAT", dashboard.phase2Results.tatResult?.overallScore)
-                    TestScoreChip("WAT", dashboard.phase2Results.watResult?.overallScore)
-                    TestScoreChip("SRT", dashboard.phase2Results.srtResult?.overallScore)
-                    TestScoreChip("Self Desc", dashboard.phase2Results.sdResult?.overallScore)
+                    TestScoreChip(
+                        testName = "TAT", 
+                        score = dashboard.phase2Results.tatResult?.overallScore,
+                        onClick = {
+                            dashboard.phase2Results.tatResult?.let {
+                                onNavigateToResult(TestType.TAT, it.submissionId)
+                            }
+                        }
+                    )
+                    TestScoreChip(
+                        testName = "WAT", 
+                        score = dashboard.phase2Results.watResult?.overallScore,
+                        onClick = {
+                            dashboard.phase2Results.watResult?.let {
+                                onNavigateToResult(TestType.WAT, it.submissionId)
+                            }
+                        }
+                    )
+                    TestScoreChip(
+                        testName = "SRT", 
+                        score = dashboard.phase2Results.srtResult?.overallScore,
+                        onClick = {
+                            dashboard.phase2Results.srtResult?.let {
+                                onNavigateToResult(TestType.SRT, it.submissionId)
+                            }
+                        }
+                    )
+                    TestScoreChip(
+                        testName = "Self Desc", 
+                        score = dashboard.phase2Results.sdResult?.overallScore,
+                        onClick = {
+                            dashboard.phase2Results.sdResult?.let {
+                                onNavigateToResult(TestType.SD, it.submissionId)
+                            }
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
@@ -128,7 +170,7 @@ fun OLQDashboardCard(
                         TestScoreChip(
                             testName = testType.displayName,
                             score = result.overallScore,
-                            onClick = { onNavigateToGTOResult(result.submissionId) }
+                            onClick = { onNavigateToResult(result.testType, result.submissionId) }
                         )
                     }
 
@@ -142,8 +184,13 @@ fun OLQDashboardCard(
                     )
                     
                     TestScoreChip(
-                        "Interview",
-                        dashboard.phase2Results.interviewResult?.getAverageOLQScore()
+                        testName = "Interview",
+                        score = dashboard.phase2Results.interviewResult?.getAverageOLQScore(),
+                        onClick = {
+                            dashboard.phase2Results.interviewResult?.let {
+                                onNavigateToResult(TestType.IO, it.id)
+                            }
+                        }
                     )
                 }
             }

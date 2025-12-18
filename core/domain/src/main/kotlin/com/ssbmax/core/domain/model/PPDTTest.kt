@@ -41,11 +41,10 @@ data class PPDTSubmission(
     val writingTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus,
-    val aiPreliminaryScore: PPDTAIScore?,
     val instructorReview: PPDTInstructorReview?
 ) {
     val finalScore: Float?
-        get() = instructorReview?.finalScore ?: aiPreliminaryScore?.overallScore
+        get() = instructorReview?.finalScore
     
     val isPending: Boolean
         get() = status == SubmissionStatus.SUBMITTED_PENDING_REVIEW

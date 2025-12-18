@@ -83,24 +83,6 @@ class SDTSubmissionResultViewModel @Inject constructor(
                 )
             }
 
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                SDTAIScore(
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
-                    emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                    socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                    introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String,
-                    positiveTraits = (it["positiveTraits"] as? List<*>)?.mapNotNull { trait -> trait as? String } ?: emptyList(),
-                    concerningPatterns = (it["concerningPatterns"] as? List<*>)?.mapNotNull { pattern -> pattern as? String } ?: emptyList(),
-                    responseQuality = try { ResponseQuality.valueOf(it["responseQuality"] as? String ?: "AVERAGE") }
-                        catch (e: Exception) { ResponseQuality.AVERAGE },
-                    strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList()
-                )
-            }
-
             // Parse OLQ analysis result if present (Phase 3)
             val analysisStatusStr = submissionData["analysisStatus"] as? String
                 ?: AnalysisStatus.PENDING_ANALYSIS.name
@@ -120,7 +102,7 @@ class SDTSubmissionResultViewModel @Inject constructor(
                 responses = responses,
                 totalTimeTakenMinutes = (submissionData["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
                 submittedAt = (submissionData["submittedAt"] as? Number)?.toLong() ?: 0L,
-                aiPreliminaryScore = aiScore,
+
                 analysisStatus = analysisStatus,
                 olqResult = olqResult
             )

@@ -88,26 +88,7 @@ class WATSubmissionResultViewModel @Inject constructor(
                 )
             }
 
-            // Parse AI score if present
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                WATAIScore(
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                    creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
-                    speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
-                    relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
-                    emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String,
-                    positiveWords = (it["positiveWords"] as? Number)?.toInt() ?: 0,
-                    negativeWords = (it["negativeWords"] as? Number)?.toInt() ?: 0,
-                    neutralWords = (it["neutralWords"] as? Number)?.toInt() ?: 0,
-                    uniqueResponsesCount = (it["uniqueResponsesCount"] as? Number)?.toInt() ?: 0,
-                    repeatedPatterns = (it["repeatedPatterns"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    strengths = (it["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                )
-            }
+
 
             // Parse instructor score if present
             val instructorScoreData = submissionData["instructorScore"] as? Map<*, *>
@@ -149,7 +130,7 @@ class WATSubmissionResultViewModel @Inject constructor(
                 status = SubmissionStatus.valueOf(
                     data["status"] as? String ?: SubmissionStatus.SUBMITTED_PENDING_REVIEW.name
                 ),
-                aiPreliminaryScore = aiScore,
+
                 instructorScore = instructorScore,
                 gradedByInstructorId = data["gradedByInstructorId"] as? String,
                 gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),

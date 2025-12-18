@@ -289,7 +289,7 @@ class SRTTestViewModel @Inject constructor(
                     responses = state.responses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
-                    aiPreliminaryScore = generateMockAIScore(state.responses),
+
                     analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
                     olqResult = null
                 )
@@ -383,43 +383,7 @@ class SRTTestViewModel @Inject constructor(
             }
     }
     
-    private fun generateMockAIScore(responses: List<SRTSituationResponse>): SRTAIScore {
-        val validResponses = responses.filter { it.isValidResponse }
-        
-        return SRTAIScore(
-            overallScore = 76f,
-            leadershipScore = 16f,
-            decisionMakingScore = 15f,
-            practicalityScore = 15f,
-            initiativeScore = 15f,
-            socialResponsibilityScore = 15f,
-            feedback = "Shows good practical judgment and leadership qualities. Responses indicate initiative and social responsibility.",
-            categoryWiseScores = mapOf(
-                SRTCategory.LEADERSHIP to 78f,
-                SRTCategory.DECISION_MAKING to 74f,
-                SRTCategory.CRISIS_MANAGEMENT to 76f,
-                SRTCategory.INTERPERSONAL to 75f,
-                SRTCategory.ETHICAL_DILEMMA to 80f
-            ),
-            positiveTraits = listOf(
-                "Proactive approach",
-                "Considers team welfare",
-                "Ethical decision making",
-                "Takes responsibility"
-            ),
-            concerningPatterns = emptyList(),
-            responseQuality = ResponseQuality.GOOD,
-            strengths = listOf(
-                "Leadership qualities",
-                "Practical solutions",
-                "Ethical awareness"
-            ),
-            areasForImprovement = listOf(
-                "Consider more options before deciding",
-                "Show more initiative in difficult situations"
-            )
-        )
-    }
+
     
     /**
      * Enqueue SRTAnalysisWorker for background OLQ analysis

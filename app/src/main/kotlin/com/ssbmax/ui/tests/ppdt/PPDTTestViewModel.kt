@@ -314,7 +314,6 @@ class PPDTTestViewModel @Inject constructor(
                     writingTimeTakenMinutes = 4,  // From test config
                     submittedAt = System.currentTimeMillis(),
                     status = com.ssbmax.core.domain.model.SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-                    aiPreliminaryScore = aiScore,
                     instructorReview = null
                 )
                 
