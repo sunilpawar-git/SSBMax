@@ -242,8 +242,17 @@ class SDTTestViewModel @Inject constructor(
 
                 val scorePercentage = if (submission.totalResponses > 0)
                     (submission.validResponses.toFloat() / submission.totalResponses) * 100 else 0f
-                difficultyManager.recordPerformance("SDT", "MEDIUM", scorePercentage,
-                    submission.validResponses, submission.totalResponses, (totalTimeMinutes * 60).toFloat())
+                
+                // Record performance analytics (using recommended difficulty)
+                val difficulty = difficultyManager.getRecommendedDifficulty("SDT")
+                difficultyManager.recordPerformance(
+                    testType = "SDT",
+                    difficulty = difficulty,
+                    score = scorePercentage,
+                    correctAnswers = submission.validResponses,
+                    totalQuestions = submission.totalResponses,
+                    timeSeconds = (totalTimeMinutes * 60).toFloat()
+                )
 
                 submitSDTTest(submission, null).onSuccess { submissionId ->
                     android.util.Log.d(TAG, "✅ Submission successful! ID: $submissionId")

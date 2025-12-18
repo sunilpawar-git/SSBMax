@@ -331,16 +331,17 @@ class WATTestViewModel @Inject constructor(
                 val totalCount = submission.totalResponses
                 val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
                 
-                // Record performance for analytics
+                // Record performance for analytics (using recommended difficulty)
+                val difficulty = difficultyManager.getRecommendedDifficulty("WAT")
                 difficultyManager.recordPerformance(
                     testType = "WAT",
-                    difficulty = "MEDIUM", // WAT doesn't have difficulty levels yet
+                    difficulty = difficulty,
                     score = scorePercentage,
                     correctAnswers = validCount,
                     totalQuestions = totalCount,
                     timeSeconds = (totalTimeMinutes * 60).toFloat()
                 )
-                android.util.Log.d("WATTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                android.util.Log.d("WATTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage% (${validCount}/${totalCount})")
                 
                 // Submit to Firestore (but also store locally to bypass permission issues)
                 val result = submitWATTest(submission, batchId = null)

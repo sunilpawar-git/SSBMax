@@ -299,16 +299,17 @@ class SRTTestViewModel @Inject constructor(
                 val totalCount = submission.totalResponses
                 val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
                 
-                // Record performance for analytics
+                // Record performance for analytics (using recommended difficulty)
+                val difficulty = difficultyManager.getRecommendedDifficulty("SRT")
                 difficultyManager.recordPerformance(
                     testType = "SRT",
-                    difficulty = "MEDIUM", // SRT doesn't have difficulty levels yet
+                    difficulty = difficulty,
                     score = scorePercentage,
                     correctAnswers = validCount,
                     totalQuestions = totalCount,
                     timeSeconds = (totalTimeMinutes * 60).toFloat()
                 )
-                android.util.Log.d("SRTTestViewModel", "📊 Recorded performance: $scorePercentage% (${validCount}/${totalCount})")
+                android.util.Log.d("SRTTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage% (${validCount}/${totalCount})")
                 
                 // Submit to Firestore
                 val result = submitSRTTest(submission, batchId = null)

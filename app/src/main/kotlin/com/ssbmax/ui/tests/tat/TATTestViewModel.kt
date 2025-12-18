@@ -397,17 +397,18 @@ class TATTestViewModel @Inject constructor(
                     val totalCount = submission.stories.size
                     val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
                     
-                    // Record performance for analytics
+                    // Record performance for analytics (using recommended difficulty)
                     android.util.Log.d("TATTestViewModel", "📍 Step 5: Recording performance analytics...")
+                    val difficulty = difficultyManager.getRecommendedDifficulty("TAT")
                     difficultyManager.recordPerformance(
                         testType = "TAT",
-                        difficulty = "MEDIUM", // TAT doesn't have difficulty levels
+                        difficulty = difficulty,
                         score = scorePercentage,
                         correctAnswers = validCount,
                         totalQuestions = totalCount,
                         timeSeconds = (submission.totalTimeTakenMinutes * 60).toFloat()
                     )
-                    android.util.Log.d("TATTestViewModel", "✅ Performance recorded: $scorePercentage% (${validCount}/${totalCount})")
+                    android.util.Log.d("TATTestViewModel", "✅ Performance recorded ($difficulty): $scorePercentage% (${validCount}/${totalCount})")
                     
                     // Record test usage for subscription tracking (with submissionId for idempotency)
                     android.util.Log.d("TATTestViewModel", "📍 Step 6: Recording test usage for subscription...")
