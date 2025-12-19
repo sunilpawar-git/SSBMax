@@ -41,10 +41,13 @@ data class PPDTSubmission(
     val writingTimeTakenMinutes: Int,
     val submittedAt: Long,
     val status: SubmissionStatus,
-    val instructorReview: PPDTInstructorReview?
+    val instructorReview: PPDTInstructorReview?,
+    // OLQ-based analysis fields (unified system)
+    val analysisStatus: com.ssbmax.core.domain.model.scoring.AnalysisStatus = com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS,
+    val olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult? = null
 ) {
     val finalScore: Float?
-        get() = instructorReview?.finalScore
+        get() = olqResult?.overallScore ?: instructorReview?.finalScore
     
     val isPending: Boolean
         get() = status == SubmissionStatus.SUBMITTED_PENDING_REVIEW

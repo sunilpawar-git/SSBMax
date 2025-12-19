@@ -231,6 +231,36 @@ interface SubmissionRepository {
     fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?>
     
     // ===========================
+    // PPDT OLQ Analysis Methods
+    // ===========================
+
+    /**
+     * Get PPDT submission by ID
+     */
+    suspend fun getPPDTSubmission(submissionId: String): Result<PPDTSubmission?>
+
+    /**
+     * Update PPDT analysis status
+     */
+    suspend fun updatePPDTAnalysisStatus(
+        submissionId: String,
+        status: com.ssbmax.core.domain.model.scoring.AnalysisStatus
+    ): Result<Unit>
+
+    /**
+     * Update PPDT OLQ result
+     */
+    suspend fun updatePPDTOLQResult(
+        submissionId: String,
+        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+    ): Result<Unit>
+
+    /**
+     * Observe PPDT submission in real-time
+     */
+    fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?>
+    
+    // ===========================
     // Archival Methods
     // ===========================
     

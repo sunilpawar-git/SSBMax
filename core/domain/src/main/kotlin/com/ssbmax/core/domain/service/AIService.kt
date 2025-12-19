@@ -161,6 +161,21 @@ interface AIService {
     suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
 
     /**
+     * Analyze PPDT (Picture Perception & Description Test) submission for OLQ scores
+     *
+     * Analyzes PPDT story to assess Officer-Like Qualities based on:
+     * - Perception quality (how well the candidate understood the scene)
+     * - Imagination and creativity  
+     * - Character depiction and development
+     * - Narrative structure and coherence
+     * - Positivity vs pessimism in the story
+     *
+     * @param prompt Pre-generated PPDT analysis prompt from PsychologyTestPrompts
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis>
+
+    /**
      * Health check for AI service availability
      *
      * @return True if service is available and API key is valid

@@ -57,6 +57,18 @@ fun SSBMaxApp(
             val isOnAuthScreen = currentRoute in AUTH_SCREENS
             
             if (!isOnAuthScreen) {
+                // CRITICAL FIX: Don't navigate if we're already on the target route
+                // This prevents duplicate screen creation and ViewModel cancellation
+                // Extract route pattern from current route (e.g., "test/ppdt/result/{submissionId}" from "test/ppdt/result/abc123")
+                val currentRoutePattern = currentRoute.substringBeforeLast("/")
+                val pendingRoutePattern = pendingDeepLink.substringBeforeLast("/")
+                
+                if (currentRoutePattern == pendingRoutePattern) {
+                    Log.d(TAG, "⏭️ Already on target route ($currentRoute), skipping duplicate navigation")
+                    onDeepLinkHandled()
+                    return@LaunchedEffect
+                }
+                
                 Log.d(TAG, "✅ Navigating to deep link: $pendingDeepLink (from route: $currentRoute)")
                 try {
                     navController.navigate(pendingDeepLink) {

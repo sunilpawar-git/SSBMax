@@ -91,8 +91,9 @@ fun OLQDashboardCard(
 
                     TestScoreChip(
                         testName = "PPDT",
-                        score = dashboard.phase1Results.ppdtResult?.finalScore,
-                        isOLQBased = false,
+                        score = dashboard.phase1Results.ppdtResult?.olqResult?.overallScore 
+                            ?: dashboard.phase1Results.ppdtResult?.finalScore,
+                        isOLQBased = true,  // ✅ Now OLQ-based
                         onClick = {
                             dashboard.phase1Results.ppdtResult?.let {
                                 onNavigateToResult(TestType.PPDT, it.submissionId)

@@ -30,39 +30,62 @@ class SDTSubmissionResultViewModel @Inject constructor(
     }
 
     fun loadSubmission(submissionId: String) {
+        android.util.Log.d(TAG, "📥 Loading submission: $submissionId")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-
-            submissionRepository.getSubmission(submissionId)
-                .onSuccess { data ->
+            
+            // Track best state seen to prevent regression from conflicting Firestore updates
+            var hasSeenCompleteWithOLQ = false
+            
+            try {
+                // Observe submission for real-time status updates (same pattern as PPDT)
+                submissionRepository.observeSubmission(submissionId).collect { data ->
+                    android.util.Log.d(TAG, "🔄 Firestore snapshot received for: $submissionId")
+                    
                     if (data == null) {
-                        ErrorLogger.logTestError(
-                            throwable = IllegalStateException("Submission data is null"),
-                            description = "SDT submission not found: $submissionId",
-                            testType = "SDT"
-                        )
+                        android.util.Log.e(TAG, "❌ Submission not found in snapshot")
                         _uiState.update { it.copy(isLoading = false, submission = null, error = "Submission not found") }
-                        return@onSuccess
+                        return@collect
                     }
 
+                    val submissionData = data["data"] as? Map<*, *>
+                    val analysisStatus = submissionData?.get("analysisStatus") as? String
+                    val hasOlqResult = submissionData?.get("olqResult") != null
+                    
+                    android.util.Log.d(TAG, "   - analysisStatus: $analysisStatus, olqResult exists: $hasOlqResult")
+                    
+                    // Check if this is a COMPLETE snapshot with OLQ data
+                    val isCompleteWithOLQ = analysisStatus == "COMPLETED" && hasOlqResult
+                    
+                    // Track best state
+                    if (isCompleteWithOLQ) {
+                        hasSeenCompleteWithOLQ = true
+                        android.util.Log.d(TAG, "✅ Marked hasSeenCompleteWithOLQ = true")
+                    }
+                    
+                    // CRITICAL FIX: Prevent regression from COMPLETED+OLQ to incomplete state
+                    if (hasSeenCompleteWithOLQ && !isCompleteWithOLQ) {
+                        android.util.Log.w(TAG, "⚠️ BLOCKING REGRESSION: Previously saw COMPLETED with OLQ, ignoring incomplete snapshot")
+                        return@collect
+                    }
+                    
+                    // Parse SDT submission from map
                     val submission = parseSDTSubmission(data)
-
-                    if (submission == null) {
-                        ErrorLogger.logTestError(
-                            throwable = IllegalStateException("Failed to parse submission"),
-                            description = "SDT submission parsing failed: $submissionId",
-                            testType = "SDT"
-                        )
-                    }
-
-                    _uiState.update { it.copy(isLoading = false, submission = submission,
-                        error = if (submission == null) "Submission not found" else null) }
+                    android.util.Log.d(TAG, "📊 Updating UI state - OLQ scores: ${submission?.olqResult?.olqScores?.size ?: 0}")
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        submission = submission,
+                        error = if (submission == null) "Submission not found" else null
+                    ) }
                 }
-                .onFailure { error ->
-                    ErrorLogger.logTestError(error, "Failed to load SDT submission result", "SDT")
-                    _uiState.update { it.copy(isLoading = false,
-                        error = error.message ?: "Failed to load submission") }
-                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "❌ Exception while observing submission", e)
+                ErrorLogger.logTestError(e, "Failed to load SDT submission result", "SDT")
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load submission"
+                ) }
+            }
         }
     }
 

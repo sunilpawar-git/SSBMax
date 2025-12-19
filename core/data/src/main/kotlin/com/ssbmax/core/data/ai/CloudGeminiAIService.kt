@@ -221,6 +221,15 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
     }
 
+    /**
+     * Analyze PPDT response (not yet implemented in cloud)
+     * Use GeminiAIService for psychology test analysis with direct API access
+     */
+    override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> {
+        Log.e(TAG, "PPDT analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
    /**
      * Health check (check if user is authenticated)
      */

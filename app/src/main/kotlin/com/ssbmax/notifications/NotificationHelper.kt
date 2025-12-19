@@ -308,6 +308,14 @@ class NotificationHelper @Inject constructor(
         showPsychologyTestFailedNotification(submissionId, "SDT", R.string.notification_sdt_failed_title, R.string.notification_sdt_failed_body)
     }
 
+    fun showPPDTResultsReadyNotification(submissionId: String) {
+        showPsychologyTestResultNotification(submissionId, "PPDT", R.string.notification_ppdt_complete_title, R.string.notification_ppdt_complete_body)
+    }
+
+    fun showPPDTAnalysisFailedNotification(submissionId: String) {
+        showPsychologyTestFailedNotification(submissionId, "PPDT", R.string.notification_ppdt_failed_title, R.string.notification_ppdt_failed_body)
+    }
+
     private fun showPsychologyTestResultNotification(submissionId: String, testType: String, titleResId: Int, bodyResId: Int) {
         try {
             val deepLink = "ssbmax://test/${testType.lowercase()}/result/$submissionId"

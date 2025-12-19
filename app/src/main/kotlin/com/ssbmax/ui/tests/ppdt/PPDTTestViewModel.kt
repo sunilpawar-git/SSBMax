@@ -44,7 +44,8 @@ class PPDTTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger
+    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
+    private val workManager: androidx.work.WorkManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(PPDTTestUiState())
@@ -297,10 +298,7 @@ class PPDTTestViewModel @Inject constructor(
                 // Generate submission ID
                 val submissionId = UUID.randomUUID().toString()
                 
-                // Generate AI preliminary score
-                val aiScore = generateMockAIScore(session.story)
-                
-                // Create submission
+                // Create submission with OLQ analysis fields
                 val submission = PPDTSubmission(
                     submissionId = submissionId,
                     questionId = session.questionId,
@@ -314,52 +312,69 @@ class PPDTTestViewModel @Inject constructor(
                     writingTimeTakenMinutes = 4,  // From test config
                     submittedAt = System.currentTimeMillis(),
                     status = com.ssbmax.core.domain.model.SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-                    instructorReview = null
+                    instructorReview = null,
+                    analysisStatus = com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS,
+                    olqResult = null
                 )
                 
                 // Submit to Firestore
-                submissionRepository.submitPPDT(submission, null).getOrThrow()
-                android.util.Log.d("PPDTTestViewModel", "✅ Submitted PPDT to Firestore: $submissionId")
+                val result = submissionRepository.submitPPDT(submission, null)
                 
-                // Calculate score for analytics (story >200 chars is "valid")
-                val isValid = session.story.length >= 200
-                val scorePercentage = if (isValid) 100f else 0f
-                
-                // Record performance for analytics
-                difficultyManager.recordPerformance(
-                    testType = "PPDT",
-                    difficulty = "MEDIUM", // PPDT doesn't have difficulty levels
-                    score = scorePercentage,
-                    correctAnswers = if (isValid) 1 else 0,
-                    totalQuestions = 1,
-                    timeSeconds = (4 * 60).toFloat() // 4 minutes
-                )
-                android.util.Log.d("PPDTTestViewModel", "📊 Recorded performance: $scorePercentage%")
-                
-                // Record test usage for subscription tracking
-                subscriptionManager.recordTestUsage(TestType.PPDT, session.userId)
-                android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
-                
-                // Mark as submitted using thread-safe .update {}
-                _uiState.update { it.copy(
-                    session = session.copy(
-                        currentPhase = PPDTPhase.SUBMITTED,
-                        isCompleted = true
-                    ),
-                    isSubmitted = true,
-                    submissionId = submissionId,
-                    subscriptionType = subscriptionType,
-                    submission = submission
-                ) }
-                
-                // Emit navigation event (one-time, consumed by screen)
-                _navigationEvents.trySend(
-                    TestNavigationEvent.NavigateToResult(
-                        submissionId = submissionId,
-                        subscriptionType = subscriptionType
+                result.onSuccess { firestoreSubmissionId ->
+                    android.util.Log.d("PPDTTestViewModel", "✅ Submitted PPDT to Firestore: $submissionId")
+                    
+                    // Enqueue PPDTAnalysisWorker for OLQ analysis
+                    android.util.Log.d("PPDTTestViewModel", "📍 Enqueueing PPDTAnalysisWorker...")
+                    enqueuePPDTAnalysisWorker(submissionId)
+                    android.util.Log.d("PPDTTestViewModel", "✅ PPDTAnalysisWorker enqueued successfully")
+                    
+                    // Calculate score for analytics (story >200 chars is "valid")
+                    val isValid = session.story.length >= 200
+                    val scorePercentage = if (isValid) 100f else 0f
+                    
+                    // Record performance for analytics (using recommended difficulty)
+                    val difficulty = difficultyManager.getRecommendedDifficulty("PPDT")
+                    difficultyManager.recordPerformance(
+                        testType = "PPDT",
+                        difficulty = difficulty,
+                        score = scorePercentage,
+                        correctAnswers = if (isValid) 1 else 0,
+                        totalQuestions = 1,
+                        timeSeconds = (4 * 60).toFloat() // 4 minutes
                     )
-                )
+                    android.util.Log.d("PPDTTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage%")
+                    
+                    // Record test usage for subscription tracking (with submissionId for idempotency)
+                    subscriptionManager.recordTestUsage(TestType.PPDT, session.userId, submissionId)
+                    android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
+                    
+                    // Mark as submitted using thread-safe .update {}
+                    _uiState.update { it.copy(
+                        session = session.copy(
+                            currentPhase = PPDTPhase.SUBMITTED,
+                            isCompleted = true
+                        ),
+                        isSubmitted = true,
+                        submissionId = submissionId,
+                        subscriptionType = subscriptionType,
+                        submission = submission
+                    ) }
+                    
+                    // Emit navigation event (one-time, consumed by screen)
+                    _navigationEvents.trySend(
+                        TestNavigationEvent.NavigateToResult(
+                            submissionId = submissionId,
+                            subscriptionType = subscriptionType
+                        )
+                    )
+                }.onFailure { error ->
+                    ErrorLogger.log(error, "Failed to submit PPDT test for user: ${session.userId}")
+                    _uiState.update { it.copy(
+                        error = "Failed to submit: ${error.message}"
+                    ) }
+                }
             } catch (e: Exception) {
+                ErrorLogger.log(e, "PPDT submit test exception")
                 _uiState.update { it.copy(
                     error = "Failed to submit: ${e.message}"
                 ) }
@@ -470,6 +485,28 @@ class PPDTTestViewModel @Inject constructor(
                 "Could add more imaginative elements",
                 "Describe the situation's background in more detail"
             )
+        )
+    }
+    
+    /**
+     * Enqueue PPDTAnalysisWorker for background OLQ analysis
+     */
+    private fun enqueuePPDTAnalysisWorker(submissionId: String) {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+        
+        val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.ssbmax.workers.PPDTAnalysisWorker>()
+            .setInputData(androidx.work.workDataOf(
+                com.ssbmax.workers.PPDTAnalysisWorker.KEY_SUBMISSION_ID to submissionId
+            ))
+            .setConstraints(constraints)
+            .build()
+        
+        workManager.enqueueUniqueWork(
+            "ppdt_analysis_$submissionId",
+            androidx.work.ExistingWorkPolicy.KEEP,
+            workRequest
         )
     }
     

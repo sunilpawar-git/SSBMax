@@ -29,23 +29,57 @@ class TATSubmissionResultViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TATSubmissionResultUiState())
     val uiState: StateFlow<TATSubmissionResultUiState> = _uiState.asStateFlow()
     
+    companion object {
+        private const val TAG = "TATSubmissionResultVM"
+    }
+    
     fun loadSubmission(submissionId: String) {
+        android.util.Log.d(TAG, "📥 Loading submission: $submissionId")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
-            submissionRepository.getSubmission(submissionId)
-                .onSuccess { data ->
+            // Track best state seen to prevent regression from conflicting Firestore updates
+            var hasSeenCompleteWithOLQ = false
+            
+            try {
+                // Observe submission for real-time status updates (same pattern as PPDT)
+                submissionRepository.observeSubmission(submissionId).collect { data ->
+                    android.util.Log.d(TAG, "🔄 Firestore snapshot received for: $submissionId")
+                    
                     if (data == null) {
+                        android.util.Log.e(TAG, "❌ Submission not found in snapshot")
                         _uiState.update { it.copy(
                             isLoading = false,
                             error = "Submission not found"
                         ) }
-                        return@onSuccess
+                        return@collect
                     }
 
+                    val submissionData = data["data"] as? Map<*, *>
+                    val analysisStatus = submissionData?.get("analysisStatus") as? String
+                    val hasOlqResult = submissionData?.get("olqResult") != null
+                    
+                    android.util.Log.d(TAG, "   - analysisStatus: $analysisStatus, olqResult exists: $hasOlqResult")
+                    
+                    // Check if this is a COMPLETE snapshot with OLQ data
+                    val isCompleteWithOLQ = analysisStatus == "COMPLETED" && hasOlqResult
+                    
+                    // Track best state
+                    if (isCompleteWithOLQ) {
+                        hasSeenCompleteWithOLQ = true
+                        android.util.Log.d(TAG, "✅ Marked hasSeenCompleteWithOLQ = true")
+                    }
+                    
+                    // CRITICAL FIX: Prevent regression from COMPLETED+OLQ to incomplete state
+                    if (hasSeenCompleteWithOLQ && !isCompleteWithOLQ) {
+                        android.util.Log.w(TAG, "⚠️ BLOCKING REGRESSION: Previously saw COMPLETED with OLQ, ignoring incomplete snapshot")
+                        return@collect
+                    }
+                    
                     // Parse TAT submission from map
                     val submission = parseTATSubmission(data)
                     if (submission != null) {
+                        android.util.Log.d(TAG, "📊 Updating UI state - OLQ scores: ${submission.olqResult?.olqScores?.size ?: 0}")
                         _uiState.update { it.copy(
                             isLoading = false,
                             submission = submission
@@ -57,13 +91,14 @@ class TATSubmissionResultViewModel @Inject constructor(
                         ) }
                     }
                 }
-                .onFailure { error ->
-                    ErrorLogger.logTestError(error, "Error loading TAT submission", "TAT")
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = error.message ?: "Failed to load submission"
-                    ) }
-                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "❌ Exception while observing submission", e)
+                ErrorLogger.logTestError(e, "Error loading TAT submission", "TAT")
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load submission"
+                ) }
+            }
         }
     }
 

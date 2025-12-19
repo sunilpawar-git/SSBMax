@@ -20,11 +20,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 
 /**
- * Background worker for analyzing SDT submissions using Gemini AI
+ * Background worker for analyzing PPDT submissions using Gemini AI
  *
- * Triggered after user completes SDT test and submits all descriptions.
+ * Triggered after user completes PPDT test and submits their story.
  * This worker:
- * 1. Fetches SDT submission from Firestore
+ * 1. Fetches PPDT submission from Firestore
  * 2. Generates analysis prompt using PsychologyTestPrompts
  * 3. Analyzes with Gemini AI for OLQ scores (all 15 OLQs)
  * 4. Updates submission in Firestore with OLQ result
@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
  * The user is free to navigate away while this runs in the background.
  */
 @HiltWorker
-class SDTAnalysisWorker @AssistedInject constructor(
+class PPDTAnalysisWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
@@ -43,7 +43,7 @@ class SDTAnalysisWorker @AssistedInject constructor(
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"
-        private const val TAG = "SDTAnalysisWorker"
+        private const val TAG = "PPDTAnalysisWorker"
         private const val MAX_AI_RETRIES = 3
         private const val RETRY_DELAY_MS = 2000L
     }
@@ -53,7 +53,7 @@ class SDTAnalysisWorker @AssistedInject constructor(
         if (submissionId.isNullOrBlank()) {
             Log.e(TAG, "❌ No submission ID provided")
             ErrorLogger.log(
-                "SDT analysis worker started without submission ID",
+                "PPDT analysis worker started without submission ID",
                 emptyMap(),
                 ErrorLogger.Severity.ERROR
             )
@@ -61,32 +61,32 @@ class SDTAnalysisWorker @AssistedInject constructor(
         }
 
         val startTime = System.currentTimeMillis()
-        Log.d(TAG, "🔄 Starting SDT analysis for submission: $submissionId")
+        Log.d(TAG, "🔄 Starting PPDT analysis for submission: $submissionId")
 
         return try {
             // 1. Get submission from repository
-            val submissionResult = submissionRepository.getSDTSubmission(submissionId)
+            val submissionResult = submissionRepository.getPPDTSubmission(submissionId)
             val submission = submissionResult.getOrNull()
             if (submission == null) {
-                Log.e(TAG, "❌ SDT submission not found: $submissionId")
+                Log.e(TAG, "❌ PPDT submission not found: $submissionId")
                 return Result.failure()
             }
 
-            Log.d(TAG, "   Step 1: SDT submission found with ${submission.responses.size} responses")
+            Log.d(TAG, "   Step 1: PPDT submission found (${submission.charactersCount} characters)")
 
             // 2. Verify PENDING_ANALYSIS status (don't process if already done)
             if (submission.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) {
-                Log.w(TAG, "⚠️ SDT submission not in PENDING_ANALYSIS state: ${submission.analysisStatus}")
+                Log.w(TAG, "⚠️ PPDT submission not in PENDING_ANALYSIS state: ${submission.analysisStatus}")
                 return Result.success()  // Already processed, skip
             }
 
             // 3. Update status to ANALYZING
-            submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
+            submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 4. Generate SDT analysis prompt
-            val prompt = PsychologyTestPrompts.generateSDAnalysisPrompt(submission)
-            Log.d(TAG, "   Step 3: Generated SDT analysis prompt")
+            // 4. Generate PPDT analysis prompt
+            val prompt = PsychologyTestPrompts.generatePPDTAnalysisPrompt(submission)
+            Log.d(TAG, "   Step 3: Generated PPDT analysis prompt")
 
             // 5. Analyze with Gemini AI (with retry logic)
             val olqScores = analyzeSubmissionWithRetry(prompt)
@@ -120,14 +120,14 @@ class SDTAnalysisWorker @AssistedInject constructor(
                 .map { "${it.key.displayName} (${it.value.score})" }
 
             val recommendations = listOf(
-                "Continue developing self-awareness and goal orientation",
+                "Continue practicing PPDT with diverse scenarios",
                 "Focus on strengthening: ${weaknesses.joinToString(", ")}",
-                "Reflect on your actions and their impact on others"
+                "Maintain clear and positive storytelling"
             )
 
             val olqResult = OLQAnalysisResult(
                 submissionId = submissionId,
-                testType = TestType.SD,
+                testType = TestType.PPDT,
                 olqScores = olqScores,
                 overallScore = overallScore,
                 overallRating = overallRating,
@@ -139,63 +139,40 @@ class SDTAnalysisWorker @AssistedInject constructor(
             )
 
             // 7. Update submission with OLQ result
-            // Note: updateSDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
-            submissionRepository.updateSDTOLQResult(submissionId, olqResult)
+            // Note: updatePPDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
+            // Do NOT call updatePPDTAnalysisStatus separately - it causes redundant writes and potential sync issues
+            submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
             Log.d(TAG, "   Step 5: Submission updated with OLQ result")
 
             // 8. Send notification
             try {
-                notificationHelper.showSDTResultsReadyNotification(submissionId)
+                notificationHelper.showPPDTResultsReadyNotification(submissionId)
                 Log.d(TAG, "✅ Push notification sent successfully!")
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Failed to send notification", e)
-                ErrorLogger.log(e, "Failed to send SDT result notification")
+                Log.w(TAG, "⚠️ Failed to send notification: ${e.message}")
             }
 
-            val durationMs = System.currentTimeMillis() - startTime
-            Log.d(TAG, "🎉 SDT analysis completed successfully in ${durationMs}ms")
-            ErrorLogger.log(
-                "SDT analysis worker completed successfully",
-                mapOf(
-                    "submissionId" to submissionId,
-                    "overallScore" to overallScore.toString(),
-                    "durationMs" to durationMs.toString()
-                ),
-                ErrorLogger.Severity.INFO
-            )
+            val duration = System.currentTimeMillis() - startTime
+            Log.d(TAG, "✅ PPDT analysis complete in ${duration}ms")
             Result.success()
 
         } catch (e: Exception) {
-            val durationMs = System.currentTimeMillis() - startTime
-            ErrorLogger.log(e, "SDT analysis worker failed for submission: $submissionId")
-
-            if (runAttemptCount < MAX_AI_RETRIES) {
-                Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/$MAX_AI_RETRIES")
-                Result.retry()
-            } else {
-                Log.e(TAG, "❌ Max retries reached, marking submission as failed")
-                handleAnalysisFailure(submissionId)
-                Result.failure()
-            }
+            Log.e(TAG, "❌ PPDT analysis failed", e)
+            ErrorLogger.log(e, "PPDT analysis failed for submission: $submissionId")
+            handleAnalysisFailure(submissionId)
+            Result.failure()
         }
     }
 
-    /**
-     * Analyze SDT submission with retry logic
-     *
-     * Retries up to MAX_AI_RETRIES times with exponential backoff.
-     * Accepts if 14-15 OLQs are present (fills missing with neutral score).
-     */
     private suspend fun analyzeSubmissionWithRetry(prompt: String): Map<OLQ, OLQScore>? {
         repeat(MAX_AI_RETRIES) { attempt ->
             try {
-                Log.d(TAG, "   AI analysis attempt ${attempt + 1}/$MAX_AI_RETRIES")
-
-                val analysisResult = aiService.analyzeSDResponse(prompt)
-
+                Log.d(TAG, "   Attempt ${attempt + 1}/$MAX_AI_RETRIES: Calling Gemini AI...")
+                val analysisResult = aiService.analyzePPDTResponse(prompt)
+                
                 if (analysisResult.isSuccess) {
                     val analysis = analysisResult.getOrNull()!!
-
+                    
                     // Convert ResponseAnalysis to OLQScore map
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
@@ -204,60 +181,43 @@ class SDTAnalysisWorker @AssistedInject constructor(
                             reasoning = scoreWithReasoning.reasoning
                         )
                     }
-
-                    Log.d(TAG, "   Received ${olqScores.size}/15 OLQs")
-
-                    // Accept if we have 14-15 OLQs (allow 1 missing)
-                    if (olqScores.size >= 14) {
-                        return if (olqScores.size == 15) {
-                            olqScores
-                        } else {
-                            fillMissingOLQs(olqScores)
-                        }
+                    
+                    // Validate 15 OLQs
+                    if (olqScores.size == 15) {
+                        Log.d(TAG, "   ✅ AI returned all 15 OLQs")
+                        return olqScores
                     } else {
-                        Log.w(TAG, "   Only ${olqScores.size}/15 OLQs - retrying")
+                        Log.w(TAG, "   ⚠️ AI returned ${olqScores.size}/15 OLQs, retrying...")
                     }
                 }
-
             } catch (e: Exception) {
-                Log.w(TAG, "   Analysis attempt ${attempt + 1} failed: ${e.message}")
+                Log.w(TAG, "   ❌ AI call failed: ${e.message}")
             }
-
-            // Exponential backoff before retry
+            
             if (attempt < MAX_AI_RETRIES - 1) {
-                val delayMs = RETRY_DELAY_MS * (attempt + 1) * 2
-                delay(delayMs)
+                delay(RETRY_DELAY_MS * (attempt + 1)) // Exponential backoff
             }
         }
         return null
     }
 
     /**
-     * Fill missing OLQs with neutral scores
-     */
-    private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
-        val mutable = scores.toMutableMap()
-        OLQ.entries.forEach { olq ->
-            if (olq !in mutable) {
-                mutable[olq] = OLQScore(
-                    score = 6,  // Neutral score
-                    confidence = 30,
-                    reasoning = "AI did not assess this OLQ - neutral score assigned"
-                )
-            }
-        }
-        return mutable
-    }
-
-    /**
-     * Handle analysis failure - update status to FAILED
+     * Handle analysis failure by marking as FAILED and sending notification
      */
     private suspend fun handleAnalysisFailure(submissionId: String) {
         try {
-            submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.FAILED)
-            notificationHelper.showSDTAnalysisFailedNotification(submissionId)
+            submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.FAILED)
+            Log.d(TAG, "   Marked submission as FAILED")
+            
+            // Send failure notification to user
+            try {
+                notificationHelper.showPPDTAnalysisFailedNotification(submissionId)
+                Log.d(TAG, "   Sent failure notification to user")
+            } catch (e: Exception) {
+                Log.w(TAG, "   Failed to send failure notification: ${e.message}")
+            }
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update SDT submission status to FAILED")
+            Log.e(TAG, "   Failed to update status to FAILED", e)
         }
     }
 }

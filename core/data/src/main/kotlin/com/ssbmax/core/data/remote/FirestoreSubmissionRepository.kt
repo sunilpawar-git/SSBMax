@@ -59,7 +59,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             )
 
             submissionsCollection.document(submission.id)
-                .set(submissionMap, SetOptions.merge())
+                .set(submissionMap)
                 .await()
 
             Result.success(submission.id)
@@ -87,7 +87,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             )
 
             submissionsCollection.document(submission.id)
-                .set(submissionMap, SetOptions.merge())
+                .set(submissionMap)
                 .await()
 
             Result.success(submission.id)
@@ -115,7 +115,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             )
 
             submissionsCollection.document(submission.id)
-                .set(submissionMap, SetOptions.merge())
+                .set(submissionMap)
                 .await()
 
             Result.success(submission.id)
@@ -151,7 +151,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
 
             Log.d(TAG, "☁️ Firestore SDT: Writing to collection 'submissions' at path: submissions/${submission.id}")
             submissionsCollection.document(submission.id)
-                .set(submissionMap, SetOptions.merge())
+                .set(submissionMap)
                 .await()
 
             Log.d(TAG, "✅ Firestore SDT: Successfully written to Firestore!")
@@ -166,6 +166,11 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
 
     /**
      * Submit PPDT test
+     * 
+     * IMPORTANT: The toMap() function does NOT include analysisStatus or olqResult.
+     * These fields are written ONLY by PPDTAnalysisWorker via updatePPDTOLQResult().
+     * This prevents race conditions where Firestore offline sync could overwrite
+     * the worker's OLQ updates.
      */
     override suspend fun submitPPDT(submission: PPDTSubmission, batchId: String?): Result<String> {
         return try {
@@ -183,7 +188,7 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             )
 
             submissionsCollection.document(submission.submissionId)
-                .set(submissionMap, SetOptions.merge())
+                .set(submissionMap)
                 .await()
 
             Result.success(submission.submissionId)
@@ -456,8 +461,18 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
 
     /**
      * Observe submission changes in real-time
+     * 
+     * CRITICAL FIX: Prevents stale cache data from overwriting complete OLQ analysis.
+     * When notification deep links cause Activity relaunch, Firestore may emit cached
+     * snapshots (without OLQ data) after fresh server data (with OLQ data). We now
+     * track the "best" analysis status and filter out regressions from cache.
+     * 
+     * See: PPDTAnalysisWorker.kt and bug where notification triggers OLQ wipe.
      */
     override fun observeSubmission(submissionId: String): Flow<Map<String, Any>?> = callbackFlow {
+        // Track highest analysis status we've seen to prevent regression
+        var hasSeenCompleteAnalysis = false
+        
         val registration = submissionsCollection.document(submissionId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -466,7 +481,33 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                 }
 
                 if (snapshot != null && snapshot.exists()) {
-                    trySend(snapshot.data)
+                    val data = snapshot.data
+                    val metadata = snapshot.metadata
+                    
+                    // Extract analysis status from nested data field
+                    val submissionData = data?.get("data") as? Map<*, *>
+                    val analysisStatus = submissionData?.get("analysisStatus") as? String
+                    val hasOlqResult = submissionData?.get("olqResult") != null
+                    
+                    // Check if this is a COMPLETED snapshot
+                    val isComplete = analysisStatus == "COMPLETED" && hasOlqResult
+                    
+                    // Update our tracking of best state seen
+                    if (isComplete) {
+                        hasSeenCompleteAnalysis = true
+                    }
+                    
+                    // CRITICAL: If we've previously seen COMPLETED state but this snapshot
+                    // is from cache and doesn't have complete data, skip it to avoid regression
+                    val isFromCacheOnly = metadata.isFromCache && !metadata.hasPendingWrites()
+                    val wouldRegress = hasSeenCompleteAnalysis && !isComplete && isFromCacheOnly
+                    
+                    if (wouldRegress) {
+                        Log.d(TAG, "⚠️ Ignoring stale cache snapshot for $submissionId (would regress from COMPLETED)")
+                        return@addSnapshotListener // Skip this snapshot, don't emit
+                    }
+                    
+                    trySend(data)
                 } else {
                     trySend(null)
                 }
@@ -938,9 +979,6 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
      */
     @Suppress("UNCHECKED_CAST")
     private fun parsePPDTSubmission(data: Map<*, *>): PPDTSubmission {
-        // Parse AI score
-
-
         // Parse instructor review (if available)
         val instructorReviewMap = data["instructorReview"] as? Map<*, *>
         val instructorReview = instructorReviewMap?.let {
@@ -966,6 +1004,22 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             )
         }
 
+        // Parse OLQ result if present
+        val olqResultMap = data["olqResult"] as? Map<*, *>
+        val olqResult = parseOLQResult(olqResultMap)
+
+        // Parse analysis status
+        val analysisStatusStr = data["analysisStatus"] as? String
+        val analysisStatus = try {
+            if (analysisStatusStr != null) {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.valueOf(analysisStatusStr)
+            } else {
+                com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+            }
+        } catch (e: Exception) {
+            com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS
+        }
+
         return PPDTSubmission(
             submissionId = data["submissionId"] as? String ?: "",
             questionId = data["questionId"] as? String ?: "",
@@ -979,8 +1033,9 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
             writingTimeTakenMinutes = (data["writingTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
             submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
             status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
-
-            instructorReview = instructorReview
+            instructorReview = instructorReview,
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
         )
     }
 
@@ -1167,6 +1222,89 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
         awaitClose { listener.remove() }
     }
 
+    // ===========================
+    // PPDT OLQ Methods
+    // ===========================
+
+    override suspend fun getPPDTSubmission(submissionId: String): Result<PPDTSubmission?> {
+        return try {
+            val snapshot = submissionsCollection.document(submissionId).get().await()
+            if (snapshot.exists()) {
+                val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                Result.success(data?.let { parsePPDTSubmission(it) })
+            } else {
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to get PPDT submission: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updatePPDTAnalysisStatus(submissionId: String, status: com.ssbmax.core.domain.model.scoring.AnalysisStatus): Result<Unit> {
+        return try {
+            submissionsCollection.document(submissionId)
+                .update("$FIELD_DATA.analysisStatus", status.name)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to update PPDT status: ${e.message}", e))
+        }
+    }
+
+    override suspend fun updatePPDTOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
+        return updateOLQResult(submissionId, olqResult)
+    }
+
+    /**
+     * Observe PPDT submission in real-time with stale cache protection
+     * 
+     * CRITICAL FIX: Prevents cache from overwriting complete OLQ data.
+     * See observeSubmission() for detailed explanation.
+     */
+    override fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?> = callbackFlow {
+        var hasSeenCompleteAnalysis = false
+        
+        val listener = submissionsCollection.document(submissionId).addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null || !snapshot.exists()) { 
+                trySend(null)
+                return@addSnapshotListener 
+            }
+            
+            try {
+                val data = snapshot.get(FIELD_DATA) as? Map<*, *>
+                if (data == null) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+                
+                val metadata = snapshot.metadata
+                
+                // Check analysis status
+                val analysisStatus = data["analysisStatus"] as? String
+                val hasOlqResult = data["olqResult"] != null
+                val isComplete = analysisStatus == "COMPLETED" && hasOlqResult
+                
+                if (isComplete) {
+                    hasSeenCompleteAnalysis = true
+                }
+                
+                // Skip stale cache that would regress from complete state
+                val isFromCacheOnly = metadata.isFromCache && !metadata.hasPendingWrites()
+                val wouldRegress = hasSeenCompleteAnalysis && !isComplete && isFromCacheOnly
+                
+                if (wouldRegress) {
+                    Log.d(TAG, "⚠️ Ignoring stale cache for PPDT $submissionId (would regress)")
+                    return@addSnapshotListener
+                }
+                
+                trySend(parsePPDTSubmission(data))
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing PPDT submission", e)
+            }
+        }
+        awaitClose { listener.remove() }
+    }
+
     private suspend fun updateOLQResult(submissionId: String, olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult): Result<Unit> {
         return try {
             val olqResultMap = mapOf(
@@ -1183,8 +1321,17 @@ class FirestoreSubmissionRepository @Inject constructor() : SubmissionRepository
                 "analyzedAt" to olqResult.analyzedAt,
                 "aiConfidence" to olqResult.aiConfidence
             )
+            
+            // CRITICAL FIX: Use field paths instead of nested maps to avoid replacing entire "data" map
+            // SetOptions.merge() with nested maps REPLACES parent map, not merges
+            // Field paths properly merge individual fields without touching siblings
             submissionsCollection.document(submissionId)
-                .update("data.olqResult", olqResultMap, "data.analysisStatus", com.ssbmax.core.domain.model.scoring.AnalysisStatus.COMPLETED.name)
+                .update(
+                    mapOf(
+                        "$FIELD_DATA.olqResult" to olqResultMap,
+                        "$FIELD_DATA.analysisStatus" to com.ssbmax.core.domain.model.scoring.AnalysisStatus.COMPLETED.name
+                    )
+                )
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -1719,6 +1866,12 @@ private fun PPDTSubmission.toMap(): Map<String, Any?> {
         "submittedAt" to submittedAt,
         "status" to status.name,
 
+        // IMPORTANT: Do NOT include analysisStatus or olqResult here!
+        // These fields are written ONLY by PPDTAnalysisWorker.
+        // Including them here causes a race condition where Firestore's
+        // offline cache sync can overwrite the worker's OLQ update.
+        // See: PPDTAnalysisWorker.kt line 142 (updatePPDTOLQResult)
+
         "instructorReview" to instructorReview?.let {
             mapOf(
                 "reviewId" to it.reviewId,
@@ -1750,6 +1903,11 @@ private fun TATSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
+
+        // IMPORTANT: Do NOT include analysisStatus or olqResult here!
+        // These fields are written ONLY by TATAnalysisWorker.
+        // Including them causes race conditions with Firestore offline sync.
+
 
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
@@ -1797,6 +1955,11 @@ private fun WATSubmission.toMap(): Map<String, Any?> {
         "submittedAt" to submittedAt,
         "status" to status.name,
 
+        // IMPORTANT: Do NOT include analysisStatus or olqResult here!
+        // These fields are written ONLY by WATAnalysisWorker.
+        // Including them causes race conditions with Firestore offline sync.
+
+
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp
@@ -1840,6 +2003,11 @@ private fun SRTSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
+
+        // IMPORTANT: Do NOT include analysisStatus or olqResult here!
+        // These fields are written ONLY by SRTAnalysisWorker.
+        // Including them causes race conditions with Firestore offline sync.
+
 
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
@@ -1890,6 +2058,12 @@ private fun SDTSubmission.toMap(): Map<String, Any?> {
         "totalTimeTakenMinutes" to totalTimeTakenMinutes,
         "submittedAt" to submittedAt,
         "status" to status.name,
+
+        // IMPORTANT: Do NOT include analysisStatus or olqResult here!
+        // These fields are written ONLY by SDAnalysisWorker.
+        // Including them causes race conditions with Firestore offline sync.
+
+
         "instructorScore" to instructorScore?.toMap(),
         "gradedByInstructorId" to gradedByInstructorId,
         "gradingTimestamp" to gradingTimestamp

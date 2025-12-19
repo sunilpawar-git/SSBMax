@@ -139,8 +139,8 @@ class TATAnalysisWorker @AssistedInject constructor(
             )
 
             // 7. Update submission with OLQ result
+            // Note: updateTATOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
             submissionRepository.updateTATOLQResult(submissionId, olqResult)
-            submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.COMPLETED)
             Log.d(TAG, "   Step 5: Submission updated with OLQ result")
 
             // 8. Send notification

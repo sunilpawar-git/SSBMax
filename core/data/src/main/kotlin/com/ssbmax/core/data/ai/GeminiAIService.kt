@@ -337,6 +337,33 @@ ${questions.flatMap { it.expectedOLQs }.distinct().joinToString(", ") { it.displ
                 Result.failure(e)
             }
         }
+
+    override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> =
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "📸 Analyzing PPDT (Picture Perception & Description) submission")
+                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending PPDT analysis request to Gemini...")
+                    val startTime = System.currentTimeMillis()
+                    val response = model.generateContent(prompt)
+                    val duration = System.currentTimeMillis() - startTime
+
+                    Log.d(TAG, "✅ Received PPDT analysis response in ${duration}ms")
+
+                    // Parse psychology test response (same format as GTO)
+                    parseGTOAnalysisResponse(response.text ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to analyze PPDT response")
+                Log.e(TAG, "   Exception Type: ${e::class.java.simpleName}")
+                Log.e(TAG, "   Exception Message: ${e.message ?: "No message"}")
+                e.cause?.let {
+                    Log.e(TAG, "   Exception Cause: ${it.message}")
+                }
+                e.printStackTrace()
+                Result.failure(e)
+            }
+        }
     
     /**
      * Parse GTO-specific JSON response to standard ResponseAnalysis format

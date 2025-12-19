@@ -1255,4 +1255,9 @@
     <string name="notification_sdt_failed_title">Self Description Analysis Issue</string>
     <string name="notification_sdt_failed_body">We couldn\'t complete the Self Description analysis. Please try again later.</string>
 
+    <string name="notification_ppdt_complete_title">PPDT Results Ready!</string>
+    <string name="notification_ppdt_complete_body">Your PPDT analysis is complete. Tap to view your OLQ assessment.</string>
+    <string name="notification_ppdt_failed_title">PPDT Analysis Issue</string>
+    <string name="notification_ppdt_failed_body">We couldn\'t complete the PPDT analysis. Please try again later.</string>
+
 </resources>

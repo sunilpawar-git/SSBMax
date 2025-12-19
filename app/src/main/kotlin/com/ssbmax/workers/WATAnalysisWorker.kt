@@ -53,8 +53,8 @@ class WATAnalysisWorker @AssistedInject constructor(
             val olqScores = analyzeSubmissionWithRetry(prompt) ?: return handleAnalysisFailure(submissionId)
 
             val olqResult = createOLQResult(submissionId, olqScores)
+            // Note: updateWATOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
             submissionRepository.updateWATOLQResult(submissionId, olqResult)
-            submissionRepository.updateWATAnalysisStatus(submissionId, AnalysisStatus.COMPLETED)
 
             notificationHelper.showWATResultsReadyNotification(submissionId)
             Log.d(TAG, "🎉 WAT analysis completed in ${System.currentTimeMillis() - startTime}ms")
