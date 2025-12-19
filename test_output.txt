@@ -1,0 +1,656 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:data:writeDebugAarMetadata UP-TO-DATE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:writeDebugAarMetadata UP-TO-DATE
+> Task :core:domain:preBuild UP-TO-DATE
+> Task :core:domain:preDebugBuild UP-TO-DATE
+> Task :core:domain:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :core:data:processDebugNavigationResources UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources UP-TO-DATE
+> Task :core:domain:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:injectCrashlyticsMappingFileIdDebug UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :core:data:generateDebugResValues UP-TO-DATE
+> Task :core:data:generateDebugResources UP-TO-DATE
+> Task :core:data:packageDebugResources UP-TO-DATE
+> Task :core:designsystem:generateDebugResValues UP-TO-DATE
+> Task :core:designsystem:generateDebugResources UP-TO-DATE
+> Task :core:designsystem:packageDebugResources UP-TO-DATE
+> Task :core:domain:generateDebugResValues UP-TO-DATE
+> Task :core:domain:generateDebugResources UP-TO-DATE
+> Task :core:domain:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:processDebugManifest UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksDebug UP-TO-DATE
+> Task :core:designsystem:processDebugManifest UP-TO-DATE
+> Task :core:domain:extractDeepLinksDebug UP-TO-DATE
+> Task :core:domain:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :core:data:compileDebugLibraryResources UP-TO-DATE
+> Task :core:data:parseDebugLocalResources UP-TO-DATE
+> Task :core:data:generateDebugRFile UP-TO-DATE
+> Task :core:designsystem:compileDebugLibraryResources UP-TO-DATE
+> Task :core:designsystem:parseDebugLocalResources UP-TO-DATE
+> Task :core:designsystem:generateDebugRFile UP-TO-DATE
+> Task :core:domain:compileDebugLibraryResources UP-TO-DATE
+> Task :core:domain:parseDebugLocalResources UP-TO-DATE
+> Task :core:domain:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :core:data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:data:generateDebugBuildConfig UP-TO-DATE
+> Task :core:domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:domain:kspDebugKotlin UP-TO-DATE
+> Task :core:domain:compileDebugKotlin UP-TO-DATE
+> Task :core:domain:javaPreCompileDebug UP-TO-DATE
+> Task :core:domain:compileDebugJavaWithJavac
+> Task :core:domain:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:data:kspDebugKotlin UP-TO-DATE
+> Task :core:data:compileDebugKotlin UP-TO-DATE
+> Task :core:data:javaPreCompileDebug UP-TO-DATE
+> Task :core:data:compileDebugJavaWithJavac
+> Task :core:data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:designsystem:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:designsystem:compileDebugKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebug UP-TO-DATE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac
+> Task :core:designsystem:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:domain:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:hiltAggregateDepsDebug UP-TO-DATE
+> Task :app:hiltJavaCompileDebug
+> Task :app:transformDebugClassesWithAsm UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:data:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:processDebugJavaRes UP-TO-DATE
+> Task :core:domain:processDebugJavaRes UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :core:data:preReleaseBuild UP-TO-DATE
+> Task :core:data:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:designsystem:preReleaseBuild UP-TO-DATE
+> Task :core:designsystem:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:domain:preReleaseBuild UP-TO-DATE
+> Task :core:domain:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:data:processReleaseNavigationResources UP-TO-DATE
+> Task :core:designsystem:processReleaseNavigationResources UP-TO-DATE
+> Task :core:domain:processReleaseNavigationResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:injectCrashlyticsMappingFileIdRelease
+> Task :app:processReleaseGoogleServices UP-TO-DATE
+> Task :core:data:generateReleaseResValues UP-TO-DATE
+> Task :core:data:generateReleaseResources UP-TO-DATE
+> Task :core:data:packageReleaseResources UP-TO-DATE
+> Task :core:designsystem:generateReleaseResValues UP-TO-DATE
+> Task :core:designsystem:generateReleaseResources UP-TO-DATE
+> Task :core:designsystem:packageReleaseResources UP-TO-DATE
+> Task :core:domain:generateReleaseResValues UP-TO-DATE
+> Task :core:domain:generateReleaseResources UP-TO-DATE
+> Task :core:domain:packageReleaseResources UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :core:data:extractDeepLinksRelease UP-TO-DATE
+> Task :core:data:processReleaseManifest UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksRelease UP-TO-DATE
+> Task :core:designsystem:processReleaseManifest UP-TO-DATE
+> Task :core:domain:extractDeepLinksRelease UP-TO-DATE
+> Task :core:domain:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :core:data:parseReleaseLocalResources UP-TO-DATE
+> Task :core:data:generateReleaseRFile UP-TO-DATE
+> Task :core:designsystem:parseReleaseLocalResources UP-TO-DATE
+> Task :core:designsystem:generateReleaseRFile UP-TO-DATE
+> Task :core:domain:parseReleaseLocalResources UP-TO-DATE
+> Task :core:domain:generateReleaseRFile UP-TO-DATE
+> Task :core:data:generateReleaseBuildConfig UP-TO-DATE
+> Task :core:domain:kspReleaseKotlin UP-TO-DATE
+> Task :app:mergeReleaseResources
+> Task :core:domain:compileReleaseKotlin UP-TO-DATE
+> Task :core:domain:javaPreCompileRelease UP-TO-DATE
+> Task :core:domain:compileReleaseJavaWithJavac
+> Task :core:domain:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:data:kspReleaseKotlin UP-TO-DATE
+> Task :core:data:compileReleaseKotlin UP-TO-DATE
+> Task :core:data:javaPreCompileRelease UP-TO-DATE
+> Task :app:processReleaseResources
+> Task :core:data:compileReleaseJavaWithJavac
+> Task :core:data:bundleLibCompileToJarRelease UP-TO-DATE
+
+> Task :app:compileDebugUnitTestKotlin FAILED
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:105:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:105:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:146:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:146:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:169:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:169:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:194:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:194:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:219:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:219:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:252:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:252:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:275:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:275:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:298:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:298:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:328:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:328:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:359:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:359:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:391:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:391:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:420:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:420:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:443:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:443:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:65:62 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:90:34 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:92:62 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:93:63 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:94:61 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:95:71 Unresolved reference 'characterDepictionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:96:62 Unresolved reference 'positivityScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:97:59 Unresolved reference 'overallScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:98:55 Unresolved reference 'feedback'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:99:53 Unresolved reference 'strengths'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:100:65 Unresolved reference 'areasForImprovement'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:163:66 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:455:73 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:457:38 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:458:65 Unresolved reference 'overallScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:459:66 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:460:67 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:461:65 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:490:34 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:492:56 Unresolved reference 'feedback'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:493:53 Unresolved reference 'strengths'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:494:65 Unresolved reference 'areasForImprovement'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:497:52 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:498:53 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:499:51 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:500:61 Unresolved reference 'characterDepictionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:501:52 Unresolved reference 'positivityScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/sdt/SDTTestViewModelTest.kt:64:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:103:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:138:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:171:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:194:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:224:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:250:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:279:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:312:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:344:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:379:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:415:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:457:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:499:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:535:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:581:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:617:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:659:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:704:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:737:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:780:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:813:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:836:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:868:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:9:39 Unresolved reference 'test'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:38:48 Unresolved reference 'GenerateTATAIScoreUseCase'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:38:85 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.Boolean' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:114:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:150:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:181:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:211:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:240:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:273:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:302:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:338:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:374:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:410:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:447:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:475:80 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:494:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:524:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:560:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:592:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:621:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:661:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:695:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:719:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:743:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:97:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:133:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:166:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:189:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:220:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:246:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:275:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:308:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:340:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:368:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:406:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:428:80 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:452:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:491:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:535:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:569:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:609:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:652:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:692:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:725:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:748:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:771:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:14:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:15:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:16:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:28:6 Unresolved reference 'Mock'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:33:9 Unresolved reference 'MockitoAnnotations'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:40:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:54:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:55:32 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:70:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:71:32 Cannot infer type for this parameter. Please specify it explicitly.
+
+> Task :core:designsystem:compileReleaseKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileRelease UP-TO-DATE
+> Task :core:designsystem:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:kspReleaseKotlin UP-TO-DATE
+> Task :app:compileReleaseKotlin UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:compileReleaseJavaWithJavac
+> Task :core:designsystem:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:domain:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :core:data:processReleaseJavaRes UP-TO-DATE
+> Task :app:hiltAggregateDepsRelease UP-TO-DATE
+> Task :app:hiltJavaCompileRelease
+> Task :app:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :app:bundleReleaseClassesToRuntimeJar UP-TO-DATE
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:bundleReleaseClassesToCompileJar UP-TO-DATE
+> Task :app:kspReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:designsystem:processReleaseJavaRes UP-TO-DATE
+> Task :core:domain:processReleaseJavaRes UP-TO-DATE
+> Task :lint:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :lint:compileKotlin UP-TO-DATE
+> Task :lint:compileJava NO-SOURCE
+> Task :lint:processResources UP-TO-DATE
+> Task :lint:classes UP-TO-DATE
+> Task :lint:jar UP-TO-DATE
+> Task :lint:compileTestKotlin UP-TO-DATE
+> Task :lint:compileTestJava NO-SOURCE
+> Task :lint:processTestResources NO-SOURCE
+> Task :lint:testClasses UP-TO-DATE
+> Task :lint:test
+> Task :core:common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:common:preBuild UP-TO-DATE
+> Task :core:common:preDebugBuild UP-TO-DATE
+> Task :core:common:generateDebugResValues UP-TO-DATE
+> Task :core:common:generateDebugResources UP-TO-DATE
+> Task :core:common:packageDebugResources UP-TO-DATE
+> Task :core:common:processDebugNavigationResources UP-TO-DATE
+> Task :core:common:parseDebugLocalResources UP-TO-DATE
+> Task :core:common:generateDebugRFile UP-TO-DATE
+> Task :core:common:compileDebugKotlin NO-SOURCE
+> Task :core:common:javaPreCompileDebug UP-TO-DATE
+> Task :core:common:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:common:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:common:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:common:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:common:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core:common:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:common:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:common:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:common:processDebugJavaRes NO-SOURCE
+> Task :core:common:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:common:testDebugUnitTest
+> Task :core:common:preReleaseBuild UP-TO-DATE
+> Task :core:common:generateReleaseResValues UP-TO-DATE
+> Task :core:common:generateReleaseResources UP-TO-DATE
+> Task :core:common:packageReleaseResources UP-TO-DATE
+> Task :core:common:processReleaseNavigationResources UP-TO-DATE
+> Task :core:common:parseReleaseLocalResources UP-TO-DATE
+> Task :core:common:generateReleaseRFile UP-TO-DATE
+> Task :core:common:compileReleaseKotlin NO-SOURCE
+> Task :core:common:javaPreCompileRelease UP-TO-DATE
+> Task :core:common:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:common:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:common:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:common:preReleaseUnitTestBuild UP-TO-DATE
+> Task :core:common:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :core:common:compileReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:common:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :core:common:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :core:common:processReleaseJavaRes NO-SOURCE
+> Task :core:common:processReleaseUnitTestJavaRes UP-TO-DATE
+
+> Task :app:compileReleaseUnitTestKotlin FAILED
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:105:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:105:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:146:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:146:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:169:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:169:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:194:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:194:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:219:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:219:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:252:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:252:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:275:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:275:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:298:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:298:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:328:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:328:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:359:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:359:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:391:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:391:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:420:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:420:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:443:13 No value passed for parameter 'unifiedResultRepository'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/home/student/StudentHomeViewModelTest.kt:443:13 No value passed for parameter 'getOLQDashboard'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:65:62 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:90:34 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:92:62 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:93:63 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:94:61 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:95:71 Unresolved reference 'characterDepictionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:96:62 Unresolved reference 'positivityScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:97:59 Unresolved reference 'overallScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:98:55 Unresolved reference 'feedback'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:99:53 Unresolved reference 'strengths'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:100:65 Unresolved reference 'areasForImprovement'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTSubmissionResultViewModelTest.kt:163:66 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:455:73 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:457:38 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:458:65 Unresolved reference 'overallScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:459:66 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:460:67 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:461:65 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:490:34 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:492:56 Unresolved reference 'feedback'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:493:53 Unresolved reference 'strengths'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:494:65 Unresolved reference 'areasForImprovement'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:497:52 Unresolved reference 'perceptionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:498:53 Unresolved reference 'imaginationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:499:51 Unresolved reference 'narrationScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:500:61 Unresolved reference 'characterDepictionScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/ppdt/PPDTTestViewModelTest.kt:501:52 Unresolved reference 'positivityScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/sdt/SDTTestViewModelTest.kt:64:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:103:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:138:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:171:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:194:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:224:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:250:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:279:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:312:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:344:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:379:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:415:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:457:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:499:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:535:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:581:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:617:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:659:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:704:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:737:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:780:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:813:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:836:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/srt/SRTTestViewModelTest.kt:868:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:9:39 Unresolved reference 'test'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:38:48 Unresolved reference 'GenerateTATAIScoreUseCase'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:38:85 Argument type mismatch: actual type is 'kotlin.Boolean', but 'kotlin.Boolean' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:114:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:150:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:181:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:211:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:240:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:273:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:302:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:338:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:374:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:410:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:447:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:475:80 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:494:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:524:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:560:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:592:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:621:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:661:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:695:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:719:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt:743:13 Argument type mismatch: actual type is 'com.ssbmax.core.data.security.SecurityEventLogger', but 'androidx.work.WorkManager' was expected.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:97:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:133:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:166:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:189:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:220:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:246:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:275:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:308:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:340:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:368:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:406:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:428:80 Unresolved reference 'aiPreliminaryScore'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:452:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:491:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:535:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:569:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:609:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:652:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:692:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:725:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:748:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt:771:13 No value passed for parameter 'workManager'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:14:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:15:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:16:12 Unresolved reference 'mockito'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:28:6 Unresolved reference 'Mock'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:33:9 Unresolved reference 'MockitoAnnotations'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:40:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:54:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:55:32 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:70:9 Unresolved reference 'when'.
+e: file:///Users/sunil/Downloads/SSBMax/app/src/test/kotlin/com/ssbmax/workers/ArchivalWorkerTest.kt:71:32 Cannot infer type for this parameter. Please specify it explicitly.
+
+> Task :core:common:testReleaseUnitTest
+> Task :core:common:test
+> Task :core:data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:data:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:data:generateDebugUnitTestResValues UP-TO-DATE
+> Task :core:data:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:data:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:data:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:data:processDebugUnitTestResources UP-TO-DATE
+> Task :core:data:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:data:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:mergeDebugShaders UP-TO-DATE
+> Task :core:data:compileDebugShaders NO-SOURCE
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:data:mergeDebugAssets UP-TO-DATE
+> Task :core:domain:mergeDebugShaders UP-TO-DATE
+> Task :core:domain:compileDebugShaders NO-SOURCE
+> Task :core:domain:generateDebugAssets UP-TO-DATE
+> Task :core:domain:mergeDebugAssets UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:data:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:data:preReleaseUnitTestBuild UP-TO-DATE
+> Task :core:data:checkReleaseUnitTestAarMetadata UP-TO-DATE
+> Task :core:data:compileReleaseLibraryResources UP-TO-DATE
+> Task :core:data:generateReleaseUnitTestResValues UP-TO-DATE
+> Task :core:data:mapReleaseUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:data:generateReleaseUnitTestResources UP-TO-DATE
+> Task :core:data:mergeReleaseUnitTestResources UP-TO-DATE
+> Task :core:data:processReleaseUnitTestManifest UP-TO-DATE
+> Task :core:domain:compileReleaseLibraryResources UP-TO-DATE
+> Task :core:data:processReleaseUnitTestResources UP-TO-DATE
+> Task :core:data:kspReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:data:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :core:data:generateReleaseUnitTestAssets UP-TO-DATE
+> Task :core:data:mergeReleaseShaders UP-TO-DATE
+> Task :core:data:compileReleaseShaders NO-SOURCE
+> Task :core:data:generateReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseAssets UP-TO-DATE
+> Task :core:domain:mergeReleaseShaders UP-TO-DATE
+> Task :core:domain:compileReleaseShaders NO-SOURCE
+> Task :core:domain:generateReleaseAssets UP-TO-DATE
+> Task :core:domain:mergeReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseUnitTestAssets UP-TO-DATE
+> Task :core:data:packageReleaseUnitTestForUnitTest UP-TO-DATE
+> Task :core:data:generateReleaseUnitTestConfig UP-TO-DATE
+> Task :core:designsystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core:designsystem:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:designsystem:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :core:data:compileDebugUnitTestKotlin FAILED
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:229:13 No parameter with name 'aiPreliminaryScore' found.
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:258:13 No parameter with name 'aiPreliminaryScore' found.
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:282:13 No parameter with name 'aiPreliminaryScore' found.
+
+> Task :core:data:compileReleaseUnitTestKotlin FAILED
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:229:13 No parameter with name 'aiPreliminaryScore' found.
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:258:13 No parameter with name 'aiPreliminaryScore' found.
+e: file:///Users/sunil/Downloads/SSBMax/core/data/src/test/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepositoryTest.kt:282:13 No parameter with name 'aiPreliminaryScore' found.
+
+> Task :core:designsystem:testDebugUnitTest
+> Task :core:designsystem:preReleaseUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :core:designsystem:compileReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :core:designsystem:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:processReleaseUnitTestJavaRes UP-TO-DATE
+> Task :core:designsystem:testReleaseUnitTest
+> Task :core:designsystem:test
+> Task :core:domain:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:domain:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core:domain:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:domain:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:domain:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:domain:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:domain:processDebugUnitTestJavaRes UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :core:domain:testDebugUnitTest
+> Task :core:domain:preReleaseUnitTestBuild UP-TO-DATE
+> Task :core:domain:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :core:domain:kspReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:domain:compileReleaseUnitTestKotlin UP-TO-DATE
+> Task :core:domain:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :core:domain:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :core:domain:processReleaseUnitTestJavaRes UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :core:domain:testReleaseUnitTest
+> Task :core:domain:test
+
+FAILURE: Build completed with 4 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileDebugUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileReleaseUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+3: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':core:data:compileDebugUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+4: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':core:data:compileReleaseUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+BUILD FAILED in 25s
+251 actionable tasks: 24 executed, 227 up-to-date

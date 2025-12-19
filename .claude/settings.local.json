@@ -50,7 +50,10 @@
       "Bash(./gradlew compileDebugKotlin:*)",
       "Bash(./gradlew :core:data:compileDebugKotlin:*)",
       "Bash(./gradlew clean compileDebugKotlin:*)",
-      "Bash(./gradlew :app:compileDebugKotlin:*)"
+      "Bash(./gradlew :app:compileDebugKotlin:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(tee:*)",
+      "Bash(./gradlew:*)"
     ],
     "deny": [],
     "ask": []

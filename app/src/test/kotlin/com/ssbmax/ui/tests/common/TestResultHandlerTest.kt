@@ -5,19 +5,22 @@ import androidx.navigation.NavOptionsBuilder
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.navigation.SSBMaxDestinations
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class TestResultHandlerTest {
 
-    private val navController: NavController = mockk(relaxed = true)
+    private val navController: NavController = mockk(relaxed = true) {
+        every { graph.startDestinationId } returns 1
+    }
 
     @Test
     fun premium_srt_navigates_to_result() {
-        val routeSlot = slot<String>()
-
         TestResultHandler.handleTestSubmission(
             submissionId = "sid",
             subscriptionType = SubscriptionType.PREMIUM,
@@ -26,15 +29,12 @@ class TestResultHandlerTest {
         )
 
         verify {
-            navController.navigate(capture(routeSlot), any<NavOptionsBuilder.() -> Unit>())
+            navController.navigate(eq(SSBMaxDestinations.SRTSubmissionResult.createRoute("sid")), any<NavOptionsBuilder.() -> Unit>())
         }
-        assert(routeSlot.captured == SSBMaxDestinations.SRTSubmissionResult.createRoute("sid"))
     }
 
     @Test
     fun free_srt_navigates_to_pending_review() {
-        val routeSlot = slot<String>()
-
         TestResultHandler.handleTestSubmission(
             submissionId = "sid",
             subscriptionType = SubscriptionType.FREE,
@@ -43,15 +43,12 @@ class TestResultHandlerTest {
         )
 
         verify {
-            navController.navigate(capture(routeSlot), any<NavOptionsBuilder.() -> Unit>())
+            navController.navigate(eq(SSBMaxDestinations.SubmissionDetail.createRoute("sid")), any<NavOptionsBuilder.() -> Unit>())
         }
-        assert(routeSlot.captured == SSBMaxDestinations.SubmissionDetail.createRoute("sid"))
     }
 
     @Test
     fun piq_always_navigates_to_result() {
-        val routeSlot = slot<String>()
-
         TestResultHandler.handleTestSubmission(
             submissionId = "sid",
             subscriptionType = SubscriptionType.FREE,
@@ -60,9 +57,8 @@ class TestResultHandlerTest {
         )
 
         verify {
-            navController.navigate(capture(routeSlot), any<NavOptionsBuilder.() -> Unit>())
+            navController.navigate(eq(SSBMaxDestinations.PIQSubmissionResult.createRoute("sid")), any<NavOptionsBuilder.() -> Unit>())
         }
-        assert(routeSlot.captured == SSBMaxDestinations.PIQSubmissionResult.createRoute("sid"))
     }
 }
 

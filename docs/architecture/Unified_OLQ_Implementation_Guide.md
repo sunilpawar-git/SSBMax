@@ -46,6 +46,9 @@ SSBMax now has a **Unified OLQ (Officer-Like Qualities) Assessment System** that
 
 **Total**: 13 tests using OLQ scoring out of 15 test modules (87%)
 
+> [!NOTE]  
+> For a detailed audit of the Psychology tests (TAT, WAT, SRT, SD), see the [Psychology Tests Architecture Analysis](Psychology_Tests_Architecture_Analysis.md).
+
 ---
 
 ## 🏗️ System Architecture

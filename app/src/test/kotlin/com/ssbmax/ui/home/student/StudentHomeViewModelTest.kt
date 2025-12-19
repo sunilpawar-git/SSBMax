@@ -4,6 +4,8 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.core.domain.repository.UnifiedResultRepository
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every
@@ -25,12 +27,14 @@ import org.junit.Assert.*
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class StudentHomeViewModelTest : BaseViewModelTest() {
-    
+
     private lateinit var viewModel: StudentHomeViewModel
     private lateinit var mockAuthRepository: AuthRepository
     private lateinit var mockUserProfileRepository: UserProfileRepository
     private lateinit var mockTestProgressRepository: TestProgressRepository
-    
+    private lateinit var mockUnifiedResultRepository: UnifiedResultRepository
+    private lateinit var mockGetOLQDashboard: GetOLQDashboardUseCase
+
     private lateinit var mockCurrentUserFlow: MutableStateFlow<SSBMaxUser?>
     
     private val testUser = SSBMaxUser(
@@ -76,9 +80,16 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         mockAuthRepository = mockk()
         mockUserProfileRepository = mockk()
         mockTestProgressRepository = mockk()
-        
+        mockUnifiedResultRepository = mockk()
+        mockGetOLQDashboard = mockk()
+
         mockCurrentUserFlow = MutableStateFlow(testUser)
         every { mockAuthRepository.currentUser } returns mockCurrentUserFlow
+
+        // Setup default behaviors for new dependencies
+        coEvery { mockUnifiedResultRepository.getRecentResults(any(), any()) } returns flowOf(emptyList())
+        coEvery { mockUnifiedResultRepository.getOverallOLQProfile(any()) } returns flowOf(emptyMap())
+        coEvery { mockGetOLQDashboard(any()) } returns Result.success(mockk(relaxed = true))
     }
     
     @After
@@ -102,7 +113,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -143,7 +156,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -166,7 +181,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -191,7 +208,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -216,7 +235,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -249,7 +270,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -272,7 +295,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -295,7 +320,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -325,7 +352,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -356,7 +385,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -388,7 +419,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -417,7 +450,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         
@@ -440,7 +475,9 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
-            mockTestProgressRepository
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard
         )
         advanceUntilIdle()
         

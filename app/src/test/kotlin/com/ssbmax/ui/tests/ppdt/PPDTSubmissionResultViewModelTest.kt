@@ -62,42 +62,34 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
             assertEquals("sub_ppdt_001", submission.submissionId)
             assertEquals("user_123", submission.userId)
             assertTrue("Story should be parsed", submission.story.isNotEmpty())
-            assertNotNull("Should have AI score", submission.aiPreliminaryScore)
             assertNull("Should not have instructor review", submission.instructorReview)
         }
     }
     
     @Test
-    fun `loadSubmission parses AI preliminary score with all fields`() = runTest {
-        // Given
+    fun `loadSubmission parses submission without instructor review`() = runTest {
+        // Given - Legacy AI scoring removed, now using unified OLQ system
         val mockSubmissionData = createMockSubmissionData(
             submissionId = "sub_ppdt_002",
-            includeAIScore = true,
+            includeAIScore = false,
             includeInstructorReview = false
         )
-        
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_002") 
+
+        coEvery {
+            mockSubmissionRepo.getSubmission("sub_ppdt_002")
         } returns Result.success(mockSubmissionData)
-        
+
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
         viewModel.loadSubmission("sub_ppdt_002")
         advanceUntilIdle()
-        
+
         // Then
         val submission = viewModel.uiState.value.submission!!
-        val aiScore = submission.aiPreliminaryScore!!
-        
-        assertTrue("Perception score should be > 0", aiScore.perceptionScore > 0f)
-        assertTrue("Imagination score should be > 0", aiScore.imaginationScore > 0f)
-        assertTrue("Narration score should be > 0", aiScore.narrationScore > 0f)
-        assertTrue("Character depiction score should be > 0", aiScore.characterDepictionScore > 0f)
-        assertTrue("Positivity score should be > 0", aiScore.positivityScore > 0f)
-        assertTrue("Overall score should be > 0", aiScore.overallScore > 0f)
-        assertNotNull("Should have feedback", aiScore.feedback)
-        assertTrue("Should have strengths", aiScore.strengths.isNotEmpty())
-        assertTrue("Should have areas for improvement", aiScore.areasForImprovement.isNotEmpty())
+
+        assertEquals("sub_ppdt_002", submission.submissionId)
+        assertNull("Should not have instructor review", submission.instructorReview)
+        assertTrue("Should have story", submission.story.isNotEmpty())
     }
     
     @Test
@@ -139,28 +131,27 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     }
     
     @Test
-    fun `loadSubmission handles null AI score gracefully`() = runTest {
-        // Given - submission without AI score
+    fun `loadSubmission handles submission without instructor review`() = runTest {
+        // Given - submission without instructor review (legacy AI scoring removed)
         val mockSubmissionData = createMockSubmissionData(
             submissionId = "sub_ppdt_004",
             includeAIScore = false,
             includeInstructorReview = false
         )
-        
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_004") 
+
+        coEvery {
+            mockSubmissionRepo.getSubmission("sub_ppdt_004")
         } returns Result.success(mockSubmissionData)
-        
+
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
         viewModel.loadSubmission("sub_ppdt_004")
         advanceUntilIdle()
-        
+
         // Then
         val state = viewModel.uiState.value
         assertFalse("Should not be loading", state.isLoading)
         assertNotNull("Should have submission", state.submission)
-        assertNull("Should not have AI score", state.submission?.aiPreliminaryScore)
         assertNull("Should not have instructor review", state.submission?.instructorReview)
     }
     
@@ -250,30 +241,15 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     /**
      * Create mock submission data matching Firestore structure
+     * Note: Legacy AI scoring removed - now using unified OLQ scoring system
      */
     private fun createMockSubmissionData(
         submissionId: String,
         userId: String = "user_123",
         story: String = "This is a detailed story about leadership and determination shown in the hazy picture. The characters demonstrated courage and teamwork.",
-        includeAIScore: Boolean = true,
+        includeAIScore: Boolean = false, // Deprecated - kept for API compatibility but not used
         includeInstructorReview: Boolean = false
     ): Map<String, Any> {
-        val aiScoreMap = if (includeAIScore) {
-            mapOf(
-                "perceptionScore" to 75.5f,
-                "imaginationScore" to 80.0f,
-                "narrationScore" to 70.5f,
-                "characterDepictionScore" to 78.0f,
-                "positivityScore" to 85.5f,
-                "overallScore" to 77.9f,
-                "feedback" to "Good story with clear leadership qualities demonstrated.",
-                "strengths" to listOf("Clear narration", "Positive outlook", "Leadership focus"),
-                "areasForImprovement" to listOf("Add more character depth", "Extend the story")
-            )
-        } else {
-            null
-        }
-        
         val instructorReviewMap = if (includeInstructorReview) {
             mapOf(
                 "reviewId" to "review_001",
@@ -309,11 +285,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
             "writingTimeTakenMinutes" to 4,
             "submittedAt" to System.currentTimeMillis()
         )
-        
-        if (aiScoreMap != null) {
-            dataMap["aiPreliminaryScore"] = aiScoreMap
-        }
-        
+
         if (instructorReviewMap != null) {
             dataMap["instructorReview"] = instructorReviewMap
         }

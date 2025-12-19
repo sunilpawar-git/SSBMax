@@ -226,7 +226,6 @@ class FirestoreSubmissionRepositoryTest {
             writingTimeTakenMinutes = 4,
             submittedAt = System.currentTimeMillis(),
             status = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-            aiPreliminaryScore = null,
             instructorReview = null
         )
     }
@@ -255,7 +254,6 @@ class FirestoreSubmissionRepositoryTest {
             totalTimeTakenMinutes = 15,
             submittedAt = System.currentTimeMillis(),
             status = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-            aiPreliminaryScore = null,
             gradedByInstructorId = null,
             gradingTimestamp = null
         )
@@ -279,7 +277,6 @@ class FirestoreSubmissionRepositoryTest {
             totalTimeTakenMinutes = 30,
             submittedAt = System.currentTimeMillis(),
             status = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-            aiPreliminaryScore = null,
             gradedByInstructorId = null,
             gradingTimestamp = null
         )

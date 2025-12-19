@@ -452,19 +452,15 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             
             val submission = state.submission!!
             assertEquals("Submission should have story", story, submission.story)
-            assertNotNull("Submission should have AI score", submission.aiPreliminaryScore)
-            
-            val aiScore = submission.aiPreliminaryScore!!
-            assertTrue("AI score should be reasonable", aiScore.overallScore in 0f..100f)
-            assertTrue("Perception score should be set", aiScore.perceptionScore > 0f)
-            assertTrue("Imagination score should be set", aiScore.imaginationScore > 0f)
-            assertTrue("Narration score should be set", aiScore.narrationScore > 0f)
+            // Note: Legacy AI scoring removed - now using unified OLQ scoring system
+            assertTrue("Submission should have user ID", submission.userId.isNotEmpty())
+            assertTrue("Submission should have story", submission.story.isNotEmpty())
         }
     }
     
     @Test
-    fun `AI score includes detailed breakdown`() = runTest {
-        // Given
+    fun `submission includes complete story data`() = runTest {
+        // Given - Legacy AI scoring removed, now using unified OLQ system
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
             mockSubmissionRepo,
@@ -477,28 +473,22 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000)
-        
-        viewModel.updateStory("a".repeat(300))
+
+        val story = "a".repeat(300)
+        viewModel.updateStory(story)
         viewModel.proceedToNextPhase()
-        
+
         // When
         viewModel.submitTest()
         advanceUntilIdle()
-        
+
         // Then
         val submission = viewModel.uiState.value.submission!!
-        val aiScore = submission.aiPreliminaryScore!!
-        
-            assertTrue("Should have feedback", aiScore.feedback?.isNotEmpty() == true)
-        assertTrue("Should have strengths", aiScore.strengths.isNotEmpty())
-        assertTrue("Should have areas for improvement", aiScore.areasForImprovement.isNotEmpty())
-        
-        // Verify all score components are present
-        assertTrue("Perception score > 0", aiScore.perceptionScore > 0f)
-        assertTrue("Imagination score > 0", aiScore.imaginationScore > 0f)
-        assertTrue("Narration score > 0", aiScore.narrationScore > 0f)
-        assertTrue("Character depiction score > 0", aiScore.characterDepictionScore > 0f)
-        assertTrue("Positivity score > 0", aiScore.positivityScore > 0f)
+
+        assertEquals("Story should match", story, submission.story)
+        assertEquals("Character count should match", 300, submission.charactersCount)
+        assertTrue("Should have user ID", submission.userId.isNotEmpty())
+        assertTrue("Submission ID should be set", submission.submissionId.isNotEmpty())
     }
     
     // ==================== Timer Management ====================

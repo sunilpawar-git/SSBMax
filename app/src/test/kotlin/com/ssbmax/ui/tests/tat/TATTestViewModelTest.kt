@@ -1,12 +1,12 @@
 package com.ssbmax.ui.tests.tat
 
+import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
-import com.ssbmax.core.domain.usecase.test.GenerateTATAIScoreUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,7 +27,7 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TATTestViewModelTest : BaseViewModelTest() {
-    
+
     private lateinit var viewModel: TATTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
     private val mockSubmitTATTest = mockk<SubmitTATTestUseCase>(relaxed = true)
@@ -35,8 +35,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
-    private val mockGenerateTATAIScore = mockk<GenerateTATAIScoreUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
+    private val mockWorkManager = mockk<WorkManager>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
     private val mockUser = SSBMaxUser(
@@ -110,8 +110,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -146,8 +146,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -177,8 +177,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -207,8 +207,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -236,8 +236,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -269,8 +269,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -298,8 +298,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -334,8 +334,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -370,8 +370,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -406,8 +406,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -443,8 +443,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -472,7 +472,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertEquals("Phase should be submitted", TATPhase.SUBMITTED, state.phase)
             assertNotNull("Should have subscription type", state.subscriptionType)
             assertNotNull("Should have submission", state.submission)
-            assertNotNull("Submission should have AI score", state.submission?.aiPreliminaryScore)
+            // Note: Legacy AI scoring removed - now using unified OLQ scoring system
+            assertTrue("Submission should have stories", state.submission!!.stories.isNotEmpty())
         }
         
         coVerify { mockSubmitTATTest(any(), null) }
@@ -490,8 +491,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -520,8 +521,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -556,8 +557,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -588,8 +589,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -617,8 +618,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -657,8 +658,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -691,8 +692,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -715,8 +716,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
@@ -739,8 +740,8 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGenerateTATAIScore,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()

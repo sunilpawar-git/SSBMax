@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.wat
 
+import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
@@ -35,7 +36,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
-    
+    private val mockWorkManager = mockk<WorkManager>(relaxed = true)
+
     private val mockWords = createMockWords()
     private val mockUser = SSBMaxUser(
         id = "test-user-123",
@@ -94,7 +96,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -130,7 +133,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -163,7 +167,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -186,7 +191,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -217,7 +223,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -243,7 +250,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -272,7 +280,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -305,7 +314,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -337,7 +347,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -365,7 +376,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -403,7 +415,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -424,8 +437,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             assertNotNull("Should have submission ID", state.submissionId)
             assertEquals("Phase should be submitted", WATPhase.SUBMITTED, state.phase)
             assertNotNull("Should have subscription type", state.subscriptionType)
-            assertNotNull("Should have submission with AI score", state.submission)
-            assertNotNull("Submission should have AI score", state.submission?.aiPreliminaryScore)
+            assertNotNull("Should have submission", state.submission)
+            // Note: Legacy AI scoring removed - now using unified OLQ scoring system
+            assertTrue("Submission should have responses", state.submission!!.responses.isNotEmpty())
         }
         
         // Verify submitWATTest was called
@@ -449,7 +463,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -476,11 +491,13 @@ class WATTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest records performance analytics with correct score`() = runTest {
         // Given - use 10 words for controlled test
+        coEvery { mockDifficultyManager.getRecommendedDifficulty("WAT") } returns "MEDIUM"
+
         val shortWords = mockWords.take(10)
-        coEvery { 
-            mockTestContentRepo.getWATQuestions(any()) 
+        coEvery {
+            mockTestContentRepo.getWATQuestions(any())
         } returns Result.success(shortWords)
-        
+
         viewModel = WATTestViewModel(
             mockTestContentRepo,
             mockSubmitWATTest,
@@ -488,12 +505,13 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
         viewModel.startTest()
-        
+
         // When - answer 7 out of 10 words, skip 3
         repeat(7) {
             viewModel.updateResponse("Response${it + 1}")
@@ -503,9 +521,9 @@ class WATTestViewModelTest : BaseViewModelTest() {
             viewModel.skipWord()
         }
         advanceUntilIdle()
-        
+
         // Then - verify recordPerformance was called with correct score (70%)
-        coVerify { 
+        coVerify {
             mockDifficultyManager.recordPerformance(
                 testType = "WAT",
                 difficulty = "MEDIUM",
@@ -532,7 +550,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -546,19 +565,21 @@ class WATTestViewModelTest : BaseViewModelTest() {
         advanceUntilIdle()
         
         // Then - verify subscription usage was recorded
-        coVerify { 
-            mockSubscriptionManager.recordTestUsage(TestType.WAT, "test-user-123")
+        coVerify {
+            mockSubscriptionManager.recordTestUsage(TestType.WAT, "test-user-123", any())
         }
     }
     
     @Test
     fun `submitTest with all skipped words records 0 percent score`() = runTest {
         // Given
+        coEvery { mockDifficultyManager.getRecommendedDifficulty("WAT") } returns "MEDIUM"
+
         val shortWords = mockWords.take(5)
-        coEvery { 
-            mockTestContentRepo.getWATQuestions(any()) 
+        coEvery {
+            mockTestContentRepo.getWATQuestions(any())
         } returns Result.success(shortWords)
-        
+
         viewModel = WATTestViewModel(
             mockTestContentRepo,
             mockSubmitWATTest,
@@ -566,20 +587,21 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
         viewModel.startTest()
-        
+
         // When - skip all words
         repeat(5) {
             viewModel.skipWord()
         }
         advanceUntilIdle()
-        
+
         // Then - verify 0% score recorded
-        coVerify { 
+        coVerify {
             mockDifficultyManager.recordPerformance(
                 testType = "WAT",
                 difficulty = "MEDIUM",
@@ -594,11 +616,13 @@ class WATTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest with all valid responses records 100 percent score`() = runTest {
         // Given
+        coEvery { mockDifficultyManager.getRecommendedDifficulty("WAT") } returns "MEDIUM"
+
         val shortWords = mockWords.take(5)
-        coEvery { 
-            mockTestContentRepo.getWATQuestions(any()) 
+        coEvery {
+            mockTestContentRepo.getWATQuestions(any())
         } returns Result.success(shortWords)
-        
+
         viewModel = WATTestViewModel(
             mockTestContentRepo,
             mockSubmitWATTest,
@@ -606,21 +630,22 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
         viewModel.startTest()
-        
+
         // When - answer all words
         repeat(5) {
             viewModel.updateResponse("ValidResponse${it + 1}")
             viewModel.submitResponse()
         }
         advanceUntilIdle()
-        
+
         // Then - verify 100% score recorded
-        coVerify { 
+        coVerify {
             mockDifficultyManager.recordPerformance(
                 testType = "WAT",
                 difficulty = "MEDIUM",
@@ -649,7 +674,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -689,7 +715,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -722,7 +749,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -745,7 +773,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()
@@ -768,7 +797,8 @@ class WATTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("wat_standard")
         advanceUntilIdle()

@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.sdt
 
+import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
@@ -31,6 +32,7 @@ class SDTTestViewModelTest {
     private lateinit var difficultyManager: DifficultyProgressionManager
     private lateinit var subscriptionManager: SubscriptionManager
     private lateinit var securityLogger: SecurityEventLogger
+    private lateinit var workManager: WorkManager
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -45,6 +47,7 @@ class SDTTestViewModelTest {
         difficultyManager = mockk(relaxed = true)
         subscriptionManager = mockk(relaxed = true)
         securityLogger = mockk(relaxed = true)
+        workManager = mockk(relaxed = true)
 
         coEvery { observeCurrentUser() } returns flowOf(createMockUser())
         coEvery { subscriptionManager.canTakeTest(any(), any()) } returns TestEligibility.Eligible(
@@ -61,7 +64,8 @@ class SDTTestViewModelTest {
             userProfileRepository,
             difficultyManager,
             subscriptionManager,
-            securityLogger
+            securityLogger,
+            workManager
         )
     }
 
@@ -176,7 +180,7 @@ class SDTTestViewModelTest {
         advanceUntilIdle()
 
         coVerify { submitSDTTest(any(), any()) }
-        coVerify { subscriptionManager.recordTestUsage(TestType.SD, any()) }
+        coVerify { subscriptionManager.recordTestUsage(TestType.SD, any(), any()) }
     }
 
     @Test
@@ -190,7 +194,7 @@ class SDTTestViewModelTest {
         viewModel.submitTest()
         advanceUntilIdle()
 
-        coVerify { subscriptionManager.recordTestUsage(TestType.SD, any()) }
+        coVerify { subscriptionManager.recordTestUsage(TestType.SD, any(), any()) }
     }
 
     @Test

@@ -65,26 +65,11 @@ class PPDTSubmissionResultViewModel @Inject constructor(
 
     /**
      * Parse PPDT submission from Firestore document data
+     * Note: Legacy AI scoring removed - now using unified OLQ scoring system
      */
     private fun parsePPDTSubmission(data: Map<String, Any>): PPDTSubmission? {
         return try {
             val submissionData = data["data"] as? Map<*, *> ?: return null
-
-            // Parse AI score if present
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                PPDTAIScore(
-                    perceptionScore = (it["perceptionScore"] as? Number)?.toFloat() ?: 0f,
-                    imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                    narrationScore = (it["narrationScore"] as? Number)?.toFloat() ?: 0f,
-                    characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                    positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String,
-                    strengths = (it["strengths"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                )
-            }
 
             // Parse instructor review if present
             val instructorReviewData = submissionData["instructorReview"] as? Map<*, *>
