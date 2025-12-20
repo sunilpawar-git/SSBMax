@@ -85,7 +85,7 @@ object TestResultHandler {
         
         navController.navigate(route) {
             // Clear test screen from back stack
-            popUpTo(navController.graph.startDestinationId) {
+            popUpTo(SSBMaxDestinations.StudentHome.route) {
                 saveState = false
             }
         }
@@ -102,7 +102,7 @@ object TestResultHandler {
             SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)
         ) {
             // Clear test screen from back stack
-            popUpTo(navController.graph.startDestinationId) {
+            popUpTo(SSBMaxDestinations.StudentHome.route) {
                 saveState = false
             }
         }

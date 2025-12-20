@@ -52,7 +52,10 @@ data class PrerequisiteCheckResult(
 }
 
 /**
- * PIQ completion and AI scoring status
+ * PIQ completion status
+ *
+ * Note: AI quality score is optional user feedback, not required for interview.
+ * The interview only needs the PIQ form data (background, family, education, etc.)
  */
 sealed class PIQStatus {
     /**
@@ -61,15 +64,10 @@ sealed class PIQStatus {
     object NotStarted : PIQStatus()
 
     /**
-     * PIQ submitted but AI scoring in progress
-     */
-    object ScoringInProgress : PIQStatus()
-
-    /**
-     * PIQ completed with AI score available
+     * PIQ completed and submitted
      *
      * @param submissionId PIQ submission ID for fetching data
-     * @param aiScore AI-generated score (0-100)
+     * @param aiScore Optional AI quality score (0-100), defaults to 0 if not available
      */
     data class Completed(
         val submissionId: String,
@@ -84,7 +82,6 @@ sealed class PIQStatus {
     val displayName: String
         get() = when (this) {
             is NotStarted -> "Not Started"
-            is ScoringInProgress -> "Scoring in Progress"
             is Completed -> "Completed"
         }
 }

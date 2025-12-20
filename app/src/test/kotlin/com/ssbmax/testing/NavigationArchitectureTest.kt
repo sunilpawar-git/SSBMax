@@ -286,5 +286,61 @@ class NavigationArchitectureTest {
         
         println("✅ Text and Voice interview have consistent navigation patterns")
     }
+
+    @Test
+    fun `test result navigation should use StudentHome for popUpTo not startDestinationId`() {
+        val testResultHandlerFile = File(projectRoot, "app/src/main/kotlin/com/ssbmax/ui/tests/common/TestResultHandler.kt")
+
+        if (!testResultHandlerFile.exists()) {
+            println("⚠️ TestResultHandler.kt not found at expected location, skipping...")
+            return
+        }
+
+        val content = testResultHandlerFile.readText()
+
+        // Check for the problematic pattern: popUpTo(navController.graph.startDestinationId)
+        val startDestinationPattern = Regex("""popUpTo\(navController\.graph\.startDestinationId\)""")
+
+        val matches = startDestinationPattern.findAll(content).toList()
+
+        if (matches.isNotEmpty()) {
+            throw AssertionError(
+                """
+                |❌ NAVIGATION BUG DETECTED IN TEST RESULT HANDLER!
+                |
+                |Found ${matches.size} uses of popUpTo(navController.graph.startDestinationId)
+                |in TestResultHandler.kt
+                |
+                |This pattern is INCORRECT because startDestinationId (Splash screen)
+                |might not be in the back stack for logged-in users, causing the app
+                |to minimize or behave unpredictably when submitting test results.
+                |
+                |FIX: Use popUpTo(SSBMaxDestinations.StudentHome.route) instead.
+                |StudentHome is always in the back stack as the root destination
+                |for authenticated users.
+                |
+                |This bug was specifically causing GPE test submissions to minimize the app.
+                |
+                |Location: TestResultHandler.kt navigation methods
+                """.trimMargin()
+            )
+        }
+
+        // Verify correct pattern is used
+        val studentHomePattern = Regex("""popUpTo\(SSBMaxDestinations\.StudentHome\.route\)""")
+        val studentHomeCount = studentHomePattern.findAll(content).count()
+
+        assert(studentHomeCount >= 2) {
+            """
+            |⚠️ Expected at least 2 uses of popUpTo(StudentHome.route) in TestResultHandler
+            |(one for navigateToResult and one for navigateToPendingReview).
+            |Found: $studentHomeCount
+            |
+            |This ensures test result navigation uses reliable back stack management.
+            """.trimMargin()
+        }
+
+        println("✅ Test result navigation uses correct popUpTo pattern: $studentHomeCount uses of StudentHome.route")
+    }
 }
 

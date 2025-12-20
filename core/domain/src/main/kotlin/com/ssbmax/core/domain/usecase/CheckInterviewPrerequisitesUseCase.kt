@@ -16,13 +16,16 @@ import javax.inject.Inject
  * Use case to check if user meets all prerequisites for starting an interview
  *
  * Prerequisites:
- * 1. PIQ must be completed with AI score
+ * 1. PIQ must be completed (submitted with form data)
  * 2. OIR must be completed with score >= 50%
  * 3. PPDT must be completed
  * 4. User must have remaining interviews based on subscription:
  *    - FREE: 1 interview/month with Android TTS
  *    - PRO: 1 interview/month with Sarvam AI TTS
  *    - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ *
+ * Note: PIQ AI quality score is optional user feedback, not required for interview.
+ * The interview only needs the PIQ form data (background, family, education, etc.)
  */
 class CheckInterviewPrerequisitesUseCase @Inject constructor(
     private val submissionRepository: SubmissionRepository,
@@ -67,7 +70,6 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
 
             when (piqStatus) {
                 is PIQStatus.NotStarted -> failureReasons.add("Complete Personal Information Questionnaire (PIQ)")
-                is PIQStatus.ScoringInProgress -> failureReasons.add("Wait for PIQ AI scoring to complete")
                 is PIQStatus.Completed -> {} // Valid
             }
 
@@ -108,7 +110,10 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
     }
 
     /**
-     * Check PIQ completion and AI scoring status
+     * Check PIQ completion status
+     *
+     * Only checks if PIQ is submitted with form data.
+     * AI quality score is optional and not required for interview eligibility.
      */
     private suspend fun checkPIQStatus(userId: String): PIQStatus {
         // Get latest PIQ submission
@@ -119,17 +124,12 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
         } else {
             val submission = piqResult.getOrNull()!!
 
-            // Check if AI score is available
-            val aiScore = submission.aiPreliminaryScore?.overallScore
-
-            if (aiScore == null) {
-                PIQStatus.ScoringInProgress
-            } else {
-                PIQStatus.Completed(
-                    submissionId = submission.id,
-                    aiScore = aiScore
-                )
-            }
+            // PIQ is completed if it's submitted (has form data)
+            // AI quality score is optional feedback, not a requirement
+            PIQStatus.Completed(
+                submissionId = submission.id,
+                aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f
+            )
         }
     }
 
