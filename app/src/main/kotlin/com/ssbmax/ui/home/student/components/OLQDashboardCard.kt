@@ -91,14 +91,17 @@ fun OLQDashboardCard(
 
                     TestScoreChip(
                         testName = "PPDT",
-                        score = dashboard.phase1Results.ppdtResult?.olqResult?.overallScore 
+                        score = dashboard.phase1Results.ppdtOLQResult?.overallScore 
                             ?: dashboard.phase1Results.ppdtResult?.finalScore,
                         isOLQBased = true,  // ✅ Now OLQ-based
-                        onClick = {
-                            dashboard.phase1Results.ppdtResult?.let {
-                                onNavigateToResult(TestType.PPDT, it.submissionId)
+                        onClick = if (dashboard.phase1Results.ppdtResult != null) {
+                            // Clickable when submission exists (even during analysis)
+                            {
+                                dashboard.phase1Results.ppdtResult?.let {
+                                    onNavigateToResult(TestType.PPDT, it.submissionId)
+                                }
                             }
-                        }
+                        } else null  // No submission = not clickable
                     )
                 }
 
@@ -259,7 +262,9 @@ private fun TestScoreChip(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (onClick != null && score != null) {
+                // Make clickable when onClick provided, regardless of score
+                // This allows navigation even during analysis (PENDING/ANALYZING)
+                if (onClick != null) {
                     Modifier.clickable(onClick = onClick)
                 } else Modifier
             ),
