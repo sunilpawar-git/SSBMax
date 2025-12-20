@@ -8,6 +8,7 @@ import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import androidx.work.WorkManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
@@ -32,6 +33,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
+    private val mockWorkManager = mockk<WorkManager>(relaxed = true)
     
     private val mockQuestion = createMockQuestion()
     private val mockUser = SSBMaxUser(
@@ -84,6 +86,11 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockSubscriptionManager.recordTestUsage(any(), any(), any())
         } returns Unit
         
+        // Mock PPDT submission - return success with the submission ID
+        coEvery {
+            mockSubmissionRepo.submitPPDT(any(), any())
+        } returns Result.success("test-submission-id")
+        
         // Mock difficulty manager
         coEvery {
             mockDifficultyManager.recordPerformance(any(), any(), any(), any(), any(), any())
@@ -102,7 +109,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         
@@ -134,7 +142,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         
@@ -166,7 +175,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         
@@ -188,7 +198,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         
@@ -214,7 +225,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -241,7 +253,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -268,7 +281,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -302,7 +316,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -336,7 +351,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -366,7 +382,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -398,7 +415,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -426,7 +444,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -468,7 +487,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -503,7 +523,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -530,7 +551,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         
@@ -558,7 +580,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -588,7 +611,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -616,7 +640,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         advanceUntilIdle()
         viewModel.startTest()
@@ -650,7 +675,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
@@ -683,7 +709,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
@@ -706,7 +733,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
-            mockSecurityLogger
+            mockSecurityLogger,
+            mockWorkManager
         )
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()

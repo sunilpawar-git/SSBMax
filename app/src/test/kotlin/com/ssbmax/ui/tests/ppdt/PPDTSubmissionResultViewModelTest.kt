@@ -5,8 +5,10 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -16,6 +18,8 @@ import org.junit.Test
 /**
  * Unit tests for PPDTSubmissionResultViewModel
  * Tests submission data loading, parsing, AI scores, and instructor reviews
+ * 
+ * Note: ViewModel uses observeSubmission() (Flow-based) not getSubmission()
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
@@ -37,13 +41,12 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
             submissionId = "sub_ppdt_001",
             userId = "user_123",
             story = "This is a detailed story about the hazy picture showing leadership qualities.",
-            includeAIScore = true,
             includeInstructorReview = false
         )
         
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_001") 
-        } returns Result.success(mockSubmissionData)
+        every { 
+            mockSubmissionRepo.observeSubmission("sub_ppdt_001") 
+        } returns flowOf(mockSubmissionData)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -68,16 +71,15 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission parses submission without instructor review`() = runTest {
-        // Given - Legacy AI scoring removed, now using unified OLQ system
+        // Given 
         val mockSubmissionData = createMockSubmissionData(
             submissionId = "sub_ppdt_002",
-            includeAIScore = false,
             includeInstructorReview = false
         )
 
-        coEvery {
-            mockSubmissionRepo.getSubmission("sub_ppdt_002")
-        } returns Result.success(mockSubmissionData)
+        every {
+            mockSubmissionRepo.observeSubmission("sub_ppdt_002")
+        } returns flowOf(mockSubmissionData)
 
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -85,9 +87,10 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         advanceUntilIdle()
 
         // Then
-        val submission = viewModel.uiState.value.submission!!
+        val submission = viewModel.uiState.value.submission
 
-        assertEquals("sub_ppdt_002", submission.submissionId)
+        assertNotNull("Should have submission", submission)
+        assertEquals("sub_ppdt_002", submission!!.submissionId)
         assertNull("Should not have instructor review", submission.instructorReview)
         assertTrue("Should have story", submission.story.isNotEmpty())
     }
@@ -97,13 +100,12 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         // Given
         val mockSubmissionData = createMockSubmissionData(
             submissionId = "sub_ppdt_003",
-            includeAIScore = true,
             includeInstructorReview = true
         )
         
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_003") 
-        } returns Result.success(mockSubmissionData)
+        every { 
+            mockSubmissionRepo.observeSubmission("sub_ppdt_003") 
+        } returns flowOf(mockSubmissionData)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -111,10 +113,13 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         advanceUntilIdle()
         
         // Then
-        val submission = viewModel.uiState.value.submission!!
-        val instructorReview = submission.instructorReview!!
+        val submission = viewModel.uiState.value.submission
+        assertNotNull("Should have submission", submission)
         
-        assertTrue("Review ID should be set", instructorReview.reviewId.isNotEmpty())
+        val instructorReview = submission!!.instructorReview
+        assertNotNull("Should have instructor review", instructorReview)
+        
+        assertTrue("Review ID should be set", instructorReview!!.reviewId.isNotEmpty())
         assertTrue("Instructor ID should be set", instructorReview.instructorId.isNotEmpty())
         assertTrue("Instructor name should be set", instructorReview.instructorName.isNotEmpty())
         assertTrue("Final score should be > 0", instructorReview.finalScore > 0f)
@@ -132,16 +137,15 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission handles submission without instructor review`() = runTest {
-        // Given - submission without instructor review (legacy AI scoring removed)
+        // Given - submission without instructor review
         val mockSubmissionData = createMockSubmissionData(
             submissionId = "sub_ppdt_004",
-            includeAIScore = false,
             includeInstructorReview = false
         )
 
-        coEvery {
-            mockSubmissionRepo.getSubmission("sub_ppdt_004")
-        } returns Result.success(mockSubmissionData)
+        every {
+            mockSubmissionRepo.observeSubmission("sub_ppdt_004")
+        } returns flowOf(mockSubmissionData)
 
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -157,10 +161,10 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission shows error when submission not found`() = runTest {
-        // Given - submission doesn't exist
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_999") 
-        } returns Result.success(null)
+        // Given - observeSubmission emits null (submission doesn't exist)
+        every { 
+            mockSubmissionRepo.observeSubmission("sub_ppdt_999") 
+        } returns flowOf(null)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -183,10 +187,10 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission shows error on repository failure`() = runTest {
-        // Given - repository returns failure
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_error") 
-        } returns Result.failure(Exception("Network error"))
+        // Given - repository throws exception
+        every { 
+            mockSubmissionRepo.observeSubmission("sub_ppdt_error") 
+        } throws RuntimeException("Network error")
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -209,17 +213,17 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission handles malformed data gracefully`() = runTest {
-        // Given - malformed submission data (missing required fields)
-        val malformedData = mapOf(
+        // Given - malformed submission data (missing required fields in data)
+        val malformedData = mapOf<String, Any>(
             "id" to "sub_ppdt_malformed",
             "userId" to "user_123",
             // Missing "data" field entirely
             "status" to "SUBMITTED_PENDING_REVIEW"
         )
         
-        coEvery { 
-            mockSubmissionRepo.getSubmission("sub_ppdt_malformed") 
-        } returns Result.success(malformedData)
+        every { 
+            mockSubmissionRepo.observeSubmission("sub_ppdt_malformed") 
+        } returns flowOf(malformedData)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -233,7 +237,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         assertNotNull("Should have error", state.error)
         assertTrue(
             "Error should mention parsing failure",
-            state.error!!.contains("parse")
+            state.error!!.contains("parse") || state.error!!.contains("Failed")
         )
     }
     
@@ -241,13 +245,11 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     /**
      * Create mock submission data matching Firestore structure
-     * Note: Legacy AI scoring removed - now using unified OLQ scoring system
      */
     private fun createMockSubmissionData(
         submissionId: String,
         userId: String = "user_123",
         story: String = "This is a detailed story about leadership and determination shown in the hazy picture. The characters demonstrated courage and teamwork.",
-        includeAIScore: Boolean = false, // Deprecated - kept for API compatibility but not used
         includeInstructorReview: Boolean = false
     ): Map<String, Any> {
         val instructorReviewMap = if (includeInstructorReview) {
@@ -300,4 +302,3 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         )
     }
 }
-

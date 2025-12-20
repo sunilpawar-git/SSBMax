@@ -20,13 +20,16 @@ import java.io.File
 class TestProgressTrackingContractTest {
 
     private val submissionRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepository.kt"
+    private val personalRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PersonalTestSubmissionRepository.kt"
+    private val psychRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PsychTestSubmissionRepository.kt"
+    private val commonRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/CommonSubmissionRepository.kt"
     private val progressRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/TestProgressRepositoryImpl.kt"
 
     @Test
     fun `Phase1 tests must create submissions with correct testType`() {
         // Given - Phase 1 tests: OIR, PPDT
-        val repoFile = findProjectFile(submissionRepoPath)
-        assertTrue("FirestoreSubmissionRepository.kt should exist", repoFile.exists())
+        val repoFile = findProjectFile(personalRepoPath)
+        assertTrue("PersonalTestSubmissionRepository.kt should exist", repoFile.exists())
         
         val content = repoFile.readText()
         
@@ -53,7 +56,7 @@ class TestProgressTrackingContractTest {
     @Test
     fun `Phase2 psychology tests must create submissions with correct testType`() {
         // Given - Phase 2 psychology tests: TAT, WAT, SRT, SD
-        val repoFile = findProjectFile(submissionRepoPath)
+        val repoFile = findProjectFile(psychRepoPath)
         val content = repoFile.readText()
         
         val psychologyTests = listOf(
@@ -117,14 +120,30 @@ class TestProgressTrackingContractTest {
     @Test
     fun `all submission methods must write to submissions collection`() {
         // Given
-        val repoFile = findProjectFile(submissionRepoPath)
-        val content = repoFile.readText()
+        val commonRepoFile = findProjectFile(commonRepoPath)
+        val commonContent = commonRepoFile.readText()
         
-        // Then - All submission methods must use submissionsCollection
+        val psychRepoFile = findProjectFile(psychRepoPath)
+        val psychContent = psychRepoFile.readText()
+        
+        val personalRepoFile = findProjectFile(personalRepoPath)
+        val personalContent = personalRepoFile.readText()
+        
+        // Then - All submission repositories must use submissionsCollection
         assertTrue(
-            "FirestoreSubmissionRepository must use 'submissions' collection",
-            content.contains("submissionsCollection") ||
-            content.contains("collection(\"submissions\")")
+            "CommonSubmissionRepository must use 'submissions' collection",
+            commonContent.contains("submissionsCollection") ||
+            commonContent.contains("collection(\"submissions\")")
+        )
+        assertTrue(
+            "PsychTestSubmissionRepository must use 'submissions' collection",
+            psychContent.contains("submissionsCollection") ||
+            psychContent.contains("collection(\"submissions\")")
+        )
+        assertTrue(
+            "PersonalTestSubmissionRepository must use 'submissions' collection",
+            personalContent.contains("submissionsCollection") ||
+            personalContent.contains("collection(\"submissions\")")
         )
     }
 
