@@ -42,16 +42,13 @@ class PPDTSubmissionResultViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
-            // Track best state seen to prevent regression from conflicting Firestore updates
-            var hasSeenCompleteWithOLQ = false
-            
             try {
-                // Observe submission for real-time status updates (GTO pattern)
-                submissionRepository.observeSubmission(submissionId).collect { data ->
+                // Observe submission for status changes (GTO dual-fetch pattern)
+                submissionRepository.observePPDTSubmission(submissionId).collect { submission ->
                     android.util.Log.d(TAG, "🔄 Firestore snapshot received for: $submissionId")
-                    android.util.Log.d(TAG, "   - Data exists: ${data != null}")
+                    android.util.Log.d(TAG, "   - Submission exists: ${submission != null}")
                     
-                    if (data == null) {
+                    if (submission == null) {
                         android.util.Log.e(TAG, "❌ Submission not found in snapshot")
                         _uiState.update { it.copy(
                             isLoading = false,
@@ -59,48 +56,21 @@ class PPDTSubmissionResultViewModel @Inject constructor(
                         ) }
                         return@collect
                     }
-
-                    val submissionData = data["data"] as? Map<*, *>
-                    val analysisStatus = submissionData?.get("analysisStatus") as? String
-                    val hasOlqResult = submissionData?.get("olqResult") != null
                     
-                    android.util.Log.d(TAG, "   - analysisStatus: $analysisStatus")
-                    android.util.Log.d(TAG, "   - olqResult exists: $hasOlqResult")
+                    android.util.Log.d(TAG, "   - analysisStatus: ${submission.analysisStatus}")
                     
-                    // Check if this is a COMPLETE snapshot with OLQ data
-                    val isCompleteWithOLQ = analysisStatus == "COMPLETED" && hasOlqResult
+                    // Update UI with submission data (story, metadata)
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        submission = submission
+                    ) }
                     
-                    // Track best state
-                    if (isCompleteWithOLQ) {
-                        hasSeenCompleteWithOLQ = true
-                        android.util.Log.d(TAG, "✅ Marked hasSeenCompleteWithOLQ = true")
-                    }
-                    
-                    // CRITICAL FIX: Prevent regression from COMPLETED+OLQ to incomplete state
-                    // This handles Firestore offline cache conflicts where stale data overwrites
-                    if (hasSeenCompleteWithOLQ && !isCompleteWithOLQ) {
-                        android.util.Log.w(TAG, "⚠️ BLOCKING REGRESSION: Previously saw COMPLETED with OLQ, ignoring incomplete snapshot")
-                        return@collect // Skip this update, keep previous good state
-                    }
-                    
-                    // Parse PPDT submission from map
-                    val submission = parsePPDTSubmission(data)
-                    if (submission != null) {
-                        android.util.Log.d(TAG, "📊 Updating UI state with submission data")
-                        android.util.Log.d(TAG, "   - analysisStatus: ${submission.analysisStatus}")
-                        android.util.Log.d(TAG, "   - olqResult: ${submission.olqResult != null}")
-                        android.util.Log.d(TAG, "   - OLQ scores count: ${submission.olqResult?.olqScores?.size ?: 0}")
-                        
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            submission = submission
-                        ) }
+                    // GTO PATTERN: If analysis is completed, fetch results from ppdt_results collection
+                    if (submission.analysisStatus == AnalysisStatus.COMPLETED) {
+                        android.util.Log.d(TAG, "✅ Status is COMPLETED, loading result from ppdt_results...")
+                        loadResult(submissionId)
                     } else {
-                        android.util.Log.e(TAG, "❌ Failed to parse submission data")
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            error = "Failed to parse submission data"
-                        ) }
+                        android.util.Log.d(TAG, "⏳ Status is ${submission.analysisStatus}, waiting for completion...")
                     }
                 }
             } catch (e: Exception) {
@@ -111,6 +81,37 @@ class PPDTSubmissionResultViewModel @Inject constructor(
                     error = e.message ?: "Failed to load submission"
                 ) }
             }
+        }
+    }
+    
+    /**
+     * Load OLQ result from ppdt_results collection (GTO pattern)
+     * This is called when submission status changes to COMPLETED
+     */
+    private suspend fun loadResult(submissionId: String) {
+        try {
+            android.util.Log.d(TAG, "📈 Loading OLQ result from ppdt_results...")
+            
+            val result = submissionRepository.getPPDTResult(submissionId)
+            
+            if (result.isSuccess) {
+                val olqResult = result.getOrNull()
+                android.util.Log.d(TAG, "✅ Result loaded: ${olqResult?.olqScores?.size} OLQ scores")
+                
+                // Update submission with OLQ result
+                _uiState.update { currentState ->
+                    currentState.submission?.let { submission ->
+                        currentState.copy(
+                            submission = submission.copy(olqResult = olqResult)
+                        )
+                    } ?: currentState
+                }
+            } else {
+                android.util.Log.w(TAG, "⚠️ Result not yet available", result.exceptionOrNull())
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "❌ Error loading OLQ result", e)
+            ErrorLogger.logTestError(e, "Failed to load PPDT OLQ result", "PPDT")
         }
     }
 

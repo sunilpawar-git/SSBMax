@@ -24,7 +24,8 @@ data class OLQDashboardData(
      */
     data class Phase1Results(
         val oirResult: OIRTestResult?,
-        val ppdtResult: PPDTSubmission?
+        val ppdtResult: PPDTSubmission?,  // Full submission for UI details
+        val ppdtOLQResult: OLQAnalysisResult?  // Extracted OLQ scores for aggregation
     )
 
     /**
@@ -52,7 +53,7 @@ data class OLQDashboardData(
         get() {
             var count = 0
             if (phase1Results.oirResult != null) count++
-            if (phase1Results.ppdtResult != null) count++
+            if (phase1Results.ppdtOLQResult != null) count++  // Count only when OLQ analyzed
             if (phase2Results.tatResult != null) count++
             if (phase2Results.watResult != null) count++
             if (phase2Results.srtResult != null) count++

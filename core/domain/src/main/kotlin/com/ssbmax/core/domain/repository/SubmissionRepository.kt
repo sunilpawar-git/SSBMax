@@ -260,6 +260,11 @@ interface SubmissionRepository {
      */
     fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?>
     
+    /**
+     * Get PPDT OLQ result from ppdt_results collection (GTO pattern)
+     */
+    suspend fun getPPDTResult(submissionId: String): Result<com.ssbmax.core.domain.model.scoring.OLQAnalysisResult?>
+    
     // ===========================
     // Archival Methods
     // ===========================

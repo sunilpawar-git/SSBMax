@@ -241,10 +241,9 @@ service cloud.firestore {
       // Assessors can update submissions for grading (any status)
       allow update: if isAuthenticated() &&
                        ((resource.data.userId == request.auth.uid && resource.data.status == 'IN_PROGRESS') ||
-                        // Allow status-only updates for background analysis workers
+                        // Allow status and data.analysisStatus updates for background analysis workers
                         (resource.data.userId == request.auth.uid && 
-                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
-                         resource.data.status in ['PENDING_ANALYSIS', 'ANALYZING']) ||
+                         resource.data.status in ['PENDING_ANALYSIS', 'ANALYZING', 'SUBMITTED_PENDING_REVIEW']) ||
                         (resource.data.instructorId == request.auth.uid) ||
                         (isAssessor() && resource.data.keys().hasAny(['batchId']) &&
                          get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
@@ -262,6 +261,16 @@ service cloud.firestore {
     
     match /gto_results/{resultId} {
       // Users can read/write their own GTO results (client-side AI analysis)
+      allow read, write: if isAuthenticated() && 
+                            (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+    }
+    
+    // ============================================
+    // PPDT RESULTS (Split Architecture like GTO)
+    // ============================================
+    
+    match /ppdt_results/{resultId} {
+      // Users can read/write their own PPDT results (client-side AI analysis)
       allow read, write: if isAuthenticated() && 
                             (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }

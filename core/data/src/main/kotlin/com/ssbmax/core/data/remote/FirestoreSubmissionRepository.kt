@@ -127,6 +127,9 @@ class FirestoreSubmissionRepository @Inject constructor(
     override fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?> =
         personalRepo.observePPDTSubmission(submissionId)
 
+    override suspend fun getPPDTResult(submissionId: String): Result<OLQAnalysisResult?> =
+        personalRepo.getPPDTResult(submissionId)
+
     // ===========================
     // Psych Test Methods (PsychTestSubmissionRepository)
     // ===========================

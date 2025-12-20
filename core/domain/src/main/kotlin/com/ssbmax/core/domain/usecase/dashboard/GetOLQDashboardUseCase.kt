@@ -56,8 +56,15 @@ class GetOLQDashboardUseCase @Inject constructor(
                     null // Keep as OIRSubmission
                 }
             
-            val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId)
+            // Fetch PPDT submission and fetch OLQ result from ppdt_results collection (GTO pattern)
+            // Important: Try fetching from ppdt_results first - the submission's analysisStatus may be stale
+            val ppdtSubmission = submissionRepository.getLatestPPDTSubmission(userId)
                 .getOrNull()
+            
+            // Directly try to fetch from ppdt_results - this collection is always fresh
+            val ppdtOLQResult = ppdtSubmission?.let { 
+                submissionRepository.getPPDTResult(it.submissionId).getOrNull() 
+            }
 
             // Fetch Phase 2 Psychology test results (OLQ-based)
             val tatResult = getLatestCompletedOLQResult(userId, "TAT")
@@ -115,7 +122,8 @@ class GetOLQDashboardUseCase @Inject constructor(
                         // Convert OIRSubmission to OIRTestResult if needed
                         null // TODO: Map to OIRTestResult
                     },
-                    ppdtResult = ppdtResult
+                    ppdtResult = ppdtSubmission,  // Full submission for UI display
+                    ppdtOLQResult = ppdtOLQResult  // Extracted OLQ scores
                 ),
                 phase2Results = OLQDashboardData.Phase2Results(
                     tatResult = tatResult,
@@ -186,7 +194,7 @@ class GetOLQDashboardUseCase @Inject constructor(
     }
     
     /**
-     * Compute average OLQ scores across all Phase 2 tests
+     * Compute average OLQ scores across all tests (Phase 1 PPDT + Phase 2)
      */
     private fun computeAverageOLQScores(dashboard: OLQDashboardData): Map<OLQ, Float> {
         val olqScoresMap = mutableMapOf<OLQ, Float>()
@@ -194,7 +202,10 @@ class GetOLQDashboardUseCase @Inject constructor(
         OLQ.entries.forEach { olq ->
             val scores = mutableListOf<Float>()
             
-            // Psychology tests
+            // Phase 1: PPDT
+            dashboard.phase1Results.ppdtOLQResult?.olqScores?.get(olq)?.score?.let { scores.add(it.toFloat()) }
+            
+            // Phase 2: Psychology tests
             dashboard.phase2Results.tatResult?.olqScores?.get(olq)?.score?.let { scores.add(it.toFloat()) }
             dashboard.phase2Results.watResult?.olqScores?.get(olq)?.score?.let { scores.add(it.toFloat()) }
             dashboard.phase2Results.srtResult?.olqScores?.get(olq)?.score?.let { scores.add(it.toFloat()) }
@@ -217,11 +228,15 @@ class GetOLQDashboardUseCase @Inject constructor(
     }
     
     /**
-     * Compute overall average score across all Phase 2 tests
+     * Compute overall average score across all tests (Phase 1 PPDT + Phase 2)
      */
     private fun computeOverallAverage(dashboard: OLQDashboardData): Float? {
         val allScores = mutableListOf<Float>()
         
+        // Phase 1: PPDT
+        dashboard.phase1Results.ppdtOLQResult?.overallScore?.let { allScores.add(it) }
+        
+        // Phase 2: Psychology tests
         dashboard.phase2Results.tatResult?.overallScore?.let { allScores.add(it) }
         dashboard.phase2Results.watResult?.overallScore?.let { allScores.add(it) }
         dashboard.phase2Results.srtResult?.overallScore?.let { allScores.add(it) }
