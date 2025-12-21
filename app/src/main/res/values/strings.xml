@@ -1162,6 +1162,9 @@
     <string name="button_ok">OK</string>
     <string name="button_cancel">Cancel</string>
     <string name="button_retry">Retry</string>
+    <string name="button_previous">Previous</string>
+    <string name="button_next">Next</string>
+    <string name="button_submit_test">Submit Test</string>
 
     <!-- Interview History -->
     <string name="interview_history_title">Past Interviews</string>

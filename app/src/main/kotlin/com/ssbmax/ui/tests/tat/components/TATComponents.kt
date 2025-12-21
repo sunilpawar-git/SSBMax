@@ -7,7 +7,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.TATPhase
 
 /**
@@ -36,7 +38,7 @@ fun TATBottomBar(
                 OutlinedButton(onClick = onPrevious) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Previous")
+                    Text(stringResource(R.string.button_previous))
                 }
             } else {
                 Spacer(Modifier.width(1.dp))
@@ -44,7 +46,7 @@ fun TATBottomBar(
 
             if (canSubmit) {
                 Button(onClick = onSubmit) {
-                    Text("Submit Test")
+                    Text(stringResource(R.string.button_submit_test))
                 }
             } else {
                 // Show Next button always, but disabled if criteria not met (e.g. min characters)
@@ -52,7 +54,7 @@ fun TATBottomBar(
                     onClick = onNext,
                     enabled = canMoveNext
                 ) {
-                    Text("Next")
+                    Text(stringResource(R.string.button_next))
                     Spacer(Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
                 }

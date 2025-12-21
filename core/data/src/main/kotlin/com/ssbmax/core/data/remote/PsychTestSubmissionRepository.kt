@@ -1,500 +1,129 @@
 package com.ssbmax.core.data.remote
 
-import android.util.Log
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.SetOptions
-import com.ssbmax.core.data.remote.mapper.PsychTestMapper
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Repository for psychology test submissions (TAT, WAT, SRT, SDT).
- * Handles submission, retrieval, observation, and OLQ updates for projective tests.
- * 
- * Implement Split Collection Strategy:
- * - Submissions: submissions/{submissionId}
- * - Results: psych_results/{submissionId}
- * 
- * Extracted from FirestoreSubmissionRepository during Phase 9 refactoring.
- * Updated to adhere to 300-line limit by extracting mapper.
+ * Facade repository for psychology test submissions (TAT, WAT, SRT, SDT).
+ * Delegates to specialized repositories while maintaining backward compatibility.
+ *
+ * Refactored during Phase 2 to adhere to 300-line limit by delegating to:
+ * - TATSubmissionRepository
+ * - WATSubmissionRepository
+ * - SRTSubmissionRepository
+ * - SDTSubmissionRepository
+ *
+ * This class now serves as a unified API for psychology tests.
  */
 @Singleton
-class PsychTestSubmissionRepository @Inject constructor() {
-    
-    private val firestore = FirebaseFirestore.getInstance()
-    private val submissionsCollection = firestore.collection("submissions")
-    private val psychResultsCollection = firestore.collection("psych_results")
-    
-    companion object {
-        private const val TAG = "PsychTestRepo"
-        private const val FIELD_ID = "id"
-        private const val FIELD_USER_ID = "userId"
-        private const val FIELD_TEST_ID = "testId"
-        private const val FIELD_TEST_TYPE = "testType"
-        private const val FIELD_STATUS = "status"
-        private const val FIELD_SUBMITTED_AT = "submittedAt"
-        private const val FIELD_GRADED_BY_INSTRUCTOR_ID = "gradedByInstructorId"
-        private const val FIELD_GRADING_TIMESTAMP = "gradingTimestamp"
-        private const val FIELD_BATCH_ID = "batchId"
-        private const val FIELD_DATA = "data"
-    }
-    
+class PsychTestSubmissionRepository @Inject constructor(
+    private val tatRepo: TATSubmissionRepository,
+    private val watRepo: WATSubmissionRepository,
+    private val srtRepo: SRTSubmissionRepository,
+    private val sdtRepo: SDTSubmissionRepository
+) {
+
     // ===========================
-    // TAT Operations
+    // TAT Operations (Delegated)
     // ===========================
-    
-    suspend fun submitTAT(submission: TATSubmission, batchId: String?): Result<String> {
-        return try {
-            val submissionMap = mapOf(
-                FIELD_ID to submission.id,
-                FIELD_USER_ID to submission.userId,
-                FIELD_TEST_ID to submission.testId,
-                FIELD_TEST_TYPE to TestType.TAT.name,
-                FIELD_STATUS to submission.status.name,
-                FIELD_SUBMITTED_AT to submission.submittedAt,
-                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
-                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
-                FIELD_BATCH_ID to batchId,
-                FIELD_DATA to submission.toFirestoreMap()
-            )
-            // Use merge to prevent overwriting existing fields (like analysis status) if they exist
-            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
-            Result.success(submission.id)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to submit TAT: ${e.message}", e))
-        }
-    }
-    
-    suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?> {
-        return try {
-            val document = submissionsCollection.document(submissionId).get().await()
-            if (!document.exists()) return Result.success(null)
-            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseTATSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch TAT submission: ${e.message}", e))
-        }
-    }
 
-    suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?> {
-        return try {
-            val snapshot = submissionsCollection
-                .whereEqualTo(FIELD_USER_ID, userId)
-                .whereEqualTo(FIELD_TEST_TYPE, TestType.TAT.name)
-                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .await()
+    suspend fun submitTAT(submission: TATSubmission, batchId: String?): Result<String> =
+        tatRepo.submitTAT(submission, batchId)
 
-            if (snapshot.isEmpty) return Result.success(null)
-            val doc = snapshot.documents.first()
-            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseTATSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch latest TAT submission: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> {
-        return try {
-            Log.d(TAG, "📝 Updating TAT analysis status: $submissionId -> $status")
-            submissionsCollection.document(submissionId)
-                .update("data.analysisStatus", status.name)
-                .await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to update TAT analysis status: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return updateOLQResult(submissionId, olqResult)
-    }
+    suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?> =
+        tatRepo.getTATSubmission(submissionId)
 
-    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> {
-        return getOLQResult(submissionId)
-    }
-    
-    fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> = callbackFlow {
-        val regressionFilter = OLQRegressionFilter()
-        val listener = submissionsCollection.document(submissionId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-                try {
-                    val data = snapshot.get(FIELD_DATA) as? Map<*, *>
-                    if (data == null || regressionFilter.shouldFilterSnapshot(data, snapshot.metadata, "TAT", submissionId)) {
-                        if (data == null) trySend(null)
-                        return@addSnapshotListener
-                    }
-                    trySend(PsychTestMapper.parseTATSubmission(data))
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing TAT submission", e)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
-    
+    suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?> =
+        tatRepo.getLatestTATSubmission(userId)
+
+    suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
+        tatRepo.updateTATAnalysisStatus(submissionId, status)
+
+    suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        tatRepo.updateTATOLQResult(submissionId, olqResult)
+
+    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> =
+        tatRepo.getTATResult(submissionId)
+
+    fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> =
+        tatRepo.observeTATSubmission(submissionId)
+
     // ===========================
-    // WAT Operations
+    // WAT Operations (Delegated)
     // ===========================
-    
-    suspend fun submitWAT(submission: WATSubmission, batchId: String?): Result<String> {
-        return try {
-            val submissionMap = mapOf(
-                FIELD_ID to submission.id,
-                FIELD_USER_ID to submission.userId,
-                FIELD_TEST_ID to submission.testId,
-                FIELD_TEST_TYPE to TestType.WAT.name,
-                FIELD_STATUS to submission.status.name,
-                FIELD_SUBMITTED_AT to submission.submittedAt,
-                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
-                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
-                FIELD_BATCH_ID to batchId,
-                FIELD_DATA to submission.toFirestoreMap()
-            )
-            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
-            Result.success(submission.id)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to submit WAT: ${e.message}", e))
-        }
-    }
-    
-    suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> {
-        return try {
-            val document = submissionsCollection.document(submissionId).get().await()
-            if (!document.exists()) return Result.success(null)
-            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseWATSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch WAT submission: ${e.message}", e))
-        }
-    }
 
-    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> {
-        return try {
-            val snapshot = submissionsCollection
-                .whereEqualTo(FIELD_USER_ID, userId)
-                .whereEqualTo(FIELD_TEST_TYPE, TestType.WAT.name)
-                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .await()
+    suspend fun submitWAT(submission: WATSubmission, batchId: String?): Result<String> =
+        watRepo.submitWAT(submission, batchId)
 
-            if (snapshot.isEmpty) return Result.success(null)
-            val doc = snapshot.documents.first()
-            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseWATSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch latest WAT submission: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> {
-        return try {
-            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to update WAT status: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return updateOLQResult(submissionId, olqResult)
-    }
+    suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> =
+        watRepo.getWATSubmission(submissionId)
 
-    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> {
-        return getOLQResult(submissionId)
-    }
-    
-    fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> = callbackFlow {
-        val regressionFilter = OLQRegressionFilter()
-        val listener = submissionsCollection.document(submissionId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-                try {
-                    val data = snapshot.get(FIELD_DATA) as? Map<*, *>
-                    if (data == null || regressionFilter.shouldFilterSnapshot(data, snapshot.metadata, "WAT", submissionId)) {
-                        if (data == null) trySend(null)
-                        return@addSnapshotListener
-                    }
-                    trySend(PsychTestMapper.parseWATSubmission(data))
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing WAT submission", e)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
-    
+    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> =
+        watRepo.getLatestWATSubmission(userId)
+
+    suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
+        watRepo.updateWATAnalysisStatus(submissionId, status)
+
+    suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        watRepo.updateWATOLQResult(submissionId, olqResult)
+
+    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> =
+        watRepo.getWATResult(submissionId)
+
+    fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> =
+        watRepo.observeWATSubmission(submissionId)
+
     // ===========================
-    // SRT Operations
+    // SRT Operations (Delegated)
     // ===========================
-    
-    suspend fun submitSRT(submission: SRTSubmission, batchId: String?): Result<String> {
-        return try {
-            val submissionMap = mapOf(
-                FIELD_ID to submission.id,
-                FIELD_USER_ID to submission.userId,
-                FIELD_TEST_ID to submission.testId,
-                FIELD_TEST_TYPE to TestType.SRT.name,
-                FIELD_STATUS to submission.status.name,
-                FIELD_SUBMITTED_AT to submission.submittedAt,
-                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
-                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
-                FIELD_BATCH_ID to batchId,
-                FIELD_DATA to submission.toFirestoreMap()
-            )
-            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
-            Result.success(submission.id)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to submit SRT: ${e.message}", e))
-        }
-    }
-    
-    suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> {
-        return try {
-            val document = submissionsCollection.document(submissionId).get().await()
-            if (!document.exists()) return Result.success(null)
-            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseSRTSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch SRT submission: ${e.message}", e))
-        }
-    }
 
-    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> {
-        return try {
-            val snapshot = submissionsCollection
-                .whereEqualTo(FIELD_USER_ID, userId)
-                .whereEqualTo(FIELD_TEST_TYPE, TestType.SRT.name)
-                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .await()
+    suspend fun submitSRT(submission: SRTSubmission, batchId: String?): Result<String> =
+        srtRepo.submitSRT(submission, batchId)
 
-            if (snapshot.isEmpty) return Result.success(null)
-            val doc = snapshot.documents.first()
-            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseSRTSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch latest SRT submission: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> {
-        return try {
-            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to update SRT status: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return updateOLQResult(submissionId, olqResult)
-    }
+    suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> =
+        srtRepo.getSRTSubmission(submissionId)
 
-    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> {
-        return getOLQResult(submissionId)
-    }
-    
-    fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> = callbackFlow {
-        val regressionFilter = OLQRegressionFilter()
-        val listener = submissionsCollection.document(submissionId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-                try {
-                    val data = snapshot.get(FIELD_DATA) as? Map<*, *>
-                    if (data == null || regressionFilter.shouldFilterSnapshot(data, snapshot.metadata, "SRT", submissionId)) {
-                        if (data == null) trySend(null)
-                        return@addSnapshotListener
-                    }
-                    trySend(PsychTestMapper.parseSRTSubmission(data))
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing SRT submission", e)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
-    
+    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> =
+        srtRepo.getLatestSRTSubmission(userId)
+
+    suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
+        srtRepo.updateSRTAnalysisStatus(submissionId, status)
+
+    suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        srtRepo.updateSRTOLQResult(submissionId, olqResult)
+
+    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> =
+        srtRepo.getSRTResult(submissionId)
+
+    fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> =
+        srtRepo.observeSRTSubmission(submissionId)
+
     // ===========================
-    // SDT Operations
+    // SDT Operations (Delegated)
     // ===========================
-    
-    suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> {
-        return try {
-            Log.d(TAG, "☁️ Firestore SDT: Preparing submission...")
-            val submissionMap = mapOf(
-                FIELD_ID to submission.id,
-                FIELD_USER_ID to submission.userId,
-                FIELD_TEST_ID to submission.testId,
-                FIELD_TEST_TYPE to TestType.SD.name,
-                FIELD_STATUS to submission.status.name,
-                FIELD_SUBMITTED_AT to submission.submittedAt,
-                FIELD_GRADED_BY_INSTRUCTOR_ID to submission.gradedByInstructorId,
-                FIELD_GRADING_TIMESTAMP to submission.gradingTimestamp,
-                FIELD_BATCH_ID to batchId,
-                FIELD_DATA to submission.toFirestoreMap()
-            )
-            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
-            Log.d(TAG, "✅ Firestore SDT: Successfully written!")
-            Result.success(submission.id)
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Firestore SDT: Failed - ${e.message}", e)
-            Result.failure(Exception("Failed to submit SDT: ${e.message}", e))
-        }
-    }
-    
-    suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> {
-        return try {
-            val document = submissionsCollection.document(submissionId).get().await()
-            if (!document.exists()) return Result.success(null)
-            val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseSDTSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch SDT submission: ${e.message}", e))
-        }
-    }
 
-    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> {
-        return try {
-            val snapshot = submissionsCollection
-                .whereEqualTo(FIELD_USER_ID, userId)
-                .whereEqualTo(FIELD_TEST_TYPE, TestType.SD.name)
-                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
-                .limit(1)
-                .get()
-                .await()
+    suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> =
+        sdtRepo.submitSDT(submission, batchId)
 
-            if (snapshot.isEmpty) return Result.success(null)
-            val doc = snapshot.documents.first()
-            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(PsychTestMapper.parseSDTSubmission(data))
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to fetch latest SDT submission: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> {
-        return try {
-            submissionsCollection.document(submissionId).update("data.analysisStatus", status.name).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to update SDT status: ${e.message}", e))
-        }
-    }
-    
-    suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return updateOLQResult(submissionId, olqResult)
-    }
+    suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> =
+        sdtRepo.getSDTSubmission(submissionId)
 
-    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> {
-        return getOLQResult(submissionId)
-    }
-    
-    fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> = callbackFlow {
-        val regressionFilter = OLQRegressionFilter()
-        val listener = submissionsCollection.document(submissionId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-                try {
-                    val data = snapshot.get(FIELD_DATA) as? Map<*, *>
-                    if (data == null || regressionFilter.shouldFilterSnapshot(data, snapshot.metadata, "SDT", submissionId)) {
-                        if (data == null) trySend(null)
-                        return@addSnapshotListener
-                    }
-                    trySend(PsychTestMapper.parseSDTSubmission(data))
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing SDT submission", e)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
-    
-    // ===========================
-    // Shared Helper Methods
-    // ===========================
-    
-    private suspend fun updateOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return try {
-            // First, fetch the userId from the submission document
-            // This is required by Firestore security rules for psych_results
-            val submissionDoc = submissionsCollection.document(submissionId).get().await()
-            val userId = submissionDoc.getString(FIELD_USER_ID)
-                ?: throw Exception("Cannot find userId for submission: $submissionId")
-            
-            val olqResultMap = OLQMapper.toFirestoreMap(olqResult).toMutableMap()
-            // CRITICAL: Add userId for Firestore security rules compliance
-            olqResultMap["userId"] = userId
-            
-            Log.d(TAG, "📝 Writing OLQ result to psych_results for submission: $submissionId, userId: $userId")
-            
-            // 1. Write to psych_results collection (with userId for security rules)
-            psychResultsCollection.document(submissionId)
-                .set(olqResultMap, SetOptions.merge())
-                .await()
-            
-            Log.d(TAG, "✅ Successfully wrote OLQ result to psych_results")
-            
-            // 2. Update analysis status in submissions collection
-            submissionsCollection.document(submissionId)
-                .update(
-                    mapOf(
-                        "$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED
-                    )
-                )
-                .await()
-            
-            Log.d(TAG, "✅ Successfully updated analysis status to COMPLETED")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to update OLQ result: ${e.message}", e)
-            Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
-        }
-    }
+    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> =
+        sdtRepo.getLatestSDTSubmission(userId)
 
-    private suspend fun getOLQResult(submissionId: String): Result<OLQAnalysisResult?> {
-        return try {
-            // Priority 1: Fetch from psych_results (New Architecture)
-            val resultDoc = psychResultsCollection.document(submissionId).get().await()
-            if (resultDoc.exists()) {
-                val data = resultDoc.data
-                return Result.success(PsychTestMapper.parseOLQResult(data))
-            }
+    suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
+        sdtRepo.updateSDTAnalysisStatus(submissionId, status)
 
-            // Priority 2: Fallback to submissions collection (Legacy / Transitional)
-            Log.w(TAG, "OLQ result not found in psych_results for $submissionId, checking submissions collection.")
-            val submissionDoc = submissionsCollection.document(submissionId).get().await()
-            if (submissionDoc.exists()) {
-                 val data = submissionDoc.get(FIELD_DATA) as? Map<*, *>
-                 val olqMap = data?.get("olqResult") as? Map<*, *>
-                 if (olqMap != null) {
-                      return Result.success(PsychTestMapper.parseOLQResult(olqMap))
-                 }
-            }
-            
-            Result.success(null)
-        } catch (e: Exception) {
-            Result.failure(Exception("Failed to get OLQ result: ${e.message}", e))
-        }
-    }
+    suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        sdtRepo.updateSDTOLQResult(submissionId, olqResult)
+
+    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> =
+        sdtRepo.getSDTResult(submissionId)
+
+    fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> =
+        sdtRepo.observeSDTSubmission(submissionId)
 }

@@ -56,28 +56,58 @@ class TestProgressTrackingContractTest {
     @Test
     fun `Phase2 psychology tests must create submissions with correct testType`() {
         // Given - Phase 2 psychology tests: TAT, WAT, SRT, SD
-        val repoFile = findProjectFile(psychRepoPath)
-        val content = repoFile.readText()
-        
+        // NOTE: After Phase 2 refactoring, PsychTestSubmissionRepository is a facade
+        // that delegates to individual repositories. We check both the facade and the delegates.
+        val psychRepoFile = findProjectFile(psychRepoPath)
+        val psychContent = psychRepoFile.readText()
+
         val psychologyTests = listOf(
             "submitTAT" to "TAT",
             "submitWAT" to "WAT",
             "submitSRT" to "SRT",
             "submitSDT" to "SD"
         )
-        
-        psychologyTests.forEach { (methodName, testType) ->
+
+        // Check facade has the methods (delegates to individual repos)
+        psychologyTests.forEach { (methodName, _) ->
             assertTrue(
-                "Missing $methodName() - Psychology test $testType must create submission record",
-                content.contains("fun $methodName")
-            )
-            
-            assertTrue(
-                "$methodName must set testType to '$testType'",
-                content.contains("FIELD_TEST_TYPE to TestType.$testType.name") ||
-                content.contains("testType.*$testType")
+                "Missing $methodName() - Psychology test must create submission record",
+                psychContent.contains("fun $methodName")
             )
         }
+
+        // Check individual repositories have the implementations with correct testType
+        val tatRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt")
+        assertTrue("TATSubmissionRepository.kt should exist", tatRepoFile.exists())
+        val tatContent = tatRepoFile.readText()
+        assertTrue(
+            "submitTAT must set testType to 'TAT'",
+            tatContent.contains("FIELD_TEST_TYPE to TestType.TAT.name")
+        )
+
+        val watRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/WATSubmissionRepository.kt")
+        assertTrue("WATSubmissionRepository.kt should exist", watRepoFile.exists())
+        val watContent = watRepoFile.readText()
+        assertTrue(
+            "submitWAT must set testType to 'WAT'",
+            watContent.contains("FIELD_TEST_TYPE to TestType.WAT.name")
+        )
+
+        val srtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SRTSubmissionRepository.kt")
+        assertTrue("SRTSubmissionRepository.kt should exist", srtRepoFile.exists())
+        val srtContent = srtRepoFile.readText()
+        assertTrue(
+            "submitSRT must set testType to 'SRT'",
+            srtContent.contains("FIELD_TEST_TYPE to TestType.SRT.name")
+        )
+
+        val sdtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SDTSubmissionRepository.kt")
+        assertTrue("SDTSubmissionRepository.kt should exist", sdtRepoFile.exists())
+        val sdtContent = sdtRepoFile.readText()
+        assertTrue(
+            "submitSDT must set testType to 'SD'",
+            sdtContent.contains("FIELD_TEST_TYPE to TestType.SD.name")
+        )
     }
 
     @Test
@@ -122,13 +152,10 @@ class TestProgressTrackingContractTest {
         // Given
         val commonRepoFile = findProjectFile(commonRepoPath)
         val commonContent = commonRepoFile.readText()
-        
-        val psychRepoFile = findProjectFile(psychRepoPath)
-        val psychContent = psychRepoFile.readText()
-        
+
         val personalRepoFile = findProjectFile(personalRepoPath)
         val personalContent = personalRepoFile.readText()
-        
+
         // Then - All submission repositories must use submissionsCollection
         assertTrue(
             "CommonSubmissionRepository must use 'submissions' collection",
@@ -136,14 +163,42 @@ class TestProgressTrackingContractTest {
             commonContent.contains("collection(\"submissions\")")
         )
         assertTrue(
-            "PsychTestSubmissionRepository must use 'submissions' collection",
-            psychContent.contains("submissionsCollection") ||
-            psychContent.contains("collection(\"submissions\")")
-        )
-        assertTrue(
             "PersonalTestSubmissionRepository must use 'submissions' collection",
             personalContent.contains("submissionsCollection") ||
             personalContent.contains("collection(\"submissions\")")
+        )
+
+        // After Phase 2 refactoring, check individual psychology test repositories
+        val tatRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt")
+        val tatContent = tatRepoFile.readText()
+        assertTrue(
+            "TATSubmissionRepository must use 'submissions' collection",
+            tatContent.contains("submissionsCollection") ||
+            tatContent.contains("collection(\"submissions\")")
+        )
+
+        val watRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/WATSubmissionRepository.kt")
+        val watContent = watRepoFile.readText()
+        assertTrue(
+            "WATSubmissionRepository must use 'submissions' collection",
+            watContent.contains("submissionsCollection") ||
+            watContent.contains("collection(\"submissions\")")
+        )
+
+        val srtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SRTSubmissionRepository.kt")
+        val srtContent = srtRepoFile.readText()
+        assertTrue(
+            "SRTSubmissionRepository must use 'submissions' collection",
+            srtContent.contains("submissionsCollection") ||
+            srtContent.contains("collection(\"submissions\")")
+        )
+
+        val sdtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SDTSubmissionRepository.kt")
+        val sdtContent = sdtRepoFile.readText()
+        assertTrue(
+            "SDTSubmissionRepository must use 'submissions' collection",
+            sdtContent.contains("submissionsCollection") ||
+            sdtContent.contains("collection(\"submissions\")")
         )
     }
 

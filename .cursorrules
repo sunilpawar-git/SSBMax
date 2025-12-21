@@ -1,6 +1,34 @@
 # SSBMax - World-Class Android App Cursor Rules
 # Specialized rules for building an exceptional SSB (Services Selection Board) preparation app
-# Last Updated: October 30, 2025
+# Last Updated: December 21, 2025
+
+## 🚨 CRITICAL QUALITY FRAMEWORK RULES (STRICT ENFORCEMENT)
+Before writing ANY code, you MUST adhere to these rules from `docs/architecture/SSBMax_Quality_Framework.md`.
+Violations are considered CRITICAL TECH DEBT and generally NOT accepted.
+
+### 1. 📏 STRICT LIMITS
+- **File Size**: MAX 300 lines per file. If >300, YOU MUST SPLIT IT. No exceptions.
+- **Component Size**: MAX 50 lines per Composable. Extract sub-components.
+
+### 2. 🗣️ STRINGS & RESOURCES
+- **NO HARDCODED STRINGS**: Use `stringResource(R.string.key)` or `context.getString()`.
+- **NO HARDCODED COLORS**: Use `MaterialTheme.colorScheme.primary`.
+- **NO HARDCODED DIMENSIONS**: Use `dp` or `sp` resources/constants.
+
+### 3. 🏗️ ARCHITECTURE INTEGRITY
+- **Domain Layer**: ZERO Android dependencies (no Context, no R.string, no ErrorLogger). Return `Result<T>` only.
+- **ViewModel**: 
+  - Use `_state.update { ... }` for thread-safe updates. NEVER `.value = _state.value.copy()`.
+  - Expose `StateFlow`, not `MutableStateFlow`.
+  - Dependencies: Injected via Hilt/Dagger.
+
+### 4. 🧪 TESTING & VERIFICATION
+- **ViewModels**: MUST have Unit Tests.
+- **Repositories**: MUST have Unit Tests.
+- **Protocol**: If you change logic, you MUST update/add tests.
+- **Failure**: If `./gradlew check` fails, fix it immediately.
+
+---
 
 ## 🎯 PROJECT OVERVIEW
 You are building SSBMax, a comprehensive Android app for SSB preparation that helps candidates:
