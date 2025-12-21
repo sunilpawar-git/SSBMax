@@ -568,7 +568,7 @@
     <!-- ============================================ -->
     <string name="tat_test">TAT Test</string>
     <string name="tat_picture_number">Picture %1$d/12</string>
-    <string name="tat_completed_stories">%1$d/12</string>
+
     <string name="tat_loading">Loading TAT test images from cloud...</string>
 
     <!-- ============================================ -->

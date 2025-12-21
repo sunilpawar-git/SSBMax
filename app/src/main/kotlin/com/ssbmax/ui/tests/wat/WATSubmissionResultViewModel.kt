@@ -56,13 +56,29 @@ class WATSubmissionResultViewModel @Inject constructor(
                     }
 
                     val submissionData = data["data"] as? Map<*, *>
-                    val analysisStatus = submissionData?.get("analysisStatus") as? String
-                    val hasOlqResult = submissionData?.get("olqResult") != null
+                    val analysisStatusStr = submissionData?.get("analysisStatus") as? String
+                    val analysisStatus = try {
+                        AnalysisStatus.valueOf(analysisStatusStr ?: "PENDING_ANALYSIS")
+                    } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
+                    
+                    var hasOlqResult = submissionData?.get("olqResult") != null
                     
                     android.util.Log.d(TAG, "   - analysisStatus: $analysisStatus, olqResult exists: $hasOlqResult")
                     
+                    // CRITICAL FIX: If COMPLETED but no result in snapshot, fetch it separately (New Architecture)
+                    var fetchedOlqResult: OLQAnalysisResult? = null
+                    if (analysisStatus == AnalysisStatus.COMPLETED && !hasOlqResult) {
+                        android.util.Log.d(TAG, "🔍 Status is COMPLETED but result missing in snapshot. Fetching separately...")
+                        val resultResult = submissionRepository.getWATResult(submissionId)
+                        fetchedOlqResult = resultResult.getOrNull()
+                        if (fetchedOlqResult != null) {
+                            android.util.Log.d(TAG, "✅ Successfully fetched OLQ result separately!")
+                            hasOlqResult = true
+                        }
+                    }
+                    
                     // Check if this is a COMPLETE snapshot with OLQ data
-                    val isCompleteWithOLQ = analysisStatus == "COMPLETED" && hasOlqResult
+                    val isCompleteWithOLQ = analysisStatus == AnalysisStatus.COMPLETED && hasOlqResult
                     
                     // Track best state
                     if (isCompleteWithOLQ) {
@@ -77,7 +93,13 @@ class WATSubmissionResultViewModel @Inject constructor(
                     }
                     
                     // Parse WAT submission from map
-                    val submission = parseWATSubmission(data)
+                    var submission = parseWATSubmission(data)
+                    
+                     // Attach separately fetched result if needed
+                    if (submission != null && fetchedOlqResult != null) {
+                        submission = submission.copy(olqResult = fetchedOlqResult)
+                    }
+
                     if (submission != null) {
                         android.util.Log.d(TAG, "📊 Updating UI state - OLQ scores: ${submission.olqResult?.olqScores?.size ?: 0}")
                         _uiState.update { it.copy(

@@ -660,6 +660,6 @@ data class TATTestUiState(
         get() = currentQuestionIndex > 0 && phase == TATPhase.WRITING
 
     val canSubmitTest: Boolean
-        get() = completedStories >= 11 // Allow submission after 11 stories minimum
+        get() = completedStories >= questions.size // Only allow submission after All stories completed
 }
 

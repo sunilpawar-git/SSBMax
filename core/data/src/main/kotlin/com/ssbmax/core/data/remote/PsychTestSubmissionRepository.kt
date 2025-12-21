@@ -436,15 +436,26 @@ class PsychTestSubmissionRepository @Inject constructor() {
     
     private suspend fun updateOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return try {
-            val olqResultMap = OLQMapper.toFirestoreMap(olqResult)
+            // First, fetch the userId from the submission document
+            // This is required by Firestore security rules for psych_results
+            val submissionDoc = submissionsCollection.document(submissionId).get().await()
+            val userId = submissionDoc.getString(FIELD_USER_ID)
+                ?: throw Exception("Cannot find userId for submission: $submissionId")
             
-            // 1. Write to psych_results collection
+            val olqResultMap = OLQMapper.toFirestoreMap(olqResult).toMutableMap()
+            // CRITICAL: Add userId for Firestore security rules compliance
+            olqResultMap["userId"] = userId
+            
+            Log.d(TAG, "📝 Writing OLQ result to psych_results for submission: $submissionId, userId: $userId")
+            
+            // 1. Write to psych_results collection (with userId for security rules)
             psychResultsCollection.document(submissionId)
                 .set(olqResultMap, SetOptions.merge())
                 .await()
             
-            // 2. Update analysis status (and optionally a simplified result or flag) in submissions collection
-            // We keep updating status in submissions so clients know when to fetch the result
+            Log.d(TAG, "✅ Successfully wrote OLQ result to psych_results")
+            
+            // 2. Update analysis status in submissions collection
             submissionsCollection.document(submissionId)
                 .update(
                     mapOf(
@@ -452,8 +463,11 @@ class PsychTestSubmissionRepository @Inject constructor() {
                     )
                 )
                 .await()
+            
+            Log.d(TAG, "✅ Successfully updated analysis status to COMPLETED")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to update OLQ result: ${e.message}", e)
             Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
         }
     }

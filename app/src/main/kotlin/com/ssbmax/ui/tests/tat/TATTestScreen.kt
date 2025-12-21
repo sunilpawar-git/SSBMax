@@ -85,14 +85,7 @@ fun TATTestScreen(
                     }
                 },
                 actions = {
-                    if (uiState.phase != TATPhase.INSTRUCTIONS) {
-                        // Progress indicator
-                        Text(
-                            stringResource(R.string.tat_completed_stories, uiState.completedStories),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
-                    }
+                    // Actions removed as per user request to remove redundant counter
                 }
             )
         },

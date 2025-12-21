@@ -46,8 +46,12 @@ fun TATBottomBar(
                 Button(onClick = onSubmit) {
                     Text("Submit Test")
                 }
-            } else if (canMoveNext) {
-                Button(onClick = onNext) {
+            } else {
+                // Show Next button always, but disabled if criteria not met (e.g. min characters)
+                Button(
+                    onClick = onNext,
+                    enabled = canMoveNext
+                ) {
                     Text("Next")
                     Spacer(Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
