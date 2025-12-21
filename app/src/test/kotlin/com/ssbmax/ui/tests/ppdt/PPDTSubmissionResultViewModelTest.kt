@@ -37,7 +37,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadSubmission with valid data parses PPDT submission correctly`() = runTest {
         // Given
-        val mockSubmissionData = createMockSubmissionData(
+        val mockSubmission = createMockSubmission(
             submissionId = "sub_ppdt_001",
             userId = "user_123",
             story = "This is a detailed story about the hazy picture showing leadership qualities.",
@@ -45,8 +45,8 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         )
         
         every { 
-            mockSubmissionRepo.observeSubmission("sub_ppdt_001") 
-        } returns flowOf(mockSubmissionData)
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_001") 
+        } returns flowOf(mockSubmission)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -72,14 +72,14 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadSubmission parses submission without instructor review`() = runTest {
         // Given 
-        val mockSubmissionData = createMockSubmissionData(
+        val mockSubmission = createMockSubmission(
             submissionId = "sub_ppdt_002",
             includeInstructorReview = false
         )
 
         every {
-            mockSubmissionRepo.observeSubmission("sub_ppdt_002")
-        } returns flowOf(mockSubmissionData)
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_002")
+        } returns flowOf(mockSubmission)
 
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -98,14 +98,14 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadSubmission parses instructor review with detailed scores`() = runTest {
         // Given
-        val mockSubmissionData = createMockSubmissionData(
+        val mockSubmission = createMockSubmission(
             submissionId = "sub_ppdt_003",
             includeInstructorReview = true
         )
         
         every { 
-            mockSubmissionRepo.observeSubmission("sub_ppdt_003") 
-        } returns flowOf(mockSubmissionData)
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_003") 
+        } returns flowOf(mockSubmission)
         
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -138,14 +138,14 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadSubmission handles submission without instructor review`() = runTest {
         // Given - submission without instructor review
-        val mockSubmissionData = createMockSubmissionData(
+        val mockSubmission = createMockSubmission(
             submissionId = "sub_ppdt_004",
             includeInstructorReview = false
         )
 
         every {
-            mockSubmissionRepo.observeSubmission("sub_ppdt_004")
-        } returns flowOf(mockSubmissionData)
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_004")
+        } returns flowOf(mockSubmission)
 
         // When
         viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
@@ -161,9 +161,9 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadSubmission shows error when submission not found`() = runTest {
-        // Given - observeSubmission emits null (submission doesn't exist)
+        // Given - observePPDTSubmission emits null (submission doesn't exist)
         every { 
-            mockSubmissionRepo.observeSubmission("sub_ppdt_999") 
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_999") 
         } returns flowOf(null)
         
         // When
@@ -189,7 +189,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
     fun `loadSubmission shows error on repository failure`() = runTest {
         // Given - repository throws exception
         every { 
-            mockSubmissionRepo.observeSubmission("sub_ppdt_error") 
+            mockSubmissionRepo.observePPDTSubmission("sub_ppdt_error") 
         } throws RuntimeException("Network error")
         
         // When
@@ -211,94 +211,56 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         }
     }
     
-    @Test
-    fun `loadSubmission handles malformed data gracefully`() = runTest {
-        // Given - malformed submission data (missing required fields in data)
-        val malformedData = mapOf<String, Any>(
-            "id" to "sub_ppdt_malformed",
-            "userId" to "user_123",
-            // Missing "data" field entirely
-            "status" to "SUBMITTED_PENDING_REVIEW"
-        )
-        
-        every { 
-            mockSubmissionRepo.observeSubmission("sub_ppdt_malformed") 
-        } returns flowOf(malformedData)
-        
-        // When
-        viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
-        viewModel.loadSubmission("sub_ppdt_malformed")
-        advanceUntilIdle()
-        
-        // Then
-        val state = viewModel.uiState.value
-        assertFalse("Should not be loading", state.isLoading)
-        assertNull("Should not have submission", state.submission)
-        assertNotNull("Should have error", state.error)
-        assertTrue(
-            "Error should mention parsing failure",
-            state.error!!.contains("parse") || state.error!!.contains("Failed")
-        )
-    }
-    
     // ==================== Helper Methods ====================
     
     /**
-     * Create mock submission data matching Firestore structure
+     * Create mock submission object
      */
-    private fun createMockSubmissionData(
+    private fun createMockSubmission(
         submissionId: String,
         userId: String = "user_123",
         story: String = "This is a detailed story about leadership and determination shown in the hazy picture. The characters demonstrated courage and teamwork.",
         includeInstructorReview: Boolean = false
-    ): Map<String, Any> {
-        val instructorReviewMap = if (includeInstructorReview) {
-            mapOf(
-                "reviewId" to "review_001",
-                "instructorId" to "instructor_123",
-                "instructorName" to "Col. Sharma",
-                "finalScore" to 82.0f,
-                "feedback" to "Excellent demonstration of OLQs. Story shows clear perception and imagination.",
-                "detailedScores" to mapOf(
-                    "perception" to 80.0f,
-                    "imagination" to 85.0f,
-                    "narration" to 78.0f,
-                    "characterDepiction" to 84.0f,
-                    "positivity" to 83.0f
+    ): PPDTSubmission {
+        val instructorReview = if (includeInstructorReview) {
+            PPDTInstructorReview(
+                reviewId = "review_001",
+                instructorId = "instructor_123",
+                instructorName = "Col. Sharma",
+                finalScore = 82.0f,
+                feedback = "Excellent demonstration of OLQs. Story shows clear perception and imagination.",
+                detailedScores = PPDTDetailedScores(
+                    perception = 80.0f,
+                    imagination = 85.0f,
+                    narration = 78.0f,
+                    characterDepiction = 84.0f,
+                    positivity = 83.0f,
+                    notes = emptyMap()
                 ),
-                "agreedWithAI" to true,
-                "reviewedAt" to System.currentTimeMillis(),
-                "timeSpentMinutes" to 15
+                agreedWithAI = true,
+                reviewedAt = System.currentTimeMillis(),
+                timeSpentMinutes = 15
             )
         } else {
             null
         }
         
-        val dataMap = mutableMapOf<String, Any?>(
-            "submissionId" to submissionId,
-            "questionId" to "ppdt_q_001",
-            "userId" to userId,
-            "userName" to "Test User",
-            "userEmail" to "test@example.com",
-            "batchId" to "batch_001",
-            "story" to story,
-            "charactersCount" to story.length,
-            "viewingTimeTakenSeconds" to 30,
-            "writingTimeTakenMinutes" to 4,
-            "submittedAt" to System.currentTimeMillis()
-        )
-
-        if (instructorReviewMap != null) {
-            dataMap["instructorReview"] = instructorReviewMap
-        }
-        
-        return mapOf(
-            "id" to submissionId,
-            "userId" to userId,
-            "testType" to "PPDT",
-            "status" to "SUBMITTED_PENDING_REVIEW",
-            "submittedAt" to System.currentTimeMillis(),
-            "data" to dataMap
+        return PPDTSubmission(
+            submissionId = submissionId,
+            questionId = "ppdt_q_001",
+            userId = userId,
+            userName = "Test User",
+            userEmail = "test@example.com",
+            batchId = "batch_001",
+            story = story,
+            charactersCount = story.length,
+            viewingTimeTakenSeconds = 30,
+            writingTimeTakenMinutes = 4,
+            submittedAt = System.currentTimeMillis(),
+            status = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
+            instructorReview = instructorReview,
+            analysisStatus = com.ssbmax.core.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS,
+            olqResult = null
         )
     }
 }
