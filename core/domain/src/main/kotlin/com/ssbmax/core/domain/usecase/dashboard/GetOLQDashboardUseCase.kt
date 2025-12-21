@@ -164,31 +164,32 @@ class GetOLQDashboardUseCase @Inject constructor(
     /**
      * Helper to get latest completed OLQ result for a psychology test
      */
+    /**
+     * Helper to get latest completed OLQ result for a psychology test
+     * 
+     * Uses Split Strategy:
+     * 1. Get latest submission to get ID
+     * 2. Fetch result from psych_results collection using ID
+     */
     private suspend fun getLatestCompletedOLQResult(
         userId: String,
         testType: String
     ): OLQAnalysisResult? {
+        // 1. Get latest submission to find the submissionId
+        val submissionId = when (testType) {
+            "TAT" -> submissionRepository.getLatestTATSubmission(userId).getOrNull()?.id
+            "WAT" -> submissionRepository.getLatestWATSubmission(userId).getOrNull()?.id
+            "SRT" -> submissionRepository.getLatestSRTSubmission(userId).getOrNull()?.id
+            "SDT" -> submissionRepository.getLatestSDTSubmission(userId).getOrNull()?.id
+            else -> return null
+        } ?: return null
+
+        // 2. Fetch the result from psych_results (via repository)
         return when (testType) {
-            "TAT" -> submissionRepository.getTATSubmission(userId)
-                .getOrNull()
-                ?.takeIf { it.analysisStatus == AnalysisStatus.COMPLETED }
-                ?.olqResult
-
-            "WAT" -> submissionRepository.getWATSubmission(userId)
-                .getOrNull()
-                ?.takeIf { it.analysisStatus == AnalysisStatus.COMPLETED }
-                ?.olqResult
-
-            "SRT" -> submissionRepository.getSRTSubmission(userId)
-                .getOrNull()
-                ?.takeIf { it.analysisStatus == AnalysisStatus.COMPLETED }
-                ?.olqResult
-
-            "SDT" -> submissionRepository.getSDTSubmission(userId)
-                .getOrNull()
-                ?.takeIf { it.analysisStatus == AnalysisStatus.COMPLETED }
-                ?.olqResult
-
+            "TAT" -> submissionRepository.getTATResult(submissionId).getOrNull()
+            "WAT" -> submissionRepository.getWATResult(submissionId).getOrNull()
+            "SRT" -> submissionRepository.getSRTResult(submissionId).getOrNull()
+            "SDT" -> submissionRepository.getSDTResult(submissionId).getOrNull()
             else -> null
         }
     }

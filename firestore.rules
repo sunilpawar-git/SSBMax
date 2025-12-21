@@ -274,6 +274,16 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && 
                             (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
     }
+
+    // ============================================
+    // PSYCH RESULTS (Split Architecture)
+    // ============================================
+    
+    match /psych_results/{resultId} {
+      // Users can read/write their own Psych results (client-side AI analysis)
+      allow read, write: if isAuthenticated() && 
+                            (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+    }
     
     // ============================================
     // AI GRADING RESULTS (Premium AI Feature)

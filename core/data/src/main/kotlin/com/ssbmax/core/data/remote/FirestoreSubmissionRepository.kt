@@ -141,6 +141,12 @@ class FirestoreSubmissionRepository @Inject constructor(
     override suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?> =
         psychRepo.getTATSubmission(submissionId)
 
+    override suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?> =
+        psychRepo.getLatestTATSubmission(userId)
+
+    override suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> =
+        psychRepo.getTATResult(submissionId)
+
     override suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         psychRepo.updateTATAnalysisStatus(submissionId, status)
 
@@ -157,6 +163,12 @@ class FirestoreSubmissionRepository @Inject constructor(
     override suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> =
         psychRepo.getWATSubmission(submissionId)
 
+    override suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> =
+        psychRepo.getLatestWATSubmission(userId)
+
+    override suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> =
+        psychRepo.getWATResult(submissionId)
+
     override suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         psychRepo.updateWATAnalysisStatus(submissionId, status)
 
@@ -172,6 +184,12 @@ class FirestoreSubmissionRepository @Inject constructor(
         
     override suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> =
         psychRepo.getSRTSubmission(submissionId)
+        
+    override suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> =
+        psychRepo.getLatestSRTSubmission(userId)
+
+    override suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> =
+        psychRepo.getSRTResult(submissionId)
 
     override suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         psychRepo.updateSRTAnalysisStatus(submissionId, status)
@@ -188,6 +206,12 @@ class FirestoreSubmissionRepository @Inject constructor(
         
     override suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> =
         psychRepo.getSDTSubmission(submissionId)
+        
+    override suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> =
+        psychRepo.getLatestSDTSubmission(userId)
+
+    override suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> =
+        psychRepo.getSDTResult(submissionId)
 
     override suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         psychRepo.updateSDTAnalysisStatus(submissionId, status)

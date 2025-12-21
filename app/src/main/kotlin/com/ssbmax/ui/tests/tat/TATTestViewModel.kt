@@ -62,11 +62,14 @@ class TATTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
     
+    
     // Navigation events (one-time events, consumed on collection)
     private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
-    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
+    // Timer Job references for explicit cancellation (prevents "rushing" bug)
+    private var viewingTimerJob: Job? = null
+    private var writingTimerJob: Job? = null
 
     init {
         // Register for memory leak tracking
@@ -459,23 +462,36 @@ class TATTestViewModel @Inject constructor(
     }
     
     private fun startViewingTimer() {
-        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
+        // PHASE 3 FIX: Cancel previous viewing timer
+        viewingTimerJob?.cancel()
+        
+        val viewingTime = _uiState.value.config?.viewingTimePerPictureSeconds ?: 30
+        
         _uiState.update { it.copy(
-            viewingTimeRemaining = it.config?.viewingTimePerPictureSeconds ?: 30,
+            viewingTimeRemaining = viewingTime,
             isTimerActive = true,
             timerStartTime = System.currentTimeMillis()
         ) }
 
-        viewModelScope.launch {
-            android.util.Log.d("TATTestViewModel", "⏰ Starting viewing timer")
+        // PHASE 3 FIX: Delta-based calculation
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + (viewingTime * 1000)
+        
+        viewingTimerJob = viewModelScope.launch {
+            android.util.Log.d("TATTestViewModel", "⏰ Starting viewing timer (${viewingTime}s)")
 
             try {
-                while (isActive && _uiState.value.viewingTimeRemaining > 0) {
-                    delay(1000)
-                    if (!isActive) break // Double-check after delay
+                while (isActive) {
+                    val remainingMillis = endTime - System.currentTimeMillis()
+                    val remainingSeconds = (remainingMillis / 1000).toInt()
+                    
+                    if (remainingSeconds <= 0) break
+                    
                     _uiState.update { it.copy(
-                        viewingTimeRemaining = it.viewingTimeRemaining - 1
+                        viewingTimeRemaining = remainingSeconds
                     ) }
+                    
+                    delay(200) // Update every 200ms for smooth UI
                 }
 
                 // Auto-transition to writing (only if not cancelled)
@@ -490,27 +506,43 @@ class TATTestViewModel @Inject constructor(
             } finally {
                 _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.trackMemoryLeaks("TATTestViewModel", "viewing-timer")
+        }.also {
+            it.trackMemoryLeaks("TATTestViewModel", "viewing-timer")
+        }
     }
     
     private fun startWritingTimer() {
-        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
+        // PHASE 3 FIX: Cancel previous writing timer
+        writingTimerJob?.cancel()
+        
+        val writingTimeMinutes = _uiState.value.config?.writingTimePerPictureMinutes ?: 4
+        val writingTimeSeconds = writingTimeMinutes * 60
+        
         _uiState.update { it.copy(
-            writingTimeRemaining = (it.config?.writingTimePerPictureMinutes ?: 4) * 60,
+            writingTimeRemaining = writingTimeSeconds,
             isTimerActive = true,
             timerStartTime = System.currentTimeMillis()
         ) }
 
-        viewModelScope.launch {
-            android.util.Log.d("TATTestViewModel", "⏰ Starting writing timer")
+        // PHASE 3 FIX: Delta-based calculation
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + (writingTimeSeconds * 1000)
+        
+        writingTimerJob = viewModelScope.launch {
+            android.util.Log.d("TATTestViewModel", "⏰ Starting writing timer (${writingTimeMinutes}min)")
 
             try {
-                while (isActive && _uiState.value.writingTimeRemaining > 0) {
-                    delay(1000)
-                    if (!isActive) break // Double-check after delay
+                while (isActive) {
+                    val remainingMillis = endTime - System.currentTimeMillis()
+                    val remainingSeconds = (remainingMillis / 1000).toInt()
+                    
+                    if (remainingSeconds <= 0) break
+                    
                     _uiState.update { it.copy(
-                        writingTimeRemaining = it.writingTimeRemaining - 1
+                        writingTimeRemaining = remainingSeconds
                     ) }
+                    
+                    delay(200) // Update every 200ms for smooth UI
                 }
 
                 // Time's up - move to review (only if not cancelled)
@@ -524,7 +556,9 @@ class TATTestViewModel @Inject constructor(
             } finally {
                 _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.trackMemoryLeaks("TATTestViewModel", "writing-timer")
+        }.also {
+            it.trackMemoryLeaks("TATTestViewModel", "writing-timer")
+        }
     }
     
     // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
@@ -555,8 +589,11 @@ class TATTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
 
-        // PHASE 2: Timers auto-cancelled by viewModelScope
-        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
+        // PHASE 3 FIX: Explicitly cancel both timers
+        viewingTimerJob?.cancel()
+        writingTimerJob?.cancel()
+        
+        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - timers cancelled")
 
         // Cancel navigation events channel
         _navigationEvents.close()

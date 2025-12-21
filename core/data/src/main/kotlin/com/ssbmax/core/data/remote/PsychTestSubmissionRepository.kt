@@ -2,6 +2,9 @@ package com.ssbmax.core.data.remote
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
+import com.ssbmax.core.data.remote.mapper.PsychTestMapper
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
@@ -16,13 +19,19 @@ import javax.inject.Singleton
  * Repository for psychology test submissions (TAT, WAT, SRT, SDT).
  * Handles submission, retrieval, observation, and OLQ updates for projective tests.
  * 
+ * Implement Split Collection Strategy:
+ * - Submissions: submissions/{submissionId}
+ * - Results: psych_results/{submissionId}
+ * 
  * Extracted from FirestoreSubmissionRepository during Phase 9 refactoring.
+ * Updated to adhere to 300-line limit by extracting mapper.
  */
 @Singleton
 class PsychTestSubmissionRepository @Inject constructor() {
     
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")
+    private val psychResultsCollection = firestore.collection("psych_results")
     
     companion object {
         private const val TAG = "PsychTestRepo"
@@ -56,7 +65,8 @@ class PsychTestSubmissionRepository @Inject constructor() {
                 FIELD_BATCH_ID to batchId,
                 FIELD_DATA to submission.toFirestoreMap()
             )
-            submissionsCollection.document(submission.id).set(submissionMap).await()
+            // Use merge to prevent overwriting existing fields (like analysis status) if they exist
+            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
             Result.success(submission.id)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to submit TAT: ${e.message}", e))
@@ -68,9 +78,28 @@ class PsychTestSubmissionRepository @Inject constructor() {
             val document = submissionsCollection.document(submissionId).get().await()
             if (!document.exists()) return Result.success(null)
             val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(parseTATSubmission(data))
+            Result.success(PsychTestMapper.parseTATSubmission(data))
         } catch (e: Exception) {
             Result.failure(Exception("Failed to fetch TAT submission: ${e.message}", e))
+        }
+    }
+
+    suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?> {
+        return try {
+            val snapshot = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, TestType.TAT.name)
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (snapshot.isEmpty) return Result.success(null)
+            val doc = snapshot.documents.first()
+            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(PsychTestMapper.parseTATSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch latest TAT submission: ${e.message}", e))
         }
     }
     
@@ -89,6 +118,10 @@ class PsychTestSubmissionRepository @Inject constructor() {
     suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return updateOLQResult(submissionId, olqResult)
     }
+
+    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> {
+        return getOLQResult(submissionId)
+    }
     
     fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> = callbackFlow {
         val regressionFilter = OLQRegressionFilter()
@@ -104,7 +137,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                         if (data == null) trySend(null)
                         return@addSnapshotListener
                     }
-                    trySend(parseTATSubmission(data))
+                    trySend(PsychTestMapper.parseTATSubmission(data))
                 } catch (e: Exception) {
                     Log.e(TAG, "Error parsing TAT submission", e)
                 }
@@ -130,7 +163,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                 FIELD_BATCH_ID to batchId,
                 FIELD_DATA to submission.toFirestoreMap()
             )
-            submissionsCollection.document(submission.id).set(submissionMap).await()
+            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
             Result.success(submission.id)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to submit WAT: ${e.message}", e))
@@ -142,9 +175,28 @@ class PsychTestSubmissionRepository @Inject constructor() {
             val document = submissionsCollection.document(submissionId).get().await()
             if (!document.exists()) return Result.success(null)
             val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(parseWATSubmission(data))
+            Result.success(PsychTestMapper.parseWATSubmission(data))
         } catch (e: Exception) {
             Result.failure(Exception("Failed to fetch WAT submission: ${e.message}", e))
+        }
+    }
+
+    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> {
+        return try {
+            val snapshot = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, TestType.WAT.name)
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (snapshot.isEmpty) return Result.success(null)
+            val doc = snapshot.documents.first()
+            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(PsychTestMapper.parseWATSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch latest WAT submission: ${e.message}", e))
         }
     }
     
@@ -159,6 +211,10 @@ class PsychTestSubmissionRepository @Inject constructor() {
     
     suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return updateOLQResult(submissionId, olqResult)
+    }
+
+    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> {
+        return getOLQResult(submissionId)
     }
     
     fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> = callbackFlow {
@@ -175,7 +231,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                         if (data == null) trySend(null)
                         return@addSnapshotListener
                     }
-                    trySend(parseWATSubmission(data))
+                    trySend(PsychTestMapper.parseWATSubmission(data))
                 } catch (e: Exception) {
                     Log.e(TAG, "Error parsing WAT submission", e)
                 }
@@ -201,7 +257,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                 FIELD_BATCH_ID to batchId,
                 FIELD_DATA to submission.toFirestoreMap()
             )
-            submissionsCollection.document(submission.id).set(submissionMap).await()
+            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
             Result.success(submission.id)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to submit SRT: ${e.message}", e))
@@ -213,9 +269,28 @@ class PsychTestSubmissionRepository @Inject constructor() {
             val document = submissionsCollection.document(submissionId).get().await()
             if (!document.exists()) return Result.success(null)
             val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(parseSRTSubmission(data))
+            Result.success(PsychTestMapper.parseSRTSubmission(data))
         } catch (e: Exception) {
             Result.failure(Exception("Failed to fetch SRT submission: ${e.message}", e))
+        }
+    }
+
+    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> {
+        return try {
+            val snapshot = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, TestType.SRT.name)
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (snapshot.isEmpty) return Result.success(null)
+            val doc = snapshot.documents.first()
+            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(PsychTestMapper.parseSRTSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch latest SRT submission: ${e.message}", e))
         }
     }
     
@@ -230,6 +305,10 @@ class PsychTestSubmissionRepository @Inject constructor() {
     
     suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return updateOLQResult(submissionId, olqResult)
+    }
+
+    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> {
+        return getOLQResult(submissionId)
     }
     
     fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> = callbackFlow {
@@ -246,7 +325,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                         if (data == null) trySend(null)
                         return@addSnapshotListener
                     }
-                    trySend(parseSRTSubmission(data))
+                    trySend(PsychTestMapper.parseSRTSubmission(data))
                 } catch (e: Exception) {
                     Log.e(TAG, "Error parsing SRT submission", e)
                 }
@@ -273,7 +352,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                 FIELD_BATCH_ID to batchId,
                 FIELD_DATA to submission.toFirestoreMap()
             )
-            submissionsCollection.document(submission.id).set(submissionMap).await()
+            submissionsCollection.document(submission.id).set(submissionMap, SetOptions.merge()).await()
             Log.d(TAG, "✅ Firestore SDT: Successfully written!")
             Result.success(submission.id)
         } catch (e: Exception) {
@@ -287,9 +366,28 @@ class PsychTestSubmissionRepository @Inject constructor() {
             val document = submissionsCollection.document(submissionId).get().await()
             if (!document.exists()) return Result.success(null)
             val data = document.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
-            Result.success(parseSDTSubmission(data))
+            Result.success(PsychTestMapper.parseSDTSubmission(data))
         } catch (e: Exception) {
             Result.failure(Exception("Failed to fetch SDT submission: ${e.message}", e))
+        }
+    }
+
+    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> {
+        return try {
+            val snapshot = submissionsCollection
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, TestType.SD.name)
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            if (snapshot.isEmpty) return Result.success(null)
+            val doc = snapshot.documents.first()
+            val data = doc.get(FIELD_DATA) as? Map<*, *> ?: return Result.success(null)
+            Result.success(PsychTestMapper.parseSDTSubmission(data))
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to fetch latest SDT submission: ${e.message}", e))
         }
     }
     
@@ -304,6 +402,10 @@ class PsychTestSubmissionRepository @Inject constructor() {
     
     suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return updateOLQResult(submissionId, olqResult)
+    }
+
+    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> {
+        return getOLQResult(submissionId)
     }
     
     fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> = callbackFlow {
@@ -320,7 +422,7 @@ class PsychTestSubmissionRepository @Inject constructor() {
                         if (data == null) trySend(null)
                         return@addSnapshotListener
                     }
-                    trySend(parseSDTSubmission(data))
+                    trySend(PsychTestMapper.parseSDTSubmission(data))
                 } catch (e: Exception) {
                     Log.e(TAG, "Error parsing SDT submission", e)
                 }
@@ -335,10 +437,17 @@ class PsychTestSubmissionRepository @Inject constructor() {
     private suspend fun updateOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return try {
             val olqResultMap = OLQMapper.toFirestoreMap(olqResult)
+            
+            // 1. Write to psych_results collection
+            psychResultsCollection.document(submissionId)
+                .set(olqResultMap, SetOptions.merge())
+                .await()
+            
+            // 2. Update analysis status (and optionally a simplified result or flag) in submissions collection
+            // We keep updating status in submissions so clients know when to fetch the result
             submissionsCollection.document(submissionId)
                 .update(
                     mapOf(
-                        "$FIELD_DATA.olqResult" to olqResultMap,
                         "$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED
                     )
                 )
@@ -348,287 +457,30 @@ class PsychTestSubmissionRepository @Inject constructor() {
             Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
         }
     }
-    
-    // ===========================
-    // Parsing Methods
-    // ===========================
-    
-    private fun parseTATSubmission(data: Map<*, *>): TATSubmission {
-        val storiesList = data["stories"] as? List<*> ?: emptyList<Any>()
-        val stories = storiesList.mapNotNull { storyData ->
-            (storyData as? Map<*, *>)?.let {
-                TATStoryResponse(
-                    questionId = it["questionId"] as? String ?: "",
-                    story = it["story"] as? String ?: "",
-                    charactersCount = (it["charactersCount"] as? Number)?.toInt() ?: 0,
-                    viewingTimeTakenSeconds = (it["viewingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                    writingTimeTakenSeconds = (it["writingTimeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
-                )
-            }
-        }
 
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            TATInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
-                narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                storyWiseComments = (it["storyWiseComments"] as? Map<*, *>)?.mapNotNull { (k, v) ->
-                    (k as? String)?.let { key -> key to (v as? String ?: "") }
-                }?.toMap() ?: emptyMap(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
-
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
-
-        return TATSubmission(
-            id = data["id"] as? String ?: "",
-            userId = data["userId"] as? String ?: "",
-            testId = data["testId"] as? String ?: "",
-            stories = stories,
-            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
-            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
-            instructorScore = instructorScore,
-            gradedByInstructorId = data["gradedByInstructorId"] as? String,
-            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            analysisStatus = analysisStatus,
-            olqResult = olqResult
-        )
-    }
-
-    private fun parseWATSubmission(data: Map<*, *>): WATSubmission {
-        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
-            (responseData as? Map<*, *>)?.let {
-                WATWordResponse(
-                    wordId = it["wordId"] as? String ?: "",
-                    word = it["word"] as? String ?: "",
-                    response = it["response"] as? String ?: "",
-                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                    isSkipped = it["isSkipped"] as? Boolean ?: false
-                )
-            }
-        }
-
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            WATInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
-                speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
-                relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                notableResponses = (it["notableResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
-
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
-
-        return WATSubmission(
-            id = data["id"] as? String ?: "",
-            userId = data["userId"] as? String ?: "",
-            testId = data["testId"] as? String ?: "",
-            responses = responses,
-            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
-            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
-            instructorScore = instructorScore,
-            gradedByInstructorId = data["gradedByInstructorId"] as? String,
-            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            analysisStatus = analysisStatus,
-            olqResult = olqResult
-        )
-    }
-
-    private fun parseSRTSubmission(data: Map<*, *>): SRTSubmission {
-        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
-            (responseData as? Map<*, *>)?.let {
-                SRTSituationResponse(
-                    situationId = it["situationId"] as? String ?: "",
-                    situation = it["situation"] as? String ?: "",
-                    response = it["response"] as? String ?: "",
-                    charactersCount = (it["charactersCount"] as? Number)?.toInt() ?: 0,
-                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                    isSkipped = it["isSkipped"] as? Boolean ?: false
-                )
-            }
-        }
-
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            val categoryWiseCommentsMap = it["categoryWiseComments"] as? Map<*, *> ?: emptyMap<Any, Any>()
-            val categoryWiseComments = categoryWiseCommentsMap.mapNotNull { (k, v) ->
-                try {
-                    val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
-                    category to (v as? String ?: "")
-                } catch (e: Exception) { null }
-            }.toMap()
-            SRTInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
-                decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
-                practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
-                initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
-                socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                categoryWiseComments = categoryWiseComments,
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
-
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
-
-        return SRTSubmission(
-            id = data["id"] as? String ?: "",
-            userId = data["userId"] as? String ?: "",
-            testId = data["testId"] as? String ?: "",
-            responses = responses,
-            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
-            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
-            instructorScore = instructorScore,
-            gradedByInstructorId = data["gradedByInstructorId"] as? String,
-            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            analysisStatus = analysisStatus,
-            olqResult = olqResult
-        )
-    }
-
-    private fun parseSDTSubmission(data: Map<*, *>): SDTSubmission {
-        val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
-            (responseData as? Map<*, *>)?.let {
-                SDTQuestionResponse(
-                    questionId = it["questionId"] as? String ?: "",
-                    question = it["question"] as? String ?: "",
-                    answer = it["answer"] as? String ?: "",
-                    wordCount = (it["wordCount"] as? Number)?.toInt() ?: 0,
-                    timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                    submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                    isSkipped = it["isSkipped"] as? Boolean ?: false
-                )
-            }
-        }
-
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            SDTInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
-
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
-
-        return SDTSubmission(
-            id = data["id"] as? String ?: "",
-            userId = data["userId"] as? String ?: "",
-            testId = data["testId"] as? String ?: "",
-            responses = responses,
-            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
-            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
-            instructorScore = instructorScore,
-            gradedByInstructorId = data["gradedByInstructorId"] as? String,
-            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            analysisStatus = analysisStatus,
-            olqResult = olqResult
-        )
-    }
-
-    private fun parseOLQResult(data: Map<*, *>?): OLQAnalysisResult? {
-        if (data == null) return null
+    private suspend fun getOLQResult(submissionId: String): Result<OLQAnalysisResult?> {
         return try {
-            val testTypeStr = data["testType"] as? String ?: return null
-            val testType = TestType.valueOf(testTypeStr)
-            val olqScoresMap = data["olqScores"] as? Map<*, *> ?: emptyMap<Any, Any>()
-            val olqScores = olqScoresMap.mapNotNull { (k, v) ->
-                try {
-                    val olq = com.ssbmax.core.domain.model.interview.OLQ.valueOf(k as? String ?: "")
-                    val scoreMap = v as? Map<*, *> ?: return@mapNotNull null
-                    olq to com.ssbmax.core.domain.model.interview.OLQScore(
-                        score = (scoreMap["score"] as? Number)?.toInt() ?: 5,
-                        confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
-                        reasoning = scoreMap["reasoning"] as? String ?: ""
-                    )
-                } catch (e: Exception) { null }
-            }.toMap()
+            // Priority 1: Fetch from psych_results (New Architecture)
+            val resultDoc = psychResultsCollection.document(submissionId).get().await()
+            if (resultDoc.exists()) {
+                val data = resultDoc.data
+                return Result.success(PsychTestMapper.parseOLQResult(data))
+            }
+
+            // Priority 2: Fallback to submissions collection (Legacy / Transitional)
+            Log.w(TAG, "OLQ result not found in psych_results for $submissionId, checking submissions collection.")
+            val submissionDoc = submissionsCollection.document(submissionId).get().await()
+            if (submissionDoc.exists()) {
+                 val data = submissionDoc.get(FIELD_DATA) as? Map<*, *>
+                 val olqMap = data?.get("olqResult") as? Map<*, *>
+                 if (olqMap != null) {
+                      return Result.success(PsychTestMapper.parseOLQResult(olqMap))
+                 }
+            }
             
-            OLQAnalysisResult(
-                submissionId = data["submissionId"] as? String ?: "",
-                testType = testType,
-                olqScores = olqScores,
-                overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 5f,
-                overallRating = data["overallRating"] as? String ?: "",
-                strengths = (data["strengths"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                weaknesses = (data["weaknesses"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                recommendations = (data["recommendations"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0
-            )
-        } catch (e: Exception) { null }
+            Result.success(null)
+        } catch (e: Exception) {
+            Result.failure(Exception("Failed to get OLQ result: ${e.message}", e))
+        }
     }
 }

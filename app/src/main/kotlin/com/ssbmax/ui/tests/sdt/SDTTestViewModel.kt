@@ -48,11 +48,13 @@ class SDTTestViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SDTTestUiState())
     val uiState: StateFlow<SDTTestUiState> = _uiState.asStateFlow()
 
+
     // Navigation events (one-time events, consumed on collection)
     private val _navigationEvents = kotlinx.coroutines.channels.Channel<com.ssbmax.ui.tests.common.TestNavigationEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
-    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
+    // Timer Job reference for explicit cancellation (prevents "rushing" bug)
+    private var timerJob: kotlinx.coroutines.Job? = null
 
     companion object {
         private const val TAG = "SDTTestViewModel"
@@ -291,23 +293,43 @@ class SDTTestViewModel @Inject constructor(
     }
 
     private fun startTimer() {
-        // PHASE 2: No need to call stopTimer(), launch directly in viewModelScope
+        // PHASE 4 FIX: Cancel previous timer to prevent concurrency bug
+        timerJob?.cancel()
+        
+        val totalTimeMinutes = 15
+        val totalTimeSeconds = totalTimeMinutes * 60
+        
         _uiState.update { it.copy(
+            totalTimeRemaining = totalTimeSeconds,
             isTimerActive = true,
             timerStartTime = System.currentTimeMillis()
         ) }
         
-        viewModelScope.launch {
+        // PHASE 4 FIX: Delta-based calculation for 15-minute timer
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + (totalTimeSeconds * 1000)
+        
+        timerJob = viewModelScope.launch {
+            android.util.Log.d(TAG, "⏰ Starting SDT timer (${totalTimeMinutes}min)")
+            
             try {
-                while (isActive && _uiState.value.totalTimeRemaining > 0) {
-                    delay(1000)
-                    if (!isActive) break
-                    _uiState.update { it.copy(totalTimeRemaining = it.totalTimeRemaining - 1) }
+                while (isActive) {
+                    val remainingMillis = endTime - System.currentTimeMillis()
+                    val remainingSeconds = (remainingMillis / 1000).toInt()
+                    
+                    if (remainingSeconds <= 0) break
+                    
+                    _uiState.update { it.copy(totalTimeRemaining = remainingSeconds) }
+                    
+                    delay(200) // Update every 200ms for smooth UI
                 }
-                if (isActive && _uiState.value.totalTimeRemaining == 0) {
+                
+                if (isActive) {
+                    android.util.Log.d(TAG, "⏰ SDT timer completed, moving to review")
                     _uiState.update { it.copy(phase = SDTPhase.REVIEW) }
                 }
             } catch (e: CancellationException) {
+                android.util.Log.d(TAG, "⏰ SDT timer cancelled")
                 throw e
             } finally {
                 _uiState.update { it.copy(isTimerActive = false) }
@@ -339,7 +361,11 @@ class SDTTestViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        // PHASE 2: Timer auto-cancelled by viewModelScope
+        
+        // PHASE 4 FIX: Explicitly cancel timer
+        timerJob?.cancel()
+        
+        android.util.Log.d(TAG, "🧹 ViewModel onCleared() - timer cancelled")
         _navigationEvents.close()
     }
 }

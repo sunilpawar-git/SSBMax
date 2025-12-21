@@ -1,6 +1,8 @@
 package com.ssbmax.core.domain.repository
 
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -120,6 +122,16 @@ interface SubmissionRepository {
     suspend fun getTATSubmission(submissionId: String): Result<TATSubmission?>
 
     /**
+     * Get latest TAT submission for user
+     */
+    suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?>
+    
+    /**
+     * Get TAT OLQ Result
+     */
+    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?>
+
+    /**
      * Update TAT analysis status
      */
     suspend fun updateTATAnalysisStatus(
@@ -148,6 +160,16 @@ interface SubmissionRepository {
      * Get WAT submission by ID
      */
     suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?>
+
+    /**
+     * Get latest WAT submission for user
+     */
+    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?>
+
+    /**
+     * Get WAT OLQ Result
+     */
+    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?>
 
     /**
      * Update WAT analysis status
@@ -180,6 +202,16 @@ interface SubmissionRepository {
     suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?>
 
     /**
+     * Get latest SRT submission for user
+     */
+    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?>
+
+    /**
+     * Get SRT OLQ Result
+     */
+    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?>
+
+    /**
      * Update SRT analysis status
      */
     suspend fun updateSRTAnalysisStatus(
@@ -208,6 +240,16 @@ interface SubmissionRepository {
      * Get SDT submission by ID
      */
     suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?>
+
+    /**
+     * Get latest SDT submission for user
+     */
+    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?>
+
+    /**
+     * Get SDT OLQ Result
+     */
+    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?>
 
     /**
      * Update SDT analysis status

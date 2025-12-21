@@ -61,6 +61,9 @@ class WATTestViewModel @Inject constructor(
     // Navigation events (one-time events, consumed on collection)
     private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
+    
+    // Timer Job reference for explicit cancellation (prevents "rushing" bug)
+    private var timerJob: Job? = null
 
     // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
@@ -392,7 +395,9 @@ class WATTestViewModel @Inject constructor(
     }
     
     private fun startWordTimer() {
-        // PHASE 2: No need to call stopTimer(), viewModelScope manages lifecycle
+        // PHASE 2 FIX: Cancel previous timer to prevent concurrency bug
+        timerJob?.cancel()
+        
         val timePerWord = _uiState.value.config?.timePerWordSeconds ?: 15
         
         _uiState.update { it.copy(
@@ -401,17 +406,27 @@ class WATTestViewModel @Inject constructor(
             timerStartTime = System.currentTimeMillis()
         ) }
 
-        // PHASE 2: Launch directly without storing Job reference
-        viewModelScope.launch {
-            android.util.Log.d("WATTestViewModel", "⏰ Starting word timer")
+        // PHASE 2 FIX: Store Job reference and use delta-based calculation
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + (timePerWord * 1000)
+        
+        timerJob = viewModelScope.launch {
+            android.util.Log.d("WATTestViewModel", "⏰ Starting word timer (${timePerWord}s)")
 
             try {
-                while (isActive && _uiState.value.timeRemaining > 0) {
-                    delay(1000)
-                    if (!isActive) break // Double-check after delay
+                while (isActive) {
+                    // Delta-based calculation: self-correcting for drift
+                    val remainingMillis = endTime - System.currentTimeMillis()
+                    val remainingSeconds = (remainingMillis / 1000).toInt()
+                    
+                    if (remainingSeconds <= 0) break
+                    
                     _uiState.update { it.copy(
-                        timeRemaining = it.timeRemaining - 1
+                        timeRemaining = remainingSeconds
                     ) }
+                    
+                    // Update every 200ms for smooth UI (more frequent than 1s)
+                    delay(200)
                 }
 
                 // Time's up - auto-skip (only if not cancelled)
@@ -425,7 +440,9 @@ class WATTestViewModel @Inject constructor(
             } finally {
                 _uiState.update { it.copy(isTimerActive = false) }
             }
-        }.trackMemoryLeaks("WATTestViewModel", "word-timer")
+        }.also {
+            it.trackMemoryLeaks("WATTestViewModel", "word-timer")
+        }
     }
     
     // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
@@ -456,8 +473,10 @@ class WATTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
 
-        // PHASE 2: Timers auto-cancelled by viewModelScope
-        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-cancels timers")
+        // PHASE 2 FIX: Explicitly cancel timer
+        timerJob?.cancel()
+        
+        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - timer cancelled")
 
         // Cancel navigation events channel
         _navigationEvents.close()
