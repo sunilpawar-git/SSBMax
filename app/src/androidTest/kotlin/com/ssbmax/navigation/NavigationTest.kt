@@ -169,8 +169,8 @@ class NavigationTest : BaseComposeTest() {
         assert(SSBMaxDestinations.StartInterview.route.isNotEmpty()) { 
             "StartInterview route should not be empty" 
         }
-        assert(SSBMaxDestinations.TextInterviewSession.route.contains("{sessionId}")) { 
-            "TextInterviewSession route should contain sessionId parameter" 
+        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) { 
+            "VoiceInterviewSession route should contain sessionId parameter" 
         }
         assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) { 
             "VoiceInterviewSession route should contain sessionId parameter" 

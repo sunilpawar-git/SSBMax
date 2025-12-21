@@ -43,6 +43,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }
@@ -69,6 +70,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }
@@ -88,6 +90,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }
@@ -112,6 +115,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }
@@ -135,6 +139,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }
@@ -161,6 +166,7 @@ class StudentHomeScreenTest : BaseComposeTest() {
                 onNavigateToTopic = {},
                 onNavigateToPhaseDetail = {},
                 onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
                 onOpenDrawer = {}
             )
         }

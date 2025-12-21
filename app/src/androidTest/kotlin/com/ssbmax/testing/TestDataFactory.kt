@@ -51,7 +51,7 @@ object TestDataFactory {
         userId = userId,
         fullName = fullName,
         age = age,
-        subscriptionType = SubscriptionType.PREMIUM_ASSESSOR
+        subscriptionType = SubscriptionType.PRO
     )
 
     /**
@@ -65,7 +65,7 @@ object TestDataFactory {
         userId = userId,
         fullName = fullName,
         age = age,
-        subscriptionType = SubscriptionType.PREMIUM_AI
+        subscriptionType = SubscriptionType.PREMIUM
     )
 
     fun createTestTATQuestion(
@@ -164,7 +164,7 @@ object TestDataFactory {
     ): Phase2Progress {
         return Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, psychologyStatus),
-            gtoProgress = TestProgress(TestType.GTO, gtoStatus),
+            gtoProgress = TestProgress(TestType.GTO_GD, gtoStatus),
             interviewProgress = TestProgress(TestType.IO, interviewStatus)
         )
     }

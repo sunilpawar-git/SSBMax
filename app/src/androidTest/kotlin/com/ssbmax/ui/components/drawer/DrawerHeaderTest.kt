@@ -156,7 +156,7 @@ class DrawerHeaderTest : BaseComposeTest() {
         val userProfile = TestDataFactory.createTestUserProfile(
             fullName = "Sarah Connor",
             age = 30,
-            subscriptionType = SubscriptionType.PREMIUM_AI
+            subscriptionType = SubscriptionType.PREMIUM
         )
 
         composeTestRule.setContent {

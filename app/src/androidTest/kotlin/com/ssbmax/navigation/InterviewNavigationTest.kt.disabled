@@ -50,10 +50,10 @@ class InterviewNavigationTest {
     @Test
     fun textInterviewSession_route_generatesCorrectly() {
         val sessionId = "test-session-123"
-        val route = SSBMaxDestinations.TextInterviewSession.createRoute(sessionId)
+        val route = SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
         
         assert(route == "interview/text/$sessionId") {
-            "TextInterviewSession route should be interview/text/{sessionId}. Got: $route"
+            "VoiceInterviewSession route should be interview/voice/{sessionId}. Got: $route"
         }
     }
 
