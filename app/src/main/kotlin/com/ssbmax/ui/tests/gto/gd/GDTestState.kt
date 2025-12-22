@@ -23,7 +23,7 @@ data class GDTestUiState(
     val discussionStartTime: Long = 0L,
     val timeRemaining: Int = 1200, // 20 minutes
     val response: String = "",
-    val wordCount: Int = 0,
+    val charCount: Int = 0,
     val validationError: String? = null,
     
     // Submission
@@ -38,14 +38,14 @@ data class GDTestUiState(
     val showUpgradeDialog: Boolean = false,
     val upgradeMessage: String? = null
 ) {
-    val meetsMinWordCount: Boolean
-        get() = wordCount >= 300
+    val meetsMinCharCount: Boolean
+        get() = charCount >= 50
     
-    val meetsMaxWordCount: Boolean
-        get() = wordCount <= 1500
+    val meetsMaxCharCount: Boolean
+        get() = charCount <= 1500
     
-    val meetsWordCountRequirements: Boolean
-        get() = meetsMinWordCount && meetsMaxWordCount
+    val meetsCharCountRequirements: Boolean
+        get() = meetsMinCharCount && meetsMaxCharCount
     
     val formattedTime: String
         get() {

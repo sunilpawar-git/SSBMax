@@ -94,7 +94,7 @@ fun SRTTestScreen(
                         totalSituations = uiState.situations.size,
                         response = uiState.currentResponse,
                         onResponseChange = { viewModel.updateResponse(it) },
-                        minChars = uiState.config?.minResponseLength ?: 20,
+                        minChars = uiState.config?.minResponseLength ?: 0,
                         maxChars = uiState.config?.maxResponseLength ?: 200,
                         canMoveNext = uiState.canMoveToNext,
                         onNext = { viewModel.moveToNext() },

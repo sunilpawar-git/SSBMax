@@ -99,7 +99,7 @@ class GTOSubmissionRepository @Inject constructor() {
                 FIELD_DATA to mapOf(
                     "topic" to submission.topic,
                     "response" to submission.response,
-                    "wordCount" to submission.wordCount,
+                    "charCount" to submission.charCount,
                     "timeSpent" to submission.timeSpent,
                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
                         mapOf(
@@ -143,7 +143,7 @@ class GTOSubmissionRepository @Inject constructor() {
                     "topicChoices" to submission.topicChoices,
                     "selectedTopic" to submission.selectedTopic,
                     "speechTranscript" to submission.speechTranscript,
-                    "wordCount" to submission.wordCount,
+                    "charCount" to submission.charCount,
                     "timeSpent" to submission.timeSpent,
                     "olqScores" to submission.olqScores.mapKeys { it.key.name }.mapValues { entry ->
                         mapOf(

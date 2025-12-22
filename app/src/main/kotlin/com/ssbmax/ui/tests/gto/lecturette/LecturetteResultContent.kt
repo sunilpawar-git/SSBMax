@@ -32,7 +32,7 @@ fun LecturetteResultContent(
             LecturetteSubmissionCard(
                 selectedTopic = submission.selectedTopic,
                 allTopics = submission.topicChoices,
-                wordCount = submission.wordCount,
+                charCount = submission.charCount,
                 timeSpent = formattedTimeSpent
             )
         }
@@ -91,7 +91,7 @@ fun LecturetteResultContent(
                 SpeechPreviewCard(
                     selectedTopic = submission.selectedTopic,
                     speechTranscript = submission.speechTranscript,
-                    wordCount = submission.wordCount
+                    charCount = submission.charCount
                 )
             }
         }

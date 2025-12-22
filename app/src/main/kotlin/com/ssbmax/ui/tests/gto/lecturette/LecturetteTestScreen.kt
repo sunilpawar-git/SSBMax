@@ -203,7 +203,7 @@ fun LecturetteTestScreen(
                     LecturettePhase.SPEECH -> SpeechPhase(
                         selectedTopic = uiState.selectedTopic,
                         speechTranscript = uiState.speechTranscript,
-                        wordCount = uiState.wordCount,
+                        charCount = uiState.charCount,
                         timeRemaining = uiState.formattedTime,
                         isTimeLow = uiState.isTimeLow,
                         onTranscriptChanged = viewModel::onTranscriptChanged,
@@ -213,7 +213,7 @@ fun LecturetteTestScreen(
                     LecturettePhase.REVIEW -> ReviewPhase(
                         selectedTopic = uiState.selectedTopic,
                         speechTranscript = uiState.speechTranscript,
-                        wordCount = uiState.wordCount,
+                        charCount = uiState.charCount,
                         isSubmitting = uiState.isSubmitting,
                         onBackToSpeech = { viewModel.backToSpeech() },
                         onSubmit = { viewModel.submitTest() }

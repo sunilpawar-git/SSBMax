@@ -372,7 +372,7 @@ internal fun SDTQuestionResponse.toFirestoreMap(): Map<String, Any?> {
         "questionId" to questionId,
         "question" to question,
         "answer" to answer,
-        "wordCount" to wordCount,
+        "charCount" to charCount,
         "timeTakenSeconds" to timeTakenSeconds,
         "submittedAt" to submittedAt,
         "isSkipped" to isSkipped

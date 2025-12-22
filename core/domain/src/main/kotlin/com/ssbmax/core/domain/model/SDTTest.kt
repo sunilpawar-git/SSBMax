@@ -31,7 +31,7 @@ data class SDTQuestionResponse(
     val questionId: String,
     val question: String,
     val answer: String,
-    val wordCount: Int,
+    val charCount: Int,
     val timeTakenSeconds: Int,
     val submittedAt: Long,
     val isSkipped: Boolean = false
@@ -60,8 +60,8 @@ data class SDTSubmission(
     val totalResponses: Int get() = responses.size
     val validResponses: Int get() = responses.count { it.isValidResponse }
     val skippedResponses: Int get() = responses.count { it.isSkipped }
-    val averageWordCount: Int get() = responses.filter { it.isValidResponse }
-        .map { it.wordCount }.average().toInt()
+    val averageCharCount: Int get() = responses.filter { it.isValidResponse }
+        .map { it.charCount }.average().toInt()
     val isComplete: Boolean get() = responses.size == 4
 }
 
@@ -144,7 +144,8 @@ data class SDTTestConfig(
     val totalQuestions: Int = 4,
     val totalTimeMinutes: Int = 15,
     val totalTimeSeconds: Int = 900, // 15 minutes
-    val maxWordsPerQuestion: Int = 1000,
+    val minCharsPerQuestion: Int = 50,
+    val maxCharsPerQuestion: Int = 1500,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true,
     val allowSkip: Boolean = true,

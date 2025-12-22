@@ -33,7 +33,7 @@ Topic: ${submission.topic}
 Candidate Response:
 ${submission.response}
 
-Word Count: ${submission.wordCount}
+Character Count: ${submission.charCount}
 Time Spent: ${submission.timeSpent} seconds
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -236,7 +236,7 @@ Available Topics: ${submission.topicChoices.joinToString(", ")}
 Speech Transcript:
 ${submission.speechTranscript}
 
-Word Count: ${submission.wordCount}
+Character Count: ${submission.charCount}
 Time Spent: ${submission.timeSpent} seconds
 
 ═══════════════════════════════════════════════════════════════════════════════

@@ -82,8 +82,8 @@ fun InstructionsPhase(
                     
                     InstructionItem(
                         icon = Icons.Default.Edit,
-                        title = "Word Count",
-                        description = "Minimum 300 words, maximum 1500 words"
+                        title = "Character Count",
+                        description = "Minimum 50 characters, maximum 1500 characters"
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -141,7 +141,7 @@ fun InstructionsPhase(
 fun DiscussionPhase(
     topic: String,
     response: String,
-    wordCount: Int,
+    charCount: Int,
     timeRemaining: String,
     isTimeLow: Boolean,
     onResponseChanged: (String) -> Unit,
@@ -179,16 +179,16 @@ fun DiscussionPhase(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Words: $wordCount",
+                            text = "Characters: $charCount",
                             style = MaterialTheme.typography.bodyMedium,
                             color = when {
-                                wordCount < 300 -> MaterialTheme.colorScheme.error
-                                wordCount > 1500 -> MaterialTheme.colorScheme.error
+                                charCount < 50 -> MaterialTheme.colorScheme.error
+                                charCount > 1500 -> MaterialTheme.colorScheme.error
                                 else -> MaterialTheme.colorScheme.primary
                             }
                         )
                         Text(
-                            text = "Min: 300 | Max: 1500",
+                            text = "Min: 50 | Max: 1500",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -199,7 +199,7 @@ fun DiscussionPhase(
                     Button(
                         onClick = onProceedToReview,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = wordCount >= 300 && wordCount <= 1500
+                        enabled = charCount >= 50 && charCount <= 1500
                     ) {
                         Text("Review Response")
                     }
@@ -251,7 +251,7 @@ fun DiscussionPhase(
 fun ReviewPhase(
     topic: String,
     response: String,
-    wordCount: Int,
+    charCount: Int,
     isSubmitting: Boolean,
     onBackToDiscussion: () -> Unit,
     onSubmit: () -> Unit
@@ -324,7 +324,7 @@ fun ReviewPhase(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "$wordCount words",
+                            text = "$charCount characters",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -15,7 +15,7 @@ import com.ssbmax.ui.tests.gto.common.InfoItem
 fun LecturetteSubmissionCard(
     selectedTopic: String,
     allTopics: List<String>,
-    wordCount: Int,
+    charCount: Int,
     timeSpent: String
 ) {
     Card(
@@ -65,7 +65,7 @@ fun LecturetteSubmissionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoItem(label = "Word Count", value = "$wordCount words")
+                InfoItem(label = "Character Count", value = "$charCount chars")
                 InfoItem(label = "Time Spent", value = timeSpent)
             }
         }
@@ -76,7 +76,7 @@ fun LecturetteSubmissionCard(
 fun SpeechPreviewCard(
     selectedTopic: String,
     speechTranscript: String,
-    wordCount: Int
+    charCount: Int
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -108,7 +108,7 @@ fun SpeechPreviewCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "$wordCount words",
+                    text = "$charCount characters",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

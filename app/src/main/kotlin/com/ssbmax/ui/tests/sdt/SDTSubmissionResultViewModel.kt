@@ -121,7 +121,7 @@ class SDTSubmissionResultViewModel @Inject constructor(
                     questionId = response["questionId"] as? String ?: "",
                     question = response["question"] as? String ?: "",
                     answer = response["answer"] as? String ?: "",
-                    wordCount = (response["wordCount"] as? Number)?.toInt() ?: 0,
+                    charCount = (response["charCount"] as? Number)?.toInt() ?: 0,
                     timeTakenSeconds = (response["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
                     submittedAt = (response["submittedAt"] as? Number)?.toLong() ?: 0L,
                     isSkipped = response["isSkipped"] as? Boolean ?: false

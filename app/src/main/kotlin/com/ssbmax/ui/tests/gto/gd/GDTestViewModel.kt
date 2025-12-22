@@ -60,8 +60,8 @@ class GDTestViewModel @Inject constructor(
     companion object {
         private const val TAG = "GDTestViewModel"
         private const val DISCUSSION_TIME_SECONDS = 1200 // 20 minutes
-        private const val MIN_WORDS = 300
-        private const val MAX_WORDS = 1500
+        private const val MIN_CHARS = 50
+        private const val MAX_CHARS = 1500
     }
     
     /**
@@ -152,21 +152,21 @@ class GDTestViewModel @Inject constructor(
     fun onResponseChanged(newResponse: String) {
         _uiState.update { it.copy(
             response = newResponse,
-            wordCount = GTOTestUtils.countWords(newResponse)
+            charCount = newResponse.trim().length
         ) }
     }
     
     fun proceedToReview() {
-        val wordCount = _uiState.value.wordCount
-        if (wordCount < MIN_WORDS) {
+        val charCount = _uiState.value.charCount
+        if (charCount < MIN_CHARS) {
             _uiState.update { it.copy(
-                validationError = "Response must be at least $MIN_WORDS words (currently $wordCount)"
+                validationError = "Response must be at least $MIN_CHARS characters (currently $charCount)"
             ) }
             return
         }
-        if (wordCount > MAX_WORDS) {
+        if (charCount > MAX_CHARS) {
             _uiState.update { it.copy(
-                validationError = "Response must not exceed $MAX_WORDS words (currently $wordCount)"
+                validationError = "Response must not exceed $MAX_CHARS characters (currently $charCount)"
             ) }
             return
         }
@@ -190,7 +190,7 @@ class GDTestViewModel @Inject constructor(
                 testId = state.testId,
                 topic = state.topic,
                 response = state.response,
-                wordCount = state.wordCount,
+                charCount = state.charCount,
                 submittedAt = System.currentTimeMillis(),
                 timeSpent = timeSpent
             )

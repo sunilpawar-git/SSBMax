@@ -244,7 +244,7 @@ private fun ResultContent(
                     Text(response.question, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     if (!response.isSkipped) {
                         Text(response.answer, style = MaterialTheme.typography.bodyMedium)
-                        Text(stringResource(R.string.sdt_result_word_count, response.wordCount), style = MaterialTheme.typography.labelSmall,
+                        Text("Characters: ${response.charCount}", style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary)
                     } else {
                         Text(stringResource(R.string.sdt_result_skipped), style = MaterialTheme.typography.bodyMedium,

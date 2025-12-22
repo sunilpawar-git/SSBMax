@@ -15,7 +15,7 @@ import com.ssbmax.ui.tests.gto.common.InfoItem
 @Composable
 fun SubmissionConfirmationCard(
     topic: String,
-    wordCount: Int,
+    charCount: Int,
     timeSpent: String,
     status: GTOSubmissionStatus
 ) {
@@ -52,7 +52,7 @@ fun SubmissionConfirmationCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoItem(label = "Word Count", value = "$wordCount words")
+                InfoItem(label = "Character Count", value = "$charCount chars")
                 InfoItem(label = "Time Spent", value = timeSpent)
             }
         }
@@ -63,7 +63,7 @@ fun SubmissionConfirmationCard(
 fun ResponsePreviewCard(
     topic: String,
     response: String,
-    wordCount: Int
+    charCount: Int
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -103,7 +103,7 @@ fun ResponsePreviewCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "$wordCount words",
+                    text = "$charCount characters",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

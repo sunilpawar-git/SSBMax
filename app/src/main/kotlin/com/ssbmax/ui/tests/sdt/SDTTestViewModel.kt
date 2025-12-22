@@ -124,10 +124,9 @@ class SDTTestViewModel @Inject constructor(
     }
 
     fun updateAnswer(answer: String) {
-        val words = answer.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
-        val maxWords = _uiState.value.config?.maxWordsPerQuestion ?: 1000
+        val maxChars = _uiState.value.config?.maxCharsPerQuestion ?: 1500
 
-        if (words.size <= maxWords) {
+        if (answer.trim().length <= maxChars) {
             _uiState.update { it.copy(currentAnswer = answer) }
         }
     }
@@ -140,7 +139,7 @@ class SDTTestViewModel @Inject constructor(
             questionId = currentQuestion.id,
             question = currentQuestion.question,
             answer = state.currentAnswer,
-            wordCount = state.currentWordCount,
+            charCount = state.currentCharCount,
             timeTakenSeconds = ((900 - state.totalTimeRemaining)),
             submittedAt = System.currentTimeMillis(),
             isSkipped = false
@@ -173,7 +172,7 @@ class SDTTestViewModel @Inject constructor(
             questionId = currentQuestion.id,
             question = currentQuestion.question,
             answer = "",
-            wordCount = 0,
+            charCount = 0,
             timeTakenSeconds = 0,
             submittedAt = System.currentTimeMillis(),
             isSkipped = true
@@ -408,13 +407,14 @@ data class SDTTestUiState(
     val progress: Float
         get() = if (questions.isEmpty()) 0f else (completedQuestions.toFloat() / questions.size)
 
-    val currentWordCount: Int
-        get() = currentAnswer.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
+    val currentCharCount: Int
+        get() = currentAnswer.trim().length
 
     val canMoveToNext: Boolean
         get() {
-            val maxWords = config?.maxWordsPerQuestion ?: 1000
-            return currentWordCount <= maxWords
+            val minChars = config?.minCharsPerQuestion ?: 50
+            val maxChars = config?.maxCharsPerQuestion ?: 1500
+            return currentCharCount >= minChars && currentCharCount <= maxChars
         }
 }
 

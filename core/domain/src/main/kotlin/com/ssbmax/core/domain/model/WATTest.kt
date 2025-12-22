@@ -145,8 +145,8 @@ data class WATTestConfig(
     val description: String = "Write the first word that comes to mind for each prompt",
     val totalWords: Int = 60,
     val timePerWordSeconds: Int = 15,
-    val minResponseLength: Int = 1,
-    val maxResponseLength: Int = 50,
+    val minResponseLength: Int = 0,
+    val maxResponseLength: Int = 150,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true,
     val allowSkip: Boolean = true, // Allow skipping if no response comes to mind

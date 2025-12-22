@@ -193,7 +193,7 @@ fun GDTestScreen(
                     GDPhase.DISCUSSION -> DiscussionPhase(
                         topic = uiState.topic,
                         response = uiState.response,
-                        wordCount = uiState.wordCount,
+                        charCount = uiState.charCount,
                         timeRemaining = uiState.formattedTime,
                         isTimeLow = uiState.isTimeLow,
                         onResponseChanged = viewModel::onResponseChanged,
@@ -203,7 +203,7 @@ fun GDTestScreen(
                     GDPhase.REVIEW -> ReviewPhase(
                         topic = uiState.topic,
                         response = uiState.response,
-                        wordCount = uiState.wordCount,
+                        charCount = uiState.charCount,
                         isSubmitting = uiState.isSubmitting,
                         onBackToDiscussion = { viewModel.backToDiscussion() },
                         onSubmit = { viewModel.submitTest() }

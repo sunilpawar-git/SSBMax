@@ -207,7 +207,7 @@ object PsychTestMapper {
                     questionId = it["questionId"] as? String ?: "",
                     question = it["question"] as? String ?: "",
                     answer = it["answer"] as? String ?: "",
-                    wordCount = (it["wordCount"] as? Number)?.toInt() ?: 0,
+                    charCount = (it["charCount"] as? Number)?.toInt() ?: 0,
                     timeTakenSeconds = (it["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
                     submittedAt = (it["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
                     isSkipped = it["isSkipped"] as? Boolean ?: false

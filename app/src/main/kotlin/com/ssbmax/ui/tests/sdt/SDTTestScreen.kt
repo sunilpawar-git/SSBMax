@@ -77,8 +77,9 @@ fun SDTTestScreen(
                     totalQuestions = uiState.questions.size,
                     answer = uiState.currentAnswer,
                     onAnswerChange = { viewModel.updateAnswer(it) },
-                    wordCount = uiState.currentWordCount,
-                    maxWords = uiState.config?.maxWordsPerQuestion ?: 1000,
+                    charCount = uiState.currentCharCount,
+                    minChars = uiState.config?.minCharsPerQuestion ?: 50,
+                    maxChars = uiState.config?.maxCharsPerQuestion ?: 1500,
                     timeRemaining = uiState.totalTimeRemaining,
                     canMoveNext = uiState.canMoveToNext,
                     onNext = { viewModel.moveToNext() },
@@ -188,8 +189,9 @@ private fun QuestionInProgressView(
     totalQuestions: Int,
     answer: String,
     onAnswerChange: (String) -> Unit,
-    wordCount: Int,
-    maxWords: Int,
+    charCount: Int,
+    minChars: Int,
+    maxChars: Int,
     timeRemaining: Int,
     canMoveNext: Boolean,
     onNext: () -> Unit,
@@ -240,11 +242,12 @@ private fun QuestionInProgressView(
                     .weight(1f),
                 label = { Text(stringResource(R.string.sdt_answer_label)) },
                 supportingText = {
-                    val color = if (wordCount > maxWords) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.primary
-                    Text(stringResource(R.string.sdt_word_count, wordCount, maxWords), color = color)
+                    val isError = charCount < minChars || charCount > maxChars
+                    val color = if (isError) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
+                    Text("Characters: $charCount / $maxChars (Min: $minChars)", color = color)
                 },
-                isError = wordCount > maxWords,
+                isError = charCount < minChars || charCount > maxChars,
                 maxLines = 20
             )
 
@@ -327,7 +330,7 @@ private fun ReviewScreen(
                             HorizontalDivider()
                             if (response != null && !response.isSkipped) {
                                 Text(response.answer, style = MaterialTheme.typography.bodySmall)
-                                Text(stringResource(R.string.sdt_review_word_count, response.wordCount), style = MaterialTheme.typography.labelSmall,
+                                Text("Characters: ${response.charCount}", style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary)
                             } else {
                                 Text(stringResource(R.string.sdt_review_skipped), style = MaterialTheme.typography.bodySmall,

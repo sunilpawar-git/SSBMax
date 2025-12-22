@@ -24,7 +24,7 @@ data class LecturetteTestUiState(
     val speechStartTime: Long = 0L,
     val timeRemaining: Int = 180, // 3 minutes
     val speechTranscript: String = "",
-    val wordCount: Int = 0,
+    val charCount: Int = 0,
     val validationError: String? = null,
     
     // Submission
@@ -39,8 +39,11 @@ data class LecturetteTestUiState(
     val showUpgradeDialog: Boolean = false,
     val upgradeMessage: String? = null
 ) {
-    val meetsMinWordCount: Boolean
-        get() = wordCount >= 100
+    val meetsMinCharCount: Boolean
+        get() = charCount >= 50
+    
+    val meetsMaxCharCount: Boolean
+        get() = charCount <= 1500
     
     val formattedTime: String
         get() {

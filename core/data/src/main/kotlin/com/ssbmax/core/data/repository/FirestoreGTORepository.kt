@@ -955,7 +955,7 @@ class FirestoreGTORepository @Inject constructor(
                 // Read from nested data if available, otherwise fall back to root level (legacy)
                 topic = (if (hasNestedData) nestedData["topic"] else data["topic"]) as? String ?: "",
                 response = (if (hasNestedData) nestedData["response"] else data["response"]) as? String ?: "",
-                wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
+                charCount = ((if (hasNestedData) nestedData["charCount"] else data["charCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
                 // Fix: Read timeSpent from nested data, same as wordCount
                 timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
@@ -982,7 +982,7 @@ class FirestoreGTORepository @Inject constructor(
                 topicChoices = ((if (hasNestedData) nestedData["topicChoices"] else data["topicChoices"]) as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 selectedTopic = (if (hasNestedData) nestedData["selectedTopic"] else data["selectedTopic"]) as? String ?: "",
                 speechTranscript = (if (hasNestedData) nestedData["speechTranscript"] else data["speechTranscript"]) as? String ?: "",
-                wordCount = ((if (hasNestedData) nestedData["wordCount"] else data["wordCount"]) as? Number)?.toInt() ?: 0,
+                charCount = ((if (hasNestedData) nestedData["charCount"] else data["charCount"]) as? Number)?.toInt() ?: 0,
                 submittedAt = submittedAt,
                 timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
                 status = finalStatus,

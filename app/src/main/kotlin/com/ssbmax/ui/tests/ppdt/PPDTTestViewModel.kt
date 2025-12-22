@@ -329,7 +329,7 @@ class PPDTTestViewModel @Inject constructor(
                     android.util.Log.d("PPDTTestViewModel", "✅ PPDTAnalysisWorker enqueued successfully")
                     
                     // Calculate score for analytics (story >200 chars is "valid")
-                    val isValid = session.story.length >= 200
+                    val isValid = session.story.length >= session.question.minCharacters
                     val scorePercentage = if (isValid) 100f else 0f
                     
                     // Record performance for analytics (using recommended difficulty)

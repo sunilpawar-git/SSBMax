@@ -21,8 +21,8 @@ data class PPDTQuestion(
         "What will be the outcome?",
         "Write a clear, positive story"
     ),
-    val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000
+    val minCharacters: Int = 50,
+    val maxCharacters: Int = 1500
 )
 
 /**
@@ -134,8 +134,8 @@ data class PPDTTestConfig(
     val description: String = "Picture Perception & Description Test",
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000,
+    val minCharacters: Int = 50,
+    val maxCharacters: Int = 1500,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true
 )

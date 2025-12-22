@@ -115,7 +115,7 @@ fun GDResultScreen(
                     item {
                         SubmissionConfirmationCard(
                             topic = uiState.submission!!.topic,
-                            wordCount = uiState.submission!!.wordCount,
+                            charCount = uiState.submission!!.charCount,
                             timeSpent = uiState.formattedTimeSpent,
                             status = uiState.submission!!.status
                         )
@@ -206,7 +206,7 @@ fun GDResultScreen(
                             ResponsePreviewCard(
                                 topic = uiState.submission!!.topic,
                                 response = uiState.submission!!.response,
-                                wordCount = uiState.submission!!.wordCount
+                                charCount = uiState.submission!!.charCount
                             )
                         }
                     }

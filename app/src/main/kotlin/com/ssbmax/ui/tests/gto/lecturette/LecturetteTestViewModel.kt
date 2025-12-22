@@ -57,7 +57,8 @@ class LecturetteTestViewModel @Inject constructor(
     companion object {
         private const val TAG = "LecturetteViewModel"
         private const val SPEECH_TIME_SECONDS = 180 // 3 minutes
-        private const val MIN_WORDS = 100 // Shorter than GD since it's a speech
+        private const val MIN_CHARS = 50
+        private const val MAX_CHARS = 1500
         private const val TOPIC_COUNT = 4
     }
     
@@ -157,15 +158,21 @@ class LecturetteTestViewModel @Inject constructor(
     fun onTranscriptChanged(newTranscript: String) {
         _uiState.update { it.copy(
             speechTranscript = newTranscript,
-            wordCount = GTOTestUtils.countWords(newTranscript)
+            charCount = newTranscript.trim().length
         ) }
     }
     
     fun proceedToReview() {
-        val wordCount = _uiState.value.wordCount
-        if (wordCount < MIN_WORDS) {
+        val charCount = _uiState.value.charCount
+        if (charCount < MIN_CHARS) {
             _uiState.update { it.copy(
-                validationError = "Speech must be at least $MIN_WORDS words (currently $wordCount)"
+                validationError = "Speech must be at least $MIN_CHARS characters (currently $charCount)"
+            ) }
+            return
+        }
+        if (charCount > MAX_CHARS) {
+            _uiState.update { it.copy(
+                validationError = "Speech must not exceed $MAX_CHARS characters (currently $charCount)"
             ) }
             return
         }
@@ -190,7 +197,7 @@ class LecturetteTestViewModel @Inject constructor(
                 topicChoices = state.topicChoices,
                 selectedTopic = state.selectedTopic,
                 speechTranscript = state.speechTranscript,
-                wordCount = state.wordCount,
+                charCount = state.charCount,
                 submittedAt = System.currentTimeMillis(),
                 timeSpent = timeSpent
             )

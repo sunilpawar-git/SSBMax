@@ -93,7 +93,7 @@ fun InstructionsPhase(
                     InstructionItem(
                         icon = Icons.Default.Edit,
                         title = "Speech Input",
-                        description = "Type your speech as you would speak it"
+                        description = "Type your speech (50-1500 characters)"
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -249,7 +249,7 @@ fun TopicChoiceCard(
 fun SpeechPhase(
     selectedTopic: String,
     speechTranscript: String,
-    wordCount: Int,
+    charCount: Int,
     timeRemaining: String,
     isTimeLow: Boolean,
     onTranscriptChanged: (String) -> Unit,
@@ -287,12 +287,12 @@ fun SpeechPhase(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Words: $wordCount",
+                            text = "Characters: $charCount",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (wordCount < 100) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            color = if (charCount < 50 || charCount > 1500) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Min: 100 words",
+                            text = "Min: 50 | Max: 1500",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -303,7 +303,7 @@ fun SpeechPhase(
                     Button(
                         onClick = onProceedToReview,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = wordCount >= 100
+                        enabled = charCount >= 50 && charCount <= 1500
                     ) {
                         Text("Review Speech")
                     }
@@ -356,7 +356,7 @@ fun SpeechPhase(
 fun ReviewPhase(
     selectedTopic: String,
     speechTranscript: String,
-    wordCount: Int,
+    charCount: Int,
     isSubmitting: Boolean,
     onBackToSpeech: () -> Unit,
     onSubmit: () -> Unit
@@ -429,7 +429,7 @@ fun ReviewPhase(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "$wordCount words",
+                            text = "$charCount characters",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
