@@ -560,7 +560,9 @@
     <string name="srt_exit">Exit</string>
     <string name="srt_submit_title">Submit Test?</string>
     <string name="srt_submit_message">You have completed %1$d/%2$d situations.</string>
-    <string name="srt_submit_incomplete">Some situations are skipped or incomplete.</string>
+    <string name="srt_submit_incomplete">You have %1$d pending situations. They will be marked as unattempted.</string>
+    <string name="srt_time_up_title">Time\'s Up!</string>
+    <string name="srt_time_up_message">Submitting your test...</string>
     <string name="srt_submit">Submit</string>
     <string name="srt_cancel">Cancel</string>
     <string name="srt_review_title">Review Your Responses</string>

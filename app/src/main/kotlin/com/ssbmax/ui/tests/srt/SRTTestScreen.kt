@@ -92,6 +92,7 @@ fun SRTTestScreen(
                         situation = uiState.currentSituation?.situation ?: "",
                         situationNumber = uiState.currentSituationIndex + 1,
                         totalSituations = uiState.situations.size,
+                        timeRemaining = uiState.timeRemaining, // Added timeRemaining
                         response = uiState.currentResponse,
                         onResponseChange = { viewModel.updateResponse(it) },
                         minChars = uiState.config?.minResponseLength ?: 0,
@@ -128,9 +129,10 @@ fun SRTTestScreen(
             text = {
                 Column {
                     Text(stringResource(R.string.srt_submit_message, uiState.validResponseCount, uiState.situations.size))
-                    if (uiState.validResponseCount < 60) {
+                    if (uiState.validResponseCount < uiState.situations.size) {
+                        val pendingCount = uiState.situations.size - uiState.validResponseCount
                         Text(
-                            stringResource(R.string.srt_submit_incomplete),
+                            stringResource(R.string.srt_submit_incomplete, pendingCount),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -151,6 +153,25 @@ fun SRTTestScreen(
                 }
             }
         )
+        // Time's Up Dialog (Non-dismissible)
+    if (uiState.isTimeUp) {
+        AlertDialog(
+            onDismissRequest = { /* No-op: Prevent dismissal */ },
+            title = { 
+                Text(
+                    text = stringResource(R.string.srt_time_up_title),
+                    color = MaterialTheme.colorScheme.error
+                ) 
+            },
+            text = { Text(stringResource(R.string.srt_time_up_message)) },
+            confirmButton = {}, // No buttons, auto-progresses
+            dismissButton = {},
+            properties = androidx.compose.ui.window.DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
+        )
     }
+}
 }
 

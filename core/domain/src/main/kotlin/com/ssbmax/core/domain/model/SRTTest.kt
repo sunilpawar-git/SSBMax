@@ -186,7 +186,7 @@ data class SRTTestConfig(
     val description: String = "Describe how you would react in each situation",
     val totalSituations: Int = 60,
     val totalTimeMinutes: Int = 30,
-    val minResponseLength: Int = 20,
+    val minResponseLength: Int = 0, // Allow empty/skipped responses
     val maxResponseLength: Int = 200,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true,

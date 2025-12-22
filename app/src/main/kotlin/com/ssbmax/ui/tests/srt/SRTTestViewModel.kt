@@ -17,14 +17,19 @@ import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.SRTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 /**
@@ -42,6 +47,9 @@ class SRTTestViewModel @Inject constructor(
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: WorkManager
 ) : ViewModel() {
+    
+    // Timer Job reference
+    private var timerJob: Job? = null
     
     private val _uiState = MutableStateFlow(SRTTestUiState())
     val uiState: StateFlow<SRTTestUiState> = _uiState.asStateFlow()
@@ -169,6 +177,55 @@ class SRTTestViewModel @Inject constructor(
             currentSituationIndex = 0,
             startTime = System.currentTimeMillis()
         ) }
+        startTimer()
+    }
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        
+        val totalTimeMinutes = _uiState.value.config?.totalTimeMinutes ?: 30
+        val totalTimeSeconds = totalTimeMinutes * 60
+        
+        _uiState.update { it.copy(
+            timeRemaining = totalTimeSeconds,
+            isTimerActive = true,
+            timerStartTime = System.currentTimeMillis()
+        ) }
+        
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + (totalTimeSeconds * 1000)
+        
+        timerJob = viewModelScope.launch {
+            try {
+                while (isActive) {
+                    val remainingMillis = endTime - System.currentTimeMillis()
+                    val remainingSeconds = (remainingMillis / 1000).toInt()
+                    
+                    if (remainingSeconds <= 0) break
+                    
+                    _uiState.update { it.copy(timeRemaining = remainingSeconds) }
+                    delay(500)
+                }
+                
+                // Timer expired
+                if (isActive) {
+                    // Set Time's Up state (blocks UI)
+                    _uiState.update { it.copy(isTimeUp = true) }
+                    
+                    // Grace period - let user see "Time's Up" dialog
+                    delay(2000)
+                    
+                    if (isActive) {
+                        // Auto-submit with partial flush
+                        submitTest()
+                    }
+                }
+            } catch (e: CancellationException) {
+                // Timer cancelled
+            } finally {
+                _uiState.update { it.copy(isTimerActive = false) }
+            }
+        }
     }
     
     fun updateResponse(response: String) {
@@ -281,12 +338,33 @@ class SRTTestViewModel @Inject constructor(
                 
                 val state = _uiState.value
                 
+                // Flush partial response if exists and not already submitted
+                // This saves the "mid-typing" answer
+                val finalResponses = if (state.currentResponse.isNotEmpty() && state.currentSituation != null) {
+                    val partialResponse = SRTSituationResponse(
+                        situationId = state.currentSituation!!.id,
+                        situation = state.currentSituation!!.situation,
+                        response = state.currentResponse,
+                        charactersCount = state.currentResponse.length,
+                        timeTakenSeconds = 30, // Default for now
+                        submittedAt = System.currentTimeMillis(),
+                        isSkipped = false
+                    )
+                    
+                    state.responses.toMutableList().apply {
+                        removeAll { it.situationId == partialResponse.situationId }
+                        add(partialResponse)
+                    }
+                } else {
+                    state.responses
+                }
+                
                 // Create submission
                 val totalTimeMinutes = ((System.currentTimeMillis() - state.startTime) / 60000).toInt()
                 val submission = SRTSubmission(
                     userId = currentUserId,
                     testId = state.testId,
-                    responses = state.responses,
+                    responses = finalResponses,
                     totalTimeTakenMinutes = totalTimeMinutes,
                     submittedAt = System.currentTimeMillis(),
 
@@ -383,6 +461,7 @@ class SRTTestViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        timerJob?.cancel()
         _navigationEvents.close()
     }
 }
@@ -411,7 +490,12 @@ data class SRTTestUiState(
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    val submission: SRTSubmission? = null
+    val submission: SRTSubmission? = null,
+    // Timer fields
+    val timeRemaining: Int = 1800, // 30 minutes
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L,
+    val isTimeUp: Boolean = false
 ) {
     val currentSituation: SRTSituation?
         get() = situations.getOrNull(currentSituationIndex)
@@ -427,7 +511,7 @@ data class SRTTestUiState(
     
     val canMoveToNext: Boolean
         get() {
-            val minLength = config?.minResponseLength ?: 20
+            val minLength = config?.minResponseLength ?: 0
             val maxLength = config?.maxResponseLength ?: 200
             return currentResponse.length in minLength..maxLength
         }
