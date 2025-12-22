@@ -490,6 +490,13 @@
     <string name="free_badge">Free</string>
     <string name="optional">Optional</string>
     <string name="required">Required</string>
+    
+    <!-- Character Count Strings (Generic for all tests) -->
+    <string name="common_character_count">Character Count</string>
+    <string name="common_characters">%d characters</string>
+    <string name="common_chars">%d chars</string>
+    <string name="common_character_limit_range">%1$d-%2$d characters</string>
+
 
     <!-- ============================================ -->
     <!-- WAT TEST SCREEN - DETAILED STRINGS -->

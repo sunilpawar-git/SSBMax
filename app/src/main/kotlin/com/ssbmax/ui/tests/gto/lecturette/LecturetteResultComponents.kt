@@ -6,9 +6,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.ui.tests.gto.common.InfoItem
 
 @Composable
@@ -65,7 +67,7 @@ fun LecturetteSubmissionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoItem(label = "Character Count", value = "$charCount chars")
+                InfoItem(label = stringResource(R.string.common_character_count), value = stringResource(R.string.common_chars, charCount))
                 InfoItem(label = "Time Spent", value = timeSpent)
             }
         }
@@ -108,7 +110,7 @@ fun SpeechPreviewCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "$charCount characters",
+                    text = stringResource(R.string.common_characters, charCount),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

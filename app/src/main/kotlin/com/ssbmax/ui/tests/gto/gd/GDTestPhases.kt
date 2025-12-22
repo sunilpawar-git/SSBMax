@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,7 +85,7 @@ fun InstructionsPhase(
                     InstructionItem(
                         icon = Icons.Default.Edit,
                         title = "Character Count",
-                        description = "Minimum 50 characters, maximum 1500 characters"
+                        description = stringResource(R.string.common_character_limit_range, 50, 1500)
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
