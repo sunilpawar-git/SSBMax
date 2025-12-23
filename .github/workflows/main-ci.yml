@@ -116,8 +116,9 @@ jobs:
             :app:assembleDebug \
             -Dlint.baselines.continue=true \
             --build-cache \
-            --parallel
-        timeout-minutes: 20
+            --parallel \
+            --stacktrace
+        timeout-minutes: 30
 
       - name: Upload Artifacts (APK & Reports)
         if: always()
