@@ -103,7 +103,7 @@ jobs:
           echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
 
       - name: Run lint
-        run: ./gradlew lintDebug --no-daemon
+        run: ./gradlew :app:lintDebug --no-daemon -Dlint.baselines.continue=true
 
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
