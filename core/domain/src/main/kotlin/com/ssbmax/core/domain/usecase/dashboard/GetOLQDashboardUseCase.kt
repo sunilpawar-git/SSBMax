@@ -179,10 +179,12 @@ class GetOLQDashboardUseCase @Inject constructor(
             }
 
             // Fetch Phase 2 Psychology test results (OLQ-based)
+            Log.d(TAG, "🔍 Fetching Phase 2 Psychology test results...")
             val tatResult = getLatestCompletedOLQResult(userId, "TAT")
             val watResult = getLatestCompletedOLQResult(userId, "WAT")
             val srtResult = getLatestCompletedOLQResult(userId, "SRT")
             val sdResult = getLatestCompletedOLQResult(userId, "SDT")
+            Log.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
 
             // Fetch GTO results (all 8 tests)
             val gtoResults = mutableMapOf<GTOTestType, OLQAnalysisResult>()
@@ -271,6 +273,10 @@ class GetOLQDashboardUseCase @Inject constructor(
             
             Log.d(TAG, "✅ Dashboard built successfully")
             Log.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
+            Log.d(TAG, "   Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")
+            Log.d(TAG, "   SDT overallScore: ${finalData.dashboard.phase2Results.sdResult?.overallScore}")
+            Log.d(TAG, "   Average OLQ scores count: ${finalData.averageOLQScores.size}")
+            Log.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
             
             return finalData
     }
@@ -289,23 +295,43 @@ class GetOLQDashboardUseCase @Inject constructor(
         userId: String,
         testType: String
     ): OLQAnalysisResult? {
+        Log.d(TAG, "🔍 Fetching $testType result for user: $userId")
+        
         // 1. Get latest submission to find the submissionId
         val submissionId = when (testType) {
             "TAT" -> submissionRepository.getLatestTATSubmission(userId).getOrNull()?.id
             "WAT" -> submissionRepository.getLatestWATSubmission(userId).getOrNull()?.id
             "SRT" -> submissionRepository.getLatestSRTSubmission(userId).getOrNull()?.id
             "SDT" -> submissionRepository.getLatestSDTSubmission(userId).getOrNull()?.id
-            else -> return null
-        } ?: return null
+            else -> {
+                Log.d(TAG, "   ❌ Unknown test type: $testType")
+                return null
+            }
+        }
+        
+        if (submissionId == null) {
+            Log.d(TAG, "   ⚠️ No $testType submission found for user")
+            return null
+        }
+        
+        Log.d(TAG, "   ✅ Found $testType submission ID: $submissionId")
 
         // 2. Fetch the result from psych_results (via repository)
-        return when (testType) {
+        val result = when (testType) {
             "TAT" -> submissionRepository.getTATResult(submissionId).getOrNull()
             "WAT" -> submissionRepository.getWATResult(submissionId).getOrNull()
             "SRT" -> submissionRepository.getSRTResult(submissionId).getOrNull()
             "SDT" -> submissionRepository.getSDTResult(submissionId).getOrNull()
             else -> null
         }
+        
+        if (result == null) {
+            Log.w(TAG, "   ⚠️ No $testType OLQ result found for submission: $submissionId")
+        } else {
+            Log.d(TAG, "   ✅ Found $testType OLQ result with ${result.olqScores.size} OLQ scores, overallScore: ${result.overallScore}")
+        }
+        
+        return result
     }
     
     /**
