@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  # Enable Gradle Build Cache and parallel builds for maximum speed
+  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=-Xmx4g"
+
 jobs:
   security-scan:
     name: Security Scan
@@ -74,7 +78,7 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     needs: security-scan
-    timeout-minutes: 45
+    timeout-minutes: 25
     
     steps:
       - name: Checkout code
@@ -102,25 +106,18 @@ jobs:
         run: |
           echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
 
-      - name: Run lint
-        run: ./gradlew :app:lintDebug --no-daemon -Dlint.baselines.continue=true
-
-      - name: Run unit tests (Excluding heavy tests)
-        run: ./gradlew testDebugUnitTest --no-daemon --info --exclude-tests "com.ssbmax.testing.MemoryLeakDetectionTest" --exclude-tests "com.ssbmax.testing.ArchitectureTest"
-
-      - name: Run architecture tests
-        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon --info
-
-      - name: Run memory leak detection tests
-        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.MemoryLeakDetectionTest" --no-daemon --info
-        continue-on-error: true
-
-      - name: Generate coverage report
-        run: ./gradlew :app:jacocoTestReport --no-daemon
-        continue-on-error: true
-
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      # Run ALL tasks in a SINGLE Gradle invocation for maximum efficiency
+      # This reuses the daemon, caches, and compiled code across all tasks
+      - name: Build, Lint, and Test (All in One)
+        run: |
+          ./gradlew \
+            :app:lintDebug \
+            :app:testDebugUnitTest \
+            :app:assembleDebug \
+            -Dlint.baselines.continue=true \
+            --build-cache \
+            --parallel
+        timeout-minutes: 20
 
       - name: Upload Artifacts (APK & Reports)
         if: always()
@@ -131,7 +128,6 @@ jobs:
             app/build/outputs/apk/debug/*.apk
             **/build/reports/lint-results-*.html
             **/build/reports/tests/
-            **/build/reports/jacoco/
           retention-days: 7
 
       - name: Test Summary
