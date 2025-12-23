@@ -30,6 +30,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
     private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
     private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var subscriptionManager: SubscriptionManager
+    private lateinit var getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
     private lateinit var difficultyManager: DifficultyProgressionManager
     private lateinit var securityLogger: SecurityEventLogger
     private lateinit var workManager: WorkManager
@@ -41,6 +42,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
         observeCurrentUser = mockk()
         userProfileRepository = mockk()
         subscriptionManager = mockk()
+        getOLQDashboard = mockk(relaxed = true)
         difficultyManager = mockk()
         securityLogger = mockk(relaxed = true)
         workManager = mockk(relaxed = true)
@@ -238,6 +240,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
         observeCurrentUser = observeCurrentUser,
         userProfileRepository = userProfileRepository,
         subscriptionManager = subscriptionManager,
+        getOLQDashboard = getOLQDashboard,
         difficultyManager = difficultyManager,
         securityLogger = securityLogger,
         workManager = workManager,

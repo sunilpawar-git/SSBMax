@@ -10,6 +10,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Assignment
@@ -32,13 +36,12 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.ui.home.student.components.ResultCard
 
 /**
  * Student Home Screen with Phase Progress Ribbon
  * Shows progress for Phase 1 and Phase 2 with quick access to tests
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun StudentHomeScreen(
     viewModel: StudentHomeViewModel = hiltViewModel(),
@@ -54,7 +57,13 @@ fun StudentHomeScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
+    // Pull-to-refresh state
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = uiState.isRefreshing,
+        onRefresh = { viewModel.refreshProgress() }
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,13 +103,17 @@ fun StudentHomeScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(paddingValues)
+                .pullRefresh(pullRefreshState)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
             // Stats Cards
             item {
                 Row(
@@ -135,39 +148,7 @@ fun StudentHomeScreen(
             item {
                 SectionDivider()
             }
-            
-            // Recent Performance Section
-            if (uiState.recentResults.isNotEmpty()) {
-                item {
-                    SectionHeader(
-                        icon = "📊",
-                        title = stringResource(R.string.section_recent_performance),
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-                
-                item {
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 0.dp)
-                    ) {
-                        items(uiState.recentResults.size) { index ->
-                            val result = uiState.recentResults[index]
-                            ResultCard(
-                                result = result,
-                                onClick = { onNavigateToResult(result.testType, result.submissionId) }
-                            )
-                        }
-                    }
-                }
-                
-                // Section Divider after Recent Performance
-                item {
-                    SectionDivider()
-                }
-            }
-            
+
             // Progress Ribbon Header
             item {
                 SectionHeader(
@@ -314,6 +295,14 @@ fun StudentHomeScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+
+            // Pull-to-refresh indicator
+            PullRefreshIndicator(
+                refreshing = uiState.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }

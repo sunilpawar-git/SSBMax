@@ -29,7 +29,8 @@ class StudentHomeViewModel @Inject constructor(
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository,
     private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository,
-    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
+    private val analyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -38,8 +39,7 @@ class StudentHomeViewModel @Inject constructor(
     init {
         observeUserProfile()
         observeTestProgress()
-        observeRecentResults()
-        loadDashboard()
+        loadDashboard(forceRefresh = false) // Use cache on initial load
     }
     
     private fun observeUserProfile() {
@@ -152,89 +152,85 @@ class StudentHomeViewModel @Inject constructor(
         }
     }
     
-    private fun observeRecentResults() {
-        viewModelScope.launch {
-            try {
-                val userId = authRepository.currentUser.value?.id ?: return@launch
-                
-                kotlinx.coroutines.flow.combine(
-                    unifiedResultRepository.getRecentResults(userId, limit = 5),
-                    unifiedResultRepository.getOverallOLQProfile(userId)
-                ) { recentResults, olqProfile ->
-                    Pair(recentResults, olqProfile)
-                }
-                    .catch { error ->
-                        ErrorLogger.logWithUser(error, "Failed to load recent results", userId)
-                        emit(Pair(emptyList(), emptyMap()))
-                    }
-                    .stateIn(
-                        scope = viewModelScope,
-                        started = SharingStarted.WhileSubscribed(5000),
-                        initialValue = Pair(emptyList(), emptyMap())
-                    )
-                    .collect { (results, profile) ->
-                        _uiState.update {
-                            it.copy(
-                                recentResults = results,
-                                overallOLQProfile = profile
-                            )
-                        }
-                    }
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Unexpected error in observeRecentResults")
-            }
-        }
-    }
-    
     fun refreshProgress() {
         // Flows are already observing, just re-trigger by reinitializing observers
         observeUserProfile()
         observeTestProgress()
-        observeRecentResults()
-        loadDashboard()
+        loadDashboard(forceRefresh = true) // Force fresh data from Firestore
     }
     
-    private fun loadDashboard() {
+    private fun loadDashboard(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                _uiState.update { it.copy(isLoadingDashboard = true, dashboardError = null) }
-                
+                _uiState.update { it.copy(
+                    isLoadingDashboard = true,
+                    isRefreshing = forceRefresh, // Only show refresh indicator on force refresh
+                    dashboardError = null
+                ) }
+
                 val userId = authRepository.currentUser.value?.id
                 if (userId == null) {
                     _uiState.update { it.copy(
                         isLoadingDashboard = false,
+                        isRefreshing = false,
                         dashboardError = "Please login to view progress"
                     ) }
                     return@launch
                 }
-                
-                // PHASE 5: Add 10-second timeout to prevent infinite loading
+
+                // Add 10-second timeout to prevent infinite loading
                 withTimeout(10_000) {
-                    getOLQDashboard(userId)
+                    getOLQDashboard(userId, forceRefresh)
                         .onSuccess { processedData ->
+                            // Track cache performance analytics
+                            val metadata = processedData.cacheMetadata
+                            analyticsManager.trackFeatureUsed(
+                                featureName = if (metadata.cacheHit) "dashboard_cache_hit" else "dashboard_cache_miss",
+                                parameters = mapOf(
+                                    "load_time_ms" to metadata.loadTimeMs,
+                                    "forced_refresh" to metadata.forcedRefresh,
+                                    "user_id" to userId
+                                )
+                            )
+
                             _uiState.update { it.copy(
                                 isLoadingDashboard = false,
+                                isRefreshing = false,
                                 dashboard = processedData,
-                                dashboardError = null
+                                dashboardError = null,
+                                lastRefreshTime = System.currentTimeMillis()
                             ) }
                         }
                         .onFailure { error ->
+                            // Track cache error
+                            analyticsManager.trackFeatureUsed(
+                                featureName = "dashboard_cache_error",
+                                parameters = mapOf(
+                                    "error" to (error.message ?: "Unknown error"),
+                                    "user_id" to userId
+                                )
+                            )
+
+                            ErrorLogger.log(error, "Failed to load dashboard")
                             _uiState.update { it.copy(
                                 isLoadingDashboard = false,
+                                isRefreshing = false,
                                 dashboardError = error.message ?: "Failed to load dashboard"
                             ) }
                         }
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                // PHASE 5: Handle timeout gracefully
+                // Handle timeout gracefully
                 _uiState.update { it.copy(
                     isLoadingDashboard = false,
+                    isRefreshing = false,
                     dashboardError = "Dashboard timed out. Please retry."
                 ) }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Unexpected error in loadDashboard")
                 _uiState.update { it.copy(
                     isLoadingDashboard = false,
+                    isRefreshing = false,
                     dashboardError = "Unexpected error: ${e.message}"
                 ) }
             }
@@ -253,11 +249,11 @@ data class StudentHomeUiState(
     val notificationCount: Int = 0,
     val phase1Progress: com.ssbmax.core.domain.model.Phase1Progress? = null,
     val phase2Progress: com.ssbmax.core.domain.model.Phase2Progress? = null,
-    val recentResults: List<com.ssbmax.core.domain.model.scoring.OLQAnalysisResult> = emptyList(),
-    val overallOLQProfile: Map<com.ssbmax.core.domain.model.interview.OLQ, Float> = emptyMap(),
     val error: String? = null,
-    // Dashboard state (PERFORMANCE: using ProcessedDashboardData with pre-computed aggregations)
+    // Dashboard state (PERFORMANCE: using ProcessedDashboardData with pre-computed aggregations + caching)
     val isLoadingDashboard: Boolean = false,
+    val isRefreshing: Boolean = false, // Separate state for pull-to-refresh
     val dashboard: com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData? = null,
-    val dashboardError: String? = null
+    val dashboardError: String? = null,
+    val lastRefreshTime: Long? = null // Track when data was last refreshed
 )

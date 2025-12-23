@@ -54,7 +54,7 @@ class TATTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: WorkManager
 ) : ViewModel() {
@@ -420,7 +420,12 @@ class TATTestViewModel @Inject constructor(
                     android.util.Log.d("TATTestViewModel", "   submissionId: $submissionId")
                     subscriptionManager.recordTestUsage(TestType.TAT, currentUserId, submissionId)
                     android.util.Log.d("TATTestViewModel", "✅ Test usage recorded successfully!")
-                    
+
+                    // Invalidate OLQ dashboard cache (user just completed a test)
+                    android.util.Log.d("TATTestViewModel", "📍 Invalidating OLQ dashboard cache...")
+                    getOLQDashboard.invalidateCache(currentUserId)
+                    android.util.Log.d("TATTestViewModel", "✅ Dashboard cache invalidated!")
+
                     android.util.Log.d("TATTestViewModel", "📍 Step 7: Updating UI state...")
                     _uiState.update { it.copy(
                         isLoading = false,

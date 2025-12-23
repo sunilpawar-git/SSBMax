@@ -36,6 +36,7 @@ class OIRTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val securityLogger: SecurityEventLogger
 ) : ViewModel() {
     
@@ -359,7 +360,12 @@ class OIRTestViewModel @Inject constructor(
                 // Record test usage for subscription tracking
                 subscriptionManager.recordTestUsage(TestType.OIR, session.userId)
                 android.util.Log.d("OIRTestViewModel", "📝 Recorded test usage for subscription tracking")
-                
+
+                // Invalidate OLQ dashboard cache (user just completed a test)
+                android.util.Log.d("OIRTestViewModel", "📍 Invalidating OLQ dashboard cache...")
+                getOLQDashboard.invalidateCache(session.userId)
+                android.util.Log.d("OIRTestViewModel", "✅ Dashboard cache invalidated!")
+
                 // Create OIR submission
                 val submissionId = UUID.randomUUID().toString()
                 val submission = OIRSubmission(

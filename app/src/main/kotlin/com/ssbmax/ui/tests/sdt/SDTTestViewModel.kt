@@ -41,6 +41,7 @@ class SDTTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: WorkManager
 ) : ViewModel() {
@@ -267,6 +268,11 @@ class SDTTestViewModel @Inject constructor(
                     android.util.Log.d(TAG, "📍 Recording test usage for subscription...")
                     subscriptionManager.recordTestUsage(TestType.SD, currentUserId, submissionId)
                     android.util.Log.d(TAG, "✅ Test usage recorded successfully!")
+
+                    // Invalidate OLQ dashboard cache (user just completed a test)
+                    android.util.Log.d(TAG, "📍 Invalidating OLQ dashboard cache...")
+                    getOLQDashboard.invalidateCache(currentUserId)
+                    android.util.Log.d(TAG, "✅ Dashboard cache invalidated!")
 
                     _uiState.update { it.copy(isLoading = false, isSubmitted = true,
                         submissionId = submissionId, subscriptionType = subscriptionType,

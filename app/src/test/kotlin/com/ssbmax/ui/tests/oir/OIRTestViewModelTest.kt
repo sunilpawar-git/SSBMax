@@ -47,6 +47,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
+    private val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
@@ -103,8 +104,13 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         
         // Mock cache status
         coEvery { mockTestContentRepo.getOIRCacheStatus() } returns mockk(relaxed = true)
+
+        // Mock dashboard cache invalidation
+        coEvery {
+            mockGetOLQDashboard.invalidateCache(any())
+        } returns Unit
     }
-    
+
     // ==================== Test Loading ====================
     
     @Test
@@ -717,6 +723,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger
         )
     }

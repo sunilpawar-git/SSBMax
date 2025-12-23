@@ -34,6 +34,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     private lateinit var mockTestProgressRepository: TestProgressRepository
     private lateinit var mockUnifiedResultRepository: UnifiedResultRepository
     private lateinit var mockGetOLQDashboard: GetOLQDashboardUseCase
+    private lateinit var mockAnalyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager
 
     private lateinit var mockCurrentUserFlow: MutableStateFlow<SSBMaxUser?>
     
@@ -82,6 +83,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         mockTestProgressRepository = mockk()
         mockUnifiedResultRepository = mockk()
         mockGetOLQDashboard = mockk()
+        mockAnalyticsManager = mockk(relaxed = true)
 
         mockCurrentUserFlow = MutableStateFlow(testUser)
         every { mockAuthRepository.currentUser } returns mockCurrentUserFlow
@@ -89,7 +91,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         // Setup default behaviors for new dependencies
         coEvery { mockUnifiedResultRepository.getRecentResults(any(), any()) } returns flowOf(emptyList())
         coEvery { mockUnifiedResultRepository.getOverallOLQProfile(any()) } returns flowOf(emptyMap())
-        coEvery { mockGetOLQDashboard(any()) } returns Result.success(mockk(relaxed = true))
+        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
     }
     
     @After
@@ -115,7 +117,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -158,7 +161,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -183,7 +187,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -210,7 +215,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -237,7 +243,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -272,7 +279,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -297,7 +305,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -322,7 +331,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -354,7 +364,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -387,7 +398,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -421,7 +433,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -452,7 +465,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         
@@ -477,7 +491,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockUserProfileRepository,
             mockTestProgressRepository,
             mockUnifiedResultRepository,
-            mockGetOLQDashboard
+            mockGetOLQDashboard,
+            mockAnalyticsManager
         )
         advanceUntilIdle()
         

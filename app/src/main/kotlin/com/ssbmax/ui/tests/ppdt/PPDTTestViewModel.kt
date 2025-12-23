@@ -44,6 +44,7 @@ class PPDTTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: androidx.work.WorkManager
 ) : ViewModel() {
@@ -347,7 +348,12 @@ class PPDTTestViewModel @Inject constructor(
                     // Record test usage for subscription tracking (with submissionId for idempotency)
                     subscriptionManager.recordTestUsage(TestType.PPDT, session.userId, submissionId)
                     android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
-                    
+
+                    // Invalidate OLQ dashboard cache (user just completed a test)
+                    android.util.Log.d("PPDTTestViewModel", "📍 Invalidating OLQ dashboard cache...")
+                    getOLQDashboard.invalidateCache(session.userId)
+                    android.util.Log.d("PPDTTestViewModel", "✅ Dashboard cache invalidated!")
+
                     // Mark as submitted using thread-safe .update {}
                     _uiState.update { it.copy(
                         session = session.copy(

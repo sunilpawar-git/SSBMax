@@ -51,6 +51,7 @@ class WATTestViewModel @Inject constructor(
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
     private val workManager: WorkManager
 ) : ViewModel() {
@@ -356,7 +357,12 @@ class WATTestViewModel @Inject constructor(
                     android.util.Log.d("WATTestViewModel", "📍 Recording test usage for subscription...")
                     subscriptionManager.recordTestUsage(TestType.WAT, currentUserId, submissionId)
                     android.util.Log.d("WATTestViewModel", "✅ Test usage recorded successfully!")
-                    
+
+                    // Invalidate OLQ dashboard cache (user just completed a test)
+                    android.util.Log.d("WATTestViewModel", "📍 Invalidating OLQ dashboard cache...")
+                    getOLQDashboard.invalidateCache(currentUserId)
+                    android.util.Log.d("WATTestViewModel", "✅ Dashboard cache invalidated!")
+
                     // Enqueue WATAnalysisWorker for OLQ analysis
                     android.util.Log.d("WATTestViewModel", "📍 Enqueueing WATAnalysisWorker...")
                     enqueueWATAnalysisWorker(submissionId)

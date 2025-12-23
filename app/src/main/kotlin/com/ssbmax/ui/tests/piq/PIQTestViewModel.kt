@@ -69,6 +69,7 @@ class PIQTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val subscriptionManager: SubscriptionManager,
+    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val difficultyManager: DifficultyProgressionManager,
     private val securityLogger: SecurityEventLogger,
     private val workManager: WorkManager,
@@ -340,7 +341,12 @@ class PIQTestViewModel @Inject constructor(
                     Log.d(TAG, "📍 PIQ Step 6: Recording test usage...")
                     subscriptionManager.recordTestUsage(TestType.PIQ, currentUserId, submissionId)
                     Log.d(TAG, "✅ PIQ: Usage recorded")
-                    
+
+                    // Invalidate OLQ dashboard cache (user just completed a test)
+                    Log.d(TAG, "📍 PIQ: Invalidating OLQ dashboard cache...")
+                    getOLQDashboard.invalidateCache(currentUserId)
+                    Log.d(TAG, "✅ PIQ: Dashboard cache invalidated!")
+
                     // Step 7: Track performance (PIQ is reference data, so 100% completion)
                     Log.d(TAG, "📍 PIQ Step 7: Recording performance...")
                     difficultyManager.recordPerformance(

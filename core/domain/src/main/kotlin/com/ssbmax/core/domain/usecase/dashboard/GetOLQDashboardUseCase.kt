@@ -10,6 +10,8 @@ import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,17 +24,28 @@ data class ProcessedDashboardData(
     val averageOLQScores: Map<OLQ, Float>,
     val topOLQs: List<Pair<OLQ, Float>>,
     val improvementOLQs: List<Pair<OLQ, Float>>,
-    val overallAverageScore: Float?
+    val overallAverageScore: Float?,
+    val cacheMetadata: CacheMetadata
+)
+
+/**
+ * Metadata about cache performance for analytics tracking
+ */
+data class CacheMetadata(
+    val cacheHit: Boolean,
+    val loadTimeMs: Long,
+    val forcedRefresh: Boolean
 )
 
 /**
  * Use case to fetch and aggregate all test results for dashboard display
- * 
+ *
  * Fetches:
  * - Phase 1: OIR, PPDT
  * - Phase 2: TAT, WAT, SRT, SD (Psychology), 8 GTO tests, Interview
- * 
+ *
  * PERFORMANCE: All aggregations computed once, not on every UI access
+ * CACHING: In-memory cache with 5-minute TTL to reduce Firestore reads
  */
 @Singleton
 class GetOLQDashboardUseCase @Inject constructor(
@@ -41,14 +54,100 @@ class GetOLQDashboardUseCase @Inject constructor(
     private val interviewRepository: InterviewRepository
 ) {
     /**
+     * Cached dashboard entry with timestamp for TTL validation
+     */
+    private data class CachedDashboard(
+        val data: ProcessedDashboardData,
+        val timestamp: Long
+    )
+
+    private val cache = mutableMapOf<String, CachedDashboard>()
+    private val cacheMutex = Mutex()
+
+    companion object {
+        private const val CACHE_TTL_MS = 5 * 60 * 1000L // 5 minutes
+    }
+
+    /**
      * Fetch complete dashboard data with pre-computed aggregations
-     * 
+     *
      * @param userId User ID to fetch dashboard for
+     * @param forceRefresh If true, bypasses cache and fetches fresh data
      * @return Processed dashboard with all aggregations computed once
      */
-    suspend operator fun invoke(userId: String): Result<ProcessedDashboardData> {
+    suspend operator fun invoke(
+        userId: String,
+        forceRefresh: Boolean = false
+    ): Result<ProcessedDashboardData> {
+        val startTime = System.currentTimeMillis()
+        var cacheHit = false
+
         return try {
-            // Fetch Phase 1 results
+            cacheMutex.withLock {
+                // Check cache validity if not forcing refresh
+                val cachedData = cache[userId]
+                val now = System.currentTimeMillis()
+
+                if (!forceRefresh && cachedData != null &&
+                    (now - cachedData.timestamp) < CACHE_TTL_MS) {
+                    // Cache hit - return cached data
+                    cacheHit = true
+                    val loadTime = System.currentTimeMillis() - startTime
+
+                    // Update cache metadata
+                    val dataWithMetadata = cachedData.data.copy(
+                        cacheMetadata = CacheMetadata(
+                            cacheHit = true,
+                            loadTimeMs = loadTime,
+                            forcedRefresh = false
+                        )
+                    )
+
+                    return Result.success(dataWithMetadata)
+                }
+
+                // Cache miss or expired - fetch fresh data
+                val freshData = fetchDashboardData(userId)
+                val loadTime = System.currentTimeMillis() - startTime
+
+                // Update cache
+                cache[userId] = CachedDashboard(
+                    data = freshData,
+                    timestamp = now
+                )
+
+                // Add cache metadata
+                val dataWithMetadata = freshData.copy(
+                    cacheMetadata = CacheMetadata(
+                        cacheHit = false,
+                        loadTimeMs = loadTime,
+                        forcedRefresh = forceRefresh
+                    )
+                )
+
+                Result.success(dataWithMetadata)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Invalidate cache for specific user
+     * Called after test completion to ensure fresh scores on next dashboard load
+     */
+    suspend fun invalidateCache(userId: String) {
+        cacheMutex.withLock {
+            cache.remove(userId)
+        }
+    }
+
+    /**
+     * Fetch fresh dashboard data from Firestore
+     * Extracted from invoke() to support caching layer
+     */
+    private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData {
+        // Fetch Phase 1 results
             val oirResult = submissionRepository.getLatestOIRSubmission(userId)
                 .getOrNull()
                 ?.let { submission ->
@@ -147,18 +246,18 @@ class GetOLQDashboardUseCase @Inject constructor(
                 .map { it.key to it.value }
             val overallAverage = computeOverallAverage(dashboard)
 
-            Result.success(
-                ProcessedDashboardData(
-                    dashboard = dashboard,
-                    averageOLQScores = averageOLQScores,
-                    topOLQs = topOLQs,
-                    improvementOLQs = improvementOLQs,
-                    overallAverageScore = overallAverage
-                )
+            return ProcessedDashboardData(
+                dashboard = dashboard,
+                averageOLQScores = averageOLQScores,
+                topOLQs = topOLQs,
+                improvementOLQs = improvementOLQs,
+                overallAverageScore = overallAverage,
+                cacheMetadata = CacheMetadata(
+                    cacheHit = false,
+                    loadTimeMs = 0L,
+                    forcedRefresh = false
+                ) // Will be replaced by invoke() with actual metadata
             )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 
     /**

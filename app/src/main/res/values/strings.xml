@@ -124,6 +124,13 @@
     <string name="progress_interview">Interview</string>
 
     <!-- ============================================ -->
+    <!-- DASHBOARD CACHING & REFRESH -->
+    <!-- ============================================ -->
+    <string name="dashboard_pull_to_refresh">Pull to refresh</string>
+    <string name="dashboard_refreshing">Refreshing your progress…</string>
+    <string name="dashboard_cache_update_notice">Scores update every 5 minutes</string>
+
+    <!-- ============================================ -->
     <!-- INSTRUCTOR HOME SCREEN -->
     <!-- ============================================ -->
     <string name="instructor_dashboard">Instructor Dashboard</string>

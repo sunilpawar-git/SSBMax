@@ -41,6 +41,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
+    private val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     private val mockWorkManager = mockk<WorkManager>(relaxed = true)
     
@@ -102,6 +103,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -138,6 +140,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -172,6 +175,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -196,6 +200,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -227,6 +232,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -254,6 +260,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -284,6 +291,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -318,6 +326,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -351,6 +360,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -387,6 +397,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -424,6 +435,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -467,6 +479,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -510,6 +523,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -549,6 +563,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -596,6 +611,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -634,6 +650,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -678,6 +695,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -724,6 +742,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -758,6 +777,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -802,6 +822,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -836,6 +857,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -860,6 +882,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -893,6 +916,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo,
             mockDifficultyManager,
             mockSubscriptionManager,
+            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
