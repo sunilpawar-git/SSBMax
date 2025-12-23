@@ -21,12 +21,25 @@ class ArchitectureTest {
         // Root directory of the project
         private val PROJECT_ROOT = File(System.getProperty("user.dir") ?: ".")
 
-        // Directories to scan
-        private val APP_SRC = File(PROJECT_ROOT, "app/src/main/kotlin")
-        private val CORE_SRC = File(PROJECT_ROOT, "core")
+        // Directories to scan - Handle both root and module-level execution
+        private val APP_SRC = run {
+            val appKotlin = File(PROJECT_ROOT, "app/src/main/kotlin")
+            if (appKotlin.exists()) appKotlin 
+            else {
+                val moduleKotlin = File(PROJECT_ROOT, "src/main/kotlin")
+                if (moduleKotlin.exists()) moduleKotlin
+                else File(".") // Fallback
+            }
+        }
+
+        private val CORE_SRC = run {
+            val coreDir = File(PROJECT_ROOT, "core")
+            if (coreDir.exists()) coreDir
+            else File(PROJECT_ROOT, "../core") // Fallback if in app module
+        }
     }
 
-    @Test
+    @Test(timeout = 60000)
     fun `no singleton objects with mutable state in codebase`() {
         val violations = mutableListOf<String>()
 
@@ -85,7 +98,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all test screens follow ID-based navigation pattern`() {
         val violations = mutableListOf<String>()
 
@@ -125,7 +138,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all result screens have dedicated ViewModels`() {
         val violations = mutableListOf<String>()
 
@@ -159,7 +172,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `no Holder pattern files exist in codebase`() {
         val holderFiles = mutableListOf<File>()
 
@@ -183,7 +196,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all ViewModels extend androidx lifecycle ViewModel`() {
         val violations = mutableListOf<String>()
 
@@ -214,7 +227,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all test result screens follow consistent naming`() {
         val violations = mutableListOf<String>()
 
@@ -245,7 +258,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all use cases must be in domain layer not UI layer`() {
         val violations = mutableListOf<String>()
 
@@ -274,7 +287,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `domain layer must not depend on UI layer`() {
         val violations = mutableListOf<String>()
 
@@ -310,7 +323,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `UI layer must not import Firebase classes directly`() {
         val violations = mutableListOf<String>()
 
@@ -426,7 +439,7 @@ class ArchitectureTest {
         return allowedPatterns.any { line.contains(it) }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `all ViewModels must not have nullable mutable vars`() {
         val violations = mutableListOf<String>()
 
@@ -483,7 +496,7 @@ class ArchitectureTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `ViewModels must not store Job references`() {
         val violations = mutableListOf<String>()
 
@@ -554,7 +567,7 @@ class ArchitectureTest {
         return this.relativeTo(PROJECT_ROOT).path
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `MainActivity must handle configuration changes to prevent process death`() {
         val violations = mutableListOf<String>()
         

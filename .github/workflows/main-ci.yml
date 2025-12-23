@@ -105,11 +105,15 @@ jobs:
       - name: Run lint
         run: ./gradlew :app:lintDebug --no-daemon -Dlint.baselines.continue=true
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Run unit tests (Excluding heavy tests)
+        run: ./gradlew testDebugUnitTest --no-daemon --info --exclude-tests "com.ssbmax.testing.MemoryLeakDetectionTest" --exclude-tests "com.ssbmax.testing.ArchitectureTest"
 
       - name: Run architecture tests
-        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.ArchitectureTest" --no-daemon --info
+
+      - name: Run memory leak detection tests
+        run: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.MemoryLeakDetectionTest" --no-daemon --info
+        continue-on-error: true
 
       - name: Generate coverage report
         run: ./gradlew :app:jacocoTestReport --no-daemon

@@ -36,11 +36,19 @@ class MemoryLeakDetectionTest {
         // Root directory of the project
         private val PROJECT_ROOT = File(System.getProperty("user.dir") ?: ".")
 
-        // Directories to scan
-        private val APP_SRC = File(PROJECT_ROOT, "app/src/main/kotlin")
+        // Directories to scan - Handle both root and module-level execution
+        private val APP_SRC = run {
+            val appKotlin = File(PROJECT_ROOT, "app/src/main/kotlin")
+            if (appKotlin.exists()) appKotlin 
+            else {
+                val moduleKotlin = File(PROJECT_ROOT, "src/main/kotlin")
+                if (moduleKotlin.exists()) moduleKotlin
+                else File(".") // Fallback
+            }
+        }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `ViewModels must not hold strong references to Activities`() {
         val violations = mutableListOf<String>()
 
@@ -71,7 +79,7 @@ class MemoryLeakDetectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `ViewModels must not hold strong references to Fragments`() {
         val violations = mutableListOf<String>()
 
@@ -102,7 +110,7 @@ class MemoryLeakDetectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `ViewModels must not hold Context references unless Application context`() {
         val violations = mutableListOf<String>()
 
@@ -136,7 +144,7 @@ class MemoryLeakDetectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 30000)
     fun `ViewModels must not have mutable references to destroyed lifecycles`() {
         val violations = mutableListOf<String>()
 
@@ -176,7 +184,7 @@ class MemoryLeakDetectionTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     fun `critical ViewModels must survive process death without leaks`() {
         // Test the most critical ViewModels that handle user test data
         val criticalViewModels = listOf(
@@ -387,7 +395,7 @@ class MemoryLeakDetectionTest {
      */
     private fun fileToClassName(file: File): String {
         val relativePath = file.relativeTo(APP_SRC).path
-        return "com.ssbmax." + relativePath
+        return relativePath
             .removeSuffix(".kt")
             .replace("/", ".")
             .replace("\\", ".")
