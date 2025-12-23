@@ -190,7 +190,29 @@ android {
             excludes += "/META-INF/LICENSE-notice.md"
         }
     }
+    
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+            
+            all {
+                // Global timeout: 60 seconds per test to prevent hangs
+                it.systemProperty("junit.jupiter.execution.timeout.default", "60s")
+                
+                // JUnit 4 timeout (for older tests)
+                it.jvmArgs("-Djunit.timeout=60000")
+                
+                // Fail fast - stop on first failure
+                it.failFast = true
+                
+                // Max heap size
+                it.maxHeapSize = "2g"
+            }
+        }
+    }
 }
+
 
 dependencies {
     // Core modules

@@ -129,6 +129,42 @@
     <string name="dashboard_pull_to_refresh">Pull to refresh</string>
     <string name="dashboard_refreshing">Refreshing your progress…</string>
     <string name="dashboard_cache_update_notice">Scores update every 5 minutes</string>
+    <string name="dashboard_your_progress">Your SSB Progress</string>
+    <string name="dashboard_tests">Tests</string>
+    <string name="dashboard_last_updated_now">Updated just now</string>
+    <string name="cd_refresh_dashboard">Refresh dashboard</string>
+    
+    <!-- Dashboard Test Names -->
+    <string name="dashboard_test_oir">OIR</string>
+    <string name="dashboard_test_ppdt">PPDT</string>
+    <string name="dashboard_test_tat">TAT</string>
+    <string name="dashboard_test_wat">WAT</string>
+    <string name="dashboard_test_srt">SRT</string>
+    <string name="dashboard_test_self_desc">Self Desc</string>
+    <string name="dashboard_test_interview">Interview</string>
+    
+    <!-- Dashboard Sections -->
+    <string name="dashboard_phase_1">PHASE 1</string>
+    <string name="dashboard_phase_2">PHASE 2</string>
+    <string name="dashboard_psychology">Psychology</string>
+    <string name="dashboard_gto">GTO</string>
+    <string name="dashboard_interview">Interview</string>
+    <string name="dashboard_olq_dashboard">OLQ Dashboard</string>
+    
+    <!-- Dashboard Labels -->
+    <string name="dashboard_overall_average">Overall Average</string>
+    <string name="dashboard_your_strengths">🌟 Your Strengths</string>
+    <string name="dashboard_focus_areas">📈 Focus Areas</string>
+    <string name="dashboard_no_score">—</string>
+    
+    <!-- Empty Dashboard State -->
+    <string name="dashboard_empty_emoji">📊</string>
+    <string name="dashboard_empty_title">Start Your SSB Journey</string>
+    <string name="dashboard_empty_message">Complete tests to see your OLQ profile and track progress</string>
+    <string name="dashboard_empty_button">Start First Test</string>
+    
+    <!-- Dashboard Errors -->
+    <string name="dashboard_error_load_failed">Failed to load dashboard</string>
 
     <!-- ============================================ -->
     <!-- INSTRUCTOR HOME SCREEN -->

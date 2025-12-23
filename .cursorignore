@@ -26,6 +26,7 @@ docs/**/*.md
 !docs/memory-profiling-guidelines.md
 !docs/architecture/SSBMax_Quality_Framework.md
 !docs/architecture/Unified_OLQ_Implementation_Guide.md
+!docs/architecture/SSBMax_Test_Implementation_Reference.md
 
 # Build/log documentation - prevent AI from creating these
 *BUILD*.md

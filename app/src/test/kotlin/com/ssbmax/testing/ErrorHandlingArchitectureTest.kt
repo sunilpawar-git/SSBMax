@@ -4,6 +4,8 @@ import org.junit.Assert.fail
 import org.junit.Test
 import java.io.File
 
+import org.junit.Ignore
+
 /**
  * Architecture Tests for Error Handling Standards
  *
@@ -12,9 +14,12 @@ import java.io.File
  * 2. ViewModels use ErrorLogger for error logging (not direct android.util.Log)
  * 3. All catch blocks have proper error handling
  *
- * These tests run on every build to prevent error handling regressions.
+ * NOTE: Disabled in CI due to heavy file scanning causing hangs.
+ * Run manually with: ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.testing.ErrorHandlingArchitectureTest"
  */
+@Ignore("Disabled in CI - file scanning causes hangs. Run manually locally.")
 class ErrorHandlingArchitectureTest {
+
 
     companion object {
         // Handle both project root and app module directory

@@ -159,12 +159,19 @@ class StudentHomeViewModel @Inject constructor(
         loadDashboard(forceRefresh = true) // Force fresh data from Firestore
     }
     
+    /**
+     * Refresh only the dashboard (used by refresh button)
+     */
+    fun refreshDashboard() {
+        loadDashboard(forceRefresh = true)
+    }
+    
     private fun loadDashboard(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(
                     isLoadingDashboard = true,
-                    isRefreshing = forceRefresh, // Only show refresh indicator on force refresh
+                    isRefreshingDashboard = forceRefresh, // Show refresh indicator on force refresh
                     dashboardError = null
                 ) }
 
@@ -172,7 +179,7 @@ class StudentHomeViewModel @Inject constructor(
                 if (userId == null) {
                     _uiState.update { it.copy(
                         isLoadingDashboard = false,
-                        isRefreshing = false,
+                        isRefreshingDashboard = false,
                         dashboardError = "Please login to view progress"
                     ) }
                     return@launch
@@ -195,10 +202,10 @@ class StudentHomeViewModel @Inject constructor(
 
                             _uiState.update { it.copy(
                                 isLoadingDashboard = false,
-                                isRefreshing = false,
+                                isRefreshingDashboard = false,
                                 dashboard = processedData,
-                                dashboardError = null,
-                                lastRefreshTime = System.currentTimeMillis()
+                                lastRefreshTime = System.currentTimeMillis(),
+                                dashboardError = null
                             ) }
                         }
                         .onFailure { error ->
@@ -214,7 +221,7 @@ class StudentHomeViewModel @Inject constructor(
                             ErrorLogger.log(error, "Failed to load dashboard")
                             _uiState.update { it.copy(
                                 isLoadingDashboard = false,
-                                isRefreshing = false,
+                                isRefreshingDashboard = false,
                                 dashboardError = error.message ?: "Failed to load dashboard"
                             ) }
                         }
@@ -223,14 +230,14 @@ class StudentHomeViewModel @Inject constructor(
                 // Handle timeout gracefully
                 _uiState.update { it.copy(
                     isLoadingDashboard = false,
-                    isRefreshing = false,
+                    isRefreshingDashboard = false,
                     dashboardError = "Dashboard timed out. Please retry."
                 ) }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Unexpected error in loadDashboard")
                 _uiState.update { it.copy(
                     isLoadingDashboard = false,
-                    isRefreshing = false,
+                    isRefreshingDashboard = false,
                     dashboardError = "Unexpected error: ${e.message}"
                 ) }
             }
@@ -252,7 +259,7 @@ data class StudentHomeUiState(
     val error: String? = null,
     // Dashboard state (PERFORMANCE: using ProcessedDashboardData with pre-computed aggregations + caching)
     val isLoadingDashboard: Boolean = false,
-    val isRefreshing: Boolean = false, // Separate state for pull-to-refresh
+    val isRefreshingDashboard: Boolean = false, // Dashboard refresh state
     val dashboard: com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData? = null,
     val dashboardError: String? = null,
     val lastRefreshTime: Long? = null // Track when data was last refreshed

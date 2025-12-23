@@ -1,12 +1,18 @@
 package com.ssbmax.ui.home.student.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +25,20 @@ import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.ui.theme.SSBScoreColors
 
 /**
+ * Formats relative time string ("Updated just now", "5m ago", etc.)
+ */
+private fun formatRelativeTime(refreshTime: Long, justNowText: String): String {
+    val diffMillis = System.currentTimeMillis() - refreshTime
+    val diffSeconds = diffMillis / 1000
+    val diffMinutes = diffSeconds / 60
+    return when {
+        diffSeconds < 60 -> justNowText
+        diffMinutes < 60 -> "Updated ${diffMinutes}m ago"
+        else -> "Updated ${diffMinutes / 60}h ago"
+    }
+}
+
+/**
  * OLQ Dashboard Card showing all test results with aggregated scores
  * Uses pre-computed data for performance (no calculations in UI)
  */
@@ -26,9 +46,21 @@ import com.ssbmax.ui.theme.SSBScoreColors
 fun OLQDashboardCard(
     processedData: ProcessedDashboardData,
     onNavigateToResult: (TestType, String) -> Unit = { _, _ -> },
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val dashboard = processedData.dashboard // Extract for convenience
+    
+    // Animate refresh icon rotation
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isRefreshing) 360f else 0f,
+        animationSpec = tween(
+            durationMillis = if (isRefreshing) 1000 else 0,
+            easing = androidx.compose.animation.core.LinearEasing
+        ),
+        label = "refresh_rotation"
+    )
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -36,29 +68,52 @@ fun OLQDashboardCard(
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header
+            // Header with refresh button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Your SSB Progress",
+                    text = stringResource(R.string.dashboard_your_progress),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 
-                // Progress badge
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
+                // Right side: Refresh button + Progress badge
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "${dashboard.completedTestsCount}/${dashboard.totalTests} Tests",
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    // Refresh button
+                    IconButton(
+                        onClick = onRefresh,
+                        enabled = !isRefreshing,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.cd_refresh_dashboard),
+                            modifier = Modifier.rotate(rotationAngle),
+                            tint = if (isRefreshing) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // Progress badge
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "${dashboard.completedTestsCount}/${dashboard.totalTests} ${stringResource(R.string.dashboard_tests)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             }
 
@@ -75,14 +130,14 @@ fun OLQDashboardCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "PHASE 1",
+                        text = stringResource(R.string.dashboard_phase_1),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
 
                     TestScoreChip(
-                        testName = "OIR",
+                        testName = stringResource(R.string.dashboard_test_oir),
                         score = dashboard.phase1Results.oirResult?.percentageScore,
                         isOLQBased = false,
                         onClick = { 
@@ -93,7 +148,7 @@ fun OLQDashboardCard(
                     )
 
                     TestScoreChip(
-                        testName = "PPDT",
+                        testName = stringResource(R.string.dashboard_test_ppdt),
                         score = dashboard.phase1Results.ppdtOLQResult?.overallScore 
                             ?: dashboard.phase1Results.ppdtResult?.finalScore,
                         isOLQBased = true,  // ✅ Now OLQ-based
@@ -114,7 +169,7 @@ fun OLQDashboardCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "PHASE 2",
+                        text = stringResource(R.string.dashboard_phase_2),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
@@ -122,13 +177,13 @@ fun OLQDashboardCard(
 
                     // Psychology Tests
                     Text(
-                        text = "Psychology",
+                        text = stringResource(R.string.dashboard_psychology),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
                     TestScoreChip(
-                        testName = "TAT", 
+                        testName = stringResource(R.string.dashboard_test_tat), 
                         score = dashboard.phase2Results.tatResult?.overallScore,
                         onClick = {
                             dashboard.phase2Results.tatResult?.let {
@@ -137,7 +192,7 @@ fun OLQDashboardCard(
                         }
                     )
                     TestScoreChip(
-                        testName = "WAT", 
+                        testName = stringResource(R.string.dashboard_test_wat), 
                         score = dashboard.phase2Results.watResult?.overallScore,
                         onClick = {
                             dashboard.phase2Results.watResult?.let {
@@ -146,7 +201,7 @@ fun OLQDashboardCard(
                         }
                     )
                     TestScoreChip(
-                        testName = "SRT", 
+                        testName = stringResource(R.string.dashboard_test_srt), 
                         score = dashboard.phase2Results.srtResult?.overallScore,
                         onClick = {
                             dashboard.phase2Results.srtResult?.let {
@@ -155,7 +210,7 @@ fun OLQDashboardCard(
                         }
                     )
                     TestScoreChip(
-                        testName = "Self Desc", 
+                        testName = stringResource(R.string.dashboard_test_self_desc), 
                         score = dashboard.phase2Results.sdResult?.overallScore,
                         onClick = {
                             dashboard.phase2Results.sdResult?.let {
@@ -168,7 +223,7 @@ fun OLQDashboardCard(
 
                     // GTO Tests
                     Text(
-                        text = "GTO",
+                        text = stringResource(R.string.dashboard_gto),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -185,13 +240,13 @@ fun OLQDashboardCard(
 
                     // Interview
                     Text(
-                        text = "Interview",
+                        text = stringResource(R.string.dashboard_interview),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     
                     TestScoreChip(
-                        testName = "Interview",
+                        testName = stringResource(R.string.dashboard_test_interview),
                         score = dashboard.phase2Results.interviewResult?.getAverageOLQScore(),
                         onClick = {
                             dashboard.phase2Results.interviewResult?.let {
@@ -214,7 +269,7 @@ fun OLQDashboardCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Overall Average",
+                        text = stringResource(R.string.dashboard_overall_average),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -230,7 +285,7 @@ fun OLQDashboardCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OLQStrengthsSection(
-                    title = "🌟 Your Strengths",
+                    title = stringResource(R.string.dashboard_your_strengths),
                     olqs = processedData.topOLQs,
                     color = Color(0xFF4CAF50)  // Green
                 )
@@ -241,160 +296,22 @@ fun OLQDashboardCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OLQStrengthsSection(
-                    title = "📈 Focus Areas",
+                    title = stringResource(R.string.dashboard_focus_areas),
                     olqs = processedData.improvementOLQs,
                     color = Color(0xFFFFC107)  // Amber
                 )
             }
 
-            // Cache update notice
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(com.ssbmax.R.string.dashboard_cache_update_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-/**
- * Individual test score chip
- * Color-coded: Green (≤5), Amber (6-7), Red (≥8)
- */
-@Composable
-private fun TestScoreChip(
-    testName: String,
-    score: Float?,
-    isOLQBased: Boolean = true,
-    onClick: (() -> Unit)? = null
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                // Make clickable when onClick provided, regardless of score
-                // This allows navigation even during analysis (PENDING/ANALYZING)
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else Modifier
-            ),
-        shape = RoundedCornerShape(8.dp),
-        color = when {
-            score == null -> MaterialTheme.colorScheme.surfaceVariant
-            score <= 5f -> Color(0xFF4CAF50).copy(alpha = 0.2f)  // Green
-            score <= 7f -> Color(0xFFFFC107).copy(alpha = 0.2f)  // Amber
-            else -> Color(0xFFF44336).copy(alpha = 0.2f)  // Red
-        },
-        border = if (score != null) {
-            androidx.compose.foundation.BorderStroke(
-                1.dp,
-                when {
-                    score <= 5f -> Color(0xFF4CAF50)
-                    score <= 7f -> Color(0xFFFFC107)
-                    else -> Color(0xFFF44336)
-                }
-            )
-        } else null
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = testName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            if (score != null) {
-                Text(
-                    text = "%.1f".format(score),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = when {
-                        score <= 5f -> Color(0xFF4CAF50)
-                        score <= 7f -> Color(0xFFFFC107)
-                        else -> Color(0xFFF44336)
-                    }
-                )
-            } else {
-                Text(
-                    text = "—",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-/**
- * Large score badge for overall average
- */
-@Composable
-private fun ScoreBadge(score: Float) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = when {
-            score <= 5f -> Color(0xFF4CAF50)
-            score <= 7f -> Color(0xFFFFC107)
-            else -> Color(0xFFF44336)
-        }
-    ) {
-        Text(
-            text = "%.1f".format(score),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-        )
-    }
-}
-
-/**
- * Section displaying OLQ strengths or improvement areas
- */
-@Composable
-private fun OLQStrengthsSection(
-    title: String,
-    olqs: List<Pair<OLQ, Float>>,
-    color: Color
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        olqs.forEach { (olq, score) ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = olq.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = color.copy(alpha = 0.2f)
-                ) {
+            // Last updated timestamp
+            processedData.cacheMetadata.let { metadata ->
+                if (!metadata.cacheHit) {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "%.1f".format(score),
+                        text = stringResource(R.string.dashboard_last_updated_now),
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = color,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -402,44 +319,9 @@ private fun OLQStrengthsSection(
     }
 }
 
-/**
- * Empty state when no tests completed
- */
-@Composable
-fun EmptyDashboardState(
-    modifier: Modifier = Modifier,
-    onStartTestClick: () -> Unit
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "📊",
-                style = MaterialTheme.typography.displayLarge
-            )
-            
-            Text(
-                text = "Start Your SSB Journey",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = "Complete tests to see your OLQ profile and track progress",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Button(onClick = onStartTestClick) {
-                Text("Start First Test")
-            }
-        }
-    }
-}
+// TestScoreChip extracted to DashboardTestScoreChip.kt
+
+// ScoreBadge extracted to DashboardScoreBadge.kt
+
+// OLQStrengthsSection extracted to DashboardOLQStrengths.kt
+// EmptyDashboardState extracted to DashboardEmptyState.kt

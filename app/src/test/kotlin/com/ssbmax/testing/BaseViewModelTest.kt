@@ -9,6 +9,9 @@ import kotlinx.coroutines.test.TestDispatcher
 import org.junit.Before
 import org.junit.Rule
 
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
+
 /**
  * Base class for ViewModel tests
  * Provides coroutine test dispatcher setup and mocks Android Log
@@ -29,6 +32,14 @@ abstract class BaseViewModelTest {
     @get:Rule
     val dispatcherRule = TestDispatcherRule()
     
+    /**
+     * Global timeout of 30 seconds per test to prevent CI hangs.
+     * Any test running longer than this is considered broken.
+     */
+    @get:Rule
+    val globalTimeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+    
+
     /**
      * Mock Android Log for unit tests
      * This prevents "Method d in android.util.Log not mocked" errors

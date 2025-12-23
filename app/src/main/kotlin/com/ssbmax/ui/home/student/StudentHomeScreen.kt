@@ -10,10 +10,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Assignment
@@ -36,12 +32,16 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.ui.home.student.components.StatsCard
+import com.ssbmax.ui.home.student.components.QuickActionCard
+import com.ssbmax.ui.home.student.components.SectionDivider
+import com.ssbmax.ui.home.student.components.SectionHeader
 
 /**
  * Student Home Screen with Phase Progress Ribbon
  * Shows progress for Phase 1 and Phase 2 with quick access to tests
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentHomeScreen(
     viewModel: StudentHomeViewModel = hiltViewModel(),
@@ -57,12 +57,6 @@ fun StudentHomeScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // Pull-to-refresh state
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = uiState.isRefreshing,
-        onRefresh = { viewModel.refreshProgress() }
-    )
 
     Scaffold(
         topBar = {
@@ -103,17 +97,13 @@ fun StudentHomeScreen(
             )
         }
     ) { paddingValues ->
-        Box(
+        LazyColumn(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .pullRefresh(pullRefreshState)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
             // Stats Cards
             item {
                 Row(
@@ -180,7 +170,7 @@ fun StudentHomeScreen(
             item {
                 SectionHeader(
                     icon = "🎯",
-                    title = "OLQ Dashboard",
+                    title = stringResource(R.string.dashboard_olq_dashboard),
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -202,6 +192,8 @@ fun StudentHomeScreen(
                         com.ssbmax.ui.home.student.components.OLQDashboardCard(
                             processedData = uiState.dashboard!!, // Now using ProcessedDashboardData
                             onNavigateToResult = onNavigateToResult,
+                            isRefreshing = uiState.isRefreshingDashboard,
+                            onRefresh = { viewModel.refreshDashboard() },
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
@@ -221,7 +213,7 @@ fun StudentHomeScreen(
                             )
                         ) {
                             Text(
-                                text = uiState.dashboardError ?: "Failed to load dashboard",
+                                text = uiState.dashboardError ?: stringResource(R.string.dashboard_error_load_failed),
                                 modifier = Modifier.padding(16.dp),
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -296,198 +288,5 @@ fun StudentHomeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
-
-            // Pull-to-refresh indicator
-            PullRefreshIndicator(
-                refreshing = uiState.isRefreshing,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-        }
     }
 }
-
-/**
- * Stats Card - Original Design
- * Gradient background with icon and horizontal layout
- */
-@Composable
-private fun StatsCard(
-    title: String,
-    value: String,
-    subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    gradient: Brush,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(84.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(gradient)
-                .padding(12.dp)
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Top row: Icon + Value + Unit
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    
-                    Text(
-                        value,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Bottom: Title
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(84.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.1f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                title,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-
-/**
- * Section Divider - Subtle horizontal line for visual separation
- */
-@Composable
-private fun SectionDivider(modifier: Modifier = Modifier) {
-    HorizontalDivider(
-        modifier = modifier.padding(vertical = 8.dp),
-        thickness = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    )
-}
-
-/**
- * Section Header Component with Icon and Title
- * Creates visual separation between content sections
- */
-@Composable
-private fun SectionHeader(
-    icon: String,
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = icon,
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-// Helper functions
-private fun getTestColor(testType: TestType): Color {
-    return when (testType.phase) {
-        TestPhase.PHASE_1 -> Color(0xFF1976D2)
-        TestPhase.PHASE_2 -> Color(0xFF388E3C)
-    }
-}
-
-private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (testType) {
-        TestType.OIR -> Icons.Default.Psychology
-        TestType.PPDT -> Icons.Default.Image
-        TestType.PIQ -> Icons.AutoMirrored.Filled.Assignment
-        TestType.TAT, TestType.WAT, TestType.SRT, TestType.SD -> Icons.Default.EditNote
-        // GTO Tasks
-        TestType.GTO_GD -> Icons.Default.Forum
-        TestType.GTO_GPE -> Icons.Default.Map
-        TestType.GTO_PGT -> Icons.AutoMirrored.Filled.TrendingUp
-        TestType.GTO_GOR -> Icons.AutoMirrored.Filled.DirectionsRun
-        TestType.GTO_HGT -> Icons.Default.People
-        TestType.GTO_LECTURETTE -> Icons.Default.Mic
-        TestType.GTO_IO -> Icons.Default.Person
-        TestType.GTO_CT -> Icons.Default.MilitaryTech
-        TestType.IO -> Icons.Default.RecordVoiceOver
-    }
-}
-

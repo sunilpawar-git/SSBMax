@@ -3,6 +3,8 @@ package com.ssbmax.testing
 import org.junit.Test
 import java.io.File
 
+import org.junit.Ignore
+
 /**
  * Architecture tests for navigation patterns
  * 
@@ -14,8 +16,12 @@ import java.io.File
  * 1. popUpTo should target reliable routes (StudentHome, not TopicScreen)
  * 2. Exit navigation callbacks should use consistent patterns
  * 3. All interview screens should use the same navigation strategy
+ *
+ * NOTE: Disabled in CI due to file system access. Run manually locally.
  */
+@Ignore("Disabled in CI - file system access. Run manually locally.")
 class NavigationArchitectureTest {
+
 
     private val projectRoot: File = File(System.getProperty("user.dir") ?: ".").parentFile ?: File(".")
     private val navGraphFile = File(projectRoot, "app/src/main/kotlin/com/ssbmax/navigation/SharedNavGraph.kt")

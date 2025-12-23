@@ -1,5 +1,6 @@
 package com.ssbmax.core.domain.usecase.dashboard
 
+import android.util.Log
 import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
@@ -65,6 +66,7 @@ class GetOLQDashboardUseCase @Inject constructor(
     private val cacheMutex = Mutex()
 
     companion object {
+        private const val TAG = "GetOLQDashboard"
         private const val CACHE_TTL_MS = 5 * 60 * 1000L // 5 minutes
     }
 
@@ -81,6 +83,8 @@ class GetOLQDashboardUseCase @Inject constructor(
     ): Result<ProcessedDashboardData> {
         val startTime = System.currentTimeMillis()
         var cacheHit = false
+        
+        Log.d(TAG, "📍 Fetching dashboard for user: $userId (forceRefresh=$forceRefresh)")
 
         return try {
             cacheMutex.withLock {
@@ -93,6 +97,8 @@ class GetOLQDashboardUseCase @Inject constructor(
                     // Cache hit - return cached data
                     cacheHit = true
                     val loadTime = System.currentTimeMillis() - startTime
+                    Log.d(TAG, "✅ Cache hit - returning cached data (load time: ${loadTime}ms)")
+                    Log.d(TAG, "   OIR result in cache: ${cachedData.data.dashboard.phase1Results.oirResult?.percentageScore}")
 
                     // Update cache metadata
                     val dataWithMetadata = cachedData.data.copy(
@@ -107,8 +113,10 @@ class GetOLQDashboardUseCase @Inject constructor(
                 }
 
                 // Cache miss or expired - fetch fresh data
+                Log.d(TAG, "❌ Cache miss - fetching from Firestore")
                 val freshData = fetchDashboardData(userId)
                 val loadTime = System.currentTimeMillis() - startTime
+                Log.d(TAG, "   Fetch completed in ${loadTime}ms")
 
                 // Update cache
                 cache[userId] = CachedDashboard(
@@ -124,6 +132,8 @@ class GetOLQDashboardUseCase @Inject constructor(
                         forcedRefresh = forceRefresh
                     )
                 )
+                
+                Log.d(TAG, "✅ Dashboard data ready (OIR score: ${dataWithMetadata.dashboard.phase1Results.oirResult?.percentageScore})")
 
                 Result.success(dataWithMetadata)
             }
@@ -138,7 +148,9 @@ class GetOLQDashboardUseCase @Inject constructor(
      */
     suspend fun invalidateCache(userId: String) {
         cacheMutex.withLock {
+            val hadCache = cache.containsKey(userId)
             cache.remove(userId)
+            Log.d(TAG, "🗑️ Cache invalidated for user: $userId (had cache: $hadCache)")
         }
     }
 
@@ -147,15 +159,16 @@ class GetOLQDashboardUseCase @Inject constructor(
      * Extracted from invoke() to support caching layer
      */
     private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData {
-        // Fetch Phase 1 results
-            val oirResult = submissionRepository.getLatestOIRSubmission(userId)
-                .getOrNull()
-                ?.let { submission ->
-                    // OIR has its own result structure, not OLQAnalysisResult
-                    null // Keep as OIRSubmission
-                }
-            
-            // Fetch PPDT submission and fetch OLQ result from ppdt_results collection (GTO pattern)
+        // Fetch OIR result
+        Log.d(TAG, "🔍 Fetching OIR submission for user: $userId")
+        val oirSubmission = submissionRepository.getLatestOIRSubmission(userId).getOrNull()
+        val oirResult = oirSubmission?.testResult
+        Log.d(TAG, "   OIR submission found: ${oirSubmission != null}")
+        Log.d(TAG, "   OIR submission ID: ${oirSubmission?.id}")
+        Log.d(TAG, "   OIR testResult extracted: ${oirResult != null}")
+        Log.d(TAG, "   OIR percentageScore: ${oirResult?.percentageScore}")
+        
+        // Fetch PPDT submission and fetch OLQ result from ppdt_results collection (GTO pattern)
             // Important: Try fetching from ppdt_results first - the submission's analysisStatus may be stale
             val ppdtSubmission = submissionRepository.getLatestPPDTSubmission(userId)
                 .getOrNull()
@@ -217,10 +230,7 @@ class GetOLQDashboardUseCase @Inject constructor(
             val dashboard = OLQDashboardData(
                 userId = userId,
                 phase1Results = OLQDashboardData.Phase1Results(
-                    oirResult = submissionRepository.getLatestOIRSubmission(userId).getOrNull()?.let {
-                        // Convert OIRSubmission to OIRTestResult if needed
-                        null // TODO: Map to OIRTestResult
-                    },
+                    oirResult = oirResult,  // Extract OIRTestResult from OIRSubmission
                     ppdtResult = ppdtSubmission,  // Full submission for UI display
                     ppdtOLQResult = ppdtOLQResult  // Extracted OLQ scores
                 ),
@@ -246,7 +256,7 @@ class GetOLQDashboardUseCase @Inject constructor(
                 .map { it.key to it.value }
             val overallAverage = computeOverallAverage(dashboard)
 
-            return ProcessedDashboardData(
+            val finalData = ProcessedDashboardData(
                 dashboard = dashboard,
                 averageOLQScores = averageOLQScores,
                 topOLQs = topOLQs,
@@ -258,6 +268,11 @@ class GetOLQDashboardUseCase @Inject constructor(
                     forcedRefresh = false
                 ) // Will be replaced by invoke() with actual metadata
             )
+            
+            Log.d(TAG, "✅ Dashboard built successfully")
+            Log.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
+            
+            return finalData
     }
 
     /**

@@ -2,20 +2,27 @@ package com.ssbmax.billing
 
 import android.app.Activity
 import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
-import org.robolectric.RobolectricTestRunner
 import io.mockk.mockk
 
-@RunWith(RobolectricTestRunner::class)
+/**
+ * BillingRepositoryTest - Unit tests for BillingRepository
+ * Uses mockk for Context instead of Robolectric to avoid SDK version issues
+ */
 class BillingRepositoryTest {
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private val repository = BillingRepository(context)
+    private lateinit var context: Context
+    private lateinit var repository: BillingRepository
+    
+    @Before
+    fun setup() {
+        context = mockk(relaxed = true)
+        repository = BillingRepository(context)
+    }
 
     @Test
     fun initialize_populatesMockProducts() {
