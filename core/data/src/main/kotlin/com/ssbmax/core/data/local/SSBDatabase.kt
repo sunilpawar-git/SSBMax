@@ -62,7 +62,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 14, // Added GPE solution column
+    version = 15, // Updated TAT character limits (150→50 min, 800→1500 max)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

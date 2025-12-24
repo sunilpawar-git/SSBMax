@@ -593,5 +593,22 @@ object DatabaseMigrations {
             database.execSQL("ALTER TABLE cached_gpe_images ADD COLUMN solution TEXT")
         }
     }
+    
+    /**
+     * Migration from version 14 to 15
+     * Updates TAT character limits to align with domain model
+     * Changes: minCharacters 150→50, maxCharacters 800→1500
+     */
+    val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Update all existing TAT images to have correct character limits
+            database.execSQL("""
+                UPDATE cached_tat_images 
+                SET minCharacters = 50, 
+                    maxCharacters = 1500
+                WHERE minCharacters = 150 AND maxCharacters = 800
+            """.trimIndent())
+        }
+    }
 }
 
