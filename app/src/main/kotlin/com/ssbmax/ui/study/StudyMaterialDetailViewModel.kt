@@ -54,7 +54,7 @@ class StudyMaterialDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                // Try to load from cloud first using use case
+                // Load from Firestore (cloud or cache)
                 val cloudResult = getStudyMaterialDetail(materialId)
 
                 val material = cloudResult.getOrNull()?.let { cloudMaterial ->
@@ -72,18 +72,32 @@ class StudyMaterialDetailViewModel @Inject constructor(
                         relatedMaterials = emptyList()
                     )
                 } ?: run {
-                    // Fallback to local content
-                    val localMaterial = getMockMaterial(materialId)
-                    // If it's HTML content, load from assets
-                    if (localMaterial.content.startsWith("<!DOCTYPE html>")) {
-                        localMaterial.copy(
+                    // Special case: PIQ Form HTML (not in Firestore)
+                    if (materialId == "piq_form_reference") {
+                        StudyMaterialContent(
+                            id = "piq_form_reference",
+                            title = "SSB PIQ Form (Reference)",
+                            category = "PIQ Form",
+                            author = "SSB",
+                            publishedDate = "2025",
+                            readTime = "5 min read",
                             content = StudyMaterialContentProvider.loadHTMLFromAssets(
                                 context,
                                 "piq_form.html"
-                            )
+                            ),
+                            isPremium = false,
+                            tags = listOf("PIQ", "Form", "Reference"),
+                            relatedMaterials = emptyList()
                         )
                     } else {
-                        localMaterial
+                        // Content not found - should not happen with Firestore
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "Content not available. Please check your internet connection."
+                            )
+                        }
+                        return@launch
                     }
                 }
 
@@ -112,34 +126,12 @@ class StudyMaterialDetailViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                // On error, fallback to local content
-                try {
-                    val fallbackMaterial = getMockMaterial(materialId)
-                    val finalMaterial = if (fallbackMaterial.content.startsWith("<!DOCTYPE html>")) {
-                        fallbackMaterial.copy(
-                            content = StudyMaterialContentProvider.loadHTMLFromAssets(
-                                context,
-                                "piq_form.html"
-                            )
-                        )
-                    } else {
-                        fallbackMaterial
-                    }
-                    _uiState.update {
-                        it.copy(
-                            material = finalMaterial,
-                            readingProgress = 0f,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-                } catch (fallbackError: Exception) {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = fallbackError.message ?: "Failed to load material"
-                        )
-                    }
+                // No fallback - Firestore should have all content (with 7-day cache)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Unable to load content. Please check your internet connection and try again."
+                    )
                 }
             }
         }
@@ -194,10 +186,6 @@ class StudyMaterialDetailViewModel @Inject constructor(
                 trackStudySession.endSession(id, progressIncrement)
             }
         }
-    }
-    
-    private fun getMockMaterial(materialId: String): StudyMaterialContent {
-        return StudyMaterialContentProvider.getMaterial(materialId)
     }
 }
 
