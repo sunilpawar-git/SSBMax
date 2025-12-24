@@ -1,4 +1,4 @@
-package com.ssbmax.ui.tests.ppdt
+package com.ssbmax.ui.tests.sdt
 
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
@@ -19,45 +19,38 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
+class SDTSubmissionResultViewModelTest : BaseViewModelTest() {
 
-    private lateinit var viewModel: PPDTSubmissionResultViewModel
+    private lateinit var viewModel: SDTSubmissionResultViewModel
     private val mockSubmissionRepo = mockk<SubmissionRepository>(relaxed = true)
 
     private val mockOLQResult = OLQAnalysisResult(
-        submissionId = "submission-ppdt-123",
-        testType = TestType.PPDT,
+        submissionId = "submission-sdt-123",
+        testType = TestType.SD,
         olqScores = createMockOLQScores(),
-        overallScore = 79.0f,
+        overallScore = 77.0f,
         overallRating = "Good",
-        strengths = listOf("Observation", "Narrative"),
-        weaknesses = listOf("Character Development"),
-        recommendations = listOf("Practice character descriptions"),
+        strengths = listOf("Self-awareness", "Honesty"),
+        weaknesses = listOf("Detail"),
+        recommendations = listOf("Provide more specific examples"),
         analyzedAt = System.currentTimeMillis(),
-        aiConfidence = 83
+        aiConfidence = 81
     )
 
-    private val mockSubmission = PPDTSubmission(
-        submissionId = "submission-ppdt-123",
-        questionId = "ppdt-q1",
+    private val mockSubmission = SDTSubmission(
+        id = "submission-sdt-123",
         userId = "user-123",
-        userName = "Test User",
-        userEmail = "test@example.com",
-        batchId = null,
-        story = "Test story content",
-        charactersCount = 150,
-        viewingTimeTakenSeconds = 30,
-        writingTimeTakenMinutes = 4,
+        testId = "sdt-standard",
+        responses = emptyList(),
+        totalTimeTakenMinutes = 20,
         submittedAt = System.currentTimeMillis(),
-        status = SubmissionStatus.SUBMITTED_PENDING_REVIEW,
-        instructorReview = null,
         analysisStatus = AnalysisStatus.COMPLETED,
         olqResult = mockOLQResult
     )
 
     @Before
     fun setup() {
-        viewModel = PPDTSubmissionResultViewModel(mockSubmissionRepo)
+        viewModel = SDTSubmissionResultViewModel(mockSubmissionRepo)
     }
 
     @Test
@@ -68,10 +61,10 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         val initialState = viewModel.uiState.value
         assertTrue(initialState.isLoading)
 
-        viewModel.loadSubmission("submission-ppdt-123")
+        viewModel.loadSubmission("submission-sdt-123")
         advanceUntilIdle()
 
-        // Note: PPDT parsing is complex, just verify method executes
+        // Note: SDT parsing is complex, just verify method executes
     }
 
     @Test
@@ -86,29 +79,21 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         return OLQ.values().take(14).associateWith { olq ->
             OLQScore(
                 score = (7..9).random(),
-                confidence = 83,
+                confidence = 81,
                 reasoning = "Good demonstration of $olq"
             )
         }
     }
 
-    private fun createFirestoreSubmissionMap(submission: PPDTSubmission): Map<String, Any> {
+    private fun createFirestoreSubmissionMap(submission: SDTSubmission): Map<String, Any> {
         val dataMap = mutableMapOf<String, Any>(
-            "submissionId" to submission.submissionId,
-            "questionId" to submission.questionId,
+            "id" to submission.id,
             "userId" to submission.userId,
-            "userName" to submission.userName,
-            "userEmail" to submission.userEmail,
-            "story" to submission.story,
-            "charactersCount" to submission.charactersCount,
-            "viewingTimeTakenSeconds" to submission.viewingTimeTakenSeconds,
-            "writingTimeTakenMinutes" to submission.writingTimeTakenMinutes,
+            "testId" to submission.testId,
+            "totalTimeTakenMinutes" to submission.totalTimeTakenMinutes,
             "submittedAt" to submission.submittedAt,
-            "status" to submission.status.name,
             "analysisStatus" to submission.analysisStatus.name
         )
-
-        submission.batchId?.let { dataMap["batchId"] = it }
 
         submission.olqResult?.let { olqResult ->
             val olqScoresMap = olqResult.olqScores.map { (olq, score) ->
@@ -136,3 +121,4 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         return mapOf("data" to dataMap)
     }
 }
+
