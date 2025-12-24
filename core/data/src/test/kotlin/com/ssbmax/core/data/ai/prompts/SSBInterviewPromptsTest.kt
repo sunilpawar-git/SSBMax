@@ -431,8 +431,8 @@ class SSBInterviewPromptsTest {
 
         // Then
         assertTrue("Should include SSB scoring", prompt.contains("LOWER IS BETTER"))
-        assertTrue("Should include score range", prompt.contains("1-10") || prompt.contains("1-2"))
-        assertTrue("Should include Exceptional", prompt.contains("Exceptional"))
+        assertTrue("Should include unified scale range", prompt.contains("5-9") || prompt.contains("5   ="))
+        assertTrue("Should include Excellent", prompt.contains("Excellent"))
     }
 
     @Test

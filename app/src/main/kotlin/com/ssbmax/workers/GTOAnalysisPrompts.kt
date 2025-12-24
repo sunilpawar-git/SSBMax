@@ -57,16 +57,27 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Sustained quality throughout
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional (rare, outstanding)
-4: Excellent (top tier)
-5: Very Good (best common score)
-6: Good (above average)
-7: Average (typical performance)
-8: Below Average (lowest acceptable)
-9-10: Poor (usually rejected)
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
+
+3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS - READ CAREFULLY:
@@ -162,16 +173,27 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Sustained quality and thoroughness
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional (rare, outstanding tactical planning)
-4: Excellent (top tier leadership)
-5: Very Good (best common score for officers)
-6: Good (above average)
-7: Average (typical performance)
-8: Below Average (lowest acceptable)
-9-10: Poor (usually rejected)
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
+
+3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 EVALUATION CHECKLIST:
@@ -271,16 +293,27 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Sustained quality and energy throughout 3 minutes
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional (rare, outstanding speakers)
-4: Excellent (top tier communication)
-5: Very Good (best common score for officers)
-6: Good (above average)
-7: Average (typical performance)
-8: Below Average (lowest acceptable)
-9-10: Poor (usually rejected)
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
+
+3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS - READ CAREFULLY:
@@ -340,11 +373,27 @@ $solutionsText
 Time Spent: ${submission.timeSpent} seconds
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
+
+3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS - READ CAREFULLY:

@@ -393,22 +393,20 @@ OLQ SCORING REFERENCE:
 $OLQ_DEFINITIONS
 
 ═══════════════════════════════════════════════════════════════════════════════
-SCORING SCALE (SSB Convention - LOWER IS BETTER):
+SCORING SCALE (UNIFIED SSB - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-2 = Exceptional (Outstanding, rare excellence)
-3   = Excellent (Top tier performance)
-4   = Very Good (Above expectations)
-5   = Good (Solid, meets standards)
-6   = Average (Acceptable, typical)
-7   = Below Average (Needs improvement)
-8   = Poor (Significant concerns)
-9-10 = Very Poor (Major deficiency)
+5   = Very Good/Excellent (BEST possible score - rare)
+6   = Good (Above average)
+7   = Average (Typical performance)
+8   = Poor (Needs improvement)
+9   = Fail (Gibberish/Irrelevant/Blank)
 
-DISTRIBUTION GUIDELINE (Bell Curve):
-- Most candidates score 5-7 (70% of scores)
-- Exceptional (1-3) and Poor (8-10) are rare (15% each)
-- Use decimal scores for precision (e.g., 5.5, 6.2)
+CRITICAL VALIDATION:
+- **GARBAGE DETECTION**: If response is gibberish or clearly irrelevant → Score 9
+- **CONSERVATIVE SCORING**: Bias towards lower side (worse scores)
+- **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
+- Use decimal scores for precision within 5-9 range (e.g., 5.5, 6.2)
 
 ═══════════════════════════════════════════════════════════════════════════════
 YOUR TASK:

@@ -53,11 +53,29 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Endurance, resilience
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If stories are gibberish, random characters, single words,
+   or clearly irrelevant → Assign score 9 for ALL OLQs, confidence 100,
+   reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If average story length < 20 words → Score 8-9
+
+3. **CONSERVATIVE SCORING**: When averaging across 12 stories, bias towards
+   the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS:
@@ -69,7 +87,7 @@ CRITICAL INSTRUCTIONS:
 4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
 5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
 6. Your entire response should START with { and END with }
-7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+7. Each OLQ must have: score (integer 5-9), confidence (integer 0-100), reasoning (string)
 
 ═══════════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT:
@@ -137,11 +155,25 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Endurance, resilience
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS:
@@ -218,11 +250,25 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Endurance, resilience
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS:
@@ -306,11 +352,25 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Endurance, resilience
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS:
@@ -385,11 +445,25 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 15. STAMINA: Endurance, resilience
 
 ═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (CRITICAL - LOWER IS BETTER):
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
 
-1-3: Exceptional, 4: Excellent, 5: Very Good
-6: Good, 7: Average, 8: Below Average, 9-10: Poor
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL INSTRUCTIONS:
