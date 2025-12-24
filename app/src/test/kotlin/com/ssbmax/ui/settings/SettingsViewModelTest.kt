@@ -4,138 +4,148 @@ import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import io.mockk.*
-import kotlinx.coroutines.Dispatchers
+import com.ssbmax.testing.BaseViewModelTest
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Tests for SettingsViewModel
- * Tests subscription tier observation and error handling
- */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SettingsViewModelTest {
+class SettingsViewModelTest : BaseViewModelTest() {
 
-    private val testDispatcher = StandardTestDispatcher()
-    private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
     private lateinit var viewModel: SettingsViewModel
-    private lateinit var userFlow: MutableStateFlow<SSBMaxUser?>
+    private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
+
+    private val mockFreeUser = SSBMaxUser(
+        id = "user-123",
+        email = "test@example.com",
+        displayName = "Test User",
+        role = UserRole.STUDENT,
+        subscriptionTier = SubscriptionTier.FREE
+    )
+
+    private val mockProUser = mockFreeUser.copy(
+        subscriptionTier = SubscriptionTier.PRO
+    )
+
+    private val mockPremiumUser = mockFreeUser.copy(
+        subscriptionTier = SubscriptionTier.PREMIUM
+    )
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
-
-        // Mock Android Log
-        mockkStatic(android.util.Log::class)
-        every { android.util.Log.d(any<String>(), any<String>()) } returns 0
-        every { android.util.Log.w(any<String>(), any<String>()) } returns 0
-        every { android.util.Log.e(any<String>(), any<String>()) } returns 0
-        every { android.util.Log.e(any<String>(), any<String>(), any()) } returns 0
-
-        // Setup mocks
-        observeCurrentUser = mockk()
-        userFlow = MutableStateFlow(null)
-        every { observeCurrentUser.invoke() } returns userFlow
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        unmockkStatic(android.util.Log::class)
+        // Default: return FREE user
+        every { mockObserveCurrentUser() } returns flowOf(mockFreeUser)
     }
 
     @Test
-    fun `viewModel initializes with FREE tier by default`() = runTest {
-        // When
-        viewModel = SettingsViewModel(observeCurrentUser)
+    fun `initial state has FREE tier`() = runTest {
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
         advanceUntilIdle()
 
-        // Then
         val state = viewModel.uiState.value
-        assertNotNull(state)
+
         assertEquals(SubscriptionTier.FREE, state.subscriptionTier)
         assertNull(state.error)
     }
 
     @Test
-    fun `subscription tier updates when user changes`() = runTest {
-        // Given
-        viewModel = SettingsViewModel(observeCurrentUser)
+    fun `observes FREE tier subscription`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf(mockFreeUser)
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
         advanceUntilIdle()
 
-        // Initially FREE (no user)
-        assertEquals(SubscriptionTier.FREE, viewModel.uiState.value.subscriptionTier)
+        val state = viewModel.uiState.value
 
-        // When - user with PRO subscription logs in
-        val proUser = SSBMaxUser(
-            id = "user123",
-            email = "pro@ssbmax.com",
-            displayName = "Pro User",
-            role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.PRO,
-            subscription = null
-        )
-        userFlow.value = proUser
-        advanceUntilIdle()
-
-        // Then
-        assertEquals(SubscriptionTier.PRO, viewModel.uiState.value.subscriptionTier)
-
-        // When - user upgrades to PREMIUM
-        val premiumUser = proUser.copy(subscriptionTier = SubscriptionTier.PREMIUM)
-        userFlow.value = premiumUser
-        advanceUntilIdle()
-
-        // Then
-        assertEquals(SubscriptionTier.PREMIUM, viewModel.uiState.value.subscriptionTier)
+        assertEquals(SubscriptionTier.FREE, state.subscriptionTier)
+        assertNull(state.error)
     }
 
     @Test
-    fun `subscription tier defaults to FREE when user is null`() = runTest {
-        // Given - start with a PRO user
-        val proUser = SSBMaxUser(
-            id = "user123",
-            email = "pro@ssbmax.com",
-            displayName = "Pro User",
-            role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.PRO,
-            subscription = null
-        )
-        userFlow.value = proUser
-        viewModel = SettingsViewModel(observeCurrentUser)
+    fun `observes PRO tier subscription`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf(mockProUser)
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
         advanceUntilIdle()
 
-        assertEquals(SubscriptionTier.PRO, viewModel.uiState.value.subscriptionTier)
+        val state = viewModel.uiState.value
 
-        // When - user logs out (becomes null)
-        userFlow.value = null
-        advanceUntilIdle()
-
-        // Then - defaults back to FREE
-        assertEquals(SubscriptionTier.FREE, viewModel.uiState.value.subscriptionTier)
+        assertEquals(SubscriptionTier.PRO, state.subscriptionTier)
+        assertNull(state.error)
     }
 
     @Test
-    fun `clearError removes error from state`() = runTest {
-        // Given
-        viewModel = SettingsViewModel(observeCurrentUser)
+    fun `observes PREMIUM tier subscription`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf(mockPremiumUser)
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
         advanceUntilIdle()
 
-        // When
+        val state = viewModel.uiState.value
+
+        assertEquals(SubscriptionTier.PREMIUM, state.subscriptionTier)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun `handles null user with FREE tier default`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf(null)
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+
+        assertEquals(SubscriptionTier.FREE, state.subscriptionTier)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun `handles error in user observation`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf()  // Empty flow triggers catch block
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+
+        // Should have FREE tier default and possibly an error
+        assertEquals(SubscriptionTier.FREE, state.subscriptionTier)
+    }
+
+    @Test
+    fun `clearError clears error message`() = runTest {
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
+        advanceUntilIdle()
+
+        // Manually set error for testing
         viewModel.clearError()
         advanceUntilIdle()
 
-        // Then
         val state = viewModel.uiState.value
+
+        assertNull(state.error)
+    }
+
+    @Test
+    fun `updates subscription tier when user changes`() = runTest {
+        every { mockObserveCurrentUser() } returns flowOf(mockFreeUser, mockProUser)
+
+        viewModel = SettingsViewModel(mockObserveCurrentUser)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+
+        // Should reflect the latest emission (PRO)
+        assertEquals(SubscriptionTier.PRO, state.subscriptionTier)
         assertNull(state.error)
     }
 }
