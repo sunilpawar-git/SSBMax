@@ -37,11 +37,12 @@ STOP and REFLECT before writing ANY code:
   • Flows collected with collectAsStateWithLifecycle()
   • No static references to Context/Activity
   • Composables properly scoped to remember{}
-- [ ] Accessibility: UI changes include?
-  • Content descriptions for images/icons
-  • Proper heading hierarchy (h1, h2, etc.)
-  • Sufficient color contrast ratios
-  • Screen reader friendly semantics
+- [ ] Accessibility: UI changes include content descriptions and proper heading hierarchy
+- [ ] Data vs Logic: Is static content (Markdown/JSON) stored in `.kt` files? (NO - use assets/resources)
+
+### 5. Test Integrity
+- [ ] Test Evasion: Renamed tests to `.bak` or used `@Ignore` to bypass CI? (STRICTLY NO)
+- [ ] Coverage: Are all new ViewModels/Repositories covered by Unit Tests? (MANDATORY)
 
 ## ✅ IMPLEMENTATION STANDARDS
 
@@ -107,14 +108,16 @@ After implementation, verify ALL pass before committing:
 - [ ] Repository Tests: Data operations tested with fake/test datasources
 - [ ] UI Tests: Critical user flows covered (login, test completion, etc.)
 
-## 🚨 FAILURE PROTOCOL
+## 🚨 FAILURE PROTOCOL & NON-EVASION
 
 If ANY check fails:
-1. STOP IMMEDIATELY - Do not commit or push
-2. REFACTOR - Fix the failing checks
-3. RE-VERIFY - Run full checklist again
-4. REPEAT until ALL checks pass
-5. Only then commit/push
+1. **STOP IMMEDIATELY** - Do not commit or push.
+2. **NO EVASION** - Strictly forbidden to:
+   - Rename tests to `.bak`
+   - Use `@Ignore` or `@Disabled` without a critical, ticketed reason
+   - Comment out failing logic or tests
+3. **REFACTOR** - Fix the root cause of the failure.
+4. **RE-VERIFY** - Run full checklist and automated scripts again.
 
 **No exceptions. ZERO tech debt means ZERO compromises.**
 
@@ -146,6 +149,18 @@ LazyColumn {
 }
 ```
 
+## 🤖 AUTOMATED QUALITY ENFORCEMENT
+
+Run these commands before every PR to objectively verify quality:
+
+| Check | Command | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **Test Health** | `find . -name "*.bak"` | Zero results |
+| **File Bloat** | `find . -name "*.kt" -exec wc -l {} + \| sort -rn \| head -n 1` | Max 300 lines |
+| **State Safety** | `grep -r ".value =" . \| grep "ViewModel"` | Zero results (use `.update {}`) |
+| **Android Leak** | `grep -r "import android." core/domain` | Zero results |
+| **Hardcoded UI** | `grep -r "text = \"" .` | Zero results (use `stringResource`) |
+
 ## 🎯 READY TO IMPLEMENT
 
-With this framework, [Phase X] will be implemented with ZERO tech debt.
+With this framework, [Phase X] will be implemented with ZERO tech debt and AUTOMATED verification.

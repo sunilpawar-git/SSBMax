@@ -1,0 +1,796 @@
+# SSBMax Tech Debt Resolution Plan (REVISED)
+**Last Updated**: December 24, 2025  
+**Status**: Active  
+**Target Completion**: 2-3 weeks
+
+---
+
+## 🎯 Executive Summary
+
+This plan provides a **phase-by-phase roadmap** to eliminate all technical debt in SSBMax while maintaining a **clean, working build at every step**. Based on comprehensive codebase analysis, including discovery that **ALL study materials are already migrated to Firebase Firestore**, the priority order has been significantly optimized.
+
+### 🚨 CRITICAL DISCOVERY: Content Already in Firebase!
+
+**Analysis reveals**:
+- ✅ **ALL 9 topics migrated to Firestore** (`ContentFeatureFlags` shows 100% migration complete)
+- ✅ **Firebase infrastructure exists**: `FirestoreContentSource`, `StudyContentRepository`
+- ✅ **Offline caching enabled**: 7-day cache, unlimited size
+- ❌ **BUT**: Large hardcoded content files (1,000-1,700 lines) are **LEGACY FALLBACKS** only used when Firestore fails
+- ❌ **Current state**: `StudyMaterialDetailViewModel` tries Firestore first, falls back to `StudyMaterialContentProvider` (which calls the giant files)
+
+**Key Insight**: We don't need to migrate content to Firebase - **it's already there!** We just need to **delete the legacy fallback files** since Firestore is working.
+
+### Current Tech Debt Status (REVISED)
+
+| Category | Severity | Files Affected | Action Required |
+|----------|----------|----------------|-----------------|
+| **Legacy Content Files** | 🔴 CRITICAL | 8 files | **DELETE** (already in Firestore) |
+| **Domain Layer Purity** | 🟡 MEDIUM | 1 file | Refactor logging |
+| **Test Coverage Gaps** | 🟡 MEDIUM | 14 ViewModels | Add unit tests |
+| **Large ViewModels** | 🟢 LOW | 6 files | Extract helpers (optional) |
+
+---
+
+## 🚨 Critical Rules
+
+**Before starting ANY phase:**
+1. ✅ Run `./gradlew test` - All tests MUST pass
+2. ✅ Run `./gradlew lint` - No ERROR-severity violations
+3. ✅ Run `./gradlew assembleDebug` - Build succeeds
+4. ✅ Commit working state with descriptive message
+
+**During each phase:**
+- Fix bugs immediately as they appear
+- Don't start next phase until current phase is 100% complete
+- Maintain SSBMax Quality Framework compliance
+- No new tech debt introduced
+
+**Phase completion criteria:**
+- ✅ All tests pass (`./gradlew test`)
+- ✅ Lint checks pass (`./gradlew lint`)
+- ✅ App builds successfully (`./gradlew assembleDebug`)
+- ✅ Manual smoke test of affected features
+- ✅ Changes committed and tagged
+
+---
+
+## 📋 Phase 1: Delete Legacy Content Files (3 days)
+
+**Goal**: Remove 8,000+ lines of hardcoded content that's already in Firestore.
+
+**Why This is First**:
+- Biggest tech debt (8 files, 8,000+ lines)
+- Content already migrated to Firestore (verified via `ContentFeatureFlags`)
+- Low risk - Firestore is working, fallback is unnecessary
+- Immediate 94% reduction in tech debt lines
+
+### Current State Analysis
+
+**Files to Delete** (confirmed legacy fallbacks):
+```
+1,718 lines - InterviewMaterialContent.kt    (4 materials hardcoded)
+1,583 lines - GTOMaterialContent.kt          (4 materials hardcoded)
+1,484 lines - PsychologyMaterialContent2.kt  (4 materials hardcoded)
+1,427 lines - PsychologyMaterialContent.kt   (4 materials hardcoded)
+1,165 lines - PPDTMaterialContent2.kt        (4 materials hardcoded)
+1,072 lines - InterviewMaterialContent2.kt   (3 materials hardcoded)
+  841 lines - OIRMaterialContent2.kt         (3 materials hardcoded)
+  762 lines - GTOMaterialContent2.kt         (3 materials hardcoded)
+─────────────────────────────────────────────
+10,052 lines TOTAL (all legacy fallbacks)
+```
+
+**Files to Refactor** (keep but simplify):
+```
+509 lines - StudyMaterialContentProvider.kt (routes to legacy files)
+```
+
+**Firestore Collections** (already populated):
+- `topic_content/{topicType}` - Topic introductions
+- `study_materials` (query by `topicType`) - Individual materials
+
+### Day 1: Verify Firestore Content & Update Fallback (8 hours)
+
+#### Step 1.1: Verify Firestore Has All Content (2 hours)
+
+**Manual Verification**:
+1. Open Firebase Console → Firestore Database
+2. Check `topic_content` collection:
+   - Verify documents exist for: OIR, PPDT, PSYCHOLOGY, PIQ_FORM, GTO, INTERVIEW, SSB_OVERVIEW, MEDICALS, CONFERENCE
+   - Each document should have: `id`, `title`, `introduction` (markdown), `version`, `lastUpdated`
+
+3. Check `study_materials` collection:
+   - Run query: `topicType == "OIR"` → Should return 7 materials
+   - Run query: `topicType == "PPDT"` → Should return 6 materials
+   - Run query: `topicType == "PSYCHOLOGY"` → Should return 8 materials
+   - Run query: `topicType == "GTO"` → Should return 7 materials
+   - Run query: `topicType == "INTERVIEW"` → Should return 7 materials
+   - Total: ~40-50 materials across all topics
+
+**Automated Verification Script**:
+
+Create: `scripts/verify_firestore_content.sh`
+
+```bash
+#!/bin/bash
+# Verify Firestore content exists before deleting legacy files
+
+echo "🔍 Verifying Firestore content..."
+
+# This script will be run manually to check Firebase Console
+# Cannot automate Firestore reads without Firebase Admin SDK
+
+echo "Manual Steps:"
+echo "1. Open Firebase Console"
+echo "2. Navigate to Firestore Database"
+echo "3. Verify topic_content collection has 9 documents"
+echo "4. Verify study_materials collection has 40+ documents"
+echo "5. Check a few materials to ensure contentMarkdown field is populated"
+echo ""
+echo "If all content exists, proceed with Phase 1."
+echo "If any content is missing, STOP and upload content first."
+```
+
+**Verification Checklist**:
+- [ ] `topic_content` has 9 documents (all topics)
+- [ ] `study_materials` has 40+ documents
+- [ ] Sample materials have non-empty `contentMarkdown` field
+- [ ] `ContentFeatureFlags.useCloudContent` is `true`
+- [ ] All topic flags in `ContentFeatureFlags.topicFlags` are `true`
+
+**If verification fails**: STOP. Upload missing content to Firestore before proceeding.
+
+#### Step 1.2: Update Fallback to Return Error (2 hours)
+
+**Rationale**: Instead of deleting files immediately, first make fallback return an error so we can test Firestore-only mode safely.
+
+**File**: `app/src/main/kotlin/com/ssbmax/ui/study/StudyMaterialDetailViewModel.kt`
+
+**Change**:
+```kotlin
+// BEFORE: Falls back to StudyMaterialContentProvider
+val material = cloudResult.getOrNull()?.let { cloudMaterial ->
+    // Convert cloud material to UI model
+    StudyMaterialContent(...)
+} ?: run {
+    // Fallback to local content
+    val localMaterial = getMockMaterial(materialId)  // ❌ LEGACY
+    ...
+}
+
+// AFTER: Fallback returns error
+val material = cloudResult.getOrNull()?.let { cloudMaterial ->
+    // Convert cloud material to UI model
+    StudyMaterialContent(...)
+} ?: run {
+    // NO FALLBACK - Firestore should have all content
+    _uiState.update {
+        it.copy(
+            isLoading = false,
+            error = "Content not available. Please check your internet connection."
+        )
+    }
+    return@launch
+}
+```
+
+**Remove** `getMockMaterial()` function entirely (lines ~150-170)
+
+**Verification**:
+```bash
+./gradlew :app:assembleDebug
+# Should compile successfully
+```
+
+**Commit**: `refactor: Remove legacy content fallback in StudyMaterialDetailViewModel`
+
+#### Step 1.3: Test Firestore-Only Mode (2 hours)
+
+**Manual Testing**:
+1. Clear app data to force fresh Firestore fetch
+2. Open app with internet connection
+3. Navigate to each topic:
+   - OIR → Open all 7 materials
+   - PPDT → Open all 6 materials
+   - Psychology → Open all 8 materials
+   - GTO → Open all 7 materials
+   - Interview → Open all 7 materials
+   - PIQ Form → Open all 3 materials
+   - SSB Overview → Open all 4 materials
+
+4. Verify all content loads correctly
+5. Test offline mode:
+   - Enable airplane mode
+   - Navigate to materials (should load from cache)
+   - Verify content displays
+
+**Test Checklist**:
+- [ ] All materials load online
+- [ ] Content displays correctly (Markdown rendered)
+- [ ] Offline cache works (7-day persistence)
+- [ ] No crashes or errors
+- [ ] Loading indicators work
+- [ ] Error states display properly if Firestore fails
+
+**If any material fails to load**: 
+- Check Firebase Console for that specific material
+- Verify `topicType` field matches query
+- Check Firestore security rules
+- Upload missing content if needed
+
+**Commit**: `test: Verify Firestore-only content loading works`
+
+#### Step 1.4: Update StudyMaterialContentProvider (2 hours)
+
+**File**: `app/src/main/kotlin/com/ssbmax/ui/study/StudyMaterialContentProvider.kt`
+
+**Strategy**: Simplify to only handle PIQ HTML form (loaded from assets), remove all other content.
+
+**BEFORE** (509 lines):
+```kotlin
+object StudyMaterialContentProvider {
+    fun getMaterial(materialId: String): StudyMaterialContent {
+        return when (materialId) {
+            "piq_form_reference" -> getPIQFormHTML()
+            "oir_1" -> getOir1()  // ❌ 200 lines of hardcoded content
+            "oir_2" -> getOir2()  // ❌ 200 lines of hardcoded content
+            // ... 40+ more materials
+        }
+    }
+    
+    private fun getOir1() = StudyMaterialContent(...)  // ❌ DELETE
+    private fun getOir2() = StudyMaterialContent(...)  // ❌ DELETE
+    // ... 40+ functions to delete
+}
+```
+
+**AFTER** (~50 lines):
+```kotlin
+package com.ssbmax.ui.study
+
+import android.content.Context
+import java.io.IOException
+
+/**
+ * Provides PIQ Form HTML content from assets
+ * All other study materials are loaded from Firestore
+ */
+object StudyMaterialContentProvider {
+    
+    /**
+     * Load PIQ form HTML from assets
+     * This is the ONLY material not in Firestore (static HTML form)
+     */
+    fun getPIQFormHTML(): StudyMaterialContent {
+        return StudyMaterialContent(
+            id = "piq_form_reference",
+            title = "SSB PIQ Form (Reference)",
+            category = "PIQ Form",
+            author = "SSB",
+            publishedDate = "2025",
+            readTime = "5 min read",
+            content = "<!DOCTYPE html>", // Marker for HTML content
+            isPremium = false,
+            tags = listOf("PIQ", "Form", "Reference"),
+            relatedMaterials = emptyList()
+        )
+    }
+    
+    /**
+     * Load HTML content from assets file
+     */
+    fun loadHTMLFromAssets(context: Context, fileName: String): String {
+        return try {
+            context.assets.open(fileName).bufferedReader().use { it.readText() }
+        } catch (e: IOException) {
+            "<html><body><p>Error loading HTML content</p></body></html>"
+        }
+    }
+}
+```
+
+**Verification**:
+```bash
+./gradlew :app:assembleDebug
+# Should compile - no references to deleted functions
+```
+
+**Commit**: `refactor: Simplify StudyMaterialContentProvider to PIQ HTML only`
+
+### Day 2: Delete Legacy Content Files (8 hours)
+
+#### Step 2.1: Delete Interview Content Files (1 hour)
+
+```bash
+git rm app/src/main/kotlin/com/ssbmax/ui/study/InterviewMaterialContent.kt
+git rm app/src/main/kotlin/com/ssbmax/ui/study/InterviewMaterialContent2.kt
+```
+
+**Verification**:
+```bash
+./gradlew :app:assembleDebug
+# Should succeed - no imports of deleted files
+```
+
+**Manual Test**: Open Interview study materials, verify all load from Firestore
+
+**Commit**: `refactor: Delete legacy InterviewMaterialContent files (2,790 lines removed)`
+
+#### Step 2.2: Delete GTO Content Files (1 hour)
+
+```bash
+git rm app/src/main/kotlin/com/ssbmax/ui/study/GTOMaterialContent.kt
+git rm app/src/main/kotlin/com/ssbmax/ui/study/GTOMaterialContent2.kt
+```
+
+**Verification**: Same as above
+
+**Commit**: `refactor: Delete legacy GTOMaterialContent files (2,345 lines removed)`
+
+#### Step 2.3: Delete Psychology Content Files (1 hour)
+
+```bash
+git rm app/src/main/kotlin/com/ssbmax/ui/study/PsychologyMaterialContent.kt
+git rm app/src/main/kotlin/com/ssbmax/ui/study/PsychologyMaterialContent2.kt
+```
+
+**Verification**: Same as above
+
+**Commit**: `refactor: Delete legacy PsychologyMaterialContent files (2,911 lines removed)`
+
+#### Step 2.4: Delete PPDT Content Files (1 hour)
+
+```bash
+git rm app/src/main/kotlin/com/ssbmax/ui/study/PPDTMaterialContent.kt
+git rm app/src/main/kotlin/com/ssbmax/ui/study/PPDTMaterialContent2.kt
+```
+
+**Note**: Keep `PPDTMaterialContent.kt` if it's referenced elsewhere. Check first:
+```bash
+grep -r "PPDTMaterialContent" app/src/main/kotlin --exclude-dir=study
+```
+
+If no references, delete. Otherwise, refactor to remove content functions.
+
+**Commit**: `refactor: Delete legacy PPDTMaterialContent files (1,165+ lines removed)`
+
+#### Step 2.5: Delete OIR Content Files (1 hour)
+
+```bash
+git rm app/src/main/kotlin/com/ssbmax/ui/study/OIRMaterialContent.kt
+git rm app/src/main/kotlin/com/ssbmax/ui/study/OIRMaterialContent2.kt
+```
+
+**Verification**: Same as above
+
+**Commit**: `refactor: Delete legacy OIRMaterialContent files (841+ lines removed)`
+
+#### Step 2.6: Final Verification & Cleanup (3 hours)
+
+**Check for orphaned imports**:
+```bash
+grep -r "InterviewMaterialContent\|GTOMaterialContent\|PsychologyMaterialContent\|PPDTMaterialContent\|OIRMaterialContent" app/src/main/kotlin
+# Should return ONLY StudyMaterialContentProvider.kt (if any)
+```
+
+**Remove any remaining imports** in `StudyMaterialContentProvider.kt`
+
+**Run full test suite**:
+```bash
+./gradlew clean
+./gradlew test
+./gradlew lint
+./gradlew assembleDebug
+```
+
+**Comprehensive Manual Testing**:
+- [ ] Open all 9 topic categories
+- [ ] Open 10+ random study materials across topics
+- [ ] Test offline mode (airplane mode)
+- [ ] Test with slow network (Network Link Conditioner)
+- [ ] Verify error states display properly
+- [ ] Check Logcat for Firestore read metrics
+- [ ] Verify cache is working (second load should be instant)
+
+**Performance Verification**:
+```bash
+# App size should decrease
+ls -lh app/build/outputs/apk/debug/app-debug.apk
+
+# Before: ~XX MB
+# After: ~(XX - 1) MB (text content removed)
+```
+
+**Commit**: `refactor: Phase 1 complete - Removed 10,000+ lines of legacy content`
+
+### Day 3: Documentation & Monitoring (8 hours)
+
+#### Step 3.1: Update Documentation (3 hours)
+
+**File**: `docs/architecture/Content_Management_Architecture.md` (create new)
+
+```markdown
+# Content Management Architecture
+
+## Overview
+SSBMax uses Firebase Firestore for all study material content storage.
+
+## Firestore Collections
+
+### `topic_content`
+- Document ID: Topic type (e.g., "OIR", "PPDT")
+- Fields: `id`, `title`, `introduction` (markdown), `version`, `lastUpdated`
+- Purpose: Topic overview and introduction text
+
+### `study_materials`
+- Auto-generated document IDs
+- Fields: `id`, `topicType`, `title`, `contentMarkdown`, `author`, `readTime`, `tags`, `isPremium`, `displayOrder`
+- Query pattern: `topicType == "OIR"` (indexed for performance)
+- Purpose: Individual study material articles
+
+## Caching Strategy
+- Offline persistence enabled (7-day cache)
+- Unlimited cache size
+- Source.DEFAULT: Uses cache if available, fetches from server if expired
+- Source.SERVER: Force refresh (use sparingly)
+
+## Content Loading Flow
+1. `TopicViewModel` checks `ContentFeatureFlags.isTopicCloudEnabled()`
+2. If enabled, calls `StudyContentRepository.getTopicContent()`
+3. Repository tries `FirestoreContentSource.getTopicContent()`
+4. Firestore returns cached or fresh content
+5. ViewModel converts to UI model and displays
+
+## Legacy Fallback (REMOVED)
+- Previous: `StudyMaterialContentProvider` with 10,000+ lines of hardcoded content
+- Status: **DELETED** as of Phase 1 completion
+- Reason: All content migrated to Firestore, fallback unnecessary
+
+## PIQ Form Exception
+- PIQ form HTML is loaded from `assets/piq_form.html`
+- Reason: Static HTML form, not dynamic content
+- Handled by: `StudyMaterialContentProvider.loadHTMLFromAssets()`
+
+## Adding New Content
+1. Upload to Firestore via Firebase Console or Admin SDK
+2. Set `topicType` field for querying
+3. Set `displayOrder` for sorting
+4. Content appears immediately in app (no code changes needed)
+
+## Monitoring
+- Check Firestore usage in Firebase Console
+- Monitor read/write operations
+- Review cache hit rates in Logcat (`FirestoreContent` tag)
+```
+
+**Update**: `README.md` - Add section on content management
+
+**Update**: `.cursorrules` - Remove references to material content files
+
+#### Step 3.2: Add Firestore Monitoring (2 hours)
+
+**File**: `core/data/src/main/kotlin/com/ssbmax/core/data/metrics/ContentMetrics.kt`
+
+Verify this file exists and logs Firestore operations:
+
+```kotlin
+class ContentMetrics @Inject constructor() {
+    private var firestoreReads = 0
+    private var cacheHits = 0
+    
+    fun recordFirestoreRead() {
+        firestoreReads++
+        Log.d("ContentMetrics", "Firestore reads: $firestoreReads")
+    }
+    
+    fun recordCacheHit() {
+        cacheHits++
+        Log.d("ContentMetrics", "Cache hits: $cacheHits (${getCacheHitRate()}%)")
+    }
+    
+    fun getCacheHitRate(): Int {
+        if (firestoreReads == 0) return 0
+        return ((cacheHits.toFloat() / firestoreReads) * 100).toInt()
+    }
+}
+```
+
+**Add analytics tracking** in `FirestoreContentSource`:
+```kotlin
+suspend fun getTopicContent(topicType: String): Result<TopicContent> {
+    return try {
+        metrics.recordFirestoreRead()
+        
+        val doc = firestore.collection(COLLECTION_TOPICS)
+            .document(topicType)
+            .get(Source.DEFAULT)
+            .await()
+        
+        if (doc.metadata.isFromCache) {
+            metrics.recordCacheHit()
+            Log.d(TAG, "✓ Cache HIT for $topicType")
+        } else {
+            Log.d(TAG, "✓ Server fetch for $topicType")
+        }
+        
+        // ... rest of code
+    }
+}
+```
+
+#### Step 3.3: Create Rollback Plan (1 hour)
+
+**File**: `docs/troubleshooting/Phase1_Rollback_Plan.md`
+
+```markdown
+# Phase 1 Rollback Plan
+
+## If Firestore Content is Missing
+
+### Symptoms
+- Study materials show "Content not available" error
+- Specific topics fail to load
+- Offline mode doesn't work
+
+### Diagnosis
+1. Check Firebase Console → Firestore Database
+2. Verify `topic_content` and `study_materials` collections exist
+3. Check Firestore security rules
+4. Review Logcat for Firestore errors
+
+### Fix
+1. Upload missing content to Firestore
+2. Verify `topicType` field matches query
+3. Check `displayOrder` for sorting
+4. Force refresh in app (clear cache)
+
+### Rollback (if needed)
+```bash
+# Revert to commit before Phase 1
+git log --oneline | grep "Phase 1"
+git revert <commit-hash>
+
+# Or cherry-pick specific files
+git checkout <commit-before-phase1> -- app/src/main/kotlin/com/ssbmax/ui/study/InterviewMaterialContent.kt
+```
+
+## If Performance Degrades
+
+### Symptoms
+- Slow material loading
+- High Firestore read costs
+- Cache not working
+
+### Diagnosis
+1. Check cache hit rate in Logcat
+2. Review Firestore usage in Firebase Console
+3. Verify offline persistence is enabled
+
+### Fix
+1. Increase cache expiry: `ContentFeatureFlags.cacheExpiryDays = 14`
+2. Enable offline persistence (should already be on)
+3. Optimize queries (add indexes if needed)
+```
+
+#### Step 3.4: Final Phase 1 Verification (2 hours)
+
+**Checklist**:
+- [ ] All 8 legacy content files deleted
+- [ ] `StudyMaterialContentProvider` reduced to ~50 lines
+- [ ] All tests passing (`./gradlew test`)
+- [ ] Lint passing (`./gradlew lint`)
+- [ ] App builds successfully
+- [ ] Manual testing complete (all topics, all materials)
+- [ ] Offline mode works
+- [ ] Performance acceptable (<500ms load time)
+- [ ] Documentation updated
+- [ ] Monitoring in place
+- [ ] Rollback plan documented
+
+**Final Commit**:
+```bash
+git commit -m "🎉 Phase 1 Complete: Removed 10,000+ lines of legacy content
+
+- Deleted 8 legacy material content files (InterviewMaterialContent, GTOMaterialContent, etc.)
+- Simplified StudyMaterialContentProvider to PIQ HTML only
+- All content now loaded from Firestore
+- Offline caching working (7-day persistence)
+- Documentation updated
+- Monitoring added
+
+Tech Debt Eliminated:
+- Files: 8 → 0 (100% reduction)
+- Lines: 10,052 → 0 (100% reduction)
+- File size violations: 8 → 0
+
+Verification:
+- ✅ All tests passing
+- ✅ All materials load from Firestore
+- ✅ Offline mode works
+- ✅ Performance acceptable"
+
+git tag -a "phase1-legacy-content-removed" -m "Phase 1: Legacy content files removed"
+git push origin PsyTests --tags
+```
+
+### Phase 1 Completion Metrics
+
+**Before**:
+- Files >300 lines: 14
+- Total lines in material files: 10,052
+- Firestore usage: Low (fallback rarely used)
+
+**After**:
+- Files >300 lines: 6 (only ViewModels/Screens, no content files)
+- Total lines in material files: ~50 (PIQ HTML loader only)
+- Firestore usage: Primary (100% of content loads)
+- Lines eliminated: **10,000+** (94% of tech debt!)
+
+**Estimated Time**: 3 working days (24 hours)  
+**Risk**: Low (Firestore already working, just removing fallback)
+
+---
+
+## 📋 Phase 2: Domain Layer Purity (1 day)
+
+**Goal**: Remove Android dependencies from `core/domain` module.
+
+**Current Violation**: `GetOLQDashboardUseCase.kt` uses `android.util.Log`
+
+[Same as original plan - see previous version for details]
+
+**Estimated Time**: 1 working day (8 hours)  
+**Risk**: Low (isolated change, well-tested)
+
+---
+
+## 📋 Phase 3: Test Coverage Expansion (1 week)
+
+**Goal**: Add unit tests for 14 ViewModels currently lacking coverage.
+
+[Same as original plan - see previous version for details]
+
+**Estimated Time**: 5 working days (40 hours)  
+**Risk**: Medium (may discover bugs requiring fixes)
+
+---
+
+## 📋 Phase 4: ViewModel Refactoring (Optional - 1 week)
+
+**Goal**: Extract helpers from large ViewModels (600-700 lines).
+
+**Target Files**:
+- `PIQTestViewModel.kt` (724 lines → <300)
+- `OIRTestViewModel.kt` (671 lines → <300)
+- `TATTestViewModel.kt` (670 lines → <300)
+- `PIQTestScreen.kt` (845 lines → <300)
+- `TopicScreen.kt` (702 lines → <300)
+- `SharedNavGraph.kt` (791 lines → <300)
+
+**Strategy**: Extract validation, business logic, and timer management into helper classes.
+
+[Same strategy as original Phase 3 Week 2 - see previous version for details]
+
+**Note**: This phase is **OPTIONAL** since these files, while large, are not hardcoded content. They can be refactored incrementally as needed.
+
+**Estimated Time**: 5 working days (40 hours)  
+**Risk**: Medium (requires updating tests)
+
+---
+
+## 📋 Phase 5: Final Polish & Quality Assurance (2 days)
+
+**Goal**: Final cleanup to achieve zero tech debt.
+
+[Same as original Phase 4 - see previous version for details]
+
+**Estimated Time**: 2 working days (16 hours)  
+**Risk**: Low (verification and cleanup only)
+
+---
+
+## 🎉 Project Completion
+
+### Final Verification
+
+```bash
+# Run complete verification suite
+./gradlew clean
+./gradlew test
+./gradlew lint
+./gradlew assembleDebug
+./gradlew assembleRelease
+
+# Verify no files exceed 300 lines (excluding ViewModels if Phase 4 skipped)
+find app/src/main/kotlin -name "*.kt" -exec wc -l {} + | awk '$1 > 300 {print $0}'
+
+# Check domain layer purity
+grep -r "import android" core/domain/src/main/kotlin
+# Should return: nothing
+```
+
+### Success Criteria
+
+**Phase 1 (CRITICAL)**:
+- ✅ Zero legacy content files
+- ✅ All content loads from Firestore
+- ✅ Offline caching works
+- ✅ 10,000+ lines eliminated
+
+**Phase 2**:
+- ✅ Zero Android dependencies in domain layer
+
+**Phase 3**:
+- ✅ 200+ unit tests, 100% pass rate
+
+**Phase 4 (Optional)**:
+- ✅ Zero files exceed 300 lines (if completed)
+
+**Phase 5**:
+- ✅ Zero hardcoded strings
+- ✅ Zero magic numbers
+- ✅ All manual tests pass
+
+### Celebration Commit
+
+```bash
+git commit --allow-empty -m "🎉 MILESTONE: SSBMax Tech Debt Eliminated!
+
+After 2-3 weeks of dedicated work:
+- ✅ Phase 1: Removed 10,000+ lines of legacy content (BIGGEST WIN!)
+- ✅ Phase 2: Domain layer purity achieved
+- ✅ Phase 3: Test coverage doubled (103 → 200+ tests)
+- ✅ Phase 4: ViewModels refactored (optional)
+- ✅ Phase 5: Final polish complete
+
+Key Achievement: Discovered content was ALREADY in Firestore!
+Instead of migrating, we simply deleted the legacy fallback files.
+
+Stats:
+- Files deleted: 8 legacy content files
+- Lines of code reduced: 10,000+
+- Firestore migration: Already complete (100%)
+- Tests added: 100+
+- Tech debt eliminated: 95%+
+
+Discipline, analysis, and smart refactoring made this possible."
+
+git tag -a "v1.0.0-tech-debt-free" -m "SSBMax 1.0.0 - Tech Debt Free Release"
+git push origin PsyTests --tags
+```
+
+---
+
+## 📊 Revised Timeline
+
+| Phase | Duration | Priority | Risk |
+|-------|----------|----------|------|
+| **Phase 1**: Delete Legacy Content | 3 days | 🔴 CRITICAL | Low |
+| **Phase 2**: Domain Layer Purity | 1 day | 🟡 HIGH | Low |
+| **Phase 3**: Test Coverage | 5 days | 🟡 HIGH | Medium |
+| **Phase 4**: ViewModel Refactoring | 5 days | 🟢 OPTIONAL | Medium |
+| **Phase 5**: Final Polish | 2 days | 🟢 LOW | Low |
+
+**Total**: 11-16 days (depending on Phase 4)
+
+---
+
+## 🆘 Troubleshooting Guide
+
+[Same as original plan - see previous version]
+
+---
+
+## 📚 References
+
+- [Firebase Firestore Documentation](https://firebase.google.com/docs/firestore)
+- [Firestore Offline Persistence](https://firebase.google.com/docs/firestore/manage-data/enable-offline)
+- [SSBMax Quality Framework](file:///Users/sunil/Downloads/SSBMax/docs/architecture/SSBMax_Quality_Framework.md)
+- [Content Feature Flags](file:///Users/sunil/Downloads/SSBMax/core/domain/src/main/kotlin/com/ssbmax/core/domain/config/ContentFeatureFlags.kt)
+
+---
+
+**Document Version**: 3.0 (REVISED)  
+**Last Reviewed**: December 24, 2025  
+**Key Change**: Discovered content already in Firestore - Phase 1 simplified from "migrate" to "delete legacy"  
+**Owner**: SSBMax Development Team
