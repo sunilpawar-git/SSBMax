@@ -1,6 +1,5 @@
 package com.ssbmax.core.domain.usecase.dashboard
 
-import android.util.Log
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.gto.GTOResult
 import com.ssbmax.core.domain.model.gto.GTOTestType
@@ -14,11 +13,11 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.model.interview.InterviewResult
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.OLQCategory
+import com.ssbmax.core.domain.util.NoOpLogger
 import java.time.Instant
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -38,19 +37,16 @@ class GetOLQDashboardUseCaseTest {
 
     @Before
     fun setup() {
-        // Mock android.util.Log for unit tests (domain layer should not use this - see tech debt Phase 2)
-        mockkStatic(Log::class)
-        every { Log.d(any<String>(), any<String>()) } returns 0
-        every { Log.w(any<String>(), any<String>()) } returns 0
-        every { Log.e(any<String>(), any<String>()) } returns 0
-        
         submissionRepository = mockk(relaxed = true)
         gtoRepository = mockk(relaxed = true)
         interviewRepository = mockk(relaxed = true)
+        
+        // Use NoOpLogger for testing (domain layer is now platform-independent)
         getOLQDashboardUseCase = GetOLQDashboardUseCase(
             submissionRepository,
             gtoRepository,
-            interviewRepository
+            interviewRepository,
+            NoOpLogger()
         )
     }
 

@@ -1,6 +1,5 @@
 package com.ssbmax.core.domain.usecase.dashboard
 
-import android.util.Log
 import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
@@ -9,6 +8,7 @@ import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.util.DomainLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -52,7 +52,8 @@ data class CacheMetadata(
 class GetOLQDashboardUseCase @Inject constructor(
     private val submissionRepository: SubmissionRepository,
     private val gtoRepository: GTORepository,
-    private val interviewRepository: InterviewRepository
+    private val interviewRepository: InterviewRepository,
+    private val logger: DomainLogger
 ) {
     /**
      * Cached dashboard entry with timestamp for TTL validation
@@ -84,7 +85,7 @@ class GetOLQDashboardUseCase @Inject constructor(
         val startTime = System.currentTimeMillis()
         var cacheHit = false
         
-        Log.d(TAG, "📍 Fetching dashboard for user: $userId (forceRefresh=$forceRefresh)")
+        logger.d(TAG, "📍 Fetching dashboard for user: $userId (forceRefresh=$forceRefresh)")
 
         return try {
             cacheMutex.withLock {
@@ -97,8 +98,8 @@ class GetOLQDashboardUseCase @Inject constructor(
                     // Cache hit - return cached data
                     cacheHit = true
                     val loadTime = System.currentTimeMillis() - startTime
-                    Log.d(TAG, "✅ Cache hit - returning cached data (load time: ${loadTime}ms)")
-                    Log.d(TAG, "   OIR result in cache: ${cachedData.data.dashboard.phase1Results.oirResult?.percentageScore}")
+                    logger.d(TAG, "✅ Cache hit - returning cached data (load time: ${loadTime}ms)")
+                    logger.d(TAG, "   OIR result in cache: ${cachedData.data.dashboard.phase1Results.oirResult?.percentageScore}")
 
                     // Update cache metadata
                     val dataWithMetadata = cachedData.data.copy(
@@ -113,10 +114,10 @@ class GetOLQDashboardUseCase @Inject constructor(
                 }
 
                 // Cache miss or expired - fetch fresh data
-                Log.d(TAG, "❌ Cache miss - fetching from Firestore")
+                logger.d(TAG, "❌ Cache miss - fetching from Firestore")
                 val freshData = fetchDashboardData(userId)
                 val loadTime = System.currentTimeMillis() - startTime
-                Log.d(TAG, "   Fetch completed in ${loadTime}ms")
+                logger.d(TAG, "   Fetch completed in ${loadTime}ms")
 
                 // Update cache
                 cache[userId] = CachedDashboard(
@@ -133,7 +134,7 @@ class GetOLQDashboardUseCase @Inject constructor(
                     )
                 )
                 
-                Log.d(TAG, "✅ Dashboard data ready (OIR score: ${dataWithMetadata.dashboard.phase1Results.oirResult?.percentageScore})")
+                logger.d(TAG, "✅ Dashboard data ready (OIR score: ${dataWithMetadata.dashboard.phase1Results.oirResult?.percentageScore})")
 
                 Result.success(dataWithMetadata)
             }
@@ -150,7 +151,7 @@ class GetOLQDashboardUseCase @Inject constructor(
         cacheMutex.withLock {
             val hadCache = cache.containsKey(userId)
             cache.remove(userId)
-            Log.d(TAG, "🗑️ Cache invalidated for user: $userId (had cache: $hadCache)")
+            logger.d(TAG, "🗑️ Cache invalidated for user: $userId (had cache: $hadCache)")
         }
     }
 
@@ -160,13 +161,13 @@ class GetOLQDashboardUseCase @Inject constructor(
      */
     private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData {
         // Fetch OIR result
-        Log.d(TAG, "🔍 Fetching OIR submission for user: $userId")
+        logger.d(TAG, "🔍 Fetching OIR submission for user: $userId")
         val oirSubmission = submissionRepository.getLatestOIRSubmission(userId).getOrNull()
         val oirResult = oirSubmission?.testResult
-        Log.d(TAG, "   OIR submission found: ${oirSubmission != null}")
-        Log.d(TAG, "   OIR submission ID: ${oirSubmission?.id}")
-        Log.d(TAG, "   OIR testResult extracted: ${oirResult != null}")
-        Log.d(TAG, "   OIR percentageScore: ${oirResult?.percentageScore}")
+        logger.d(TAG, "   OIR submission found: ${oirSubmission != null}")
+        logger.d(TAG, "   OIR submission ID: ${oirSubmission?.id}")
+        logger.d(TAG, "   OIR testResult extracted: ${oirResult != null}")
+        logger.d(TAG, "   OIR percentageScore: ${oirResult?.percentageScore}")
         
         // Fetch PPDT submission and fetch OLQ result from ppdt_results collection (GTO pattern)
             // Important: Try fetching from ppdt_results first - the submission's analysisStatus may be stale
@@ -179,12 +180,12 @@ class GetOLQDashboardUseCase @Inject constructor(
             }
 
             // Fetch Phase 2 Psychology test results (OLQ-based)
-            Log.d(TAG, "🔍 Fetching Phase 2 Psychology test results...")
+            logger.d(TAG, "🔍 Fetching Phase 2 Psychology test results...")
             val tatResult = getLatestCompletedOLQResult(userId, "TAT")
             val watResult = getLatestCompletedOLQResult(userId, "WAT")
             val srtResult = getLatestCompletedOLQResult(userId, "SRT")
             val sdResult = getLatestCompletedOLQResult(userId, "SDT")
-            Log.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
+            logger.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
 
             // Fetch GTO results (all 8 tests)
             val gtoResults = mutableMapOf<GTOTestType, OLQAnalysisResult>()
@@ -271,12 +272,12 @@ class GetOLQDashboardUseCase @Inject constructor(
                 ) // Will be replaced by invoke() with actual metadata
             )
             
-            Log.d(TAG, "✅ Dashboard built successfully")
-            Log.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
-            Log.d(TAG, "   Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")
-            Log.d(TAG, "   SDT overallScore: ${finalData.dashboard.phase2Results.sdResult?.overallScore}")
-            Log.d(TAG, "   Average OLQ scores count: ${finalData.averageOLQScores.size}")
-            Log.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
+            logger.d(TAG, "✅ Dashboard built successfully")
+            logger.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
+            logger.d(TAG, "   Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")
+            logger.d(TAG, "   SDT overallScore: ${finalData.dashboard.phase2Results.sdResult?.overallScore}")
+            logger.d(TAG, "   Average OLQ scores count: ${finalData.averageOLQScores.size}")
+            logger.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
             
             return finalData
     }
@@ -295,7 +296,7 @@ class GetOLQDashboardUseCase @Inject constructor(
         userId: String,
         testType: String
     ): OLQAnalysisResult? {
-        Log.d(TAG, "🔍 Fetching $testType result for user: $userId")
+        logger.d(TAG, "🔍 Fetching $testType result for user: $userId")
         
         // 1. Get latest submission to find the submissionId
         val submissionId = when (testType) {
@@ -304,17 +305,17 @@ class GetOLQDashboardUseCase @Inject constructor(
             "SRT" -> submissionRepository.getLatestSRTSubmission(userId).getOrNull()?.id
             "SDT" -> submissionRepository.getLatestSDTSubmission(userId).getOrNull()?.id
             else -> {
-                Log.d(TAG, "   ❌ Unknown test type: $testType")
+                logger.d(TAG, "   ❌ Unknown test type: $testType")
                 return null
             }
         }
         
         if (submissionId == null) {
-            Log.d(TAG, "   ⚠️ No $testType submission found for user")
+            logger.d(TAG, "   ⚠️ No $testType submission found for user")
             return null
         }
         
-        Log.d(TAG, "   ✅ Found $testType submission ID: $submissionId")
+        logger.d(TAG, "   ✅ Found $testType submission ID: $submissionId")
 
         // 2. Fetch the result from psych_results (via repository)
         val result = when (testType) {
@@ -326,9 +327,9 @@ class GetOLQDashboardUseCase @Inject constructor(
         }
         
         if (result == null) {
-            Log.w(TAG, "   ⚠️ No $testType OLQ result found for submission: $submissionId")
+            logger.w(TAG, "   ⚠️ No $testType OLQ result found for submission: $submissionId")
         } else {
-            Log.d(TAG, "   ✅ Found $testType OLQ result with ${result.olqScores.size} OLQ scores, overallScore: ${result.overallScore}")
+            logger.d(TAG, "   ✅ Found $testType OLQ result with ${result.olqScores.size} OLQ scores, overallScore: ${result.overallScore}")
         }
         
         return result
