@@ -1,0 +1,214 @@
+package com.ssbmax.ui.tests.wat
+
+import app.cash.turbine.test
+import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.core.domain.model.interview.OLQScore
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.testing.BaseViewModelTest
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * Unit tests for WATSubmissionResultViewModel
+ * 
+ * Tests cover:
+ * - Submission loading success/failure
+ * - Real-time status updates via Flow
+ * - OLQ result parsing
+ * - Error handling
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class WATSubmissionResultViewModelTest : BaseViewModelTest() {
+
+    private lateinit var viewModel: WATSubmissionResultViewModel
+    private val mockSubmissionRepo = mockk<SubmissionRepository>(relaxed = true)
+
+    private val mockOLQResult = OLQAnalysisResult(
+        submissionId = "submission-wat-123",
+        testType = TestType.WAT,
+        olqScores = createMockOLQScores(),
+        overallScore = 78.0f,
+        overallRating = "Good",
+        strengths = listOf("Quick Thinking", "Positivity"),
+        weaknesses = listOf("Complexity"),
+        recommendations = listOf("Practice varied word associations"),
+        analyzedAt = System.currentTimeMillis(),
+        aiConfidence = 82
+    )
+
+    private val mockSubmission = WATSubmission(
+        id = "submission-wat-123",
+        userId = "user-123",
+        testId = "wat-standard",
+        responses = emptyList(),
+        totalTimeTakenMinutes = 15,
+        submittedAt = System.currentTimeMillis(),
+        analysisStatus = AnalysisStatus.COMPLETED,
+        olqResult = mockOLQResult
+    )
+
+    @Before
+    fun setup() {
+        viewModel = WATSubmissionResultViewModel(mockSubmissionRepo)
+    }
+
+    @Test
+    fun `loadSubmission success updates state with submission data`() = runTest {
+        val firestoreData = createFirestoreSubmissionMap(mockSubmission)
+        coEvery { mockSubmissionRepo.observeSubmission(any()) } returns flowOf(firestoreData)
+
+        viewModel.loadSubmission("submission-wat-123")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertNotNull(state.submission)
+            assertEquals("submission-wat-123", state.submission?.id)
+            assertEquals(AnalysisStatus.COMPLETED, state.submission?.analysisStatus)
+            assertNull(state.error)
+        }
+    }
+
+    @Test
+    fun `loadSubmission with null data shows error`() = runTest {
+        coEvery { mockSubmissionRepo.observeSubmission(any()) } returns flowOf(null)
+
+        viewModel.loadSubmission("submission-wat-123")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertNull(state.submission)
+            assertNotNull(state.error)
+            assertEquals("Submission not found", state.error)
+        }
+    }
+
+    @Test
+    fun `loadSubmission with pending analysis shows correct status`() = runTest {
+        val pendingSubmission = mockSubmission.copy(
+            analysisStatus = AnalysisStatus.PENDING_ANALYSIS,
+            olqResult = null
+        )
+        val firestoreData = createFirestoreSubmissionMap(pendingSubmission)
+        coEvery { mockSubmissionRepo.observeSubmission(any()) } returns flowOf(firestoreData)
+
+        viewModel.loadSubmission("submission-wat-123")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertNotNull(state.submission)
+            assertEquals(AnalysisStatus.PENDING_ANALYSIS, state.submission?.analysisStatus)
+            assertNull(state.submission?.olqResult)
+        }
+    }
+
+    @Test
+    fun `loadSubmission with analyzing status shows correct status`() = runTest {
+        val analyzingSubmission = mockSubmission.copy(
+            analysisStatus = AnalysisStatus.ANALYZING,
+            olqResult = null
+        )
+        val firestoreData = createFirestoreSubmissionMap(analyzingSubmission)
+        coEvery { mockSubmissionRepo.observeSubmission(any()) } returns flowOf(firestoreData)
+
+        viewModel.loadSubmission("submission-wat-123")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertNotNull(state.submission)
+            assertEquals(AnalysisStatus.ANALYZING, state.submission?.analysisStatus)
+            assertNull(state.submission?.olqResult)
+        }
+    }
+
+    @Test
+    fun `loadSubmission with completed status and OLQ result shows complete data`() = runTest {
+        val firestoreData = createFirestoreSubmissionMap(mockSubmission)
+        coEvery { mockSubmissionRepo.observeSubmission(any()) } returns flowOf(firestoreData)
+
+        viewModel.loadSubmission("submission-wat-123")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertNotNull(state.submission)
+            assertEquals(AnalysisStatus.COMPLETED, state.submission?.analysisStatus)
+            assertNotNull(state.submission?.olqResult)
+            assertEquals(78.0f, state.submission?.olqResult?.overallScore)
+            assertEquals("Good", state.submission?.olqResult?.overallRating)
+        }
+    }
+
+    @Test
+    fun `initial state is loading`() = runTest {
+        val state = viewModel.uiState.value
+        assertTrue(state.isLoading)
+        assertNull(state.submission)
+        assertNull(state.error)
+    }
+
+    private fun createMockOLQScores(): Map<OLQ, OLQScore> {
+        return OLQ.values().take(14).associateWith { olq ->
+            OLQScore(
+                score = (7..9).random(),
+                confidence = 82,
+                reasoning = "Good demonstration of $olq in word associations"
+            )
+        }
+    }
+
+    private fun createFirestoreSubmissionMap(submission: WATSubmission): Map<String, Any> {
+        val dataMap = mutableMapOf<String, Any>(
+            "id" to submission.id,
+            "userId" to submission.userId,
+            "testId" to submission.testId,
+            "totalTimeTakenMinutes" to submission.totalTimeTakenMinutes,
+            "submittedAt" to submission.submittedAt,
+            "analysisStatus" to submission.analysisStatus.name
+        )
+
+        submission.olqResult?.let { olqResult ->
+            val olqScoresMap = olqResult.olqScores.map { (olq, score) ->
+                olq.name to mapOf(
+                    "score" to score.score,
+                    "confidence" to score.confidence,
+                    "reasoning" to score.reasoning
+                )
+            }.toMap()
+
+            dataMap["olqResult"] = mapOf(
+                "submissionId" to olqResult.submissionId,
+                "testType" to olqResult.testType.name,
+                "olqScores" to olqScoresMap,
+                "overallScore" to olqResult.overallScore,
+                "overallRating" to olqResult.overallRating,
+                "strengths" to olqResult.strengths,
+                "weaknesses" to olqResult.weaknesses,
+                "recommendations" to olqResult.recommendations,
+                "analyzedAt" to olqResult.analyzedAt,
+                "aiConfidence" to olqResult.aiConfidence
+            )
+        }
+
+        return mapOf("data" to dataMap)
+    }
+}
+
