@@ -655,8 +655,8 @@ data class TATTestUiState(
     
     val canMoveToNextQuestion: Boolean
         get() = when (phase) {
-            TATPhase.WRITING -> currentStory.length >= (currentQuestion?.minCharacters ?: 150) &&
-                                currentStory.length <= (currentQuestion?.maxCharacters ?: 800)
+            TATPhase.WRITING -> currentStory.length >= (currentQuestion?.minCharacters ?: 50) &&
+                                currentStory.length <= (currentQuestion?.maxCharacters ?: 1500)
             TATPhase.REVIEW_CURRENT -> true
             else -> false
         }

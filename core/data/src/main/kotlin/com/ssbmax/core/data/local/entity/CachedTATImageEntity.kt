@@ -18,8 +18,8 @@ data class CachedTATImageEntity(
     val prompt: String = "Write a story about what you see in the picture",
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 150,
-    val maxCharacters: Int = 800,
+    val minCharacters: Int = 50,
+    val maxCharacters: Int = 1500,
     val category: String? = null, // Optional: theme category for analytics
     val difficulty: String? = null, // easy, medium, hard
     val batchId: String,

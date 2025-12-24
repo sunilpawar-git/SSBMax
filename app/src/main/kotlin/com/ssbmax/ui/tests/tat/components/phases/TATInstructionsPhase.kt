@@ -78,7 +78,7 @@ fun TATInstructionsPhase(onStart: () -> Unit) {
                     )
                     InstructionItem(
                         icon = Icons.Default.Description,
-                        text = "Write 150-800 characters per story"
+                        text = "Write 50-1500 characters per story"
                     )
                     InstructionItem(
                         icon = Icons.Default.Psychology,
