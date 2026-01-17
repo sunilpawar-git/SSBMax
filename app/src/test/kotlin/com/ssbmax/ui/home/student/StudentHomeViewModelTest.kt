@@ -35,6 +35,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     private lateinit var mockUnifiedResultRepository: UnifiedResultRepository
     private lateinit var mockGetOLQDashboard: GetOLQDashboardUseCase
     private lateinit var mockAnalyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager
+    private lateinit var mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository
 
     private lateinit var mockCurrentUserFlow: MutableStateFlow<SSBMaxUser?>
     
@@ -84,6 +85,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         mockUnifiedResultRepository = mockk()
         mockGetOLQDashboard = mockk()
         mockAnalyticsManager = mockk(relaxed = true)
+        mockNotificationRepository = mockk()
 
         mockCurrentUserFlow = MutableStateFlow(testUser)
         every { mockAuthRepository.currentUser } returns mockCurrentUserFlow
@@ -92,6 +94,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         coEvery { mockUnifiedResultRepository.getRecentResults(any(), any()) } returns flowOf(emptyList())
         coEvery { mockUnifiedResultRepository.getOverallOLQProfile(any()) } returns flowOf(emptyMap())
         coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+        coEvery { mockNotificationRepository.getUnreadCount(any()) } returns flowOf(0) // Default to 0 notifications
     }
     
     @After
@@ -118,7 +121,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -162,7 +166,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -188,7 +193,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -216,7 +222,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -244,7 +251,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -280,7 +288,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -306,7 +315,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -332,7 +342,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -365,7 +376,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -399,7 +411,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -434,7 +447,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -466,7 +480,8 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
         
@@ -478,13 +493,13 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     @Test
     fun `handles profile loading failure gracefully`() = runTest {
         // Given
-        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns 
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
             flowOf(Result.failure(Exception("Profile load error")))
-        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns 
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
             MutableStateFlow(phase1ProgressEmpty)
-        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns 
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
             MutableStateFlow(phase2ProgressEmpty)
-        
+
         // When
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
@@ -492,13 +507,113 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockTestProgressRepository,
             mockUnifiedResultRepository,
             mockGetOLQDashboard,
-            mockAnalyticsManager
+            mockAnalyticsManager,
+            mockNotificationRepository
         )
         advanceUntilIdle()
-        
+
         // Then - should not crash, still load progress
         val state = viewModel.uiState.value
         assertEquals("Should have test progress despite profile error", 0, state.testsCompleted)
+    }
+
+    // ==================== Notification Badge Tests (Phase 2) ====================
+
+    @Test
+    fun `notification count updates from repository flow`() = runTest {
+        // Given
+        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        val notificationFlow = MutableStateFlow(5)
+        coEvery { mockNotificationRepository.getUnreadCount(testUser.id) } returns notificationFlow
+
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+
+        // When
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository // NEW dependency
+        )
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Should load initial notification count", 5, viewModel.uiState.value.notificationCount)
+
+        // When notification count changes
+        notificationFlow.value = 10
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Should update notification count reactively", 10, viewModel.uiState.value.notificationCount)
+    }
+
+    @Test
+    fun `notification count is zero when user not logged in`() = runTest {
+        // Given
+        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        mockCurrentUserFlow.value = null // No logged-in user
+
+        coEvery { mockTestProgressRepository.getPhase1Progress(any()) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(any()) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+
+        // When
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Should have zero notifications when not logged in",
+            0, viewModel.uiState.value.notificationCount)
+    }
+
+    @Test
+    fun `notification repository failure defaults to zero count gracefully`() = runTest {
+        // Given
+        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        coEvery { mockNotificationRepository.getUnreadCount(any()) } returns kotlinx.coroutines.flow.flow {
+            throw Exception("Network error")
+        }
+
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+
+        // When
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Should gracefully default to 0 on repository failure",
+            0, viewModel.uiState.value.notificationCount)
     }
 }
 

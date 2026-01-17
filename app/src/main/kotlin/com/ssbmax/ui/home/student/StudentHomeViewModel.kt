@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -30,15 +31,17 @@ class StudentHomeViewModel @Inject constructor(
     private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository,
     private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val analyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager
+    private val analyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager,
+    private val notificationRepository: com.ssbmax.core.domain.repository.NotificationRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(StudentHomeUiState())
     val uiState: StateFlow<StudentHomeUiState> = _uiState.asStateFlow()
-    
+
     init {
         observeUserProfile()
         observeTestProgress()
+        observeNotifications()
         loadDashboard(forceRefresh = false) // Use cache on initial load
     }
     
@@ -151,7 +154,40 @@ class StudentHomeViewModel @Inject constructor(
             }
         }
     }
-    
+
+    /**
+     * Observe notification count from repository
+     * Updates UI state with real-time unread notification count
+     */
+    private fun observeNotifications() {
+        viewModelScope.launch {
+            try {
+                authRepository.currentUser.collectLatest { user ->
+                    if (user != null) {
+                        notificationRepository.getUnreadCount(user.id)
+                            .catch { error ->
+                                ErrorLogger.logWithUser(
+                                    throwable = error,
+                                    description = "Failed to load notification count",
+                                    userId = user.id
+                                )
+                                emit(0) // Graceful degradation
+                            }
+                            .collectLatest { count ->
+                                _uiState.update { it.copy(notificationCount = count) }
+                            }
+                    } else {
+                        // User logged out, reset count
+                        _uiState.update { it.copy(notificationCount = 0) }
+                    }
+                }
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Unexpected error in observeNotifications")
+                _uiState.update { it.copy(notificationCount = 0) }
+            }
+        }
+    }
+
     fun refreshProgress() {
         // Flows are already observing, just re-trigger by reinitializing observers
         observeUserProfile()

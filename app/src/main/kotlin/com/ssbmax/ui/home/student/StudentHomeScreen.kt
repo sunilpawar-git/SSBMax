@@ -83,12 +83,20 @@ fun StudentHomeScreen(
                 },
                 actions = {
                     IconButton(onClick = onNavigateToNotifications) {
-                        if (uiState.notificationCount > 0) {
-                            Badge {
-                                Text("${uiState.notificationCount}")
+                        BadgedBox(
+                            badge = {
+                                if (uiState.notificationCount > 0) {
+                                    Badge {
+                                        Text("${uiState.notificationCount}")
+                                    }
+                                }
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = stringResource(R.string.cd_notifications)
+                            )
                         }
-                        Icon(Icons.Default.Notifications, stringResource(R.string.cd_notifications))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
