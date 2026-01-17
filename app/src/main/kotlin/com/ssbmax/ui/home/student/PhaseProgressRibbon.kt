@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.Phase1Progress
 import com.ssbmax.core.domain.model.Phase2Progress
 import com.ssbmax.core.domain.model.TestPhase
@@ -44,11 +46,11 @@ fun PhaseProgressRibbon(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "🏆",
+                    text = stringResource(R.string.icon_trophy),
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    "SSB Preparation Progress",
+                    stringResource(R.string.phase_progress_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -110,13 +112,13 @@ private fun Phase1Card(
             // Phase Header
             Column {
                 Text(
-                    "PHASE 1",
+                    stringResource(R.string.phase_1_label),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = phaseColor
                 )
                 Text(
-                    "Screening",
+                    stringResource(R.string.phase_1_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -143,7 +145,7 @@ private fun Phase1Card(
                     )
                 } else {
                     Text(
-                        "No tests attempted yet",
+                        stringResource(R.string.progress_no_tests),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -156,7 +158,7 @@ private fun Phase1Card(
                 onClick = onPhaseClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("View All Tests", color = phaseColor)
+                Text(stringResource(R.string.progress_view_all), color = phaseColor)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     Icons.Default.ChevronRight,
@@ -199,13 +201,13 @@ private fun Phase2Card(
             // Phase Header
             Column {
                 Text(
-                    "PHASE 2",
+                    stringResource(R.string.phase_2_label),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = phaseColor
                 )
                 Text(
-                    "Assessment",
+                    stringResource(R.string.phase_2_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -241,7 +243,7 @@ private fun Phase2Card(
                     )
                 } else {
                     Text(
-                        "No tests attempted yet",
+                        stringResource(R.string.progress_no_tests),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -254,7 +256,7 @@ private fun Phase2Card(
                 onClick = onPhaseClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("View All Tests", color = phaseColor)
+                Text(stringResource(R.string.progress_view_all), color = phaseColor)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     Icons.Default.ChevronRight,
@@ -309,12 +311,12 @@ private fun TestProgressItem(
             )
             
             // Simplified status text - just show "Completed on {date}" or "Not Attempted"
-            val statusText = testProgress.lastAttemptDate?.let { lastAttemptDate ->
-                "Completed on ${DateFormatter.formatFullDate(lastAttemptDate)}"
-            } ?: "Not Attempted"
-            
             Text(
-                statusText,
+                text = if (testProgress.lastAttemptDate != null) {
+                    stringResource(R.string.progress_completed_on, DateFormatter.formatFullDate(testProgress.lastAttemptDate!!))
+                } else {
+                    stringResource(R.string.progress_not_attempted)
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = if (testProgress.lastAttemptDate != null) phaseColor
                        else MaterialTheme.colorScheme.onSurfaceVariant

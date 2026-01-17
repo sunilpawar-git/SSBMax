@@ -114,14 +114,19 @@
     <!-- Phase Progress -->
     <string name="phase_progress_title">SSB Preparation Progress</string>
     <string name="phase_1_title">PHASE 1</string>
+    <string name="phase_1_label">PHASE 1</string>
     <string name="phase_1_subtitle">Screening</string>
     <string name="phase_2_title">PHASE 2</string>
+    <string name="phase_2_label">PHASE 2</string>
     <string name="phase_2_subtitle">Assessment</string>
     <string name="progress_no_tests">No tests attempted yet</string>
     <string name="progress_view_all">View All Tests</string>
     <string name="progress_psychology">Psychology Tests</string>
     <string name="progress_gto">GTO Tasks</string>
     <string name="progress_interview">Interview</string>
+    <string name="progress_completed_on">Completed on %1$s</string>
+    <string name="progress_not_attempted">Not Attempted</string>
+    <string name="icon_trophy">🏆</string>
 
     <!-- ============================================ -->
     <!-- DASHBOARD CACHING & REFRESH -->
