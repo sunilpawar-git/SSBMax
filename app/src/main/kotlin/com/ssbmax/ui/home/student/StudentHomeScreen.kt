@@ -127,6 +127,7 @@ fun StudentHomeScreen(
                         gradient = Brush.linearGradient(
                             colors = listOf(SSBColors.Warning, SSBColors.Warning.copy(alpha = 0.8f))
                         ),
+                        iconContentDescription = stringResource(R.string.cd_stats_streak_icon),
                         modifier = Modifier.weight(1f)
                     )
 
@@ -138,6 +139,7 @@ fun StudentHomeScreen(
                         gradient = Brush.linearGradient(
                             colors = listOf(SSBColors.Success, SSBColors.Success.copy(alpha = 0.8f))
                         ),
+                        iconContentDescription = stringResource(R.string.cd_stats_tests_icon),
                         modifier = Modifier.weight(1f)
                     )
                 }

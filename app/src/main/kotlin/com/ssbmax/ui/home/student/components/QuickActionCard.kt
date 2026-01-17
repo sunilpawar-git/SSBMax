@@ -25,7 +25,8 @@ fun QuickActionCard(
     icon: ImageVector,
     color: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconContentDescription: String? = null
 ) {
     Card(
         modifier = modifier
@@ -43,7 +44,7 @@ fun QuickActionCard(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = iconContentDescription ?: title,
                 tint = color,
                 modifier = Modifier.size(28.dp)
             )

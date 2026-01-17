@@ -162,8 +162,8 @@ private fun Phase1Card(
                 Text(stringResource(R.string.progress_view_all), color = phaseColor)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = stringResource(R.string.cd_phase_view_all),
                     tint = phaseColor,
                     modifier = Modifier.size(18.dp)
                 )
@@ -260,8 +260,8 @@ private fun Phase2Card(
                 Text(stringResource(R.string.progress_view_all), color = phaseColor)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = stringResource(R.string.cd_phase_view_all),
                     tint = phaseColor,
                     modifier = Modifier.size(18.dp)
                 )
@@ -294,10 +294,19 @@ private fun TestProgressItem(
             TestStatus.NOT_ATTEMPTED ->
                 Icons.Default.RadioButtonUnchecked to MaterialTheme.colorScheme.onSurfaceVariant
         }
-        
+
+        val contentDescription = when (testProgress.status) {
+            TestStatus.COMPLETED, TestStatus.GRADED, TestStatus.SUBMITTED_PENDING_REVIEW ->
+                stringResource(R.string.cd_test_status_completed)
+            TestStatus.IN_PROGRESS ->
+                stringResource(R.string.cd_test_status_in_progress)
+            TestStatus.NOT_ATTEMPTED ->
+                stringResource(R.string.cd_test_status_not_attempted)
+        }
+
         Icon(
-            icon,
-            contentDescription = null,
+            imageVector = icon,
+            contentDescription = contentDescription,
             tint = iconColor,
             modifier = Modifier.size(16.dp)
         )

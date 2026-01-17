@@ -27,7 +27,8 @@ fun StatsCard(
     subtitle: String,
     icon: ImageVector,
     gradient: Brush,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconContentDescription: String? = null
 ) {
     Card(
         modifier = modifier.height(84.dp),
@@ -48,8 +49,8 @@ fun StatsCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        icon,
-                        contentDescription = null,
+                        imageVector = icon,
+                        contentDescription = iconContentDescription,
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
                     )
