@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.R
+import com.ssbmax.core.designsystem.theme.SSBColors
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
@@ -124,7 +125,7 @@ fun StudentHomeScreen(
                         subtitle = stringResource(R.string.stats_days),
                         icon = Icons.Default.LocalFireDepartment,
                         gradient = Brush.linearGradient(
-                            colors = listOf(Color(0xFFFF6B6B), Color(0xFFFF8E53))
+                            colors = listOf(SSBColors.Warning, SSBColors.Warning.copy(alpha = 0.8f))
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -135,7 +136,7 @@ fun StudentHomeScreen(
                         subtitle = stringResource(R.string.stats_tests),
                         icon = Icons.Default.CheckCircle,
                         gradient = Brush.linearGradient(
-                            colors = listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
+                            colors = listOf(SSBColors.Success, SSBColors.Success.copy(alpha = 0.8f))
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -252,7 +253,7 @@ fun StudentHomeScreen(
                     QuickActionCard(
                         title = stringResource(R.string.action_self_preparation),
                         icon = Icons.AutoMirrored.Filled.MenuBook,
-                        color = Color(0xFF7B1FA2),
+                        color = SSBColors.NavyBlue,
                         onClick = onOpenDrawer,
                         modifier = Modifier.weight(1f)
                     )
@@ -260,7 +261,7 @@ fun StudentHomeScreen(
                     QuickActionCard(
                         title = stringResource(R.string.action_join_batch),
                         icon = Icons.Default.GroupAdd,
-                        color = Color(0xFF1976D2),
+                        color = SSBColors.Info,
                         onClick = onNavigateToMarketplace,
                         modifier = Modifier.weight(1f)
                     )
@@ -275,7 +276,7 @@ fun StudentHomeScreen(
                     QuickActionCard(
                         title = stringResource(R.string.action_view_analytics),
                         icon = Icons.Default.Analytics,
-                        color = Color(0xFF00897B),
+                        color = SSBColors.OliveGreen,
                         onClick = onNavigateToAnalytics,
                         modifier = Modifier.weight(1f)
                     )
@@ -283,7 +284,7 @@ fun StudentHomeScreen(
                     QuickActionCard(
                         title = stringResource(R.string.action_study_materials),
                         icon = Icons.Default.Book,
-                        color = Color(0xFFD84315),
+                        color = SSBColors.Error,
                         onClick = onNavigateToStudy,
                         modifier = Modifier.weight(1f)
                     )

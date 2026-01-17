@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
+import com.ssbmax.core.designsystem.theme.SSBColors
 import com.ssbmax.core.domain.model.Phase1Progress
 import com.ssbmax.core.domain.model.Phase2Progress
 import com.ssbmax.core.domain.model.TestPhase
@@ -89,7 +90,7 @@ private fun Phase1Card(
     onTopicClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val phaseColor = Color(0xFF1976D2)
+    val phaseColor = SSBColors.Info
     
     Card(
         modifier = modifier
@@ -178,7 +179,7 @@ private fun Phase2Card(
     onTopicClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val phaseColor = Color(0xFF388E3C)
+    val phaseColor = SSBColors.Success
     
     Card(
         modifier = modifier
@@ -286,12 +287,12 @@ private fun TestProgressItem(
     ) {
         // Status Icon - Checkmark for any completed/attempted test, empty circle for not attempted
         val (icon, iconColor) = when (testProgress.status) {
-            TestStatus.COMPLETED, TestStatus.GRADED, TestStatus.SUBMITTED_PENDING_REVIEW -> 
-                Icons.Default.CheckCircle to Color(0xFF4CAF50)
-            TestStatus.IN_PROGRESS -> 
-                Icons.Default.Schedule to Color(0xFFFFA726)
-            TestStatus.NOT_ATTEMPTED -> 
-                Icons.Default.RadioButtonUnchecked to Color(0xFF9E9E9E)
+            TestStatus.COMPLETED, TestStatus.GRADED, TestStatus.SUBMITTED_PENDING_REVIEW ->
+                Icons.Default.CheckCircle to SSBColors.Success
+            TestStatus.IN_PROGRESS ->
+                Icons.Default.Schedule to SSBColors.Warning
+            TestStatus.NOT_ATTEMPTED ->
+                Icons.Default.RadioButtonUnchecked to MaterialTheme.colorScheme.onSurfaceVariant
         }
         
         Icon(
