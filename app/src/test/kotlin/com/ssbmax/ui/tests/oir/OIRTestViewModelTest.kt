@@ -323,10 +323,18 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             assertEquals("Should have 0 incorrect answers", 0, result.incorrectAnswers)
             assertEquals("Should have 0 skipped", 0, result.skippedQuestions)
             assertTrue("Percentage score should be 100%", result.percentageScore >= 99f)
+            
+            // Verify results were submitted to repository with correct ID
+            coVerify { 
+                mockSubmissionRepo.submitOIR(
+                    match { it.id == state.sessionId },
+                    null
+                ) 
+            }
+            
+            // Verify dashboard cache was invalidated
+            coVerify { mockGetOLQDashboard.invalidateCache(mockUser.id) }
         }
-        
-        // Note: Session management is now handled differently (local UUID generation)
-        // No need to verify endTestSession or clearCache calls
     }
     
     @Test

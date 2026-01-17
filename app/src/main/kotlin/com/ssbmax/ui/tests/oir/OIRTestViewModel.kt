@@ -367,7 +367,8 @@ class OIRTestViewModel @Inject constructor(
                 android.util.Log.d("OIRTestViewModel", "✅ Dashboard cache invalidated!")
 
                 // Create OIR submission
-                val submissionId = UUID.randomUUID().toString()
+                // CRITICAL: Use session.sessionId as the document ID to match OIRSubmissionResultViewModel's expectations
+                val submissionId = session.sessionId
                 val submission = OIRSubmission(
                     id = submissionId,
                     userId = session.userId,
