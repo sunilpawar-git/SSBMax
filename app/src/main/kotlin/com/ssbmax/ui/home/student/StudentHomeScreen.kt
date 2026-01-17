@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
+import com.ssbmax.core.designsystem.theme.Spacing
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
@@ -110,14 +111,14 @@ fun StudentHomeScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(Spacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sectionSpacing)
         ) {
             // Stats Cards
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
                 ) {
                     StatsCard(
                         title = stringResource(R.string.stats_study_streak),
@@ -155,7 +156,7 @@ fun StudentHomeScreen(
                 SectionHeader(
                     icon = "📊",
                     title = stringResource(R.string.section_your_progress),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = Spacing.small)
                 )
             }
             
@@ -165,9 +166,10 @@ fun StudentHomeScreen(
                     phase1Progress = uiState.phase1Progress,
                     phase2Progress = uiState.phase2Progress,
                     onPhaseClick = onNavigateToPhaseDetail,
-                    onTopicClick = { topicId -> 
+                    onTopicClick = { topicId ->
                         // Navigate to topic with Tests tab selected (tab index 2)
-                        onNavigateToTopic("$topicId?selectedTab=2")
+                        val route = buildTopicRoute(topicId, selectedTab = 2)
+                        onNavigateToTopic(route)
                     }
                 )
             }
@@ -182,7 +184,7 @@ fun StudentHomeScreen(
                 SectionHeader(
                     icon = "🎯",
                     title = stringResource(R.string.dashboard_olq_dashboard),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = Spacing.small)
                 )
             }
             
@@ -205,7 +207,7 @@ fun StudentHomeScreen(
                             onNavigateToResult = onNavigateToResult,
                             isRefreshing = uiState.isRefreshingDashboard,
                             onRefresh = { viewModel.refreshDashboard() },
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = Spacing.cardPadding)
                         )
                     }
                     
@@ -225,7 +227,7 @@ fun StudentHomeScreen(
                         ) {
                             Text(
                                 text = uiState.dashboardError ?: stringResource(R.string.dashboard_error_load_failed),
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(Spacing.cardPadding),
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
@@ -243,14 +245,14 @@ fun StudentHomeScreen(
                 SectionHeader(
                     icon = "⚡",
                     title = stringResource(R.string.section_quick_actions),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = Spacing.small)
                 )
             }
 
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
                 ) {
                     QuickActionCard(
                         title = stringResource(R.string.action_self_preparation),
@@ -273,7 +275,7 @@ fun StudentHomeScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
                 ) {
                     QuickActionCard(
                         title = stringResource(R.string.action_view_analytics),
@@ -296,8 +298,22 @@ fun StudentHomeScreen(
             
             // Bottom spacing
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Spacing.large))
             }
         }
+    }
+}
+
+/**
+ * Builds topic route with optional query parameters
+ * @param topicId The topic ID
+ * @param selectedTab Optional tab index (defaults to Overview tab)
+ * @return Route string for navigation
+ */
+private fun buildTopicRoute(topicId: String, selectedTab: Int? = null): String {
+    return if (selectedTab != null) {
+        "$topicId?selectedTab=$selectedTab"
+    } else {
+        topicId
     }
 }

@@ -1,5 +1,7 @@
 package com.ssbmax.ui.home.student.components
 
+import com.ssbmax.core.designsystem.theme.Spacing
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,21 +34,21 @@ fun QuickActionCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Spacing.cardCornerRadius),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(Spacing.cardPadding),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = iconContentDescription ?: title,
                 tint = color,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(Spacing.iconSizeLarge)
             )
             
             Text(

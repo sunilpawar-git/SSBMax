@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
+import com.ssbmax.core.designsystem.theme.Spacing
 import com.ssbmax.core.domain.model.Phase1Progress
 import com.ssbmax.core.domain.model.Phase2Progress
 import com.ssbmax.core.domain.model.TestPhase
@@ -36,15 +37,15 @@ fun PhaseProgressRibbon(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(Spacing.cardCornerRadiusLarge),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(Spacing.cardPadding)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
                 Text(
                     text = stringResource(R.string.icon_trophy),
@@ -57,11 +58,11 @@ fun PhaseProgressRibbon(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.large))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
             ) {
                 // Phase 1 Card
                 Phase1Card(
@@ -94,9 +95,9 @@ private fun Phase1Card(
     
     Card(
         modifier = modifier
-            .height(280.dp)
+            .height(Spacing.phaseCardHeight)
             .clickable(onClick = onPhaseClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Spacing.cardCornerRadius),
         colors = CardDefaults.cardColors(
             containerColor = phaseColor.copy(alpha = 0.05f)
         ),
@@ -108,7 +109,7 @@ private fun Phase1Card(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
+                .padding(Spacing.medium)
         ) {
             // Phase Header
             Column {
@@ -125,11 +126,11 @@ private fun Phase1Card(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.large))
             
             // Tests List
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
                 if (progress != null) {
                     TestProgressItem(
@@ -160,12 +161,12 @@ private fun Phase1Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.progress_view_all), color = phaseColor)
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.extraSmall))
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = stringResource(R.string.cd_phase_view_all),
                     tint = phaseColor,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(Spacing.iconSizeSmall)
                 )
             }
         }
@@ -183,9 +184,9 @@ private fun Phase2Card(
     
     Card(
         modifier = modifier
-            .height(280.dp)
+            .height(Spacing.phaseCardHeight)
             .clickable(onClick = onPhaseClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(Spacing.cardCornerRadius),
         colors = CardDefaults.cardColors(
             containerColor = phaseColor.copy(alpha = 0.05f)
         ),
@@ -197,7 +198,7 @@ private fun Phase2Card(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
+                .padding(Spacing.medium)
         ) {
             // Phase Header
             Column {
@@ -214,11 +215,11 @@ private fun Phase2Card(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.large))
             
             // Tests List
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
                 if (progress != null) {
                     TestProgressItem(
@@ -258,12 +259,12 @@ private fun Phase2Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.progress_view_all), color = phaseColor)
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.extraSmall))
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = stringResource(R.string.cd_phase_view_all),
                     tint = phaseColor,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(Spacing.iconSizeSmall)
                 )
             }
         }
@@ -308,7 +309,7 @@ private fun TestProgressItem(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(Spacing.iconSizeExtraSmall)
         )
         
         Spacer(modifier = Modifier.width(8.dp))

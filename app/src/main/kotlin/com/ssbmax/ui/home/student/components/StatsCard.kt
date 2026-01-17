@@ -1,5 +1,7 @@
 package com.ssbmax.ui.home.student.components
 
+import com.ssbmax.core.designsystem.theme.Spacing
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,14 +33,14 @@ fun StatsCard(
     iconContentDescription: String? = null
 ) {
     Card(
-        modifier = modifier.height(84.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = modifier.height(Spacing.statsCardHeight),
+        shape = RoundedCornerShape(Spacing.cardCornerRadiusLarge)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradient)
-                .padding(12.dp)
+                .padding(Spacing.medium)
         ) {
             Column(
                 verticalArrangement = Arrangement.Center
@@ -46,13 +48,13 @@ fun StatsCard(
                 // Top row: Icon + Value + Unit
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.small)
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = iconContentDescription,
                         tint = Color.White,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(Spacing.iconSizeLarge)
                     )
                     
                     Text(
@@ -69,7 +71,7 @@ fun StatsCard(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.extraSmall))
                 
                 // Bottom: Title
                 Text(
