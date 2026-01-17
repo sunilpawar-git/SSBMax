@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "8.7.3"
 kotlin = "2.1.0"
 
 # AndroidX Core
@@ -8,11 +8,11 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
 
 # Compose
-composeBom = "2024.12.01"
+composeBom = "2024.05.00"
 navigationCompose = "2.8.5"
 
 # Hilt
-hilt = "2.53"
+hilt = "2.54"
 hiltNavigationCompose = "1.2.0"
 
 # Room

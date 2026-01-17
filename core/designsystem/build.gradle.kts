@@ -1,4 +1,5 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     alias(libs.plugins.android.library)
@@ -7,7 +8,7 @@ plugins {
     id("jacoco")
 }
 
-android {
+extensions.getByType<LibraryExtension>().apply {
     namespace = "com.ssbmax.core.designsystem"
     compileSdk = 35
 
@@ -33,10 +34,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-    
     kotlin {
         jvmToolchain(21)
     }
@@ -107,4 +104,3 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         include("jacoco/testDebugUnitTest.exec")
     })
 }
-

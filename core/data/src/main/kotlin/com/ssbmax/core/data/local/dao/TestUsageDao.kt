@@ -48,6 +48,6 @@ interface TestUsageDao {
      * Delete old usage records (older than 6 months)
      */
     @Query("DELETE FROM test_usage WHERE month < :oldestMonth")
-    suspend fun deleteOldRecords(oldestMonth: String)
+    suspend fun deleteOldRecords(oldestMonth: String): Int
 }
 

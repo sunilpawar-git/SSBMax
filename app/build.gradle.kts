@@ -2,6 +2,7 @@ import java.util.Properties
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import java.math.BigDecimal
+import com.android.build.api.dsl.ApplicationExtension
 
 plugins {
     alias(libs.plugins.android.application)
@@ -64,7 +65,7 @@ tasks.named("preBuild").configure {
 }
 */
 
-android {
+extensions.getByType<ApplicationExtension>().apply {
     namespace = "com.ssbmax"
     compileSdk = 35
 
@@ -142,14 +143,6 @@ android {
             // Production: No forced premium TTS (use subscription logic)
             buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
         }
-    }
-    
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-    
-    kotlin {
-        jvmToolchain(21)
     }
 
     compileOptions {
@@ -258,8 +251,8 @@ dependencies {
 
     // WorkManager (background jobs for question pre-generation)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation("androidx.hilt:hilt-work:1.1.0")
-    ksp("androidx.hilt:hilt-compiler:1.1.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp(libs.hilt.compiler)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

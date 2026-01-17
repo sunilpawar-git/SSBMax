@@ -1,6 +1,7 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import java.math.BigDecimal
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     alias(libs.plugins.android.library)
@@ -10,7 +11,7 @@ plugins {
     id("jacoco")
 }
 
-android {
+extensions.getByType<LibraryExtension>().apply {
     namespace = "com.ssbmax.core.domain"
     compileSdk = 35
 
@@ -36,10 +37,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-    
     kotlin {
         jvmToolchain(21)
     }

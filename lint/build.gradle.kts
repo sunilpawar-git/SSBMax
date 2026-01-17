@@ -13,22 +13,22 @@ java {
 
 dependencies {
     // Lint API dependencies
-    compileOnly("com.android.tools.lint:lint-api:31.13.2")
-    compileOnly("com.android.tools.lint:lint-checks:31.13.2")
+    compileOnly("com.android.tools.lint:lint-api:32.0.0")
+    compileOnly("com.android.tools.lint:lint-checks:32.0.0")
 
     // Kotlin standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24")
 
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")
-    testImplementation("com.android.tools.lint:lint:31.13.2")
-    testImplementation("com.android.tools.lint:lint-tests:31.13.2")
+    testImplementation("com.android.tools.lint:lint:32.0.0")
+    testImplementation("com.android.tools.lint:lint-tests:32.0.0")
     testImplementation("com.android.tools:testutils:31.5.1")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "21"
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }
 

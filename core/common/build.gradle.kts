@@ -1,9 +1,11 @@
+import com.android.build.api.dsl.LibraryExtension
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
 }
 
-android {
+extensions.getByType<LibraryExtension>().apply {
     namespace = "com.ssbmax.core.common"
     compileSdk = 35
 
@@ -29,10 +31,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-    
     kotlin {
         jvmToolchain(21)
     }
