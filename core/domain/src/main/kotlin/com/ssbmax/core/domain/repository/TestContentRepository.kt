@@ -61,6 +61,14 @@ interface TestContentRepository {
     suspend fun getPPDTQuestions(testId: String): Result<List<PPDTQuestion>>
 
     /**
+     * Fetch a single PPDT question by its ID.
+     * Required for PPDT analysis to retrieve image context.
+     * @param questionId The unique question ID
+     * @return Result with the PPDT question or error
+     */
+    suspend fun getPPDTQuestion(questionId: String): Result<PPDTQuestion>
+
+    /**
      * Fetch GPE test questions from Firestore/Cache
      * @param testId The specific test ID to load
      * @return Result with list of GPE questions or error

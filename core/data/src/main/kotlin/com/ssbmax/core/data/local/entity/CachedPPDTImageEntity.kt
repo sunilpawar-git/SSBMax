@@ -15,6 +15,7 @@ data class CachedPPDTImageEntity(
     val imageUrl: String, // Firebase Storage URL
     val localFilePath: String? = null, // Local cache path if image is downloaded
     val imageDescription: String, // Alt text for accessibility
+    val context: String = "", // Context for AI analysis
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val minCharacters: Int = 200,
