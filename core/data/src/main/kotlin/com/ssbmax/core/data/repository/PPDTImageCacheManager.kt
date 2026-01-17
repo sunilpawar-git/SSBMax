@@ -45,7 +45,7 @@ class PPDTImageCacheManager @Inject constructor(
             }
             
             // Download first batch
-            downloadBatch("batch_001").getOrThrow()
+            downloadBatch("batch_002_context_enhanced").getOrThrow()
             
             Log.d(TAG, "Initial sync complete")
             Result.success(Unit)
@@ -82,6 +82,7 @@ class PPDTImageCacheManager @Inject constructor(
                         localFilePath = null, // Will be set when image is downloaded
                         imageDescription = imageMap["imageDescription"] as? String 
                             ?: "Picture showing an ambiguous scene",
+                        context = imageMap["context"] as? String ?: "",
                         viewingTimeSeconds = (imageMap["viewingTimeSeconds"] as? Long)?.toInt() ?: 30,
                         writingTimeMinutes = (imageMap["writingTimeMinutes"] as? Long)?.toInt() ?: 4,
                         minCharacters = (imageMap["minCharacters"] as? Long)?.toInt() ?: 200,
@@ -155,6 +156,7 @@ class PPDTImageCacheManager @Inject constructor(
                 id = image.id,
                 imageUrl = image.imageUrl,
                 imageDescription = image.imageDescription,
+                context = image.context,
                 viewingTimeSeconds = image.viewingTimeSeconds,
                 writingTimeMinutes = image.writingTimeMinutes,
                 minCharacters = image.minCharacters,
@@ -165,6 +167,39 @@ class PPDTImageCacheManager @Inject constructor(
             Result.success(question)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get image for test", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get a specific image by ID
+     */
+    suspend fun getImageById(imageId: String): Result<PPDTQuestion> {
+        return try {
+            val entity = dao.getImageById(imageId)
+            if (entity != null) {
+                // Return cached version
+                return Result.success(
+                    PPDTQuestion(
+                        id = entity.id,
+                        imageUrl = entity.imageUrl,
+                        imageDescription = entity.imageDescription,
+                        context = entity.context, // Map context
+                        viewingTimeSeconds = entity.viewingTimeSeconds,
+                        writingTimeMinutes = entity.writingTimeMinutes,
+                        minCharacters = entity.minCharacters,
+                        maxCharacters = entity.maxCharacters
+                    )
+                )
+            }
+
+            // Not in cache, try to fetch from batch metadata to see if we can find it
+            // For now, simpler to just return failure if not in cache, as we expect relevant images to be cached
+            // In a robust implementation, we might fetch from Firestore directly here if needed.
+            // But strict caching policy prevents ad-hoc Firestore reads for content.
+            Result.failure(Exception("Image not found in cache: $imageId"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get image by ID: $imageId", e)
             Result.failure(e)
         }
     }
@@ -199,6 +234,7 @@ class PPDTImageCacheManager @Inject constructor(
                     id = entity.id,
                     imageUrl = entity.imageUrl,
                     imageDescription = entity.imageDescription,
+                    context = entity.context,
                     viewingTimeSeconds = entity.viewingTimeSeconds,
                     writingTimeMinutes = entity.writingTimeMinutes,
                     minCharacters = entity.minCharacters,

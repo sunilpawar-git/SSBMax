@@ -11,6 +11,7 @@ data class PPDTQuestion(
     val id: String,
     val imageUrl: String,
     val imageDescription: String, // Alt text for accessibility
+    val context: String = "", // Context for AI analysis
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val guidelines: List<String> = listOf(

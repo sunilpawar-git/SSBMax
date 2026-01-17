@@ -196,6 +196,7 @@ object MockTestDataProvider {
                 id = "ppdt_mock_1",
                 imageUrl = "https://via.placeholder.com/800x600/4CAF50/FFFFFF?text=PPDT+Sample+Image",
                 imageDescription = "A group of people in a meeting room discussing around a table",
+                context = "A hazy image showing a formal meeting or discussion in progress, typically interpreted as a corporate or academic setting.",
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4
             )

@@ -18,6 +18,13 @@ interface PPDTImageCacheDao {
      */
     @Query("SELECT * FROM cached_ppdt_images ORDER BY id ASC")
     suspend fun getAllImages(): List<CachedPPDTImageEntity>
+
+    /**
+     * Get a single image by ID
+     */
+    @Query("SELECT * FROM cached_ppdt_images WHERE id = :imageId")
+    suspend fun getImageById(imageId: String): CachedPPDTImageEntity?
+
     
     /**
      * Get images from specific batch
@@ -51,7 +58,7 @@ interface PPDTImageCacheDao {
     /**
      * Get least used images
      */
-    @Query("SELECT * FROM cached_ppdt_images ORDER BY usageCount ASC, lastUsed ASC LIMIT :count")
+    @Query("SELECT * FROM cached_ppdt_images ORDER BY usageCount ASC, RANDOM() LIMIT :count")
     suspend fun getLeastUsedImages(count: Int): List<CachedPPDTImageEntity>
     
     /**

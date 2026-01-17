@@ -137,10 +137,9 @@ class TestContentRepositoryImpl @Inject constructor(
 
             // Initialize cache if needed OR if we have old placeholder data
             val cacheStatus = ppdtImageCacheManager.getCacheStatus()
-            if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 50) {
-                // If we have less than 50 images, force refresh to get the new 57 images
-                Log.d("TestContent", "Initializing PPDT image cache (current: ${cacheStatus.cachedImages})...")
-                ppdtImageCacheManager.clearCache() // Clear old data
+            if (cacheStatus.cachedImages == 0) {
+                // Initialize if empty
+                Log.d("TestContent", "Initializing PPDT image cache...")
                 ppdtImageCacheManager.initialSync().getOrThrow()
             }
 
@@ -167,6 +166,21 @@ class TestContentRepositoryImpl @Inject constructor(
             val mockQuestions = MockTestDataProvider.getPPDTQuestions()
             ppdtCache[testId] = mockQuestions
             Result.success(mockQuestions)
+        }
+    }
+
+    override suspend fun getPPDTQuestion(questionId: String): Result<PPDTQuestion> {
+        return try {
+            // Try to find in cache first
+            ppdtCache.values.flatten().find { it.id == questionId }?.let {
+                return Result.success(it)
+            }
+
+            // Fallback to cache manager
+            ppdtImageCacheManager.getImageById(questionId)
+        } catch (e: Exception) {
+            Log.e("TestContent", "Failed to get specific PPDT question: $questionId", e)
+            Result.failure(e)
         }
     }
 
