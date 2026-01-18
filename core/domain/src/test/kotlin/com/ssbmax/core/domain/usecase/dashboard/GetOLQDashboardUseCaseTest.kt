@@ -281,6 +281,73 @@ class GetOLQDashboardUseCaseTest {
         assertEquals(6.0f, data?.averageOLQScores?.get(OLQ.EFFECTIVE_INTELLIGENCE))
     }
 
+    /**
+     * REGRESSION PREVENTION TEST: OIR Dashboard Navigation ID Consistency
+     * 
+     * This test ensures that any discrepancy between the internal sessionId 
+     * and the document ID is reconciled when the dashboard data is built.
+     * Without this fix, clicking on OIR tile would result in "Submission not found" error.
+     */
+    @Test
+    fun `invoke reconciles OIR sessionId with submission document ID`() = runTest {
+        // Given
+        val userId = "user_123"
+        val submissionId = "oir_doc_ID"
+        val sessionIdInResult = "internal_session_ID" // Mismatched ID in old records
+        
+        val oirResult = OIRTestResult(
+            testId = "test_1",
+            sessionId = sessionIdInResult,
+            userId = userId,
+            totalQuestions = 10,
+            correctAnswers = 5,
+            incorrectAnswers = 5,
+            skippedQuestions = 0,
+            totalTimeSeconds = 600,
+            timeTakenSeconds = 300,
+            rawScore = 5,
+            percentageScore = 50f,
+            categoryScores = emptyMap(),
+            difficultyBreakdown = emptyMap(),
+            answeredQuestions = emptyList(),
+            completedAt = System.currentTimeMillis()
+        )
+        
+        val oirSubmission = OIRSubmission(
+            id = submissionId,
+            userId = userId,
+            testId = "test_1",
+            testResult = oirResult,
+            submittedAt = System.currentTimeMillis(),
+            status = SubmissionStatus.SUBMITTED_PENDING_REVIEW
+        )
+
+        // Mock: Return submission with mismatched internal ID
+        coEvery { submissionRepository.getLatestOIRSubmission(userId) } returns Result.success(oirSubmission)
+        
+        // Mock others empty
+        coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestWATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
+        coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+
+        // When
+        val result = getOLQDashboardUseCase(userId)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val data = result.getOrNull()
+        
+        // CRITICAL VERIFICATION: The sessionId in the processed data MUST match the submission document ID
+        val finalOirResult = data?.dashboard?.phase1Results?.oirResult
+        assertNotNull(finalOirResult)
+        assertEquals("The sessionId must be reconciled with the document ID for navigation consistency", 
+            submissionId, finalOirResult?.sessionId)
+    }
+
     private fun createOLQResult(
         submissionId: String,
         testType: TestType,

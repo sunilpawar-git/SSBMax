@@ -233,7 +233,9 @@ class GetOLQDashboardUseCase @Inject constructor(
             val dashboard = OLQDashboardData(
                 userId = userId,
                 phase1Results = OLQDashboardData.Phase1Results(
-                    oirResult = oirResult,  // Extract OIRTestResult from OIRSubmission
+                    // CRITICAL: Ensure sessionId matches document ID for navigation consistency
+                    // This fixes old records where sessionId might have been different from document ID
+                    oirResult = oirResult?.copy(sessionId = oirSubmission?.id ?: ""),  
                     ppdtResult = ppdtSubmission,  // Full submission for UI display
                     ppdtOLQResult = ppdtOLQResult  // Extracted OLQ scores
                 ),
