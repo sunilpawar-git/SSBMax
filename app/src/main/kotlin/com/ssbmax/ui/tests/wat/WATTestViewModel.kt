@@ -358,10 +358,10 @@ class WATTestViewModel @Inject constructor(
                     subscriptionManager.recordTestUsage(TestType.WAT, currentUserId, submissionId)
                     android.util.Log.d("WATTestViewModel", "✅ Test usage recorded successfully!")
 
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    android.util.Log.d("WATTestViewModel", "📍 Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(currentUserId)
-                    android.util.Log.d("WATTestViewModel", "✅ Dashboard cache invalidated!")
+                    // NOTE: Cache invalidation moved to WATAnalysisWorker.
+                    // Invalidating here is premature because analysis takes ~15-30s.
+                    // The next dashboard fetch would cache empty WAT result.
+                    // See: WATAnalysisWorker.doWork() for correct cache invalidation timing.
 
                     // Enqueue WATAnalysisWorker for OLQ analysis
                     android.util.Log.d("WATTestViewModel", "📍 Enqueueing WATAnalysisWorker...")

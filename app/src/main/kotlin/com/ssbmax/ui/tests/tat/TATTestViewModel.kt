@@ -421,10 +421,10 @@ class TATTestViewModel @Inject constructor(
                     subscriptionManager.recordTestUsage(TestType.TAT, currentUserId, submissionId)
                     android.util.Log.d("TATTestViewModel", "✅ Test usage recorded successfully!")
 
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    android.util.Log.d("TATTestViewModel", "📍 Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(currentUserId)
-                    android.util.Log.d("TATTestViewModel", "✅ Dashboard cache invalidated!")
+                    // NOTE: Cache invalidation moved to TATAnalysisWorker.
+                    // Invalidating here is premature because analysis takes ~15-30s.
+                    // The next dashboard fetch would cache empty TAT result.
+                    // See: TATAnalysisWorker.doWork() for correct cache invalidation timing.
 
                     android.util.Log.d("TATTestViewModel", "📍 Step 7: Updating UI state...")
                     _uiState.update { it.copy(
