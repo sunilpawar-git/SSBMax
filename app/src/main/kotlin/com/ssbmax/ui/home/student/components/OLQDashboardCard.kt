@@ -2,7 +2,6 @@ package com.ssbmax.ui.home.student.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,24 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
-import com.ssbmax.ui.theme.SSBScoreColors
 
-/**
- * Formats relative time string ("Updated just now", "5m ago", etc.)
- */
-private fun formatRelativeTime(refreshTime: Long, justNowText: String): String {
-    val diffMillis = System.currentTimeMillis() - refreshTime
-    val diffSeconds = diffMillis / 1000
-    val diffMinutes = diffSeconds / 60
-    return when {
-        diffSeconds < 60 -> justNowText
-        diffMinutes < 60 -> "Updated ${diffMinutes}m ago"
-        else -> "Updated ${diffMinutes / 60}h ago"
-    }
-}
 
 /**
  * OLQ Dashboard Card showing all test results with aggregated scores
@@ -119,147 +103,38 @@ fun OLQDashboardCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Two-column layout
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Column 1: Phase 1 Tests (OIR, PPDT)
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.dashboard_phase_1),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_oir),
-                        score = dashboard.phase1Results.oirResult?.percentageScore,
-                        isOLQBased = false,
-                        onClick = { 
-                            dashboard.phase1Results.oirResult?.let { 
-                                onNavigateToResult(TestType.OIR, it.sessionId) 
-                            }
-                        }
-                    )
+            // Vertical Section Layout (Symmetrical & Balanced)
+            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                // Section 1: Screening (Phase 1)
+                Phase1Section(
+                    results = dashboard.phase1Results,
+                    onNavigateToResult = onNavigateToResult
+                )
 
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_ppdt),
-                        score = dashboard.phase1Results.ppdtOLQResult?.overallScore 
-                            ?: dashboard.phase1Results.ppdtResult?.finalScore,
-                        isOLQBased = true,  // ✅ Now OLQ-based
-                        onClick = if (dashboard.phase1Results.ppdtResult != null) {
-                            // Clickable when submission exists (even during analysis)
-                            {
-                                dashboard.phase1Results.ppdtResult?.let {
-                                    onNavigateToResult(TestType.PPDT, it.submissionId)
-                                }
-                            }
-                        } else null  // No submission = not clickable
-                    )
-                }
+                // Section 2: Psychology
+                PsychologySection(
+                    results = dashboard.phase2Results,
+                    onNavigateToResult = onNavigateToResult
+                )
 
-                // Column 2: Phase 2 Tests (Psychology + GTO + Interview)
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.dashboard_phase_2),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                // Section 3: GTO
+                GTOSection(
+                    results = dashboard.phase2Results,
+                    onNavigateToResult = onNavigateToResult
+                )
 
-                    // Psychology Tests
-                    Text(
-                        text = stringResource(R.string.dashboard_psychology),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_tat), 
-                        score = dashboard.phase2Results.tatResult?.overallScore,
-                        onClick = {
-                            dashboard.phase2Results.tatResult?.let {
-                                onNavigateToResult(TestType.TAT, it.submissionId)
-                            }
-                        }
-                    )
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_wat), 
-                        score = dashboard.phase2Results.watResult?.overallScore,
-                        onClick = {
-                            dashboard.phase2Results.watResult?.let {
-                                onNavigateToResult(TestType.WAT, it.submissionId)
-                            }
-                        }
-                    )
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_srt), 
-                        score = dashboard.phase2Results.srtResult?.overallScore,
-                        onClick = {
-                            dashboard.phase2Results.srtResult?.let {
-                                onNavigateToResult(TestType.SRT, it.submissionId)
-                            }
-                        }
-                    )
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_self_desc), 
-                        score = dashboard.phase2Results.sdResult?.overallScore,
-                        onClick = {
-                            dashboard.phase2Results.sdResult?.let {
-                                onNavigateToResult(TestType.SD, it.submissionId)
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // GTO Tests
-                    Text(
-                        text = stringResource(R.string.dashboard_gto),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    dashboard.phase2Results.gtoResults.forEach { (testType, result) ->
-                        TestScoreChip(
-                            testName = testType.displayName,
-                            score = result.overallScore,
-                            onClick = { onNavigateToResult(result.testType, result.submissionId) }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Interview
-                    Text(
-                        text = stringResource(R.string.dashboard_interview),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    TestScoreChip(
-                        testName = stringResource(R.string.dashboard_test_interview),
-                        score = dashboard.phase2Results.interviewResult?.getAverageOLQScore(),
-                        onClick = {
-                            dashboard.phase2Results.interviewResult?.let {
-                                onNavigateToResult(TestType.IO, it.id)
-                            }
-                        }
-                    )
-                }
+                // Section 4: Interview
+                InterviewSection(
+                    results = dashboard.phase2Results,
+                    onNavigateToResult = onNavigateToResult
+                )
             }
 
             // Overall average score (pre-computed)
             processedData.overallAverageScore?.let { avgScore ->
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
