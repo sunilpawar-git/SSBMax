@@ -19,6 +19,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 
 /**
  * Background worker for analyzing PPDT submissions using Gemini AI
@@ -29,7 +30,8 @@ import com.ssbmax.core.domain.repository.TestContentRepository
  * 2. Generates analysis prompt using PsychologyTestPrompts
  * 3. Analyzes with Gemini AI for OLQ scores (all 15 OLQs)
  * 4. Updates submission in Firestore with OLQ result
- * 5. Sends push notification when complete
+ * 5. Invalidates dashboard cache so fresh results are shown
+ * 6. Sends push notification when complete
  *
  * The user is free to navigate away while this runs in the background.
  */
@@ -40,7 +42,8 @@ class PPDTAnalysisWorker @AssistedInject constructor(
     private val submissionRepository: SubmissionRepository,
     private val aiService: AIService,
     private val notificationHelper: NotificationHelper,
-    private val testContentRepository: TestContentRepository
+    private val testContentRepository: TestContentRepository,
+    private val getOLQDashboard: GetOLQDashboardUseCase
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -165,7 +168,17 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
             Log.d(TAG, "   Step 5: Submission updated with OLQ result")
 
-            // 8. Send notification
+            // 8. Invalidate dashboard cache AFTER result is saved
+            // CRITICAL: This must happen AFTER the result is in Firestore, not at submission time.
+            // Otherwise, the next dashboard fetch caches empty PPDT result (analysis still in progress).
+            try {
+                getOLQDashboard.invalidateCache(submission.userId)
+                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+            }
+
+            // 9. Send notification
             try {
                 notificationHelper.showPPDTResultsReadyNotification(submissionId)
                 Log.d(TAG, "✅ Push notification sent successfully!")

@@ -15,6 +15,7 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
@@ -38,7 +39,8 @@ class TATAnalysisWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
     private val aiService: AIService,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val getOLQDashboard: GetOLQDashboardUseCase
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -143,7 +145,16 @@ class TATAnalysisWorker @AssistedInject constructor(
             submissionRepository.updateTATOLQResult(submissionId, olqResult)
             Log.d(TAG, "   Step 5: Submission updated with OLQ result")
 
-            // 8. Send notification
+            // 8. Invalidate dashboard cache AFTER result is saved
+            // CRITICAL: Must happen after result is in Firestore, not at submission time
+            try {
+                getOLQDashboard.invalidateCache(submission.userId)
+                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+            }
+
+            // 9. Send notification
             try {
                 notificationHelper.showTATResultsReadyNotification(submissionId)
                 Log.d(TAG, "✅ Push notification sent successfully!")

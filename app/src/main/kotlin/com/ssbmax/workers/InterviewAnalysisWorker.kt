@@ -14,6 +14,7 @@ import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.constants.InterviewConstants
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
@@ -37,7 +38,8 @@ class InterviewAnalysisWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val interviewRepository: InterviewRepository,
     private val aiService: AIService,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val getOLQDashboard: GetOLQDashboardUseCase
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -170,6 +172,15 @@ class InterviewAnalysisWorker @AssistedInject constructor(
                 }
             } else {
                 Log.w(TAG, "⚠️ interviewResult is null, skipping notification")
+            }
+
+            // Invalidate dashboard cache AFTER result is saved
+            // CRITICAL: Must happen after result is in Firestore, not at submission time
+            try {
+                getOLQDashboard.invalidateCache(session.userId)
+                Log.d(TAG, "   Dashboard cache invalidated for user: ${session.userId}")
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
             }
 
             val durationMs = System.currentTimeMillis() - startTime
