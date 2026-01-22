@@ -24,6 +24,9 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 
+# Local Gradle configuration overrides
+gradle.properties.local
+
 # Environment variables (contains API keys and secrets)
 .env
 .env.local
