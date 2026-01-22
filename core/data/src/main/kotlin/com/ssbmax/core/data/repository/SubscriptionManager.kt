@@ -159,6 +159,7 @@ class SubscriptionManager @Inject constructor(
                         "watTestsUsed" to 0,
                         "srtTestsUsed" to 0,
                         "ppdtTestsUsed" to 0,
+                        "piqTestsUsed" to 0,
                         "gtoTestsUsed" to 0,
                         "interviewTestsUsed" to 0,
                         "sdTestsUsed" to 0,

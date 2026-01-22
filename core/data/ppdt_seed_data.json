@@ -1,0 +1,124 @@
+[
+    {
+        "id": "ppdt_001",
+        "imageUrl": "https://via.placeholder.com/800x600/4A90E2/FFFFFF?text=PPDT+Image+1",
+        "imageDescription": "Ambiguous social situation in a park",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_002",
+        "imageUrl": "https://via.placeholder.com/800x600/E74C3C/FFFFFF?text=PPDT+Image+2",
+        "imageDescription": "Ambiguous social situation in a workplace",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_003",
+        "imageUrl": "https://via.placeholder.com/800x600/2ECC71/FFFFFF?text=PPDT+Image+3",
+        "imageDescription": "Ambiguous social situation in a public transport",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_004",
+        "imageUrl": "https://via.placeholder.com/800x600/F39C12/FFFFFF?text=PPDT+Image+4",
+        "imageDescription": "Ambiguous social situation at a café",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_005",
+        "imageUrl": "https://via.placeholder.com/800x600/9B59B6/FFFFFF?text=PPDT+Image+5",
+        "imageDescription": "Ambiguous social situation in a library",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_006",
+        "imageUrl": "https://via.placeholder.com/800x600/1ABC9C/FFFFFF?text=PPDT+Image+6",
+        "imageDescription": "Ambiguous social situation at a market",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_007",
+        "imageUrl": "https://via.placeholder.com/800x600/34495E/FFFFFF?text=PPDT+Image+7",
+        "imageDescription": "Ambiguous social situation in a hallway",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_008",
+        "imageUrl": "https://via.placeholder.com/800x600/95A5A6/FFFFFF?text=PPDT+Image+8",
+        "imageDescription": "Ambiguous social situation at a bus stop",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_009",
+        "imageUrl": "https://via.placeholder.com/800x600/E67E22/FFFFFF?text=PPDT+Image+9",
+        "imageDescription": "Ambiguous social situation in a gym",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_010",
+        "imageUrl": "https://via.placeholder.com/800x600/3498DB/FFFFFF?text=PPDT+Image+10",
+        "imageDescription": "Ambiguous social situation at a concert",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000
+    },
+    {
+        "id": "ppdt_011",
+        "imageUrl": "artifact://ppdt_image_011_bw.png",
+        "imageDescription": "Ambiguous social situation in a park (black & white, hazy, grainy)",
+        "category": "general",
+        "difficulty": "medium",
+        "viewingTimeSeconds": 30,
+        "writingTimeMinutes": 4,
+        "minCharacters": 200,
+        "maxCharacters": 1000,
+        "analysisContext": "The user will be asked to describe the scene, emotions, and possible interactions depicted. The LLM should compare the user's textual response with the visual cues (e.g., presence of multiple figures, ambiguous gestures, subdued lighting) to assess perception and reasoning."
+    }
+]

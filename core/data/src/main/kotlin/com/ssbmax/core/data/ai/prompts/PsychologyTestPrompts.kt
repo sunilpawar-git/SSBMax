@@ -412,22 +412,52 @@ OUTPUT FORMAT:
     /**
      * Generate PPDT analysis prompt (optimized for token efficiency)
      */
+    /**
+     * Existing overload retained for backward compatibility. Delegates to the new overload with placeholder context and gender.
+     */
     fun generatePPDTAnalysisPrompt(submission: com.ssbmax.core.domain.model.PPDTSubmission): String {
+        // Placeholder context and gender (to be provided in Phase 2)
+        val placeholderContext = ""
+        val placeholderGender = "male"
+        return generatePPDTAnalysisPrompt(submission, placeholderContext, placeholderGender)
+    }
+
+    /**
+     * New overload that includes image context and candidate gender, and integrates scoring-rule hints.
+     */
+    fun generatePPDTAnalysisPrompt(
+        submission: com.ssbmax.core.domain.model.PPDTSubmission,
+        imageContext: String,
+        candidateGender: String
+    ): String {
+        val genderHint = when {
+            candidateGender.equals("male", ignoreCase = true) -> "Prefer a male protagonist in the story, but other genders are acceptable if justified."
+            candidateGender.equals("female", ignoreCase = true) -> "Prefer a female protagonist in the story, but other genders are acceptable if justified."
+            else -> "Gender of the protagonist is not constrained."
+        }
+        val speedDecisionHint = "If the goal/aim is established within the first 2-3 lines, boost SPEED_OF_DECISION score."
+        val rewardPenaltyHint = "Avoid giving the protagonist a material reward (money, prize, trophy) at the end; this caps the maximum possible score."
+        val structureBonusHint = "A clear Past-Present-Future structure boosts ORGANIZING_ABILITY."
+
         return """
 You are analyzing PPDT (Picture Perception & Description Test) story for SSB assessment.
 
-═══════════════════════════════════════════════════════════════════════════════
-PPDT STORY:
-═══════════════════════════════════════════════════════════════════════════════
+--- Image Context ---
+$imageContext
+--- End Context ---
 
+--- Story ---
 ${submission.story}
 
 (Characters: ${submission.charactersCount}, Time: ${submission.writingTimeTakenMinutes} minutes)
 
-═══════════════════════════════════════════════════════════════════════════════
-EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════
+--- Scoring Guidance ---
+$genderHint
+$speedDecisionHint
+$rewardPenaltyHint
+$structureBonusHint
 
+--- Evaluation Criteria (15 OLQs) ---
 1. EFFECTIVE_INTELLIGENCE: Practical wisdom, common sense
 2. REASONING_ABILITY: Logical thinking, problem-solving
 3. ORGANIZING_ABILITY: Planning, systematic approach

@@ -16,6 +16,7 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.notifications.NotificationHelper
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +42,7 @@ class InterviewAnalysisWorkerTest {
     private lateinit var interviewRepository: InterviewRepository
     private lateinit var aiService: AIService
     private lateinit var notificationHelper: NotificationHelper
+    private lateinit var getOLQDashboard: GetOLQDashboardUseCase
 
     private val testSessionId = "test-session-123"
     private val testUserId = "user-123"
@@ -115,6 +117,7 @@ class InterviewAnalysisWorkerTest {
         interviewRepository = mockk(relaxed = true)
         aiService = mockk(relaxed = true)
         notificationHelper = mockk(relaxed = true)
+        getOLQDashboard = mockk(relaxed = true)
 
         every { workerParams.inputData } returns workDataOf(
             InterviewAnalysisWorker.KEY_SESSION_ID to testSessionId
@@ -128,7 +131,8 @@ class InterviewAnalysisWorkerTest {
             params = workerParams,
             interviewRepository = interviewRepository,
             aiService = aiService,
-            notificationHelper = notificationHelper
+            notificationHelper = notificationHelper,
+            getOLQDashboard = getOLQDashboard
         )
     }
 

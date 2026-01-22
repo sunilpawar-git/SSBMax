@@ -15,6 +15,7 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
@@ -25,7 +26,8 @@ class WATAnalysisWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
     private val aiService: AIService,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val getOLQDashboard: GetOLQDashboardUseCase
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -55,6 +57,15 @@ class WATAnalysisWorker @AssistedInject constructor(
             val olqResult = createOLQResult(submissionId, olqScores)
             // Note: updateWATOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
             submissionRepository.updateWATOLQResult(submissionId, olqResult)
+
+            // Invalidate dashboard cache AFTER result is saved
+            // CRITICAL: Must happen after result is in Firestore, not at submission time
+            try {
+                getOLQDashboard.invalidateCache(submission.userId)
+                Log.d(TAG, "   Dashboard cache invalidated for user: ${submission.userId}")
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+            }
 
             notificationHelper.showWATResultsReadyNotification(submissionId)
             Log.d(TAG, "🎉 WAT analysis completed in ${System.currentTimeMillis() - startTime}ms")

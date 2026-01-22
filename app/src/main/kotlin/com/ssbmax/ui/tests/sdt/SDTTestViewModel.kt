@@ -269,10 +269,10 @@ class SDTTestViewModel @Inject constructor(
                     subscriptionManager.recordTestUsage(TestType.SD, currentUserId, submissionId)
                     android.util.Log.d(TAG, "✅ Test usage recorded successfully!")
 
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    android.util.Log.d(TAG, "📍 Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(currentUserId)
-                    android.util.Log.d(TAG, "✅ Dashboard cache invalidated!")
+                    // NOTE: Cache invalidation moved to SDTAnalysisWorker.
+                    // Invalidating here is premature because analysis takes ~15-30s.
+                    // The next dashboard fetch would cache empty SDT result.
+                    // See: SDTAnalysisWorker.doWork() for correct cache invalidation timing.
 
                     _uiState.update { it.copy(isLoading = false, isSubmitted = true,
                         submissionId = submissionId, subscriptionType = subscriptionType,

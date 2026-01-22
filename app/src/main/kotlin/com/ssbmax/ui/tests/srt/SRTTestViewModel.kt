@@ -406,10 +406,10 @@ class SRTTestViewModel @Inject constructor(
                     subscriptionManager.recordTestUsage(TestType.SRT, currentUserId, submissionId)
                     android.util.Log.d("SRTTestViewModel", "✅ Test usage recorded successfully!")
 
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    android.util.Log.d("SRTTestViewModel", "📍 Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(currentUserId)
-                    android.util.Log.d("SRTTestViewModel", "✅ Dashboard cache invalidated!")
+                    // NOTE: Cache invalidation moved to SRTAnalysisWorker.
+                    // Invalidating here is premature because analysis takes ~15-30s.
+                    // The next dashboard fetch would cache empty SRT result.
+                    // See: SRTAnalysisWorker.doWork() for correct cache invalidation timing.
 
                     _uiState.update { it.copy(
                         isLoading = false,

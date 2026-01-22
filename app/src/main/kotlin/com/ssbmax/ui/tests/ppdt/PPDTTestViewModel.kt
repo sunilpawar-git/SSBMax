@@ -349,10 +349,10 @@ class PPDTTestViewModel @Inject constructor(
                     subscriptionManager.recordTestUsage(TestType.PPDT, session.userId, submissionId)
                     android.util.Log.d("PPDTTestViewModel", "📝 Recorded test usage for subscription tracking")
 
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    android.util.Log.d("PPDTTestViewModel", "📍 Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(session.userId)
-                    android.util.Log.d("PPDTTestViewModel", "✅ Dashboard cache invalidated!")
+                    // NOTE: Cache invalidation moved to PPDTAnalysisWorker.
+                    // Invalidating here is premature because analysis takes ~17s.
+                    // The next dashboard fetch would cache empty PPDT result.
+                    // See: PPDTAnalysisWorker.doWork() for correct cache invalidation timing.
 
                     // Mark as submitted using thread-safe .update {}
                     _uiState.update { it.copy(

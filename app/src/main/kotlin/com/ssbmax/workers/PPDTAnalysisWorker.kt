@@ -18,6 +18,8 @@ import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 
 /**
  * Background worker for analyzing PPDT submissions using Gemini AI
@@ -28,7 +30,8 @@ import kotlinx.coroutines.delay
  * 2. Generates analysis prompt using PsychologyTestPrompts
  * 3. Analyzes with Gemini AI for OLQ scores (all 15 OLQs)
  * 4. Updates submission in Firestore with OLQ result
- * 5. Sends push notification when complete
+ * 5. Invalidates dashboard cache so fresh results are shown
+ * 6. Sends push notification when complete
  *
  * The user is free to navigate away while this runs in the background.
  */
@@ -38,7 +41,9 @@ class PPDTAnalysisWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
     private val aiService: AIService,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val testContentRepository: TestContentRepository,
+    private val getOLQDashboard: GetOLQDashboardUseCase
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -84,9 +89,28 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 4. Generate PPDT analysis prompt
-            val prompt = PsychologyTestPrompts.generatePPDTAnalysisPrompt(submission)
-            Log.d(TAG, "   Step 3: Generated PPDT analysis prompt")
+            // 4. Determine Candidate Gender (Placeholder for now, TODO: Fetch from User Profile)
+            // Default to "male" if unknown variables, or "female" if name suggests (simplistic fallback)
+            val candidateGender = "male" // Placeholder until UserProfile is integrated in worker
+
+            // 5. Fetch Image Context using questionId
+            var imageContext = ""
+            try {
+                val questionResult = testContentRepository.getPPDTQuestion(submission.questionId)
+                val question = questionResult.getOrNull()
+                if (question != null) {
+                    imageContext = question.context
+                    Log.d(TAG, "   Step 3a: Retrieved image context (${imageContext.length} chars)")
+                } else {
+                    Log.w(TAG, "   ⚠️ Failed to retrieve PPDT question context for ID: ${submission.questionId}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "   ❌ Error fetching image context", e)
+            }
+
+            // 6. Generate PPDT analysis prompt with context and gender
+            val prompt = PsychologyTestPrompts.generatePPDTAnalysisPrompt(submission, imageContext, candidateGender)
+            Log.d(TAG, "   Step 3b: Generated PPDT analysis prompt with context")
 
             // 5. Analyze with Gemini AI (with retry logic)
             val olqScores = analyzeSubmissionWithRetry(prompt)
@@ -144,7 +168,17 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
             Log.d(TAG, "   Step 5: Submission updated with OLQ result")
 
-            // 8. Send notification
+            // 8. Invalidate dashboard cache AFTER result is saved
+            // CRITICAL: This must happen AFTER the result is in Firestore, not at submission time.
+            // Otherwise, the next dashboard fetch caches empty PPDT result (analysis still in progress).
+            try {
+                getOLQDashboard.invalidateCache(submission.userId)
+                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+            }
+
+            // 9. Send notification
             try {
                 notificationHelper.showPPDTResultsReadyNotification(submissionId)
                 Log.d(TAG, "✅ Push notification sent successfully!")
