@@ -281,8 +281,6 @@ class GetOLQDashboardUseCaseTest {
         assertEquals(6.0f, data?.averageOLQScores?.get(OLQ.EFFECTIVE_INTELLIGENCE))
     }
 
-<<<<<<< HEAD
-=======
     /**
      * REGRESSION PREVENTION TEST: OIR Dashboard Navigation ID Consistency
      * 
@@ -290,7 +288,6 @@ class GetOLQDashboardUseCaseTest {
      * and the document ID is reconciled when the dashboard data is built.
      * Without this fix, clicking on OIR tile would result in "Submission not found" error.
      */
->>>>>>> d27fe5a (fix(oir): re-apply OIR dashboard reconciliation fix and regression test)
     @Test
     fun `invoke reconciles OIR sessionId with submission document ID`() = runTest {
         // Given
@@ -345,20 +342,14 @@ class GetOLQDashboardUseCaseTest {
         val data = result.getOrNull()
         
         // CRITICAL VERIFICATION: The sessionId in the processed data MUST match the submission document ID
-<<<<<<< HEAD
         // even if it was different in the raw data (regression prevention)
-=======
->>>>>>> d27fe5a (fix(oir): re-apply OIR dashboard reconciliation fix and regression test)
         val finalOirResult = data?.dashboard?.phase1Results?.oirResult
         assertNotNull(finalOirResult)
         assertEquals("The sessionId must be reconciled with the document ID for navigation consistency", 
             submissionId, finalOirResult?.sessionId)
     }
 
-<<<<<<< HEAD
     // Helper to create test OLQ results
-=======
->>>>>>> d27fe5a (fix(oir): re-apply OIR dashboard reconciliation fix and regression test)
     private fun createOLQResult(
         submissionId: String,
         testType: TestType,
