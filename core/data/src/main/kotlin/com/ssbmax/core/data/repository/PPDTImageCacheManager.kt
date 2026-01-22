@@ -154,7 +154,7 @@ class PPDTImageCacheManager @Inject constructor(
             // Convert to domain model
             val question = PPDTQuestion(
                 id = image.id,
-                imageUrl = image.imageUrl,
+                imageUrl = normalizeUrl(image.imageUrl) ?: image.imageUrl,
                 imageDescription = image.imageDescription,
                 context = image.context,
                 viewingTimeSeconds = image.viewingTimeSeconds,
@@ -182,7 +182,7 @@ class PPDTImageCacheManager @Inject constructor(
                 return Result.success(
                     PPDTQuestion(
                         id = entity.id,
-                        imageUrl = entity.imageUrl,
+                        imageUrl = normalizeUrl(entity.imageUrl) ?: entity.imageUrl,
                         imageDescription = entity.imageDescription,
                         context = entity.context, // Map context
                         viewingTimeSeconds = entity.viewingTimeSeconds,
@@ -232,7 +232,7 @@ class PPDTImageCacheManager @Inject constructor(
             val questions = cachedImages.map { entity ->
                 PPDTQuestion(
                     id = entity.id,
-                    imageUrl = entity.imageUrl,
+                    imageUrl = normalizeUrl(entity.imageUrl) ?: entity.imageUrl,
                     imageDescription = entity.imageDescription,
                     context = entity.context,
                     viewingTimeSeconds = entity.viewingTimeSeconds,
@@ -270,6 +270,16 @@ class PPDTImageCacheManager @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get cache status", e)
             PPDTCacheStatus()
+        }
+    }
+
+    private fun normalizeUrl(raw: String?): String? {
+        return raw?.let {
+            if (it.startsWith("gs://")) {
+                it.replaceFirst("gs://", "https://storage.googleapis.com/")
+            } else {
+                it
+            }
         }
     }
     
