@@ -115,6 +115,7 @@ jobs:
             :app:testDebugUnitTest \
             :app:assembleDebug \
             -Dlint.baselines.continue=true \
+            -Dorg.gradle.java.home=$JAVA_HOME \
             --build-cache \
             --parallel \
             --stacktrace
