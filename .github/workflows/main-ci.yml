@@ -91,6 +91,14 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Validate JAVA_HOME
+        run: |
+          echo "JAVA_HOME is set to: $JAVA_HOME"
+          echo "Java version:"
+          java -version
+          echo "Javac version:"
+          javac -version
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
