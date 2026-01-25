@@ -13,6 +13,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val SRT_TOTAL_TIME_SECONDS = 1800 // 30 minutes
 
 /**
  * SRT Test In-Progress Screen
@@ -74,6 +78,13 @@ fun SRTInProgressView(
                     onResponseChange = onResponseChange,
                     minChars = minChars,
                     maxChars = maxChars
+                )
+
+                // Timer progress bar - always visible even with keyboard open
+                TimerProgressBar(
+                    timeRemainingSeconds = timeRemaining,
+                    totalTimeSeconds = SRT_TOTAL_TIME_SECONDS,
+                    lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
                 )
                 
                 // Buttons moved here, immediately below input as requested

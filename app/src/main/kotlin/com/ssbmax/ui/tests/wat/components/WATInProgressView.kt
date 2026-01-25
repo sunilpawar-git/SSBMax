@@ -16,6 +16,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ssbmax.R
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val WAT_TIME_PER_WORD_SECONDS = 15
 
 @Composable
 fun WATInProgressView(
@@ -64,6 +68,7 @@ fun WATInProgressView(
                     onResponseChange = onResponseChange,
                     onSubmit = onSubmit,
                     onSkip = onSkip,
+                    timeRemaining = timeRemaining,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f) // Take remaining space
@@ -149,6 +154,7 @@ private fun WATActiveContent(
     onResponseChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onSkip: () -> Unit,
+    timeRemaining: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -194,7 +200,15 @@ private fun WATActiveContent(
             )
         )
 
-        Spacer(Modifier.height(24.dp))
+        // Timer progress bar - always visible even with keyboard open
+        TimerProgressBar(
+            timeRemainingSeconds = timeRemaining,
+            totalTimeSeconds = WAT_TIME_PER_WORD_SECONDS,
+            lowTimeThresholdSeconds = TimerThresholds.SHORT_TEST,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Spacer(Modifier.height(16.dp))
 
         // Action buttons
         Row(
