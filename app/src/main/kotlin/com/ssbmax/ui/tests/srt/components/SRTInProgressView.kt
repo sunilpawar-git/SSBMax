@@ -13,14 +13,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.ui.components.TimerProgressBar
-import com.ssbmax.ui.components.TimerThresholds
-
-private const val SRT_TOTAL_TIME_SECONDS = 1800 // 30 minutes
 
 /**
  * SRT Test In-Progress Screen
- * Displays current situation, response input, and navigation controls
+ * Timer is displayed in the static SRTHeader (always visible at top)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,14 +85,6 @@ fun SRTInProgressView(
                 
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-            // Timer progress bar - FIXED at bottom, always visible above keyboard
-            TimerProgressBar(
-                timeRemainingSeconds = timeRemaining,
-                totalTimeSeconds = SRT_TOTAL_TIME_SECONDS,
-                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
-                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp)
-            )
         }
     }
     
