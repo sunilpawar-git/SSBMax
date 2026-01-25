@@ -287,6 +287,15 @@ fun SpeechPhase(
                 shadowElevation = 8.dp
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    // Timer progress bar - FIXED at bottom, always visible above keyboard
+                    TimerProgressBar(
+                        timeRemainingSeconds = timeRemainingSeconds,
+                        totalTimeSeconds = LECTURETTE_SPEECH_TIME_SECONDS,
+                        lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -320,6 +329,7 @@ fun SpeechPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         ) {
             Card(
                 modifier = Modifier
@@ -351,14 +361,6 @@ fun SpeechPhase(
                 placeholder = { Text("Deliver your speech here...") },
                 textStyle = MaterialTheme.typography.bodyLarge,
                 label = { Text("Speech Transcript") }
-            )
-
-            // Timer progress bar - always visible even with keyboard open
-            TimerProgressBar(
-                timeRemainingSeconds = timeRemainingSeconds,
-                totalTimeSeconds = LECTURETTE_SPEECH_TIME_SECONDS,
-                lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
     }

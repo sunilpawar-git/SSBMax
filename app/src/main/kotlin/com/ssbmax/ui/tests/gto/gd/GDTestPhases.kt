@@ -181,6 +181,15 @@ fun DiscussionPhase(
                 shadowElevation = 8.dp
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    // Timer progress bar - FIXED at bottom, always visible above keyboard
+                    TimerProgressBar(
+                        timeRemainingSeconds = timeRemainingSeconds,
+                        totalTimeSeconds = GD_TOTAL_TIME_SECONDS,
+                        lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -218,6 +227,7 @@ fun DiscussionPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         ) {
             Card(
                 modifier = Modifier
@@ -248,14 +258,6 @@ fun DiscussionPhase(
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Write your thoughts on this topic...") },
                 textStyle = MaterialTheme.typography.bodyLarge
-            )
-
-            // Timer progress bar - always visible even with keyboard open
-            TimerProgressBar(
-                timeRemainingSeconds = timeRemainingSeconds,
-                totalTimeSeconds = GD_TOTAL_TIME_SECONDS,
-                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
     }

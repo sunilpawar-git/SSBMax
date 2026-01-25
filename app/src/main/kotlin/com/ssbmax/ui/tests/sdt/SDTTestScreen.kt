@@ -218,12 +218,22 @@ private fun QuestionInProgressView(
                     TimerDisplay(timeRemaining)
                 }
             )
+        },
+        bottomBar = {
+            // Timer progress bar - FIXED at bottom, always visible above keyboard
+            TimerProgressBar(
+                timeRemainingSeconds = timeRemaining,
+                totalTimeSeconds = SDT_TOTAL_TIME_SECONDS,
+                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -243,7 +253,7 @@ private fun QuestionInProgressView(
                 onValueChange = onAnswerChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .heightIn(min = 120.dp, max = 300.dp), // Compact initial, expands with content
                 label = { Text(stringResource(R.string.sdt_answer_label)) },
                 supportingText = {
                     val isError = charCount < minChars || charCount > maxChars
@@ -252,15 +262,10 @@ private fun QuestionInProgressView(
                     Text("Characters: $charCount / $maxChars (Min: $minChars)", color = color)
                 },
                 isError = charCount < minChars || charCount > maxChars,
-                maxLines = 20
+                maxLines = 12
             )
 
-            // Timer progress bar - always visible even with keyboard open
-            TimerProgressBar(
-                timeRemainingSeconds = timeRemaining,
-                totalTimeSeconds = SDT_TOTAL_TIME_SECONDS,
-                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
-            )
+            Spacer(modifier = Modifier.weight(1f))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) {

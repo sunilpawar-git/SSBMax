@@ -158,80 +158,85 @@ private fun WATActiveContent(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(32.dp))
-        
-        // Word display (Large, centered)
-        AnimatedContent(
-            targetState = word,
-            transitionSpec = {
-                fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut()
-            },
-            label = "word_animation"
-        ) { currentWord ->
-            Text(
-                text = currentWord,
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 36.sp
-                ),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp)
+        // Scrollable content area
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Spacer(Modifier.height(16.dp))
+            
+            // Word display (Large, centered)
+            AnimatedContent(
+                targetState = word,
+                transitionSpec = {
+                    fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut()
+                },
+                label = "word_animation"
+            ) { currentWord ->
+                Text(
+                    text = currentWord,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 36.sp
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp)
+                )
+            }
+            
+            // Response input
+            OutlinedTextField(
+                value = response,
+                onValueChange = onResponseChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.wat_response_placeholder)) },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.titleLarge.copy(
+                    textAlign = TextAlign.Center
+                )
             )
-        }
-        
-        // Response input
-        OutlinedTextField(
-            value = response,
-            onValueChange = onResponseChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(stringResource(R.string.wat_response_placeholder)) },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.titleLarge.copy(
-                textAlign = TextAlign.Center
-            )
-        )
 
-        // Timer progress bar - always visible even with keyboard open
+            Spacer(Modifier.height(16.dp))
+
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onSkip,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.wat_skip))
+                }
+
+                Button(
+                    onClick = onSubmit,
+                    modifier = Modifier.weight(1f),
+                    enabled = response.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.wat_submit))
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // Timer progress bar - FIXED at bottom, always visible above keyboard
         TimerProgressBar(
             timeRemainingSeconds = timeRemaining,
             totalTimeSeconds = WAT_TIME_PER_WORD_SECONDS,
             lowTimeThresholdSeconds = TimerThresholds.SHORT_TEST,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         )
-
-        Spacer(Modifier.height(16.dp))
-
-        // Action buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(
-                onClick = onSkip,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.wat_skip))
-            }
-
-            Button(
-                onClick = onSubmit,
-                modifier = Modifier.weight(1f),
-                enabled = response.isNotBlank()
-            ) {
-                Text(stringResource(R.string.wat_submit))
-            }
-        }
-        
-        // Bottom spacer to ensure safe scrolling
-        Spacer(Modifier.height(16.dp))
     }
 }

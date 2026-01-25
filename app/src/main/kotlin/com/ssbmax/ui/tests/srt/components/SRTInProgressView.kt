@@ -79,13 +79,6 @@ fun SRTInProgressView(
                     minChars = minChars,
                     maxChars = maxChars
                 )
-
-                // Timer progress bar - always visible even with keyboard open
-                TimerProgressBar(
-                    timeRemainingSeconds = timeRemaining,
-                    totalTimeSeconds = SRT_TOTAL_TIME_SECONDS,
-                    lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
-                )
                 
                 // Buttons moved here, immediately below input as requested
                 SRTButtons(
@@ -94,9 +87,16 @@ fun SRTInProgressView(
                     onSkip = onSkip
                 )
                 
-                Spacer(modifier = Modifier.weight(1f)) // Push remaining space to bottom
                 Spacer(modifier = Modifier.height(16.dp))
             }
+
+            // Timer progress bar - FIXED at bottom, always visible above keyboard
+            TimerProgressBar(
+                timeRemainingSeconds = timeRemaining,
+                totalTimeSeconds = SRT_TOTAL_TIME_SECONDS,
+                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
     }
     
