@@ -525,6 +525,27 @@ class FirestoreInterviewRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    override suspend fun getLatestResult(userId: String): Result<InterviewResult?> {
+        return try {
+            val snapshot = firestore.collection(COLLECTION_RESULTS)
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .orderBy(FIELD_COMPLETED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            val result = snapshot.documents.firstOrNull()?.data?.let { data ->
+                InterviewFirestoreMappers.mapToResult(data)
+            }
+
+            Log.d(TAG, "getLatestResult for user $userId: ${result?.id ?: "null"}")
+            Result.success(result)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get latest result for user: $userId", e)
+            Result.failure(e)
+        }
+    }
+
     // ============================================
     // ANALYTICS
     // ============================================

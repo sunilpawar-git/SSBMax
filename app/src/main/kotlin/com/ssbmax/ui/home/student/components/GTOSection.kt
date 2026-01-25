@@ -16,6 +16,7 @@ import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 fun GTOSection(
     results: OLQDashboardData.Phase2Results,
     onNavigateToResult: (TestType, String) -> Unit,
+    isRefreshing: Boolean = false
 ) {
     DashboardSection(title = stringResource(R.string.dashboard_gto)) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -23,6 +24,7 @@ fun GTOSection(
                 TestScoreChip(
                     testName = type.displayName,
                     score = result.overallScore,
+                    isRefreshing = isRefreshing,
                     onClick = { onNavigateToResult(result.testType, result.submissionId) }
                 )
             }

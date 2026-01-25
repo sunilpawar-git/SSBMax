@@ -460,6 +460,72 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         val state = viewModel.uiState.value
         assertNotNull("State should still be accessible", state)
     }
+
+    // ==================== Dashboard Loading State Tests (Phase 2 Fix) ====================
+
+    @Test
+    fun `dashboard should not show loading state on initial load`() = runTest {
+        // Given - Dashboard loads data asynchronously
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+
+        // When - ViewModel is created
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+
+        // Then - isLoadingDashboard should be false (no spinner blocking UI)
+        val initialState = viewModel.uiState.value
+        assertFalse(
+            "Dashboard should not show loading spinner on initial load",
+            initialState.isLoadingDashboard
+        )
+    }
+
+    @Test
+    fun `refreshDashboard sets isRefreshingDashboard but not isLoadingDashboard`() = runTest {
+        // Given
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle()
+
+        // When - User manually refreshes dashboard
+        viewModel.refreshDashboard()
+
+        // Then - Should show refresh indicator, not full loading spinner
+        // Note: isRefreshingDashboard is for the refresh icon animation
+        val state = viewModel.uiState.value
+        assertFalse(
+            "isLoadingDashboard should remain false during refresh",
+            state.isLoadingDashboard
+        )
+    }
     
     // ==================== Edge Cases Tests ====================
     

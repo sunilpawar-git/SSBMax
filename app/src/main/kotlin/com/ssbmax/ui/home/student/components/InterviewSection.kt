@@ -13,11 +13,13 @@ import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 fun InterviewSection(
     results: OLQDashboardData.Phase2Results,
     onNavigateToResult: (TestType, String) -> Unit,
+    isRefreshing: Boolean = false
 ) {
     DashboardSection(title = stringResource(R.string.dashboard_interview)) {
         TestScoreChip(
             testName = stringResource(R.string.dashboard_test_interview),
             score = results.interviewResult?.getAverageOLQScore(),
+            isRefreshing = isRefreshing,
             onClick = results.interviewResult?.let {
                 { onNavigateToResult(TestType.IO, it.id) }
             }
