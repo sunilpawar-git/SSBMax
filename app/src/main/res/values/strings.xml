@@ -1327,4 +1327,41 @@
     <string name="notification_ppdt_failed_title">PPDT Analysis Issue</string>
     <string name="notification_ppdt_failed_body">We couldn\'t complete the PPDT analysis. Please try again later.</string>
 
+    <!-- Unified Result Screen Components -->
+    <string name="result_test_submitted_title">Test Submitted Successfully!</string>
+    <string name="result_tat_stories_completed">You completed %1$d/%2$d stories</string>
+    <string name="result_wat_responses_completed">%1$d/%2$d valid responses</string>
+    <string name="result_srt_situations_completed">%1$d/%2$d situations answered</string>
+    <string name="result_ppdt_story_submitted">Your PPDT story has been submitted for analysis</string>
+    <string name="result_sdt_responses_completed">Completed: %1$d / 4 questions</string>
+    <string name="result_tat_title">TAT Test Results</string>
+    <string name="result_wat_title">WAT Test Results</string>
+    <string name="result_srt_title">SRT Test Results</string>
+    <string name="result_ppdt_title">PPDT Test Results</string>
+    <string name="result_ppdt_story_submitted_title">Story Submitted Successfully!</string>
+    <string name="result_ppdt_characters_written">%d characters written</string>
+    <string name="result_ppdt_your_story_title">Your Story</string>
+    <string name="result_ppdt_character_count_label">Character Count:</string>
+    <string name="result_ppdt_writing_time_label">Writing Time:</string>
+    <string name="result_ppdt_writing_time_value">%d minutes</string>
+    <string name="result_sdt_title">SDT Test Results</string>
+    <string name="result_sdt_characters_label">Characters: %d</string>
+    <string name="result_analyzing_title">Analyzing Your Response…</string>
+    <string name="result_analyzing_description">AI is evaluating your response across 15 Officer-Like Qualities. This usually takes 30–60 seconds.</string>
+    <string name="result_analysis_failed_title">Analysis Failed</string>
+    <string name="result_analysis_failed_description">AI analysis could not be completed. Please contact support or retake the test.</string>
+    <string name="result_pending_analysis_title">OLQ Analysis Pending</string>
+    <string name="result_pending_analysis_description">Your submission will be analyzed shortly.</string>
+    <string name="result_overall_performance">Overall Performance</string>
+    <string name="result_score_out_of_10">out of 10</string>
+    <string name="result_ai_confidence">AI Confidence: %d%%</string>
+    <string name="result_ssb_scale_note">Note: SSB uses 1–10 scale where LOWER scores indicate BETTER performance</string>
+    <string name="result_top_strengths_title">Top Strengths</string>
+    <string name="result_areas_improvement_title">Areas for Improvement</string>
+    <string name="result_olq_assessment_title">Officer-Like Qualities Assessment</string>
+    <string name="result_recommendations_title">Recommendations</string>
+    <string name="result_back_to_home">Back to Home</string>
+    <string name="result_instructor_review_pending_title">Pending Instructor Review</string>
+    <string name="result_instructor_review_pending_description">Your instructor will review and provide final feedback</string>
+
 </resources>

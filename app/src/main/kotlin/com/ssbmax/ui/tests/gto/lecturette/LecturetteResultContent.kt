@@ -12,8 +12,10 @@ import com.ssbmax.core.domain.model.gto.GTOResult
 import com.ssbmax.core.domain.model.gto.GTOSubmission
 import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.ui.components.SSBRecommendationBanner
-import com.ssbmax.ui.tests.gto.common.*
-import com.ssbmax.ui.tests.gto.lecturette.*
+import com.ssbmax.ui.components.result.AnalyzingCard
+import com.ssbmax.ui.components.result.AnalysisFailedCard
+import com.ssbmax.ui.components.result.OverallScoreCard
+import com.ssbmax.ui.components.result.OLQScoreCard
 
 @Composable
 fun LecturetteResultContent(
@@ -42,7 +44,7 @@ fun LecturetteResultContent(
         
         item {
             when {
-                isAnalyzing -> AnalyzingCard("Analyzing Your Speech...")
+                isAnalyzing -> AnalyzingCard(message = "Analyzing Your Speech...")
                 isFailed -> AnalysisFailedCard()
             }
         }
