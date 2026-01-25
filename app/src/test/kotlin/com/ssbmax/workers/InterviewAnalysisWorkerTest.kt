@@ -140,10 +140,12 @@ class InterviewAnalysisWorkerTest {
     fun `worker fetches session and responses`() = runTest {
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
         coEvery { interviewRepository.getResponses(testSessionId) } returns Result.success(testResponses)
+        coEvery { interviewRepository.getResponse(any()) } returns Result.success(testResponses[0])
         coEvery { aiService.analyzeResponse(any(), any(), any()) } returns Result.success(testAnalysisResult)
         coEvery { interviewRepository.updateResponse(any()) } returns Result.success(mockk())
         coEvery { interviewRepository.completeInterview(testSessionId) } returns Result.success(testInterviewResult)
         coEvery { interviewRepository.updateSession(any()) } returns Result.success(Unit)
+        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
 
         val worker = createWorker()
         val result = worker.doWork()
@@ -157,10 +159,12 @@ class InterviewAnalysisWorkerTest {
     fun `worker sends success notification`() = runTest {
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
         coEvery { interviewRepository.getResponses(testSessionId) } returns Result.success(testResponses)
+        coEvery { interviewRepository.getResponse(any()) } returns Result.success(testResponses[0])
         coEvery { aiService.analyzeResponse(any(), any(), any()) } returns Result.success(testAnalysisResult)
         coEvery { interviewRepository.updateResponse(any()) } returns Result.success(mockk())
         coEvery { interviewRepository.completeInterview(testSessionId) } returns Result.success(testInterviewResult)
         coEvery { interviewRepository.updateSession(any()) } returns Result.success(Unit)
+        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
 
         val worker = createWorker()
         worker.doWork()
