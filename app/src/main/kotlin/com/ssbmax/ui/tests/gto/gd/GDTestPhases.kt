@@ -15,10 +15,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.ui.components.TimerProgressBar
-import com.ssbmax.ui.components.TimerThresholds
 
-private const val GD_TOTAL_TIME_SECONDS = 1200 // 20 minutes
+/**
+ * GD Test Phases
+ * Timer is displayed in the static TopAppBar header (always visible)
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,7 +150,6 @@ fun DiscussionPhase(
     response: String,
     charCount: Int,
     timeRemaining: String,
-    timeRemainingSeconds: Int,
     isTimeLow: Boolean,
     onResponseChanged: (String) -> Unit,
     onProceedToReview: () -> Unit,
@@ -181,15 +181,6 @@ fun DiscussionPhase(
                 shadowElevation = 8.dp
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    // Timer progress bar - FIXED at bottom, always visible above keyboard
-                    TimerProgressBar(
-                        timeRemainingSeconds = timeRemainingSeconds,
-                        totalTimeSeconds = GD_TOTAL_TIME_SECONDS,
-                        lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
-                    )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -210,7 +201,7 @@ fun DiscussionPhase(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     Button(
                         onClick = onProceedToReview,
