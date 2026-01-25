@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQCategory
+import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.tests.gto.common.*
 import com.ssbmax.ui.tests.gto.gd.*
 
@@ -132,6 +133,13 @@ fun GDResultScreen(
                     }
                     
                     if (uiState.isCompleted && uiState.result != null) {
+                        // SSB Recommendation Banner (above Overall Performance)
+                        uiState.ssbRecommendation?.let { recommendation ->
+                            item {
+                                SSBRecommendationBanner(model = recommendation)
+                            }
+                        }
+                        
                         item {
                             OverallScoreCard(
                                 overallScore = uiState.result!!.overallScore,

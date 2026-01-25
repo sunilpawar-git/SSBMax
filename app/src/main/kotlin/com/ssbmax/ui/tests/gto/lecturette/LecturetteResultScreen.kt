@@ -103,6 +103,7 @@ fun LecturetteResultScreen(
                 LecturetteResultContent(
                     submission = uiState.submission!!,
                     result = uiState.result,
+                    ssbRecommendation = uiState.ssbRecommendation,
                     isAnalyzing = uiState.isAnalyzing,
                     isFailed = uiState.isFailed,
                     formattedTimeSpent = uiState.formattedTimeSpent,
