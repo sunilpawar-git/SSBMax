@@ -109,7 +109,6 @@ fun GPETestScreen(
                             charactersCount = uiState.charactersCount,
                             minCharacters = uiState.minCharacters,
                             maxCharacters = uiState.maxCharacters,
-                            timeRemainingSeconds = uiState.timeRemainingSeconds,
                             scenario = uiState.scenario,
                             resources = uiState.resources,
                             imageUrl = uiState.imageUrl
