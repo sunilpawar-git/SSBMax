@@ -320,6 +320,8 @@ fun SpeechPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             Card(
                 modifier = Modifier
@@ -346,12 +348,15 @@ fun SpeechPhase(
                 onValueChange = onTranscriptChanged,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .defaultMinSize(minHeight = 300.dp)
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Deliver your speech here...") },
                 textStyle = MaterialTheme.typography.bodyLarge,
-                label = { Text("Speech Transcript") }
+                label = { Text("Speech Transcript") },
+                maxLines = Int.MAX_VALUE
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

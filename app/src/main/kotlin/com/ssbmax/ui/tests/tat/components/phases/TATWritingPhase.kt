@@ -1,6 +1,8 @@
 package com.ssbmax.ui.tests.tat.components.phases
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Timer
@@ -14,6 +16,8 @@ import androidx.compose.ui.unit.dp
 /**
  * TAT Writing Phase
  * Story composition with character count tracking and timer
+ * 
+ * Layout: Scrollable column with imePadding for keyboard handling
  */
 @Composable
 fun TATWritingPhase(
@@ -28,7 +32,10 @@ fun TATWritingPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Show blank slide reminder for 12th picture
@@ -115,12 +122,13 @@ fun TATWritingPhase(
             onValueChange = onStoryChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .defaultMinSize(minHeight = 250.dp),
             placeholder = { Text("Write a complete story with characters, situation, action, and outcome...") },
             supportingText = {
                 Text("Include: Who, What, Why, How the story unfolds, and What happens in the end")
             },
-            isError = charactersCount > maxCharacters
+            isError = charactersCount > maxCharacters,
+            maxLines = Int.MAX_VALUE
         )
 
         // Full-width timer progress bar (matches PPDT implementation)
@@ -133,5 +141,7 @@ fun TATWritingPhase(
                 MaterialTheme.colorScheme.primary
             }
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

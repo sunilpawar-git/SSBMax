@@ -218,6 +218,8 @@ fun DiscussionPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             Card(
                 modifier = Modifier
@@ -244,11 +246,14 @@ fun DiscussionPhase(
                 onValueChange = onResponseChanged,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .defaultMinSize(minHeight = 300.dp)
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Write your thoughts on this topic...") },
-                textStyle = MaterialTheme.typography.bodyLarge
+                textStyle = MaterialTheme.typography.bodyLarge,
+                maxLines = Int.MAX_VALUE
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

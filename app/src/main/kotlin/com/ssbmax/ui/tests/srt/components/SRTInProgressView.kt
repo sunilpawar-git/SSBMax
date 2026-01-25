@@ -61,7 +61,8 @@ fun SRTInProgressView(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()) // Allow scrolling to reach buttons
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))

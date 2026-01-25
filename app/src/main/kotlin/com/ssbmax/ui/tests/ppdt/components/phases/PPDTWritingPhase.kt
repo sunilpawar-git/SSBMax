@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
  * Story composition with character count tracking
  * 
  * Timer is displayed in the static TopAppBar header (TimerChip)
- * Layout: Fixed instructions card + scrollable text field for optimal typing UX
+ * Layout: Scrollable column that allows content to scroll behind header when keyboard appears
  */
 
 @Composable
@@ -28,11 +28,13 @@ fun PPDTWritingPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-            .padding(16.dp),
+            .verticalScroll(rememberScrollState()) // Make entire column scrollable
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
+            .imePadding(), // Handle keyboard insets at the end
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Fixed instructions card - never scrolls away
+        // Instructions card - will scroll up behind header when keyboard appears
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -56,7 +58,7 @@ fun PPDTWritingPhase(
             }
         }
 
-        // Scrollable text field - user can type as much as they want
+        // Text field - fills remaining space efficiently
         OutlinedTextField(
             value = story,
             onValueChange = {
@@ -66,9 +68,9 @@ fun PPDTWritingPhase(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
+                .defaultMinSize(minHeight = 300.dp), // Larger minimum height
             placeholder = { Text("Start writing your story here...") },
+            maxLines = Int.MAX_VALUE, // Allow multi-line expansion
             supportingText = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -93,5 +95,8 @@ fun PPDTWritingPhase(
                 }
             }
         )
+        
+        // Bottom spacer for better scroll behavior
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

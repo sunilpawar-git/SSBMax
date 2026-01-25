@@ -34,7 +34,9 @@ fun GPEPlanningPhase(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Map Image Card
@@ -98,13 +100,13 @@ fun GPEPlanningPhase(
             }
         }
 
-        // Planning response text field - compact height that expands
+        // Planning response text field - with proper keyboard handling
         OutlinedTextField(
             value = planningResponse,
             onValueChange = onPlanningResponseChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 150.dp, max = 350.dp), // Compact initial, expands with content
+                .defaultMinSize(minHeight = 200.dp),
             label = { Text(stringResource(R.string.gpe_planning_response_label)) },
             placeholder = { Text(stringResource(R.string.gpe_planning_response_placeholder)) },
             supportingText = {
@@ -125,7 +127,7 @@ fun GPEPlanningPhase(
                 )
             },
             isError = charactersCount > maxCharacters,
-            maxLines = 15
+            maxLines = Int.MAX_VALUE
         )
 
         // Guidelines card
