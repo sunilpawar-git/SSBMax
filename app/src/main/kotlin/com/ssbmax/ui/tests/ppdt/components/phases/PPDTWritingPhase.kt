@@ -27,7 +27,6 @@ fun PPDTWritingPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding() // Push content up when keyboard opens
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)

@@ -218,7 +218,6 @@ fun DiscussionPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
         ) {
             Card(
                 modifier = Modifier

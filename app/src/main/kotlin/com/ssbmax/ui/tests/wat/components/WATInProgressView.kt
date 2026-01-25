@@ -52,7 +52,6 @@ fun WATInProgressView(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
-                    .imePadding()
             ) {
                 // Top bar with progress and exit - PINNED at top
                 WATHeader(

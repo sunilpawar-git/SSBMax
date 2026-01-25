@@ -48,7 +48,6 @@ fun SRTInProgressView(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .imePadding() // Key fix: Push content up when keyboard opens
         ) {
             SRTHeader(
                 situationNumber = situationNumber,

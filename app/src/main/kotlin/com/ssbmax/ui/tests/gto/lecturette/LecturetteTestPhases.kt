@@ -320,7 +320,6 @@ fun SpeechPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
         ) {
             Card(
                 modifier = Modifier
