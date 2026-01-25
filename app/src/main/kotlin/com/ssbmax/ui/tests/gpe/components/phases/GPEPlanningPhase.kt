@@ -11,6 +11,10 @@ import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val GPE_PLANNING_TIME_SECONDS = 1740 // 29 minutes
 
 /**
  * GPE Planning Phase
@@ -125,6 +129,13 @@ fun GPEPlanningPhase(
             },
             isError = charactersCount > maxCharacters,
             maxLines = 20
+        )
+
+        // Timer progress bar - always visible even with keyboard open
+        TimerProgressBar(
+            timeRemainingSeconds = timeRemainingSeconds,
+            totalTimeSeconds = GPE_PLANNING_TIME_SECONDS,
+            lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
         )
 
         // Guidelines card

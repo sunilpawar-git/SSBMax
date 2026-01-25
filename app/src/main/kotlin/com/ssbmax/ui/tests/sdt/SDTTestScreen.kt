@@ -21,6 +21,10 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.SDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val SDT_TOTAL_TIME_SECONDS = 900 // 15 minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -249,6 +253,13 @@ private fun QuestionInProgressView(
                 },
                 isError = charCount < minChars || charCount > maxChars,
                 maxLines = 20
+            )
+
+            // Timer progress bar - always visible even with keyboard open
+            TimerProgressBar(
+                timeRemainingSeconds = timeRemaining,
+                totalTimeSeconds = SDT_TOTAL_TIME_SECONDS,
+                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
