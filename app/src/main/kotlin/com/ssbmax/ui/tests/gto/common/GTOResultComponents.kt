@@ -15,8 +15,18 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 
 /**
  * Shared components for GTO result screens
+ *
+ * @deprecated Use components from com.ssbmax.ui.components.result package instead.
+ * These components will be removed in a future version.
  */
 
+@Deprecated(
+    message = "Use AnalyzingCard from com.ssbmax.ui.components.result.ResultStatusCards instead",
+    replaceWith = ReplaceWith(
+        "AnalyzingCard(message = message)",
+        "com.ssbmax.ui.components.result.AnalyzingCard"
+    )
+)
 @Composable
 fun AnalyzingCard(message: String = "Analyzing Your Response...") {
     Card(
@@ -50,6 +60,13 @@ fun AnalyzingCard(message: String = "Analyzing Your Response...") {
     }
 }
 
+@Deprecated(
+    message = "Use AnalysisFailedCard from com.ssbmax.ui.components.result.ResultStatusCards instead",
+    replaceWith = ReplaceWith(
+        "AnalysisFailedCard()",
+        "com.ssbmax.ui.components.result.AnalysisFailedCard"
+    )
+)
 @Composable
 fun AnalysisFailedCard() {
     Card(
@@ -89,6 +106,13 @@ fun AnalysisFailedCard() {
     }
 }
 
+@Deprecated(
+    message = "Use OverallScoreCard from com.ssbmax.ui.components.result.ResultScoreCards instead",
+    replaceWith = ReplaceWith(
+        "OverallScoreCard(overallScore, overallRating, aiConfidence)",
+        "com.ssbmax.ui.components.result.OverallScoreCard"
+    )
+)
 @Composable
 fun OverallScoreCard(
     overallScore: Float,
@@ -162,6 +186,13 @@ fun OverallScoreCard(
     }
 }
 
+@Deprecated(
+    message = "Use OLQScoreCard from com.ssbmax.ui.components.result.ResultScoreCards instead",
+    replaceWith = ReplaceWith(
+        "OLQScoreCard(olq, score, isStrength)",
+        "com.ssbmax.ui.components.result.OLQScoreCard"
+    )
+)
 @Composable
 fun OLQScoreCard(
     olq: OLQ,
@@ -240,6 +271,13 @@ fun OLQScoreCard(
     }
 }
 
+@Deprecated(
+    message = "Use InfoItem from com.ssbmax.ui.components.result.ResultScoreCards instead",
+    replaceWith = ReplaceWith(
+        "InfoItem(label, value)",
+        "com.ssbmax.ui.components.result.InfoItem"
+    )
+)
 @Composable
 fun InfoItem(
     label: String,

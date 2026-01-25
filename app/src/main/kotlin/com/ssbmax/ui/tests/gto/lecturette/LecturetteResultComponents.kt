@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.ui.tests.gto.common.InfoItem
+import com.ssbmax.ui.components.result.InfoItem
 
 @Composable
 fun LecturetteSubmissionCard(

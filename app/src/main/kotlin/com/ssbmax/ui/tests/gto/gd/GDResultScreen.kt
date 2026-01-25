@@ -17,7 +17,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQCategory
 import com.ssbmax.ui.components.SSBRecommendationBanner
-import com.ssbmax.ui.tests.gto.common.*
+import com.ssbmax.ui.components.result.AnalyzingCard
+import com.ssbmax.ui.components.result.AnalysisFailedCard
+import com.ssbmax.ui.components.result.OverallScoreCard
+import com.ssbmax.ui.components.result.OLQScoreCard
 import com.ssbmax.ui.tests.gto.gd.*
 
 /**
