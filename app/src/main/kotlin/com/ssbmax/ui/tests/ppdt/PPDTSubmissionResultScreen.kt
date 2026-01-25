@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.core.domain.model.SubmissionStatus
 import com.ssbmax.core.domain.model.interview.OLQCategory
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.tests.gto.common.AnalyzingCard
 import com.ssbmax.ui.tests.gto.common.AnalysisFailedCard
 import com.ssbmax.ui.tests.gto.common.OverallScoreCard
@@ -163,6 +164,15 @@ fun PPDTSubmissionResultScreen(
                         }
                         AnalysisStatus.COMPLETED -> {
                             uiState.submission!!.olqResult?.let { result ->
+                                // SSB Recommendation Banner (above Overall Score)
+                                uiState.ssbRecommendation?.let { recommendation ->
+                                    item {
+                                        SSBRecommendationBanner(
+                                            model = recommendation
+                                        )
+                                    }
+                                }
+                                
                                 // Overall Score Card
                                 item {
                                     OverallScoreCard(
