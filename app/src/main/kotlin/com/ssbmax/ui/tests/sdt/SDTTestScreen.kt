@@ -21,10 +21,11 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.SDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
-import com.ssbmax.ui.components.TimerProgressBar
-import com.ssbmax.ui.components.TimerThresholds
 
-private const val SDT_TOTAL_TIME_SECONDS = 900 // 15 minutes
+/**
+ * SDT Test Screen
+ * Timer is displayed in the static TopAppBar (always visible at top)
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -217,15 +218,6 @@ private fun QuestionInProgressView(
                 actions = {
                     TimerDisplay(timeRemaining)
                 }
-            )
-        },
-        bottomBar = {
-            // Timer progress bar - FIXED at bottom, always visible above keyboard
-            TimerProgressBar(
-                timeRemainingSeconds = timeRemaining,
-                totalTimeSeconds = SDT_TOTAL_TIME_SECONDS,
-                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
-                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp)
             )
         }
     ) { padding ->
