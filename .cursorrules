@@ -1,6 +1,6 @@
 # SSBMax - World-Class Android App Cursor Rules
 # Specialized rules for building an exceptional SSB (Services Selection Board) preparation app
-# Last Updated: December 21, 2025
+# Last Updated: January 25, 2026
 
 ## 🚨 CRITICAL QUALITY FRAMEWORK RULES (STRICT ENFORCEMENT)
 Before writing ANY code, you MUST adhere to these rules from `docs/architecture/SSBMax_Quality_Framework.md`.
@@ -50,24 +50,28 @@ You are building SSBMax, a comprehensive Android app for SSB preparation that he
 - **Local Storage**: Room Database + DataStore Preferences
 - **Backend**: Firebase (Auth, Firestore, Storage, Messaging, Analytics)
 
-### Tech Stack (Current Versions - Oct 2025)
+### Tech Stack (Current Versions - Jan 2026)
 ```kotlin
 // Core
 Kotlin: 2.1.0
-AGP: 8.13.0
-Compose BOM: 2024.12.01
+AGP: 8.7.3
+Compose BOM: 2024.05.00
 compileSdk: 35
 targetSdk: 35
 minSdk: 26
-JVM Target: 17
+JVM Target: 21
 
 // Key Libraries
-Hilt: 2.52
+Hilt: 2.54
 Room: 2.6.1
 Coroutines: 1.9.0
 Coil: 2.5.0
 Firebase BOM: 33.7.0
 Navigation Compose: 2.8.5
+Ktor: 3.0.2
+Generative AI (Gemini): 0.9.0
+Google Billing: 7.1.1
+WorkManager: 2.9.0
 ```
 
 ### Multi-Module Architecture
@@ -75,13 +79,31 @@ Navigation Compose: 2.8.5
 SSBMax/
 ├── app/                          # Main application module
 │   ├── ui/                       # Compose UI screens & components
-│   ├── navigation/               # Navigation graphs
+│   │   ├── auth/                # Login, role selection
+│   │   ├── home/                # Student & instructor dashboards
+│   │   ├── tests/               # All test modules (TAT, WAT, SRT, OIR, PPDT, SDT, PIQ, GTO)
+│   │   ├── interview/           # AI-powered interview (voice/text modes)
+│   │   ├── study/               # Study materials
+│   │   ├── profile/             # User profiles
+│   │   ├── premium/             # Subscription & upgrades
+│   │   └── settings/            # App settings
+│   ├── navigation/               # Navigation graphs (Auth, Student, Instructor, Shared)
 │   ├── notifications/            # FCM messaging service
 │   └── di/                       # App-level DI modules
 ├── core/
+│   ├── common/                  # Shared utilities across modules
 │   ├── designsystem/            # Reusable Compose components, theme
-│   ├── domain/                  # Business logic, use cases, models
+│   ├── domain/                  # Business logic, use cases, models, repository interfaces
+│   │   ├── model/               # Domain models (TestType, User, Subscription, Interview, GTO)
+│   │   ├── usecase/             # Use cases organized by feature
+│   │   ├── repository/          # Repository interfaces
+│   │   └── service/             # Service interfaces (AIService)
 │   └── data/                    # Repositories, data sources, Room DB
+│       ├── ai/                  # Gemini AI integration, prompts
+│       ├── local/               # Room database, DAOs, entities
+│       ├── remote/              # Firebase repositories
+│       └── repository/          # Repository implementations
+├── lint/                         # Custom lint rules (StateFlow, Hardcoded strings, etc.)
 └── gradle/
     └── libs.versions.toml       # Centralized version catalog
 ```
@@ -92,15 +114,37 @@ com.ssbmax/
 ├── ui/
 │   ├── auth/                    # Login, role selection
 │   ├── home/                    # Student & instructor dashboards
-│   ├── tests/                   # Test modules (TAT, WAT, SRT, OIR, PPDT)
+│   │   ├── student/             # Student home with phase progress
+│   │   └── instructor/          # Instructor home with grading queue
+│   ├── tests/                   # Test modules
+│   │   ├── oir/                 # Officer Intelligence Rating
+│   │   ├── ppdt/                # Picture Perception & Description Test
+│   │   ├── tat/                 # Thematic Apperception Test
+│   │   ├── wat/                 # Word Association Test
+│   │   ├── srt/                 # Situation Reaction Test
+│   │   ├── sdt/                 # Self Description Test
+│   │   ├── piq/                 # Personal Information Questionnaire
+│   │   ├── gto/                 # GTO Tests (GD, Lecturette, GPE, etc.)
+│   │   ├── gpe/                 # Group Planning Exercise
+│   │   └── common/              # Shared test components & utilities
+│   ├── interview/               # AI-powered interview module
+│   │   ├── start/               # Interview start screen & mode selection
+│   │   ├── session/             # Interview session with TTS support
+│   │   └── result/              # Interview results & OLQ analysis
 │   ├── study/                   # Study materials
 │   ├── profile/                 # User profiles
 │   ├── notifications/           # Notification center
 │   ├── premium/                 # Subscription & upgrades
 │   ├── settings/                # App settings & migrations
+│   ├── analytics/               # Performance analytics dashboard
 │   ├── components/              # Shared UI components
 │   └── theme/                   # Material 3 theming
 ├── navigation/                  # Navigation graphs
+│   ├── AuthNavGraph.kt          # Authentication flow
+│   ├── StudentNavGraph.kt       # Student-specific navigation
+│   ├── InstructorNavGraph.kt    # Instructor-specific navigation
+│   ├── SharedNavGraph.kt        # Shared screens (tests, study, settings)
+│   └── SSBMaxDestinations.kt    # Type-safe destination definitions
 ├── notifications/               # FCM service
 └── di/                         # Dependency injection
 ```
@@ -346,13 +390,36 @@ fun WATTestScreen(
 
 ### Test Engine Architecture
 ```kotlin
-// Sealed class for test types
-sealed class TestType {
-    data object TAT : TestType()
-    data object WAT : TestType()
-    data object SRT : TestType()
-    data object OIR : TestType()
-    data object PPDT : TestType()
+// Enum class for test types (core/domain/model/SSBPhase.kt)
+enum class TestType {
+    // Phase 1
+    OIR,        // Officer Intelligence Rating
+    PPDT,       // Picture Perception & Description Test
+    
+    // Phase 2
+    PIQ,        // Personal Information Questionnaire
+    TAT,        // Thematic Apperception Test
+    WAT,        // Word Association Test
+    SRT,        // Situation Reaction Test
+    SD,         // Self Description
+    
+    // GTO Tasks (8 individual tests)
+    GTO_GD,     // Group Discussion
+    GTO_GPE,    // Group Planning Exercise
+    GTO_PGT,    // Progressive Group Task
+    GTO_GOR,    // Group Obstacle Race
+    GTO_HGT,    // Half Group Task
+    GTO_LECTURETTE, // Lecturette
+    GTO_IO,     // Individual Obstacles
+    GTO_CT,     // Command Task
+    
+    IO;         // Interview Test - AI-powered SSB interview
+    
+    val phase: TestPhase
+        get() = when (this) {
+            OIR, PPDT -> TestPhase.PHASE_1
+            else -> TestPhase.PHASE_2
+        }
 }
 
 // Test state management
@@ -911,19 +978,55 @@ fun SSBMaxApp(userRole: UserRole) {
 | TAT | 0 | 3 | Unlimited |
 | WAT | 0 | 3 | Unlimited |
 | SRT | 0 | 3 | Unlimited |
-| Self Description | 0 | 3 | Unlimited |
+| Self Description (SD) | 0 | 3 | Unlimited |
 | GTO (each of 8 tests) | 0 | 3 | Unlimited |
-| Interview | 0 | 1 | Unlimited |
+| Interview (IO) | 0 | 2 | Unlimited |
 
 **Key Points:**
-- GTO: PRO tier gets 3 attempts for EACH of the 8 GTO sub-tests (Group Discussion, Group Planning Exercise, Progressive Group Task, Group Obstacle Race, Half Group Task, Lecturette, Individual Obstacles, Command Task)
+- GTO: PRO tier gets 3 attempts for EACH of the 8 GTO sub-tests:
+  - GTO_GD (Group Discussion)
+  - GTO_GPE (Group Planning Exercise)
+  - GTO_PGT (Progressive Group Task)
+  - GTO_GOR (Group Obstacle Race)
+  - GTO_HGT (Half Group Task)
+  - GTO_LECTURETTE (Lecturette)
+  - GTO_IO (Individual Obstacles)
+  - GTO_CT (Command Task)
 - PIQ: FREE tier gets 1 form (required for Interview), PRO/PREMIUM get unlimited updates
+- Interview (IO): PRO tier gets 2 attempts, supports text and voice modes with TTS
 - Limits reset on 1st of each month
 - Server-side enforcement via Firestore (cannot be bypassed by clearing app cache)
+- Debug bypass available via `BYPASS_SUBSCRIPTION_LIMITS` build config field
 
 **Implementation Location:**
 - `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubscriptionManager.kt` - `getTestLimitForTier()` function
 - This is the SINGLE SOURCE OF TRUTH - all other displays derive from this
+
+**TestType Enum (core/domain/model/SSBPhase.kt):**
+```kotlin
+enum class TestType {
+    // Phase 1
+    OIR,        // Officer Intelligence Rating
+    PPDT,       // Picture Perception & Description Test
+    
+    // Phase 2
+    PIQ,        // Personal Information Questionnaire
+    TAT,        // Thematic Apperception Test
+    WAT,        // Word Association Test
+    SRT,        // Situation Reaction Test
+    SD,         // Self Description
+    // GTO Tasks (8 individual tests)
+    GTO_GD,     // Group Discussion
+    GTO_GPE,    // Group Planning Exercise
+    GTO_PGT,    // Progressive Group Task
+    GTO_GOR,    // Group Obstacle Race
+    GTO_HGT,    // Half Group Task
+    GTO_LECTURETTE, // Lecturette
+    GTO_IO,     // Individual Obstacles
+    GTO_CT,     // Command Task
+    IO;         // Interview Test - AI-powered SSB interview simulation
+}
+```
 
 ### Premium/Subscription Features
 ```kotlin
@@ -944,6 +1047,60 @@ fun PremiumFeature(
     }
 }
 ```
+
+### AI-Powered Interview System
+
+The app includes a complete AI-powered SSB interview simulation using Google Gemini:
+
+**Architecture:**
+```
+interview/
+├── start/                  # Mode selection (text/voice)
+│   ├── StartInterviewScreen.kt
+│   ├── StartInterviewViewModel.kt
+│   └── StartInterviewUiState.kt
+├── session/                # Active interview session
+│   ├── InterviewSessionScreen.kt
+│   ├── InterviewSessionViewModel.kt
+│   └── InterviewSessionUiState.kt
+└── result/                 # Results with OLQ analysis
+    ├── InterviewResultScreen.kt
+    ├── InterviewResultViewModel.kt
+    └── InterviewResultUiState.kt
+```
+
+**Key Features:**
+- **Text Mode**: Type responses, AI generates follow-up questions
+- **Voice Mode (Premium)**: TTS reads questions aloud
+  - Sarvam AI (primary premium TTS - Indian English)
+  - ElevenLabs (fallback premium TTS)
+  - Android TTS (free tier fallback)
+- **OLQ Analysis**: AI evaluates 15 Officer Like Qualities
+- **Dynamic Questions**: Generated based on user's PIQ data
+- **Session Management**: Save/resume interview sessions
+
+**TTS Configuration (build.gradle.kts):**
+```kotlin
+// Debug: Force premium TTS for testing
+buildConfigField("boolean", "FORCE_PREMIUM_TTS", "true")
+
+// API Keys in local.properties:
+// GEMINI_API_KEY=your_key
+// SARVAM_API_KEY=your_key
+// ELEVENLABS_API_KEY=your_key
+```
+
+**Domain Models (core/domain/model/interview/):**
+- `InterviewSession.kt` - Session state management
+- `InterviewQuestion.kt` - Question with follow-ups
+- `InterviewResponse.kt` - User responses with timing
+- `InterviewResult.kt` - Final results with OLQ scores
+- `OLQ.kt` - 15 Officer Like Qualities enum
+- `InterviewMode.kt` - TEXT vs VOICE modes
+
+**AI Prompts:**
+- `core/data/ai/prompts/EnhancedInterviewPrompts.kt` - Gemini prompts
+- `core/data/ai/prompts/SSBInterviewPrompts.kt` - Base prompts
 
 ## 🔧 DEBUGGING & TROUBLESHOOTING
 
