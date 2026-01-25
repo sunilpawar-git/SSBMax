@@ -6,11 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
 
 /**
  * PPDT Writing Phase
  * Story composition with character count tracking
  */
+private const val PPDT_WRITING_TIME_SECONDS = 240 // 4 minutes
+
 @Composable
 fun PPDTWritingPhase(
     story: String,
@@ -85,6 +89,14 @@ fun PPDTWritingPhase(
             },
             minLines = 10,
             maxLines = 15
+        )
+
+        // Timer progress bar - always visible even with keyboard open
+        TimerProgressBar(
+            timeRemainingSeconds = timeRemainingSeconds,
+            totalTimeSeconds = PPDT_WRITING_TIME_SECONDS,
+            lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST,
+            modifier = Modifier.padding(top = 8.dp)
         )
     }
 }
