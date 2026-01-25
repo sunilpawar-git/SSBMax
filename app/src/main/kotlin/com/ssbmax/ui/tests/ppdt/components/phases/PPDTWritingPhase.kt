@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
  * Story composition with character count tracking
  * 
  * Timer is displayed in the static TopAppBar header (TimerChip)
+ * Layout: Fixed instructions card + scrollable text field for optimal typing UX
  */
 
 @Composable
@@ -27,10 +28,11 @@ fun PPDTWritingPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Fixed instructions card - never scrolls away
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -54,6 +56,7 @@ fun PPDTWritingPhase(
             }
         }
 
+        // Scrollable text field - user can type as much as they want
         OutlinedTextField(
             value = story,
             onValueChange = {
@@ -63,7 +66,8 @@ fun PPDTWritingPhase(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 150.dp, max = 400.dp),
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
             placeholder = { Text("Start writing your story here...") },
             supportingText = {
                 Row(
@@ -87,9 +91,7 @@ fun PPDTWritingPhase(
                         }
                     )
                 }
-            },
-            minLines = 5,
-            maxLines = 15
+            }
         )
     }
 }
