@@ -16,10 +16,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ssbmax.R
-import com.ssbmax.ui.components.TimerProgressBar
-import com.ssbmax.ui.components.TimerThresholds
 
-private const val WAT_TIME_PER_WORD_SECONDS = 15
+/**
+ * WAT In-Progress View
+ * Timer is displayed in the static WATHeader (always visible at top)
+ */
 
 @Composable
 fun WATInProgressView(
@@ -68,7 +69,6 @@ fun WATInProgressView(
                     onResponseChange = onResponseChange,
                     onSubmit = onSubmit,
                     onSkip = onSkip,
-                    timeRemaining = timeRemaining,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f) // Take remaining space
@@ -154,89 +154,73 @@ private fun WATActiveContent(
     onResponseChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onSkip: () -> Unit,
-    timeRemaining: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Scrollable content area
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Spacer(Modifier.height(16.dp))
-            
-            // Word display (Large, centered)
-            AnimatedContent(
-                targetState = word,
-                transitionSpec = {
-                    fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut()
-                },
-                label = "word_animation"
-            ) { currentWord ->
-                Text(
-                    text = currentWord,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 36.sp
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp)
-                )
-            }
-            
-            // Response input
-            OutlinedTextField(
-                value = response,
-                onValueChange = onResponseChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.wat_response_placeholder)) },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.titleLarge.copy(
-                    textAlign = TextAlign.Center
-                )
+        Spacer(Modifier.height(16.dp))
+        
+        // Word display (Large, centered)
+        AnimatedContent(
+            targetState = word,
+            transitionSpec = {
+                fadeIn() + scaleIn() togetherWith fadeOut() + scaleOut()
+            },
+            label = "word_animation"
+        ) { currentWord ->
+            Text(
+                text = currentWord,
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontSize = 36.sp
+                ),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp)
             )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onSkip,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(stringResource(R.string.wat_skip))
-                }
-
-                Button(
-                    onClick = onSubmit,
-                    modifier = Modifier.weight(1f),
-                    enabled = response.isNotBlank()
-                ) {
-                    Text(stringResource(R.string.wat_submit))
-                }
-            }
-            
-            Spacer(Modifier.height(16.dp))
         }
-
-        // Timer progress bar - FIXED at bottom, always visible above keyboard
-        TimerProgressBar(
-            timeRemainingSeconds = timeRemaining,
-            totalTimeSeconds = WAT_TIME_PER_WORD_SECONDS,
-            lowTimeThresholdSeconds = TimerThresholds.SHORT_TEST,
-            modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 4.dp)
+        
+        // Response input
+        OutlinedTextField(
+            value = response,
+            onValueChange = onResponseChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(stringResource(R.string.wat_response_placeholder)) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.titleLarge.copy(
+                textAlign = TextAlign.Center
+            )
         )
+
+        Spacer(Modifier.height(16.dp))
+
+        // Action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onSkip,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(stringResource(R.string.wat_skip))
+            }
+
+            Button(
+                onClick = onSubmit,
+                modifier = Modifier.weight(1f),
+                enabled = response.isNotBlank()
+            ) {
+                Text(stringResource(R.string.wat_submit))
+            }
+        }
+        
+        Spacer(Modifier.height(16.dp))
     }
 }
