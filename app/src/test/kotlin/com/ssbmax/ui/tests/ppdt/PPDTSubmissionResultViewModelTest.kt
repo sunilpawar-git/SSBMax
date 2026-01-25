@@ -7,6 +7,7 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.validation.RecommendationOutcome
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -79,7 +80,14 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         val state = viewModel.uiState.value
         assertTrue(state.isLoading)
         assertNull(state.submission)
+        assertNull(state.ssbRecommendation)
         assertNull(state.error)
+    }
+
+    @Test
+    fun `initial state has no recommendation`() = runTest {
+        val state = viewModel.uiState.value
+        assertNull(state.ssbRecommendation)
     }
 
     private fun createMockOLQScores(): Map<OLQ, OLQScore> {

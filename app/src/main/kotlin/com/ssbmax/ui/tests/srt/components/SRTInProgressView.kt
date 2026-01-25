@@ -16,7 +16,7 @@ import com.ssbmax.R
 
 /**
  * SRT Test In-Progress Screen
- * Displays current situation, response input, and navigation controls
+ * Timer is displayed in the static SRTHeader (always visible at top)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +48,6 @@ fun SRTInProgressView(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .imePadding() // Key fix: Push content up when keyboard opens
         ) {
             SRTHeader(
                 situationNumber = situationNumber,
@@ -62,7 +61,8 @@ fun SRTInProgressView(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()) // Allow scrolling to reach buttons
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -83,7 +83,6 @@ fun SRTInProgressView(
                     onSkip = onSkip
                 )
                 
-                Spacer(modifier = Modifier.weight(1f)) // Push remaining space to bottom
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

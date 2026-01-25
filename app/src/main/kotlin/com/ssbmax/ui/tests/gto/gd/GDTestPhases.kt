@@ -16,6 +16,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 
+/**
+ * GD Test Phases
+ * Timer is displayed in the static TopAppBar header (always visible)
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstructionsPhase(
@@ -175,7 +180,7 @@ fun DiscussionPhase(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 8.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -213,6 +218,8 @@ fun DiscussionPhase(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
         ) {
             Card(
                 modifier = Modifier
@@ -239,11 +246,14 @@ fun DiscussionPhase(
                 onValueChange = onResponseChanged,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .defaultMinSize(minHeight = 300.dp)
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Write your thoughts on this topic...") },
-                textStyle = MaterialTheme.typography.bodyLarge
+                textStyle = MaterialTheme.typography.bodyLarge,
+                maxLines = Int.MAX_VALUE
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

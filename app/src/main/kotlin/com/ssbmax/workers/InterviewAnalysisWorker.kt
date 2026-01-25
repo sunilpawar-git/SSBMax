@@ -10,6 +10,8 @@ import com.ssbmax.core.domain.model.interview.InterviewStatus
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.constants.InterviewConstants
 import com.ssbmax.notifications.NotificationHelper
@@ -138,6 +140,18 @@ class InterviewAnalysisWorker @AssistedInject constructor(
             }
 
             Log.d(TAG, "   Step 3: Analysis complete - $successCount success, $failCount failed")
+
+            // 3.5. SSB validation on aggregated scores
+            val aggregatedScores = aggregateOLQScores(responses.mapNotNull { 
+                interviewRepository.getResponse(it.id).getOrNull()?.olqScores 
+            })
+            if (aggregatedScores.isNotEmpty()) {
+                val validationResult = ValidationIntegration.validateScores(aggregatedScores, EntryType.NDA)
+                Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+                if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+                    Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
+                }
+            }
 
             // 4. Generate final result
             Log.d(TAG, "   Step 4: Generating final interview result...")
@@ -315,5 +329,24 @@ class InterviewAnalysisWorker @AssistedInject constructor(
         val olqScores: Map<OLQ, OLQScore>,
         val confidence: Int
     )
-}
 
+    /**
+     * Aggregate OLQ scores from multiple responses by averaging.
+     */
+    private fun aggregateOLQScores(allScores: List<Map<OLQ, OLQScore>>): Map<OLQ, OLQScore> {
+        if (allScores.isEmpty()) return emptyMap()
+        
+        return OLQ.entries.associateWith { olq ->
+            val scoresForOlq = allScores.mapNotNull { it[olq] }
+            if (scoresForOlq.isEmpty()) {
+                OLQScore(score = 6, confidence = 30, reasoning = "No data")
+            } else {
+                OLQScore(
+                    score = scoresForOlq.map { it.score }.average().toInt().coerceIn(1, 10),
+                    confidence = scoresForOlq.map { it.confidence }.average().toInt(),
+                    reasoning = "Aggregated from ${scoresForOlq.size} responses"
+                )
+            }
+        }
+    }
+}

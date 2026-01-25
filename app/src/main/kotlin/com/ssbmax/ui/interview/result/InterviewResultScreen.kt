@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
+import com.ssbmax.ui.components.SSBRecommendationBanner
 
 /**
  * Interview Result Screen
@@ -114,6 +115,13 @@ fun InterviewResultScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // SSB Recommendation Banner (above Overall summary)
+                        uiState.ssbRecommendation?.let { recommendation ->
+                            item {
+                                SSBRecommendationBanner(model = recommendation)
+                            }
+                        }
+                        
                         // Overall summary card
                         item {
                             Card(

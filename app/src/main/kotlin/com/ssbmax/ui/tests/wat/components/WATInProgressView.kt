@@ -17,6 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ssbmax.R
 
+/**
+ * WAT In-Progress View
+ * Timer is displayed in the static WATHeader (always visible at top)
+ */
+
 @Composable
 fun WATInProgressView(
     word: String,
@@ -47,7 +52,6 @@ fun WATInProgressView(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
-                    .imePadding()
             ) {
                 // Top bar with progress and exit - PINNED at top
                 WATHeader(
@@ -155,11 +159,11 @@ private fun WATActiveContent(
         modifier = modifier
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp)
-            .padding(bottom = 16.dp),
+            .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
         
         // Word display (Large, centered)
         AnimatedContent(
@@ -178,7 +182,7 @@ private fun WATActiveContent(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 32.dp)
+                    .padding(vertical = 24.dp)
             )
         }
         
@@ -194,7 +198,7 @@ private fun WATActiveContent(
             )
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
         // Action buttons
         Row(
@@ -217,7 +221,6 @@ private fun WATActiveContent(
             }
         }
         
-        // Bottom spacer to ensure safe scrolling
         Spacer(Modifier.height(16.dp))
     }
 }

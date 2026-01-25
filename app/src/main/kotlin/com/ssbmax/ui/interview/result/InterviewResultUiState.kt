@@ -6,6 +6,7 @@ import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQCategory
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.interview.PerformanceLevel
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
 
 /**
  * UI state for Interview Result screen
@@ -20,6 +21,7 @@ data class InterviewResultUiState(
     val isLoading: Boolean = true,
     val loadingMessage: String? = null,
     val result: InterviewResult? = null,
+    val ssbRecommendation: SSBRecommendationUIModel? = null,
     val error: String? = null,
     // True when analysis is still in progress (for future history view)
     val isAnalysisPending: Boolean = false

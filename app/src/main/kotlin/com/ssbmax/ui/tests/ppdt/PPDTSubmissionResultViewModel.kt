@@ -8,6 +8,9 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,11 +101,26 @@ class PPDTSubmissionResultViewModel @Inject constructor(
                 val olqResult = result.getOrNull()
                 android.util.Log.d(TAG, "✅ Result loaded: ${olqResult?.olqScores?.size} OLQ scores")
                 
-                // Update submission with OLQ result
+                // Compute SSB recommendation if we have scores
+                val ssbRecommendation = olqResult?.olqScores?.let { scores ->
+                    if (scores.isNotEmpty()) {
+                        val validationResult = ValidationIntegration.validateScores(
+                            scores = scores,
+                            entryType = EntryType.NDA // TODO: Get from user profile
+                        )
+                        SSBRecommendationUIModel.fromValidationResult(
+                            validationResult, 
+                            EntryType.NDA
+                        )
+                    } else null
+                }
+                
+                // Update submission with OLQ result and recommendation
                 _uiState.update { currentState ->
                     currentState.submission?.let { submission ->
                         currentState.copy(
-                            submission = submission.copy(olqResult = olqResult)
+                            submission = submission.copy(olqResult = olqResult),
+                            ssbRecommendation = ssbRecommendation
                         )
                     } ?: currentState
                 }
@@ -124,5 +142,6 @@ class PPDTSubmissionResultViewModel @Inject constructor(
 data class PPDTSubmissionResultUiState(
     val isLoading: Boolean = true,
     val submission: PPDTSubmission? = null,
+    val ssbRecommendation: SSBRecommendationUIModel? = null,
     val error: String? = null
 )

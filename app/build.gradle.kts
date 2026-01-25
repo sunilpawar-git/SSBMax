@@ -7,6 +7,7 @@ import com.android.build.api.dsl.ApplicationExtension
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("kapt")
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
@@ -248,15 +249,16 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Hilt
+    // Hilt - Use KAPT for both Dagger and AndroidX Hilt to ensure proper processing order
+    // KSP runs before KAPT, so if Dagger uses KSP, worker modules won't be included
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    kapt(libs.hilt.compiler)  // Dagger Hilt compiler
     implementation(libs.hilt.navigation.compose)
 
     // WorkManager (background jobs for question pre-generation)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
-    ksp("androidx.hilt:hilt-compiler:1.2.0")
+    kapt("androidx.hilt:hilt-compiler:1.2.0")  // AndroidX Hilt compiler for @HiltWorker
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -289,7 +291,7 @@ dependencies {
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation(libs.hilt.android.testing)
-    kspTest(libs.hilt.compiler)
+    kaptTest(libs.hilt.compiler)
 
     // WorkManager testing (for Phase 1 worker tests)
     testImplementation("androidx.work:work-testing:2.9.0")
@@ -304,7 +306,7 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.mockk.android) // For mocking in UI tests
     androidTestImplementation(libs.androidx.navigation.testing) // For navigation testing
-    kspAndroidTest(libs.hilt.compiler)
+    kaptAndroidTest(libs.hilt.compiler)
     
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)

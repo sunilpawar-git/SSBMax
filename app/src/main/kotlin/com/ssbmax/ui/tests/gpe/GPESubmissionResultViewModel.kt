@@ -7,6 +7,9 @@ import com.ssbmax.core.domain.model.gto.GTOResult
 import com.ssbmax.core.domain.model.gto.GTOSubmission
 import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -102,7 +105,18 @@ class GPESubmissionResultViewModel @Inject constructor(
                 val result = resultResult.getOrNull()
                 android.util.Log.d(TAG, "✅ Result loaded: ${result?.olqScores?.size} OLQ scores")
                 
-                _uiState.update { it.copy(result = result) }
+                // Compute SSB recommendation if OLQ scores are available
+                val ssbRecommendation = result?.olqScores?.let { scores ->
+                    if (scores.isNotEmpty()) {
+                        val validationResult = ValidationIntegration.validateScores(
+                            scores = scores,
+                            entryType = EntryType.NDA
+                        )
+                        SSBRecommendationUIModel.fromValidationResult(validationResult, EntryType.NDA)
+                    } else null
+                }
+                
+                _uiState.update { it.copy(result = result, ssbRecommendation = ssbRecommendation) }
             } else {
                 android.util.Log.w(TAG, "⚠️ Result not yet available", resultResult.exceptionOrNull())
             }
@@ -131,6 +145,7 @@ data class GPESubmissionResultUiState(
     val isLoading: Boolean = true,
     val submission: GTOSubmission.GPESubmission? = null,
     val result: GTOResult? = null,
+    val ssbRecommendation: SSBRecommendationUIModel? = null,
     val error: String? = null
 ) {
     /**

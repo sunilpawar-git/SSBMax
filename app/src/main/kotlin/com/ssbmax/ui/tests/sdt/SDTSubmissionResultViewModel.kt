@@ -8,6 +8,9 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,10 +96,22 @@ class SDTSubmissionResultViewModel @Inject constructor(
                         submission = submission.copy(olqResult = fetchedOlqResult)
                     }
 
+                    // Compute SSB recommendation if OLQ scores are available
+                    val ssbRecommendation = submission?.olqResult?.olqScores?.let { scores ->
+                        if (scores.isNotEmpty()) {
+                            val validationResult = ValidationIntegration.validateScores(
+                                scores = scores,
+                                entryType = EntryType.NDA
+                            )
+                            SSBRecommendationUIModel.fromValidationResult(validationResult, EntryType.NDA)
+                        } else null
+                    }
+
                     android.util.Log.d(TAG, "📊 Updating UI state - OLQ scores: ${submission?.olqResult?.olqScores?.size ?: 0}")
                     _uiState.update { it.copy(
                         isLoading = false,
                         submission = submission,
+                        ssbRecommendation = ssbRecommendation,
                         error = if (submission == null) "Submission not found" else null
                     ) }
                 }
@@ -209,6 +224,7 @@ class SDTSubmissionResultViewModel @Inject constructor(
 data class SDTSubmissionResultUiState(
     val isLoading: Boolean = true,
     val submission: SDTSubmission? = null,
+    val ssbRecommendation: SSBRecommendationUIModel? = null,
     val error: String? = null
 )
 

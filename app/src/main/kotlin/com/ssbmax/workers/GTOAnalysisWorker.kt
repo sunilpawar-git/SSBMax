@@ -11,6 +11,8 @@ import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
@@ -107,6 +109,13 @@ class GTOAnalysisWorker @AssistedInject constructor(
             )
 
             if (olqScores != null) {
+                // SSB validation
+                val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+                Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+                if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+                    Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
+                }
+
                 // Update submission with OLQ scores
                 val updateResult = gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
                 

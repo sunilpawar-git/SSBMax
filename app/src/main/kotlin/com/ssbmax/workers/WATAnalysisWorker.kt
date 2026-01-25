@@ -12,6 +12,8 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
@@ -53,6 +55,13 @@ class WATAnalysisWorker @AssistedInject constructor(
             submissionRepository.updateWATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             val prompt = PsychologyTestPrompts.generateWATAnalysisPrompt(submission)
             val olqScores = analyzeSubmissionWithRetry(prompt) ?: return handleAnalysisFailure(submissionId)
+
+            // SSB validation
+            val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+            Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+                Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
+            }
 
             val olqResult = createOLQResult(submissionId, olqScores)
             // Note: updateWATOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED

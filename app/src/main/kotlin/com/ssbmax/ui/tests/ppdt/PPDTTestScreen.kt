@@ -116,8 +116,7 @@ fun PPDTTestScreen(
                             onStoryChange = { viewModel.updateStory(it) },
                             charactersCount = uiState.charactersCount,
                             minCharacters = uiState.minCharacters,
-                            maxCharacters = uiState.maxCharacters,
-                            timeRemainingSeconds = uiState.timeRemainingSeconds
+                            maxCharacters = uiState.maxCharacters
                         )
                         PPDTPhase.REVIEW -> PPDTReviewPhase(
                             imageUrl = uiState.imageUrl,

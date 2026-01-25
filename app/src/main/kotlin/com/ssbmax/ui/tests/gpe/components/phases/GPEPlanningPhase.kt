@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.BrokenImage
 /**
  * GPE Planning Phase
  * User writes their planning response (29 minutes)
+ * 
+ * Timer is displayed in the static TopAppBar header (TimerChip)
  */
 @Composable
 fun GPEPlanningPhase(
@@ -23,7 +25,6 @@ fun GPEPlanningPhase(
     charactersCount: Int,
     minCharacters: Int,
     maxCharacters: Int,
-    timeRemainingSeconds: Int,
     scenario: String,
     resources: List<String>,
     imageUrl: String
@@ -32,8 +33,10 @@ fun GPEPlanningPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Map Image Card
@@ -41,7 +44,7 @@ fun GPEPlanningPhase(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 250.dp), // Limit height to allow space for other content
+                    .heightIn(max = 200.dp), // Reduced height for better keyboard visibility
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 coil.compose.AsyncImage(
@@ -52,7 +55,7 @@ fun GPEPlanningPhase(
                     contentDescription = stringResource(R.string.gpe_test_image),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    error = androidx.compose.ui.graphics.vector.rememberVectorPainter(androidx.compose.material.icons.Icons.Filled.BrokenImage)
+                    error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.BrokenImage)
                 )
             }
         }
@@ -97,13 +100,13 @@ fun GPEPlanningPhase(
             }
         }
 
-        // Planning response text field
+        // Planning response text field - with proper keyboard handling
         OutlinedTextField(
             value = planningResponse,
             onValueChange = onPlanningResponseChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 300.dp),
+                .defaultMinSize(minHeight = 200.dp),
             label = { Text(stringResource(R.string.gpe_planning_response_label)) },
             placeholder = { Text(stringResource(R.string.gpe_planning_response_placeholder)) },
             supportingText = {
@@ -124,7 +127,7 @@ fun GPEPlanningPhase(
                 )
             },
             isError = charactersCount > maxCharacters,
-            maxLines = 20
+            maxLines = Int.MAX_VALUE
         )
 
         // Guidelines card

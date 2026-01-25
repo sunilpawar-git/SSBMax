@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.core.domain.model.gto.GTOResult
 import com.ssbmax.core.domain.model.gto.GTOSubmission
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.tests.gto.common.*
 import com.ssbmax.ui.tests.gto.lecturette.*
 
@@ -17,6 +19,7 @@ import com.ssbmax.ui.tests.gto.lecturette.*
 fun LecturetteResultContent(
     submission: GTOSubmission.LecturetteSubmission,
     result: GTOResult?,
+    ssbRecommendation: SSBRecommendationUIModel?,
     isAnalyzing: Boolean,
     isFailed: Boolean,
     formattedTimeSpent: String,
@@ -45,6 +48,13 @@ fun LecturetteResultContent(
         }
         
         if (result != null) {
+            // SSB Recommendation Banner (above Overall Performance)
+            ssbRecommendation?.let { recommendation ->
+                item {
+                    SSBRecommendationBanner(model = recommendation)
+                }
+            }
+            
             item {
                 OverallScoreCard(
                     overallScore = result.overallScore,

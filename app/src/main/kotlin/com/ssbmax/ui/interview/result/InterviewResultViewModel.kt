@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,11 +94,21 @@ class InterviewResultViewModel @Inject constructor(
                     return@launch
                 }
 
+                // Compute SSB recommendation if OLQ scores are available
+                val ssbRecommendation = if (result.overallOLQScores.isNotEmpty()) {
+                    val validationResult = ValidationIntegration.validateScores(
+                        scores = result.overallOLQScores,
+                        entryType = EntryType.NDA
+                    )
+                    SSBRecommendationUIModel.fromValidationResult(validationResult, EntryType.NDA)
+                } else null
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         loadingMessage = null,
-                        result = result
+                        result = result,
+                        ssbRecommendation = ssbRecommendation
                     )
                 }
             } catch (e: Exception) {

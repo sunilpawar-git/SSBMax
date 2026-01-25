@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.interview.OLQCategory
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.tests.gto.common.AnalyzingCard
 import com.ssbmax.ui.tests.gto.common.AnalysisFailedCard
 import com.ssbmax.ui.tests.gto.common.OverallScoreCard
@@ -58,6 +59,7 @@ fun SDTSubmissionResultScreen(
             uiState.submission != null -> {
                 ResultContent(
                     submission = uiState.submission!!, 
+                    ssbRecommendation = uiState.ssbRecommendation,
                     onNavigateHome = onNavigateHome,
                     modifier = Modifier.padding(padding)
                 )
@@ -69,6 +71,7 @@ fun SDTSubmissionResultScreen(
 @Composable
 private fun ResultContent(
     submission: com.ssbmax.core.domain.model.SDTSubmission, 
+    ssbRecommendation: com.ssbmax.core.domain.validation.SSBRecommendationUIModel?,
     onNavigateHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -124,6 +127,13 @@ private fun ResultContent(
             }
             AnalysisStatus.COMPLETED -> {
                 submission.olqResult?.let { result ->
+                    // SSB Recommendation Banner (above Overall Score)
+                    ssbRecommendation?.let { recommendation ->
+                        item {
+                            SSBRecommendationBanner(model = recommendation)
+                        }
+                    }
+                    
                     // Overall Score Card
                     item {
                         OverallScoreCard(

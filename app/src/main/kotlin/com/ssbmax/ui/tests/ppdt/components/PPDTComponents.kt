@@ -84,6 +84,16 @@ fun TimerChip(timeRemainingSeconds: Int) {
                 MaterialTheme.colorScheme.errorContainer
             } else {
                 MaterialTheme.colorScheme.tertiaryContainer
+            },
+            labelColor = if (isLowTime) {
+                MaterialTheme.colorScheme.onErrorContainer
+            } else {
+                MaterialTheme.colorScheme.onTertiaryContainer
+            },
+            leadingIconContentColor = if (isLowTime) {
+                MaterialTheme.colorScheme.onErrorContainer
+            } else {
+                MaterialTheme.colorScheme.onTertiaryContainer
             }
         )
     )

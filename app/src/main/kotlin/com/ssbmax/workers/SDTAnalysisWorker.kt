@@ -12,6 +12,8 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
@@ -99,6 +101,13 @@ class SDTAnalysisWorker @AssistedInject constructor(
             }
 
             Log.d(TAG, "   Step 4: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
+
+            // 5.5. Validate OLQ scores against SSB rules
+            val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+            Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+                Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
+            }
 
             // 6. Create OLQAnalysisResult
             val overallScore = olqScores.values.map { it.score }.average().toFloat()

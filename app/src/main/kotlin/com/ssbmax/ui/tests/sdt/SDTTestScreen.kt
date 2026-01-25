@@ -3,6 +3,8 @@ package com.ssbmax.ui.tests.sdt
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -21,6 +23,11 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.SDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
+
+/**
+ * SDT Test Screen
+ * Timer is displayed in the static TopAppBar (always visible at top)
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -220,7 +227,10 @@ private fun QuestionInProgressView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             LinearProgressIndicator(
@@ -239,7 +249,7 @@ private fun QuestionInProgressView(
                 onValueChange = onAnswerChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .defaultMinSize(minHeight = 180.dp),
                 label = { Text(stringResource(R.string.sdt_answer_label)) },
                 supportingText = {
                     val isError = charCount < minChars || charCount > maxChars
@@ -248,7 +258,7 @@ private fun QuestionInProgressView(
                     Text("Characters: $charCount / $maxChars (Min: $minChars)", color = color)
                 },
                 isError = charCount < minChars || charCount > maxChars,
-                maxLines = 20
+                maxLines = Int.MAX_VALUE
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -265,6 +275,8 @@ private fun QuestionInProgressView(
                     Text(stringResource(if (questionNumber < totalQuestions) R.string.sdt_action_next else R.string.sdt_action_review))
                 }
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 
