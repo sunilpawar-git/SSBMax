@@ -203,6 +203,17 @@ interface InterviewRepository {
      */
     fun getUserResults(userId: String): Flow<List<InterviewResult>>
 
+    /**
+     * Get the latest interview result for user (one-shot fetch)
+     *
+     * Uses Firestore .get() for reliable single fetch instead of snapshot listener.
+     * This ensures data is available immediately without race conditions.
+     *
+     * @param userId User ID
+     * @return Latest interview result or null if none exists
+     */
+    suspend fun getLatestResult(userId: String): Result<InterviewResult?>
+
     // Analytics
 
     /**

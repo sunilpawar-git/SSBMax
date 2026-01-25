@@ -16,6 +16,7 @@ import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 fun Phase1Section(
     results: OLQDashboardData.Phase1Results,
     onNavigateToResult: (TestType, String) -> Unit,
+    isRefreshing: Boolean = false
 ) {
     DashboardSection(
         title = stringResource(R.string.dashboard_phase_1)
@@ -25,6 +26,7 @@ fun Phase1Section(
                 testName = stringResource(R.string.dashboard_test_oir),
                 score = results.oirResult?.percentageScore,
                 isOLQBased = false,
+                isRefreshing = isRefreshing,
                 onClick = { 
                     results.oirResult?.let { onNavigateToResult(TestType.OIR, it.sessionId) }
                 }
@@ -33,6 +35,7 @@ fun Phase1Section(
                 testName = stringResource(R.string.dashboard_test_ppdt),
                 score = results.ppdtOLQResult?.overallScore ?: results.ppdtResult?.finalScore,
                 isOLQBased = true,
+                isRefreshing = isRefreshing,
                 onClick = results.ppdtResult?.let {
                     { onNavigateToResult(TestType.PPDT, it.submissionId) }
                 }

@@ -106,29 +106,34 @@ fun OLQDashboardCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Vertical Section Layout (Symmetrical & Balanced)
+            // Pass isRefreshing to sections for subtle visual feedback
             Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 // Section 1: Screening (Phase 1)
                 Phase1Section(
                     results = dashboard.phase1Results,
-                    onNavigateToResult = onNavigateToResult
+                    onNavigateToResult = onNavigateToResult,
+                    isRefreshing = isRefreshing
                 )
 
                 // Section 2: Psychology
                 PsychologySection(
                     results = dashboard.phase2Results,
-                    onNavigateToResult = onNavigateToResult
+                    onNavigateToResult = onNavigateToResult,
+                    isRefreshing = isRefreshing
                 )
 
                 // Section 3: GTO
                 GTOSection(
                     results = dashboard.phase2Results,
-                    onNavigateToResult = onNavigateToResult
+                    onNavigateToResult = onNavigateToResult,
+                    isRefreshing = isRefreshing
                 )
 
                 // Section 4: Interview
                 InterviewSection(
                     results = dashboard.phase2Results,
-                    onNavigateToResult = onNavigateToResult
+                    onNavigateToResult = onNavigateToResult,
+                    isRefreshing = isRefreshing
                 )
             }
 

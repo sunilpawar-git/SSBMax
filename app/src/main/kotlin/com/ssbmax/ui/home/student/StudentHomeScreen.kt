@@ -189,21 +189,12 @@ fun StudentHomeScreen(
             }
             
             item {
+                // Show dashboard immediately (no loading spinner)
+                // Dashboard updates values in-place when data arrives
                 when {
-                    uiState.isLoadingDashboard -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    
                     uiState.dashboard != null -> {
                         com.ssbmax.ui.home.student.components.OLQDashboardCard(
-                            processedData = uiState.dashboard!!, // Now using ProcessedDashboardData
+                            processedData = uiState.dashboard!!,
                             onNavigateToResult = onNavigateToResult,
                             isRefreshing = uiState.isRefreshingDashboard,
                             onRefresh = { viewModel.refreshDashboard() },
@@ -211,14 +202,8 @@ fun StudentHomeScreen(
                         )
                     }
                     
-                    uiState.dashboard == null && !uiState.isLoadingDashboard -> {
-                        com.ssbmax.ui.home.student.components.EmptyDashboardState(
-                            modifier = Modifier.fillMaxWidth(),
-                            onStartTestClick = onNavigateToStudy
-                        )
-                    }
-                    
                     uiState.dashboardError != null -> {
+                        // Show error with retry option
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
@@ -231,6 +216,14 @@ fun StudentHomeScreen(
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
+                    }
+                    
+                    else -> {
+                        // No data yet - show empty state with call-to-action
+                        com.ssbmax.ui.home.student.components.EmptyDashboardState(
+                            modifier = Modifier.fillMaxWidth(),
+                            onStartTestClick = onNavigateToStudy
+                        )
                     }
                 }
             }

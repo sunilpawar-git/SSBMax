@@ -9,8 +9,6 @@ import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.util.DomainLogger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -222,12 +220,10 @@ class GetOLQDashboardUseCase @Inject constructor(
                     }
             }
 
-            // Fetch Interview result (getUserResults returns Flow, so we need to collect first)
-            val interviewResult = try {
-                interviewRepository.getUserResults(userId).first().firstOrNull() // Get latest result from list
-            } catch (e: Exception) {
-                null
-            }
+            // Fetch Interview result using suspend function for reliable one-shot fetch
+            // Using getLatestResult() instead of Flow.first() to avoid race conditions
+            // where Firestore snapshot listener may not have synced data yet
+            val interviewResult = interviewRepository.getLatestResult(userId).getOrNull()
 
             // Build dashboard
             val dashboard = OLQDashboardData(
