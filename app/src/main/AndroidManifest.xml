@@ -60,7 +60,10 @@
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@mipmap/ic_launcher" />
 
-        <!-- WorkManager uses HiltWorkerFactory via Configuration.Provider in SSBMaxApplication -->
+        <!-- Disable default WorkManager initialization to use custom HiltWorkerFactory -->
+        <meta-data
+            android:name="androidx.work.WorkManagerInitializer"
+            android:value="disable" />
     </application>
 
 </manifest>
