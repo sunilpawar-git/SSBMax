@@ -15,10 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.ui.components.TimerProgressBar
-import com.ssbmax.ui.components.TimerThresholds
 
-private const val LECTURETTE_SPEECH_TIME_SECONDS = 180 // 3 minutes
+/**
+ * Lecturette Test Phases
+ * Timer is displayed in the static TopAppBar header (always visible)
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -255,7 +256,6 @@ fun SpeechPhase(
     speechTranscript: String,
     charCount: Int,
     timeRemaining: String,
-    timeRemainingSeconds: Int,
     isTimeLow: Boolean,
     onTranscriptChanged: (String) -> Unit,
     onProceedToReview: () -> Unit,
@@ -287,15 +287,6 @@ fun SpeechPhase(
                 shadowElevation = 8.dp
             ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    // Timer progress bar - FIXED at bottom, always visible above keyboard
-                    TimerProgressBar(
-                        timeRemainingSeconds = timeRemainingSeconds,
-                        totalTimeSeconds = LECTURETTE_SPEECH_TIME_SECONDS,
-                        lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST
-                    )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -312,7 +303,7 @@ fun SpeechPhase(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     Button(
                         onClick = onProceedToReview,

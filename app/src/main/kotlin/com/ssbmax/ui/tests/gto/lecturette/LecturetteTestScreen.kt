@@ -205,7 +205,6 @@ fun LecturetteTestScreen(
                         speechTranscript = uiState.speechTranscript,
                         charCount = uiState.charCount,
                         timeRemaining = uiState.formattedTime,
-                        timeRemainingSeconds = uiState.timeRemaining,
                         isTimeLow = uiState.isTimeLow,
                         onTranscriptChanged = viewModel::onTranscriptChanged,
                         onProceedToReview = { viewModel.proceedToReview() },
