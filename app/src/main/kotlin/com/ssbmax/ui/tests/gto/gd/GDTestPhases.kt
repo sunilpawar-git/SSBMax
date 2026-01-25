@@ -15,6 +15,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val GD_TOTAL_TIME_SECONDS = 1200 // 20 minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,6 +149,7 @@ fun DiscussionPhase(
     response: String,
     charCount: Int,
     timeRemaining: String,
+    timeRemainingSeconds: Int,
     isTimeLow: Boolean,
     onResponseChanged: (String) -> Unit,
     onProceedToReview: () -> Unit,
@@ -243,6 +248,14 @@ fun DiscussionPhase(
                     .padding(horizontal = 16.dp),
                 placeholder = { Text("Write your thoughts on this topic...") },
                 textStyle = MaterialTheme.typography.bodyLarge
+            )
+
+            // Timer progress bar - always visible even with keyboard open
+            TimerProgressBar(
+                timeRemainingSeconds = timeRemainingSeconds,
+                totalTimeSeconds = GD_TOTAL_TIME_SECONDS,
+                lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
     }

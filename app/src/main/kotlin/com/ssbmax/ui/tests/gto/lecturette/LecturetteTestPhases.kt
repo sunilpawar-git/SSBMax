@@ -15,6 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.ui.components.TimerProgressBar
+import com.ssbmax.ui.components.TimerThresholds
+
+private const val LECTURETTE_SPEECH_TIME_SECONDS = 180 // 3 minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -251,6 +255,7 @@ fun SpeechPhase(
     speechTranscript: String,
     charCount: Int,
     timeRemaining: String,
+    timeRemainingSeconds: Int,
     isTimeLow: Boolean,
     onTranscriptChanged: (String) -> Unit,
     onProceedToReview: () -> Unit,
@@ -346,6 +351,14 @@ fun SpeechPhase(
                 placeholder = { Text("Deliver your speech here...") },
                 textStyle = MaterialTheme.typography.bodyLarge,
                 label = { Text("Speech Transcript") }
+            )
+
+            // Timer progress bar - always visible even with keyboard open
+            TimerProgressBar(
+                timeRemainingSeconds = timeRemainingSeconds,
+                totalTimeSeconds = LECTURETTE_SPEECH_TIME_SECONDS,
+                lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
     }

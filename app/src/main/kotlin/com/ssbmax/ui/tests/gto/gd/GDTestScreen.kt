@@ -195,6 +195,7 @@ fun GDTestScreen(
                         response = uiState.response,
                         charCount = uiState.charCount,
                         timeRemaining = uiState.formattedTime,
+                        timeRemainingSeconds = uiState.timeRemaining,
                         isTimeLow = uiState.isTimeLow,
                         onResponseChanged = viewModel::onResponseChanged,
                         onProceedToReview = { viewModel.proceedToReview() },
