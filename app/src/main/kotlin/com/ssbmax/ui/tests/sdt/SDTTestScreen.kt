@@ -225,7 +225,7 @@ private fun QuestionInProgressView(
                 timeRemainingSeconds = timeRemaining,
                 totalTimeSeconds = SDT_TOTAL_TIME_SECONDS,
                 lowTimeThresholdSeconds = TimerThresholds.LONG_TEST,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp)
             )
         }
     ) { padding ->

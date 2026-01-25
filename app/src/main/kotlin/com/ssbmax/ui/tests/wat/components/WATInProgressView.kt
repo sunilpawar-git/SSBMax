@@ -236,7 +236,7 @@ private fun WATActiveContent(
             timeRemainingSeconds = timeRemaining,
             totalTimeSeconds = WAT_TIME_PER_WORD_SECONDS,
             lowTimeThresholdSeconds = TimerThresholds.SHORT_TEST,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 4.dp)
         )
     }
 }

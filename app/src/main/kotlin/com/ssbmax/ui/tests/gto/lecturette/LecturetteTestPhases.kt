@@ -286,7 +286,7 @@ fun SpeechPhase(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 8.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     // Timer progress bar - FIXED at bottom, always visible above keyboard
                     TimerProgressBar(
                         timeRemainingSeconds = timeRemainingSeconds,
@@ -294,7 +294,7 @@ fun SpeechPhase(
                         lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -312,7 +312,7 @@ fun SpeechPhase(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Button(
                         onClick = onProceedToReview,

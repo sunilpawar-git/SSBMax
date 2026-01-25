@@ -180,7 +180,7 @@ fun DiscussionPhase(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 8.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     // Timer progress bar - FIXED at bottom, always visible above keyboard
                     TimerProgressBar(
                         timeRemainingSeconds = timeRemainingSeconds,
@@ -188,7 +188,7 @@ fun DiscussionPhase(
                         lowTimeThresholdSeconds = TimerThresholds.LONG_TEST
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -210,7 +210,7 @@ fun DiscussionPhase(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Button(
                         onClick = onProceedToReview,

@@ -108,7 +108,7 @@ fun PPDTWritingPhase(
             timeRemainingSeconds = timeRemainingSeconds,
             totalTimeSeconds = PPDT_WRITING_TIME_SECONDS,
             lowTimeThresholdSeconds = TimerThresholds.STANDARD_TEST,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 4.dp)
         )
     }
 }
