@@ -95,7 +95,7 @@ class InterviewSessionViewModel @Inject constructor(
                 Log.d(TAG, "🔊 [TTS-INIT] Starting TTS initialization...")
 
                 if (BuildConfig.DEBUG && BuildConfig.FORCE_PREMIUM_TTS) {
-                    Log.d(TAG, "🔊 [TTS-INIT] DEBUG MODE: Forcing Sarvam AI TTS for testing")
+                    Log.d(TAG, "🔊 [TTS-INIT] DEBUG MODE: Forcing Qwen TTS for testing")
                     selectTTSService(SubscriptionType.PREMIUM)
                     return@launch
                 }
@@ -130,27 +130,18 @@ class InterviewSessionViewModel @Inject constructor(
         ttsService = when (subscriptionType) {
             SubscriptionType.PRO, SubscriptionType.PREMIUM -> {
                 Log.d(TAG, "🔊 [TTS-SELECT] Checking premium TTS services...")
-                Log.d(TAG, "🔊 [TTS-SELECT] Enhanced Android TTS ready: ${androidTTSService.isReady()}")
-                Log.d(TAG, "🔊 [TTS-SELECT] Sarvam AI ready: ${sarvamTTSService.isReady()}")
-                Log.d(TAG, "🔊 [TTS-SELECT] ElevenLabs ready: ${elevenLabsTTSService.isReady()}")
+                Log.d(TAG, "🔊 [TTS-SELECT] Qwen TTS ready: ${qwenTTSService.isReady()}")
+                Log.d(TAG, "🔊 [TTS-SELECT] Android TTS ready: ${androidTTSService.isReady()}")
 
-                // Priority: Android TTS (local) → Sarvam API → ElevenLabs API
-                if (androidTTSService.isReady()) {
-                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Enhanced Android TTS (Local Pro/Premium with Indian English)")
+                // Priority: Qwen TTS (primary) → Android TTS (fallback)
+                if (qwenTTSService.isReady()) {
+                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Qwen TTS (Pro/Premium via Hugging Face)")
                     usingPremiumVoice = true
-                    androidTTSService
-                } else if (sarvamTTSService.isReady()) {
-                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using Sarvam AI TTS (Pro/Premium)")
-                    usingPremiumVoice = true
-                    sarvamTTSService
-                } else if (elevenLabsTTSService.isReady()) {
-                    Log.d(TAG, "🔊 [TTS-SELECT] ✅ Using ElevenLabs TTS (Fallback)")
-                    usingPremiumVoice = true
-                    elevenLabsTTSService
+                    qwenTTSService
                 } else {
-                    Log.w(TAG, "⚠️ [TTS-SELECT] No TTS services available")
+                    Log.w(TAG, "⚠️ [TTS-SELECT] Qwen TTS not available, using Android TTS")
                     usingPremiumVoice = false
-                    androidTTSService // Last resort
+                    androidTTSService
                 }
             }
             SubscriptionType.FREE -> {
@@ -193,49 +184,40 @@ class InterviewSessionViewModel @Inject constructor(
                     is TTSService.TTSEvent.Error -> {
                         ErrorLogger.log(Exception(event.message), "[TTS-EVENTS] TTS service error")
                         _uiState.update { it.copy(isTTSSpeaking = false) }
-                        if (event.fallbackToAndroid && usingPremiumVoice) {
-                            // Fallback chain: Android → Sarvam → ElevenLabs
-                            when {
-                                ttsService == androidTTSService && sarvamTTSService.isReady() -> {
-                                    Log.d(TAG, "🔄 Enhanced Android TTS failed, falling back to Sarvam AI TTS")
-                                    analyticsManager.trackFeatureUsed(
-                                        "tts_fallback",
-                                        mapOf("from_service" to "android_enhanced", "to_service" to "sarvam_ai")
-                                    )
-                                    ttsService = sarvamTTSService
-                                    observeTTSEvents()
-                                }
-                                (ttsService == androidTTSService || ttsService == sarvamTTSService) && elevenLabsTTSService.isReady() -> {
-                                    Log.d(TAG, "🔄 Premium TTS failed, falling back to ElevenLabs TTS")
-                                    analyticsManager.trackFeatureUsed(
-                                        "tts_fallback",
-                                        mapOf("from_service" to if (ttsService == androidTTSService) "android_enhanced" else "sarvam_ai", "to_service" to "elevenlabs")
-                                    )
-                                    ttsService = elevenLabsTTSService
-                                    observeTTSEvents()
-                                }
-                                else -> {
-                                    Log.w(TAG, "⚠️ All premium TTS services failed, staying with basic Android TTS")
-                                    analyticsManager.trackFeatureUsed(
-                                        "tts_fallback",
-                                        mapOf(
-                                            "from_service" to when (ttsService) {
-                                                androidTTSService -> "android_enhanced"
-                                                sarvamTTSService -> "sarvam_ai"
-                                                elevenLabsTTSService -> "elevenlabs"
-                                                else -> "unknown"
-                                            },
-                                            "to_service" to "android_basic"
-                                        )
-                                    )
-                                    usingPremiumVoice = false
-                                    // Stay with current service but mark as not premium
-                                }
-                            }
-                        }
+                        handleTTSError(event)
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Handle TTS error with fallback logic.
+     * Qwen TTS → Android TTS fallback for Pro/Premium users.
+     */
+    private fun handleTTSError(event: TTSService.TTSEvent.Error) {
+        if (!event.fallbackToAndroid || !usingPremiumVoice) return
+
+        // Qwen TTS failed, fallback to Android TTS
+        if (ttsService == qwenTTSService && androidTTSService.isReady()) {
+            Log.d(TAG, "🔄 Qwen TTS failed, falling back to Android TTS")
+            analyticsManager.trackFeatureUsed(
+                "tts_fallback",
+                mapOf("from_service" to "qwen_tts", "to_service" to "android_tts")
+            )
+            ttsService = androidTTSService
+            usingPremiumVoice = false
+            observeTTSEvents()
+        } else {
+            Log.w(TAG, "⚠️ TTS fallback failed, staying with current service")
+            analyticsManager.trackFeatureUsed(
+                "tts_fallback",
+                mapOf(
+                    "from_service" to if (ttsService == qwenTTSService) "qwen_tts" else "android_tts",
+                    "to_service" to "none"
+                )
+            )
+            usingPremiumVoice = false
         }
     }
     

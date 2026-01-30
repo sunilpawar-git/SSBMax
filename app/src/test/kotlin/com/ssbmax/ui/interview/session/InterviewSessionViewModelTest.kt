@@ -331,11 +331,11 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
     // ============================================
 
     @Test
-    fun `initializeTTS uses Sarvam AI for Pro subscription`() = runTest {
-        // Given - Pro user with Sarvam AI ready
+    fun `initializeTTS uses Qwen TTS for Pro subscription`() = runTest {
+        // Given - Pro user with Qwen TTS ready
         val proProfile = testProfile.copy(subscriptionType = SubscriptionType.PRO)
         coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(proProfile))
-        every { sarvamTTSService.isReady() } returns true
+        every { qwenTTSService.isReady() } returns true
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
         coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
 
@@ -343,9 +343,30 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Then - Sarvam AI should be used for Pro tier
-        // Verify by checking that Sarvam TTS was initialized
-        verify { sarvamTTSService.isReady() }
+        // Then - Qwen TTS should be used for Pro tier
+        verify { qwenTTSService.isReady() }
+    }
+
+    @Test
+    fun `initializeTTS uses Qwen TTS for Premium subscription`() = runTest {
+        // Given - Premium user with Qwen TTS ready
+        val premiumProfile = testProfile.copy(subscriptionType = SubscriptionType.PREMIUM)
+        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(premiumProfile))
+        every { qwenTTSService.isReady() } returns true
+        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
+        coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
+
+        // When
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        
+        // Emit Qwen TTS ready event to verify it's listening
+        qwenTTSEvents.emit(TTSService.TTSEvent.Ready)
+        advanceUntilIdle()
+
+        // Then - Qwen TTS events should be observed (Premium tier uses Qwen TTS)
+        val state = viewModel.uiState.value
+        assertTrue("TTS should be ready for Premium tier", state.isTTSReady)
     }
 
     @Test
@@ -370,12 +391,12 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
     }
 
     @Test
-    fun `initializeTTS falls back to ElevenLabs when Sarvam unavailable`() = runTest {
-        // Given - Premium user but Sarvam is not ready, ElevenLabs is ready
+    fun `initializeTTS falls back to Android TTS when Qwen unavailable`() = runTest {
+        // Given - Premium user but Qwen TTS is not ready
         val premiumProfile = testProfile.copy(subscriptionType = SubscriptionType.PREMIUM)
         coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(premiumProfile))
-        every { sarvamTTSService.isReady() } returns false
-        every { elevenLabsTTSService.isReady() } returns true
+        every { qwenTTSService.isReady() } returns false
+        every { androidTTSService.isReady() } returns true
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
         coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
 
@@ -383,28 +404,9 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Then - ElevenLabs should be checked as fallback
-        verify { sarvamTTSService.isReady() }
-        verify { elevenLabsTTSService.isReady() }
-    }
-
-    @Test
-    fun `initializeTTS falls back to Android TTS when no premium services available`() = runTest {
-        // Given - Premium user but neither Sarvam nor ElevenLabs are ready
-        val premiumProfile = testProfile.copy(subscriptionType = SubscriptionType.PREMIUM)
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(premiumProfile))
-        every { sarvamTTSService.isReady() } returns false
-        every { elevenLabsTTSService.isReady() } returns false
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
-
-        // When
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // Then - Both premium services should have been checked before falling back
-        verify { sarvamTTSService.isReady() }
-        verify { elevenLabsTTSService.isReady() }
+        // Then - Qwen TTS should be checked, then fallback to Android TTS
+        verify { qwenTTSService.isReady() }
+        verify { androidTTSService.isReady() }
     }
 
     @Test
