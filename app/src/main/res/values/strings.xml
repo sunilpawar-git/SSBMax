@@ -1204,12 +1204,20 @@
     <string name="interview_response_placeholder">Type your response or tap the keyboard mic to speak…</string>
     <string name="interview_char_count">%1$d characters</string>
 
-    <!-- Premium Voice Feature (Sarvam AI TTS) -->
+    <!-- Premium Voice Feature (Qwen TTS via Hugging Face) -->
     <string name="interview_premium_voice">Premium Voice</string>
     <string name="interview_premium_voice_active">Human-like interviewer voice enabled</string>
     <string name="interview_standard_voice">Standard Voice</string>
     <string name="interview_premium_voice_upgrade">Upgrade to Pro or Premium for a more realistic interviewer voice</string>
     <string name="interview_premium_voice_error">Premium voice unavailable, using standard voice</string>
+
+    <!-- Qwen TTS Error Messages -->
+    <string name="tts_qwen_api_key_missing">Qwen TTS API key not configured</string>
+    <string name="tts_qwen_synthesis_failed">Failed to synthesize speech</string>
+    <string name="tts_qwen_network_error">Network error during speech synthesis</string>
+    <string name="tts_qwen_rate_limit">TTS rate limit exceeded, please try again</string>
+    <string name="tts_qwen_auth_error">Invalid TTS API key</string>
+    <string name="tts_qwen_playback_error">Audio playback error</string>
 
     <!-- Interview Result Notifications -->
     <string name="notification_interview_results_title">Interview Results Ready!</string>

@@ -89,3 +89,15 @@ annotation class SarvamTTS
 @Retention(AnnotationRetention.BINARY)
 annotation class ElevenLabsTTS
 
+/**
+ * Qualifier for Qwen TTS implementation (Hugging Face Inference API)
+ *
+ * Replaces Sarvam and ElevenLabs as the primary premium TTS service.
+ * Features:
+ * - Low latency (~97ms)
+ * - Cost-effective ($9/month HF PRO subscription)
+ * - Multiple voice options (Ryan - Indian English male)
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class QwenTTS
