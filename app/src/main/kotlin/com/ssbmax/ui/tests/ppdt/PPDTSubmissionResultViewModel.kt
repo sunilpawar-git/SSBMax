@@ -140,8 +140,13 @@ class PPDTSubmissionResultViewModel @Inject constructor(
  * UI State for PPDT Submission Result
  */
 data class PPDTSubmissionResultUiState(
-    val isLoading: Boolean = true,
+    override val isLoading: Boolean = true,
     val submission: PPDTSubmission? = null,
-    val ssbRecommendation: SSBRecommendationUIModel? = null,
-    val error: String? = null
-)
+    override val ssbRecommendation: SSBRecommendationUIModel? = null,
+    override val error: String? = null
+) : com.ssbmax.ui.components.result.UnifiedResultUiState {
+    override val analysisStatus: AnalysisStatus
+        get() = submission?.analysisStatus ?: AnalysisStatus.PENDING_ANALYSIS
+    override val olqResult: OLQAnalysisResult?
+        get() = submission?.olqResult
+}
