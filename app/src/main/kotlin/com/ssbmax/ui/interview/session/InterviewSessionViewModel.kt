@@ -23,9 +23,7 @@ import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.utils.tts.AndroidTTS
-import com.ssbmax.utils.tts.ElevenLabsTTS
 import com.ssbmax.utils.tts.QwenTTS
-import com.ssbmax.utils.tts.SarvamTTS
 import com.ssbmax.utils.tts.TTSService
 import com.ssbmax.workers.InterviewAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,8 +58,6 @@ class InterviewSessionViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val analyticsManager: AnalyticsManager,
     @AndroidTTS private val androidTTSService: TTSService,
-    @SarvamTTS private val sarvamTTSService: TTSService,
-    @ElevenLabsTTS private val elevenLabsTTSService: TTSService,
     @QwenTTS private val qwenTTSService: TTSService,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle
@@ -527,8 +523,6 @@ class InterviewSessionViewModel @Inject constructor(
         super.onCleared()
         isExiting = true
         qwenTTSService.release()
-        sarvamTTSService.release()
-        elevenLabsTTSService.release()
         androidTTSService.release()
     }
 }

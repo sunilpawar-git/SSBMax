@@ -7,9 +7,8 @@ import javax.inject.Qualifier
  * Interface for Text-to-Speech services
  *
  * Supports multiple TTS implementations:
- * - AndroidTTSService: Free tier (built-in Android TTS)
- * - SarvamTTSService: Primary TTS service for Pro/Premium tier (high-quality Indian English)
- * - ElevenLabsTTSService: Fallback TTS service (human-like ElevenLabs voices)
+ * - AndroidTTSService: Free tier (built-in Android TTS, ultimate fallback)
+ * - QwenTTSService: Primary TTS for Pro/Premium tier (Hugging Face Inference API)
  */
 interface TTSService {
     /**
@@ -69,34 +68,20 @@ interface TTSService {
 }
 
 /**
- * Qualifier for Android TTS implementation (free tier)
+ * Qualifier for Android TTS implementation (free tier, ultimate fallback)
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class AndroidTTS
 
 /**
- * Qualifier for Sarvam AI TTS implementation (Primary Pro/Premium tier)
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class SarvamTTS
-
-/**
- * Qualifier for ElevenLabs TTS implementation (Fallback Pro/Premium tier)
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class ElevenLabsTTS
-
-/**
  * Qualifier for Qwen TTS implementation (Hugging Face Inference API)
  *
- * Replaces Sarvam and ElevenLabs as the primary premium TTS service.
+ * Primary premium TTS service for Pro/Premium tier.
  * Features:
  * - Low latency (~97ms)
  * - Cost-effective ($9/month HF PRO subscription)
- * - Multiple voice options (Ryan - Indian English male)
+ * - High-quality voice synthesis
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

@@ -95,21 +95,7 @@ extensions.getByType<ApplicationExtension>().apply {
             ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
 
-        // Sarvam AI API Key for primary premium TTS (Pro/Premium users)
-        // Read from local.properties (fallback to empty string - will use ElevenLabs or Android TTS)
-        val sarvamApiKey: String = localProperties.getProperty("SARVAM_API_KEY")
-            ?: project.findProperty("SARVAM_API_KEY") as? String
-            ?: ""
-        buildConfigField("String", "SARVAM_API_KEY", "\"$sarvamApiKey\"")
-
-        // ElevenLabs API Key for fallback premium TTS (Pro/Premium users)
-        // Read from local.properties (fallback to empty string - will use Android TTS)
-        val elevenLabsApiKey: String = localProperties.getProperty("ELEVENLABS_API_KEY")
-            ?: project.findProperty("ELEVENLABS_API_KEY") as? String
-            ?: ""
-        buildConfigField("String", "ELEVENLABS_API_KEY", "\"$elevenLabsApiKey\"")
-
-        // Hugging Face API Key for Qwen TTS (primary premium TTS replacement)
+        // Hugging Face API Key for Qwen TTS (primary premium TTS)
         // Read from local.properties (fallback to empty string - will use Android TTS)
         val huggingFaceApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY")
             ?: project.findProperty("HUGGINGFACE_API_KEY") as? String
