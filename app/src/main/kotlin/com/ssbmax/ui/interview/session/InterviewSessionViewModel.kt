@@ -24,6 +24,7 @@ import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.ElevenLabsTTS
+import com.ssbmax.utils.tts.QwenTTS
 import com.ssbmax.utils.tts.SarvamTTS
 import com.ssbmax.utils.tts.TTSService
 import com.ssbmax.workers.InterviewAnalysisWorker
@@ -61,6 +62,7 @@ class InterviewSessionViewModel @Inject constructor(
     @AndroidTTS private val androidTTSService: TTSService,
     @SarvamTTS private val sarvamTTSService: TTSService,
     @ElevenLabsTTS private val elevenLabsTTSService: TTSService,
+    @QwenTTS private val qwenTTSService: TTSService,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -542,6 +544,7 @@ class InterviewSessionViewModel @Inject constructor(
         Log.d(TAG, "🧹 onCleared()")
         super.onCleared()
         isExiting = true
+        qwenTTSService.release()
         sarvamTTSService.release()
         elevenLabsTTSService.release()
         androidTTSService.release()

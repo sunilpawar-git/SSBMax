@@ -61,6 +61,7 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
     private lateinit var androidTTSService: TTSService
     private lateinit var sarvamTTSService: TTSService
     private lateinit var elevenLabsTTSService: TTSService
+    private lateinit var qwenTTSService: TTSService
     private lateinit var context: Context
     private lateinit var savedStateHandle: SavedStateHandle
 
@@ -109,6 +110,7 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
     private lateinit var androidTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
     private lateinit var sarvamTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
     private lateinit var elevenLabsTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
+    private lateinit var qwenTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
 
     @Before
     fun setUp() {
@@ -116,6 +118,7 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         androidTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
         sarvamTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
         elevenLabsTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
+        qwenTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
 
         // Mock repositories
         interviewRepository = mockk(relaxed = true)
@@ -130,14 +133,17 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         androidTTSService = mockk(relaxed = true)
         sarvamTTSService = mockk(relaxed = true)
         elevenLabsTTSService = mockk(relaxed = true)
+        qwenTTSService = mockk(relaxed = true)
 
         // Setup TTS service mocks
         every { androidTTSService.events } returns androidTTSEvents
         every { sarvamTTSService.events } returns sarvamTTSEvents
         every { elevenLabsTTSService.events } returns elevenLabsTTSEvents
+        every { qwenTTSService.events } returns qwenTTSEvents
         every { androidTTSService.isReady() } returns true
         every { sarvamTTSService.isReady() } returns false // Default: Sarvam not ready
         every { elevenLabsTTSService.isReady() } returns false // Default: ElevenLabs not ready
+        every { qwenTTSService.isReady() } returns false // Default: Qwen not ready (Phase 2 - no logic change)
 
         // Setup auth repository mock
         every { authRepository.currentUser } returns MutableStateFlow(testUser)
@@ -160,6 +166,7 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
             androidTTSService = androidTTSService,
             sarvamTTSService = sarvamTTSService,
             elevenLabsTTSService = elevenLabsTTSService,
+            qwenTTSService = qwenTTSService,
             context = context,
             savedStateHandle = savedStateHandle
         )

@@ -108,6 +108,13 @@ extensions.getByType<ApplicationExtension>().apply {
             ?: project.findProperty("ELEVENLABS_API_KEY") as? String
             ?: ""
         buildConfigField("String", "ELEVENLABS_API_KEY", "\"$elevenLabsApiKey\"")
+
+        // Hugging Face API Key for Qwen TTS (primary premium TTS replacement)
+        // Read from local.properties (fallback to empty string - will use Android TTS)
+        val huggingFaceApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY")
+            ?: project.findProperty("HUGGINGFACE_API_KEY") as? String
+            ?: ""
+        buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$huggingFaceApiKey\"")
     }
 
     buildTypes {

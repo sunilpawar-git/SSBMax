@@ -6,6 +6,8 @@ import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.AndroidTTSService
 import com.ssbmax.utils.tts.ElevenLabsTTS
 import com.ssbmax.utils.tts.ElevenLabsTTSService
+import com.ssbmax.utils.tts.QwenTTS
+import com.ssbmax.utils.tts.QwenTTSService
 import com.ssbmax.utils.tts.SarvamTTS
 import com.ssbmax.utils.tts.SarvamTTSService
 import com.ssbmax.utils.tts.TTSService
@@ -20,11 +22,12 @@ import javax.inject.Singleton
  * Dependency injection module for Text-to-Speech services
  *
  * Provides:
- * - AndroidTTSService: Built-in Android TTS with Indian English optimization (Free tier)
- * - SarvamTTSService: High-quality Indian English from Sarvam AI (Pro/Premium)
- * - ElevenLabsTTSService: Human-like voice from ElevenLabs API (Pro/Premium fallback)
+ * - AndroidTTSService: Built-in Android TTS (Free tier, ultimate fallback)
+ * - QwenTTSService: Primary premium TTS via Hugging Face (Pro/Premium)
+ * - SarvamTTSService: Legacy premium TTS (being deprecated)
+ * - ElevenLabsTTSService: Legacy fallback TTS (being deprecated)
  *
- * Priority order: Android TTS → Sarvam AI → ElevenLabs API
+ * Priority order: Qwen TTS → Android TTS (fallback)
  * Selected based on user's subscription tier in InterviewSessionViewModel.
  */
 @Module
@@ -109,6 +112,38 @@ object TTSModule {
     ): TTSService {
         return ElevenLabsTTSService(context, apiKey)
     }
+
+    /**
+     * Provide Hugging Face API key from BuildConfig
+     *
+     * Read from local.properties at compile time:
+     * HUGGINGFACE_API_KEY=hf_your_key_here
+     *
+     * Returns empty string if not configured (will fallback to Android TTS)
+     */
+    @Provides
+    @Singleton
+    @HuggingFaceApiKey
+    fun provideHuggingFaceApiKey(): String {
+        return BuildConfig.HUGGINGFACE_API_KEY
+    }
+
+    /**
+     * Provide Qwen TTS service (Primary Pro/Premium tier)
+     *
+     * Uses Hugging Face Inference API for Qwen TTS model.
+     * Low latency (~97ms), cost-effective ($9/month HF PRO).
+     * Falls back to Android TTS if API key not configured or API fails.
+     */
+    @Provides
+    @Singleton
+    @QwenTTS
+    fun provideQwenTTSService(
+        @ApplicationContext context: Context,
+        @HuggingFaceApiKey apiKey: String
+    ): TTSService {
+        return QwenTTSService(context, apiKey)
+    }
 }
 
 /**
@@ -124,3 +159,10 @@ annotation class SarvamApiKey
 @Retention(AnnotationRetention.BINARY)
 @javax.inject.Qualifier
 annotation class ElevenLabsApiKey
+
+/**
+ * Qualifier annotation for Hugging Face API key (Qwen TTS)
+ */
+@Retention(AnnotationRetention.BINARY)
+@javax.inject.Qualifier
+annotation class HuggingFaceApiKey
