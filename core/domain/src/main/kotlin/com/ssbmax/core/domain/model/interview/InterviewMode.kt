@@ -6,8 +6,8 @@ package com.ssbmax.core.domain.model.interview
  * UNIFIED MODEL (Current):
  * - VOICE_BASED: Unified interview with TTS support (mutable)
  *   - FREE: 1/month with Android TTS
- *   - PRO: 1/month with Sarvam AI TTS
- *   - PREMIUM: 3/month with Sarvam AI TTS
+ *   - PRO: 1/month with Qwen TTS
+ *   - PREMIUM: 3/month with Qwen TTS
  *
  * LEGACY (Deprecated):
  * - TEXT_BASED: Old text-only interview (removed from UI, kept for data migration)
@@ -34,13 +34,13 @@ enum class InterviewMode {
      *
      * Features:
      * - Type or use keyboard voice input for responses
-     * - TTS voice quality based on subscription (Android TTS or Sarvam AI)
+     * - TTS voice quality based on subscription (Android TTS or Qwen TTS)
      * - Mute toggle to disable TTS if preferred
      *
      * Available for:
      * - FREE: 1/month with Android TTS
-     * - PRO: 1/month with Sarvam AI TTS
-     * - PREMIUM: 3/month with Sarvam AI TTS
+     * - PRO: 1/month with Qwen TTS
+     * - PREMIUM: 3/month with Qwen TTS
      */
     VOICE_BASED;
 

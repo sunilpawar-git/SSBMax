@@ -21,8 +21,8 @@ import javax.inject.Inject
  * 3. PPDT must be completed
  * 4. User must have remaining interviews based on subscription:
  *    - FREE: 1 interview/month with Android TTS
- *    - PRO: 1 interview/month with Sarvam AI TTS
- *    - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ *    - PRO: 1 interview/month with Qwen TTS
+ *    - PREMIUM: 3 interviews/month with Qwen TTS
  *
  * Note: PIQ AI quality score is optional user feedback, not required for interview.
  * The interview only needs the PIQ form data (background, family, education, etc.)

@@ -6,8 +6,8 @@ import com.ssbmax.core.domain.model.SubscriptionType
  * TTS service type available based on subscription tier
  */
 enum class TTSServiceType {
-    ANDROID,      // Free tier - built-in Android TTS (robotic)
-    SARVAM_AI     // Pro/Premium tier - Sarvam AI TTS (premium, with ElevenLabs fallback)
+    ANDROID,      // Free tier - built-in Android TTS (ultimate fallback)
+    QWEN_TTS      // Pro/Premium tier - Qwen TTS via Hugging Face (premium)
 }
 
 /**
@@ -17,8 +17,8 @@ enum class TTSServiceType {
  * - All interviews use the same unified implementation
  * - Subscription tier determines TTS quality and monthly limit
  * - FREE: 1 interview/month with Android TTS
- * - PRO: 1 interview/month with Sarvam AI TTS
- * - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ * - PRO: 1 interview/month with Qwen TTS
+ * - PREMIUM: 3 interviews/month with Qwen TTS
  *
  * @param subscriptionType User's subscription tier
  * @param totalLimit Total interviews allowed per month
@@ -62,14 +62,14 @@ data class InterviewLimits(
                     totalLimit = 1,
                     used = used,
                     remaining = maxOf(0, 1 - used),
-                    ttsService = TTSServiceType.SARVAM_AI
+                    ttsService = TTSServiceType.QWEN_TTS
                 )
                 SubscriptionType.PREMIUM -> InterviewLimits(
                     subscriptionType = subscriptionType,
                     totalLimit = 3,
                     used = used,
                     remaining = maxOf(0, 3 - used),
-                    ttsService = TTSServiceType.SARVAM_AI
+                    ttsService = TTSServiceType.QWEN_TTS
                 )
             }
         }
@@ -87,7 +87,7 @@ data class InterviewLimits(
         fun getTTSService(subscriptionType: SubscriptionType): TTSServiceType {
             return when (subscriptionType) {
                 SubscriptionType.FREE -> TTSServiceType.ANDROID
-                SubscriptionType.PRO, SubscriptionType.PREMIUM -> TTSServiceType.SARVAM_AI
+                SubscriptionType.PRO, SubscriptionType.PREMIUM -> TTSServiceType.QWEN_TTS
             }
         }
     }
@@ -111,7 +111,7 @@ data class InterviewLimits(
     fun getTTSDisplayName(): String {
         return when (ttsService) {
             TTSServiceType.ANDROID -> "Standard Voice"
-            TTSServiceType.SARVAM_AI -> "Premium AI Voice"
+            TTSServiceType.QWEN_TTS -> "Premium AI Voice"
         }
     }
 }
