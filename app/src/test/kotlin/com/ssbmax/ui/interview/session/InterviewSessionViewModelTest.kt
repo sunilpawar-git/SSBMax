@@ -4,11 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.work.WorkManager
-import com.ssbmax.core.domain.model.EntryType
-import com.ssbmax.core.domain.model.Gender
 import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.UserProfile
 import com.ssbmax.core.domain.model.UserRole
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
@@ -19,7 +15,6 @@ import com.ssbmax.core.domain.model.interview.QuestionSource
 import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.utils.tts.TTSService
 import io.mockk.coEvery
@@ -55,12 +50,9 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
 
     private lateinit var interviewRepository: InterviewRepository
     private lateinit var authRepository: AuthRepository
-    private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var workManager: WorkManager
     private lateinit var analyticsManager: AnalyticsManager
     private lateinit var androidTTSService: TTSService
-    private lateinit var sarvamTTSService: TTSService
-    private lateinit var elevenLabsTTSService: TTSService
     private lateinit var context: Context
     private lateinit var savedStateHandle: SavedStateHandle
 
@@ -72,15 +64,6 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         email = "test@example.com",
         displayName = "Test User",
         role = UserRole.STUDENT
-    )
-
-    private val testProfile = UserProfile(
-        userId = testUserId,
-        fullName = "Test User",
-        age = 22,
-        gender = Gender.MALE,
-        entryType = EntryType.GRADUATE,
-        subscriptionType = SubscriptionType.FREE
     )
 
     private val testSession = InterviewSession(
@@ -107,43 +90,29 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
 
     // TTS event flows for mocking
     private lateinit var androidTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
-    private lateinit var sarvamTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
-    private lateinit var elevenLabsTTSEvents: MutableSharedFlow<TTSService.TTSEvent>
 
     @Before
     fun setUp() {
         // Initialize TTS event flows
         androidTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
-        sarvamTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
-        elevenLabsTTSEvents = MutableSharedFlow(extraBufferCapacity = 1)
 
         // Mock repositories
         interviewRepository = mockk(relaxed = true)
         authRepository = mockk(relaxed = true)
-        userProfileRepository = mockk(relaxed = true)
         workManager = mockk(relaxed = true)
         analyticsManager = mockk(relaxed = true)
         context = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("sessionId" to testSessionId))
 
-        // Mock TTS services
+        // Mock TTS service
         androidTTSService = mockk(relaxed = true)
-        sarvamTTSService = mockk(relaxed = true)
-        elevenLabsTTSService = mockk(relaxed = true)
 
         // Setup TTS service mocks
         every { androidTTSService.events } returns androidTTSEvents
-        every { sarvamTTSService.events } returns sarvamTTSEvents
-        every { elevenLabsTTSService.events } returns elevenLabsTTSEvents
         every { androidTTSService.isReady() } returns true
-        every { sarvamTTSService.isReady() } returns false // Default: Sarvam not ready
-        every { elevenLabsTTSService.isReady() } returns false // Default: ElevenLabs not ready
 
         // Setup auth repository mock
         every { authRepository.currentUser } returns MutableStateFlow(testUser)
-
-        // Setup user profile repository mock
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(testProfile))
 
         // Mock context string resources
         every { context.getString(any()) } returns "Mocked String"
@@ -154,12 +123,10 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         return InterviewSessionViewModel(
             interviewRepository = interviewRepository,
             authRepository = authRepository,
-            userProfileRepository = userProfileRepository,
+            userProfileRepository = mockk(relaxed = true),
             workManager = workManager,
             analyticsManager = analyticsManager,
             androidTTSService = androidTTSService,
-            sarvamTTSService = sarvamTTSService,
-            elevenLabsTTSService = elevenLabsTTSService,
             context = context,
             savedStateHandle = savedStateHandle
         )
@@ -320,32 +287,12 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
     }
 
     // ============================================
-    // TTS SERVICE SELECTION TESTS
+    // TTS INITIALIZATION TESTS
     // ============================================
 
     @Test
-    fun `initializeTTS uses Sarvam AI for Pro subscription`() = runTest {
-        // Given - Pro user with Sarvam AI ready
-        val proProfile = testProfile.copy(subscriptionType = SubscriptionType.PRO)
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(proProfile))
-        every { sarvamTTSService.isReady() } returns true
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
-
-        // When
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // Then - Sarvam AI should be used for Pro tier
-        // Verify by checking that Sarvam TTS was initialized
-        verify { sarvamTTSService.isReady() }
-    }
-
-    @Test
-    fun `initializeTTS uses Android TTS for Free subscription`() = runTest {
-        // Given - Free user
-        val freeProfile = testProfile.copy(subscriptionType = SubscriptionType.FREE)
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(freeProfile))
+    fun `initializeTTS initializes Android TTS`() = runTest {
+        // Given
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
         coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
 
@@ -353,51 +300,13 @@ class InterviewSessionViewModelTest : BaseViewModelTest() {
         val viewModel = createViewModel()
         advanceUntilIdle()
         
-        // Emit TTS ready event on Android TTS to verify it's listening
+        // Emit TTS ready event on Android TTS
         androidTTSEvents.emit(TTSService.TTSEvent.Ready)
         advanceUntilIdle()
 
-        // Then - Android TTS events should be observed (Free tier uses Android TTS)
+        // Then - Android TTS should be initialized and ready
         val state = viewModel.uiState.value
-        assertTrue("TTS should be ready for Free tier", state.isTTSReady)
-    }
-
-    @Test
-    fun `initializeTTS falls back to ElevenLabs when Sarvam unavailable`() = runTest {
-        // Given - Premium user but Sarvam is not ready, ElevenLabs is ready
-        val premiumProfile = testProfile.copy(subscriptionType = SubscriptionType.PREMIUM)
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(premiumProfile))
-        every { sarvamTTSService.isReady() } returns false
-        every { elevenLabsTTSService.isReady() } returns true
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
-
-        // When
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // Then - ElevenLabs should be checked as fallback
-        verify { sarvamTTSService.isReady() }
-        verify { elevenLabsTTSService.isReady() }
-    }
-
-    @Test
-    fun `initializeTTS falls back to Android TTS when no premium services available`() = runTest {
-        // Given - Premium user but neither Sarvam nor ElevenLabs are ready
-        val premiumProfile = testProfile.copy(subscriptionType = SubscriptionType.PREMIUM)
-        coEvery { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(premiumProfile))
-        every { sarvamTTSService.isReady() } returns false
-        every { elevenLabsTTSService.isReady() } returns false
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getQuestion("q1") } returns Result.success(testQuestion)
-
-        // When
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        // Then - Both premium services should have been checked before falling back
-        verify { sarvamTTSService.isReady() }
-        verify { elevenLabsTTSService.isReady() }
+        assertTrue("TTS should be ready", state.isTTSReady)
     }
 
     @Test

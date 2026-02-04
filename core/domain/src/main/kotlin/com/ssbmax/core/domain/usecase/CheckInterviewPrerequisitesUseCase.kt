@@ -21,8 +21,8 @@ import javax.inject.Inject
  * 3. PPDT must be completed
  * 4. User must have remaining interviews based on subscription:
  *    - FREE: 1 interview/month with Android TTS
- *    - PRO: 1 interview/month with Sarvam AI TTS
- *    - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ *    - PRO: 1 interview/month with Qwen TTS
+ *    - PREMIUM: 3 interviews/month with Qwen TTS
  *
  * Note: PIQ AI quality score is optional user feedback, not required for interview.
  * The interview only needs the PIQ form data (background, family, education, etc.)
@@ -38,13 +38,81 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
      *
      * @param userId User to check
      * @param bypassSubscriptionCheck If true, skip subscription validation (for debug builds)
+     * @param bypassPrerequisites If true, skip all prerequisite checks (PIQ, OIR score, PPDT) for testing
      * @return Prerequisite check result with detailed status
      */
     suspend operator fun invoke(
         userId: String,
-        bypassSubscriptionCheck: Boolean = false
+        bypassSubscriptionCheck: Boolean = false,
+        bypassPrerequisites: Boolean = false
     ): Result<PrerequisiteCheckResult> {
         return try {
+            // If bypassing prerequisites, return eligible result immediately
+            if (bypassPrerequisites) {
+                // Debug mode: Mock all prerequisites as completed
+                val mockPiqStatus = try {
+                    val piqResult = submissionRepository.getLatestPIQSubmission(userId)
+                    if (piqResult.isSuccess && piqResult.getOrNull() != null) {
+                        val submission = piqResult.getOrNull()!!
+                        PIQStatus.Completed(
+                            submissionId = submission.id,
+                            aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f
+                        )
+                    } else {
+                        PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
+                    }
+                } catch (e: Exception) {
+                    PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
+                }
+                
+                val mockOirStatus = try {
+                    val oirResult = submissionRepository.getLatestOIRSubmission(userId)
+                    if (oirResult.isSuccess && oirResult.getOrNull() != null) {
+                        val submission = oirResult.getOrNull()!!
+                        OIRStatus.Completed(
+                            submissionId = submission.id,
+                            score = submission.testResult.percentageScore
+                        )
+                    } else {
+                        OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
+                    }
+                } catch (e: Exception) {
+                    OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
+                }
+                
+                val mockPpdtStatus = try {
+                    val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId)
+                    if (ppdtResult.isSuccess && ppdtResult.getOrNull() != null) {
+                        val submission = ppdtResult.getOrNull()!!
+                        PPDTStatus.Completed(submission.submissionId)
+                    } else {
+                        PPDTStatus.Completed("DEBUG")
+                    }
+                } catch (e: Exception) {
+                    PPDTStatus.Completed("DEBUG")
+                }
+                
+                val subscriptionStatus = if (bypassSubscriptionCheck) {
+                    SubscriptionStatus.Available(
+                        tier = "DEBUG",
+                        remaining = Int.MAX_VALUE
+                    )
+                } else {
+                    checkSubscriptionStatus(userId)
+                }
+                
+                return Result.success(
+                    PrerequisiteCheckResult(
+                        isEligible = true,
+                        piqStatus = mockPiqStatus,
+                        oirStatus = mockOirStatus,
+                        ppdtStatus = mockPpdtStatus,
+                        subscriptionStatus = subscriptionStatus,
+                        failureReasons = emptyList()
+                    )
+                )
+            }
+            
             // 1. Check PIQ status
             val piqStatus = checkPIQStatus(userId)
 

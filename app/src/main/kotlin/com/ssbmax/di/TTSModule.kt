@@ -1,13 +1,8 @@
 package com.ssbmax.di
 
 import android.content.Context
-import com.ssbmax.BuildConfig
 import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.AndroidTTSService
-import com.ssbmax.utils.tts.ElevenLabsTTS
-import com.ssbmax.utils.tts.ElevenLabsTTSService
-import com.ssbmax.utils.tts.SarvamTTS
-import com.ssbmax.utils.tts.SarvamTTSService
 import com.ssbmax.utils.tts.TTSService
 import dagger.Module
 import dagger.Provides
@@ -20,52 +15,18 @@ import javax.inject.Singleton
  * Dependency injection module for Text-to-Speech services
  *
  * Provides:
- * - AndroidTTSService: Built-in Android TTS with Indian English optimization (Free tier)
- * - SarvamTTSService: High-quality Indian English from Sarvam AI (Pro/Premium)
- * - ElevenLabsTTSService: Human-like voice from ElevenLabs API (Pro/Premium fallback)
- *
- * Priority order: Android TTS → Sarvam AI → ElevenLabs API
- * Selected based on user's subscription tier in InterviewSessionViewModel.
+ * - AndroidTTSService: Built-in Android TTS engine
+ *   Works offline, available on all devices.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object TTSModule {
 
     /**
-     * Provide Sarvam AI API key from BuildConfig
-     *
-     * Read from local.properties at compile time:
-     * SARVAM_API_KEY=your_key_here
-     *
-     * Returns empty string if not configured (will fallback to ElevenLabs or Android TTS)
-     */
-    @Provides
-    @Singleton
-    @SarvamApiKey
-    fun provideSarvamApiKey(): String {
-        return BuildConfig.SARVAM_API_KEY
-    }
-
-    /**
-     * Provide ElevenLabs API key from BuildConfig
-     *
-     * Read from local.properties at compile time:
-     * ELEVENLABS_API_KEY=your_key_here
-     *
-     * Returns empty string if not configured (will fallback to Android TTS)
-     */
-    @Provides
-    @Singleton
-    @ElevenLabsApiKey
-    fun provideElevenLabsApiKey(): String {
-        return BuildConfig.ELEVENLABS_API_KEY
-    }
-
-    /**
-     * Provide Android TTS service (Free tier)
+     * Provide Android TTS service
      *
      * Uses Android's built-in TextToSpeech engine.
-     * Functional but robotic-sounding.
+     * Works offline, available on all devices.
      */
     @Provides
     @Singleton
@@ -75,52 +36,4 @@ object TTSModule {
     ): TTSService {
         return AndroidTTSService(context)
     }
-
-    /**
-     * Provide Sarvam AI TTS service (Primary Pro/Premium tier)
-     *
-     * Uses Sarvam AI API for high-quality Indian English voice synthesis.
-     * Uses OkHttp for API calls (no Ktor to avoid conflicts with Gemini SDK).
-     * Falls back to ElevenLabs TTS if API key not configured or API fails.
-     */
-    @Provides
-    @Singleton
-    @SarvamTTS
-    fun provideSarvamTTSService(
-        @ApplicationContext context: Context,
-        @SarvamApiKey apiKey: String
-    ): TTSService {
-        return SarvamTTSService(context, apiKey)
-    }
-
-    /**
-     * Provide ElevenLabs TTS service (Fallback Pro/Premium tier)
-     *
-     * Uses ElevenLabs API for human-like voice synthesis.
-     * Uses OkHttp for API calls (no Ktor to avoid conflicts with Gemini SDK).
-     * Falls back to Android TTS if API key not configured or API fails.
-     */
-    @Provides
-    @Singleton
-    @ElevenLabsTTS
-    fun provideElevenLabsTTSService(
-        @ApplicationContext context: Context,
-        @ElevenLabsApiKey apiKey: String
-    ): TTSService {
-        return ElevenLabsTTSService(context, apiKey)
-    }
 }
-
-/**
- * Qualifier annotation for Sarvam AI API key
- */
-@Retention(AnnotationRetention.BINARY)
-@javax.inject.Qualifier
-annotation class SarvamApiKey
-
-/**
- * Qualifier annotation for ElevenLabs API key
- */
-@Retention(AnnotationRetention.BINARY)
-@javax.inject.Qualifier
-annotation class ElevenLabsApiKey

@@ -11,8 +11,8 @@ import javax.inject.Inject
  *
  * New unified interview limits (TTS-based):
  * - FREE: 1 interview/month with Android TTS
- * - PRO: 1 interview/month with Sarvam AI TTS
- * - PREMIUM: 3 interviews/month with Sarvam AI TTS
+ * - PRO: 1 interview/month with Qwen TTS
+ * - PREMIUM: 3 interviews/month with Qwen TTS
  */
 class CheckInterviewLimitsUseCase @Inject constructor(
     private val subscriptionRepository: SubscriptionRepository,

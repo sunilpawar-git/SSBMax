@@ -107,7 +107,8 @@ class StartInterviewViewModel @Inject constructor(
 
                 val result = checkPrerequisites(
                     userId = userId,
-                    bypassSubscriptionCheck = BuildConfig.DEBUG
+                    bypassSubscriptionCheck = BuildConfig.DEBUG,
+                    bypassPrerequisites = BuildConfig.BYPASS_INTERVIEW_PREREQUISITES
                 )
 
                 if (result.isFailure) {

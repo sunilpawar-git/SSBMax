@@ -387,7 +387,7 @@ class AnalyticsManager @Inject constructor(
     
     /**
      * Track TTS service usage and performance
-     * @param service TTS service name (sarvam_ai, elevenlabs, android)
+     * @param service TTS service name (qwen_tts, android_tts)
      * @param latencyMs API response latency in milliseconds
      * @param success Whether the TTS call was successful
      */

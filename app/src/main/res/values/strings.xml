@@ -1204,12 +1204,6 @@
     <string name="interview_response_placeholder">Type your response or tap the keyboard mic to speak…</string>
     <string name="interview_char_count">%1$d characters</string>
 
-    <!-- Premium Voice Feature (Sarvam AI TTS) -->
-    <string name="interview_premium_voice">Premium Voice</string>
-    <string name="interview_premium_voice_active">Human-like interviewer voice enabled</string>
-    <string name="interview_standard_voice">Standard Voice</string>
-    <string name="interview_premium_voice_upgrade">Upgrade to Pro or Premium for a more realistic interviewer voice</string>
-    <string name="interview_premium_voice_error">Premium voice unavailable, using standard voice</string>
 
     <!-- Interview Result Notifications -->
     <string name="notification_interview_results_title">Interview Results Ready!</string>
