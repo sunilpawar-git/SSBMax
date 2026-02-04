@@ -15,7 +15,6 @@ import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.utils.tts.AndroidTTS
-import com.ssbmax.utils.tts.QwenTTS
 import com.ssbmax.utils.tts.TTSService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,7 +35,7 @@ import javax.inject.Inject
  *
  * OPTIMIZATION: Uses BACKGROUND AI analysis via WorkManager.
  */
-@HiltViewModel
+    @HiltViewModel
 class InterviewSessionViewModel @Inject constructor(
     interviewRepository: InterviewRepository,
     authRepository: AuthRepository,
@@ -44,7 +43,6 @@ class InterviewSessionViewModel @Inject constructor(
     workManager: WorkManager,
     analyticsManager: AnalyticsManager,
     @AndroidTTS androidTTSService: TTSService,
-    @QwenTTS qwenTTSService: TTSService,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -63,11 +61,7 @@ class InterviewSessionViewModel @Inject constructor(
 
     // Delegate TTS management
     private val ttsManager = TTSManager(
-        qwenTTSService = qwenTTSService,
         androidTTSService = androidTTSService,
-        authRepository = authRepository,
-        userProfileRepository = userProfileRepository,
-        analyticsManager = analyticsManager,
         scope = viewModelScope
     )
 
@@ -88,8 +82,7 @@ class InterviewSessionViewModel @Inject constructor(
 
     private fun initializeTTS() {
         viewModelScope.launch {
-            val forcePremium = BuildConfig.DEBUG && BuildConfig.FORCE_PREMIUM_TTS
-            ttsManager.initialize(forcePremium)
+            ttsManager.initialize()
         }
     }
 

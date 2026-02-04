@@ -95,12 +95,6 @@ extensions.getByType<ApplicationExtension>().apply {
             ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
 
-        // Hugging Face API Key for Qwen TTS (primary premium TTS)
-        // Read from local.properties (fallback to empty string - will use Android TTS)
-        val huggingFaceApiKey: String = localProperties.getProperty("HUGGINGFACE_API_KEY")
-            ?: project.findProperty("HUGGINGFACE_API_KEY") as? String
-            ?: ""
-        buildConfigField("String", "HUGGINGFACE_API_KEY", "\"$huggingFaceApiKey\"")
     }
 
     buildTypes {
@@ -115,12 +109,10 @@ extensions.getByType<ApplicationExtension>().apply {
             // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
             
-            // Debug: Force premium TTS (Sarvam AI) for testing (even for FREE users)
-            // Premium TTS Debug Override:
-            // - "true": Force Sarvam AI TTS for all users (bypasses subscription check)
-            // - "false": Normal behavior (Sarvam AI for Pro/Premium, Android TTS for Free)
-            // NOTE: Set to "true" temporarily when testing premium voice quality
-            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "true")
+            // Debug: Bypass interview prerequisites (PIQ, OIR score >= 50%, PPDT)
+            // Set to "true" to bypass all prerequisite checks for testing TTS and interview features
+            // ENABLED FOR DEVELOPMENT - DISABLE TO TEST PREREQUISITE FLOW
+            buildConfigField("boolean", "BYPASS_INTERVIEW_PREREQUISITES", "true")
         }
         
         release {
@@ -133,9 +125,9 @@ extensions.getByType<ApplicationExtension>().apply {
 
             // Production: Subscription limits enforced
             buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
-
-            // Production: No forced premium TTS (use subscription logic)
-            buildConfigField("boolean", "FORCE_PREMIUM_TTS", "false")
+            
+            // Production: Prerequisites enforced
+            buildConfigField("boolean", "BYPASS_INTERVIEW_PREREQUISITES", "false")
         }
     }
 

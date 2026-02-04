@@ -6,9 +6,8 @@ import javax.inject.Qualifier
 /**
  * Interface for Text-to-Speech services
  *
- * Supports multiple TTS implementations:
- * - AndroidTTSService: Free tier (built-in Android TTS, ultimate fallback)
- * - QwenTTSService: Primary TTS for Pro/Premium tier (Hugging Face Inference API)
+ * Implementation:
+ * - AndroidTTSService: Built-in Android TTS engine
  */
 interface TTSService {
     /**
@@ -68,21 +67,8 @@ interface TTSService {
 }
 
 /**
- * Qualifier for Android TTS implementation (free tier, ultimate fallback)
+ * Qualifier for Android TTS implementation
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class AndroidTTS
-
-/**
- * Qualifier for Qwen TTS implementation (Hugging Face Inference API)
- *
- * Primary premium TTS service for Pro/Premium tier.
- * Features:
- * - Low latency (~97ms)
- * - Cost-effective ($9/month HF PRO subscription)
- * - High-quality voice synthesis
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class QwenTTS
