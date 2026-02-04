@@ -72,22 +72,32 @@ class InterviewQuestionGenerator @Inject constructor(
                 excludeUsed = true
             ).getOrDefault(emptyList())
 
-            // Combine and shuffle cached questions
-            var allQuestions = (piqQuestions + genericQuestions).shuffled()
+            // Combine cached questions
+            var allQuestions = (piqQuestions + genericQuestions).toMutableList()
+            val cachedCount = allQuestions.size
 
-            // STEP 2: If cache is empty, use AI to generate personalized questions
-            if (allQuestions.isEmpty()) {
-                Log.i(TAG, "📝 Question cache empty. Generating $count AI-powered questions from PIQ data...")
-                allQuestions = generateAIQuestions(piqSnapshotId, count)
+            Log.d(TAG, "📦 Cache: ${piqQuestions.size} PIQ + ${genericQuestions.size} generic = $cachedCount total")
+
+            // STEP 2: If cache has insufficient questions, generate missing via AI
+            if (allQuestions.size < count) {
+                val missingCount = count - allQuestions.size
+                Log.i(TAG, "📝 Cache has $cachedCount/$count questions. Generating $missingCount via AI...")
+                val aiQuestions = generateAIQuestions(piqSnapshotId, missingCount)
+                allQuestions.addAll(aiQuestions)
             }
 
-            // STEP 3: Final fallback to mock questions if AI failed
-            if (allQuestions.isEmpty()) {
-                Log.w(TAG, "⚠️ AI generation failed. Using $count mock questions for development")
-                allQuestions = generateMockQuestions(count)
+            // STEP 3: If still insufficient, use fallback questions
+            if (allQuestions.size < count) {
+                val stillMissing = count - allQuestions.size
+                Log.w(TAG, "⚠️ Still missing $stillMissing questions. Using fallback...")
+                val fallbackQuestions = generateMockQuestions(stillMissing)
+                allQuestions.addAll(fallbackQuestions)
             }
 
-            Result.success(allQuestions.take(count))
+            // Shuffle and return the target count
+            val finalQuestions = allQuestions.shuffled().take(count)
+            Log.i(TAG, "✅ Generated ${finalQuestions.size}/$count questions (cache: $cachedCount, AI+fallback: ${finalQuestions.size - cachedCount})")
+            Result.success(finalQuestions)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate interview questions", e)
             Result.failure(e)
