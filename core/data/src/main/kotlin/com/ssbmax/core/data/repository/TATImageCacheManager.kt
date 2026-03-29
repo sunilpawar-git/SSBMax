@@ -197,7 +197,7 @@ class TATImageCacheManager @Inject constructor(
             val questions = cachedImages.map { entity ->
                 TATQuestion(
                     id = entity.id,
-                    imageUrl = entity.imageUrl,
+                    imageUrl = normalizeUrl(entity.imageUrl),
                     sequenceNumber = entity.sequenceNumber,
                     prompt = entity.prompt,
                     viewingTimeSeconds = entity.viewingTimeSeconds,
@@ -238,6 +238,17 @@ class TATImageCacheManager @Inject constructor(
         }
     }
     
+    /**
+     * Normalize Firebase Storage gs:// URLs to HTTPS
+     */
+    private fun normalizeUrl(raw: String): String {
+        return if (raw.startsWith("gs://")) {
+            raw.replaceFirst("gs://", "https://storage.googleapis.com/")
+        } else {
+            raw
+        }
+    }
+
     /**
      * Clear all cache (for debugging/testing)
      */

@@ -1,6 +1,5 @@
 package com.ssbmax.core.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
@@ -29,28 +28,71 @@ class PPDTImageCacheManager @Inject constructor(
         private const val TARGET_CACHE_SIZE = 15 // Multiple PPDT images per test
         private const val MIN_CACHE_SIZE = 5 // Minimum before resyncing
     }
-    
+
+    // Safe logging that works in unit tests
+    private fun logD(message: String) {
+        try {
+            Class.forName("android.util.Log")
+                .getMethod("d", String::class.java, String::class.java)
+                .invoke(null, TAG, message)
+        } catch (e: Exception) {
+            println("$TAG: $message")
+        }
+    }
+
+    private fun logW(message: String, throwable: Throwable? = null) {
+        try {
+            if (throwable != null) {
+                Class.forName("android.util.Log")
+                    .getMethod("w", String::class.java, String::class.java, Throwable::class.java)
+                    .invoke(null, TAG, message, throwable)
+            } else {
+                Class.forName("android.util.Log")
+                    .getMethod("w", String::class.java, String::class.java)
+                    .invoke(null, TAG, message)
+            }
+        } catch (e: Exception) {
+            println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
+        }
+    }
+
+    private fun logE(message: String, throwable: Throwable? = null) {
+        try {
+            if (throwable != null) {
+                Class.forName("android.util.Log")
+                    .getMethod("e", String::class.java, String::class.java, Throwable::class.java)
+                    .invoke(null, TAG, message, throwable)
+            } else {
+                Class.forName("android.util.Log")
+                    .getMethod("e", String::class.java, String::class.java)
+                    .invoke(null, TAG, message)
+            }
+        } catch (e: Exception) {
+            System.err.println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
+        }
+    }
+
     /**
      * Initialize cache with first batch
      * Called when app starts or cache is empty
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
-            Log.d(TAG, "Starting initial sync...")
+            logD("Starting initial sync...")
             
             val currentCount = dao.getTotalImageCount()
             if (currentCount >= TARGET_CACHE_SIZE) {
-                Log.d(TAG, "Cache already initialized ($currentCount images)")
+                logD("Cache already initialized ($currentCount images)")
                 return Result.success(Unit)
             }
             
             // Download first batch
             downloadBatch("batch_002_context_enhanced").getOrThrow()
             
-            Log.d(TAG, "Initial sync complete")
+            logD("Initial sync complete")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Initial sync failed", e)
+            logE("Initial sync failed", e)
             Result.failure(e)
         }
     }
@@ -60,7 +102,7 @@ class PPDTImageCacheManager @Inject constructor(
      */
     suspend fun downloadBatch(batchId: String): Result<Unit> {
         return try {
-            Log.d(TAG, "Downloading batch: $batchId")
+            logD("Downloading batch: $batchId")
             
             val doc = firestore.document("$COLLECTION_PATH/$batchId").get().await()
             
@@ -96,7 +138,7 @@ class PPDTImageCacheManager @Inject constructor(
                         imageDownloaded = false
                     )
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to parse image: ${imageMap["id"]}", e)
+                    logW("Failed to parse image: ${imageMap["id"]}", e)
                     null
                 }
             }
@@ -116,10 +158,10 @@ class PPDTImageCacheManager @Inject constructor(
                 )
             )
             
-            Log.d(TAG, "Downloaded batch $batchId: ${images.size} images")
+            logD("Downloaded batch $batchId: ${images.size} images")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to download batch $batchId", e)
+            logE("Failed to download batch $batchId", e)
             Result.failure(e)
         }
     }
@@ -130,27 +172,27 @@ class PPDTImageCacheManager @Inject constructor(
      */
     suspend fun getImageForTest(): Result<PPDTQuestion> {
         return try {
-            Log.d(TAG, "Getting image for PPDT test")
+            logD("Getting image for PPDT test")
             
             // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
-                Log.w(TAG, "Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
+                logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-            
+
             // Get least-used image to ensure variety
             val cachedImages = dao.getLeastUsedImages(1)
-            
+
             if (cachedImages.isEmpty()) {
                 throw Exception("No images in cache")
             }
-            
+
             val image = cachedImages.first()
-            
+
             // Mark as used
             dao.markImagesAsUsed(listOf(image.id))
-            
+
             // Convert to domain model
             val question = PPDTQuestion(
                 id = image.id,
@@ -162,11 +204,11 @@ class PPDTImageCacheManager @Inject constructor(
                 minCharacters = image.minCharacters,
                 maxCharacters = image.maxCharacters
             )
-            
-            Log.d(TAG, "Retrieved image for PPDT test: ${question.id}")
+
+            logD("Retrieved image for PPDT test: ${question.id}")
             Result.success(question)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get image for test", e)
+            logE("Failed to get image for test", e)
             Result.failure(e)
         }
     }
@@ -199,7 +241,7 @@ class PPDTImageCacheManager @Inject constructor(
             // But strict caching policy prevents ad-hoc Firestore reads for content.
             Result.failure(Exception("Image not found in cache: $imageId"))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get image by ID: $imageId", e)
+            logE("Failed to get image by ID: $imageId", e)
             Result.failure(e)
         }
     }
@@ -209,25 +251,25 @@ class PPDTImageCacheManager @Inject constructor(
      */
     suspend fun getImagesForTest(count: Int = 1): Result<List<PPDTQuestion>> {
         return try {
-            Log.d(TAG, "Getting $count images for PPDT test")
+            logD("Getting $count images for PPDT test")
             
             // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
-                Log.w(TAG, "Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
+                logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-            
+
             // Get least-used images to ensure variety
             val cachedImages = dao.getLeastUsedImages(count)
-            
+
             if (cachedImages.isEmpty()) {
                 throw Exception("No images in cache")
             }
-            
+
             // Mark as used
             dao.markImagesAsUsed(cachedImages.map { it.id })
-            
+
             // Convert to domain model
             val questions = cachedImages.map { entity ->
                 PPDTQuestion(
@@ -241,11 +283,11 @@ class PPDTImageCacheManager @Inject constructor(
                     maxCharacters = entity.maxCharacters
                 )
             }
-            
-            Log.d(TAG, "Retrieved ${questions.size} images for PPDT test")
+
+            logD("Retrieved ${questions.size} images for PPDT test")
             Result.success(questions)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get images for test", e)
+            logE("Failed to get images for test", e)
             Result.failure(e)
         }
     }
@@ -268,7 +310,7 @@ class PPDTImageCacheManager @Inject constructor(
                 lastSyncTime = lastSyncTime
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get cache status", e)
+            logE("Failed to get cache status", e)
             PPDTCacheStatus()
         }
     }
@@ -288,11 +330,11 @@ class PPDTImageCacheManager @Inject constructor(
      */
     suspend fun clearCache() {
         try {
-            Log.d(TAG, "Clearing cache...")
+            logD("Clearing cache...")
             dao.clearAllImages()
-            Log.d(TAG, "Cache cleared")
+            logD("Cache cleared")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to clear cache", e)
+            logE("Failed to clear cache", e)
         }
     }
 }

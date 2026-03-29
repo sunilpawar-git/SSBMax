@@ -18,6 +18,7 @@ import java.time.Instant
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -76,7 +77,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -120,7 +121,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -167,7 +168,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -215,7 +216,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -253,8 +254,9 @@ class GetOLQDashboardUseCaseTest {
             overallRating = 6
         )
         
-        // Mock Interview repo - now uses suspend function getLatestResult()
-        coEvery { interviewRepository.getLatestResult(userId) } returns Result.success(interviewResult)
+        // Mock Interview repo
+        // Returns Flow<List<InterviewResult>>
+        every { interviewRepository.getUserResults(userId) } returns flowOf(listOf(interviewResult))
         
         // Mock others empty
         coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
@@ -277,61 +279,6 @@ class GetOLQDashboardUseCaseTest {
         assertEquals("session_1", data?.dashboard?.phase2Results?.interviewResult?.sessionId)
         // Avg for that OLQ
         assertEquals(6.0f, data?.averageOLQScores?.get(OLQ.EFFECTIVE_INTELLIGENCE))
-    }
-
-    /**
-     * REGRESSION TEST: Interview score disappears on initial load
-     * 
-     * This test ensures getLatestResult() is used (suspend function with .get())
-     * instead of Flow.first() which could return empty list before Firestore syncs.
-     */
-    @Test
-    fun `invoke uses getLatestResult for reliable interview data fetch`() = runTest {
-        // Given
-        val userId = "user_interview_test"
-        val interviewResult = InterviewResult(
-            id = "res_reliable",
-            sessionId = "session_reliable",
-            userId = userId,
-            mode = InterviewMode.TEXT_BASED,
-            completedAt = Instant.now(),
-            durationSec = 900L,
-            totalQuestions = 5,
-            totalResponses = 5,
-            overallOLQScores = mapOf(
-                OLQ.COURAGE to OLQScore(7, 85, "Excellent")
-            ),
-            categoryScores = mapOf(OLQCategory.DYNAMIC to 7f),
-            overallConfidence = 85,
-            strengths = listOf(OLQ.COURAGE),
-            weaknesses = emptyList(),
-            feedback = "Good performance",
-            overallRating = 7
-        )
-        
-        // Mock getLatestResult (suspend function) - more reliable than Flow.first()
-        coEvery { interviewRepository.getLatestResult(userId) } returns Result.success(interviewResult)
-        
-        // Mock others empty
-        coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
-        coEvery { submissionRepository.getLatestWATSubmission(any()) } returns Result.success(null)
-        coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
-        coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
-        coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
-        coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
-        coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-
-        // When
-        val result = getOLQDashboardUseCase(userId)
-
-        // Then
-        assertTrue("Should succeed", result.isSuccess)
-        val data = result.getOrNull()
-        
-        // Verify interview result is present (regression prevention)
-        assertNotNull("Interview result should be present", data?.dashboard?.phase2Results?.interviewResult)
-        assertEquals("session_reliable", data?.dashboard?.phase2Results?.interviewResult?.sessionId)
-        assertEquals(7.0f, data?.averageOLQScores?.get(OLQ.COURAGE))
     }
 
     /**
@@ -385,7 +332,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -451,7 +398,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
         
         // When: Fetch and cache
         val result1 = getOLQDashboardUseCase(userId)
@@ -503,7 +450,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
         
         // Populate cache
         getOLQDashboardUseCase(userId)
@@ -550,7 +497,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
         
         // When
         val result = getOLQDashboardUseCase(userId)
