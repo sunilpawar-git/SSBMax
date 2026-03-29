@@ -74,7 +74,11 @@ jobs:
           fi
           echo "✅ Security checks passed"
 
-  # ── Lint ──────────────────────────────────────────────────────────────
+  # ── Shared setup anchor (used by lint, test, build) ──────────────────
+  # Each job repeats setup because GitHub Actions doesn't support YAML anchors
+  # across jobs. Gradle build cache keeps repeated compilation fast.
+
+  # ── Lint (all modules) ───────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -90,6 +94,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Restore Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle/build-cache
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -101,8 +115,15 @@ jobs:
         if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
         run: echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
 
-      - name: Run Lint
-        run: ./gradlew lintDebug --build-cache --parallel --stacktrace
+      - name: Run Lint (all modules)
+        run: |
+          ./gradlew \
+            :app:lintDebug \
+            :core:data:lintDebug \
+            :core:designsystem:lintDebug \
+            --build-cache \
+            --parallel \
+            --stacktrace
 
       - name: Upload Lint Reports
         if: always()
@@ -127,6 +148,16 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Restore Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle/build-cache
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Create local.properties
         run: |
@@ -158,7 +189,7 @@ jobs:
           path: '**/build/reports/tests/'
           retention-days: 7
 
-  # ── Build APK (depends on lint + tests passing) ──────────────────────
+  # ── Build APK (only after lint + tests pass) ─────────────────────────
   build:
     name: Build APK
     runs-on: ubuntu-latest
@@ -174,6 +205,16 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Restore Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle/build-cache
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Create local.properties
         run: |
@@ -202,6 +243,6 @@ jobs:
           echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint (all modules) | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests (all modules) | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Build APK | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
