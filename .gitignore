@@ -104,7 +104,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
-lint-baseline.xml
+# lint-baseline.xml is intentionally tracked — required for CI lint to pass
 
 # Android Profiling
 *.hprof
