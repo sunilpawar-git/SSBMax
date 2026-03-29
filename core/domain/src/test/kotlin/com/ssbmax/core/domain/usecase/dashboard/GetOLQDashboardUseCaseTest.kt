@@ -18,7 +18,6 @@ import java.time.Instant
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -77,7 +76,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -121,7 +120,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -168,7 +167,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -216,7 +215,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -254,9 +253,8 @@ class GetOLQDashboardUseCaseTest {
             overallRating = 6
         )
         
-        // Mock Interview repo
-        // Returns Flow<List<InterviewResult>>
-        every { interviewRepository.getUserResults(userId) } returns flowOf(listOf(interviewResult))
+        // Mock Interview repo - getLatestResult returns one-shot suspend result
+        coEvery { interviewRepository.getLatestResult(userId) } returns Result.success(interviewResult)
         
         // Mock others empty
         coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
@@ -332,7 +330,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
 
         // When
         val result = getOLQDashboardUseCase(userId)
@@ -398,7 +396,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
         
         // When: Fetch and cache
         val result1 = getOLQDashboardUseCase(userId)
@@ -450,7 +448,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
         
         // Populate cache
         getOLQDashboardUseCase(userId)
@@ -497,7 +495,7 @@ class GetOLQDashboardUseCaseTest {
         coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
         coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        every { interviewRepository.getUserResults(any()) } returns flowOf(emptyList())
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
         
         // When
         val result = getOLQDashboardUseCase(userId)
