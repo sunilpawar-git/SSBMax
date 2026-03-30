@@ -25,7 +25,42 @@ data class ProcessedDashboardData(
     val improvementOLQs: List<Pair<OLQ, Float>>,
     val overallAverageScore: Float?,
     val cacheMetadata: CacheMetadata
-)
+) {
+    companion object {
+        /**
+         * SSOT for a pre-fetch / no-data dashboard state.
+         * Use this wherever the OLQDashboardCard must be rendered before Firestore data arrives.
+         * All result fields are null/empty; completedTestsCount == 0, totalTests == 15.
+         */
+        fun empty(): ProcessedDashboardData = ProcessedDashboardData(
+            dashboard = OLQDashboardData(
+                userId = "",
+                phase1Results = OLQDashboardData.Phase1Results(
+                    oirResult = null,
+                    ppdtResult = null,
+                    ppdtOLQResult = null
+                ),
+                phase2Results = OLQDashboardData.Phase2Results(
+                    tatResult = null,
+                    watResult = null,
+                    srtResult = null,
+                    sdResult = null,
+                    gtoResults = emptyMap(),
+                    interviewResult = null
+                )
+            ),
+            averageOLQScores = emptyMap(),
+            topOLQs = emptyList(),
+            improvementOLQs = emptyList(),
+            overallAverageScore = null,
+            cacheMetadata = CacheMetadata(
+                cacheHit = false,
+                loadTimeMs = 0L,
+                forcedRefresh = false
+            )
+        )
+    }
+}
 
 /**
  * Metadata about cache performance for analytics tracking

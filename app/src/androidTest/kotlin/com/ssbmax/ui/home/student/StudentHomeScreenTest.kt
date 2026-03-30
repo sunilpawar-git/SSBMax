@@ -2,6 +2,7 @@ package com.ssbmax.ui.home.student
 
 import androidx.compose.ui.test.*
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -175,6 +176,152 @@ class StudentHomeScreenTest : BaseComposeTest() {
         composeTestRule
             .onNodeWithText("COMPLETED", substring = true)
             .assertExists()
+    }
+
+    // ── OLQ Dashboard always in view ─────────────────────────────────────────
+
+    @Test
+    fun homeScreen_olqDashboardCard_isVisibleWhenDashboardIsNullAndLoading() {
+        // Given: initial state — no data yet, fetch in flight
+        uiStateFlow.value = StudentHomeUiState(
+            userName = "Test User",
+            dashboard = null,
+            isDashboardLoading = true
+        )
+
+        composeTestRule.setContent {
+            StudentHomeScreen(
+                viewModel = mockViewModel,
+                onNavigateToTopic = {},
+                onNavigateToPhaseDetail = {},
+                onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
+                onOpenDrawer = {}
+            )
+        }
+
+        // OLQDashboardCard sections must be present — same card, just showing placeholder data
+        composeTestRule.onNodeWithText("Phase 1 - Screening", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Psychology", substring = true).assertExists()
+        composeTestRule.onNodeWithText("GTO", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Interview", substring = true).assertExists()
+    }
+
+    @Test
+    fun homeScreen_olqDashboardCard_isVisibleWhenDashboardIsNullAndNotLoading() {
+        // Given: dashboard null but fetch finished (error path or cache miss)
+        uiStateFlow.value = StudentHomeUiState(
+            userName = "Test User",
+            dashboard = null,
+            isDashboardLoading = false
+        )
+
+        composeTestRule.setContent {
+            StudentHomeScreen(
+                viewModel = mockViewModel,
+                onNavigateToTopic = {},
+                onNavigateToPhaseDetail = {},
+                onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
+                onOpenDrawer = {}
+            )
+        }
+
+        // Card is still rendered — no layout jump, no replacement composable
+        composeTestRule.onNodeWithText("Phase 1 - Screening", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Psychology", substring = true).assertExists()
+        composeTestRule.onNodeWithText("GTO", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Interview", substring = true).assertExists()
+    }
+
+    @Test
+    fun homeScreen_olqDashboardCard_isVisibleWhenDashboardIsPopulated() {
+        // Given: real data loaded
+        uiStateFlow.value = StudentHomeUiState(
+            userName = "Test User",
+            dashboard = ProcessedDashboardData.empty(), // reuse empty() as stand-in for populated
+            isDashboardLoading = false
+        )
+
+        composeTestRule.setContent {
+            StudentHomeScreen(
+                viewModel = mockViewModel,
+                onNavigateToTopic = {},
+                onNavigateToPhaseDetail = {},
+                onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
+                onOpenDrawer = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("Phase 1 - Screening", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Psychology", substring = true).assertExists()
+        composeTestRule.onNodeWithText("GTO", substring = true).assertExists()
+        composeTestRule.onNodeWithText("Interview", substring = true).assertExists()
+    }
+
+    @Test
+    fun homeScreen_emptyDashboardState_isNeverShown() {
+        // REGRESSION: EmptyDashboardState ("Start First Test" CTA) must never appear.
+        // The OLQDashboardCard is always rendered instead.
+        listOf(
+            StudentHomeUiState(dashboard = null, isDashboardLoading = true),
+            StudentHomeUiState(dashboard = null, isDashboardLoading = false),
+            StudentHomeUiState(dashboard = ProcessedDashboardData.empty(), isDashboardLoading = false)
+        ).forEach { state ->
+            uiStateFlow.value = state
+
+            composeTestRule.setContent {
+                StudentHomeScreen(
+                    viewModel = mockViewModel,
+                    onNavigateToTopic = {},
+                    onNavigateToPhaseDetail = {},
+                    onNavigateToStudy = {},
+                    onNavigateToResult = { _, _ -> },
+                    onOpenDrawer = {}
+                )
+            }
+
+            // "Start First Test" button text must not exist in any state
+            composeTestRule
+                .onNodeWithText("Start First Test", substring = true)
+                .assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun homeScreen_linearProgressIndicator_shownOnlyWhenDashboardLoading() {
+        // Loading state — indicator must be visible
+        uiStateFlow.value = StudentHomeUiState(
+            dashboard = null,
+            isDashboardLoading = true
+        )
+
+        composeTestRule.setContent {
+            StudentHomeScreen(
+                viewModel = mockViewModel,
+                onNavigateToTopic = {},
+                onNavigateToPhaseDetail = {},
+                onNavigateToStudy = {},
+                onNavigateToResult = { _, _ -> },
+                onOpenDrawer = {}
+            )
+        }
+
+        composeTestRule
+            .onNodeWithTag("dashboard_loading_indicator")
+            .assertExists()
+
+        // Non-loading state — indicator must be gone
+        uiStateFlow.value = StudentHomeUiState(
+            dashboard = ProcessedDashboardData.empty(),
+            isDashboardLoading = false
+        )
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithTag("dashboard_loading_indicator")
+            .assertDoesNotExist()
     }
 }
 

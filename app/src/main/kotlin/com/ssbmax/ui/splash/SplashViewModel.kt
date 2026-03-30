@@ -9,8 +9,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /**
@@ -47,20 +49,30 @@ class SplashViewModel @Inject constructor(
                 android.util.Log.d("SplashViewModel", "Starting authentication check...")
                 val startTime = System.currentTimeMillis()
 
-                // Check authentication first (fast for returning users)
-                val user = authRepository.currentUser.first()
-                android.util.Log.d("SplashViewModel", "Current user: ${user?.email ?: "null"}")
+                // Fast local Firebase check — no Firestore round-trip, no network call
+                val isAuthenticated = authRepository.isAuthenticated()
+                android.util.Log.d("SplashViewModel", "isAuthenticated: $isAuthenticated")
 
-                // Ensure minimum splash time for branding, but shorter if already authenticated
-                val elapsedTime = System.currentTimeMillis() - startTime
-                val minSplashTime = if (user != null) 800L else 2000L  // Faster for logged-in users
-                val remainingDelay = (minSplashTime - elapsedTime).coerceAtLeast(0)
-                if (remainingDelay > 0) {
-                    delay(remainingDelay)
+                val minSplashTime = if (isAuthenticated) 800L else 2000L
+                val remainingDelay = (minSplashTime - (System.currentTimeMillis() - startTime)).coerceAtLeast(0)
+                if (remainingDelay > 0) delay(remainingDelay)
+
+                if (!isAuthenticated) {
+                    android.util.Log.d("SplashViewModel", "No authenticated user, navigating to login")
+                    _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
+                    return@launch
                 }
 
+                // Wait for Firestore-backed user profile with a safety timeout.
+                // currentUser emits null until callbackFlow resolves the Firebase auth state;
+                // filterNotNull() skips the StateFlow initial null so we wait for the real value.
+                val user = withTimeoutOrNull(5000L) {
+                    authRepository.currentUser.filterNotNull().first()
+                }
+                android.util.Log.d("SplashViewModel", "Resolved user: ${user?.email ?: "timeout/null"}")
+
                 if (user == null) {
-                    android.util.Log.d("SplashViewModel", "No user found, navigating to login")
+                    android.util.Log.w("SplashViewModel", "User profile timed out, navigating to login")
                     _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
                     return@launch
                 }
@@ -76,30 +88,26 @@ class SplashViewModel @Inject constructor(
                 }
 
                 // Navigate based on user role
-                when {
-                    user.role == UserRole.STUDENT -> {
+                when (user.role) {
+                    UserRole.STUDENT -> {
                         android.util.Log.d("SplashViewModel", "User is STUDENT, navigating to student home")
                         _navigationEvent.value = SplashNavigationEvent.NavigateToStudentHome
                     }
-                    user.role == UserRole.INSTRUCTOR -> {
+                    UserRole.INSTRUCTOR -> {
                         android.util.Log.d("SplashViewModel", "User is INSTRUCTOR, navigating to instructor home")
                         _navigationEvent.value = SplashNavigationEvent.NavigateToInstructorHome
                     }
-                    user.role == UserRole.BOTH -> {
+                    UserRole.BOTH -> {
                         android.util.Log.d("SplashViewModel", "User has BOTH roles, navigating to role selection")
-                        // User can be both student and instructor
-                        // Navigate to role selection or last used role
                         _navigationEvent.value = SplashNavigationEvent.NavigateToRoleSelection
                     }
                     else -> {
                         android.util.Log.d("SplashViewModel", "User role unknown, navigating to role selection")
-                        // New user, needs to select role
                         _navigationEvent.value = SplashNavigationEvent.NavigateToRoleSelection
                     }
                 }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Failed to check authentication state")
-                // Navigate to login on ANY error (per user decision)
                 android.util.Log.d("SplashViewModel", "Error during authentication check, navigating to login")
                 _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
             }

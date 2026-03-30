@@ -205,12 +205,18 @@ class StudentHomeViewModel @Inject constructor(
     private fun loadDashboard(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                // Only show refresh indicator for manual refresh (forceRefresh = true)
-                // For initial load, show dashboard immediately without spinner
-                // This provides better UX - dashboard is visible and updates in-place
                 if (forceRefresh) {
+                    // Manual refresh: drive the rotate-icon animation only.
+                    // OLQDashboardCard is already visible — do not set isDashboardLoading.
                     _uiState.update { it.copy(
                         isRefreshingDashboard = true,
+                        dashboardError = null
+                    ) }
+                } else if (_uiState.value.dashboard == null) {
+                    // Initial fetch: card is visible but showing empty() placeholder data.
+                    // Signal the card to display its LinearProgressIndicator.
+                    _uiState.update { it.copy(
+                        isDashboardLoading = true,
                         dashboardError = null
                     ) }
                 }
@@ -218,6 +224,7 @@ class StudentHomeViewModel @Inject constructor(
                 val userId = authRepository.currentUser.value?.id
                 if (userId == null) {
                     _uiState.update { it.copy(
+                        isDashboardLoading = false,
                         isRefreshingDashboard = false,
                         dashboardError = "Please login to view progress"
                     ) }
@@ -228,7 +235,6 @@ class StudentHomeViewModel @Inject constructor(
                 withTimeout(10_000) {
                     getOLQDashboard(userId, forceRefresh)
                         .onSuccess { processedData ->
-                            // Track cache performance analytics
                             val metadata = processedData.cacheMetadata
                             analyticsManager.trackFeatureUsed(
                                 featureName = if (metadata.cacheHit) "dashboard_cache_hit" else "dashboard_cache_miss",
@@ -240,6 +246,7 @@ class StudentHomeViewModel @Inject constructor(
                             )
 
                             _uiState.update { it.copy(
+                                isDashboardLoading = false,
                                 isRefreshingDashboard = false,
                                 dashboard = processedData,
                                 lastRefreshTime = System.currentTimeMillis(),
@@ -247,7 +254,6 @@ class StudentHomeViewModel @Inject constructor(
                             ) }
                         }
                         .onFailure { error ->
-                            // Track cache error
                             analyticsManager.trackFeatureUsed(
                                 featureName = "dashboard_cache_error",
                                 parameters = mapOf(
@@ -258,20 +264,22 @@ class StudentHomeViewModel @Inject constructor(
 
                             ErrorLogger.log(error, "Failed to load dashboard")
                             _uiState.update { it.copy(
+                                isDashboardLoading = false,
                                 isRefreshingDashboard = false,
                                 dashboardError = error.message ?: "Failed to load dashboard"
                             ) }
                         }
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                // Handle timeout gracefully
                 _uiState.update { it.copy(
+                    isDashboardLoading = false,
                     isRefreshingDashboard = false,
                     dashboardError = "Dashboard timed out. Please retry."
                 ) }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Unexpected error in loadDashboard")
                 _uiState.update { it.copy(
+                    isDashboardLoading = false,
                     isRefreshingDashboard = false,
                     dashboardError = "Unexpected error: ${e.message}"
                 ) }
@@ -292,13 +300,14 @@ data class StudentHomeUiState(
     val phase1Progress: com.ssbmax.core.domain.model.Phase1Progress? = null,
     val phase2Progress: com.ssbmax.core.domain.model.Phase2Progress? = null,
     val error: String? = null,
-    // Dashboard state (PERFORMANCE: using ProcessedDashboardData with pre-computed aggregations + caching)
-    // NOTE: isLoadingDashboard is deprecated - dashboard shows immediately, values update in-place
-    // Kept for backward compatibility (always false)
-    @Deprecated("Dashboard no longer shows loading spinner. Use isRefreshingDashboard for refresh indicator.")
-    val isLoadingDashboard: Boolean = false,
-    val isRefreshingDashboard: Boolean = false, // Dashboard refresh indicator (for refresh button animation)
+    // true only during the very first fetch (dashboard == null).
+    // OLQDashboardCard uses this to render a LinearProgressIndicator placeholder
+    // while the card structure is already visible. Cleared on success or failure.
+    val isDashboardLoading: Boolean = false,
+    // true while a manual pull-to-refresh is in flight; drives the rotate animation
+    // on the refresh icon. Independent of isDashboardLoading.
+    val isRefreshingDashboard: Boolean = false,
     val dashboard: com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData? = null,
     val dashboardError: String? = null,
-    val lastRefreshTime: Long? = null // Track when data was last refreshed
+    val lastRefreshTime: Long? = null
 )

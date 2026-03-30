@@ -54,7 +54,8 @@
       "Bash(./gradlew test:*)",
       "Bash(tee:*)",
       "Bash(./gradlew:*)",
-      "Bash(gh run:*)"
+      "Bash(gh run:*)",
+      "Bash(wait)"
     ],
     "deny": [],
     "ask": []
