@@ -3,12 +3,13 @@ package com.ssbmax.core.domain.usecase.dashboard
 import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.util.DomainLogger
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -192,127 +193,141 @@ class GetOLQDashboardUseCase @Inject constructor(
      * Fetch fresh dashboard data from Firestore
      * Extracted from invoke() to support caching layer
      */
-    private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData {
-        // Fetch OIR result
-        logger.d(TAG, "🔍 Fetching OIR submission for user: $userId")
-        val oirSubmission = submissionRepository.getLatestOIRSubmission(userId).getOrNull()
+    private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData = coroutineScope {
+        logger.d(TAG, "🔍 Fetching all dashboard data in parallel for user: $userId")
+
+        // Launch all independent fetches concurrently so every Firestore query hits the
+        // network at the same time.  Previously they were sequential: OIR → PPDT → TAT →
+        // … → Lecturette → Interview.  On cold-start the early queries (GD, GPE, …) hit
+        // the local Firestore cache instantly, but Lecturette and Interview – completed
+        // most recently – were not yet cached.  By the time those sequential fetches ran,
+        // the cold-start Firestore connection was still being established, causing them to
+        // fail silently (.getOrNull() → null).  Parallel fetches establish the connection
+        // once for all queries, eliminating that race.
+        val oirJob = async { submissionRepository.getLatestOIRSubmission(userId).getOrNull() }
+
+        // PPDT has a 2-step dependency (submission → OLQ result), so both steps are
+        // inside a single async block to keep them parallel with everything else.
+        val ppdtJob = async {
+            val submission = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
+            val olqResult = submission?.let {
+                submissionRepository.getPPDTResult(it.submissionId).getOrNull()
+            }
+            Pair(submission, olqResult)
+        }
+
+        val tatJob = async { getLatestCompletedOLQResult(userId, "TAT") }
+        val watJob = async { getLatestCompletedOLQResult(userId, "WAT") }
+        val srtJob = async { getLatestCompletedOLQResult(userId, "SRT") }
+        val sdJob  = async { getLatestCompletedOLQResult(userId, "SDT") }
+
+        // All 8 GTO tests in parallel – previously these were sequential, so the 5 tests
+        // with no submissions (PGT, HGT, GOR, IO, CT) each wasted a server round-trip
+        // before Lecturette's query even started.
+        val gtoJobs = GTOTestType.entries.associateWith { testType ->
+            async { gtoRepository.getUserResults(userId, testType).getOrNull()?.firstOrNull() }
+        }
+
+        // Interview fetched in parallel with everything above.
+        val interviewJob = async { interviewRepository.getLatestResult(userId).getOrNull() }
+
+        // ── Await all results ────────────────────────────────────────────────────────────
+        val oirSubmission = oirJob.await()
         val oirResult = oirSubmission?.testResult
-        logger.d(TAG, "   OIR submission found: ${oirSubmission != null}")
-        logger.d(TAG, "   OIR submission ID: ${oirSubmission?.id}")
-        logger.d(TAG, "   OIR testResult extracted: ${oirResult != null}")
-        logger.d(TAG, "   OIR percentageScore: ${oirResult?.percentageScore}")
-        
-        // Fetch PPDT submission and fetch OLQ result from ppdt_results collection (GTO pattern)
-            // Important: Try fetching from ppdt_results first - the submission's analysisStatus may be stale
-            val ppdtSubmission = submissionRepository.getLatestPPDTSubmission(userId)
-                .getOrNull()
-            
-            // Directly try to fetch from ppdt_results - this collection is always fresh
-            val ppdtOLQResult = ppdtSubmission?.let { 
-                submissionRepository.getPPDTResult(it.submissionId).getOrNull() 
+        logger.d(TAG, "   OIR submission found: ${oirSubmission != null}, score: ${oirResult?.percentageScore}")
+
+        val (ppdtSubmission, ppdtOLQResult) = ppdtJob.await()
+
+        val tatResult = tatJob.await()
+        val watResult = watJob.await()
+        val srtResult = srtJob.await()
+        val sdResult  = sdJob.await()
+        logger.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
+
+        val gtoResults = mutableMapOf<GTOTestType, OLQAnalysisResult>()
+        gtoJobs.forEach { (testType, job) ->
+            job.await()?.let { gtoResult ->
+                if (gtoResult.olqScores.isNotEmpty()) {
+                    gtoResults[testType] = OLQAnalysisResult(
+                        submissionId = gtoResult.submissionId,
+                        testType = when (testType) {
+                            GTOTestType.GROUP_DISCUSSION -> com.ssbmax.core.domain.model.TestType.GTO_GD
+                            GTOTestType.GROUP_PLANNING_EXERCISE -> com.ssbmax.core.domain.model.TestType.GTO_GPE
+                            GTOTestType.LECTURETTE -> com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE
+                            GTOTestType.PROGRESSIVE_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_PGT
+                            GTOTestType.HALF_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_HGT
+                            GTOTestType.GROUP_OBSTACLE_RACE -> com.ssbmax.core.domain.model.TestType.GTO_GOR
+                            GTOTestType.INDIVIDUAL_OBSTACLES -> com.ssbmax.core.domain.model.TestType.GTO_IO
+                            GTOTestType.COMMAND_TASK -> com.ssbmax.core.domain.model.TestType.GTO_CT
+                        },
+                        olqScores = gtoResult.olqScores,
+                        overallScore = gtoResult.overallScore,
+                        overallRating = gtoResult.overallRating,
+                        strengths = gtoResult.strengths,
+                        weaknesses = gtoResult.weaknesses,
+                        recommendations = gtoResult.recommendations,
+                        analyzedAt = gtoResult.analyzedAt,
+                        aiConfidence = gtoResult.aiConfidence
+                    )
+                }
             }
+        }
 
-            // Fetch Phase 2 Psychology test results (OLQ-based)
-            logger.d(TAG, "🔍 Fetching Phase 2 Psychology test results...")
-            val tatResult = getLatestCompletedOLQResult(userId, "TAT")
-            val watResult = getLatestCompletedOLQResult(userId, "WAT")
-            val srtResult = getLatestCompletedOLQResult(userId, "SRT")
-            val sdResult = getLatestCompletedOLQResult(userId, "SDT")
-            logger.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
+        val interviewResult = interviewJob.await()
+        logger.d(TAG, "   Interview result: ${interviewResult != null}")
 
-            // Fetch GTO results (all 8 tests)
-            val gtoResults = mutableMapOf<GTOTestType, OLQAnalysisResult>()
-            
-            GTOTestType.entries.forEach { testType ->
-                gtoRepository.getUserResults(userId, testType)
-                    .getOrNull()
-                    ?.firstOrNull() // Get latest result
-                    ?.let { gtoResult ->
-                        // Convert GTOResult to OLQAnalysisResult
-                        if (gtoResult.olqScores.isNotEmpty()) {
-                            gtoResults[testType] = OLQAnalysisResult(
-                                submissionId = gtoResult.submissionId,
-                                testType = when (testType) {
-                                    GTOTestType.GROUP_DISCUSSION -> com.ssbmax.core.domain.model.TestType.GTO_GD
-                                    GTOTestType.GROUP_PLANNING_EXERCISE -> com.ssbmax.core.domain.model.TestType.GTO_GPE
-                                    GTOTestType.LECTURETTE -> com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE
-                                    GTOTestType.PROGRESSIVE_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_PGT
-                                    GTOTestType.HALF_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_HGT
-                                    GTOTestType.GROUP_OBSTACLE_RACE -> com.ssbmax.core.domain.model.TestType.GTO_GOR
-                                    GTOTestType.INDIVIDUAL_OBSTACLES -> com.ssbmax.core.domain.model.TestType.GTO_IO
-                                    GTOTestType.COMMAND_TASK -> com.ssbmax.core.domain.model.TestType.GTO_CT
-                                },
-                                olqScores = gtoResult.olqScores,
-                                overallScore = gtoResult.overallScore,
-                                overallRating = gtoResult.overallRating,
-                                strengths = gtoResult.strengths,
-                                weaknesses = gtoResult.weaknesses,
-                                recommendations = gtoResult.recommendations,
-                                analyzedAt = gtoResult.analyzedAt,
-                                aiConfidence = gtoResult.aiConfidence
-                            )
-                        }
-                    }
-            }
-
-            // Fetch Interview result using suspend function for reliable one-shot fetch
-            // Using getLatestResult() instead of Flow.first() to avoid race conditions
-            // where Firestore snapshot listener may not have synced data yet
-            val interviewResult = interviewRepository.getLatestResult(userId).getOrNull()
-
-            // Build dashboard
-            val dashboard = OLQDashboardData(
-                userId = userId,
-                phase1Results = OLQDashboardData.Phase1Results(
-                    // CRITICAL: Ensure sessionId matches document ID for navigation consistency
-                    // This fixes old records where sessionId might have been different from document ID
-                    oirResult = oirResult?.copy(sessionId = oirSubmission?.id ?: ""),  
-                    ppdtResult = ppdtSubmission,  // Full submission for UI display
-                    ppdtOLQResult = ppdtOLQResult  // Extracted OLQ scores
-                ),
-                phase2Results = OLQDashboardData.Phase2Results(
-                    tatResult = tatResult,
-                    watResult = watResult,
-                    srtResult = srtResult,
-                    sdResult = sdResult,
-                    gtoResults = gtoResults,
-                    interviewResult = interviewResult
-                )
+        // Build dashboard
+        val dashboard = OLQDashboardData(
+            userId = userId,
+            phase1Results = OLQDashboardData.Phase1Results(
+                // CRITICAL: Ensure sessionId matches document ID for navigation consistency
+                oirResult = oirResult?.copy(sessionId = oirSubmission?.id ?: ""),
+                ppdtResult = ppdtSubmission,
+                ppdtOLQResult = ppdtOLQResult
+            ),
+            phase2Results = OLQDashboardData.Phase2Results(
+                tatResult = tatResult,
+                watResult = watResult,
+                srtResult = srtResult,
+                sdResult = sdResult,
+                gtoResults = gtoResults,
+                interviewResult = interviewResult
             )
+        )
 
-            // PERFORMANCE: Compute all aggregations ONCE, not on every UI access
-            val averageOLQScores = computeAverageOLQScores(dashboard)
-            val topOLQs = averageOLQScores.entries
-                .sortedBy { it.value }  // Lower is better
-                .take(3)
-                .map { it.key to it.value }
-            val improvementOLQs = averageOLQScores.entries
-                .sortedByDescending { it.value }  // Higher needs improvement
-                .take(3)
-                .map { it.key to it.value }
-            val overallAverage = computeOverallAverage(dashboard)
+        // PERFORMANCE: Compute all aggregations ONCE, not on every UI access
+        val averageOLQScores = computeAverageOLQScores(dashboard)
+        val topOLQs = averageOLQScores.entries
+            .sortedBy { it.value }
+            .take(3)
+            .map { it.key to it.value }
+        val improvementOLQs = averageOLQScores.entries
+            .sortedByDescending { it.value }
+            .take(3)
+            .map { it.key to it.value }
+        val overallAverage = computeOverallAverage(dashboard)
 
-            val finalData = ProcessedDashboardData(
-                dashboard = dashboard,
-                averageOLQScores = averageOLQScores,
-                topOLQs = topOLQs,
-                improvementOLQs = improvementOLQs,
-                overallAverageScore = overallAverage,
-                cacheMetadata = CacheMetadata(
-                    cacheHit = false,
-                    loadTimeMs = 0L,
-                    forcedRefresh = false
-                ) // Will be replaced by invoke() with actual metadata
-            )
-            
-            logger.d(TAG, "✅ Dashboard built successfully")
-            logger.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
-            logger.d(TAG, "   Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")
-            logger.d(TAG, "   SDT overallScore: ${finalData.dashboard.phase2Results.sdResult?.overallScore}")
-            logger.d(TAG, "   Average OLQ scores count: ${finalData.averageOLQScores.size}")
-            logger.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
-            
-            return finalData
+        val finalData = ProcessedDashboardData(
+            dashboard = dashboard,
+            averageOLQScores = averageOLQScores,
+            topOLQs = topOLQs,
+            improvementOLQs = improvementOLQs,
+            overallAverageScore = overallAverage,
+            cacheMetadata = CacheMetadata(
+                cacheHit = false,
+                loadTimeMs = 0L,
+                forcedRefresh = false
+            ) // Will be replaced by invoke() with actual metadata
+        )
+
+        logger.d(TAG, "✅ Dashboard built successfully")
+        logger.d(TAG, "   Final OIR result: ${finalData.dashboard.phase1Results.oirResult?.percentageScore}")
+        logger.d(TAG, "   Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")
+        logger.d(TAG, "   SDT overallScore: ${finalData.dashboard.phase2Results.sdResult?.overallScore}")
+        logger.d(TAG, "   Average OLQ scores count: ${finalData.averageOLQScores.size}")
+        logger.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
+
+        finalData
     }
 
     /**
