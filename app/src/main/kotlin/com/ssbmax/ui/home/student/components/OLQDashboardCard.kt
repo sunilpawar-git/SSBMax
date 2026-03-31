@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,11 +26,16 @@ import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
 /**
  * OLQ Dashboard Card showing all test results with aggregated scores
  * Uses pre-computed data for performance (no calculations in UI)
+ *
+ * @param isLoading true while the initial Firestore fetch is in flight (dashboard == null in ViewModel).
+ *                  Shows a LinearProgressIndicator so the card structure is always visible without
+ *                  jumping to a different composable. Cleared to false on success or failure.
  */
 @Composable
 fun OLQDashboardCard(
     processedData: ProcessedDashboardData,
     onNavigateToResult: (TestType, String) -> Unit = { _, _ -> },
+    isLoading: Boolean = false,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -101,7 +107,17 @@ fun OLQDashboardCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Show LinearProgressIndicator during initial fetch; card structure stays visible.
+            // assertDoesNotExist in tests relies on this testTag being absent when isLoading = false.
+            if (isLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("dashboard_loading_indicator")
+                )
+            } else {
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -204,4 +220,3 @@ fun OLQDashboardCard(
 // ScoreBadge extracted to DashboardScoreBadge.kt
 
 // OLQStrengthsSection extracted to DashboardOLQStrengths.kt
-// EmptyDashboardState extracted to DashboardEmptyState.kt

@@ -16,6 +16,7 @@ import com.ssbmax.core.domain.repository.AuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -141,8 +142,11 @@ class AuthRepositoryImpl @Inject constructor(
             }
             
             android.util.Log.d("AuthRepositoryImpl", "Firebase authentication successful: ${firebaseUser.email}")
-            // Load or create user profile in Firestore
-            loadOrCreateUserProfile(firebaseUser)
+            // Load or create user profile in Firestore — timeout prevents infinite hang
+            // if Firestore is unreachable (e.g. no network after sign-in).
+            withTimeout(10_000L) {
+                loadOrCreateUserProfile(firebaseUser)
+            }
         } catch (e: Exception) {
             android.util.Log.e("AuthRepositoryImpl", "Google Sign-In error: ${e.message}", e)
             Result.failure(Exception("Google Sign-In error: ${e.message}", e))

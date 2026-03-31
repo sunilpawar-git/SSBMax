@@ -137,8 +137,9 @@ class SplashViewModelTest : BaseViewModelTest() {
     @Test
     fun `user without completed profile navigates to onboarding`() = runTest {
         // Given - user exists but no profile
+        coEvery { mockAuthRepository.isAuthenticated() } returns true
         mockCurrentUserFlow.value = testStudent
-        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns 
+        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns
             MutableStateFlow(false)
         
         // When
@@ -160,8 +161,9 @@ class SplashViewModelTest : BaseViewModelTest() {
     @Test
     fun `student with completed profile navigates to student home`() = runTest {
         // Given
+        coEvery { mockAuthRepository.isAuthenticated() } returns true
         mockCurrentUserFlow.value = testStudent
-        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns 
+        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns
             MutableStateFlow(true)
         
         // When
@@ -183,8 +185,9 @@ class SplashViewModelTest : BaseViewModelTest() {
     @Test
     fun `instructor with completed profile navigates to instructor home`() = runTest {
         // Given
+        coEvery { mockAuthRepository.isAuthenticated() } returns true
         mockCurrentUserFlow.value = testInstructor
-        coEvery { mockUserProfileRepository.hasCompletedProfile(testInstructor.id) } returns 
+        coEvery { mockUserProfileRepository.hasCompletedProfile(testInstructor.id) } returns
             MutableStateFlow(true)
         
         // When
@@ -206,8 +209,9 @@ class SplashViewModelTest : BaseViewModelTest() {
     @Test
     fun `user with both roles navigates to role selection`() = runTest {
         // Given
+        coEvery { mockAuthRepository.isAuthenticated() } returns true
         mockCurrentUserFlow.value = testBothRoles
-        coEvery { mockUserProfileRepository.hasCompletedProfile(testBothRoles.id) } returns 
+        coEvery { mockUserProfileRepository.hasCompletedProfile(testBothRoles.id) } returns
             MutableStateFlow(true)
         
         // When
@@ -229,8 +233,9 @@ class SplashViewModelTest : BaseViewModelTest() {
     @Test
     fun `navigation event is initially null before init completes`() = runTest {
         // Given
+        coEvery { mockAuthRepository.isAuthenticated() } returns true
         mockCurrentUserFlow.value = testStudent
-        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns 
+        coEvery { mockUserProfileRepository.hasCompletedProfile(testStudent.id) } returns
             MutableStateFlow(true)
         
         // When

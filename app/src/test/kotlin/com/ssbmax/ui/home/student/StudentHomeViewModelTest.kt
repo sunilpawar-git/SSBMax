@@ -6,11 +6,13 @@ import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.repository.UnifiedResultRepository
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -461,20 +463,25 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         assertNotNull("State should still be accessible", state)
     }
 
-    // ==================== Dashboard Loading State Tests (Phase 2 Fix) ====================
+    // ==================== Dashboard Loading State Tests ====================
 
     @Test
-    fun `dashboard should not show loading state on initial load`() = runTest {
-        // Given - Dashboard loads data asynchronously
+    fun `isDashboardLoading is true immediately after init when no data exists`() = runTest {
+        // CompletableDeferred lets us suspend the use case so we can observe mid-flight state.
+        // UnconfinedTestDispatcher runs coroutines eagerly up to the first real suspension point;
+        // deferred.await() is that suspension point.
+        val fetchDeferred = CompletableDeferred<Result<ProcessedDashboardData>>()
+
         coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
             flowOf(Result.success(testProfile))
         coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
             MutableStateFlow(phase1ProgressEmpty)
         coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
             MutableStateFlow(phase2ProgressEmpty)
-        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+        // Suspend the fetch so loadDashboard stays in-flight
+        coEvery { mockGetOLQDashboard(any(), any()) } coAnswers { fetchDeferred.await() }
 
-        // When - ViewModel is created
+        // When - ViewModel is created; loadDashboard() suspends at deferred.await()
         viewModel = StudentHomeViewModel(
             mockAuthRepository,
             mockUserProfileRepository,
@@ -485,16 +492,19 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
             mockNotificationRepository
         )
 
-        // Then - isLoadingDashboard should be false (no spinner blocking UI)
-        val initialState = viewModel.uiState.value
-        assertFalse(
-            "Dashboard should not show loading spinner on initial load",
-            initialState.isLoadingDashboard
+        // Then - isDashboardLoading must be true while fetch is still pending
+        assertTrue(
+            "isDashboardLoading should be true while initial fetch is in flight",
+            viewModel.uiState.value.isDashboardLoading
         )
+
+        // Cleanup: unblock fetch so the coroutine can complete
+        fetchDeferred.complete(Result.success(mockk(relaxed = true)))
+        advanceUntilIdle()
     }
 
     @Test
-    fun `refreshDashboard sets isRefreshingDashboard but not isLoadingDashboard`() = runTest {
+    fun `isDashboardLoading is false after successful dashboard load`() = runTest {
         // Given
         coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
             flowOf(Result.success(testProfile))
@@ -515,15 +525,109 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
         )
         advanceUntilIdle()
 
-        // When - User manually refreshes dashboard
+        // Then - loading cleared after data arrives
+        assertFalse(
+            "isDashboardLoading must be false after successful fetch",
+            viewModel.uiState.value.isDashboardLoading
+        )
+    }
+
+    @Test
+    fun `isDashboardLoading is false after dashboard load fails`() = runTest {
+        // Given - use case returns failure
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+        coEvery { mockGetOLQDashboard(any(), any()) } returns
+            Result.failure(Exception("Firestore unavailable"))
+
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle()
+
+        // Then - loading cleared even on failure (card stays visible with empty data)
+        assertFalse(
+            "isDashboardLoading must be false after failed fetch",
+            viewModel.uiState.value.isDashboardLoading
+        )
+        assertNotNull(
+            "dashboardError should be set on failure",
+            viewModel.uiState.value.dashboardError
+        )
+    }
+
+    @Test
+    fun `isDashboardLoading is false during forceRefresh - uses isRefreshingDashboard instead`() = runTest {
+        // Given - dashboard already loaded
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle() // dashboard is now loaded (dashboard != null)
+
+        // When - user triggers manual refresh
         viewModel.refreshDashboard()
 
-        // Then - Should show refresh indicator, not full loading spinner
-        // Note: isRefreshingDashboard is for the refresh icon animation
+        // Then - isDashboardLoading stays false; isRefreshingDashboard drives the icon animation
         val state = viewModel.uiState.value
         assertFalse(
-            "isLoadingDashboard should remain false during refresh",
-            state.isLoadingDashboard
+            "isDashboardLoading must stay false during forceRefresh (card already visible)",
+            state.isDashboardLoading
+        )
+    }
+
+    @Test
+    fun `isDashboardLoading stays false on second loadDashboard when dashboard already exists`() = runTest {
+        // Given - simulate dashboard already populated (cache hit path)
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            flowOf(Result.success(testProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(phase1ProgressEmpty)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(phase2ProgressEmpty)
+        coEvery { mockGetOLQDashboard(any(), any()) } returns Result.success(mockk(relaxed = true))
+
+        viewModel = StudentHomeViewModel(
+            mockAuthRepository,
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockUnifiedResultRepository,
+            mockGetOLQDashboard,
+            mockAnalyticsManager,
+            mockNotificationRepository
+        )
+        advanceUntilIdle() // dashboard loaded
+
+        // When - refreshProgress triggers loadDashboard again (forceRefresh = true)
+        viewModel.refreshProgress()
+
+        // Then - isDashboardLoading must not flicker back to true (card already visible)
+        assertFalse(
+            "isDashboardLoading must not become true when dashboard is already loaded",
+            viewModel.uiState.value.isDashboardLoading
         )
     }
     

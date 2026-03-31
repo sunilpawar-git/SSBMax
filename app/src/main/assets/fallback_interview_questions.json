@@ -1,7 +1,8 @@
 {
-  "version": "1.0",
-  "description": "Fallback interview questions for development and when AI generation fails",
-  "lastUpdated": "2025-11-23",
+  "version": "2.0",
+  "description": "Fallback interview questions for development and when AI generation fails. Covers all 15 OLQs.",
+  "lastUpdated": "2026-02-04",
+  "totalQuestions": 27,
   "questions": [
     {
       "questionText": "Tell me about yourself and your background.",
@@ -52,6 +53,91 @@
       "questionText": "Where do you see yourself in 5 years?",
       "expectedOLQs": ["DETERMINATION", "ORGANIZING_ABILITY"],
       "context": "Career planning and long-term vision"
+    },
+    {
+      "questionText": "Describe a situation where you had to take initiative without being told.",
+      "expectedOLQs": ["INITIATIVE", "SELF_CONFIDENCE", "DETERMINATION"],
+      "context": "Proactiveness and self-motivation assessment"
+    },
+    {
+      "questionText": "How would you convince a group of people who disagree with your plan?",
+      "expectedOLQs": ["INFLUENCE_GROUP", "POWER_OF_EXPRESSION", "REASONING_ABILITY"],
+      "context": "Persuasion and influence skills"
+    },
+    {
+      "questionText": "Tell me about a time when you had to make a quick decision with limited information.",
+      "expectedOLQs": ["SPEED_OF_DECISION", "COURAGE", "EFFECTIVE_INTELLIGENCE"],
+      "context": "Decision-making under uncertainty"
+    },
+    {
+      "questionText": "How do you organize your day and prioritize tasks?",
+      "expectedOLQs": ["ORGANIZING_ABILITY", "EFFECTIVE_INTELLIGENCE"],
+      "context": "Time management and organizational skills"
+    },
+    {
+      "questionText": "Describe a situation where you had to stand up for what you believed was right.",
+      "expectedOLQs": ["COURAGE", "DETERMINATION", "SENSE_OF_RESPONSIBILITY"],
+      "context": "Moral courage and integrity"
+    },
+    {
+      "questionText": "How do you maintain your physical fitness?",
+      "expectedOLQs": ["STAMINA", "DETERMINATION", "LIVELINESS"],
+      "context": "Physical fitness and discipline"
+    },
+    {
+      "questionText": "Tell me about a time when you helped someone in need.",
+      "expectedOLQs": ["COOPERATION", "SENSE_OF_RESPONSIBILITY", "SOCIAL_ADJUSTMENT"],
+      "context": "Empathy and social responsibility"
+    },
+    {
+      "questionText": "How do you handle criticism or negative feedback?",
+      "expectedOLQs": ["SELF_CONFIDENCE", "SOCIAL_ADJUSTMENT", "REASONING_ABILITY"],
+      "context": "Emotional maturity and resilience"
+    },
+    {
+      "questionText": "Describe a goal you achieved that required sustained effort over a long period.",
+      "expectedOLQs": ["DETERMINATION", "STAMINA", "ORGANIZING_ABILITY"],
+      "context": "Perseverance and long-term commitment"
+    },
+    {
+      "questionText": "How would you handle a conflict between two team members?",
+      "expectedOLQs": ["COOPERATION", "INFLUENCE_GROUP", "REASONING_ABILITY"],
+      "context": "Conflict resolution skills"
+    },
+    {
+      "questionText": "What current affairs topic interests you the most and why?",
+      "expectedOLQs": ["EFFECTIVE_INTELLIGENCE", "POWER_OF_EXPRESSION"],
+      "context": "Awareness and intellectual engagement"
+    },
+    {
+      "questionText": "Describe a time when you failed at something. What did you learn?",
+      "expectedOLQs": ["SELF_CONFIDENCE", "REASONING_ABILITY", "DETERMINATION"],
+      "context": "Learning from failure and resilience"
+    },
+    {
+      "questionText": "How do you stay motivated when things get difficult?",
+      "expectedOLQs": ["DETERMINATION", "STAMINA", "SELF_CONFIDENCE"],
+      "context": "Self-motivation and mental strength"
+    },
+    {
+      "questionText": "Tell me about your family and their influence on you.",
+      "expectedOLQs": ["SOCIAL_ADJUSTMENT", "SENSE_OF_RESPONSIBILITY"],
+      "context": "Family background and values"
+    },
+    {
+      "questionText": "How would you handle a situation where you had to lead people older than you?",
+      "expectedOLQs": ["INITIATIVE", "INFLUENCE_GROUP", "SELF_CONFIDENCE"],
+      "context": "Leadership across age differences"
+    },
+    {
+      "questionText": "Describe your approach to learning new skills.",
+      "expectedOLQs": ["EFFECTIVE_INTELLIGENCE", "INITIATIVE", "DETERMINATION"],
+      "context": "Learning agility and adaptability"
+    },
+    {
+      "questionText": "What would you do if you witnessed a colleague doing something unethical?",
+      "expectedOLQs": ["COURAGE", "SENSE_OF_RESPONSIBILITY", "REASONING_ABILITY"],
+      "context": "Ethical decision-making"
     }
   ]
 }

@@ -154,8 +154,8 @@ extensions.getByType<ApplicationExtension>().apply {
         baseline = file("lint-baseline.xml")
 
         // Fail build on any errors (enforce quality)
-        abortOnError = false
-        warningsAsErrors = false // Can enable later for stricter enforcement
+        abortOnError = true
+        warningsAsErrors = false
 
         disable += setOf(
             "ModifierParameter",

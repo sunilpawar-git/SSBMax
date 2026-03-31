@@ -547,6 +547,7 @@
     <string name="required">Required</string>
     
     <!-- Character Count Strings (Generic for all tests) -->
+    <string name="common_time_spent">Time Spent</string>
     <string name="common_character_count">Character Count</string>
     <string name="common_characters">%d characters</string>
     <string name="common_chars">%d chars</string>

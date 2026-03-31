@@ -34,6 +34,8 @@ import com.ssbmax.core.designsystem.theme.Spacing
 import com.ssbmax.core.domain.model.TestPhase
 import com.ssbmax.core.domain.model.TestStatus
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.ui.home.student.components.OLQDashboardCard
 import com.ssbmax.ui.home.student.components.StatsCard
 import com.ssbmax.ui.home.student.components.QuickActionCard
 import com.ssbmax.ui.home.student.components.SectionDivider
@@ -188,41 +190,35 @@ fun StudentHomeScreen(
                 )
             }
             
+            // OLQDashboardCard is always rendered — same composable tree before and after data loads.
+            // Before data arrives: empty() placeholder keeps card structure visible (no layout jump).
+            // After data arrives: real data replaces placeholder values in-place.
             item {
-                // Show dashboard immediately (no loading spinner)
-                // Dashboard updates values in-place when data arrives
-                when {
-                    uiState.dashboard != null -> {
-                        com.ssbmax.ui.home.student.components.OLQDashboardCard(
-                            processedData = uiState.dashboard!!,
-                            onNavigateToResult = onNavigateToResult,
-                            isRefreshing = uiState.isRefreshingDashboard,
-                            onRefresh = { viewModel.refreshDashboard() },
-                            modifier = Modifier.padding(horizontal = Spacing.cardPadding)
+                OLQDashboardCard(
+                    processedData = uiState.dashboard ?: ProcessedDashboardData.empty(),
+                    isLoading = uiState.isDashboardLoading,
+                    isRefreshing = uiState.isRefreshingDashboard,
+                    onRefresh = { viewModel.refreshDashboard() },
+                    onNavigateToResult = onNavigateToResult,
+                    modifier = Modifier.padding(horizontal = Spacing.cardPadding)
+                )
+            }
+
+            // Supplemental error banner — shown below the card, does not replace it.
+            if (uiState.dashboardError != null) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.cardPadding),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
                         )
-                    }
-                    
-                    uiState.dashboardError != null -> {
-                        // Show error with retry option
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
-                        ) {
-                            Text(
-                                text = uiState.dashboardError ?: stringResource(R.string.dashboard_error_load_failed),
-                                modifier = Modifier.padding(Spacing.cardPadding),
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
-                    
-                    else -> {
-                        // No data yet - show empty state with call-to-action
-                        com.ssbmax.ui.home.student.components.EmptyDashboardState(
-                            modifier = Modifier.fillMaxWidth(),
-                            onStartTestClick = onNavigateToStudy
+                    ) {
+                        Text(
+                            text = uiState.dashboardError ?: stringResource(R.string.dashboard_error_load_failed),
+                            modifier = Modifier.padding(Spacing.cardPadding),
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }

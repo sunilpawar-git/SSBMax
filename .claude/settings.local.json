@@ -53,7 +53,9 @@
       "Bash(./gradlew :app:compileDebugKotlin:*)",
       "Bash(./gradlew test:*)",
       "Bash(tee:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(gh run:*)",
+      "Bash(wait)"
     ],
     "deny": [],
     "ask": []

@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
-import com.ssbmax.ui.tests.gto.common.InfoItem
+import com.ssbmax.ui.components.result.InfoItem
 
 @Composable
 fun SubmissionConfirmationCard(
@@ -55,7 +55,7 @@ fun SubmissionConfirmationCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 InfoItem(label = stringResource(R.string.common_character_count), value = stringResource(R.string.common_chars, charCount))
-                InfoItem(label = "Time Spent", value = timeSpent)
+                InfoItem(label = stringResource(R.string.common_time_spent), value = timeSpent)
             }
         }
     }
