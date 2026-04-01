@@ -30,7 +30,9 @@ data class OIRQuestion(
     val correctAnswerId: String,
     val explanation: String,
     val difficulty: QuestionDifficulty,
-    val timeSeconds: Int = 60 // Time allocated for this question
+    val timeSeconds: Int = 60, // Time allocated for this question
+    val questionImageUrl: String? = null, // URL for image-based questions (cubes, figure series, etc.)
+    val setNumber: Int? = null // Which practice set this question belongs to (null = random pool)
 )
 
 /**
@@ -236,5 +238,27 @@ data class OIRSubmission(
     val status: SubmissionStatus,
     val gradedByInstructorId: String? = null,
     val gradingTimestamp: Long? = null
+)
+
+/**
+ * One of the 20 practice sets from the SSBCrack PDF
+ */
+data class OIRTestSet(
+    val setNumber: Int,
+    val title: String,
+    val questions: List<OIRQuestion>,
+    val isCompleted: Boolean = false,
+    val lastScore: Int? = null
+)
+
+/**
+ * User's progress on a single practice set
+ */
+data class OIRSetProgress(
+    val setNumber: Int,
+    val isCompleted: Boolean,
+    val score: Int?,
+    val totalQuestions: Int,
+    val completedAt: Long?
 )
 

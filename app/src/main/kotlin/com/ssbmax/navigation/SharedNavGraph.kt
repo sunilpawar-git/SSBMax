@@ -106,6 +106,34 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
     
+    // OIR Set List (20 practice sets with sequential unlock)
+    composable(route = SSBMaxDestinations.OIRSetList.route) {
+        com.ssbmax.ui.tests.oir.OIRSetListScreen(
+            onStartSet = { setNumber ->
+                navController.navigate(SSBMaxDestinations.OIRSetTest.createRoute(setNumber))
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+
+    // OIR Set Test (individual set from the 20-set collection)
+    composable(
+        route = SSBMaxDestinations.OIRSetTest.route,
+        arguments = listOf(navArgument("setNumber") { type = NavType.IntType })
+    ) {
+        com.ssbmax.ui.tests.oir.OIRTestScreen(
+            onTestComplete = { submissionId, subscriptionType ->
+                com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = com.ssbmax.core.domain.model.TestType.OIR,
+                    navController = navController
+                )
+            },
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+
     // PPDT Test
     composable(
         route = SSBMaxDestinations.PPDTTest.route,
@@ -597,6 +625,9 @@ fun NavGraphBuilder.sharedNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToStudyMaterial = { materialId ->
                 navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))
+            },
+            onNavigateToOIRSets = {
+                navController.navigate(SSBMaxDestinations.OIRSetList.route)
             },
             onNavigateToTest = { testId ->
                 when {

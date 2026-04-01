@@ -41,6 +41,7 @@ class OIRQuestionCacheManager @Inject constructor(
         private const val FIRESTORE_COLLECTION = "test_content"
         private const val FIRESTORE_OIR_DOC = "oir"
         private const val FIRESTORE_BATCHES = "question_batches"
+        private const val FIRESTORE_TEST_SETS = "test_sets"
         
         // Distribution ratios for test generation
         private const val VERBAL_RATIO = 0.40f  // 40%
@@ -321,6 +322,19 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
+     * Returns cached domain questions for a specific practice set.
+     * Returns empty list if the set hasn't been synced yet.
+     */
+    suspend fun getQuestionsForSet(setNumber: Int): List<OIRQuestion> {
+        return try {
+            cacheDao.getQuestionsBySetNumber(setNumber).map { convertToDomain(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load set $setNumber from cache", e)
+            emptyList()
+        }
+    }
+
+    /**
      * Mark questions as used after a test
      */
     suspend fun markQuestionsUsed(questionIds: List<String>) {
@@ -361,6 +375,44 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
+     * Fetch all 50 questions for a specific practice set from Firestore and cache them in Room.
+     * Firestore path: test_content/oir/test_sets/set_{NNN} (e.g. set_001)
+     */
+    @Suppress("UNCHECKED_CAST")
+    suspend fun syncTestSet(setNumber: Int): Result<Unit> {
+        return try {
+            val setId = "set_%03d".format(setNumber)
+            Log.d(TAG, "Syncing OIR test set: $setId")
+
+            val doc = firestore.collection(FIRESTORE_COLLECTION)
+                .document(FIRESTORE_OIR_DOC)
+                .collection(FIRESTORE_TEST_SETS)
+                .document(setId)
+                .get()
+                .await()
+
+            if (!doc.exists()) {
+                return Result.failure(Exception("OIR set $setId not found in Firestore"))
+            }
+
+            val data = doc.data ?: return Result.failure(Exception("OIR set data is null"))
+            val questions = data["questions"] as? List<Map<String, Any>>
+                ?: return Result.failure(Exception("Questions field missing or invalid"))
+
+            val entities = questions.mapIndexed { index, questionMap ->
+                convertToEntity(questionMap, batchId = setId, index = index, setNumber = setNumber)
+            }
+
+            cacheDao.insertQuestions(entities)
+            Log.d(TAG, "Cached ${entities.size} questions for $setId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to sync OIR set $setNumber", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Clear all cached questions and metadata
      */
     suspend fun clearCache(): Result<Unit> {
@@ -377,13 +429,15 @@ class OIRQuestionCacheManager @Inject constructor(
     }
     
     /**
-     * Convert Firestore map to entity
+     * Convert Firestore map to entity.
+     * @param setNumber Non-null for set-based questions (1–20); null for random-pool questions.
      */
     @Suppress("UNCHECKED_CAST")
     private fun convertToEntity(
         questionMap: Map<String, Any>,
         batchId: String,
-        index: Int
+        index: Int,
+        setNumber: Int? = null
     ): CachedOIRQuestionEntity {
         return CachedOIRQuestionEntity(
             id = questionMap["id"] as? String ?: "oir_q_${System.currentTimeMillis()}_$index",
@@ -399,7 +453,9 @@ class OIRQuestionCacheManager @Inject constructor(
             batchId = batchId,
             cachedAt = System.currentTimeMillis(),
             lastUsed = null,
-            usageCount = 0
+            usageCount = 0,
+            questionImageUrl = questionMap["questionImageUrl"] as? String,
+            setNumber = setNumber
         )
     }
     
@@ -427,7 +483,9 @@ class OIRQuestionCacheManager @Inject constructor(
             correctAnswerId = entity.correctAnswerId,
             explanation = entity.explanation,
             difficulty = QuestionDifficulty.valueOf(entity.difficulty),
-            timeSeconds = 60
+            timeSeconds = 60,
+            questionImageUrl = entity.questionImageUrl,
+            setNumber = entity.setNumber
         )
     }
 }

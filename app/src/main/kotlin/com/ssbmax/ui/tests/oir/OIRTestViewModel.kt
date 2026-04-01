@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.oir
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.security.SecurityEventLogger
@@ -37,7 +38,8 @@ class OIRTestViewModel @Inject constructor(
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val securityLogger: SecurityEventLogger
+    private val securityLogger: SecurityEventLogger,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -51,8 +53,9 @@ class OIRTestViewModel @Inject constructor(
         trackMemoryLeaks("OIRTestViewModel")
         android.util.Log.d("OIRTestViewModel", "🚀 ViewModel initialized with leak tracking")
         
-        loadTest()
-        
+        // For set-based navigation ("test/oir/set/{setNumber}"), the nav arg is injected via SavedStateHandle
+        loadTest(setNumber = savedStateHandle.get<Int>("setNumber"))
+
         // Restore timer if test was in progress (configuration change recovery)
         restoreTimerIfNeeded()
     }
@@ -84,7 +87,7 @@ class OIRTestViewModel @Inject constructor(
         return subscriptionManager.canTakeTest(TestType.OIR, userId)
     }
     
-    fun loadTest(testId: String = "oir_standard") {
+    fun loadTest(testId: String = "oir_standard", setNumber: Int? = savedStateHandle.get<Int>("setNumber")) {
         viewModelScope.launch {
             _uiState.update { it.copy(
                 isLoading = true,
@@ -155,17 +158,21 @@ class OIRTestViewModel @Inject constructor(
                     loadingMessage = "Analyzing your level..."
                 ) }
                 
-                // Get recommended difficulty based on past performance
-                val difficulty = difficultyManager.getRecommendedDifficulty("OIR")
-                android.util.Log.d("OIRTestViewModel", "📊 Recommended difficulty: $difficulty")
-                
-                _uiState.update { it.copy(
-                    loadingMessage = "Loading $difficulty questions...",
-                    currentDifficulty = difficulty
-                ) }
-                
-                // Fetch questions using the new caching system with difficulty
-                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50, difficulty = difficulty)
+                // Fetch questions: set-based (practice sets) or random (adaptive difficulty)
+                val questionsResult = if (setNumber != null) {
+                    android.util.Log.d("OIRTestViewModel", "📚 Loading OIR set $setNumber")
+                    _uiState.update { it.copy(loadingMessage = "Loading Set $setNumber...") }
+                    testContentRepository.getOIRTestSet(setNumber)
+                } else {
+                    // Get recommended difficulty based on past performance
+                    val difficulty = difficultyManager.getRecommendedDifficulty("OIR")
+                    android.util.Log.d("OIRTestViewModel", "📊 Recommended difficulty: $difficulty")
+                    _uiState.update { it.copy(
+                        loadingMessage = "Loading $difficulty questions...",
+                        currentDifficulty = difficulty
+                    ) }
+                    testContentRepository.getOIRTestQuestions(count = 50, difficulty = difficulty)
+                }
                 
                 if (questionsResult.isFailure) {
                     throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")

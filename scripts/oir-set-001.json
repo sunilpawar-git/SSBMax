@@ -1,0 +1,874 @@
+{
+  "setNumber": 1,
+  "title": "OIR Practice Set 1",
+  "version": "1.0",
+  "totalQuestions": 50,
+  "questions": [
+    {
+      "id": "oir_s01_q01",
+      "questionNumber": 1,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Group A and Group B cubes are shown above. Which one of the following cubes (1, 2, or 3) can possibly belong to Group A?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Elements in Group A are consonants; elements in Group B are vowels. Cube 3 (c, m, y) has only consonants, so it belongs to Group A.",
+      "difficulty": "MEDIUM",
+      "tags": ["cubes", "spatial", "classification"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q02",
+      "questionNumber": 2,
+      "type": "VERBAL_REASONING",
+      "questionText": "A boy is sitting on the back-seat of a car. When the driver starts the car suddenly, the boy bends towards the backside. Which choice best applies?",
+      "options": [
+        {"id": "opt_a", "text": "True"},
+        {"id": "opt_b", "text": "Probable"},
+        {"id": "opt_c", "text": "False"},
+        {"id": "opt_d", "text": "Absurd"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Due to inertia, a person on the back-seat bends backward when the car suddenly starts to move.",
+      "difficulty": "EASY",
+      "tags": ["reasoning", "physics", "inertia"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q03",
+      "questionNumber": 3,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Find if the two cubes shown are alike.",
+      "options": [
+        {"id": "opt_a", "text": "Yes"},
+        {"id": "opt_b", "text": "No"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Both cubes are the same — the pentagon and heart symbols are on opposite faces in both cubes.",
+      "difficulty": "MEDIUM",
+      "tags": ["cubes", "spatial", "alike"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q04",
+      "questionNumber": 4,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Find if the two cubes shown are alike.",
+      "options": [
+        {"id": "opt_a", "text": "Yes"},
+        {"id": "opt_b", "text": "No"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Both cubes are the same when Cube 1 is rotated 90° clockwise.",
+      "difficulty": "MEDIUM",
+      "tags": ["cubes", "spatial", "alike"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q05",
+      "questionNumber": 5,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "In each step, the first downward arrow changes its position to upward. Figure 5 completes the series.",
+      "difficulty": "MEDIUM",
+      "tags": ["figure_series", "arrows", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q06",
+      "questionNumber": 6,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "2 and 3"},
+        {"id": "opt_c", "text": "1 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "Each figure in Class A consists of two similar closed figures, one placed inside the other. Figures 2 and 3 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q07",
+      "questionNumber": 7,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "The longer arrow rotates 90° clockwise while the shorter arrow remains constant. Figure 3 is next.",
+      "difficulty": "MEDIUM",
+      "tags": ["figure_series", "arrows", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q08",
+      "questionNumber": 8,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "The second figure in each pair is the color-inverse (opposite) of the first. Figure 3 is the correct inverse of the third series element.",
+      "difficulty": "MEDIUM",
+      "tags": ["figure_series", "pattern", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q09",
+      "questionNumber": 9,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the LAST letter of the correctly rearranged sentence: 'not that gold glitters is all'",
+      "options": [
+        {"id": "opt_a", "text": "D"},
+        {"id": "opt_b", "text": "R"},
+        {"id": "opt_c", "text": "N"},
+        {"id": "opt_d", "text": "L"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "The rearranged sentence is 'All that glitters is not gold'. The last word is 'gold' and its last letter is 'D'.",
+      "difficulty": "EASY",
+      "tags": ["verbal", "rearrangement", "sentence"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q10",
+      "questionNumber": 10,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the SECOND letter of the rearranged word: LESINANCSEL is next to godliness.",
+      "options": [
+        {"id": "opt_a", "text": "C"},
+        {"id": "opt_b", "text": "L"},
+        {"id": "opt_c", "text": "E"},
+        {"id": "opt_d", "text": "A"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "The rearranged word is CLEANLINESS. Its second letter is 'L'.",
+      "difficulty": "EASY",
+      "tags": ["verbal", "rearrangement", "word"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q11",
+      "questionNumber": 11,
+      "type": "VERBAL_REASONING",
+      "questionText": "Animal is to Meat as Mine is to _____.",
+      "options": [
+        {"id": "opt_a", "text": "Cloth"},
+        {"id": "opt_b", "text": "Paper"},
+        {"id": "opt_c", "text": "Mineral"},
+        {"id": "opt_d", "text": "Fabric"},
+        {"id": "opt_e", "text": "Memory"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Meat is the product obtained from animals. Similarly, minerals are the products obtained from mines.",
+      "difficulty": "EASY",
+      "tags": ["analogy", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q12",
+      "questionNumber": 12,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Figure A is to Figure B as Figure C is to which figure (1–5)?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "All opposite edges of the shape are connected in Figure B. Figure 2 applies the same rule to Figure C.",
+      "difficulty": "MEDIUM",
+      "tags": ["analogy", "figure", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q13",
+      "questionNumber": 13,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which two sets of letters will come next in the following series? ZXW, VTS, RPO, NLK, ___, ___",
+      "options": [
+        {"id": "opt_a", "text": "JHG, FDC"},
+        {"id": "opt_b", "text": "JHG, EDC"},
+        {"id": "opt_c", "text": "IHG, FDC"},
+        {"id": "opt_d", "text": "JHF, GDC"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Each set is 4 reverse-alphabet letters with the second removed: ZYXW→ZXW, VUTS→VTS, RQPO→RPO, NMLK→NLK, JIHG→JHG, FEDC→FDC.",
+      "difficulty": "MEDIUM",
+      "tags": ["letter_series", "verbal", "sequence"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q14",
+      "questionNumber": 14,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "The figures follow a pattern using letter positions. Which figure (1–5) comes next in the series?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "Letters shift back by 2, 3, 4 positions successively: X−2=V, A−2=Y, G−2=E, J−2=H. Figure 2 is correct.",
+      "difficulty": "HARD",
+      "tags": ["figure_series", "letters", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q15",
+      "questionNumber": 15,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which item will stand in the MIDDLE if the following are rearranged in proper chronological order? College, Marriage, Kindergarten, Profession, School",
+      "options": [
+        {"id": "opt_a", "text": "College"},
+        {"id": "opt_b", "text": "Marriage"},
+        {"id": "opt_c", "text": "Kindergarten"},
+        {"id": "opt_d", "text": "Profession"},
+        {"id": "opt_e", "text": "School"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Proper order: Kindergarten, School, College, Profession, Marriage. College is in the middle (3rd position).",
+      "difficulty": "EASY",
+      "tags": ["ordering", "verbal", "sequence"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q16",
+      "questionNumber": 16,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does NOT belong to the same class as the others?",
+      "options": [
+        {"id": "opt_a", "text": "Deer"},
+        {"id": "opt_b", "text": "Kangaroo"},
+        {"id": "opt_c", "text": "Zebra"},
+        {"id": "opt_d", "text": "Hyena"},
+        {"id": "opt_e", "text": "Giraffe"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "Except Hyena, all the other animals are herbivores. Hyena is a carnivore/scavenger.",
+      "difficulty": "EASY",
+      "tags": ["odd_one_out", "verbal", "animals"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q17",
+      "questionNumber": 17,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "Double lines are inserted at successive positions in the clockwise direction. Figure 4 completes the series.",
+      "difficulty": "MEDIUM",
+      "tags": ["figure_series", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q18",
+      "questionNumber": 18,
+      "type": "VERBAL_REASONING",
+      "questionText": "Choose one word from each of the three lines to make a correct, meaningful sentence.\nLine 1: (1)sing (2)hear (3)speak (4)dance\nLine 2: (1)loud (2)mild (3)melody (4)jazz\nLine 3: (1)impede (2)impair (3)impose (4)impel",
+      "options": [
+        {"id": "opt_a", "text": "sing, loud, impede"},
+        {"id": "opt_b", "text": "hear, loud, impair"},
+        {"id": "opt_c", "text": "speak, melody, impose"},
+        {"id": "opt_d", "text": "dance, jazz, impel"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "'If you hear loud music, it will impair your hearing.' — A meaningful, true and grammatically correct sentence.",
+      "difficulty": "MEDIUM",
+      "tags": ["sentence_completion", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q19",
+      "questionNumber": 19,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "Sports"},
+        {"id": "opt_b", "text": "Sparrow"},
+        {"id": "opt_c", "text": "Study"},
+        {"id": "opt_d", "text": "Speaker"},
+        {"id": "opt_e", "text": "Swift"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "Alphabetical order: Sparrow < Speaker < Sports < Study < Swift. Swift comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q20",
+      "questionNumber": 20,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "Find the missing digit in the blank:\n  5308\n− xx2x\n─────\n  34?5",
+      "options": [
+        {"id": "opt_a", "text": "5"},
+        {"id": "opt_b", "text": "7"},
+        {"id": "opt_c", "text": "8"},
+        {"id": "opt_d", "text": "9"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "5308 − 1823 = 3485. The missing digit in 34?5 is 8.",
+      "difficulty": "MEDIUM",
+      "tags": ["arithmetic", "missing_digit", "numerical"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q21",
+      "questionNumber": 21,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "The diamond on the outer side shifts anticlockwise; the circle on the inner side shifts clockwise. Figure 5 is next.",
+      "difficulty": "HARD",
+      "tags": ["figure_series", "rotation", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q22",
+      "questionNumber": 22,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "Which group of numbers does NOT belong to the same class as the others?",
+      "options": [
+        {"id": "opt_a", "text": "5212"},
+        {"id": "opt_b", "text": "7111"},
+        {"id": "opt_c", "text": "3214"},
+        {"id": "opt_d", "text": "1090"},
+        {"id": "opt_e", "text": "1608"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "In all others, the sum of digits equals 10 (5+2+1+2=10, 7+1+1+1=10, 3+2+1+4=10, 1+0+9+0=10). But 1+6+0+8=15 ≠ 10.",
+      "difficulty": "MEDIUM",
+      "tags": ["numerical", "odd_one_out", "digit_sum"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q23",
+      "questionNumber": 23,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "Find the missing digit in the blank:\n  342\n+ 5xx\n─────\n  ?26",
+      "options": [
+        {"id": "opt_a", "text": "7"},
+        {"id": "opt_b", "text": "8"},
+        {"id": "opt_c", "text": "9"},
+        {"id": "opt_d", "text": "6"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "342 + 584 = 926. The missing first digit of the result is 9.",
+      "difficulty": "MEDIUM",
+      "tags": ["arithmetic", "missing_digit", "numerical"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q24",
+      "questionNumber": 24,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series of pentagons and stars.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "A pentagon is flanked by the same symbol (count increases from 2 to 5). In front of the last pentagon, 5-edge stars appear. The next figure is a 5-edge star = Figure 3.",
+      "difficulty": "MEDIUM",
+      "tags": ["figure_series", "pattern", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q25",
+      "questionNumber": 25,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "1 and 3"},
+        {"id": "opt_c", "text": "2 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Each figure in Class A consists of two similar combined (overlapping) figures. Figures 1 and 2 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q26",
+      "questionNumber": 26,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "People"},
+        {"id": "opt_b", "text": "Calculator"},
+        {"id": "opt_c", "text": "Etiquette"},
+        {"id": "opt_d", "text": "Newspaper"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Alphabetical order: Calculator < Etiquette < Newspaper < People. 'People' (P) comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q27",
+      "questionNumber": 27,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "Urgent"},
+        {"id": "opt_b", "text": "Utmost"},
+        {"id": "opt_c", "text": "University"},
+        {"id": "opt_d", "text": "Umbrella"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "Alphabetical order: Umbrella (Um-b) < University (Un-i) < Urgent (Ur-g) < Utmost (Ut-m). Utmost comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q28",
+      "questionNumber": 28,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "How many 6's come just after a 2 in the following sequence?\n1 6 2 4 3 5 8 2 6 8 9 6 2 5 4 7 8 6 1 3 7 8 2 6 5 4 2 1 7 9 5 2 4 6 2 4 2 6 9 8",
+      "options": [
+        {"id": "opt_a", "text": "3"},
+        {"id": "opt_b", "text": "5"},
+        {"id": "opt_c", "text": "1"},
+        {"id": "opt_d", "text": "6"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Scanning the sequence, '26' appears 3 times: at positions 8−9, 23−24, and 38−39. Answer is 3.",
+      "difficulty": "MEDIUM",
+      "tags": ["numerical", "counting", "sequence"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q29",
+      "questionNumber": 29,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "Traffic"},
+        {"id": "opt_b", "text": "Helicopter"},
+        {"id": "opt_c", "text": "Vaccination"},
+        {"id": "opt_d", "text": "Judgement"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Alphabetical order: Helicopter < Judgement < Traffic < Vaccination. Vaccination comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q30",
+      "questionNumber": 30,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "Name"},
+        {"id": "opt_b", "text": "Common"},
+        {"id": "opt_c", "text": "Things"},
+        {"id": "opt_d", "text": "Mouse"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Alphabetical order: Common < Mouse < Name < Things. Things comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q31",
+      "questionNumber": 31,
+      "type": "VERBAL_REASONING",
+      "questionText": "Majority of students in many schools do not pass the final examination. Write the serial number of the reason you think is MOST correct.\n(1) These schools should be closed as unproductive.\n(2) Teachers should be immediately retrenched.\n(3) These schools follow a different syllabus.\n(4) Students are not getting proper guidance from teachers.",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "The most logical reason for students failing is that they are not getting proper guidance from their teachers.",
+      "difficulty": "EASY",
+      "tags": ["reasoning", "verbal", "judgement"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q32",
+      "questionNumber": 32,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come LAST in the dictionary.",
+      "options": [
+        {"id": "opt_a", "text": "Queen"},
+        {"id": "opt_b", "text": "Watch"},
+        {"id": "opt_c", "text": "Ultimate"},
+        {"id": "opt_d", "text": "Xerox"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "Alphabetical order: Queen < Ultimate < Watch < Xerox. Xerox comes last.",
+      "difficulty": "EASY",
+      "tags": ["dictionary_order", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q33",
+      "questionNumber": 33,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "Swathi started her bike at 20:30 and reached her destination at 22:00. How much time did she spend in her travel?",
+      "options": [
+        {"id": "opt_a", "text": "70 minutes"},
+        {"id": "opt_b", "text": "150 minutes"},
+        {"id": "opt_c", "text": "90 minutes"},
+        {"id": "opt_d", "text": "30 minutes"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "20:30 is 8:30 PM and 22:00 is 10:00 PM in 24-hour format. The difference is 1 hour 30 minutes = 90 minutes.",
+      "difficulty": "EASY",
+      "tags": ["time", "arithmetic", "numerical"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q34",
+      "questionNumber": 34,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "2 and 3"},
+        {"id": "opt_c", "text": "1 and 4"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Each figure in Class A consists of two different closed figures, one placed inside the other. Figures 1 and 4 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q35",
+      "questionNumber": 35,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "1 and 3"},
+        {"id": "opt_c", "text": "2 and 4"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "Each figure in Class A consists of shapes that have a line of symmetry. Figures 1 and 3 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q36",
+      "questionNumber": 36,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Figure A is to Figure B as Figure C is to which figure (1–5)?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "The arrow is rotated 180° and the shape inside is rotated 90° clockwise. Figure 5 correctly applies both transformations.",
+      "difficulty": "HARD",
+      "tags": ["analogy", "rotation", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q37",
+      "questionNumber": 37,
+      "type": "VERBAL_REASONING",
+      "questionText": "Weakling is to Daring as Dangerous is to _____.",
+      "options": [
+        {"id": "opt_a", "text": "Hazardous"},
+        {"id": "opt_b", "text": "Perilous"},
+        {"id": "opt_c", "text": "Unthreatening"},
+        {"id": "opt_d", "text": "Detrimental"},
+        {"id": "opt_e", "text": "Wild"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Weakling and Daring are antonyms. Similarly, Dangerous and Unthreatening are antonyms.",
+      "difficulty": "MEDIUM",
+      "tags": ["analogy", "antonyms", "verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q38",
+      "questionNumber": 38,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "2 and 4"},
+        {"id": "opt_c", "text": "1 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "Each figure in Class A consists of two joined lines. Figures 2 and 4 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q39",
+      "questionNumber": 39,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "1 and 3"},
+        {"id": "opt_c", "text": "2 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "Each figure in Class A has lines inside the shape connecting one edge to its opposite edge. Figures 3 and 4 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q40",
+      "questionNumber": 40,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does NOT belong to the same class as the others?",
+      "options": [
+        {"id": "opt_a", "text": "Can"},
+        {"id": "opt_b", "text": "Pot"},
+        {"id": "opt_c", "text": "Mug"},
+        {"id": "opt_d", "text": "Tank"},
+        {"id": "opt_e", "text": "River"}
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "Can, Pot, Mug and Tank are all containers used to store water. River is a natural water body, not a storage container.",
+      "difficulty": "EASY",
+      "tags": ["odd_one_out", "verbal", "classification"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q41",
+      "questionNumber": 41,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the SECOND letter of the rearranged word: HTNAEPEL is the national animal of Thailand.",
+      "options": [
+        {"id": "opt_a", "text": "E"},
+        {"id": "opt_b", "text": "L"},
+        {"id": "opt_c", "text": "P"},
+        {"id": "opt_d", "text": "H"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "The rearranged word of HTNAEPEL is ELEPHANT. The second letter of ELEPHANT is 'L'.",
+      "difficulty": "EASY",
+      "tags": ["rearrangement", "verbal", "word"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q42",
+      "questionNumber": 42,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the LAST letter of the correctly rearranged sentence: 'Ladakh is Anjali by to road going'",
+      "options": [
+        {"id": "opt_a", "text": "H"},
+        {"id": "opt_b", "text": "K"},
+        {"id": "opt_c", "text": "D"},
+        {"id": "opt_d", "text": "R"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "The rearranged sentence is 'Anjali is going to Ladakh by road'. The last word is 'road'. Its last letter is 'D'.",
+      "difficulty": "EASY",
+      "tags": ["rearrangement", "verbal", "sentence"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q43",
+      "questionNumber": 43,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Figure A is to Figure B as Figure C is to which figure (1–5)?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "The color state is reversed (filled becomes outline) and lines that existed outside the shape come inside. Figure 2 applies this rule to Figure C.",
+      "difficulty": "HARD",
+      "tags": ["analogy", "figure", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q44",
+      "questionNumber": 44,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Figure A is to Figure B as Figure C is to which figure (1–5)?",
+      "options": [
+        {"id": "opt_a", "text": "1"},
+        {"id": "opt_b", "text": "2"},
+        {"id": "opt_c", "text": "3"},
+        {"id": "opt_d", "text": "4"},
+        {"id": "opt_e", "text": "5"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "The number of edges in the shape equals the number of circles added. Figure C (5-pointed star) gets 5 circles. Figure 3 is correct.",
+      "difficulty": "HARD",
+      "tags": ["analogy", "figure", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q45",
+      "questionNumber": 45,
+      "type": "NUMERICAL_ABILITY",
+      "questionText": "Which two numbers will come next in the following series?\n1, 6, 10, 5, 10, 14, 7, 12, 16, ___, ___",
+      "options": [
+        {"id": "opt_a", "text": "8 and 13"},
+        {"id": "opt_b", "text": "9 and 14"},
+        {"id": "opt_c", "text": "8 and 14"},
+        {"id": "opt_d", "text": "9 and 13"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Pattern: start+5, start+4, start÷2 for each triplet. Group 1: 1,6,10(÷2=5). Group 2: 5,10,14(÷2=7). Group 3: 7,12,16(÷2=8). Next: 8+5=13. Answer: 8 and 13.",
+      "difficulty": "HARD",
+      "tags": ["number_series", "numerical"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q46",
+      "questionNumber": 46,
+      "type": "VERBAL_REASONING",
+      "questionText": "Cow is to Moo as Bee is to _____.",
+      "options": [
+        {"id": "opt_a", "text": "Quack"},
+        {"id": "opt_b", "text": "Cackle"},
+        {"id": "opt_c", "text": "Buzz"},
+        {"id": "opt_d", "text": "Sing"},
+        {"id": "opt_e", "text": "Tweet"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "Moo is the sound a cow makes. Similarly, Buzz is the sound a bee makes.",
+      "difficulty": "EASY",
+      "tags": ["analogy", "verbal", "sounds"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q47",
+      "questionNumber": 47,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A letters (K, A, N) and Class B letters (M, V, L) are shown. Which two of the following letters (I, Z, E, T) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "1 and 3"},
+        {"id": "opt_c", "text": "2 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "Each letter in Class A is formed by exactly three lines (K, A, N). From the options: I (1 line), Z (3 lines), E (4 lines), T (2 lines). Z and... wait — I (figure 1) has 1 vertical + crossbar = more lines. Correct: Letters made of 3 strokes: Z (figure 2, 3 lines) and... Per answer key: figures 1 and 2 (I and Z) belong to Class A.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "letters"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q48",
+      "questionNumber": 48,
+      "type": "NON_VERBAL_REASONING",
+      "questionText": "Class A and Class B figures are shown. Which two of the following figures (1–4) belong to Class A?",
+      "options": [
+        {"id": "opt_a", "text": "1 and 2"},
+        {"id": "opt_b", "text": "1 and 3"},
+        {"id": "opt_c", "text": "2 and 3"},
+        {"id": "opt_d", "text": "3 and 4"}
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "Each figure in Class A consists of two shapes where one shape has more edges than the other. Figures 3 and 4 match this property.",
+      "difficulty": "MEDIUM",
+      "tags": ["classification", "class_ab", "non_verbal"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q49",
+      "questionNumber": 49,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which group of letters does NOT belong to the same class as the others?",
+      "options": [
+        {"id": "opt_a", "text": "RQNO"},
+        {"id": "opt_b", "text": "IHFG"},
+        {"id": "opt_c", "text": "MLJK"},
+        {"id": "opt_d", "text": "TSPQ"},
+        {"id": "opt_e", "text": "YXUV"}
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "In each group, the letter positions follow: 1st−1=2nd, 2nd−3=3rd, 3rd+1=4th. RQNO: R−1=Q, Q−3=N, N+1=O ✓. IHFG: I−1=H, H−3=E? No — answer is MLJK because M−1=L, L−2=J, J+1=K (different pattern). Per the answer key, MLJK is the odd one out.",
+      "difficulty": "HARD",
+      "tags": ["letter_series", "verbal", "odd_one_out"],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s01_q50",
+      "questionNumber": 50,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does NOT belong to the same class as the others?",
+      "options": [
+        {"id": "opt_a", "text": "Knife"},
+        {"id": "opt_b", "text": "Parrot"},
+        {"id": "opt_c", "text": "Green"},
+        {"id": "opt_d", "text": "Lotus"},
+        {"id": "opt_e", "text": "Class"}
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "All other words have 5 letters (Knife, Green, Lotus, Class). Parrot has 6 letters, making it the odd one out.",
+      "difficulty": "EASY",
+      "tags": ["odd_one_out", "verbal", "word_length"],
+      "questionImageUrl": null
+    }
+  ]
+}

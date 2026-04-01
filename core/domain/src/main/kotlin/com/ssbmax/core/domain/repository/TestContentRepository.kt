@@ -3,6 +3,7 @@ package com.ssbmax.core.domain.repository
 import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.GPEQuestion
 import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.core.domain.model.OIRSetProgress
 import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.SDTQuestion
 import com.ssbmax.core.domain.model.SRTSituation
@@ -52,6 +53,22 @@ interface TestContentRepository {
      * @return Cache status with statistics
      */
     suspend fun getOIRCacheStatus(): CacheStatus
+
+    /**
+     * Get the 50 questions for a specific OIR practice set (1–20).
+     * Cache-first: reads from Room, falls back to Firestore test_content/oir/test_sets/set_{NNN}.
+     */
+    suspend fun getOIRTestSet(setNumber: Int): Result<List<OIRQuestion>>
+
+    /**
+     * Returns the lowest incomplete set number for the user (defaults to 1 if no history).
+     */
+    suspend fun getNextOIRSetNumber(userId: String): Result<Int>
+
+    /**
+     * Returns progress for all 20 sets. Missing entries are filled as isCompleted=false.
+     */
+    suspend fun getOIRSetProgressList(userId: String): Result<List<OIRSetProgress>>
     
     /**
      * Fetch PPDT test questions from Firestore

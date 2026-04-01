@@ -58,6 +58,13 @@ interface OIRQuestionCacheDao {
     suspend fun getQuestionById(questionId: String): CachedOIRQuestionEntity?
     
     /**
+     * Get all questions for a specific practice set, ordered by question number.
+     * Used for set-based OIR practice (Sets 1–20).
+     */
+    @Query("SELECT * FROM cached_oir_questions WHERE setNumber = :setNumber ORDER BY questionNumber ASC")
+    suspend fun getQuestionsBySetNumber(setNumber: Int): List<CachedOIRQuestionEntity>
+
+    /**
      * Get all cached questions (for debugging/admin)
      */
     @Query("SELECT * FROM cached_oir_questions")

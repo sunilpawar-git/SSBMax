@@ -53,7 +53,8 @@ class TestContentRepositoryImplTest {
         val mockPPDTImageCacheManager = mockk<PPDTImageCacheManager>(relaxed = true)
         val mockGPEImageCacheManager = mockk<GPEImageCacheManager>(relaxed = true)
         val mockTATImageCacheManager = mockk<TATImageCacheManager>(relaxed = true)
-        
+        val mockOIRSetProgressDao = mockk<com.ssbmax.core.data.local.dao.OIRSetProgressDao>(relaxed = true)
+
         repository = TestContentRepositoryImpl(
             firestore = mockFirestore,
             oirCacheManager = mockCacheManager,
@@ -61,7 +62,8 @@ class TestContentRepositoryImplTest {
             srtSituationCacheManager = mockSRTCacheManager,
             ppdtImageCacheManager = mockPPDTImageCacheManager,
             gpeImageCacheManager = mockGPEImageCacheManager,
-            tatImageCacheManager = mockTATImageCacheManager
+            tatImageCacheManager = mockTATImageCacheManager,
+            oirSetProgressDao = mockOIRSetProgressDao
         )
         
         coEvery { mockCacheManager.initialSync() } returns Result.success(Unit)

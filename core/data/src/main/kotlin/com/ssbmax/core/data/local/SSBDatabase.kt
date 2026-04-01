@@ -7,6 +7,7 @@ import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
+import com.ssbmax.core.data.local.dao.OIRSetProgressDao
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
@@ -27,6 +28,7 @@ import com.ssbmax.core.data.local.entity.GTOBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.InterviewBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.NotificationEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.OIRSetProgressEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
@@ -60,9 +62,10 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         GTOBatchMetadataEntity::class,
         CachedInterviewQuestionEntity::class,
         InterviewBatchMetadataEntity::class,
-        UserPerformanceEntity::class
+        UserPerformanceEntity::class,
+        OIRSetProgressEntity::class
     ],
-    version = 16, // Added PPDT context field (migrated from 15)
+    version = 18, // v18: fix oir_set_progress index parity (drop spurious userId index)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {
@@ -81,6 +84,11 @@ abstract class SSBDatabase : RoomDatabase() {
      * OIR question cache DAO
      */
     abstract fun oirQuestionCacheDao(): OIRQuestionCacheDao
+
+    /**
+     * OIR set progress DAO (sequential unlock for 20 practice sets)
+     */
+    abstract fun oirSetProgressDao(): OIRSetProgressDao
     
     /**
      * Test usage DAO

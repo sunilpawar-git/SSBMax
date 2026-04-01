@@ -2,9 +2,12 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.ssbmax.core.data.local.dao.OIRSetProgressDao
+import com.ssbmax.core.data.local.entity.OIRSetProgressEntity
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.model.CacheStatus
+import com.ssbmax.core.domain.model.OIRSetProgress
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -24,7 +27,8 @@ class TestContentRepositoryImpl @Inject constructor(
     private val srtSituationCacheManager: SRTSituationCacheManager,
     private val ppdtImageCacheManager: PPDTImageCacheManager,
     private val gpeImageCacheManager: GPEImageCacheManager,
-    private val tatImageCacheManager: TATImageCacheManager
+    private val tatImageCacheManager: TATImageCacheManager,
+    private val oirSetProgressDao: OIRSetProgressDao
 ) : TestContentRepository {
 
     // In-memory caches - cleared after test completion
@@ -414,6 +418,59 @@ class TestContentRepositoryImpl @Inject constructor(
         tatCache.clear()
         watCache.clear()
         srtCache.clear()
+    }
+
+    override suspend fun getOIRTestSet(setNumber: Int): Result<List<OIRQuestion>> {
+        return try {
+            // Cache-first: check Room for already-synced set questions
+            val cached = oirCacheManager.getQuestionsForSet(setNumber)
+            if (cached.isNotEmpty()) {
+                Log.d(TAG, "OIR set $setNumber: loaded ${cached.size} questions from cache")
+                return Result.success(cached)
+            }
+            // Fallback: fetch from Firestore and cache
+            Log.d(TAG, "OIR set $setNumber: not in cache, syncing from Firestore")
+            oirCacheManager.syncTestSet(setNumber).getOrThrow()
+            val synced = oirCacheManager.getQuestionsForSet(setNumber)
+            Result.success(synced)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load OIR set $setNumber", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getNextOIRSetNumber(userId: String): Result<Int> {
+        return try {
+            val progressList = oirSetProgressDao.getProgressByUserId(userId)
+            val nextSet = (1..20).firstOrNull { setNum ->
+                progressList.none { it.setNumber == setNum && it.isCompleted }
+            } ?: 1
+            Result.success(nextSet)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get next OIR set for user $userId", e)
+            Result.success(1) // Safe default
+        }
+    }
+
+    override suspend fun getOIRSetProgressList(userId: String): Result<List<OIRSetProgress>> {
+        return try {
+            val dbProgress = oirSetProgressDao.getProgressByUserId(userId)
+            val progressMap = dbProgress.associateBy { it.setNumber }
+            val allProgress = (1..20).map { setNum ->
+                val entry = progressMap[setNum]
+                OIRSetProgress(
+                    setNumber = setNum,
+                    isCompleted = entry?.isCompleted ?: false,
+                    score = entry?.score,
+                    totalQuestions = entry?.totalQuestions ?: 50,
+                    completedAt = entry?.completedAt
+                )
+            }
+            Result.success(allProgress)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get OIR set progress for user $userId", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun getRandomGDTopic(): Result<String> {

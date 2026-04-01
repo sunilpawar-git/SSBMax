@@ -10,6 +10,7 @@ import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
+import com.ssbmax.core.data.local.dao.OIRSetProgressDao
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
@@ -61,7 +62,10 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_11_12, // Add PIQ/SD usage columns
                 DatabaseMigrations.MIGRATION_12_13, // Add GPE image cache tables
                 DatabaseMigrations.MIGRATION_13_14, // Add GPE solution column
-                DatabaseMigrations.MIGRATION_14_15  // Update TAT character limits
+                DatabaseMigrations.MIGRATION_14_15, // Update TAT character limits
+                DatabaseMigrations.MIGRATION_15_16, // Add PPDT context field
+                DatabaseMigrations.MIGRATION_16_17, // Add OIR set progress + image columns
+                DatabaseMigrations.MIGRATION_17_18  // Fix oir_set_progress index parity
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -80,6 +84,11 @@ object DatabaseModule {
     @Provides
     fun provideOIRQuestionCacheDao(database: SSBDatabase): OIRQuestionCacheDao {
         return database.oirQuestionCacheDao()
+    }
+
+    @Provides
+    fun provideOIRSetProgressDao(database: SSBDatabase): OIRSetProgressDao {
+        return database.oirSetProgressDao()
     }
     
     @Provides

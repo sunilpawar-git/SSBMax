@@ -603,11 +603,75 @@ object DatabaseMigrations {
         override fun migrate(database: SupportSQLiteDatabase) {
             // Update all existing TAT images to have correct character limits
             database.execSQL("""
-                UPDATE cached_tat_images 
-                SET minCharacters = 50, 
+                UPDATE cached_tat_images
+                SET minCharacters = 50,
                     maxCharacters = 1500
                 WHERE minCharacters = 150 AND maxCharacters = 800
             """.trimIndent())
+        }
+    }
+
+    /**
+     * Migration from version 15 to 16
+     * Adds context field to cached_ppdt_images for AI analysis
+     */
+    val MIGRATION_15_16 = object : Migration(15, 16) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_ppdt_images ADD COLUMN context TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
+    /**
+     * Migration from version 16 to 17
+     * - Adds questionImageUrl and setNumber columns to cached_oir_questions
+     *   (enables set-based OIR practice with image support)
+     * - Creates oir_set_progress table for sequential unlock tracking
+     */
+    val MIGRATION_16_17 = object : Migration(16, 17) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN questionImageUrl TEXT")
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN setNumber INTEGER")
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS oir_set_progress (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    userId TEXT NOT NULL,
+                    setNumber INTEGER NOT NULL,
+                    isCompleted INTEGER NOT NULL,
+                    score INTEGER,
+                    totalQuestions INTEGER NOT NULL,
+                    completedAt INTEGER
+                )
+            """.trimIndent())
+        }
+    }
+
+    /**
+     * Migration from version 17 to 18
+     * - Fixes oir_set_progress table: drops the spurious userId index that was
+     *   created in MIGRATION_16_17 but not declared in OIRSetProgressEntity.
+     *   Room validates index parity, so the extra index caused a fatal migration error.
+     */
+    val MIGRATION_17_18 = object : Migration(17, 18) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Recreate without the index (preserve any existing progress data)
+            database.execSQL("ALTER TABLE oir_set_progress RENAME TO oir_set_progress_old")
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS oir_set_progress (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    userId TEXT NOT NULL,
+                    setNumber INTEGER NOT NULL,
+                    isCompleted INTEGER NOT NULL,
+                    score INTEGER,
+                    totalQuestions INTEGER NOT NULL,
+                    completedAt INTEGER
+                )
+            """.trimIndent())
+            database.execSQL("""
+                INSERT INTO oir_set_progress
+                SELECT id, userId, setNumber, isCompleted, score, totalQuestions, completedAt
+                FROM oir_set_progress_old
+            """.trimIndent())
+            database.execSQL("DROP TABLE oir_set_progress_old")
         }
     }
 }

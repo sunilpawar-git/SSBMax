@@ -33,6 +33,11 @@ sealed class SSBMaxDestinations(val route: String) {
     data object OIRTestResult : SSBMaxDestinations("test/oir/result/{sessionId}") {
         fun createRoute(sessionId: String) = "test/oir/result/$sessionId"
     }
+    // OIR Practice Sets (20-set sequential unlock)
+    data object OIRSetList : SSBMaxDestinations("test/oir/sets")
+    data object OIRSetTest : SSBMaxDestinations("test/oir/set/{setNumber}") {
+        fun createRoute(setNumber: Int) = "test/oir/set/$setNumber"
+    }
     data object PPDTTest : SSBMaxDestinations("test/ppdt/{testId}") {
         fun createRoute(testId: String) = "test/ppdt/$testId"
     }

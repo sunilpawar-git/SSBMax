@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +42,7 @@ fun TopicScreen(
     onNavigateToStudyMaterial: (String) -> Unit = {},
     onNavigateToTest: (String) -> Unit = {},
     onNavigateToInterviewResult: (String) -> Unit = {},
+    onNavigateToOIRSets: () -> Unit = {},
     viewModel: TopicViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -115,7 +117,8 @@ fun TopicScreen(
                         val testId = "${testType.name.lowercase()}_standard"
                         onNavigateToTest(testId)
                     },
-                    onInterviewResultClick = onNavigateToInterviewResult
+                    onInterviewResultClick = onNavigateToInterviewResult,
+                    onNavigateToOIRSets = onNavigateToOIRSets
                 )
             }
         }
@@ -354,6 +357,7 @@ private fun TestsTab(
     isLoadingInterviewHistory: Boolean = false,
     onTestClick: (TestType) -> Unit,
     onInterviewResultClick: (String) -> Unit = {},
+    onNavigateToOIRSets: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (isLoading) {
@@ -411,6 +415,14 @@ private fun TestsTab(
                     test = test,
                     onClick = { onTestClick(test) }
                 )
+            }
+        } else if (topicId.equals("OIR", ignoreCase = true)) {
+            // OIR: show Practice Sets entry first, then random practice
+            item {
+                OIRPracticeSetsCard(onClick = onNavigateToOIRSets)
+            }
+            items(tests) { test ->
+                TestCard(test = test, onClick = { onTestClick(test) })
             }
         } else if (topicId.equals("INTERVIEW", ignoreCase = true)) {
             // Interview topic - show test card and past results
@@ -578,6 +590,61 @@ private fun getInterviewScoreColor(rating: Int): Color {
         6 -> Color(0xFF8BC34A)       // Light Green - Good
         7 -> Color(0xFFFF9800)       // Orange - Average
         else -> Color(0xFFF44336)    // Red - Below Average/Poor
+    }
+}
+
+@Composable
+private fun OIRPracticeSetsCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                modifier = Modifier.size(56.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ViewList,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.oir_practice_sets_card_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(R.string.oir_practice_sets_card_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
+                )
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 

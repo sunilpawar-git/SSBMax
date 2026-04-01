@@ -658,6 +658,17 @@
     <string name="oir_difficulty_easy">Easy</string>
     <string name="oir_difficulty_medium">Medium</string>
     <string name="oir_difficulty_hard">Hard</string>
+    <string name="oir_question_image_description">Question figure</string>
+    <string name="oir_set_list_title">OIR Practice Sets</string>
+    <string name="oir_set_list_set_number">Set %d</string>
+    <string name="oir_set_list_score_format">%1$d/%2$d · %3$d%%</string>
+    <string name="oir_set_list_not_started">Not started</string>
+    <string name="oir_set_list_locked">Locked</string>
+    <string name="oir_set_list_start">Start</string>
+    <string name="oir_set_list_retake">Retake</string>
+    <string name="oir_set_list_error">Failed to load sets. Please retry.</string>
+    <string name="oir_practice_sets_card_title">Practice Sets (20 Sets)</string>
+    <string name="oir_practice_sets_card_desc">Work through all 20 official OIR practice sets with sequential unlock.</string>
 
     <!-- ============================================ -->
     <!-- PPDT TEST SCREEN - DETAILED STRINGS -->

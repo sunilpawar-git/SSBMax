@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.oir
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
@@ -101,9 +102,12 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         
         // Mock cache initialization (may be called by repository)
         coEvery { mockTestContentRepo.initializeOIRCache() } returns Result.success(Unit)
-        
+
         // Mock cache status
         coEvery { mockTestContentRepo.getOIRCacheStatus() } returns mockk(relaxed = true)
+
+        // Mock set-based question loading
+        coEvery { mockTestContentRepo.getOIRTestSet(any()) } returns Result.success(mockQuestions)
 
         // Mock dashboard cache invalidation
         coEvery {
@@ -721,9 +725,34 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         }
     }
     
+    // ==================== Set-Based Loading ====================
+
+    @Test
+    fun `loadTest with setNumber loads set questions not random`() = runTest {
+        // Given - SavedStateHandle with setNumber=1 (simulates "test/oir/set/1" nav arg)
+        val savedStateHandle = SavedStateHandle(mapOf("setNumber" to 1))
+
+        // When
+        viewModel = createViewModel(savedStateHandle)
+        advanceUntilIdle()
+
+        // Then - questions loaded successfully via set-based path
+        val state = viewModel.uiState.value
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should not have error", state.error)
+        assertEquals("Should have 5 questions", 5, state.totalQuestions)
+
+        // Verify set-based repo method was called with correct set number
+        coVerify(exactly = 1) { mockTestContentRepo.getOIRTestSet(1) }
+        // Random practice path must NOT have been called
+        coVerify(exactly = 0) { mockTestContentRepo.getOIRTestQuestions(any(), any()) }
+    }
+
     // ==================== Helper Methods ====================
-    
-    private fun createViewModel(): OIRTestViewModel {
+
+    private fun createViewModel(
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ): OIRTestViewModel {
         return OIRTestViewModel(
             mockTestContentRepo,
             mockSubmissionRepo,
@@ -732,7 +761,8 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockDifficultyManager,
             mockSubscriptionManager,
             mockGetOLQDashboard,
-            mockSecurityLogger
+            mockSecurityLogger,
+            savedStateHandle
         )
     }
     

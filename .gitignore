@@ -119,9 +119,18 @@ lint/tmp/
 # Cursor AI
 .cursor/
 
+# Claude local settings (machine-specific)
+.claude/settings.local.json
+
 # Node.js dependencies (contains test data with hardcoded passwords)
 node_modules/
 scripts/node_modules/
+
+# OIR pipeline — generated image files (uploaded to Firebase Storage; not source)
+scripts/oir_images/
+
+# Python bytecode
+scripts/__pycache__/
 
 # ============================================
 # DOCUMENTATION FILES

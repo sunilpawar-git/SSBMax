@@ -36,7 +36,11 @@ data class CachedOIRQuestionEntity(
     val cachedAt: Long, // Timestamp when cached
     
     val lastUsed: Long?, // Last time this question was used in a test
-    
-    val usageCount: Int = 0 // How many times used in tests
+
+    val usageCount: Int = 0, // How many times used in tests
+
+    val questionImageUrl: String? = null, // Firebase Storage URL for image-based questions
+
+    val setNumber: Int? = null // Practice set number (1–20); null = random pool question
 )
 

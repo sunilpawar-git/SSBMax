@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.ui.components.StableAsyncImage
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.AnswerFeedbackEffect
@@ -289,6 +290,19 @@ private fun QuestionView(
             }
         }
         
+        // Question Figure (image-based questions: cubes, figure series, Class A/B, etc.)
+        question.questionImageUrl?.let { imageUrl ->
+            item {
+                StableAsyncImage(
+                    imageUrl = imageUrl,
+                    contentDescription = stringResource(R.string.oir_question_image_description),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+            }
+        }
+
         // Options
         items(question.options) { option ->
             OptionCard(
