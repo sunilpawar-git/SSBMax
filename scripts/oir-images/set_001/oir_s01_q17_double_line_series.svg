@@ -1,0 +1,97 @@
+<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" width="700" height="270" font-family="Arial,sans-serif">
+  <rect width="700" height="270" fill="white"/>
+  <!--
+    Q17: Double lines series rotating 45° clockwise each step.
+    Given series (3 figures):
+      Fig1: //  (two parallel diagonal lines, going up-right ~45°)
+      Fig2: ∧∧  (two parallel lines forming inverted-V tops ~90°, up-left & up-right meet)
+      Fig3: ∧∧ tilted right (lines going up-left & down-left, like \ mirrored)
+
+    Actually from image:
+      Fig1: two parallel lines: \\ going top-left to bottom-right
+      Fig2: two lines meeting at top forming /\ /\ shape (double peak)
+      Fig3: two lines going top-right to bottom-left + small tick
+
+    The double lines rotate 45° CW each step, and the "pair" structure stays.
+
+    Answer: 4 (from PDF)
+    Option 4 shows two parallel lines + a box/square shape (diamond outline)
+
+    More precisely from the PDF image:
+    The series shows progressively rotating double-line shapes:
+    // → ∧∧ → >> → ∨∨
+    But with a "doubling" and specific orientation
+
+    Let me create based on what's visible:
+    Given 1: Two parallel diagonal lines going /  (bottom-left to top-right)
+    Given 2: Two parallel lines going ∧ (bent at top, like house roof doubled)
+    Given 3: Two parallel lines going > (pointing right)
+
+    Options:
+    1: A bent/folded shape with two lines (like L with extra)
+    2: Two diagonal lines //
+    3: Two bent lines (like V rotated)
+    4: Diamond/square shape from double lines meeting ← CORRECT
+    5: Single bent line with extra
+  -->
+
+  <!-- Given Series -->
+
+  <!-- Fig 1: Two parallel diagonal lines / / (going upper-right) -->
+  <g transform="translate(30,20)">
+    <line x1="20" y1="80" x2="50" y2="20" stroke="black" stroke-width="3"/>
+    <line x1="40" y1="80" x2="70" y2="20" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Fig 2: Two parallel inverted-V lines /\ /\ (double peak) -->
+  <g transform="translate(170,20)">
+    <polyline points="10,80 40,15 70,80" fill="none" stroke="black" stroke-width="3"/>
+    <polyline points="25,80 54,15 85,80" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Fig 3: 3-sided diamond — Left→Top→Right→Bottom (3 bends; left side open) -->
+  <g transform="translate(310,20)">
+    <polyline points="17,50 60,5 103,50 60,95" fill="none" stroke="black" stroke-width="3"/>
+    <polyline points="27,50 60,17 93,50 60,83" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Divider -->
+  <line x1="10" y1="115" x2="690" y2="115" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- Option labels -->
+  <text x="65"  y="135" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="195" y="135" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="325" y="135" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="455" y="135" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+  <text x="585" y="135" font-size="13" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: A box/L shape with extra tick - closed path going up,right,down with ticks -->
+  <g transform="translate(25,140)">
+    <polyline points="15,85 15,35 55,85" fill="none" stroke="black" stroke-width="3"/>
+    <polyline points="30,85 30,20 70,70" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 2: Two parallel diagonal lines / / (same as given 1 - wrong) -->
+  <g transform="translate(155,140)">
+    <line x1="20" y1="85" x2="55" y2="25" stroke="black" stroke-width="3"/>
+    <line x1="40" y1="85" x2="75" y2="25" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 3: Two V-shaped lines (open at top, pointing down) -->
+  <g transform="translate(285,140)">
+    <polyline points="10,20 40,80 70,20" fill="none" stroke="black" stroke-width="3"/>
+    <polyline points="20,20 50,80 82,20" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 4: Complete double-line diamond — 4 bends (fully closed) CORRECT -->
+  <g transform="translate(415,140)">
+    <polygon points="60,5 103,50 60,95 17,50" fill="none" stroke="black" stroke-width="3"/>
+    <polygon points="60,18 90,50 60,82 30,50" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 5: Left-pointing angle (<) — two parallel left-pointing chevrons -->
+  <g transform="translate(545,140)">
+    <polyline points="75,15 20,50 75,85" fill="none" stroke="black" stroke-width="3"/>
+    <polyline points="90,20 35,50 90,80" fill="none" stroke="black" stroke-width="3"/>
+  </g>
+</svg>

@@ -1,0 +1,120 @@
+<svg viewBox="0 0 700 310" xmlns="http://www.w3.org/2000/svg" width="700" height="310" font-family="Arial,sans-serif">
+  <rect width="700" height="310" fill="white"/>
+  <!--
+    Q21: Hexagon series — diamond outside moves CCW one vertex per step,
+    circle inside moves CW one vertex per step.
+
+    Pointed-top hexagon vertices (clock positions):
+      N(12)=(50,15), NE(2)=(80,33), SE(4)=(80,67), S(6)=(50,85), SW(8)=(20,67), NW(10)=(20,33)
+
+    Diamond (outside) CCW: N → NW → SW → S → SE  (Figs 1–5)
+    Circle  (inside)  CW:  SE(66,59) → S(50,68) → SW(34,59) → NW(34,41) → N(50,32)
+
+    6th position (answer = option 5): Diamond at NE(2), Circle at NE inside(66,41)
+  -->
+
+  <!-- Hexagon polygon: 6 points at angles 30,90,150,210,270,330 from center -->
+  <!-- At center (50,50), radius=35 -->
+  <!-- Points: (50+35cos, 50+35sin) for each angle -->
+  <!-- 30°: (50+30.3, 50+17.5)=(80.3,67.5) -->
+  <!-- 90°: (50, 85) -->
+  <!-- 150°: (19.7, 67.5) -->
+  <!-- 210°: (19.7, 32.5) -->
+  <!-- 270°: (50, 15) -->
+  <!-- 330°: (80.3, 32.5) -->
+
+  <!-- Series given (the question shows them unlabeled in a row) -->
+  <!-- Using positions for diamond: NW=(-35,-35), W=(-48,0), SW=(-35,35), S=(0,48), SE=(35,35), E=(48,0), NE=(35,-35), N=(0,-48) -->
+
+  <!-- Series Fig 1: diamond at N (top), circle at SE inside -->
+  <g transform="translate(10,10)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at N — above top vertex (50,15) -->
+    <polygon points="50,5 40,15 50,25 60,15" fill="black"/>
+    <!-- circle at SE inside -->
+    <circle cx="66" cy="59" r="6" fill="black"/>
+  </g>
+
+  <!-- Series Fig 2: diamond at NW, circle at S inside -->
+  <g transform="translate(110,10)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at NW — outside NW vertex (20,33) -->
+    <polygon points="10,23 0,33 10,43 20,33" fill="black"/>
+    <!-- circle at S inside -->
+    <circle cx="50" cy="68" r="6" fill="black"/>
+  </g>
+
+  <!-- Series Fig 3: diamond at SW, circle at SW inside -->
+  <g transform="translate(210,10)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at SW — outside SW vertex (20,67) -->
+    <polygon points="10,57 0,67 10,77 20,67" fill="black"/>
+    <!-- circle at SW inside -->
+    <circle cx="34" cy="59" r="6" fill="black"/>
+  </g>
+
+  <!-- Series Fig 4: diamond at S, circle at NW inside -->
+  <g transform="translate(310,10)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at S — below bottom vertex (50,85) -->
+    <polygon points="50,87 40,97 50,107 60,97" fill="black"/>
+    <!-- circle at NW inside -->
+    <circle cx="34" cy="41" r="6" fill="black"/>
+  </g>
+
+  <!-- Series Fig 5: diamond at SE, circle at N inside -->
+  <g transform="translate(410,10)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at SE — outside SE vertex (80,67) -->
+    <polygon points="90,67 80,77 90,87 100,77" fill="black"/>
+    <!-- circle at N inside -->
+    <circle cx="50" cy="32" r="6" fill="black"/>
+  </g>
+
+  <!-- Divider -->
+  <line x1="10" y1="130" x2="690" y2="130" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- Option labels -->
+  <text x="65"  y="150" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="195" y="150" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="325" y="150" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="455" y="150" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+  <text x="585" y="150" font-size="13" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: diamond at W (left-outside), circle at SE inside (wrong combo) -->
+  <g transform="translate(25,158)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="5,50 -5,60 5,70 15,60" fill="black"/>
+    <circle cx="66" cy="59" r="6" fill="black"/>
+  </g>
+
+  <!-- Option 2: diamond at S (bottom-outside), circle at SW inside (wrong combo) -->
+  <g transform="translate(155,158)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="50,87 40,97 50,107 60,97" fill="black"/>
+    <circle cx="34" cy="59" r="6" fill="black"/>
+  </g>
+
+  <!-- Option 3: diamond at NE (upper-right-outside), circle at NW inside (wrong combo) -->
+  <g transform="translate(285,158)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="90,23 80,33 90,43 100,33" fill="black"/>
+    <circle cx="34" cy="41" r="6" fill="black"/>
+  </g>
+
+  <!-- Option 4: diamond at N (top-outside), circle at SW inside (wrong combo) -->
+  <g transform="translate(415,158)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="50,5 40,15 50,25 60,15" fill="black"/>
+    <circle cx="34" cy="59" r="6" fill="black"/>
+  </g>
+
+  <!-- Option 5: diamond at NE (upper-right-outside), circle at NE inside ← CORRECT (6th position) -->
+  <g transform="translate(545,158)">
+    <polygon points="80,67 50,85 20,67 20,33 50,15 80,33" fill="none" stroke="black" stroke-width="2"/>
+    <!-- diamond at NE — outside NE vertex (80,33) -->
+    <polygon points="90,23 80,33 90,43 100,33" fill="black"/>
+    <!-- circle at NE inside -->
+    <circle cx="66" cy="41" r="6" fill="black"/>
+  </g>
+</svg>
