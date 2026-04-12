@@ -65,18 +65,19 @@ def find_question_positions(pdf_doc: fitz.Document, page_index: int) -> dict[int
     Return {question_number: y_pixel_position} for all question-number
     markers found on the given page.
 
-    Question number markers are standalone text blocks matching '\\d{1,2}.'
-    at the left margin of the page (x0 < 80 PDF points).
+    Uses word-level extraction so markers are found whether they appear as
+    standalone blocks ("1.") or inline within a larger text block
+    ("3. Find if the two cubes are alike.").  Both forms appear at x0 < 80pt.
     """
     page = pdf_doc[page_index]
     positions: dict[int, float] = {}
 
-    # "blocks" returns: (x0, y0, x1, y1, text, block_no, block_type)
-    for block in page.get_text("blocks"):
-        x0, y0, x1, y1, text = block[0], block[1], block[2], block[3], block[4]
-        text_stripped = text.strip()
+    # "words" returns: (x0, y0, x1, y1, word, block_no, line_no, word_no)
+    for word in page.get_text("words"):
+        x0, y0 = word[0], word[1]
+        text_stripped = word[4].strip()
 
-        # Match standalone "N." or "NN." where N is 1–50, at the left margin
+        # Match "N." or "NN." at the left margin
         if re.match(r'^\d{1,2}\.$', text_stripped) and x0 < 80:
             qnum = int(text_stripped.rstrip('.'))
             if 1 <= qnum <= 50:

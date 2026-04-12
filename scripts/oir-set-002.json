@@ -1,0 +1,1863 @@
+{
+  "setNumber": 2,
+  "title": "OIR Practice Set 2",
+  "version": "1.0",
+  "totalQuestions": 50,
+  "_draft": true,
+  "_reviewNeeded": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    17,
+    20,
+    21,
+    23,
+    24,
+    25,
+    34,
+    35,
+    36,
+    38,
+    39,
+    41,
+    42,
+    43,
+    44,
+    45,
+    47,
+    48
+  ],
+  "questions": [
+    {
+      "id": "oir_s02_q01",
+      "questionNumber": 1,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which one of the following cubes can possibly belong to Group A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q1",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q02",
+      "questionNumber": 2,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the choice that applies best to the statement given below:\nA boy driving a bicycle put the brake suddenly he bends forward.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q2",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q03",
+      "questionNumber": 3,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Find if the two cubes are alike. Write ‘Yes’ or ‘No’ on the answer sheet:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "Yes"
+        },
+        {
+          "id": "opt_2",
+          "text": "No"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q3",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q04",
+      "questionNumber": 4,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Find if the two cubes are alike. Write ‘Yes’ or ‘No’ on the answer sheet:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "Yes"
+        },
+        {
+          "id": "opt_2",
+          "text": "No"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q4",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q05",
+      "questionNumber": 5,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q5",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q06",
+      "questionNumber": 6,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q6",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q07",
+      "questionNumber": 7,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q7",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q08",
+      "questionNumber": 8,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q8",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q09",
+      "questionNumber": 9,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the last letter of the rearranged sentence.\nThe teacher us to assignment complete the go before wants we home",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "TODO: Add explanation for Q9",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q10",
+      "questionNumber": 10,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the SECOND letter of the rearranged word.\nWhat are their RAEVAEG salaries?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q10",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q11",
+      "questionNumber": 11,
+      "type": "VERBAL_REASONING",
+      "questionText": "Envy is to Jealous as Shrewd is to __________.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Clever"
+        },
+        {
+          "id": "opt_b",
+          "text": "Ingenuous"
+        },
+        {
+          "id": "opt_c",
+          "text": "Beginner"
+        },
+        {
+          "id": "opt_d",
+          "text": "Angry"
+        },
+        {
+          "id": "opt_e",
+          "text": "Dense"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q11",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q12",
+      "questionNumber": 12,
+      "type": "SPATIAL_REASONING",
+      "questionText": "See figure above.",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_4",
+      "explanation": "TODO: Add explanation for Q12",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q13",
+      "questionNumber": 13,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which two sets of letters will come next in the following series?\nANZ, DPY, GRX, JSW, ________, ________.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q13",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q14",
+      "questionNumber": 14,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q14",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q15",
+      "questionNumber": 15,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which item will stand middle if the following are rearranged proper order?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Probation"
+        },
+        {
+          "id": "opt_b",
+          "text": "Interview"
+        },
+        {
+          "id": "opt_c",
+          "text": "Selection"
+        },
+        {
+          "id": "opt_d",
+          "text": "Appointment"
+        },
+        {
+          "id": "opt_e",
+          "text": "Advertisement"
+        }
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "TODO: Add explanation for Q15",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q16",
+      "questionNumber": 16,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does not belong to the same class as others?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Tesla"
+        },
+        {
+          "id": "opt_b",
+          "text": "Volt"
+        },
+        {
+          "id": "opt_c",
+          "text": "Ampere"
+        },
+        {
+          "id": "opt_d",
+          "text": "Ohm"
+        },
+        {
+          "id": "opt_e",
+          "text": "Watt"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q16",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q17",
+      "questionNumber": 17,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q17",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q18",
+      "questionNumber": 18,
+      "type": "VERBAL_REASONING",
+      "questionText": "Choose one word from each of the following three lines to make a correct, true and meaningful\nsentence.\nBreak [",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "fast"
+        },
+        {
+          "id": "opt_b",
+          "text": "right"
+        },
+        {
+          "id": "opt_c",
+          "text": "left"
+        },
+        {
+          "id": "opt_d",
+          "text": "up] was on the ["
+        },
+        {
+          "id": "opt_a",
+          "text": "chair"
+        },
+        {
+          "id": "opt_b",
+          "text": "car"
+        },
+        {
+          "id": "opt_c",
+          "text": "table"
+        },
+        {
+          "id": "opt_d",
+          "text": "bike] when she entered the dining ["
+        },
+        {
+          "id": "opt_a",
+          "text": "room"
+        },
+        {
+          "id": "opt_b",
+          "text": "kitchen"
+        },
+        {
+          "id": "opt_c",
+          "text": "table"
+        },
+        {
+          "id": "opt_d",
+          "text": "door]."
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q18",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q19",
+      "questionNumber": 19,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number which will come LAST in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Transfer"
+        },
+        {
+          "id": "opt_b",
+          "text": "Table"
+        },
+        {
+          "id": "opt_c",
+          "text": "Treatment"
+        },
+        {
+          "id": "opt_d",
+          "text": "Tribal"
+        },
+        {
+          "id": "opt_e",
+          "text": "Treatment"
+        }
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "TODO: Add explanation for Q19",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q20",
+      "questionNumber": 20,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Subtract:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q20",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q21",
+      "questionNumber": 21,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_5",
+      "explanation": "TODO: Add explanation for Q21",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q22",
+      "questionNumber": 22,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which group of numbers does not belong to the same class as others?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "8122"
+        },
+        {
+          "id": "opt_b",
+          "text": "6111"
+        },
+        {
+          "id": "opt_c",
+          "text": "7121"
+        },
+        {
+          "id": "opt_d",
+          "text": "9321"
+        },
+        {
+          "id": "opt_e",
+          "text": "9513"
+        }
+      ],
+      "correctAnswerId": "opt_e",
+      "explanation": "TODO: Add explanation for Q22",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q23",
+      "questionNumber": 23,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Add:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q23",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q24",
+      "questionNumber": 24,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Write the number of the figure which will come next in the series:",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q24",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q25",
+      "questionNumber": 25,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q25",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q26",
+      "questionNumber": 26,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come last in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Letter"
+        },
+        {
+          "id": "opt_b",
+          "text": "Engine"
+        },
+        {
+          "id": "opt_c",
+          "text": "Pen"
+        },
+        {
+          "id": "opt_d",
+          "text": "Required"
+        }
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "TODO: Add explanation for Q26",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q27",
+      "questionNumber": 27,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come last in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Contest"
+        },
+        {
+          "id": "opt_b",
+          "text": "Cool"
+        },
+        {
+          "id": "opt_c",
+          "text": "Concentration"
+        },
+        {
+          "id": "opt_d",
+          "text": "Convocation"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q27",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q28",
+      "questionNumber": 28,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the correct choice.\nHow many 3’s come just after 4 in the following numbers?\n1 2 3 4 3 5 8 2 6 8 9 6 2 5 4 3 8 6 1 3 7 8 2 6 5 4 3 1 7 9 5 2 4 2 2 4 2 6 9 8",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "3"
+        },
+        {
+          "id": "opt_b",
+          "text": "5"
+        },
+        {
+          "id": "opt_c",
+          "text": "4"
+        },
+        {
+          "id": "opt_d",
+          "text": "7"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q28",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q29",
+      "questionNumber": 29,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come last in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Groups"
+        },
+        {
+          "id": "opt_b",
+          "text": "Property"
+        },
+        {
+          "id": "opt_c",
+          "text": "Determining"
+        },
+        {
+          "id": "opt_d",
+          "text": "Between"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q29",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q30",
+      "questionNumber": 30,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come last in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Pairs"
+        },
+        {
+          "id": "opt_b",
+          "text": "Letters"
+        },
+        {
+          "id": "opt_c",
+          "text": "Forms"
+        },
+        {
+          "id": "opt_d",
+          "text": "Except"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q30",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q31",
+      "questionNumber": 31,
+      "type": "VERBAL_REASONING",
+      "questionText": "The underlined statement has four reasons for its justification. They are listed below the statement\nserially. Write the serial number of the reason you think correct.\n\"Some men are definitely intelligent, others are definitely not intelligent, but of intermediate men, we\nshould say, 'intelligent'? Yes, I think, so or no, I shouldn't be inclined to call him intelligent.\"\nWhich of the following reflects the intention of the writer well?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "To call men intelligent who are not strikingly so must be to use the concept with undue imprecision"
+        },
+        {
+          "id": "opt_b",
+          "text": "Every empirical concept has a degree of vagueness"
+        },
+        {
+          "id": "opt_c",
+          "text": "Calling someone intelligent or not depends upon one's whim"
+        },
+        {
+          "id": "opt_d",
+          "text": "There is no need to be as indecisive as the writer of the above"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q31",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q32",
+      "questionNumber": 32,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the word which will come last in the dictionary?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Contains"
+        },
+        {
+          "id": "opt_b",
+          "text": "Consecutive"
+        },
+        {
+          "id": "opt_c",
+          "text": "Alternatives"
+        },
+        {
+          "id": "opt_d",
+          "text": "Sparrow"
+        }
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "TODO: Add explanation for Q32",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q33",
+      "questionNumber": 33,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the number of the correct choice.\nThe total number of digits used in numbering the pages of a book having 366 pages is",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "732"
+        },
+        {
+          "id": "opt_b",
+          "text": "990"
+        },
+        {
+          "id": "opt_c",
+          "text": "1098"
+        },
+        {
+          "id": "opt_d",
+          "text": "1305"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q33",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q34",
+      "questionNumber": 34,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q34",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q35",
+      "questionNumber": 35,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q35",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q36",
+      "questionNumber": 36,
+      "type": "SPATIAL_REASONING",
+      "questionText": "See figure above.",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q36",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q37",
+      "questionNumber": 37,
+      "type": "VERBAL_REASONING",
+      "questionText": "Quixotic is too pragmatic as murky is to ___________.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Consider"
+        },
+        {
+          "id": "opt_b",
+          "text": "Clear"
+        },
+        {
+          "id": "opt_c",
+          "text": "Maiden"
+        },
+        {
+          "id": "opt_d",
+          "text": "Angel"
+        },
+        {
+          "id": "opt_e",
+          "text": "Enlighten"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q37",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q38",
+      "questionNumber": 38,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q38",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q39",
+      "questionNumber": 39,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q39",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q40",
+      "questionNumber": 40,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does not belong to the same class as others?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Neon"
+        },
+        {
+          "id": "opt_b",
+          "text": "Silicon"
+        },
+        {
+          "id": "opt_c",
+          "text": "Xenon"
+        },
+        {
+          "id": "opt_d",
+          "text": "Krypton"
+        },
+        {
+          "id": "opt_e",
+          "text": "Helium"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q40",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q41",
+      "questionNumber": 41,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the SECOND letter of the rearranged word.\nI made DNSEIRF with many people on the train.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q41",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q42",
+      "questionNumber": 42,
+      "type": "VERBAL_REASONING",
+      "questionText": "Write the last letter of the rearranged sentence.\nHis medication mother advised to take without Rohan fail",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_a",
+      "explanation": "TODO: Add explanation for Q42",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q43",
+      "questionNumber": 43,
+      "type": "SPATIAL_REASONING",
+      "questionText": "See figure above.",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q43",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q44",
+      "questionNumber": 44,
+      "type": "SPATIAL_REASONING",
+      "questionText": "See figure above.",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_2",
+      "explanation": "TODO: Add explanation for Q44",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q45",
+      "questionNumber": 45,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which two numbers will come next in the following series?\n31, 29, 24, ____, _____",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "True"
+        },
+        {
+          "id": "opt_b",
+          "text": "Probable"
+        },
+        {
+          "id": "opt_c",
+          "text": "False"
+        },
+        {
+          "id": "opt_d",
+          "text": "Absurd"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q45",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q46",
+      "questionNumber": 46,
+      "type": "VERBAL_REASONING",
+      "questionText": "Salsa is to Dance as Rock is to __________.",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Cuisine"
+        },
+        {
+          "id": "opt_b",
+          "text": "Music"
+        },
+        {
+          "id": "opt_c",
+          "text": "Stone"
+        },
+        {
+          "id": "opt_d",
+          "text": "Singing"
+        },
+        {
+          "id": "opt_e",
+          "text": "Bike"
+        }
+      ],
+      "correctAnswerId": "opt_b",
+      "explanation": "TODO: Add explanation for Q46",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q47",
+      "questionNumber": 47,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q47",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q48",
+      "questionNumber": 48,
+      "type": "SPATIAL_REASONING",
+      "questionText": "Which two of the following figures belong to Class A?",
+      "options": [
+        {
+          "id": "opt_1",
+          "text": "1"
+        },
+        {
+          "id": "opt_2",
+          "text": "2"
+        },
+        {
+          "id": "opt_3",
+          "text": "3"
+        },
+        {
+          "id": "opt_4",
+          "text": "4"
+        },
+        {
+          "id": "opt_5",
+          "text": "5"
+        }
+      ],
+      "correctAnswerId": "opt_1",
+      "explanation": "TODO: Add explanation for Q48",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q49",
+      "questionNumber": 49,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which group of letters does not belong to the same class as others?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "KMNL"
+        },
+        {
+          "id": "opt_b",
+          "text": "PRSQ"
+        },
+        {
+          "id": "opt_c",
+          "text": "VWYZ"
+        },
+        {
+          "id": "opt_d",
+          "text": "JLMK"
+        },
+        {
+          "id": "opt_e",
+          "text": "WYZX"
+        }
+      ],
+      "correctAnswerId": "opt_c",
+      "explanation": "TODO: Add explanation for Q49",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    },
+    {
+      "id": "oir_s02_q50",
+      "questionNumber": 50,
+      "type": "VERBAL_REASONING",
+      "questionText": "Which word does not belong to the same class as others?",
+      "options": [
+        {
+          "id": "opt_a",
+          "text": "Anger"
+        },
+        {
+          "id": "opt_b",
+          "text": "Loathe"
+        },
+        {
+          "id": "opt_c",
+          "text": "Envy"
+        },
+        {
+          "id": "opt_d",
+          "text": "Laugh"
+        },
+        {
+          "id": "opt_e",
+          "text": "Fear ANSWERS AND EXPLANATIONS 1. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "When you look at the figures in Group A, all the figures are bisected in two unequal halves while in Group B all the figures are bisected in two equal halves. When you look at the options then you will find only the circle in the first figure is not equally divided so we can say the cube “1” possibly belongs to Group A. 2. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "According to the rule of science, a cyclist uses the brakes suddenly he always bends down towards the forward direction. Hence it is true. 3. Answer: Yes Yes, both are same. 4. Answer: No No, both are not same. 5. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "In each subsequent figure, the line segment with curve moves one step in clockwise direction after being inverted while one small line segment is added in clockwise direction. The correct answer is"
+        },
+        {
+          "id": "opt_b",
+          "text": ". 6. Answer: 2 and 3 Class A has even number of stars and circles with equal half shaded; figure 2 and 3 matched that property. Hence, figures"
+        },
+        {
+          "id": "opt_b",
+          "text": "and"
+        },
+        {
+          "id": "opt_c",
+          "text": "belong to Class A. 7. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "The shadow is changed to its 3D shape and dots shift by one place anticlockwise. Hence, option"
+        },
+        {
+          "id": "opt_b",
+          "text": "is correct. 8. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "In each subsequent figure, one line segment is added. Thus, the correct answer is option"
+        },
+        {
+          "id": "opt_b",
+          "text": ". 9. Answer: E The rearranged sentence is: The teacher wants us to complete the assignment before we go home. Then, the last letter of the rearranged sentence is ‘e’. 10. Answer: V The rearranged word is AVERAGE and its SECOND letter is “V”. 11. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "Jealous is a synonym of envy similarly clever is a synonym of shrewd 12. Answer:"
+        },
+        {
+          "id": "opt_d",
+          "text": "The inner figure is enlarged and it becomes the outer figure while the outer figure is reduced in size and it becomes the inner figure. 13. Answer: MUV, PWU A+3=D, N+2=P, Z-1=Y; D+3=G, P+2=R, Y-1=X; G+3=J, R+2=S, X-1=W; J+3=M, S+2=U, W-1=V; M+3=P, U+2=W, V-1=U. Thus, the correct sets are MUV and PWU. 14. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "K – 2 = I; O – 2 M; R – 2 = P; T – 2 = R I – 3 = F; M – 3 = J; P – 3 = M; R – 3 = O F – 4 = B; J – 4 = F; M – 4 = I; O – 4=K 15. Answer:"
+        },
+        {
+          "id": "opt_c",
+          "text": "The rearranged order of the given words is Advertisement, Interview, Selection, Appointment, Probation. Here, Selection is the middle term. 16. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "Except Tesla all other are SI units directly related to electricity. 17. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "Two elements are added in each in each step, be it two lines, two arcs or one line and one arc. 18. Answer: 1, 3, 1 Fast, table, room The meaningful sentence is “Breakfast was on the table when she entered the dining room.” 19. Answer:"
+        },
+        {
+          "id": "opt_d",
+          "text": "Among these given words, Tribal will come last in the dictionary. 20. Answer: 21. Answer:"
+        },
+        {
+          "id": "opt_e",
+          "text": "From the series, we understand that the arrow gets rotated by 45° in anti-clockwise direction. The small curve is placed on the right side of the arrow and the number of curves is increased and decreased by one, alternatively. 22. Answer:"
+        },
+        {
+          "id": "opt_e",
+          "text": "The difference of all digits in the given number is 3 in all options except option 5. 8122 = 8 – 1 – 2 -2 = 3 6111 = 6 – 1 – 1 – 1 = 3 7121 = 7 – 1 – 2 – 1 = 3 9321 = 9 – 3 – 2 – 1 = 3 9513 = 9 – 5 – 1 – 3 = 0 Thus option 5 is the correct answer. 23. Answer: 24. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Notice that in each segment, the figures are all the same shape, but the one in the middle is larger than the two on either side. Also, notice that one of the figures is shaded and that this shading alternates first right and then left. To continue this pattern in the third segment, you will look for a square. Choice"
+        },
+        {
+          "id": "opt_b",
+          "text": "is correct because this choice will put the large square between the two smaller squares, with the shading on the right. 25. Answer: 1 and 4 Since the outgrowths are coming from the corners in class A. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_d",
+          "text": "belong to Class A. 26. Answer:"
+        },
+        {
+          "id": "opt_d",
+          "text": "Among these given words, ‘Required’ will come last in the dictionary. 27. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Among these given words, ‘Cool’ will come last in the dictionary. 28.  Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "There are three 3’s come just after 4 in the given numbers. They are 29.  Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Among these given words, ‘Property’ will come last in the dictionary. 30.  Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "Among these given words, ‘Pairs’ will come last in the dictionary. 31. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "The Writer clearly states in the last part of his statement, that he should or should not be inclined to call him intelligent. The only option, which reflects that intention, is the first option and thus is the answer. Option 2 is wrong because we cannot generalise all empirical concepts to be vague on basis of this and it is irrelevant also. Option 3 and 4 are also vague. 32. Answer:"
+        },
+        {
+          "id": "opt_d",
+          "text": "Among these given words, Sparrow will come last in the dictionary. 33. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Total number of digits = (No. of digits in 1- digit page nos. + No. of digits in 2-digit page nos. + No. of digits in 3- digit page nos.) = (1 ×  9 +  2 × 90 +  3 × 267) = (9 +  180 +  801) =  990. 34. Answer: 1 and 3 Class A has even number of triangles with equal half shaded; and also, vowels. Figure 1 and 3 matched that property. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_c",
+          "text": "belong to Class A. 35. Answer: 1 and 4 When a, b, c, d, ……is numbered as 1, 2, 3, 4, …… respectively, the class A has codes of alphabets as same as its respective numbers. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_d",
+          "text": "belong to Class A. 36.  Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "The corresponding figure of A, introduced as many elements head as the number of side (inside). 37. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Quixotic is an antonym for pragmatic, and murky is an antonym for clear. 38. Answer: 1 and 2 Class A has odd number of lines that made an alphabet. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_b",
+          "text": "belong to Class A. 39. Answer: 1 and 2 In class A, two alternative triangles of opposite sides are shaded. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_b",
+          "text": "belong to Class A. 40. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Neon, Xenon, Helium and krypton are noble gases while silicon is a metalloid or semimetal. 41. Answer: R The rearranged word is FRIENDS and its SECOND letter is “R”. 42.  Answer: L The rearranged sentence is: Mother advised Rohan to take his medication without fail. Then, the last letter of the rearranged sentence is ‘l’. 43. Answer:"
+        },
+        {
+          "id": "opt_a",
+          "text": "From first figure to second figure, the design becomes shaded. 44. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "From first figure to second figure two arrows and one + are deleted and the remaining two arrows are inverted. 45. Answer: 22, 17 This is simple alternating subtraction series, which subtracts 2 then 5 31 – 2 = 29 29 – 5 = 24 24 – 2 = 22 22 – 5 = 17 and so on 46. Answer:"
+        },
+        {
+          "id": "opt_b",
+          "text": "Salsa is a type of dance similarly rock is a type of music 47. Answer: 1 and 2 Class A figures are symmetrically bisected with multiples of 29. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_b",
+          "text": "belong to Class A. 48. Answer: 1 and 2 Class A figures are symmetrically bisected with vowels. Hence, figures"
+        },
+        {
+          "id": "opt_a",
+          "text": "and"
+        },
+        {
+          "id": "opt_b",
+          "text": "belong to Class A. 49. Answer:"
+        },
+        {
+          "id": "opt_c",
+          "text": "Option"
+        },
+        {
+          "id": "opt_a",
+          "text": "→ K+2=M+1=N-2=L Option"
+        },
+        {
+          "id": "opt_b",
+          "text": "→ P+2=R+1=S-2=Q Option"
+        },
+        {
+          "id": "opt_c",
+          "text": "→ V+1=W+2=Y+1=Z Option"
+        },
+        {
+          "id": "opt_d",
+          "text": "→ J+2=L+1=M-2=K Option"
+        },
+        {
+          "id": "opt_e",
+          "text": "→ W+2=Y+1=Z-2=X Among these options, 3 is different from others. Thus option"
+        },
+        {
+          "id": "opt_c",
+          "text": "VWYZ is the correct answer. 50. Answer:"
+        },
+        {
+          "id": "opt_d",
+          "text": "Anger, loathe, Fear and envy are feelings while laugh is a form of verb and not a feeling."
+        }
+      ],
+      "correctAnswerId": "opt_d",
+      "explanation": "TODO: Add explanation for Q50",
+      "difficulty": "MEDIUM",
+      "tags": [],
+      "questionImageUrl": null
+    }
+  ]
+}

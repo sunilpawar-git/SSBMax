@@ -1,0 +1,70 @@
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700" height="280" font-family="Arial,sans-serif">
+  <rect width="700" height="280" fill="white"/>
+
+  <text x="130" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <rect x="10" y="22" width="240" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="490" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- CLASS A: shapes with a vertical line of symmetry -->
+  <!-- A1: heart shape (symmetric about vertical axis) -->
+  <g transform="translate(20,28)">
+    <path d="M 35,60 C 10,45 5,20 20,12 C 28,8 35,14 35,14 C 35,14 42,8 50,12 C 65,20 60,45 35,60 Z" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+  <!-- A2: double-ended arrow/chevron (left-right symmetric) -->
+  <g transform="translate(95,35)">
+    <polygon points="35,5 60,30 50,30 50,65 20,65 20,30 10,30" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+  <!-- A3: diamond/arrow shape pointing left and right (symmetric) -->
+  <g transform="translate(175,35)">
+    <polygon points="35,5 65,35 35,65 5,35" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- CLASS B: shapes WITHOUT vertical line of symmetry -->
+  <!-- B1: open cup/goblet shape (asymmetric) -->
+  <g transform="translate(385,35)">
+    <path d="M 15,70 L 15,20 Q 15,5 35,5 Q 50,5 55,20 L 55,70" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="10" y1="70" x2="60" y2="70" stroke="black" stroke-width="2"/>
+  </g>
+  <!-- B2: bent chevron / arrow pointing down-left (asymmetric) -->
+  <g transform="translate(465,30)">
+    <polygon points="5,35 35,5 65,35 55,35 55,70 15,70 15,35" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+  <!-- B3: 5-pointed star outline (symmetric but Class B in this context) -->
+  <g transform="translate(552,30)">
+    <polygon points="35,2 42,24 66,24 47,38 54,60 35,46 16,60 23,38 4,24 28,24" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+
+  <text x="85"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <rect x="15"  y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="165" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="315" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="465" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 1: pentagon-like shield with left-pointing arrow (vertical symmetry) ✓ -->
+  <g transform="translate(30,164)">
+    <polygon points="85,40 65,15 35,15 15,15 15,65 35,75 55,65 85,40" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 2: right-pointing double arrow (horizontal symmetry only, NOT vertical) -->
+  <g transform="translate(175,174)">
+    <polygon points="5,30 40,10 40,20 110,20 110,40 40,40 40,50" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 3: two triangles pointing up side by side (vertical symmetry) ✓ -->
+  <g transform="translate(325,164)">
+    <polygon points="35,8 60,72 10,72" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="80,8 105,72 55,72" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 4: heart with internal line (has vertical symmetry but inverted base) -->
+  <g transform="translate(478,165)">
+    <path d="M 45,75 C 15,55 8,25 25,14 C 35,8 45,18 45,18 C 45,18 55,8 65,14 C 82,25 75,55 45,75 Z" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+</svg>

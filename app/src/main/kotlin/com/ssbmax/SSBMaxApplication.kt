@@ -3,6 +3,9 @@ package com.ssbmax
 import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
+import coil.Coil
+import coil.ImageLoader
+import coil.decode.SvgDecoder
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -40,6 +43,14 @@ class SSBMaxApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "🚀 SSBMax Application starting...")
+
+        // Configure Coil with SVG decoder so OIR question figures render correctly
+        Coil.setImageLoader(
+            ImageLoader.Builder(this)
+                .components { add(SvgDecoder.Factory()) }
+                .crossfade(true)
+                .build()
+        )
 
         // Schedule periodic cleanup of expired question cache
         scheduleQuestionCacheCleanup()

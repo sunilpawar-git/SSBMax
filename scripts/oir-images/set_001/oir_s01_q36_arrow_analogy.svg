@@ -1,0 +1,82 @@
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" width="700" height="200" font-family="Arial,sans-serif">
+  <rect width="700" height="200" fill="white"/>
+
+  <!--
+    Q36: A:B::C:?
+    A: Up-pointing thick arrow (like ⬆) with small square hole inside
+    B: Down-pointing thick arrow (⬇) with the inner shape rotated 90°
+    C: Left-pointing thick arrow (⬅) with small shape inside
+    Answer: 5 — Right-pointing arrow with inner shape rotated 90° from C
+
+    Arrow is rotated 180°, inner shape rotated 90° CW.
+  -->
+
+  <!-- A: Up arrow with inner square -->
+  <text x="55"  y="16" font-size="13" font-weight="bold" text-anchor="middle">A</text>
+  <rect x="10" y="20" width="90" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <!-- up arrow body -->
+  <polygon points="55,28 80,55 67,55 67,100 43,100 43,55 30,55" fill="none" stroke="black" stroke-width="2"/>
+  <!-- inner square (hole in the arrow body) -->
+  <rect x="46" y="62" width="18" height="18" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- IS TO -->
+  <text x="115" y="68" font-size="12" text-anchor="middle">IS</text>
+  <text x="115" y="84" font-size="12" text-anchor="middle">TO</text>
+
+  <!-- B: Down arrow with inner shape rotated 90° (now rectangle horizontal) -->
+  <text x="175" y="16" font-size="13" font-weight="bold" text-anchor="middle">B</text>
+  <rect x="130" y="20" width="90" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <!-- down arrow body -->
+  <polygon points="175,100 200,73 187,73 187,28 163,28 163,73 150,73" fill="none" stroke="black" stroke-width="2"/>
+  <!-- inner shape rotated: horizontal rectangle -->
+  <rect x="162" y="48" width="26" height="16" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- AS -->
+  <text x="235" y="75" font-size="12" text-anchor="middle">AS</text>
+
+  <!-- C: Left arrow with small upright shape inside -->
+  <text x="295" y="16" font-size="13" font-weight="bold" text-anchor="middle">C</text>
+  <rect x="250" y="20" width="90" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <!-- left arrow body -->
+  <polygon points="255,65 282,88 282,75 330,75 330,55 282,55 282,42" fill="none" stroke="black" stroke-width="2"/>
+  <!-- inner shape: small vertical pentagon/circle -->
+  <circle cx="310" cy="65" r="8" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- IS TO -->
+  <text x="355" y="68" font-size="12" text-anchor="middle">IS</text>
+  <text x="355" y="84" font-size="12" text-anchor="middle">TO</text>
+
+  <!-- Options 1–5 -->
+  <text x="400" y="16" font-size="12" font-weight="bold" text-anchor="middle">1</text>
+  <text x="455" y="16" font-size="12" font-weight="bold" text-anchor="middle">2</text>
+  <text x="510" y="16" font-size="12" font-weight="bold" text-anchor="middle">3</text>
+  <text x="565" y="16" font-size="12" font-weight="bold" text-anchor="middle">4</text>
+  <text x="620" y="16" font-size="12" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Opt 1: right arrow with small vertical circle inside (wrong, not rotated) -->
+  <rect x="375" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="420,47 393,60 393,53 368,53 368,41 393,41 393,34" fill="none" stroke="black" stroke-width="1.5"/>
+  <circle cx="385" cy="47" r="5" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- Opt 2: up arrow with pentagon shape inside -->
+  <rect x="430" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="455,25 470,40 463,40 463,65 447,65 447,40 440,40" fill="none" stroke="black" stroke-width="1.5"/>
+  <polygon points="455,42 462,47 459,55 451,55 448,47" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Opt 3: left arrow (same direction as C, wrong) -->
+  <rect x="485" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="488,47 508,60 508,53 528,53 528,41 508,41 508,34" fill="none" stroke="black" stroke-width="1.5"/>
+  <circle cx="518" cy="47" r="5" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- Opt 4: down arrow with pentagon shape -->
+  <rect x="540" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="565,65 580,50 573,50 573,25 557,25 557,50 550,50" fill="none" stroke="black" stroke-width="1.5"/>
+  <rect x="556" y="32" width="18" height="12" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Opt 5: right arrow with HORIZONTAL circle (rotated 90° from C's circle) CORRECT -->
+  <rect x="595" y="22" width="90" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <!-- right arrow body -->
+  <polygon points="680,65 653,88 653,75 605,75 605,55 653,55 653,42" fill="none" stroke="black" stroke-width="2"/>
+  <!-- inner shape rotated: horizontal ellipse (90° from vertical circle in C) -->
+  <ellipse cx="630" cy="65" rx="12" ry="7" fill="none" stroke="black" stroke-width="1.5"/>
+</svg>

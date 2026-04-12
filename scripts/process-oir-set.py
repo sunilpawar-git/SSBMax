@@ -120,30 +120,52 @@ def run_images_phase(set_num: int, pdf_path: Path, cfg: dict):
 
 # ── Phase 2: Questions ────────────────────────────────────────────────────────
 
+
+# Branding lines that appear as page headers/footers in SSBCrack PDFs.
+# These are stripped from extracted question text to prevent bleed-through
+# at page boundaries (e.g. "28 | P a g e  shop.ssbcrack.com" appearing in Q43's text).
+_BRANDING_RE = re.compile(
+    r'^\d+\s*\|\s*P\s*a\s*g\s*e\b|OIR TEST\s*-\s*PRACTICE QUESTIONS',
+    re.IGNORECASE,
+)
+
+
 def _all_text_blocks(pdf_doc: fitz.Document, page_start: int, page_end: int):
     """
-    Return a flat list of (page_idx, y0, x0, text) for all text blocks
+    Return a flat list of (page_idx, y0, x0, text) for all lines
     in pages page_start..page_end (0-based, inclusive), sorted by page then Y.
+
+    Uses line-level extraction (get_text("dict")) so inline question markers
+    like "3. Find if the two cubes are alike." appear as separate entries
+    with accurate y0 positions, even when the PDF merges them into a prior block.
+    Branding lines (page header / footer) are stripped.
     """
-    blocks = []
+    lines = []
     for page_idx in range(page_start, page_end + 1):
         page = pdf_doc[page_idx]
-        for b in page.get_text("blocks"):
-            x0, y0, x1, y1, text, _bno, btype = b
-            if btype == 0 and text.strip():  # text block only
-                blocks.append((page_idx, y0, x0, text.strip()))
-    blocks.sort(key=lambda b: (b[0], b[1]))
-    return blocks
+        for block in page.get_text("dict")["blocks"]:
+            if block.get("type") != 0:
+                continue
+            for line in block.get("lines", []):
+                x0 = line["bbox"][0]
+                y0 = line["bbox"][1]
+                text = "".join(span["text"] for span in line["spans"]).strip()
+                if text and not _BRANDING_RE.search(text):
+                    lines.append((page_idx, y0, x0, text))
+    lines.sort(key=lambda b: (b[0], b[1]))
+    return lines
 
 
 def _find_question_starts(blocks: list, total_questions: int) -> dict:
     """
     Return {qnum: block_index} for all question-number markers found in blocks.
+    Handles both standalone markers ("1.") and inline markers ("3. Find if…").
     """
     starts = {}
     for i, (_, _, x0, text) in enumerate(blocks):
-        if re.match(r'^\d{1,2}\.$', text) and x0 < 80:
-            qnum = int(text.rstrip('.'))
+        # Match "N." standalone OR "N. text..." inline, at left margin
+        if re.match(r'^\d{1,2}\.(?:\s|$)', text) and x0 < 80:
+            qnum = int(re.match(r'^(\d{1,2})\.', text).group(1))
             if 1 <= qnum <= total_questions and qnum not in starts:
                 starts[qnum] = i
     return starts
@@ -165,8 +187,14 @@ def extract_question_texts(pdf_doc: fitz.Document, page_start: int, page_end: in
         start_i = starts[qnum]
         end_i = starts[sorted_qnums[idx + 1]] if idx + 1 < len(sorted_qnums) else len(blocks)
 
-        # Collect all text after the "N." marker up to the next question
-        parts = [text for (_, _, _, text) in blocks[start_i + 1:end_i] if text]
+        parts = []
+        # If the marker line has text after "N." (inline marker), capture it
+        marker_text = blocks[start_i][3]
+        inline_text = re.sub(r'^\d{1,2}\.\s*', '', marker_text).strip()
+        if inline_text:
+            parts.append(inline_text)
+        # Collect remaining lines up to the next question
+        parts.extend(text for (_, _, _, text) in blocks[start_i + 1:end_i] if text)
         question_texts[qnum] = "\n".join(parts)
 
     return question_texts
@@ -177,8 +205,9 @@ def extract_answers(pdf_doc: fitz.Document, page_start: int, page_end: int) -> d
     Search for an ANSWERS or EXPLANATIONS section in the set's page range
     (and up to 5 pages beyond) and return {qnum: answer_char}.
 
-    Handles common SSBCrack formats:
-      "1.(c)"   "1. (c)"   "1 - c"   "1.c"   "1 c"
+    Handles two SSBCrack formats:
+      Format A (Set 1 style): "1.(c)"  "1. (c)"  "1 - c"  "1.c"  "1 c"
+      Format B (Set 2+ style): "1. Answer: (2)"  "9. Answer: E"  "25. Answer: 1 and 4"
     """
     answers: dict[int, str] = {}
     search_end = min(page_end + 5, pdf_doc.page_count - 1)
@@ -189,14 +218,30 @@ def extract_answers(pdf_doc: fitz.Document, page_start: int, page_end: int) -> d
         text = page.get_text("text")
 
         if not in_answers:
-            if re.search(r'\b(ANSWERS|EXPLANATION)', text, re.IGNORECASE):
+            # Match the standalone section heading, not the page-header sub-string
+            # "OIR TEST - PRACTICE QUESTIONS WITH ANSWER & EXPLANATIONS" (page header)
+            # must not trigger this — only "ANSWERS AND EXPLANATIONS" (section heading) should.
+            if re.search(r'\bANSWERS AND EXPLANATIONS\b|\bANSWER KEY\b|\bSOLUTION\b', text, re.IGNORECASE):
                 in_answers = True
             else:
                 continue
 
-        # Match patterns like: 1.(c)  1. c  1-c  1 c  1.c
+        # Format B: "N. Answer: (M)" or "N. Answer: M" — first digit/letter after "Answer:"
+        # Use [ \t]* (not \s*) to prevent matching across line boundaries
+        # e.g. "23. Answer:\n24. Answer: (2)" must NOT assign '2' to Q23
         for m in re.finditer(
-            r'\b(\d{1,2})\s*[.\-]\s*\(?([a-eA-E1-5])\)?',
+            r'\b(\d{1,2})\.\s*Answer:[ \t]*\(?([a-eA-E1-9])\)?',
+            text
+        ):
+            qnum = int(m.group(1))
+            ans = m.group(2).lower()
+            if 1 <= qnum <= 50 and qnum not in answers:
+                answers[qnum] = ans
+
+        # Format A: "1.(c)"  "1. c"  "1-c"  (legacy Set 1 style)
+        # Use [ \t]* to stay on the same line
+        for m in re.finditer(
+            r'\b(\d{1,2})\s*[.\-][ \t]*\(?([a-eA-E1-5])\)?',
             text
         ):
             qnum = int(m.group(1))
@@ -221,7 +266,6 @@ def _parse_options(text: str):
     """
     # Pattern: (a) ... (b) ... or (A) ... (B) ...
     if re.search(r'\([a-eA-E]\)', text):
-        # Find where options start
         first = re.search(r'\n?\s*\([aA]\)', text)
         q_text = text[: first.start()].strip() if first else text
         opts_text = text[first.start():] if first else text
@@ -233,6 +277,23 @@ def _parse_options(text: str):
             letter = m.group(1).lower()
             label = m.group(2).strip().replace("\n", " ")
             options.append({"id": letter_map.get(letter, f"opt_{letter}"), "text": label})
+
+        if options:
+            return q_text, options
+
+    # Pattern: (1) ... (2) ... (3) ... — numbered options (OIR verbal analogy / odd-one-out)
+    if re.search(r'\(1\)', text):
+        first = re.search(r'\n?\s*\(1\)', text)
+        q_text = text[: first.start()].strip() if first else text
+        opts_text = text[first.start():] if first else text
+
+        options = []
+        num_map = {str(n): f"opt_{chr(ord('a') + n - 1)}" for n in range(1, 6)}
+        for m in re.finditer(r'\(([1-5])\)\s*(.+?)(?=\s*\([1-5]\)|$)',
+                              opts_text, re.DOTALL):
+            num = m.group(1)
+            label = m.group(2).strip().replace("\n", " ")
+            options.append({"id": num_map.get(num, f"opt_{num}"), "text": label})
 
         if options:
             return q_text, options

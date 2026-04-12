@@ -1,0 +1,171 @@
+<svg viewBox="0 0 700 310" xmlns="http://www.w3.org/2000/svg" width="700" height="310" font-family="Arial,sans-serif">
+  <rect width="700" height="310" fill="white"/>
+
+  <!--
+    SERIES: Cross-shaped arrow figure with a filled dot at center.
+    One arm is LONG (the rotating arm), other arm is SHORT (constant).
+    Long arm rotates 90° clockwise each step.
+    Series:
+      Fig1: long=LEFT  short=UP/DOWN  (dot center)
+      Fig2: long=UP    short=LEFT/RIGHT
+      Fig3: long=RIGHT short=UP/DOWN
+      Fig4: long=DOWN  short=LEFT/RIGHT
+      Fig5: long=LEFT  short=UP/DOWN (repeat, different orientation?)
+
+    From PDF explanation: "longer arrow rotated 90° clockwise, shorter arrow remains constant."
+    Given: 5 series figures shown. Answer option 3 comes next.
+
+    Looking at the PDF image for Q7:
+    Series figures (given, 5 of them shown in a row):
+      - Fig 1: dot, short up, long left, short down
+      - Fig 2: short left, long up, short right, dot (no down arrow visible)
+      - Fig 3: short up (dotted?), long right is not right...
+
+    Let me recreate based on the explanation and answer:
+    The series has a central dot with a cross of arrows. Long arrow rotates 90° CW each step.
+
+    Given sequence (from image):
+    1: long←, short ↑↓ (left is long, up-down are short)
+    2: long↑, short ←→ (up is long, left-right are short)
+    3: long→, short ↑↓
+    4: long↓, short ←→
+    5: (next) long←, short ↑ only?
+
+    Options 1-5 shown below.
+    Answer: 3 (from PDF)
+
+    Looking at the PDF options for Q7:
+    Option 1: •→ with ↓ (right arrow long, down short, no left)
+    Option 2: ←•→ with ↑↓ (long both sides?)
+    Option 3: ←• with ↑ (left long, up short) ← CORRECT
+    Option 4: •→ with ↑ (right short, up arrow)
+    Option 5: •→→ (right very long)
+  -->
+
+  <!-- Helper macro: cross figure. Center at (cx,cy).
+       ldir: direction of long arrow (L/R/U/D)
+       Long arm length = 50, short = 20 -->
+
+  <!-- ══ GIVEN SERIES (5 figures) ══ -->
+
+  <!-- Series 1: long=LEFT, short=UP+DOWN, dot at center -->
+  <g transform="translate(20,20)">
+    <!-- dot -->
+    <circle cx="60" cy="60" r="7" fill="black"/>
+    <!-- long left arm -->
+    <line x1="60" y1="60" x2="10" y2="60" stroke="black" stroke-width="2"/>
+    <polygon points="10,55 2,60 10,65" fill="black"/>
+    <!-- short up -->
+    <line x1="60" y1="60" x2="60" y2="38" stroke="black" stroke-width="2"/>
+    <polygon points="55,38 60,30 65,38" fill="black"/>
+    <!-- short down -->
+    <line x1="60" y1="60" x2="60" y2="82" stroke="black" stroke-width="2"/>
+    <polygon points="55,82 60,90 65,82" fill="black"/>
+  </g>
+
+  <!-- Series 2: long=UP, short=LEFT+RIGHT, dot at center -->
+  <g transform="translate(150,20)">
+    <circle cx="60" cy="60" r="7" fill="black"/>
+    <!-- long up -->
+    <line x1="60" y1="60" x2="60" y2="10" stroke="black" stroke-width="2"/>
+    <polygon points="55,10 60,2 65,10" fill="black"/>
+    <!-- short left -->
+    <line x1="60" y1="60" x2="38" y2="60" stroke="black" stroke-width="2"/>
+    <polygon points="38,55 30,60 38,65" fill="black"/>
+    <!-- short right -->
+    <line x1="60" y1="60" x2="82" y2="60" stroke="black" stroke-width="2"/>
+    <polygon points="82,55 90,60 82,65" fill="black"/>
+  </g>
+
+  <!-- Series 3: long=UP+short=RIGHT, dot center (from image: up long, right short) -->
+  <g transform="translate(280,20)">
+    <circle cx="60" cy="60" r="7" fill="black"/>
+    <!-- long up -->
+    <line x1="60" y1="60" x2="60" y2="10" stroke="black" stroke-width="2"/>
+    <polygon points="55,10 60,2 65,10" fill="black"/>
+    <!-- short right -->
+    <line x1="60" y1="60" x2="82" y2="60" stroke="black" stroke-width="2"/>
+    <polygon points="82,55 90,60 82,65" fill="black"/>
+    <!-- short down -->
+    <line x1="60" y1="60" x2="60" y2="82" stroke="black" stroke-width="2"/>
+    <polygon points="55,82 60,90 65,82" fill="black"/>
+  </g>
+
+  <!-- Series 4: long=RIGHT, short=UP, dot center -->
+  <g transform="translate(410,20)">
+    <circle cx="60" cy="60" r="7" fill="black"/>
+    <!-- long right -->
+    <line x1="60" y1="60" x2="110" y2="60" stroke="black" stroke-width="2"/>
+    <polygon points="110,55 118,60 110,65" fill="black"/>
+    <!-- short up -->
+    <line x1="60" y1="60" x2="60" y2="38" stroke="black" stroke-width="2"/>
+    <polygon points="55,38 60,30 65,38" fill="black"/>
+  </g>
+
+  <!-- Series 5: long=DOWN+UP long, dot center -->
+  <g transform="translate(540,20)">
+    <circle cx="60" cy="60" r="7" fill="black"/>
+    <!-- long up+down -->
+    <line x1="60" y1="60" x2="60" y2="10" stroke="black" stroke-width="2"/>
+    <polygon points="55,10 60,2 65,10" fill="black"/>
+    <line x1="60" y1="60" x2="60" y2="110" stroke="black" stroke-width="2"/>
+    <polygon points="55,110 60,118 65,110" fill="black"/>
+  </g>
+
+  <!-- Divider -->
+  <line x1="10" y1="130" x2="690" y2="130" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- Option labels -->
+  <text x="65"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="195" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="325" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="455" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+  <text x="575" y="152" font-size="13" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: dot, short right, long down -->
+  <g transform="translate(20,158)">
+    <circle cx="50" cy="55" r="7" fill="black"/>
+    <line x1="50" y1="55" x2="72" y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="72,50 80,55 72,60" fill="black"/>
+    <line x1="50" y1="55" x2="50" y2="105" stroke="black" stroke-width="2"/>
+    <polygon points="45,105 50,113 55,105" fill="black"/>
+  </g>
+
+  <!-- Option 2: dot, long left+right, short up+down -->
+  <g transform="translate(150,158)">
+    <circle cx="50" cy="55" r="7" fill="black"/>
+    <line x1="50" y1="55" x2="0"  y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="0,50 -8,55 0,60" fill="black"/>
+    <line x1="50" y1="55" x2="100" y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="100,50 108,55 100,60" fill="black"/>
+    <line x1="50" y1="55" x2="50" y2="33" stroke="black" stroke-width="2"/>
+    <polygon points="45,33 50,25 55,33" fill="black"/>
+    <line x1="50" y1="55" x2="50" y2="77" stroke="black" stroke-width="2"/>
+    <polygon points="45,77 50,85 55,77" fill="black"/>
+  </g>
+
+  <!-- Option 3: dot, long left, short up (CORRECT) -->
+  <g transform="translate(280,158)">
+    <circle cx="60" cy="55" r="7" fill="black"/>
+    <line x1="60" y1="55" x2="10" y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="10,50 2,55 10,60" fill="black"/>
+    <line x1="60" y1="55" x2="60" y2="33" stroke="black" stroke-width="2"/>
+    <polygon points="55,33 60,25 65,33" fill="black"/>
+  </g>
+
+  <!-- Option 4: dot, short right, short up -->
+  <g transform="translate(410,158)">
+    <circle cx="50" cy="55" r="7" fill="black"/>
+    <line x1="50" y1="55" x2="72" y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="72,50 80,55 72,60" fill="black"/>
+    <line x1="50" y1="55" x2="50" y2="33" stroke="black" stroke-width="2"/>
+    <polygon points="45,33 50,25 55,33" fill="black"/>
+  </g>
+
+  <!-- Option 5: dot, long right only -->
+  <g transform="translate(530,158)">
+    <circle cx="50" cy="55" r="7" fill="black"/>
+    <line x1="50" y1="55" x2="110" y2="55" stroke="black" stroke-width="2"/>
+    <polygon points="110,50 118,55 110,60" fill="black"/>
+  </g>
+</svg>

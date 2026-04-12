@@ -1,0 +1,143 @@
+<svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" width="700" height="340" font-family="Arial,sans-serif">
+  <rect width="700" height="340" fill="white"/>
+
+  <!-- Cross shape: center cross, with boxes on each of 4 arms and top/bottom.
+       Pattern from PDF: letters shift back by 2, then 3, then 4 each step.
+       Given series:
+         Fig1: top=X, left=J, right=A, bottom=G
+         Fig2: top=V, left=H, right=Y, bottom=E
+         Fig3: top=S, left=E, right=V, bottom=B
+       Answer (option 2): top=O, left=A, right=R, bottom=X
+  -->
+
+  <!-- Helper: draw cross figure at translate(tx,ty) with labels t,l,r,b -->
+  <!-- Center cross at (60,70). Box size 24x24. -->
+
+  <!-- ══ GIVEN SERIES ══ -->
+
+  <!-- Series Fig 1: X, J, A, G -->
+  <g transform="translate(10,10)">
+    <!-- vertical arm -->
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <!-- horizontal arm -->
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <!-- boxes -->
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- labels -->
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">X</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">J</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">A</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">G</text>
+  </g>
+
+  <!-- Series Fig 2: V, H, Y, E -->
+  <g transform="translate(130,10)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">V</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">H</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">Y</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">E</text>
+  </g>
+
+  <!-- Series Fig 3: S, E, V, B -->
+  <g transform="translate(250,10)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">S</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">E</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">V</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">B</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="10" y1="145" x2="690" y2="145" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- Option labels row 1: 1, 2, 3 -->
+  <text x="65"  y="168" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="205" y="168" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="345" y="168" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+
+  <!-- Option 1: P, R, L, X -->
+  <g transform="translate(10,175)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">P</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">R</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">L</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">X</text>
+  </g>
+
+  <!-- Option 2: O, A, R, X  ← CORRECT -->
+  <g transform="translate(150,175)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">O</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">A</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">R</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">X</text>
+  </g>
+
+  <!-- Option 3: I, D, T, W -->
+  <g transform="translate(290,175)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">I</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">D</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">T</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">W</text>
+  </g>
+
+  <!-- Option 4: Q, F, T, Y -->
+  <g transform="translate(10,295)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">Q</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">F</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">T</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">Y</text>
+  </g>
+  <text x="65" y="290" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <!-- Option 5: F, P, T, X -->
+  <g transform="translate(150,295)">
+    <line x1="60" y1="30" x2="60" y2="110" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="70" x2="100" y2="70" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="18" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="8"  y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="92" y="58" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <rect x="48" y="98" width="24" height="24" fill="white" stroke="black" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="14" font-weight="bold" text-anchor="middle">F</text>
+    <text x="20" y="75" font-size="14" font-weight="bold" text-anchor="middle">P</text>
+    <text x="104" y="75" font-size="14" font-weight="bold" text-anchor="middle">T</text>
+    <text x="60" y="115" font-size="14" font-weight="bold" text-anchor="middle">X</text>
+  </g>
+  <text x="205" y="290" font-size="13" font-weight="bold" text-anchor="middle">5</text>
+</svg>

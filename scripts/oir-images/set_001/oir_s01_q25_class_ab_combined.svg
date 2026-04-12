@@ -1,0 +1,85 @@
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700" height="280" font-family="Arial,sans-serif">
+  <rect width="700" height="280" fill="white"/>
+
+  <!-- Class A box -->
+  <text x="130" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <rect x="10" y="22" width="240" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <!-- Class B box -->
+  <text x="490" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- CLASS A: two similar combined figures (overlapping/inscribed) -->
+  <!-- A1: circle inside circle (concentric) with horizontal line through -->
+  <g transform="translate(25,30)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="1.5"/>
+    <circle cx="35" cy="35" r="18" fill="none" stroke="black" stroke-width="1.5"/>
+    <line x1="2" y1="35" x2="68" y2="35" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A2: square inside square with diagonals (X inside) -->
+  <g transform="translate(105,30)">
+    <rect x="2" y="2" width="66" height="66" fill="none" stroke="black" stroke-width="1.5"/>
+    <rect x="16" y="16" width="38" height="38" fill="none" stroke="black" stroke-width="1.5"/>
+    <line x1="2" y1="2" x2="68" y2="68" stroke="black" stroke-width="1.5"/>
+    <line x1="68" y1="2" x2="2" y2="68" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A3: diamond inside diamond with lines -->
+  <g transform="translate(185,30)">
+    <polygon points="35,2 66,35 35,68 4,35" fill="none" stroke="black" stroke-width="1.5"/>
+    <polygon points="35,16 52,35 35,54 18,35" fill="none" stroke="black" stroke-width="1.5"/>
+    <line x1="4" y1="35" x2="66" y2="35" stroke="black" stroke-width="1.5"/>
+    <line x1="35" y1="2" x2="35" y2="68" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- CLASS B: plain shapes (single closed figures, no internal combination) -->
+  <!-- B1: plain triangle -->
+  <g transform="translate(385,30)">
+    <polygon points="40,2 72,68 8,68" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B2: plain circle -->
+  <g transform="translate(470,30)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B3: plain diamond -->
+  <g transform="translate(555,30)">
+    <polygon points="40,2 72,35 40,68 8,35" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Question -->
+
+  <!-- Option labels -->
+  <text x="85"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <!-- Option containers -->
+  <rect x="15"  y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="165" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="315" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="465" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 1: triangle with internal triangle (two similar combined) ✓ Class A -->
+  <g transform="translate(35,165)">
+    <polygon points="50,5 90,75 10,75" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="50,25 75,68 25,68" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Option 2: oval + diamond shape (two similar combined overlapping) ✓ Class A -->
+  <g transform="translate(185,168)">
+    <ellipse cx="50" cy="40" rx="42" ry="28" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="50,12 78,40 50,68 22,40" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Option 3: two circles side by side NOT combined = NOT Class A -->
+  <g transform="translate(335,175)">
+    <circle cx="28" cy="30" r="25" fill="none" stroke="black" stroke-width="2"/>
+    <circle cx="78" cy="30" r="25" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 4: two diamonds side by side NOT combined = NOT Class A -->
+  <g transform="translate(480,170)">
+    <polygon points="28,5 48,30 28,55 8,30" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="76,5 96,30 76,55 56,30" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+</svg>

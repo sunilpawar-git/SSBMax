@@ -1,0 +1,114 @@
+<svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" width="700" height="120" font-family="Arial,sans-serif">
+  <rect width="700" height="120" fill="white"/>
+  <!--
+    Q24: Series of pentagons and 5-pointed stars in increasing groups.
+    Pattern: ⬠☆☆ ⬠☆☆☆ ⬠☆☆☆☆ ⬠☆☆☆☆☆ (pentagons with increasing stars)
+    Each pentagon is flanked by 2 stars before and 1 behind, then 3 before and 1 behind...
+    Actually from PDF answer: "pentagon placed between 2 symbols in front, 1 in back;
+    similarly in front of last pentagon 5-edge stars. The last pattern = 5-edge star = figure 3."
+
+    The series from the image appears to be a long row of shapes:
+    ⬠ ☆ ☆ ⬠ ☆ ☆ ☆ ⬠ ☆ ☆ ☆ ☆ ⬠ ...
+    And the next shape after this pattern would be another 5-pointed star (figure 3).
+
+    Given the options are:
+    1: ⬠ (pentagon)
+    2: ✡ (6-pointed star)
+    3: ☆ (5-pointed star, outline)
+    4: ✦ (4-pointed star)
+    5: ⬠ (smaller pentagon)
+
+    Answer: 3 (5-pointed star)
+  -->
+
+  <!-- Long series of pentagons and stars shown as the question -->
+  <!-- Pentagon: 5 sides -->
+  <!-- 5-pt star: -->
+
+  <!-- Pentagon at x -->
+  <!-- Let me place them as a horizontal series -->
+  <!-- Series: ⬠ ☆ ☆ | ⬠ ☆ ☆ ☆ | ⬠ ☆ ☆ ☆ ☆ | ⬠ -->
+
+  <!-- Pentagon polygon at cx,cy radius r -->
+  <!-- pts: for r=18: angles 90,162,234,306,18 -->
+
+  <!-- Shape 1: Pentagon -->
+  <g transform="translate(5,10)">
+    <polygon points="18,0 34,12 28,32 8,32 2,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shape 2: 5-pt star -->
+  <g transform="translate(42,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shape 3: 5-pt star -->
+  <g transform="translate(80,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shape 4: Pentagon -->
+  <g transform="translate(118,10)">
+    <polygon points="18,0 34,12 28,32 8,32 2,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shapes 5,6,7: 3 stars -->
+  <g transform="translate(155,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(193,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(231,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shape 8: Pentagon -->
+  <g transform="translate(269,10)">
+    <polygon points="18,0 34,12 28,32 8,32 2,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shapes 9,10,11,12: 4 stars -->
+  <g transform="translate(306,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(344,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(382,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(420,10)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Shape 13: Pentagon -->
+  <g transform="translate(458,10)">
+    <polygon points="18,0 34,12 28,32 8,32 2,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- ? mark (what comes next) -->
+  <text x="500" y="28" font-size="22" font-weight="bold">?</text>
+
+  <!-- Options 1-5 -->
+  <text x="10" y="68" font-size="12">Options:</text>
+  <text x="75"  y="68" font-size="12" font-weight="bold" text-anchor="middle">1</text>
+  <text x="145" y="68" font-size="12" font-weight="bold" text-anchor="middle">2</text>
+  <text x="215" y="68" font-size="12" font-weight="bold" text-anchor="middle">3</text>
+  <text x="285" y="68" font-size="12" font-weight="bold" text-anchor="middle">4</text>
+  <text x="355" y="68" font-size="12" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: Pentagon (larger) -->
+  <g transform="translate(57,72)">
+    <polygon points="18,0 34,12 28,32 8,32 2,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Option 2: 6-pointed star -->
+  <g transform="translate(127,72)">
+    <polygon points="18,0 22,10 34,10 25,18 28,30 18,22 8,30 11,18 2,10 14,10" fill="none" stroke="black" stroke-width="1.5"/>
+    <polygon points="18,32 14,22 2,22 11,14 8,2 18,10 28,2 25,14 34,22 22,22" fill="none" stroke="black" stroke-width="1"/>
+  </g>
+  <!-- Option 3: 5-pointed star CORRECT -->
+  <g transform="translate(197,72)">
+    <polygon points="18,0 22,12 34,12 25,20 28,32 18,24 8,32 11,20 2,12 14,12" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Option 4: 4-pointed star -->
+  <g transform="translate(267,72)">
+    <polygon points="18,0 22,14 34,16 22,18 18,32 14,18 2,16 14,14" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- Option 5: smaller pentagon -->
+  <g transform="translate(338,72)">
+    <polygon points="14,5 26,14 22,27 6,27 2,14" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" width="700" height="240" font-family="Arial,sans-serif">
+  <rect width="700" height="240" fill="white"/>
+
+  <!-- A: diamond outline inside a square -->
+  <text x="60"  y="16" font-size="13" font-weight="bold" text-anchor="middle">A</text>
+  <rect x="10" y="22" width="100" height="100" fill="none" stroke="black" stroke-width="1.5"/>
+  <polygon points="60,30 100,72 60,114 20,72" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- IS TO -->
+  <text x="130" y="75" font-size="13" text-anchor="middle">IS</text>
+  <text x="130" y="92" font-size="13" text-anchor="middle">TO</text>
+
+  <!-- B: diamond with all opposite edges connected (diagonals + cross) -->
+  <text x="230" y="16" font-size="13" font-weight="bold" text-anchor="middle">B</text>
+  <rect x="180" y="22" width="100" height="100" fill="none" stroke="black" stroke-width="1.5"/>
+  <polygon points="230,30 270,72 230,114 190,72" fill="none" stroke="black" stroke-width="1.5"/>
+  <!-- diagonals connecting opposite corners of the diamond -->
+  <line x1="230" y1="30" x2="230" y2="114" stroke="black" stroke-width="1.5"/>
+  <line x1="190" y1="72" x2="270"  y2="72" stroke="black" stroke-width="1.5"/>
+
+  <!-- AS -->
+  <text x="300" y="75" font-size="13" text-anchor="middle">AS</text>
+
+  <!-- C: hexagon outline inside a square -->
+  <text x="390" y="16" font-size="13" font-weight="bold" text-anchor="middle">C</text>
+  <rect x="340" y="22" width="100" height="100" fill="none" stroke="black" stroke-width="1.5"/>
+  <polygon points="390,28 418,42 418,78 390,92 362,78 362,42" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- IS TO -->
+  <text x="460" y="75" font-size="13" text-anchor="middle">IS</text>
+  <text x="460" y="92" font-size="13" text-anchor="middle">TO</text>
+
+  <!-- Options 1–5 -->
+  <text x="510" y="16" font-size="12" font-weight="bold" text-anchor="middle">1</text>
+  <text x="560" y="16" font-size="12" font-weight="bold" text-anchor="middle">2</text>
+  <text x="610" y="16" font-size="12" font-weight="bold" text-anchor="middle">3</text>
+  <text x="660" y="16" font-size="12" font-weight="bold" text-anchor="middle">4</text>
+
+  <!-- Row 2 of options: below (5th) -->
+  <text x="535" y="145" font-size="12" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: hexagon with only 2 diagonals -->
+  <rect x="485" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="510,26 524,33 524,51 510,58 496,51 496,33" fill="none" stroke="black" stroke-width="1.5"/>
+  <line x1="510" y1="26" x2="510" y2="58" stroke="black" stroke-width="1.5"/>
+  <line x1="496" y1="33" x2="524" y2="51" stroke="black" stroke-width="1.5"/>
+
+  <!-- Option 2: hexagon with all 3 diagonals (all opposite vertices connected) CORRECT -->
+  <rect x="535" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="560,26 574,33 574,51 560,58 546,51 546,33" fill="none" stroke="black" stroke-width="1.5"/>
+  <line x1="560" y1="26" x2="560" y2="58" stroke="black" stroke-width="1.5"/>
+  <line x1="546" y1="33" x2="574" y2="51" stroke="black" stroke-width="1.5"/>
+  <line x1="574" y1="33" x2="546" y2="51" stroke="black" stroke-width="1.5"/>
+
+  <!-- Option 3: hexagon with many lines (all edges connected to all others = too many) -->
+  <rect x="585" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="610,26 624,33 624,51 610,58 596,51 596,33" fill="none" stroke="black" stroke-width="1.5"/>
+  <!-- all 6 possible diagonals (over-connected) -->
+  <line x1="610" y1="26" x2="610" y2="58" stroke="black" stroke-width="1"/>
+  <line x1="596" y1="33" x2="624" y2="51" stroke="black" stroke-width="1"/>
+  <line x1="624" y1="33" x2="596" y2="51" stroke="black" stroke-width="1"/>
+  <line x1="610" y1="26" x2="596" y2="51" stroke="black" stroke-width="0.8"/>
+  <line x1="610" y1="26" x2="624" y2="51" stroke="black" stroke-width="0.8"/>
+
+  <!-- Option 4: hexagon plain (no internal lines) -->
+  <rect x="635" y="22" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="660,26 674,33 674,51 660,58 646,51 646,33" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- Option 5: hexagon with only horizontal diameter -->
+  <rect x="510" y="150" width="50" height="50" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="535,154 549,161 549,179 535,186 521,179 521,161" fill="none" stroke="black" stroke-width="1.5"/>
+  <line x1="521" y1="170" x2="549" y2="170" stroke="black" stroke-width="1.5"/>
+</svg>

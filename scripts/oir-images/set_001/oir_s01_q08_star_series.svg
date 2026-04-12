@@ -1,0 +1,146 @@
+<svg viewBox="0 0 700 310" xmlns="http://www.w3.org/2000/svg" width="700" height="310" font-family="Arial,sans-serif">
+  <rect width="700" height="310" fill="white"/>
+
+  <!--
+    Q8: 5-pointed star, TWO-TONE (half black, half white outline).
+    The black HALF rotates 90° clockwise each step.
+
+    Series:
+      Star 1: upper-left half BLACK  (diagonal: top-right → bottom-left through centre)
+      Star 2: lower-left half BLACK  (diagonal: top-left  → bottom-right through centre)
+      Star 3: lower-right half BLACK (opposite of Star 1)
+    Answer: upper-right half BLACK  (opposite of Star 2) = Option 3
+
+    All clip polygons use local coordinates; centre of star = (60, 55).
+    The two diagonals both pass through (60,55):
+      Diag A: (120, 0) → (0, 110)  — clips UL / LR
+      Diag B: (0, 0)  → (120,110)  — clips LL / UR
+  -->
+
+  <defs>
+    <!-- Clip: upper-left of Diag A -->
+    <clipPath id="clipUL">
+      <polygon points="-50,-50 200,-50 60,55 -50,200"/>
+    </clipPath>
+    <!-- Clip: lower-right of Diag A (opposite of UL) -->
+    <clipPath id="clipLR">
+      <polygon points="200,-50 120,0 0,110 -50,200 200,200"/>
+    </clipPath>
+    <!-- Clip: lower-left of Diag B -->
+    <clipPath id="clipLL">
+      <polygon points="-50,-50 0,0 120,110 200,200 -50,200"/>
+    </clipPath>
+    <!-- Clip: upper-right of Diag B (opposite of LL) -->
+    <clipPath id="clipUR">
+      <polygon points="-50,-50 200,-50 200,200 120,110 0,0"/>
+    </clipPath>
+    <!-- Clip: top half (horizontal split, for options) -->
+    <clipPath id="clipTOP">
+      <rect x="-10" y="-10" width="140" height="65"/>
+    </clipPath>
+    <!-- Clip: bottom half (horizontal split, for options) -->
+    <clipPath id="clipBOT">
+      <rect x="-10" y="55" width="140" height="70"/>
+    </clipPath>
+  </defs>
+
+  <!-- ══════════════════════════════════════════════════
+       SERIES (3 given figures, left to right)
+       Each star: full outline + clipped black half
+  ══════════════════════════════════════════════════ -->
+
+  <!-- Series Star 1: upper-left BLACK (Diag A, UL side) -->
+  <g transform="translate(30,10)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipUL)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Series Star 2: lower-left BLACK (Diag B, LL side) — rotated 90° CW from Star 1 -->
+  <g transform="translate(265,10)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipLL)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Series Star 3: lower-right BLACK (Diag A, LR side) — rotated 90° CW from Star 2 -->
+  <g transform="translate(500,10)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipLR)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Divider -->
+  <line x1="10" y1="130" x2="690" y2="130" stroke="#bbb" stroke-width="1" stroke-dasharray="5,3"/>
+
+  <!-- Option number labels -->
+  <text x="60"  y="150" font-size="14" font-weight="bold" text-anchor="middle">1</text>
+  <text x="190" y="150" font-size="14" font-weight="bold" text-anchor="middle">2</text>
+  <text x="320" y="150" font-size="14" font-weight="bold" text-anchor="middle">3</text>
+  <text x="450" y="150" font-size="14" font-weight="bold" text-anchor="middle">4</text>
+  <text x="580" y="150" font-size="14" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- ══════════════════════════════════════════════════
+       OPTIONS (5 answer stars)
+  ══════════════════════════════════════════════════ -->
+
+  <!-- Option 1: upper-left BLACK — same angle as Star 1 (wrong; series already passed this) -->
+  <g transform="translate(10,158)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipUL)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 2: top half BLACK (horizontal cut — wrong rotation) -->
+  <g transform="translate(140,158)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipTOP)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 3: upper-right BLACK — CORRECT (next 90° CW step after Star 3) -->
+  <g transform="translate(270,158)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipUR)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 4: bottom half BLACK (horizontal cut — wrong direction) -->
+  <g transform="translate(400,158)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipBOT)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 5: lower-left BLACK — same angle as Star 2 (wrong; already in series) -->
+  <g transform="translate(530,158)">
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="white" stroke="black" stroke-width="2"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="black" stroke="none" clip-path="url(#clipLL)"/>
+    <polygon points="60,5 73,43 113,43 81,67 92,105 60,82 28,105 39,67 7,43 47,43"
+             fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+</svg>

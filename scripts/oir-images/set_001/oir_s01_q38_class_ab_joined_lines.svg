@@ -1,0 +1,79 @@
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700" height="280" font-family="Arial,sans-serif">
+  <rect width="700" height="280" fill="white"/>
+
+  <text x="130" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <rect x="10" y="22" width="240" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="490" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- CLASS A: two lines JOINED (crossing or meeting) -->
+  <!-- A1: + (two lines crossing at 90°) -->
+  <g transform="translate(30,30)">
+    <line x1="35" y1="5" x2="35" y2="65" stroke="black" stroke-width="3"/>
+    <line x1="5" y1="35" x2="65" y2="35" stroke="black" stroke-width="3"/>
+  </g>
+  <!-- A2: × (two lines crossing at 45°) -->
+  <g transform="translate(110,30)">
+    <line x1="5" y1="5" x2="65" y2="65" stroke="black" stroke-width="3"/>
+    <line x1="65" y1="5" x2="5" y2="65" stroke="black" stroke-width="3"/>
+  </g>
+  <!-- A3: two lines meeting at one end (like < or V rotated) -->
+  <g transform="translate(190,30)">
+    <line x1="5" y1="5" x2="35" y2="65" stroke="black" stroke-width="3"/>
+    <line x1="65" y1="5" x2="35" y2="65" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- CLASS B: lines that are SEPARATE (not joined) -->
+  <!-- B1: >> (two diagonal separate lines going right) -->
+  <g transform="translate(385,30)">
+    <line x1="5" y1="5" x2="35" y2="35" stroke="black" stroke-width="3"/>
+    <line x1="5" y1="65" x2="35" y2="35" stroke="black" stroke-width="3"/>
+    <line x1="30" y1="10" x2="60" y2="40" stroke="black" stroke-width="3"/>
+    <line x1="30" y1="60" x2="60" y2="40" stroke="black" stroke-width="3"/>
+  </g>
+  <!-- B2: / single diagonal line -->
+  <g transform="translate(470,30)">
+    <line x1="10" y1="65" x2="60" y2="5" stroke="black" stroke-width="3"/>
+  </g>
+  <!-- B3: = two horizontal parallel separate lines -->
+  <g transform="translate(555,30)">
+    <line x1="5" y1="25" x2="65" y2="25" stroke="black" stroke-width="3"/>
+    <line x1="5" y1="45" x2="65" y2="45" stroke="black" stroke-width="3"/>
+  </g>
+
+
+  <text x="85"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <rect x="15"  y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="165" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="315" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="465" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 1: two separate diagonal lines (NOT joined) — NOT Class A -->
+  <g transform="translate(40,175)">
+    <line x1="5"  y1="5"  x2="50" y2="55" stroke="black" stroke-width="3"/>
+    <line x1="45" y1="5"  x2="90" y2="55" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 2: | and \ meeting at top (two lines joined at top) ✓ Class A -->
+  <g transform="translate(195,170)">
+    <line x1="35" y1="10" x2="35" y2="70" stroke="black" stroke-width="3"/>
+    <line x1="60" y1="10" x2="35" y2="70" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 3: / and | separate (not joined) — NOT Class A -->
+  <g transform="translate(340,170)">
+    <line x1="10" y1="65" x2="50" y2="15" stroke="black" stroke-width="3"/>
+    <line x1="75" y1="15" x2="75" y2="65" stroke="black" stroke-width="3"/>
+  </g>
+
+  <!-- Option 4: ∨ with extra line (joined at bottom) ✓ Class A -->
+  <g transform="translate(490,170)">
+    <line x1="10" y1="10" x2="50" y2="65" stroke="black" stroke-width="3"/>
+    <line x1="90" y1="10" x2="50" y2="65" stroke="black" stroke-width="3"/>
+  </g>
+
+</svg>

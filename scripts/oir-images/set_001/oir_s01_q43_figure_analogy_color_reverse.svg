@@ -1,0 +1,86 @@
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" width="700" height="200" font-family="Arial,sans-serif">
+  <rect width="700" height="200" fill="white"/>
+  <!--
+    Q43: A:B::C:?
+    A: Square with 8-pointed star OUTLINE inside + diagonal lines outside the star (in corners)
+    B: BLACK filled square with WHITE 4-pointed star inside (color reversed, lines come inside)
+    C: Square with BLACK filled triangle + small shape below (outline version)
+    Answer: 2 — inverted colors + lines that were outside come inside
+
+    From PDF:
+    A = outline 8-pt star in white square with corner hatching
+    B = BLACK square, WHITE 4-pt star inside
+    C = square with large BLACK filled triangle and small black rectangle at bottom
+    Options 1-5 vary in how the triangle is treated
+    Answer: 2 (color reversed: white triangle on black background + inner detail)
+  -->
+
+  <!-- A: white square, outline 8-pt star, X lines in corners -->
+  <text x="55"  y="16" font-size="13" font-weight="bold" text-anchor="middle">A</text>
+  <rect x="10" y="20" width="90" height="90" fill="white" stroke="black" stroke-width="2"/>
+  <!-- 8-pt star outline (like ✦) at center 55,65 -->
+  <polygon points="55,28 60,42 72,32 62,44 75,48 62,52 72,64 60,54 55,68 50,54 38,64 48,52 35,48 48,44 38,32 50,42" fill="none" stroke="black" stroke-width="1.5"/>
+  <!-- diagonal lines in corners -->
+  <line x1="10" y1="20" x2="38" y2="44" stroke="black" stroke-width="1"/>
+  <line x1="100" y1="20" x2="72" y2="44" stroke="black" stroke-width="1"/>
+  <line x1="10" y1="110" x2="38" y2="64" stroke="black" stroke-width="1"/>
+  <line x1="100" y1="110" x2="72" y2="64" stroke="black" stroke-width="1"/>
+
+  <!-- IS TO -->
+  <text x="118" y="68" font-size="12" text-anchor="middle">IS</text>
+  <text x="118" y="84" font-size="12" text-anchor="middle">TO</text>
+
+  <!-- B: BLACK square, WHITE 4-pt star outline inside -->
+  <text x="175" y="16" font-size="13" font-weight="bold" text-anchor="middle">B</text>
+  <rect x="130" y="20" width="90" height="90" fill="black" stroke="black" stroke-width="2"/>
+  <!-- white 4-pt star -->
+  <polygon points="175,28 180,55 205,65 180,75 175,100 170,75 145,65 170,55" fill="white" stroke="white" stroke-width="1"/>
+
+  <!-- AS -->
+  <text x="238" y="75" font-size="12" text-anchor="middle">AS</text>
+
+  <!-- C: white square, BLACK filled triangle + small rectangle below -->
+  <text x="295" y="16" font-size="13" font-weight="bold" text-anchor="middle">C</text>
+  <rect x="250" y="20" width="90" height="90" fill="white" stroke="black" stroke-width="2"/>
+  <!-- big black triangle filling upper portion -->
+  <polygon points="295,25 335,85 255,85" fill="black"/>
+  <!-- small black rectangle at bottom -->
+  <rect x="282" y="88" width="26" height="18" fill="black"/>
+
+  <!-- IS TO -->
+  <text x="358" y="68" font-size="12" text-anchor="middle">IS</text>
+  <text x="358" y="84" font-size="12" text-anchor="middle">TO</text>
+
+  <!-- Option labels -->
+  <text x="400" y="16" font-size="12" font-weight="bold" text-anchor="middle">1</text>
+  <text x="453" y="16" font-size="12" font-weight="bold" text-anchor="middle">2</text>
+  <text x="506" y="16" font-size="12" font-weight="bold" text-anchor="middle">3</text>
+  <text x="559" y="16" font-size="12" font-weight="bold" text-anchor="middle">4</text>
+  <text x="612" y="16" font-size="12" font-weight="bold" text-anchor="middle">5</text>
+
+  <!-- Option 1: white square, outline triangle (wrong - not inverted) -->
+  <rect x="376" y="22" width="48" height="48" fill="white" stroke="black" stroke-width="1"/>
+  <polygon points="400,26 420,62 380,62" fill="none" stroke="black" stroke-width="1.5"/>
+  <rect x="390" y="64" width="20" height="8" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 2: BLACK square, WHITE outline triangle inside (color reversed) CORRECT -->
+  <rect x="429" y="22" width="48" height="48" fill="black" stroke="black" stroke-width="1"/>
+  <polygon points="453,26 473,62 433,62" fill="white" stroke="white" stroke-width="1.5"/>
+  <rect x="443" y="64" width="20" height="8" fill="white"/>
+
+  <!-- Option 3: BLACK square, BLACK triangle (both black, wrong) -->
+  <rect x="482" y="22" width="48" height="48" fill="black" stroke="black" stroke-width="1"/>
+  <polygon points="506,26 526,62 486,62" fill="black" stroke="white" stroke-width="1"/>
+
+  <!-- Option 4: white square, white triangle on grey (wrong) -->
+  <rect x="535" y="22" width="48" height="48" fill="white" stroke="black" stroke-width="1"/>
+  <polygon points="559,26 579,62 539,62" fill="none" stroke="black" stroke-width="1.5"/>
+  <!-- lines outside -->
+  <line x1="535" y1="22" x2="555" y2="38" stroke="black" stroke-width="1"/>
+  <line x1="583" y1="22" x2="563" y2="38" stroke="black" stroke-width="1"/>
+
+  <!-- Option 5: BLACK square, partially filled triangle -->
+  <rect x="588" y="22" width="48" height="48" fill="black" stroke="black" stroke-width="1"/>
+  <polygon points="612,26 632,62 592,62" fill="none" stroke="white" stroke-width="1.5"/>
+  <polygon points="612,38 622,55 602,55" fill="white"/>
+</svg>

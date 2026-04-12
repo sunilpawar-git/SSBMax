@@ -1,0 +1,42 @@
+<svg viewBox="0 0 380 160" xmlns="http://www.w3.org/2000/svg" width="380" height="160" font-family="Arial,sans-serif">
+  <rect width="380" height="160" fill="white"/>
+
+  <!-- Labels -->
+  <text x="75"  y="16" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="245" y="16" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+
+  <!-- ══ CUBE 1 ══
+       Top face   : white, cross (+) symbol
+       Left face  : BLACK filled
+       Right face : white, heart (♡) symbol  -->
+  <g transform="translate(20,22)">
+    <!-- top face -->
+    <polygon points="30,0 90,0 110,25 50,25" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- left face (BLACK) -->
+    <polygon points="10,25 50,25 50,80 10,55" fill="black" stroke="black" stroke-width="1.5"/>
+    <!-- right face -->
+    <polygon points="50,25 110,25 110,80 50,80" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- cross symbol on top face -->
+    <text x="70" y="18" font-size="20" text-anchor="middle" font-weight="bold">+</text>
+    <!-- heart symbol on right face (front) -->
+    <text x="82" y="58" font-size="22" text-anchor="middle">♡</text>
+  </g>
+
+  <!-- ══ CUBE 2 ══
+       Top face   : white, 6-pt star (☆)
+       Left face  : BLACK filled
+       Right face : white, pentagon (⬠)  -->
+  <g transform="translate(190,22)">
+    <!-- top face -->
+    <polygon points="30,0 90,0 110,25 50,25" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- left face (BLACK) -->
+    <polygon points="10,25 50,25 50,80 10,55" fill="black" stroke="black" stroke-width="1.5"/>
+    <!-- right face -->
+    <polygon points="50,25 110,25 110,80 50,80" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- star (☆) on top face -->
+    <text x="70" y="20" font-size="18" text-anchor="middle">☆</text>
+    <!-- pentagon on right face -->
+    <text x="82" y="57" font-size="20" text-anchor="middle">⬠</text>
+  </g>
+
+</svg>

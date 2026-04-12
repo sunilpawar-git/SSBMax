@@ -21,7 +21,13 @@ service firebase.storage {
       allow read;  // TRULY public - no conditions
       allow write: if request.auth != null;
     }
-    
+
+    // OIR question images (SVG figures for Sets 1-20) - PUBLIC READ
+    match /oir/{allPaths=**} {
+      allow read;  // TRULY public - no conditions
+      allow write: if request.auth != null;
+    }
+
     // User uploads and profile pictures - AUTHENTICATED ONLY
     match /user_uploads/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

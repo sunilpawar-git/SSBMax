@@ -1,0 +1,39 @@
+<svg viewBox="0 0 380 160" xmlns="http://www.w3.org/2000/svg" width="380" height="160" font-family="Arial,sans-serif">
+  <rect width="380" height="160" fill="white"/>
+
+  <text x="75"  y="16" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="245" y="16" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+
+  <!-- ══ CUBE 1 ══
+       Left face  : BLACK filled
+       Right face : white, sad-face (⌢ + dot eyes)
+       Top face   : white, dot (•)  -->
+  <g transform="translate(20,22)">
+    <polygon points="30,0 90,0 110,25 50,25" fill="white" stroke="black" stroke-width="1.5"/>
+    <polygon points="10,25 50,25 50,80 10,55" fill="black" stroke="black" stroke-width="1.5"/>
+    <polygon points="50,25 110,25 110,80 50,80" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- dot on top face -->
+    <circle cx="70" cy="14" r="4" fill="black"/>
+    <!-- sad/frown face on right face: two eyes + frown arc -->
+    <circle cx="72" cy="45" r="3" fill="black"/>
+    <circle cx="90" cy="45" r="3" fill="black"/>
+    <path d="M 70,60 Q 82,55 94,60" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- ══ CUBE 2 ══
+       Top face   : white, circle (○)
+       Left face  : white, dot (•)
+       Right face : white, curved bracket ) shape  -->
+  <g transform="translate(190,22)">
+    <polygon points="30,0 90,0 110,25 50,25" fill="white" stroke="black" stroke-width="1.5"/>
+    <polygon points="10,25 50,25 50,80 10,55" fill="white" stroke="black" stroke-width="1.5"/>
+    <polygon points="50,25 110,25 110,80 50,80" fill="white" stroke="black" stroke-width="1.5"/>
+    <!-- circle on top face -->
+    <circle cx="70" cy="14" r="7" fill="none" stroke="black" stroke-width="1.5"/>
+    <!-- dot on left face -->
+    <circle cx="28" cy="52" r="4" fill="black"/>
+    <!-- curved bracket ) on right face -->
+    <path d="M 72,36 Q 95,52 72,68" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+</svg>

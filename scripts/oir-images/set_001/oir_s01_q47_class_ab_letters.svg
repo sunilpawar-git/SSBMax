@@ -1,0 +1,41 @@
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" width="700" height="220" font-family="Arial,sans-serif">
+  <rect width="700" height="220" fill="white"/>
+
+  <!-- Class A and B label boxes -->
+  <text x="155" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <text x="530" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+
+  <!-- Class A: letters made of exactly 3 strokes — K, A, N -->
+  <rect x="10" y="22" width="290" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="60"  y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">K</text>
+  <text x="155" y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">A</text>
+  <text x="250" y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">N</text>
+
+  <!-- Class B: letters made of fewer/more than 3 strokes — M, V, L -->
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="432" y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">M</text>
+  <text x="525" y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">V</text>
+  <text x="618" y="88" font-size="72" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">L</text>
+
+  <!-- Question -->
+
+  <!-- Options 1–4 shown in boxes -->
+  <text x="85"  y="153" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="153" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="153" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="153" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <rect x="15"  y="157" width="140" height="55" fill="none" stroke="black" stroke-width="1.5"/>
+  <rect x="165" y="157" width="140" height="55" fill="none" stroke="black" stroke-width="1.5"/>
+  <rect x="315" y="157" width="140" height="55" fill="none" stroke="black" stroke-width="1.5"/>
+  <rect x="465" y="157" width="140" height="55" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- Option 1: I — 3 strokes when drawn with serifs (top bar + vertical + bottom bar) ✓ Class A -->
+  <text x="85"  y="202" font-size="52" font-weight="bold" text-anchor="middle" font-family="serif">I</text>
+  <!-- Option 2: Z — 3 strokes (top horizontal + diagonal + bottom horizontal) ✓ Class A -->
+  <text x="235" y="202" font-size="52" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">Z</text>
+  <!-- Option 3: E — 4 strokes (vertical + 3 horizontals) -->
+  <text x="385" y="202" font-size="52" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">E</text>
+  <!-- Option 4: T — 2 strokes (vertical + horizontal) -->
+  <text x="535" y="202" font-size="52" font-weight="bold" text-anchor="middle" font-family="Arial,sans-serif">T</text>
+</svg>

@@ -1,0 +1,94 @@
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700" height="280" font-family="Arial,sans-serif">
+  <rect width="700" height="280" fill="white"/>
+
+  <text x="130" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <rect x="10" y="22" width="240" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="490" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- CLASS A: lines INSIDE shape connecting ONE EDGE to its OPPOSITE EDGE -->
+  <!-- A1: 4-pointed star with lines from each point to center (connects opposite edges through center) -->
+  <g transform="translate(22,28)">
+    <polygon points="35,2 42,28 68,35 42,42 35,68 28,42 2,35 28,28" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="35" y1="2"  x2="35" y2="68" stroke="black" stroke-width="1.5"/>
+    <line x1="2"  y1="35" x2="68" y2="35" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A2: square with X (diagonals connecting opposite corners = opposite edges) -->
+  <g transform="translate(102,28)">
+    <rect x="2" y="2" width="66" height="66" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="2"  y1="2"  x2="68" y2="68" stroke="black" stroke-width="1.5"/>
+    <line x1="68" y1="2"  x2="2"  y2="68" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A3: hexagon/circle with 3 diameters (lines connecting opposite edges) -->
+  <g transform="translate(182,28)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="2"  y1="35" x2="68" y2="35" stroke="black" stroke-width="1.5"/>
+    <line x1="18" y1="6"  x2="52" y2="64" stroke="black" stroke-width="1.5"/>
+    <line x1="52" y1="6"  x2="18" y2="64" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- CLASS B: lines inside shape NOT connecting opposite edges (adjacent or asymmetric) -->
+  <!-- B1: rectangle divided into 4 unequal parts (grid lines, not opposite-to-opposite) -->
+  <g transform="translate(382,28)">
+    <rect x="2" y="2" width="66" height="66" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="25" y1="2"  x2="25" y2="68" stroke="black" stroke-width="1.5"/>
+    <line x1="2"  y1="40" x2="68" y2="40" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B2: circle divided into many non-opposite wedges (like a pie cut unevenly) -->
+  <g transform="translate(465,28)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="35" y1="2"  x2="35" y2="68" stroke="black" stroke-width="1.5"/>
+    <line x1="2"  y1="35" x2="68" y2="35" stroke="black" stroke-width="1.5"/>
+    <line x1="35" y1="2"  x2="68" y2="55" stroke="black" stroke-width="1.5"/>
+    <line x1="35" y1="2"  x2="2"  y2="55" stroke="black" stroke-width="1.5"/>
+    <line x1="35" y1="68" x2="68" y2="15" stroke="black" stroke-width="1.5"/>
+    <line x1="35" y1="68" x2="2"  y2="15" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B3: diamond with only 2 adjacent-corner lines (not opposite) -->
+  <g transform="translate(552,28)">
+    <polygon points="35,2 66,35 35,68 4,35" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="35" y1="2" x2="66" y2="35" stroke="black" stroke-width="1.5"/>
+    <line x1="66" y1="35" x2="35" y2="68" stroke="black" stroke-width="1.5"/>
+  </g>
+
+
+  <text x="85"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <rect x="15"  y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="165" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="315" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="465" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 1: triangle with internal line from vertex to base midpoint (not vertex-to-opposite) -->
+  <g transform="translate(30,165)">
+    <polygon points="55,8 95,78 15,78" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="55" y1="8" x2="55" y2="78" stroke="black" stroke-width="1.5"/>
+    <line x1="15" y1="78" x2="75" y2="38" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Option 2: circle with + inside (opposite edges connected) ✓ Class A -->
+  <g transform="translate(183,168)">
+    <circle cx="47" cy="40" r="35" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="12" y1="40" x2="82" y2="40" stroke="black" stroke-width="1.5"/>
+    <line x1="47" y1="5"  x2="47" y2="75" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Option 3: 6-pointed star with all opposite-point lines ✓ Class A -->
+  <g transform="translate(322,162)">
+    <polygon points="55,5 68,28 92,28 76,48 82,72 55,58 28,72 34,48 18,28 42,28" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="55" y1="5"  x2="55" y2="72" stroke="black" stroke-width="1.5"/>
+    <line x1="18" y1="28" x2="92" y2="28" stroke="black" stroke-width="1.5"/>
+    <line x1="82" y1="72" x2="28" y2="72" stroke="black" stroke-width="0.5"/>
+  </g>
+
+  <!-- Option 4: diamond with full cross (opposite vertices connected) ✓ Class A -->
+  <g transform="translate(478,165)">
+    <polygon points="55,8 90,43 55,78 20,43" fill="none" stroke="black" stroke-width="2"/>
+    <line x1="55" y1="8"  x2="55" y2="78" stroke="black" stroke-width="1.5"/>
+    <line x1="20" y1="43" x2="90" y2="43" stroke="black" stroke-width="1.5"/>
+  </g>
+
+</svg>

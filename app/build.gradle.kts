@@ -260,6 +260,7 @@ dependencies {
     
     // Image Loading
     implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 
 
     // Google Play Billing

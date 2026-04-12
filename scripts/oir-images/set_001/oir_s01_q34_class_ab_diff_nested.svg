@@ -1,0 +1,78 @@
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700" height="280" font-family="Arial,sans-serif">
+  <rect width="700" height="280" fill="white"/>
+
+  <text x="130" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class A</text>
+  <rect x="10" y="22" width="240" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+  <text x="490" y="18" font-size="13" font-weight="bold" text-anchor="middle">Class B</text>
+  <rect x="370" y="22" width="310" height="90" fill="none" stroke="black" stroke-width="1.5"/>
+
+  <!-- CLASS A: small shape inside a DIFFERENT larger shape -->
+  <!-- A1: small triangle inside large circle -->
+  <g transform="translate(25,30)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="1.5"/>
+    <polygon points="35,12 58,58 12,58" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A2: small triangle inside large triangle (SAME shape but different sizes = still "two different" per answer? Actually answer says different) -->
+  <!-- Actually from PDF: A2 has circle inside triangle? Let me re-examine -->
+  <!-- The explanation says "two different closed figures, one inside the other" -->
+  <!-- From image: A2 looks like circle inside triangle outline -->
+  <g transform="translate(105,30)">
+    <polygon points="35,2 68,68 2,68" fill="none" stroke="black" stroke-width="1.5"/>
+    <circle cx="35" cy="48" r="16" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- A3: small square inside large circle -->
+  <g transform="translate(185,30)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="1.5"/>
+    <rect x="17" y="17" width="36" height="36" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- CLASS B: same-type shapes with different arrangements -->
+  <!-- B1: square with inner square (same type) -->
+  <g transform="translate(385,30)">
+    <rect x="2" y="2" width="66" height="66" fill="none" stroke="black" stroke-width="1.5"/>
+    <rect x="16" y="16" width="38" height="38" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B2: circle with inner circle (same type) -->
+  <g transform="translate(470,30)">
+    <circle cx="35" cy="35" r="33" fill="none" stroke="black" stroke-width="1.5"/>
+    <circle cx="35" cy="35" r="18" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+  <!-- B3: plain triangle outline -->
+  <g transform="translate(555,30)">
+    <polygon points="35,2 68,68 2,68" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+
+  <text x="85"  y="152" font-size="13" font-weight="bold" text-anchor="middle">1</text>
+  <text x="235" y="152" font-size="13" font-weight="bold" text-anchor="middle">2</text>
+  <text x="385" y="152" font-size="13" font-weight="bold" text-anchor="middle">3</text>
+  <text x="535" y="152" font-size="13" font-weight="bold" text-anchor="middle">4</text>
+
+  <rect x="15"  y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="165" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="315" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+  <rect x="465" y="156" width="140" height="90" fill="none" stroke="black" stroke-width="1"/>
+
+  <!-- Option 1: pentagon inside square (two DIFFERENT shapes) ✓ Class A -->
+  <g transform="translate(30,166)">
+    <rect x="5" y="5" width="80" height="70" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="45,15 70,32 60,60 30,60 20,32" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+  <!-- Option 2: 6-pointed star outline (single shape only) -->
+  <g transform="translate(195,172)">
+    <polygon points="40,5 49,28 74,28 54,44 62,68 40,52 18,68 26,44 6,28 31,28" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 3: hexagon outline (single shape) -->
+  <g transform="translate(348,173)">
+    <polygon points="40,5 68,20 68,55 40,70 12,55 12,20" fill="none" stroke="black" stroke-width="2"/>
+  </g>
+
+  <!-- Option 4: diamond inside rectangle (two DIFFERENT shapes) ✓ Class A -->
+  <g transform="translate(480,166)">
+    <rect x="5" y="8" width="80" height="65" fill="none" stroke="black" stroke-width="2"/>
+    <polygon points="45,16 72,40 45,65 18,40" fill="none" stroke="black" stroke-width="1.5"/>
+  </g>
+
+</svg>
