@@ -101,7 +101,7 @@ class TestSubmissionRepositoryImpl @Inject constructor(
     }
 
     // Mappers
-    private fun TestSubmission.toMap(): Map<String, Any?> {
+    internal fun TestSubmission.toMap(): Map<String, Any?> {
         return mapOf(
             "id" to id,
             "testId" to testId,
@@ -122,18 +122,35 @@ class TestSubmissionRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun com.ssbmax.core.domain.model.TestResponse.toMap(): Map<String, Any?> {
-        // Simplified mapping - just store questionId and timestamp
-        // Actual response data will vary by test type
-        return mapOf(
+    internal fun com.ssbmax.core.domain.model.TestResponse.toMap(): Map<String, Any?> {
+        val baseMap = mutableMapOf<String, Any?>(
             "questionId" to questionId,
             "timestamp" to timestamp,
             "type" to this::class.simpleName
         )
+        when (this) {
+            is com.ssbmax.core.domain.model.TestResponse.MultipleChoice -> {
+                baseMap["selectedOption"] = selectedOption
+                baseMap["isCorrect"] = isCorrect
+            }
+            is com.ssbmax.core.domain.model.TestResponse.TextResponse -> {
+                baseMap["answer"] = answer
+                baseMap["wordCount"] = wordCount
+            }
+            is com.ssbmax.core.domain.model.TestResponse.ImageBasedResponse -> {
+                baseMap["imageUrl"] = imageUrl
+                baseMap["description"] = description
+            }
+            is com.ssbmax.core.domain.model.TestResponse.RatingResponse -> {
+                baseMap["rating"] = rating
+                baseMap["comment"] = comment
+            }
+        }
+        return baseMap
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun com.google.firebase.firestore.DocumentSnapshot.toTestSubmission(): TestSubmission? {
+    internal fun com.google.firebase.firestore.DocumentSnapshot.toTestSubmission(): TestSubmission? {
         return try {
             TestSubmission(
                 id = getString("id") ?: return null,
@@ -159,19 +176,53 @@ class TestSubmissionRepositoryImpl @Inject constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any?>.toTestResponse(): com.ssbmax.core.domain.model.TestResponse? {
+    internal fun Map<String, Any?>.toTestResponse(): com.ssbmax.core.domain.model.TestResponse? {
         return try {
             val questionId = this["questionId"] as? String ?: return null
             val timestamp = (this["timestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
-            
-            // For now, return a simple MultipleChoice response
-            // TODO: Implement proper deserialization based on "type" field
-            com.ssbmax.core.domain.model.TestResponse.MultipleChoice(
-                questionId = questionId,
-                timestamp = timestamp,
-                selectedOption = 0,
-                isCorrect = null
-            )
+            val type = this["type"] as? String ?: return null
+
+            when (type) {
+                "MultipleChoice" -> {
+                    val selectedOption = (this["selectedOption"] as? Number)?.toInt() ?: 0
+                    val isCorrect = this["isCorrect"] as? Boolean
+                    com.ssbmax.core.domain.model.TestResponse.MultipleChoice(
+                        questionId = questionId,
+                        timestamp = timestamp,
+                        selectedOption = selectedOption,
+                        isCorrect = isCorrect
+                    )
+                }
+                "TextResponse" -> {
+                    val answer = this["answer"] as? String ?: ""
+                    com.ssbmax.core.domain.model.TestResponse.TextResponse(
+                        questionId = questionId,
+                        timestamp = timestamp,
+                        answer = answer
+                    )
+                }
+                "ImageBasedResponse" -> {
+                    val imageUrl = this["imageUrl"] as? String ?: ""
+                    val description = this["description"] as? String ?: ""
+                    com.ssbmax.core.domain.model.TestResponse.ImageBasedResponse(
+                        questionId = questionId,
+                        timestamp = timestamp,
+                        imageUrl = imageUrl,
+                        description = description
+                    )
+                }
+                "RatingResponse" -> {
+                    val rating = (this["rating"] as? Number)?.toInt() ?: 0
+                    val comment = this["comment"] as? String
+                    com.ssbmax.core.domain.model.TestResponse.RatingResponse(
+                        questionId = questionId,
+                        timestamp = timestamp,
+                        rating = rating,
+                        comment = comment
+                    )
+                }
+                else -> null
+            }
         } catch (e: Exception) {
             null
         }

@@ -103,6 +103,88 @@ class TestSubmissionRepositoryImplTest {
         assertEquals("batch-123", doc.getString("batchId"))
     }
     
+    @Test
+    fun submitTest_stores_and_retrieves_all_response_subclasses() = runTest {
+        // Given
+        val submissionId = "test-submission-${UUID.randomUUID()}"
+        submissionIds.add(submissionId)
+        
+        val responses = listOf(
+            TestResponse.MultipleChoice(
+                questionId = "q_mc",
+                timestamp = System.currentTimeMillis(),
+                selectedOption = 2,
+                isCorrect = true
+            ),
+            TestResponse.TextResponse(
+                questionId = "q_txt",
+                timestamp = System.currentTimeMillis(),
+                answer = "Authentic psychology test response text here."
+            ),
+            TestResponse.ImageBasedResponse(
+                questionId = "q_img",
+                timestamp = System.currentTimeMillis(),
+                imageUrl = "file:///android_asset/ppdt_image.png",
+                description = "Candidate running a marathon."
+            ),
+            TestResponse.RatingResponse(
+                questionId = "q_rate",
+                timestamp = System.currentTimeMillis(),
+                rating = 4,
+                comment = "Good detail."
+            )
+        )
+        
+        val submission = TestSubmission(
+            id = submissionId,
+            testId = "test-all-responses",
+            userId = testUserId,
+            testType = TestType.TAT,
+            phase = TestPhase.PHASE_2,
+            submittedAt = System.currentTimeMillis(),
+            responses = responses,
+            aiPreliminaryScore = 80.0f,
+            instructorScore = null,
+            finalScore = null,
+            gradingStatus = GradingStatus.PENDING,
+            instructorId = null,
+            instructorFeedback = null,
+            gradedAt = null,
+            timeSpent = 120000L,
+            batchId = null
+        )
+        
+        // When
+        repository.submitTest(submission)
+        val result = repository.getSubmissionById(submissionId)
+        
+        // Then
+        assertTrue(result.isSuccess)
+        val retrieved = result.getOrNull()
+        assertNotNull(retrieved)
+        assertEquals(4, retrieved!!.responses.size)
+        
+        val mc = retrieved.responses[0] as TestResponse.MultipleChoice
+        assertEquals("q_mc", mc.questionId)
+        assertEquals(2, mc.selectedOption)
+        assertEquals(true, mc.isCorrect)
+        
+        val txt = retrieved.responses[1] as TestResponse.TextResponse
+        assertEquals("q_txt", txt.questionId)
+        assertEquals("Authentic psychology test response text here.", txt.answer)
+        assertEquals(6, txt.wordCount)
+        
+        val img = retrieved.responses[2] as TestResponse.ImageBasedResponse
+        assertEquals("q_img", img.questionId)
+        assertEquals("file:///android_asset/ppdt_image.png", img.imageUrl)
+        assertEquals("Candidate running a marathon.", img.description)
+        
+        val rate = retrieved.responses[3] as TestResponse.RatingResponse
+        assertEquals("q_rate", rate.questionId)
+        assertEquals(4, rate.rating)
+        assertEquals("Good detail.", rate.comment)
+    }
+    
     // ==================== Get Submission By ID ====================
     
     @Test

@@ -1,5 +1,7 @@
 package com.ssbmax.core.data.di
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.functions.FirebaseFunctions
 import com.ssbmax.core.data.ai.CloudGeminiAIService
 import com.ssbmax.core.data.ai.GeminiAIService
 import com.ssbmax.core.domain.service.AIService
@@ -38,11 +40,13 @@ object AIModule {
     @Provides
     @Singleton
     fun provideAIService(
-        @GeminiApiKey apiKey: String
+        @GeminiApiKey apiKey: String,
+        functions: FirebaseFunctions,
+        auth: FirebaseAuth
     ): AIService {
         return if (com.ssbmax.core.data.BuildConfig.USE_CLOUD_AI) {
             // Production: Use Firebase Functions (secure)
-            CloudGeminiAIService()
+            CloudGeminiAIService(functions, auth)
         } else {
             // Development: Use direct API calls (fast iteration)
             GeminiAIService(apiKey)
