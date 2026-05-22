@@ -5,7 +5,6 @@ import com.ssbmax.core.domain.model.interview.OIRStatus
 import com.ssbmax.core.domain.model.interview.PIQStatus
 import com.ssbmax.core.domain.model.interview.PPDTStatus
 import com.ssbmax.core.domain.model.interview.SubscriptionStatus
-import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
 import com.ssbmax.core.domain.repository.UsageInfo
@@ -28,11 +27,9 @@ class CheckInterviewPrerequisitesUseCaseTest {
 
     private val mockSubmissionRepo = mockk<SubmissionRepository>()
     private val mockSubscriptionRepo = mockk<SubscriptionRepository>()
-    private val mockInterviewRepo = mockk<InterviewRepository>()
     private val useCase = CheckInterviewPrerequisitesUseCase(
         mockSubmissionRepo,
-        mockSubscriptionRepo,
-        mockInterviewRepo
+        mockSubscriptionRepo
     )
 
     private val currentMonthStr = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))

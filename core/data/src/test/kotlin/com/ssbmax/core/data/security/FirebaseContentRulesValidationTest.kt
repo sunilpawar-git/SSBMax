@@ -138,4 +138,36 @@ class FirebaseContentRulesValidationTest {
         assertTrue("Clients cannot write study materials",
             studyMaterialsRules.contains("allow write: if false"))
     }
+
+    // ==================== General Security & Roles Tests ====================
+
+    @Test
+    fun `default deny rule exists`() {
+        val content = getRulesContent()
+        
+        assertTrue("Should have default deny-all rule",
+            content.contains("match /{document=**}"))
+        assertTrue("Default rule should deny all access",
+            content.contains("allow read, write: if false"))
+    }
+
+    @Test
+    fun `role-based access functions check role field`() {
+        val content = getRulesContent()
+        
+        assertTrue("isAssessor should check role == 'ASSESSOR'",
+            content.contains("data.role == 'ASSESSOR'"))
+        assertTrue("isStudent should check role == 'STUDENT'",
+            content.contains("data.role == 'STUDENT'"))
+    }
+
+    @Test
+    fun `batch access control validates instructor ownership`() {
+        val content = getRulesContent()
+        val batchRules = content.substringAfter("match /batches/{batchId}")
+            .substringBefore("// BATCH ENROLLMENTS")
+        
+        assertTrue("Batch creation should check instructorId",
+            batchRules.contains("request.resource.data.instructorId == request.auth.uid"))
+    }
 }

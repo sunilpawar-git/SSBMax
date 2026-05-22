@@ -14,6 +14,8 @@ import com.ssbmax.core.domain.model.interview.InterviewStatus
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.SubscriptionRepository
+import com.ssbmax.core.domain.repository.UsageInfo
+import com.ssbmax.core.domain.model.SubscriptionTier
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -21,6 +23,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -143,5 +147,37 @@ class InterviewResultManagerTest {
                 submissionId = "interview_${interviewResult?.id}"
             )
         }
+    }
+
+    @Test
+    fun `getRemainingInterviews returns correct counts for Free, Pro, and Premium tiers`() = runTest {
+        val currentMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+
+        // Test 1: FREE tier with 0 used -> remaining should be 1
+        coEvery { subscriptionRepository.getSubscriptionTier(testUserId) } returns Result.success(SubscriptionTier.FREE)
+        coEvery { subscriptionRepository.getMonthlyUsage(testUserId, currentMonth) } returns Result.success(
+            mapOf("Interview" to UsageInfo(used = 0, limit = 1))
+        )
+        val remainingFree = resultManager.getRemainingInterviews(testUserId, InterviewMode.TEXT_BASED)
+        assertTrue(remainingFree.isSuccess)
+        assertEquals(1, remainingFree.getOrNull())
+
+        // Test 2: PRO tier with 1 used -> remaining should be 0
+        coEvery { subscriptionRepository.getSubscriptionTier(testUserId) } returns Result.success(SubscriptionTier.PRO)
+        coEvery { subscriptionRepository.getMonthlyUsage(testUserId, currentMonth) } returns Result.success(
+            mapOf("Interview" to UsageInfo(used = 1, limit = 1))
+        )
+        val remainingPro = resultManager.getRemainingInterviews(testUserId, InterviewMode.TEXT_BASED)
+        assertTrue(remainingPro.isSuccess)
+        assertEquals(0, remainingPro.getOrNull())
+
+        // Test 3: PREMIUM tier with 1 used -> remaining should be 2
+        coEvery { subscriptionRepository.getSubscriptionTier(testUserId) } returns Result.success(SubscriptionTier.PREMIUM)
+        coEvery { subscriptionRepository.getMonthlyUsage(testUserId, currentMonth) } returns Result.success(
+            mapOf("Interview" to UsageInfo(used = 1, limit = 3))
+        )
+        val remainingPremium = resultManager.getRemainingInterviews(testUserId, InterviewMode.TEXT_BASED)
+        assertTrue(remainingPremium.isSuccess)
+        assertEquals(2, remainingPremium.getOrNull())
     }
 }

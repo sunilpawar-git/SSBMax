@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.time.Instant
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -276,12 +278,15 @@ class InterviewResultManager @Inject constructor(
             // Convert SubscriptionTier to SubscriptionType
             val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-            // Get total used interviews
-            val stats = getInterviewStats(userId).getOrDefault(emptyMap())
-            val totalUsed = stats.values.sum()
+            // Get used count from monthly usage
+            val currentMonth = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
+            val usageResult = subscriptionRepository.getMonthlyUsage(userId, currentMonth)
+            val usageMap = usageResult.getOrNull() ?: emptyMap()
+            val interviewUsage = usageMap["Interview"] ?: usageMap["interview"]
+            val used = interviewUsage?.used ?: 0
 
             // Calculate limits
-            val limits = InterviewLimits.forSubscription(subscriptionType, totalUsed)
+            val limits = InterviewLimits.forSubscription(subscriptionType, used)
 
             Result.success(limits.remaining)
         } catch (e: Exception) {

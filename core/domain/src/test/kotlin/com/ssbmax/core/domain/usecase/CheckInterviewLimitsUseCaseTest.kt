@@ -1,7 +1,6 @@
 package com.ssbmax.core.domain.usecase
 
 import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
 import com.ssbmax.core.domain.repository.UsageInfo
 import io.mockk.coEvery
@@ -16,8 +15,7 @@ import java.time.format.DateTimeFormatter
 class CheckInterviewLimitsUseCaseTest {
 
     private val mockSubscriptionRepo = mockk<SubscriptionRepository>()
-    private val mockInterviewRepo = mockk<InterviewRepository>()
-    private val useCase = CheckInterviewLimitsUseCase(mockSubscriptionRepo, mockInterviewRepo)
+    private val useCase = CheckInterviewLimitsUseCase(mockSubscriptionRepo)
 
     private val currentMonthStr = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
 

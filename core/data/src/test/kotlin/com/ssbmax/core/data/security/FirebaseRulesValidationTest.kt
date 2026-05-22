@@ -201,15 +201,7 @@ class FirebaseRulesValidationTest {
 
     // ==================== Security Best Practices Tests ====================
     
-    @Test
-    fun `default deny rule exists`() {
-        val content = getRulesContent()
-        
-        assertTrue("Should have default deny-all rule",
-            content.contains("match /{document=**}"))
-        assertTrue("Default rule should deny all access",
-            content.contains("allow read, write: if false"))
-    }
+
     
     @Test
     fun `no rules allow unauthenticated write access`() {
@@ -234,7 +226,7 @@ class FirebaseRulesValidationTest {
         val content = getRulesContent()
         
         val criticalCollections = listOf(
-            "users", "test_usage", "subscription", "test_sessions",
+            "users", "subscription", "test_sessions",
             "submissions", "test_content/oir"
         )
         
@@ -245,25 +237,7 @@ class FirebaseRulesValidationTest {
         }
     }
     
-    @Test
-    fun `role-based access functions check role field`() {
-        val content = getRulesContent()
-        
-        assertTrue("isAssessor should check role == 'ASSESSOR'",
-            content.contains("data.role == 'ASSESSOR'"))
-        assertTrue("isStudent should check role == 'STUDENT'",
-            content.contains("data.role == 'STUDENT'"))
-    }
-    
-    @Test
-    fun `batch access control validates instructor ownership`() {
-        val content = getRulesContent()
-        val batchRules = content.substringAfter("match /batches/{batchId}")
-            .substringBefore("// BATCH ENROLLMENTS")
-        
-        assertTrue("Batch creation should check instructorId",
-            batchRules.contains("request.resource.data.instructorId == request.auth.uid"))
-    }
+
     
     // ==================== Documentation and Maintainability Tests ====================
     

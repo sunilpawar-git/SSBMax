@@ -64,25 +64,6 @@ service cloud.firestore {
         allow write: if isOwner(userId) && document != 'subscription';
       }
       
-      // Test usage tracking (for subscription limits)
-      match /test_usage/{month} {
-        // Users can read their own test usage
-        allow read: if isOwner(userId);
-        
-        // Users can write their own test usage
-        // Relaxed validation: Allow updates and creates
-        // Create: Must have all fields
-        allow create: if isOwner(userId) &&
-                         request.resource.data.keys().hasAll([
-                           'oirTestsUsed', 'tatTestsUsed', 'watTestsUsed',
-                           'srtTestsUsed', 'ppdtTestsUsed', 'gtoTestsUsed',
-                           'interviewTestsUsed', 'lastUpdated'
-                         ]);
-        
-        // Update: Can update individual fields via transactions
-        allow update: if isOwner(userId) &&
-                         request.resource.data.lastUpdated is timestamp;
-      }
       
       // Subscription usage tracking (server-side persistence)
       // SECURITY: Cannot be bypassed by clearing app cache

@@ -2,7 +2,6 @@ package com.ssbmax.core.domain.usecase
 
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.interview.InterviewLimits
-import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
 import javax.inject.Inject
 
@@ -15,8 +14,7 @@ import javax.inject.Inject
  * - PREMIUM: 3 interviews/month with Qwen TTS
  */
 class CheckInterviewLimitsUseCase @Inject constructor(
-    private val subscriptionRepository: SubscriptionRepository,
-    private val interviewRepository: InterviewRepository
+    private val subscriptionRepository: SubscriptionRepository
 ) {
 
     /**

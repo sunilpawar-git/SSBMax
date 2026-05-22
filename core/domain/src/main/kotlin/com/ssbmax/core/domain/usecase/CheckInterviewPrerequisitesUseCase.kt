@@ -7,7 +7,6 @@ import com.ssbmax.core.domain.model.interview.PIQStatus
 import com.ssbmax.core.domain.model.interview.PPDTStatus
 import com.ssbmax.core.domain.model.interview.PrerequisiteCheckResult
 import com.ssbmax.core.domain.model.interview.SubscriptionStatus
-import com.ssbmax.core.domain.repository.InterviewRepository
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.SubscriptionRepository
 import javax.inject.Inject
@@ -29,8 +28,7 @@ import javax.inject.Inject
  */
 class CheckInterviewPrerequisitesUseCase @Inject constructor(
     private val submissionRepository: SubmissionRepository,
-    private val subscriptionRepository: SubscriptionRepository,
-    private val interviewRepository: InterviewRepository
+    private val subscriptionRepository: SubscriptionRepository
 ) {
 
     /**
