@@ -265,10 +265,16 @@ class CheckInterviewPrerequisitesUseCase @Inject constructor(
         // Convert SubscriptionTier to SubscriptionType
         val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
 
-        // Get used count (sum all interview modes for unified system)
-        val statsResult = interviewRepository.getInterviewStats(userId)
-        val stats = statsResult.getOrNull() ?: emptyMap()
-        val used = stats.values.sum()
+        // Get current month in yyyy-MM format
+        val currentMonth = java.time.YearMonth.now().format(
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")
+        )
+
+        // Get used count from monthly usage
+        val usageResult = subscriptionRepository.getMonthlyUsage(userId, currentMonth)
+        val usageMap = usageResult.getOrNull() ?: emptyMap()
+        val interviewUsage = usageMap["Interview"] ?: usageMap["interview"]
+        val used = interviewUsage?.used ?: 0
 
         // Calculate limits using new InterviewLimits API
         val limits = InterviewLimits.forSubscription(subscriptionType, used)

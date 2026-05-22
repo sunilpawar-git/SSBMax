@@ -120,19 +120,25 @@ class CheckInterviewLimitsUseCase @Inject constructor(
      */
     suspend fun getUsedCount(userId: String): Result<Int> {
         return try {
-            // Get interview stats (returns map of mode -> count)
-            val statsResult = interviewRepository.getInterviewStats(userId)
+            // Get current month in yyyy-MM format (pure Java API, safe for domain layer)
+            val currentMonth = java.time.YearMonth.now().format(
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")
+            )
 
-            if (statsResult.isFailure) {
+            // Get monthly usage info
+            val usageResult = subscriptionRepository.getMonthlyUsage(userId, currentMonth)
+
+            if (usageResult.isFailure) {
                 return Result.success(0)
             }
 
-            val stats = statsResult.getOrNull() ?: return Result.success(0)
+            val usageMap = usageResult.getOrNull() ?: return Result.success(0)
 
-            // Sum all interview counts (unified system counts all interviews)
-            val totalUsed = stats.values.sum()
+            // Extract used count for key "Interview" or "interview"
+            val interviewUsage = usageMap["Interview"] ?: usageMap["interview"]
+            val used = interviewUsage?.used ?: 0
 
-            Result.success(totalUsed)
+            Result.success(used)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -59,8 +59,9 @@ service cloud.firestore {
       // 🔥 THIS IS THE CRITICAL FIX FOR YOUR PROFILE ERROR
       // User data subcollection (for profile, settings, etc.)
       match /data/{document} {
-        // Users can read/write their own data subcollection
-        allow read, write: if isOwner(userId);
+        // Users can read/write their own data subcollection, except subscription document which is read-only
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && document != 'subscription';
       }
       
       // Test usage tracking (for subscription limits)

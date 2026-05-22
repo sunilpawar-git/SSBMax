@@ -8,6 +8,10 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.WriteBatch
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGenerator
+import com.ssbmax.core.data.repository.interview.InterviewQuestionManager
+import com.ssbmax.core.data.repository.interview.InterviewResponseManager
+import com.ssbmax.core.data.repository.interview.InterviewResultManager
+import com.ssbmax.core.data.repository.interview.InterviewSessionManager
 import com.ssbmax.core.domain.constants.InterviewConstants
 import com.ssbmax.core.domain.model.interview.InterviewMode
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
@@ -40,6 +44,7 @@ class FirestoreInterviewRepositoryTest {
     private lateinit var questionCacheRepository: QuestionCacheRepository
     private lateinit var questionGenerator: InterviewQuestionGenerator
     private lateinit var subscriptionRepository: SubscriptionRepository
+    private lateinit var subscriptionManager: SubscriptionManager
 
     private val testUserId = "test-user-123"
     private val testPiqSnapshotId = "test-piq-456"
@@ -69,12 +74,24 @@ class FirestoreInterviewRepositoryTest {
         questionCacheRepository = mockk(relaxed = true)
         questionGenerator = mockk(relaxed = true)
         subscriptionRepository = mockk(relaxed = true)
+        subscriptionManager = mockk(relaxed = true)
+
+        val sessionManager = InterviewSessionManager(firestore, questionGenerator)
+        val questionManager = InterviewQuestionManager(firestore, questionGenerator, questionCacheRepository)
+        val responseManager = InterviewResponseManager(firestore, sessionManager)
+        val resultManager = InterviewResultManager(
+            firestore = firestore,
+            sessionManager = sessionManager,
+            responseManager = responseManager,
+            subscriptionRepository = subscriptionRepository,
+            subscriptionManager = subscriptionManager
+        )
 
         repository = FirestoreInterviewRepository(
-            firestore = firestore,
-            questionCacheRepository = questionCacheRepository,
-            questionGenerator = questionGenerator,
-            subscriptionRepository = subscriptionRepository
+            sessionManager = sessionManager,
+            questionManager = questionManager,
+            responseManager = responseManager,
+            resultManager = resultManager
         )
     }
 
