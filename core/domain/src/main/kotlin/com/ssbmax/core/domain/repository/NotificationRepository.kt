@@ -64,5 +64,12 @@ interface NotificationRepository {
      * Save notification preferences
      */
     suspend fun savePreferences(preferences: NotificationPreferences): Result<Unit>
+
+    /**
+     * Retrieve the current FCM registration token from the Firebase SDK.
+     * Used to synchronize the token after login, resolving the first-install
+     * race condition where [onNewToken] fires before the user is authenticated.
+     */
+    suspend fun getCurrentFCMToken(): Result<String>
 }
 

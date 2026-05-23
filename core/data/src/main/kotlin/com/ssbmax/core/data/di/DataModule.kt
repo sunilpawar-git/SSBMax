@@ -243,5 +243,11 @@ abstract class RepositoryModule {
     abstract fun bindUnifiedResultRepository(
         impl: com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
     ): com.ssbmax.core.domain.repository.UnifiedResultRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBatchRepository(
+        impl: com.ssbmax.core.data.repository.FirestoreBatchRepository
+    ): com.ssbmax.core.domain.repository.BatchRepository
 }
 

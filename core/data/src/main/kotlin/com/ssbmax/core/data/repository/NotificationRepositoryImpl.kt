@@ -269,9 +269,10 @@ class NotificationRepositoryImpl @Inject constructor(
     }
     
     /**
-     * Get current FCM token from Firebase SDK
+     * Get current FCM token from Firebase SDK.
+     * Implements [NotificationRepository.getCurrentFCMToken].
      */
-    suspend fun getCurrentFCMToken(): Result<String> {
+    override suspend fun getCurrentFCMToken(): Result<String> {
         return try {
             val token = firebaseMessaging.token.await()
             Result.success(token)

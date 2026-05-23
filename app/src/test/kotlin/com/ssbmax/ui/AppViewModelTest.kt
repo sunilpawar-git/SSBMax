@@ -1,9 +1,14 @@
 package com.ssbmax.ui
 
+import android.content.ContentResolver
+import android.content.Context
+import android.provider.Settings
 import app.cash.turbine.test
+import com.ssbmax.core.domain.model.FCMToken
 import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.core.domain.repository.NotificationRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.testing.TestDispatcherRule
@@ -12,17 +17,24 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Assert.*
 
 /**
- * Tests for AppViewModel
- * Tests global authentication state management and sign out
+ * Tests for AppViewModel.
+ * Covers:
+ * - Global authentication state management
+ * - Sign-out delegation
+ * - FCM token synchronization on first login (first-install race condition fix)
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppViewModelTest {
@@ -33,6 +45,9 @@ class AppViewModelTest {
     private lateinit var viewModel: AppViewModel
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>()
     private val mockSignOutUseCase = mockk<SignOutUseCase>()
+    private val mockNotificationRepository = mockk<NotificationRepository>(relaxed = true)
+    private val mockContext = mockk<Context>(relaxed = true)
+    private val mockContentResolver = mockk<ContentResolver>(relaxed = true)
     private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
 
     private val mockStudent = SSBMaxUser(
@@ -71,248 +86,224 @@ class AppViewModelTest {
         every { android.util.Log.e(any(), any()) } returns 0
         every { android.util.Log.e(any(), any(), any()) } returns 0
 
+        // Mock Settings.Secure.getString for ANDROID_ID
+        mockkStatic(Settings.Secure::class)
+        every { Settings.Secure.getString(any(), Settings.Secure.ANDROID_ID) } returns "test-device-id"
+        every { mockContext.contentResolver } returns mockContentResolver
+
         // Mock current user flow
         every { mockObserveCurrentUser() } returns mockCurrentUserFlow
 
         // Mock sign out use case
         coEvery { mockSignOutUseCase() } returns Result.success(Unit)
+
+        // Mock notification repository defaults
+        coEvery { mockNotificationRepository.getCurrentFCMToken() } returns Result.success("test-fcm-token")
+        coEvery { mockNotificationRepository.saveFCMToken(any()) } returns Result.success(Unit)
     }
+
+    private fun buildViewModel(): AppViewModel =
+        AppViewModel(mockObserveCurrentUser, mockSignOutUseCase, mockNotificationRepository, mockContext)
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Auth State Tests
+    // ─────────────────────────────────────────────────────────────────────────
 
     @Test
     fun `initial currentUser is null`() = runTest {
-        // When
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
-        // Then
         viewModel.currentUser.test {
-            val user = awaitItem()
-            assertNull("Initial user should be null", user)
+            assertNull("Initial user should be null", awaitItem())
         }
     }
 
     @Test
     fun `currentUser emits when user signs in`() = runTest {
-        // Given
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            // Initial emission
             assertNull("Initial user should be null", awaitItem())
 
-            // When - user signs in
             mockCurrentUserFlow.value = mockStudent
 
-            // Then
             val user = awaitItem()
             assertNotNull("User should not be null after sign in", user)
-            assertEquals("User ID should match", "student-123", user?.id)
-            assertEquals("User email should match", "student@example.com", user?.email)
-            assertEquals("User role should be STUDENT", UserRole.STUDENT, user?.role)
-            assertEquals("User tier should be FREE", SubscriptionTier.FREE, user?.subscriptionTier)
+            assertEquals("student-123", user?.id)
+            assertEquals("student@example.com", user?.email)
+            assertEquals(UserRole.STUDENT, user?.role)
+            assertEquals(SubscriptionTier.FREE, user?.subscriptionTier)
         }
     }
 
     @Test
     fun `currentUser emits null when user signs out`() = runTest {
-        // Given - user is already signed in
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            // Initial emission with user
             assertNotNull("Initial user should not be null", awaitItem())
 
-            // When - user signs out
             mockCurrentUserFlow.value = null
 
-            // Then
-            val user = awaitItem()
-            assertNull("User should be null after sign out", user)
+            assertNull("User should be null after sign out", awaitItem())
         }
     }
 
     @Test
     fun `currentUser updates when user changes role`() = runTest {
-        // Given - student is signed in
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            // Initial emission
-            val initialUser = awaitItem()
-            assertEquals("Initial role should be STUDENT", UserRole.STUDENT, initialUser?.role)
+            assertEquals(UserRole.STUDENT, awaitItem()?.role)
 
-            // When - user role is updated to INSTRUCTOR
-            val updatedStudent = mockStudent.copy(role = UserRole.INSTRUCTOR)
-            mockCurrentUserFlow.value = updatedStudent
+            mockCurrentUserFlow.value = mockStudent.copy(role = UserRole.INSTRUCTOR)
 
-            // Then
             val updatedUser = awaitItem()
-            assertNotNull("Updated user should not be null", updatedUser)
-            assertEquals("Updated role should be INSTRUCTOR", UserRole.INSTRUCTOR, updatedUser?.role)
-            assertEquals("User ID should remain the same", "student-123", updatedUser?.id)
+            assertEquals(UserRole.INSTRUCTOR, updatedUser?.role)
+            assertEquals("student-123", updatedUser?.id)
         }
     }
 
     @Test
     fun `currentUser updates when user upgrades subscription`() = runTest {
-        // Given - user with FREE tier
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            // Initial emission
-            val initialUser = awaitItem()
-            assertEquals("Initial tier should be FREE", SubscriptionTier.FREE, initialUser?.subscriptionTier)
+            assertEquals(SubscriptionTier.FREE, awaitItem()?.subscriptionTier)
 
-            // When - user upgrades to PRO
-            val upgradedStudent = mockStudent.copy(subscriptionTier = SubscriptionTier.PRO)
-            mockCurrentUserFlow.value = upgradedStudent
+            mockCurrentUserFlow.value = mockStudent.copy(subscriptionTier = SubscriptionTier.PRO)
 
-            // Then
-            val updatedUser = awaitItem()
-            assertNotNull("Updated user should not be null", updatedUser)
-            assertEquals("Updated tier should be PRO", SubscriptionTier.PRO, updatedUser?.subscriptionTier)
+            assertEquals(SubscriptionTier.PRO, awaitItem()?.subscriptionTier)
         }
     }
 
     @Test
     fun `currentUser switches between different users`() = runTest {
-        // Given
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            // Initial emission
-            assertNull("Initial user should be null", awaitItem())
+            assertNull(awaitItem())
 
-            // When - student signs in
             mockCurrentUserFlow.value = mockStudent
+            assertEquals("student-123", awaitItem()?.id)
 
-            // Then
-            val student = awaitItem()
-            assertEquals("First user should be student", "student-123", student?.id)
-            assertEquals("First user role should be STUDENT", UserRole.STUDENT, student?.role)
-
-            // When - switch to instructor (e.g., different account on same device)
             mockCurrentUserFlow.value = mockInstructor
-
-            // Then
-            val instructor = awaitItem()
-            assertEquals("Second user should be instructor", "instructor-456", instructor?.id)
-            assertEquals("Second user role should be INSTRUCTOR", UserRole.INSTRUCTOR, instructor?.role)
+            assertEquals("instructor-456", awaitItem()?.id)
         }
     }
 
     @Test
     fun `currentUser StateFlow retains last value for new collectors`() = runTest {
-        // Given - user already signed in before ViewModel creation
         mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
-        // When - new collector subscribes
-        viewModel.currentUser.test {
-            // Then - should immediately receive the current user
-            val user = awaitItem()
-            assertNotNull("New collector should immediately get current user", user)
-            assertEquals("User should be the student", "student-123", user?.id)
-        }
-    }
-
-    @Test
-    fun `currentUser StateFlow is properly configured`() = runTest {
-        // This test verifies that the StateFlow is configured correctly with proper initial value
-
-        // Given - user signed in before ViewModel creation
-        mockCurrentUserFlow.value = mockStudent
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
-
-        // When - collect using test collector
         viewModel.currentUser.test {
             val user = awaitItem()
-            // Then - should get the current user (may be null initially, then user)
-            if (user == null) {
-                // If null, wait for next emission
-                val nextUser = awaitItem()
-                assertNotNull("User should eventually be emitted", nextUser)
-                assertEquals("User should match", "student-123", nextUser?.id)
-            } else {
-                assertEquals("User should match immediately", "student-123", user.id)
-            }
-        }
-    }
-
-    @Test
-    fun `currentUser with complete user profile data`() = runTest {
-        // Given - user with complete profile
-        val completeUser = SSBMaxUser(
-            id = "complete-user-789",
-            email = "complete@example.com",
-            displayName = "Complete User",
-            photoUrl = "https://example.com/photo.jpg",
-            role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.PREMIUM,
-            subscription = null,
-            studentProfile = null,
-            instructorProfile = null,
-            createdAt = 1234567890L,
-            lastLoginAt = 9876543210L
-        )
-        mockCurrentUserFlow.value = completeUser
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
-
-        // When/Then
-        viewModel.currentUser.test {
-            val user = awaitItem()
-            assertNotNull("User should not be null", user)
-            assertEquals("ID should match", "complete-user-789", user?.id)
-            assertEquals("Email should match", "complete@example.com", user?.email)
-            assertEquals("Display name should match", "Complete User", user?.displayName)
-            assertEquals("Photo URL should match", "https://example.com/photo.jpg", user?.photoUrl)
-            assertEquals("Role should be STUDENT", UserRole.STUDENT, user?.role)
-            assertEquals("Tier should be PREMIUM", SubscriptionTier.PREMIUM, user?.subscriptionTier)
-            assertEquals("Created at should match", 1234567890L, user?.createdAt)
-            assertEquals("Last login at should match", 9876543210L, user?.lastLoginAt)
+            assertNotNull(user)
+            assertEquals("student-123", user?.id)
         }
     }
 
     @Test
     fun `viewModel handles rapid user changes`() = runTest {
-        // Given
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
         viewModel.currentUser.test {
-            assertNull("Initial should be null", awaitItem())
+            assertNull(awaitItem())
 
-            // When - rapid sign in/out
             mockCurrentUserFlow.value = mockStudent
-            assertEquals("Should emit student", "student-123", awaitItem()?.id)
+            assertEquals("student-123", awaitItem()?.id)
 
             mockCurrentUserFlow.value = null
-            assertNull("Should emit null", awaitItem())
+            assertNull(awaitItem())
 
             mockCurrentUserFlow.value = mockInstructor
-            assertEquals("Should emit instructor", "instructor-456", awaitItem()?.id)
+            assertEquals("instructor-456", awaitItem()?.id)
 
             mockCurrentUserFlow.value = mockStudent
-            assertEquals("Should emit student again", "student-123", awaitItem()?.id)
+            assertEquals("student-123", awaitItem()?.id)
 
-            // Then - all transitions should be captured
             expectNoEvents()
         }
     }
 
     @Test
     fun `signOut calls SignOutUseCase`() = runTest {
-        // Given
-        viewModel = AppViewModel(mockObserveCurrentUser, mockSignOutUseCase)
+        viewModel = buildViewModel()
 
-        // When
         viewModel.signOut()
+        advanceUntilIdle()
 
-        // Wait for async operation
-        kotlinx.coroutines.delay(100)
-
-        // Then
         coVerify { mockSignOutUseCase() }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FCM Token Sync Tests (First-Install Race Condition Fix)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `FCM token is synced when user logs in`() = runTest {
+        viewModel = buildViewModel()
+        advanceUntilIdle()
+
+        mockCurrentUserFlow.value = mockStudent
+        advanceUntilIdle()
+
+        val tokenSlot = slot<FCMToken>()
+        coVerify { mockNotificationRepository.getCurrentFCMToken() }
+        coVerify { mockNotificationRepository.saveFCMToken(capture(tokenSlot)) }
+
+        assertEquals("student-123", tokenSlot.captured.userId)
+        assertEquals("test-fcm-token", tokenSlot.captured.token)
+        assertEquals("test-device-id", tokenSlot.captured.deviceId)
+        assertEquals("android", tokenSlot.captured.platform)
+    }
+
+    @Test
+    fun `FCM token sync is not duplicated when same user re-emits`() = runTest {
+        mockCurrentUserFlow.value = mockStudent
+        viewModel = buildViewModel()
+        advanceUntilIdle()
+
+        // Re-emit same user (e.g., profile update, subscription change)
+        mockCurrentUserFlow.value = mockStudent.copy(subscriptionTier = SubscriptionTier.PRO)
+        advanceUntilIdle()
+
+        // Token should only be synced once (distinctUntilChanged on user ID)
+        coVerify(exactly = 1) { mockNotificationRepository.saveFCMToken(any()) }
+    }
+
+    @Test
+    fun `FCM token is re-synced when a different user logs in`() = runTest {
+        viewModel = buildViewModel()
+        advanceUntilIdle()
+
+        mockCurrentUserFlow.value = mockStudent
+        advanceUntilIdle()
+
+        mockCurrentUserFlow.value = null
+        advanceUntilIdle()
+
+        mockCurrentUserFlow.value = mockInstructor
+        advanceUntilIdle()
+
+        // Should have been called twice — once per distinct user ID
+        coVerify(exactly = 2) { mockNotificationRepository.saveFCMToken(any()) }
+    }
+
+    @Test
+    fun `FCM token sync is skipped when getCurrentFCMToken fails`() = runTest {
+        coEvery { mockNotificationRepository.getCurrentFCMToken() } returns
+                Result.failure(Exception("FCM unavailable"))
+
+        viewModel = buildViewModel()
+        mockCurrentUserFlow.value = mockStudent
+        advanceUntilIdle()
+
+        // saveFCMToken must NOT be called when token retrieval fails
+        coVerify(exactly = 0) { mockNotificationRepository.saveFCMToken(any()) }
     }
 }

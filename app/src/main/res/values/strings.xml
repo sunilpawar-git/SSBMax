@@ -1114,6 +1114,17 @@
     <string name="create_batch_placeholder_description">Create and manage student batches for organized teaching</string>
     <string name="create_batch_features_title">Coming Soon</string>
     <string name="create_batch_features_list">• Create batch with name and details\n• Add students via invite codes\n• Set batch capacity and duration\n• Assign default tests\n• Track batch progress</string>
+    <string name="batch_name_label">Batch Name</string>
+    <string name="batch_description_label">Description</string>
+    <string name="batch_max_students_label">Maximum Students</string>
+    <string name="batch_create_button">Create Batch</string>
+    <string name="batch_creating">Creating batch...</string>
+    <string name="batch_error_prefix">Error: %s</string>
+    <string name="batch_details_header">Batch Details</string>
+    <string name="batch_students_header">Enrolled Students</string>
+    <string name="batch_empty_students">No students have joined this batch yet.</string>
+    <string name="batch_details_capacity">Capacity: %1$d / %2$d students</string>
+    <string name="batch_invite_code_label">Invite Code: %s</string>
     
     <!-- Batch Detail Screen -->
     <string name="batch_detail_title">Batch: %1$s</string>

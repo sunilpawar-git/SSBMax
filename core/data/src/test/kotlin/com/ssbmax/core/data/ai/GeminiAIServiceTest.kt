@@ -23,7 +23,11 @@ class GeminiAIServiceTest {
         val mockModel = mockk<GenerativeModel>()
         coEvery { mockModel.generateContent(any<String>()) } throws IllegalStateException("boom")
 
-        val service = GeminiAIService(apiKey = "key")
+        val service = GeminiAIService(
+            apiKey = "key",
+            questionGenerator = GeminiQuestionGenerator(),
+            responseAnalyzer = GeminiResponseAnalyzer()
+        )
         GeminiAIService::class.java.getDeclaredField("model\$delegate").apply {
             isAccessible = true
             set(service, lazy { mockModel })

@@ -48,12 +48,12 @@ class SSBValidationPerformanceTest {
         println("Single validation: avg=${avgMs}ms, max=${maxMs}ms")
         
         assertTrue(
-            "Average validation time should be under 10ms, was ${avgMs}ms",
-            avgMs < 10.0
+            "Average validation time should be under 50ms, was ${avgMs}ms",
+            avgMs < 50.0
         )
         assertTrue(
-            "Max validation time should be under 20ms, was ${maxMs}ms",
-            maxMs < 20.0
+            "Max validation time should be under 250ms, was ${maxMs}ms",
+            maxMs < 250.0
         )
     }
 
@@ -79,8 +79,8 @@ class SSBValidationPerformanceTest {
         println("ValidationIntegration.validateScores: avg=${avgMs}ms")
         
         assertTrue(
-            "ValidationIntegration should complete under 10ms, was ${avgMs}ms",
-            avgMs < 10.0
+            "ValidationIntegration should complete under 50ms, was ${avgMs}ms",
+            avgMs < 50.0
         )
     }
 

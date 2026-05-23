@@ -301,7 +301,7 @@ service cloud.firestore {
     // NOTIFICATION PREFERENCES
     // ============================================
     
-    match /notificationPreferences/{userId} {
+    match /notification_preferences/{userId} {
       // Users can read/write their own preferences
       allow read, write: if isOwner(userId);
     }
@@ -310,7 +310,7 @@ service cloud.firestore {
     // FCM TOKENS
     // ============================================
     
-    match /fcmTokens/{tokenId} {
+    match /fcm_tokens/{tokenId} {
       // Users can read their own tokens
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       
@@ -356,9 +356,17 @@ service cloud.firestore {
       // All authenticated users can read batch info
       allow read: if isAuthenticated();
       
-      // Only assessors can create/update batches
-      allow create, update: if isAuthenticated() && 
-                               request.resource.data.instructorId == request.auth.uid;
+      // Only instructors can create batches
+      allow create: if isAuthenticated() && request.resource.data.instructorId == request.auth.uid;
+      
+      // Instructors can update their own batches, and students can ONLY append their own UID to join
+      allow update: if isAuthenticated() && 
+                       (resource.data.instructorId == request.auth.uid ||
+                        (
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentIds']) &&
+                          request.resource.data.studentIds.size() == resource.data.studentIds.size() + 1 &&
+                          request.resource.data.studentIds.removeAll(resource.data.studentIds).hasOnly([request.auth.uid])
+                        ));
       
       // No delete
       allow delete: if false;

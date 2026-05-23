@@ -32,8 +32,8 @@ import javax.inject.Inject
 @HiltViewModel
 class UpgradeViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: UserProfileRepository
-    // Payment gateway not yet integrated
+    private val userProfileRepository: UserProfileRepository,
+    private val billingRepository: com.ssbmax.billing.BillingRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(UpgradeUiState())
@@ -211,6 +211,20 @@ class UpgradeViewModel @Inject constructor(
         _uiState.update {
             it.copy(showComingSoonDialog = true, selectedPlanForUpgrade = tier)
         }
+    }
+    
+    fun upgradeToPlan(activity: android.app.Activity, tier: SubscriptionTier) {
+        if (tier == SubscriptionTier.FREE) {
+            dismissComingSoonDialog()
+            return
+        }
+        
+        // Map Tier + selectedBillingCycle to product ID
+        val isYearly = _uiState.value.selectedBillingCycle == BillingCycle.ANNUALLY
+        val productId = if (isYearly) "premium_yearly" else "premium_monthly"
+        
+        Log.d("Upgrade", "Purchasing subscription product: $productId for tier: $tier")
+        billingRepository.purchaseProduct(activity, productId)
     }
     
     fun dismissComingSoonDialog() {

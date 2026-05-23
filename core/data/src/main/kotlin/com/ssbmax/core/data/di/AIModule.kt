@@ -42,14 +42,16 @@ object AIModule {
     fun provideAIService(
         @GeminiApiKey apiKey: String,
         functions: FirebaseFunctions,
-        auth: FirebaseAuth
+        auth: FirebaseAuth,
+        questionGenerator: com.ssbmax.core.data.ai.GeminiQuestionGenerator,
+        responseAnalyzer: com.ssbmax.core.data.ai.GeminiResponseAnalyzer
     ): AIService {
         return if (com.ssbmax.core.data.BuildConfig.USE_CLOUD_AI) {
             // Production: Use Firebase Functions (secure)
             CloudGeminiAIService(functions, auth)
         } else {
             // Development: Use direct API calls (fast iteration)
-            GeminiAIService(apiKey)
+            GeminiAIService(apiKey, questionGenerator, responseAnalyzer)
         }
     }
 

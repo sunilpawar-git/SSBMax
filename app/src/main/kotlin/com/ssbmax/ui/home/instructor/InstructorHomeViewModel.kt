@@ -19,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class InstructorHomeViewModel @Inject constructor(
     private val gradingQueueRepository: GradingQueueRepository,
-    private val observeCurrentUser: ObserveCurrentUserUseCase
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val batchRepository: com.ssbmax.core.domain.repository.BatchRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(InstructorHomeUiState())
@@ -52,74 +53,38 @@ class InstructorHomeViewModel @Inject constructor(
                     ) }
                 }
             }
-            // TODO: Load batches and students from BatchRepository
-            // For now, keep mock data for batches and students until BatchRepository is implemented
-            _uiState.update { it.copy(
-                totalStudents = 24,
-                activeBatches = 3,
-                students = listOf(
-                    StudentPerformance(
-                        studentId = "1",
-                        studentName = "Rahul Sharma",
-                        averageScore = 78.5f,
-                        testsCompleted = 8,
-                        lastActiveAt = System.currentTimeMillis(),
-                        currentStreak = 5,
-                        phase1Score = 82f,
-                        phase2Score = 75f
-                    ),
-                    StudentPerformance(
-                        studentId = "2",
-                        studentName = "Priya Patel",
-                        averageScore = 85.2f,
-                        testsCompleted = 12,
-                        lastActiveAt = System.currentTimeMillis(),
-                        currentStreak = 7,
-                        phase1Score = 88f,
-                        phase2Score = 82f
-                    ),
-                    StudentPerformance(
-                        studentId = "3",
-                        studentName = "Amit Kumar",
-                        averageScore = 72.3f,
-                        testsCompleted = 6,
-                        lastActiveAt = System.currentTimeMillis(),
-                        currentStreak = 3,
-                        phase1Score = 75f,
-                        phase2Score = 69f
-                    ),
-                    StudentPerformance(
-                        studentId = "4",
-                        studentName = "Sneha Singh",
-                        averageScore = 91.0f,
-                        testsCompleted = 15,
-                        lastActiveAt = System.currentTimeMillis(),
-                        currentStreak = 12,
-                        phase1Score = 93f,
-                        phase2Score = 89f
-                    )
-                ),
-                batches = listOf(
-                    BatchInfo(
-                        id = "batch1",
-                        name = "NDA Batch 2024",
-                        inviteCode = "NDA2024",
-                        studentCount = 15
-                    ),
-                    BatchInfo(
-                        id = "batch2",
-                        name = "CDS Preparation",
-                        inviteCode = "CDS2024",
-                        studentCount = 8
-                    ),
-                    BatchInfo(
-                        id = "batch3",
-                        name = "AFCAT Group",
-                        inviteCode = "AFC2024",
-                        studentCount = 6
-                    )
-                )
-            ) }
+            
+            // Observe batches from repository
+            launch {
+                batchRepository.getBatchesForInstructor(instructorId).collect { result ->
+                    val batches = result.getOrDefault(emptyList())
+                    val batchesList = batches.map { batch ->
+                        BatchInfo(
+                            id = batch.id,
+                            name = batch.name,
+                            inviteCode = batch.inviteCode,
+                            studentCount = batch.studentIds.size
+                        )
+                    }
+                    _uiState.update { it.copy(
+                        batches = batchesList,
+                        activeBatches = batchesList.size
+                    ) }
+                    
+                    // Observe students dynamically from the first active batch
+                    if (batches.isNotEmpty()) {
+                        launch {
+                            batchRepository.getStudentsInBatch(batches.first().id).collect { studentResult ->
+                                val studentsList = studentResult.getOrDefault(emptyList())
+                                _uiState.update { it.copy(
+                                    students = studentsList,
+                                    totalStudents = studentsList.size
+                                ) }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     

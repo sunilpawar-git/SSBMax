@@ -103,12 +103,20 @@ fun UpgradeScreen(
             
             // Plan Cards
             items(uiState.availablePlans) { plan ->
+                val context = androidx.compose.ui.platform.LocalContext.current
                 AnimatedPlanCard(
                     plan = plan,
                     currentTier = uiState.currentTier,
                     selectedBillingCycle = uiState.selectedBillingCycle,
                     isVisible = isVisible,
-                    onUpgradeClick = { viewModel.upgradeToPlan(plan.tier) }
+                    onUpgradeClick = {
+                        val activity = context as? android.app.Activity
+                        if (activity != null) {
+                            viewModel.upgradeToPlan(activity, plan.tier)
+                        } else {
+                            viewModel.upgradeToPlan(plan.tier)
+                        }
+                    }
                 )
             }
             
