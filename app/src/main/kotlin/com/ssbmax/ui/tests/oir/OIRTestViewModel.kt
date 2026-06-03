@@ -2,6 +2,9 @@ package com.ssbmax.ui.tests.oir
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
@@ -11,6 +14,8 @@ import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +42,10 @@ class OIRTestViewModel @Inject constructor(
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val securityLogger: SecurityEventLogger
+    private val securityLogger: SecurityEventLogger,
+    private val scoreCalculator: OIRTestScoreCalculator,
+    @ApplicationContext private val appContext: Context,
+    val imageLoader: ImageLoader
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -88,7 +96,6 @@ class OIRTestViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(
                 isLoading = true,
-                loadingMessage = "Checking eligibility...",
                 error = null
             ) }
             
@@ -106,13 +113,12 @@ class OIRTestViewModel @Inject constructor(
                 
                 _uiState.update { it.copy(
                     isLoading = false,
-                    loadingMessage = null,
                     error = "Authentication required. Please login to continue."
                 ) }
                 return@launch
             }
             
-            android.util.Log.d("OIRTestViewModel", "✅ User authenticated: $userId")
+            android.util.Log.d("OIRTestViewModel", "✅ User authenticated")
             
             try {
                 // Check subscription eligibility
@@ -123,7 +129,6 @@ class OIRTestViewModel @Inject constructor(
                         // Show limit reached state
                         _uiState.update { it.copy(
                             isLoading = false,
-                            loadingMessage = null,
                             error = null,
                             isLimitReached = true,
                             subscriptionTier = eligibility.tier,
@@ -144,28 +149,9 @@ class OIRTestViewModel @Inject constructor(
                 // Continue anyway in case of error
             }
             
-            _uiState.update { it.copy(
-                loadingMessage = "Preparing test..."
-            ) }
-            
             try {
-                // TODO: Check subscription eligibility when feature is implemented
-                
-                _uiState.update { it.copy(
-                    loadingMessage = "Analyzing your level..."
-                ) }
-                
-                // Get recommended difficulty based on past performance
-                val difficulty = difficultyManager.getRecommendedDifficulty("OIR")
-                android.util.Log.d("OIRTestViewModel", "📊 Recommended difficulty: $difficulty")
-                
-                _uiState.update { it.copy(
-                    loadingMessage = "Loading $difficulty questions...",
-                    currentDifficulty = difficulty
-                ) }
-                
-                // Fetch questions using the new caching system with difficulty
-                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50, difficulty = difficulty)
+                // OIR uses authentic SSB-level questions — no difficulty filtering
+                val questionsResult = testContentRepository.getOIRTestQuestions(count = 50, difficulty = null)
                 
                 if (questionsResult.isFailure) {
                     throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
@@ -222,7 +208,6 @@ class OIRTestViewModel @Inject constructor(
                 ErrorLogger.log(e, "Exception loading OIR test")
                 _uiState.update { it.copy(
                     isLoading = false,
-                    loadingMessage = null,
                     error = "Failed to load test: ${e.message ?: "Unknown error"}"
                 ) }
             }
@@ -342,20 +327,9 @@ class OIRTestViewModel @Inject constructor(
                 val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
                 
                 // Calculate results
-                val result = calculateResults(session)
+                val result = scoreCalculator.calculate(session)
                 
-                // Record performance for adaptive difficulty
-                val difficulty = _uiState.value.currentDifficulty
-                val timeSpent = (30 * 60) - _uiState.value.timeRemainingSeconds // seconds
-                difficultyManager.recordPerformance(
-                    testType = "OIR",
-                    difficulty = difficulty,
-                    score = result.percentageScore,
-                    correctAnswers = result.correctAnswers,
-                    totalQuestions = result.totalQuestions,
-                    timeSeconds = timeSpent.toFloat()
-                )
-                android.util.Log.d("OIRTestViewModel", "📊 Recorded performance: ${result.percentageScore}% ($difficulty)")
+                // OIR uses authentic SSB-level questions — no adaptive difficulty tracking
                 
                 // Record test usage for subscription tracking
                 subscriptionManager.recordTestUsage(TestType.OIR, session.userId)
@@ -494,7 +468,6 @@ class OIRTestViewModel @Inject constructor(
             
             _uiState.update { it.copy(
                 isLoading = false,
-                loadingMessage = null,
                 error = "Invalid question index (${session.currentQuestionIndex}/${session.questions.size}). Please click Submit Test button."
             ) }
             return
@@ -506,7 +479,6 @@ class OIRTestViewModel @Inject constructor(
         
         _uiState.update { it.copy(
             isLoading = false,
-            loadingMessage = null,
             error = null, // Clear any previous errors
             currentQuestion = currentQuestion,
             currentQuestionIndex = session.currentQuestionIndex,
@@ -517,111 +489,30 @@ class OIRTestViewModel @Inject constructor(
             isCurrentAnswerCorrect = existingAnswer?.isCorrect ?: false,
             currentQuestionAnswered = existingAnswer != null
         ) }
+
+        // Prefetch next question's image so it's in memory cache when the user advances
+        prefetchNextImage(session.questions, session.currentQuestionIndex)
+    }
+
+    /**
+     * Enqueues a background Coil preload for the image of question[currentIndex + 1].
+     * This ensures smooth image display when the user taps "Next" — the image is already
+     * in memory cache before the next question is shown.
+     *
+     * No-op if already on the last question or the next question has no image.
+     */
+    private fun prefetchNextImage(questions: List<OIRQuestion>, currentIndex: Int) {
+        val nextUrl = questions.getOrNull(currentIndex + 1)?.questionImageUrl ?: return
+        val request = ImageRequest.Builder(appContext)
+            .data(nextUrl)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build()
+        imageLoader.enqueue(request)
     }
     
-    private fun calculateResults(session: OIRTestSession): OIRTestResult {
-        val correctAnswers = session.answers.values.count { it.isCorrect }
-        val incorrectAnswers = session.answers.values.count { !it.isCorrect && !it.skipped }
-        val skippedQuestions = session.questions.size - session.answers.size
-        
-        val rawScore = session.answers.values.filter { it.isCorrect }.sumOf { answer ->
-            val question = session.questions.find { it.id == answer.questionId }
-            question?.difficulty?.points ?: 1
-        }
-        
-        val maxScore = session.questions.sumOf { it.difficulty.points }
-        val percentageScore = if (maxScore > 0) (rawScore.toFloat() / maxScore) * 100 else 0f
-        
-        // Calculate category scores
-        val categoryScores = OIRQuestionType.values().associateWith { type ->
-            val categoryQuestions = session.questions.filter { it.type == type }
-            val categoryAnswers = categoryQuestions.mapNotNull { q -> session.answers[q.id] }
-            val correct = categoryAnswers.count { it.isCorrect }
-            val avgTime = if (categoryAnswers.isNotEmpty()) {
-                categoryAnswers.map { it.timeTakenSeconds }.average().toInt()
-            } else 0
-            
-            CategoryScore(
-                category = type,
-                totalQuestions = categoryQuestions.size,
-                correctAnswers = correct,
-                percentage = if (categoryQuestions.isNotEmpty()) {
-                    (correct.toFloat() / categoryQuestions.size) * 100
-                } else 0f,
-                averageTimeSeconds = avgTime
-            )
-        }
-        
-        // Calculate difficulty breakdown
-        val difficultyScores = QuestionDifficulty.values().associateWith { diff ->
-            val diffQuestions = session.questions.filter { it.difficulty == diff }
-            val diffAnswers = diffQuestions.mapNotNull { q -> session.answers[q.id] }
-            val correct = diffAnswers.count { it.isCorrect }
-            
-            DifficultyScore(
-                difficulty = diff,
-                totalQuestions = diffQuestions.size,
-                correctAnswers = correct,
-                percentage = if (diffQuestions.isNotEmpty()) {
-                    (correct.toFloat() / diffQuestions.size) * 100
-                } else 0f
-            )
-        }
-        
-        // Create answered questions list
-        android.util.Log.d("OIRTestViewModel", "📋 Creating answered questions list from ${session.questions.size} questions")
-        
-        val answeredQuestions = session.questions.mapNotNull { question ->
-            val answer = session.answers[question.id] ?: return@mapNotNull null
-            
-            android.util.Log.d("OIRTestViewModel", "   Processing question: ${question.id}")
-            android.util.Log.d("OIRTestViewModel", "     correctAnswerId: ${question.correctAnswerId}")
-            android.util.Log.d("OIRTestViewModel", "     Options: ${question.options.map { it.id }}")
-            
-            val correctOption = question.options.find { it.id == question.correctAnswerId }
-            
-            if (correctOption == null) {
-                val exception = Exception("Question ${question.id} has invalid correctAnswerId: ${question.correctAnswerId}")
-                ErrorLogger.log(exception, "OIR question data validation failed: correctAnswerId not found in options")
-                return@mapNotNull null // Skip this question instead of crashing
-            }
-            
-            val selectedOption = answer.selectedOptionId?.let { id ->
-                question.options.find { it.id == id }
-            }
-            
-            OIRAnsweredQuestion(
-                question = question,
-                userAnswer = answer,
-                isCorrect = answer.isCorrect,
-                correctOption = correctOption,
-                selectedOption = selectedOption
-            )
-        }
-        
-        android.util.Log.d("OIRTestViewModel", "✅ Created ${answeredQuestions.size} answered questions")
-        
-        val timeTaken = ((System.currentTimeMillis() - session.startTime) / 1000).toInt()
-        
-        return OIRTestResult(
-            testId = session.testId,
-            sessionId = session.sessionId,
-            userId = session.userId,
-            totalQuestions = session.questions.size,
-            correctAnswers = correctAnswers,
-            incorrectAnswers = incorrectAnswers,
-            skippedQuestions = skippedQuestions,
-            totalTimeSeconds = OIRTestConfig().totalTimeMinutes * 60,
-            timeTakenSeconds = timeTaken,
-            rawScore = rawScore,
-            percentageScore = percentageScore,
-            categoryScores = categoryScores,
-            difficultyBreakdown = difficultyScores,
-            answeredQuestions = answeredQuestions,
-            completedAt = System.currentTimeMillis()
-        )
-    }
-    
+    // Scoring logic extracted to OIRTestScoreCalculator (single responsibility, testable)
+
     override fun onCleared() {
         super.onCleared()
         
@@ -638,35 +529,4 @@ class OIRTestViewModel @Inject constructor(
     }
 }
 
-/**
- * UI State for OIR Test Screen
- */
-data class OIRTestUiState(
-    val isLoading: Boolean = true,
-    val loadingMessage: String? = null,
-    val error: String? = null,
-    val currentQuestion: OIRQuestion? = null,
-    val currentQuestionIndex: Int = 0,
-    val totalQuestions: Int = 0,
-    val timeRemainingSeconds: Int = 0,
-    val selectedOptionId: String? = null,
-    val showFeedback: Boolean = false,
-    val isCurrentAnswerCorrect: Boolean = false,
-    val currentQuestionAnswered: Boolean = false,
-    val isCompleted: Boolean = false,
-    val sessionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
-    val testResult: OIRTestResult? = null,  // Result calculated locally, no Firestore needed
-    val currentDifficulty: String = "EASY",  // Current difficulty level for adaptive progression
-    // Subscription limit fields
-    val isLimitReached: Boolean = false,
-    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
-    val testsLimit: Int = 1,
-    val testsUsed: Int = 0,
-    val resetsAt: String = "",
-    // PHASE 1: New StateFlow fields (replacing nullable vars)
-    val isTimerActive: Boolean = false,
-    val timerStartTime: Long = 0L,
-    val session: OIRTestSession? = null  // Move session to observable state
-)
 

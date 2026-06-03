@@ -72,8 +72,10 @@ class SplashViewModel @Inject constructor(
                 android.util.Log.d("SplashViewModel", "Resolved user: ${user?.email ?: "timeout/null"}")
 
                 if (user == null) {
-                    android.util.Log.w("SplashViewModel", "User profile timed out, navigating to login")
-                    _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
+                    // Profile load timed out (e.g. no network) but user IS authenticated locally.
+                    // Do NOT send them back to login — navigate to home so they can use cached data.
+                    android.util.Log.w("SplashViewModel", "User profile timed out but isAuthenticated=true, navigating to student home")
+                    _navigationEvent.value = SplashNavigationEvent.NavigateToStudentHome
                     return@launch
                 }
 

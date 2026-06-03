@@ -655,9 +655,7 @@
     <string name="oir_incorrect">Incorrect</string>
     <string name="oir_error_loading">Error Loading Test</string>
     <string name="oir_retry">Retry</string>
-    <string name="oir_difficulty_easy">Easy</string>
-    <string name="oir_difficulty_medium">Medium</string>
-    <string name="oir_difficulty_hard">Hard</string>
+    <string name="oir_question_figure_description">OIR question figure</string>
 
     <!-- ============================================ -->
     <!-- PPDT TEST SCREEN - DETAILED STRINGS -->

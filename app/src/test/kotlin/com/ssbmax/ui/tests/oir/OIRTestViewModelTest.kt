@@ -49,6 +49,7 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     private val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
+    private val mockImageLoader = mockk<coil.ImageLoader>(relaxed = true)
     
     private val mockQuestions = createMockQuestions()
     private val mockUser = SSBMaxUser(
@@ -87,11 +88,9 @@ class OIRTestViewModelTest : BaseViewModelTest() {
             mockUserProfileRepo.getUserProfile(any()) 
         } returns flowOf(Result.success(mockUserProfile))
         
-        // Mock difficulty manager
-        coEvery {
-            mockDifficultyManager.getRecommendedDifficulty(any())
-        } returns "EASY"
-        
+        // Note: mockDifficultyManager is kept for constructor injection compatibility.
+        // OIR no longer uses adaptive difficulty — all sets are authentic SSB level.
+
         // Mock subscription manager - use sealed class subtype
         coEvery {
             mockSubscriptionManager.canTakeTest(any(), any())
@@ -723,17 +722,70 @@ class OIRTestViewModelTest : BaseViewModelTest() {
     
     // ==================== Helper Methods ====================
     
+    // Use real calculator so score assertions in submit tests continue to work
+    private val realScoreCalculator = OIRTestScoreCalculator()
+    private val mockContext = mockk<android.content.Context>(relaxed = true)
+
     private fun createViewModel(): OIRTestViewModel {
         return OIRTestViewModel(
-            mockTestContentRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger
+            testContentRepository = mockTestContentRepo,
+            submissionRepository  = mockSubmissionRepo,
+            observeCurrentUser    = mockObserveCurrentUser,
+            userProfileRepository = mockUserProfileRepo,
+            difficultyManager     = mockDifficultyManager,
+            subscriptionManager   = mockSubscriptionManager,
+            getOLQDashboard       = mockGetOLQDashboard,
+            securityLogger        = mockSecurityLogger,
+            scoreCalculator       = realScoreCalculator,
+            appContext            = mockContext,
+            imageLoader           = mockImageLoader
         )
+    }
+
+    // ==================== Image Prefetch Tests ====================
+
+    @Test
+    fun `prefetchNextImage enqueues next question imageUrl when advancing`() = runTest {
+        // Given — questions with imageUrls at index 0 and 1
+        val questionsWithImages = createMockQuestions().mapIndexed { idx, q ->
+            q.copy(questionImageUrl = "https://cdn.example.com/oir_q${idx + 1}.png")
+        }
+        coEvery {
+            mockTestContentRepo.getOIRTestQuestions(any(), any())
+        } returns Result.success(questionsWithImages)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // When — advance to next question (triggers updateUiFromSession → prefetch Q2's image)
+        viewModel.nextQuestion()
+        advanceUntilIdle()
+
+        // Then — imageLoader.enqueue() called at least once with the Q2 image URL
+        verify(atLeast = 1) { mockImageLoader.enqueue(any()) }
+    }
+
+    @Test
+    fun `prefetchNextImage does NOT enqueue when on last question`() = runTest {
+        // Given — single-question test (no "next" to prefetch)
+        val singleQuestion = createMockQuestions().take(1).map { q ->
+            q.copy(questionImageUrl = "https://cdn.example.com/oir_only.png")
+        }
+        coEvery {
+            mockTestContentRepo.getOIRTestQuestions(any(), any())
+        } returns Result.success(singleQuestion)
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        clearMocks(mockImageLoader) // Clear any enqueue calls from initial load
+
+        // When — attempt to navigate past the last question
+        viewModel.nextQuestion() // No-op, already on last
+        advanceUntilIdle()
+
+        // Then — no new prefetch enqueue for a non-existent next question
+        verify(exactly = 0) { mockImageLoader.enqueue(any()) }
     }
     
     private fun createMockQuestions(): List<OIRQuestion> {

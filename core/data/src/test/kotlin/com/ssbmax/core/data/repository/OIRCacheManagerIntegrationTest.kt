@@ -9,6 +9,8 @@ import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.domain.model.OIRQuestionType
 import com.ssbmax.core.domain.model.QuestionDifficulty
 import io.mockk.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
@@ -30,6 +32,7 @@ import org.junit.Test
  * They are temporarily ignored pending emulator setup or conversion to instrumented tests.
  * The cache manager logic is validated via ViewModel tests and E2E tests.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class OIRCacheManagerIntegrationTest {
     
     companion object {
@@ -64,10 +67,12 @@ class OIRCacheManagerIntegrationTest {
         every { Log.i(any(), any()) } returns 0
         every { Log.v(any(), any()) } returns 0
         
+        val selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
         cacheManager = OIRQuestionCacheManager(
             firestore = mockFirestore,
-            cacheDao = mockCacheDao,
-            gson = gson
+            cacheDao  = mockCacheDao,
+            gson      = gson,
+            selector  = selector
         )
         cacheManager = spyk(cacheManager)
         coEvery { cacheManager.downloadBatch(any()) } returns Result.success(Unit)
@@ -149,15 +154,15 @@ class OIRCacheManagerIntegrationTest {
     
     @Test
     fun `initialSync skips download when cache already has enough questions`() = runTest {
-        // Given - cache already has 100 questions
-        coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
-        
+        // Given - cache already has 900 questions (full 20-batch pool)
+        coEvery { mockCacheDao.getCachedQuestionCount() } returns 900
+
         // When
         val result = cacheManager.initialSync()
-        
+
         // Then
         assertTrue("Should succeed without downloading", result.isSuccess)
-        
+
         // Verify no Firestore calls made
         verify(exactly = 0) { mockFirestore.collection(any()) }
     }
@@ -182,6 +187,46 @@ class OIRCacheManagerIntegrationTest {
         coVerify { mockCacheDao.getCachedQuestionCount() }
     }
     
+    @Test
+    fun `initialSync downloads batches 1 to 4 synchronously before returning`() = runTest {
+        // Given - empty cache
+        coEvery { mockCacheDao.getCachedQuestionCount() } returns 0
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        // downloadBatch is already stubbed via spyk to return success
+
+        // When
+        val result = cacheManager.initialSync()
+
+        // Then - function returned successfully
+        assertTrue("initialSync should succeed", result.isSuccess)
+
+        // Batches 1-4 must be downloaded during the synchronous phase
+        val expectedBatches = (1..4).map { "batch_pdf_%03d".format(it) }
+        expectedBatches.forEach { batchId ->
+            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
+        }
+    }
+
+    @Test
+    fun `initialSync enqueues background download for batches 5 to 20`() = runTest {
+        // Given - empty cache
+        coEvery { mockCacheDao.getCachedQuestionCount() } returns 0
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        // When
+        cacheManager.initialSync()
+
+        // Allow background coroutine to run
+        advanceUntilIdle()
+
+        // Then - batches 5-20 must eventually be downloaded in background
+        val backgroundBatches = (5..20).map { "batch_pdf_%03d".format(it) }
+        backgroundBatches.forEach { batchId ->
+            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
+        }
+    }
+
     // ==================== Usage Tracking Tests ====================
     
     @Test
