@@ -30,7 +30,8 @@ data class OIRQuestion(
     val correctAnswerId: String,
     val explanation: String,
     val difficulty: QuestionDifficulty,
-    val timeSeconds: Int = 60 // Time allocated for this question
+    val timeSeconds: Int = 60, // Time allocated for this question
+    val questionImageUrl: String? = null // Figure for non-verbal questions (cube/series/classification)
 )
 
 /**

@@ -604,10 +604,20 @@ object DatabaseMigrations {
             // Update all existing TAT images to have correct character limits
             database.execSQL("""
                 UPDATE cached_tat_images 
-                SET minCharacters = 50, 
+                SET minCharacters = 50,
                     maxCharacters = 1500
                 WHERE minCharacters = 150 AND maxCharacters = 800
             """.trimIndent())
+        }
+    }
+
+    /**
+     * Migration from version 16 to 17
+     * Adds questionImageUrl column to OIR question cache (figure-based non-verbal questions)
+     */
+    val MIGRATION_16_17 = object : Migration(16, 17) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN questionImageUrl TEXT")
         }
     }
 }

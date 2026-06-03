@@ -24,8 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
@@ -288,7 +290,28 @@ private fun QuestionView(
                 )
             }
         }
-        
+
+        // Question Figure (non-verbal: cube / series / classification questions)
+        question.questionImageUrl?.let { imageUrl ->
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Question figure",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+                }
+            }
+        }
+
         // Options
         items(question.options) { option ->
             OptionCard(
@@ -350,11 +373,20 @@ private fun OptionCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = option.text,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
+            if (option.imageUrl != null) {
+                AsyncImage(
+                    model = option.imageUrl,
+                    contentDescription = "Option ${option.text}",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                Text(
+                    text = option.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             
             when {
                 isCorrect -> Icon(

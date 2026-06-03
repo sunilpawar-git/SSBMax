@@ -26,7 +26,9 @@ data class CachedOIRQuestionEntity(
     val correctAnswerId: String,
     
     val explanation: String,
-    
+
+    val questionImageUrl: String? = null, // Figure for non-verbal questions (nullable for verbal)
+
     val difficulty: String, // EASY, MEDIUM, HARD
     
     val tags: String, // Comma-separated tags for analytics

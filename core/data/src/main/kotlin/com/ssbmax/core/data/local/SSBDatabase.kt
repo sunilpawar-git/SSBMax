@@ -62,7 +62,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 16, // Added PPDT context field (migrated from 15)
+    version = 17, // Added OIR questionImageUrl field (migrated from 16)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

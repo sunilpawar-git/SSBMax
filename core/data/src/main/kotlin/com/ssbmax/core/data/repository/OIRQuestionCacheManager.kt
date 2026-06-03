@@ -394,6 +394,7 @@ class OIRQuestionCacheManager @Inject constructor(
             optionsJson = gson.toJson(questionMap["options"]),
             correctAnswerId = questionMap["correctAnswerId"] as? String ?: "",
             explanation = questionMap["explanation"] as? String ?: "",
+            questionImageUrl = questionMap["questionImageUrl"] as? String,
             difficulty = questionMap["difficulty"] as? String ?: "MEDIUM",
             tags = (questionMap["tags"] as? List<String>)?.joinToString(",") ?: "",
             batchId = batchId,
@@ -427,8 +428,16 @@ class OIRQuestionCacheManager @Inject constructor(
             correctAnswerId = entity.correctAnswerId,
             explanation = entity.explanation,
             difficulty = QuestionDifficulty.valueOf(entity.difficulty),
-            timeSeconds = 60
+            timeSeconds = 60,
+            questionImageUrl = entity.questionImageUrl?.let { normalizeStorageUrl(it) }
         )
+    }
+
+    /** Normalize Firebase Storage gs:// URLs to HTTPS (same convention as TAT/PPDT). */
+    private fun normalizeStorageUrl(raw: String): String {
+        return if (raw.startsWith("gs://")) {
+            raw.replaceFirst("gs://", "https://storage.googleapis.com/")
+        } else raw
     }
 }
 

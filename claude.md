@@ -113,6 +113,17 @@ Pass only IDs (strings) between screens via navigation. Never pass complex objec
 - If you change ViewModel or Repository logic, you **must** update or add tests
 - If `./gradlew check` fails, fix it before considering the task done
 
+## Content-Ingestion Principle (question banks from PDFs/sources)
+
+When importing question/test content from an external source (PDF, scan, doc) into Firestore, **keep the LLM out of the correctness path.** A vision-LLM doing extraction + image-matching + answer/explanation generation in one pass produces jumbled, hallucinated data (see the `scripts/*fix-*-questions.js` graveyard — the cost of the old approach).
+
+Instead:
+1. **Parse the source-of-truth deterministically.** Question text, options, the answer key, and explanations almost always live in the PDF *text layer* — extract them with `pymupdf`, not an LLM. Map figures to questions by *geometry* (vertical position), and rebuild figures by compositing the clean embedded images onto a canvas (never a page-render, which bakes in watermarks).
+2. **LLM only for non-critical enrichment** (tags, subtype, difficulty) — never for `questionText`, `correctAnswerId`, or `explanation`.
+3. **Always gate writes with a human-reviewable HTML preview** before uploading to Firebase.
+
+Reference implementation: `scripts/oir-extraction/` (`oir_extract_v2.py` + `upload-oir-batch.js`). Apply the same shape to future WAT/SRT/GPE content pipelines.
+
 ## Tech Stack Quick Reference
 
 Kotlin 2.1.0, AGP 8.7.3, compileSdk/targetSdk 35, minSdk 26, JVM 21, Compose BOM 2024.05.00, Hilt 2.54, Room 2.6.1, Coroutines 1.9.0, Firebase BOM 33.7.0, Ktor 3.0.2, Gemini AI 0.9.0. Versions managed in `gradle/libs.versions.toml`.

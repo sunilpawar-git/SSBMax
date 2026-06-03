@@ -61,7 +61,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_11_12, // Add PIQ/SD usage columns
                 DatabaseMigrations.MIGRATION_12_13, // Add GPE image cache tables
                 DatabaseMigrations.MIGRATION_13_14, // Add GPE solution column
-                DatabaseMigrations.MIGRATION_14_15  // Update TAT character limits
+                DatabaseMigrations.MIGRATION_14_15, // Update TAT character limits
+                DatabaseMigrations.MIGRATION_16_17  // Add OIR questionImageUrl column
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
