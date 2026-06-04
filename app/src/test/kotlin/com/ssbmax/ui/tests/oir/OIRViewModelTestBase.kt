@@ -39,6 +39,7 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
 
     protected lateinit var viewModel: OIRTestViewModel
     protected val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    protected val mockTestSessionRepo = mockk<com.ssbmax.core.domain.repository.TestSessionRepository>(relaxed = true)
     protected val mockSubmissionRepo = mockk<com.ssbmax.core.domain.repository.SubmissionRepository>(relaxed = true)
     protected val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     protected val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -108,6 +109,7 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
     protected fun createViewModel(): OIRTestViewModel {
         return OIRTestViewModel(
             testContentRepository = mockTestContentRepo,
+            testSessionRepository = mockTestSessionRepo,
             observeCurrentUser    = mockObserveCurrentUser,
             userProfileRepository = mockUserProfileRepo,
             subscriptionManager   = mockSubscriptionManager,

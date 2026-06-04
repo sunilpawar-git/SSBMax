@@ -9,6 +9,7 @@ import com.ssbmax.R
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.core.domain.usecase.oir.SubmitOIRTestUseCase
@@ -40,6 +41,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
@@ -207,6 +209,9 @@ class OIRTestViewModel @Inject constructor(
     fun pauseTest() {
         val session = _uiState.value.session ?: return
         _uiState.update { it.copy(isTimerActive = false, session = session.copy(isPaused = true)) }
+        viewModelScope.launch {
+            testSessionRepository.endTestSession(session.sessionId)
+        }
     }
 
     private fun startTimer() {

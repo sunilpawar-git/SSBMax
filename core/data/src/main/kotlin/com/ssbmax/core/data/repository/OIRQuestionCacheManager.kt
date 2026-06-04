@@ -40,7 +40,6 @@ class OIRQuestionCacheManager @Inject constructor(
         private const val FIRESTORE_COLLECTION = "test_content"
         private const val FIRESTORE_OIR_DOC   = "oir"
         private const val FIRESTORE_BATCHES   = "batches"
-        private const val MAX_CACHE_QUESTIONS = 300
     }
 
     /**

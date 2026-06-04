@@ -644,7 +644,7 @@
     <string name="oir_question_format">Q %1$d/%2$d</string>
     <string name="oir_exit_test">Exit Test</string>
     <string name="oir_exit_title">Exit Test?</string>
-    <string name="oir_exit_message">Are you sure you want to exit? Your progress will be saved and you can resume later.</string>
+    <string name="oir_exit_message">Are you sure you want to exit? Your current progress will be lost.</string>
     <string name="oir_exit">Exit</string>
     <string name="oir_continue_test">Continue Test</string>
     <string name="oir_previous">Previous</string>

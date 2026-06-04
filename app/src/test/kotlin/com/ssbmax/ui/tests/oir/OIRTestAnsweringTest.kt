@@ -208,5 +208,24 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
         assertNotNull(answer)
         assertTrue("timeTakenSeconds should be >= 0", answer!!.timeTakenSeconds >= 0)
     }
+
+    // ==================== Phase 5-D RED: pauseTest session leak ====================
+
+    @Test
+    fun `pauseTest callsEndTestSession preventingSessionLeak`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val sessionId = viewModel.uiState.value.session?.sessionId ?: "unknown"
+
+        // Act
+        viewModel.pauseTest()
+        advanceUntilIdle()
+
+        // Assert — endTestSession must be called to prevent orphaned Firestore sessions
+        coVerify(exactly = 1) {
+            mockTestSessionRepo.endTestSession(sessionId)
+        }
+    }
 }
 
