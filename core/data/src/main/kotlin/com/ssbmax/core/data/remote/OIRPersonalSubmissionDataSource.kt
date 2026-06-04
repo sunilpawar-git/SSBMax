@@ -12,14 +12,12 @@ import javax.inject.Singleton
 /**
  * Data source for OIR personal test submissions.
  * Handles Firestore CRUD for OIRSubmission documents.
- *
- * Note: getLatestOIRSubmission currently uses default cache source.
- * Bug 6 (Phase 4) will migrate this to server-first fetch.
  */
 @Singleton
-class OIRPersonalSubmissionDataSource @Inject constructor() {
+class OIRPersonalSubmissionDataSource @Inject constructor(
+    private val firestore: FirebaseFirestore
+) {
 
-    private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")
 
     companion object {
@@ -64,7 +62,12 @@ class OIRPersonalSubmissionDataSource @Inject constructor() {
                 .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
                 .limit(1)
 
-            val snapshot = query.get().await()
+            val snapshot = try {
+                query.get(com.google.firebase.firestore.Source.SERVER).await()
+            } catch (e: Exception) {
+                Log.w(TAG, "Server fetch failed, falling back to cache: ${e.message}")
+                query.get(com.google.firebase.firestore.Source.CACHE).await()
+            }
 
             if (snapshot.isEmpty) {
                 Result.success(null)

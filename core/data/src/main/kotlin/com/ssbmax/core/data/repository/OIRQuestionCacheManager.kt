@@ -105,7 +105,10 @@ class OIRQuestionCacheManager @Inject constructor(
             val questions = data["questions"] as? List<Map<String, Any>>
                 ?: throw Exception("Questions field missing or invalid")
 
-            val questionCount = data["question_count"] as? Long ?: questions.size.toLong()
+            // TODO: Remove question_count fallback after confirming all 20 Firestore batches use totalQuestions field
+            val questionCount = (data["totalQuestions"] as? Long)
+                ?: (data["question_count"] as? Long)
+                ?: questions.size.toLong()
             val version       = data["version"] as? String ?: "1.0.0"
 
             val entities = questions.mapIndexed { index, map -> selector.toEntity(map, batchId, index) }

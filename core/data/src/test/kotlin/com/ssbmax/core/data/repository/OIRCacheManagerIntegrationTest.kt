@@ -1,6 +1,10 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
@@ -347,7 +351,94 @@ class OIRCacheManagerIntegrationTest {
     }
     
     // ==================== Helper Methods ====================
-    
+
+    // ==================== Phase 4-B RED: totalQuestions field name fix ====================
+
+    private fun buildMockFirestoreChainForDownloadBatch(docData: Map<String, Any?>): DocumentSnapshot {
+        val mockDoc = mockk<DocumentSnapshot>(relaxed = true)
+        val mockBatchesCollection = mockk<CollectionReference>(relaxed = true)
+        val mockBatchDoc = mockk<DocumentReference>(relaxed = true)
+        val mockOirDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockOirCollection = mockk<CollectionReference>(relaxed = true)
+
+        every { mockFirestore.collection(any()) } returns mockOirCollection
+        every { mockOirCollection.document(any()) } returns mockOirDocRef
+        every { mockOirDocRef.collection(any()) } returns mockBatchesCollection
+        every { mockBatchesCollection.document(any()) } returns mockBatchDoc
+        every { mockBatchDoc.get() } returns Tasks.forResult(mockDoc)
+        every { mockDoc.exists() } returns true
+        every { mockDoc.data } returns docData
+        return mockDoc
+    }
+
+    @Test
+    fun `downloadBatch withTotalQuestionsField usesCorrectCount`() = runTest {
+        // Arrange — batch doc uses new field name "totalQuestions"
+        val docData = mapOf<String, Any?>(
+            "totalQuestions" to 50L,
+            "version" to "1.0.0",
+            "questions" to listOf(
+                mapOf(
+                    "id" to "q1", "questionNumber" to 1L, "type" to "VERBAL_REASONING",
+                    "questionText" to "Q1", "options" to emptyList<Any>(),
+                    "correctAnswerId" to "A", "explanation" to "E",
+                    "difficulty" to "EASY", "tags" to listOf<String>()
+                )
+            )
+        )
+        buildMockFirestoreChainForDownloadBatch(docData)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
+        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
+
+        // Act — call real downloadBatch (un-stub the spyk for this test)
+        val cacheManagerReal = OIRQuestionCacheManager(
+            firestore = mockFirestore,
+            cacheDao = mockCacheDao,
+            gson = gson,
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
+        )
+        cacheManagerReal.downloadBatch("batch_001")
+
+        // Assert — metadata was stored with questionCount == 50
+        coVerify {
+            mockCacheDao.insertBatchMetadata(match { it.questionCount == 50 })
+        }
+    }
+
+    @Test
+    fun `downloadBatch withLegacyQuestionCountField usesCorrectCount`() = runTest {
+        // Arrange — batch doc uses legacy field name "question_count" (regression guard)
+        val docData = mapOf<String, Any?>(
+            "question_count" to 30L,
+            "version" to "1.0.0",
+            "questions" to listOf(
+                mapOf(
+                    "id" to "q1", "questionNumber" to 1L, "type" to "VERBAL_REASONING",
+                    "questionText" to "Q1", "options" to emptyList<Any>(),
+                    "correctAnswerId" to "A", "explanation" to "E",
+                    "difficulty" to "EASY", "tags" to listOf<String>()
+                )
+            )
+        )
+        buildMockFirestoreChainForDownloadBatch(docData)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
+        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
+
+        val cacheManagerReal = OIRQuestionCacheManager(
+            firestore = mockFirestore,
+            cacheDao = mockCacheDao,
+            gson = gson,
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
+        )
+        cacheManagerReal.downloadBatch("batch_001")
+
+        coVerify {
+            mockCacheDao.insertBatchMetadata(match { it.questionCount == 30 })
+        }
+    }
+
     private fun createMockCachedQuestion(
         id: String,
         type: String = OIRQuestionType.VERBAL_REASONING.name,
