@@ -11,6 +11,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import java.io.IOException
 
 /** Integration tests for TestContentRepositoryImpl using mocked cache managers. */
 class TestContentRepositoryImplTest {
@@ -142,7 +143,7 @@ class TestContentRepositoryImplTest {
         coVerify { mockCacheManager.getTestQuestions(50) }
     }
     @Test
-    fun `getOIRTestQuestions falls back to mock data on cache error`() = runTest {
+    fun `getOIRTestQuestions whenCacheErrors returnsFailure`() = runTest {
         // Given - cache throws error
         val cacheStatus = com.ssbmax.core.domain.model.CacheStatus(
             cachedQuestions = 0,
@@ -161,11 +162,9 @@ class TestContentRepositoryImplTest {
         // When
         val result = repository.getOIRTestQuestions(count = 50)
         
-        // Then
-        assertTrue("Should succeed with fallback", result.isSuccess)
-        val questions = result.getOrNull()!!
-        assertTrue("Should have mock questions", questions.isNotEmpty())
-        assertTrue("Should be from MockTestDataProvider", questions.size == 10) // Mock provider has 10 questions
+        // Then — no mock fallback: error must propagate
+        assertTrue("Should return failure when cache fails", result.isFailure)
+        assertNull("Should NOT fall back to mock data", result.getOrNull())
     }
     @Test
     fun `initializeOIRCache delegates to cache manager`() = runTest {
@@ -275,7 +274,27 @@ class TestContentRepositoryImplTest {
     }
     
     // ==================== Helper Methods ====================
-    
+
+    // ==================== Phase 3 RED: Remove Mock Fallback ====================
+
+    @Test
+    fun `getOIRTestQuestions whenCacheFails returnsFailure not mock data`() = runTest {
+        // Given — cache fails completely
+        val emptyCacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+            cachedQuestions = 0, batchesDownloaded = 0, lastSyncTime = null,
+            verbalCount = 0, nonVerbalCount = 0, numericalCount = 0, spatialCount = 0
+        )
+        coEvery { mockCacheManager.getCacheStatus() } returns emptyCacheStatus
+        coEvery { mockCacheManager.initialSync() } returns Result.failure(IOException("No network"))
+
+        // When
+        val result = repository.getOIRTestQuestions(count = 50)
+
+        // Then — must return failure, NOT mock data
+        assertTrue("Should return failure when cache fails", result.isFailure)
+        assertNull("Should NOT return mock data", result.getOrNull())
+    }
+
     private fun createMockOIRQuestions(count: Int): List<OIRQuestion> {
         return (1..count).map { i ->
             val type = when {

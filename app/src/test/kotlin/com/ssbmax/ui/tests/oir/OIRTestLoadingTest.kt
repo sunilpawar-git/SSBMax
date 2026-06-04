@@ -261,4 +261,36 @@ class OIRTestLoadingTest : OIRViewModelTestBase() {
             mockSubscriptionManager.canTakeTest(TestType.OIR, any())
         }
     }
+
+    // ==================== Phase 3 RED: Remove Mock Fallback ====================
+
+    @Test
+    fun `loadTest whenQuestionsUnavailable showsOirUnavailableError`() = runTest {
+        coEvery {
+            mockTestContentRepo.getOIRTestQuestions(any(), any())
+        } returns Result.failure(java.io.IOException("Cache empty, no network"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals(
+            "Should show oir_error_questions_unavailable string",
+            com.ssbmax.R.string.oir_error_questions_unavailable,
+            state.errorResId
+        )
+    }
+
+    @Test
+    fun `loadTest failure doesNotIncrementSubscriptionUsage`() = runTest {
+        coEvery {
+            mockTestContentRepo.getOIRTestQuestions(any(), any())
+        } returns Result.failure(java.io.IOException("Cache empty, no network"))
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { mockSubscriptionManager.recordTestUsage(any(), any()) }
+    }
 }

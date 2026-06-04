@@ -658,6 +658,7 @@
     <string name="oir_error_load_failed">Failed to load test. Please try again.</string>
     <string name="oir_error_submit_failed">Failed to submit test. Please try again.</string>
     <string name="oir_error_invalid_question">Invalid question state. Please click Submit Test button.</string>
+    <string name="oir_error_questions_unavailable">OIR questions are temporarily unavailable. Please check your connection and try again.</string>
     <string name="oir_retry">Retry</string>
     <string name="oir_question_figure_description">OIR question figure</string>
 

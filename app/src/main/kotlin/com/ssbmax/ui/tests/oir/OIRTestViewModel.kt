@@ -121,7 +121,7 @@ class OIRTestViewModel @Inject constructor(
                 throw e
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Exception loading OIR test")
-                _uiState.update { it.copy(isLoading = false, errorResId = R.string.oir_error_load_failed) }
+                _uiState.update { it.copy(isLoading = false, errorResId = R.string.oir_error_questions_unavailable) }
             }
         }
     }

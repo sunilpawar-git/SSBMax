@@ -100,13 +100,7 @@ class TestContentRepositoryImpl @Inject constructor(
             
         } catch (e: Exception) {
             Log.e("TestContent", "Failed to get cached OIR questions", e)
-            // Fallback to mock data only in development
-            if (android.os.Build.VERSION.SDK_INT >= 0) { // Always true, but keeps the code
-                Log.w("TestContent", "Using mock data as fallback")
-                Result.success(MockTestDataProvider.getOIRQuestions())
-            } else {
-                Result.failure(e)
-            }
+            Result.failure(e)
         }
     }
     
