@@ -263,7 +263,7 @@
 - [ ] `./gradlew check` → exit 0
 
 ### Tech Debt Resolved in Phase 4
-- [ ] Migration bridge (`question_count` fallback) explicitly tracked via TODO comment — not silently abandoned ✓
+- [x] Migration bridge (`question_count` fallback) removed — all 20 Firestore batches confirmed using `totalQuestions` field ✓
 - [ ] Server-first pattern consistent across OIR and PPDT (same pattern, separate data sources) ✓
 
 ---

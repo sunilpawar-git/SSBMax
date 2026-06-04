@@ -407,10 +407,9 @@ class OIRCacheManagerIntegrationTest {
     }
 
     @Test
-    fun `downloadBatch withLegacyQuestionCountField usesCorrectCount`() = runTest {
-        // Arrange — batch doc uses legacy field name "question_count" (regression guard)
+    fun `downloadBatch withMissingTotalQuestions fallsBackToQuestionListSize`() = runTest {
+        // Arrange — batch doc has no totalQuestions field; fallback to questions.size
         val docData = mapOf<String, Any?>(
-            "question_count" to 30L,
             "version" to "1.0.0",
             "questions" to listOf(
                 mapOf(
@@ -434,8 +433,9 @@ class OIRCacheManagerIntegrationTest {
         )
         cacheManagerReal.downloadBatch("batch_001")
 
+        // questionCount falls back to questions.size (1 question in mock)
         coVerify {
-            mockCacheDao.insertBatchMetadata(match { it.questionCount == 30 })
+            mockCacheDao.insertBatchMetadata(match { it.questionCount == 1 })
         }
     }
 
