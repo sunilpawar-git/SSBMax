@@ -37,6 +37,8 @@ data class OIRTestUiState(
     val resetsAt: String = "",
     val isTimerActive: Boolean = false,
     val timerStartTime: Long = 0L,
+    /** Epoch ms when the current question was first displayed. Used for per-question timeTakenSeconds. */
+    val questionStartTimeMs: Long = 0L,
     /** Active test session kept in observable state for lifecycle-safe access. */
     val session: OIRTestSession? = null
 )

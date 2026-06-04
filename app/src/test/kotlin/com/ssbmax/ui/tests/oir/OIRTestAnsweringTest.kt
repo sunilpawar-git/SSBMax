@@ -159,4 +159,54 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
 
         verify(exactly = 0) { mockImageLoader.enqueue(any()) }
     }
+
+    // ==================== Per-question timeTakenSeconds (Bug 1) ====================
+
+    @Test
+    fun `selectOption timeTakenSeconds equals elapsed time since question start`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        fakeClock.advanceBy(3_000L) // 3 seconds pass while user reads question
+        viewModel.selectOption(mockQuestions[0].correctAnswerId)
+
+        val answer = viewModel.uiState.value.session?.answers?.get(mockQuestions[0].id)
+        assertNotNull("Answer should be recorded", answer)
+        assertEquals("timeTakenSeconds should reflect elapsed time", 3, answer!!.timeTakenSeconds)
+    }
+
+    @Test
+    fun `nextQuestion resets per-question timer so second answer tracks its own elapsed time`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Answer Q1 at t+2s
+        fakeClock.advanceBy(2_000L)
+        viewModel.selectOption(mockQuestions[0].correctAnswerId)
+
+        // Navigate to Q2 — timer should reset here
+        viewModel.nextQuestion()
+
+        // 5 more seconds pass while user reads Q2
+        fakeClock.advanceBy(5_000L)
+        viewModel.selectOption(mockQuestions[1].correctAnswerId)
+
+        val answerQ2 = viewModel.uiState.value.session?.answers?.get(mockQuestions[1].id)
+        assertNotNull("Q2 answer should be recorded", answerQ2)
+        assertEquals("Q2 timeTakenSeconds should be 5, not 7", 5, answerQ2!!.timeTakenSeconds)
+    }
+
+    @Test
+    fun `selectOption timeTakenSeconds is never negative`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Call selectOption immediately — no time has passed since question displayed
+        viewModel.selectOption(mockQuestions[0].correctAnswerId)
+
+        val answer = viewModel.uiState.value.session?.answers?.get(mockQuestions[0].id)
+        assertNotNull(answer)
+        assertTrue("timeTakenSeconds should be >= 0", answer!!.timeTakenSeconds >= 0)
+    }
 }
+

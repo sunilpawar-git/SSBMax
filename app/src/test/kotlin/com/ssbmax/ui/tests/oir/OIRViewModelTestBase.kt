@@ -9,6 +9,7 @@ import com.ssbmax.core.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.core.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.core.domain.util.NoOpLogger
 import com.ssbmax.testing.BaseViewModelTest
+import com.ssbmax.time.FakeClock
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -49,6 +50,7 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
     protected val realScoreCalculator = OIRTestScoreCalculator(NoOpLogger())
     protected val mockSubmitUseCase = mockk<SubmitOIRTestUseCase>(relaxed = true)
     protected val mockContext = mockk<android.content.Context>(relaxed = true)
+    protected val fakeClock = FakeClock()
 
     protected val mockQuestions = createMockQuestions()
     protected val mockUser = SSBMaxUser(
@@ -112,6 +114,7 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
             securityLogger        = mockSecurityLogger,
             scoreCalculator       = realScoreCalculator,
             submitOIRTestUseCase  = mockSubmitUseCase,
+            clock                 = fakeClock,
             appContext            = mockContext,
             imageLoader           = mockImageLoader
         )

@@ -16,6 +16,7 @@ import com.ssbmax.core.domain.validation.OIRQuestionValidator
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.time.Clock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
@@ -45,6 +46,7 @@ class OIRTestViewModel @Inject constructor(
     private val securityLogger: SecurityEventLogger,
     private val scoreCalculator: OIRTestScoreCalculator,
     private val submitOIRTestUseCase: SubmitOIRTestUseCase,
+    private val clock: Clock,
     @ApplicationContext private val appContext: Context,
     private val imageLoader: ImageLoader
 ) : ViewModel() {
@@ -108,11 +110,12 @@ class OIRTestViewModel @Inject constructor(
                     sessionId = UUID.randomUUID().toString(),
                     userId = userId, testId = testId,
                     questions = validatedQuestions, answers = emptyMap(),
-                    currentQuestionIndex = 0, startTime = System.currentTimeMillis(),
+                    currentQuestionIndex = 0, startTime = clock.nowMs(),
                     timeRemainingSeconds = config.totalTimeMinutes * 60
                 )
                 _uiState.update { it.copy(session = newSession) }
                 updateUiFromSession()
+                _uiState.update { it.copy(questionStartTimeMs = clock.nowMs()) }
                 startTimer()
             } catch (e: CancellationException) {
                 throw e
@@ -136,11 +139,12 @@ class OIRTestViewModel @Inject constructor(
         if (!validationResult.isValid) {
             ErrorLogger.log(Exception("Invalid question during runtime validation: ${question.id}"), "OIR question runtime validation failed: ${validationResult.toLogString()}")
         }
+        val timeTaken = ((clock.nowMs() - _uiState.value.questionStartTimeMs) / 1000L).toInt().coerceAtLeast(0)
         val answer = OIRAnswer(
             questionId = question.id,
             selectedOptionId = optionId,
             isCorrect = optionId == question.correctAnswerId,
-            timeTakenSeconds = 60 - _uiState.value.timeRemainingSeconds,
+            timeTakenSeconds = timeTaken,
             skipped = false
         )
         _uiState.update { state ->
@@ -159,6 +163,7 @@ class OIRTestViewModel @Inject constructor(
         if (session.currentQuestionIndex < session.questions.size - 1) {
             _uiState.update { it.copy(session = session.copy(currentQuestionIndex = session.currentQuestionIndex + 1)) }
             updateUiFromSession()
+            _uiState.update { it.copy(questionStartTimeMs = clock.nowMs()) }
         }
     }
 
@@ -167,6 +172,7 @@ class OIRTestViewModel @Inject constructor(
         if (session.currentQuestionIndex > 0) {
             _uiState.update { it.copy(session = session.copy(currentQuestionIndex = session.currentQuestionIndex - 1)) }
             updateUiFromSession()
+            _uiState.update { it.copy(questionStartTimeMs = clock.nowMs()) }
         }
     }
 
@@ -202,7 +208,7 @@ class OIRTestViewModel @Inject constructor(
     }
 
     private fun startTimer() {
-        _uiState.update { it.copy(isTimerActive = true, timerStartTime = System.currentTimeMillis()) }
+        _uiState.update { it.copy(isTimerActive = true, timerStartTime = clock.nowMs()) }
         viewModelScope.launch {
             try {
                 while (isActive && _uiState.value.isTimerActive &&
