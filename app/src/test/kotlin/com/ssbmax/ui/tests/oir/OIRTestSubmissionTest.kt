@@ -169,4 +169,28 @@ class OIRTestSubmissionTest : OIRViewModelTestBase() {
         // This test verifies the timer was active and functioning correctly.
         assertTrue("Timer was active and working", initialTime > 0)
     }
+
+    // ==================== markQuestionsUsed (Bug 2) ====================
+
+    @Test
+    fun `submitTest marks all served question IDs as used in cache`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Clear any calls made during auto-submit triggered by the timer running to zero
+        clearMocks(mockTestContentRepo, answers = false)
+
+        // Reload so there's a fresh session to submit
+        viewModel.loadTest()
+        advanceUntilIdle()
+
+        // Immediately submit without waiting for timer so no double-trigger
+        viewModel.submitTest()
+        advanceUntilIdle()
+
+        val expectedIds = mockQuestions.map { it.id }
+        coVerify(exactly = 1) {
+            mockTestContentRepo.markOIRQuestionsUsed(expectedIds)
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.ssbmax.core.domain.usecase.oir
 
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.TestUsageRecorder
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
@@ -24,7 +25,8 @@ class SubmitOIRTestUseCase @Inject constructor(
     private val usageRecorder: TestUsageRecorder,
     private val dashboardUseCase: GetOLQDashboardUseCase,
     private val submissionRepository: SubmissionRepository,
-    private val testSessionRepository: TestSessionRepository
+    private val testSessionRepository: TestSessionRepository,
+    private val testContentRepository: TestContentRepository
 ) {
 
     suspend operator fun invoke(session: OIRTestSession): Result<String> {
@@ -52,6 +54,11 @@ class SubmitOIRTestUseCase @Inject constructor(
 
             // Step 5: End the test session
             testSessionRepository.endTestSession(session.sessionId)
+
+            // Step 6: Mark served questions as used (best-effort — never fails the submission)
+            runCatching {
+                testContentRepository.markOIRQuestionsUsed(session.questions.map { it.id })
+            }
 
             // Return the submission ID
             submission.id

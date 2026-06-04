@@ -336,6 +336,9 @@ class TestContentRepositoryImpl @Inject constructor(
         srtCache.clear()
     }
 
+    override suspend fun markOIRQuestionsUsed(questionIds: List<String>): Result<Unit> =
+        runCatching { oirCacheManager.markQuestionsUsed(questionIds) }
+
     override suspend fun getRandomGDTopic(): Result<String> {
         return try {
             // Use task_batches path to match GTOTaskCacheManager and security rules

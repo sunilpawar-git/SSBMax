@@ -118,4 +118,14 @@ interface TestContentRepository {
      * Call this after test completion or on memory pressure
      */
     fun clearCache()
+
+    /**
+     * Mark OIR question IDs as recently served so they are excluded from future
+     * test selections for the next 7 days.
+     *
+     * Default implementation is a no-op so that existing fakes and test doubles
+     * do not need to be updated.
+     */
+    suspend fun markOIRQuestionsUsed(questionIds: List<String>): Result<Unit> =
+        Result.success(Unit)
 }

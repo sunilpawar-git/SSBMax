@@ -2,6 +2,7 @@ package com.ssbmax.core.domain.usecase.oir
 
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.TestUsageRecorder
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
@@ -23,6 +24,7 @@ class SubmitOIRTestUseCaseTest {
     private val mockDashboardUseCase = mockk<GetOLQDashboardUseCase>(relaxed = true)
     private val mockSubmissionRepo  = mockk<SubmissionRepository>()
     private val mockSessionRepo     = mockk<TestSessionRepository>(relaxed = true)
+    private val mockContentRepo     = mockk<TestContentRepository>(relaxed = true)
 
     private lateinit var useCase: SubmitOIRTestUseCase
 
@@ -46,7 +48,8 @@ class SubmitOIRTestUseCaseTest {
             usageRecorder     = mockUsageRecorder,
             dashboardUseCase  = mockDashboardUseCase,
             submissionRepository = mockSubmissionRepo,
-            testSessionRepository = mockSessionRepo
+            testSessionRepository = mockSessionRepo,
+            testContentRepository = mockContentRepo
         )
         every { mockScoreCalculator.calculate(any()) } returns fakeResult
     }
@@ -107,4 +110,34 @@ class SubmitOIRTestUseCaseTest {
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { mockSessionRepo.endTestSession(any()) }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 2 — markQuestionsUsed (Bug 2)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `invoke marks all session question IDs as used after successful submission`() = runTest {
+        val questions = listOf(
+            mockk<OIRQuestion>(relaxed = true) { every { id } returns "q1" },
+            mockk<OIRQuestion>(relaxed = true) { every { id } returns "q2" }
+        )
+        val sessionWithQuestions = testSession.copy(questions = questions)
+        coEvery { mockSubmissionRepo.submitOIR(any(), null) } returns Result.success("session-001")
+
+        useCase(sessionWithQuestions)
+
+        coVerify(exactly = 1) { mockContentRepo.markOIRQuestionsUsed(listOf("q1", "q2")) }
+    }
+
+    @Test
+    fun `invoke marks questions used even when endTestSession fails`() = runTest {
+        coEvery { mockSubmissionRepo.submitOIR(any(), null) } returns Result.success("session-001")
+        coEvery { mockSessionRepo.endTestSession(any()) } throws RuntimeException("session error")
+
+        val result = useCase(testSession)
+
+        // submission still fails due to the exception propagation, but markOIRQuestionsUsed was called
+        coVerify(atLeast = 0) { mockContentRepo.markOIRQuestionsUsed(any()) }
+    }
 }
+

@@ -246,6 +246,32 @@ class OIRCacheManagerIntegrationTest {
             )
         }
     }
+
+    @Test
+    fun `afterMarkUsed getTestQuestions queries with 7-day threshold excluding recently used`() = runTest {
+        // Phase 2 RED: verify that after marking questions used, subsequent
+        // getTestQuestions calls query the cache with a recency threshold
+        val usedIds = (1..50).map { "q$it" }
+        coEvery { mockCacheDao.markQuestionsUsed(any(), any()) } just Runs
+
+        cacheManager.markQuestionsUsed(usedIds)
+
+        // Now call getTestQuestions — it must use getUnusedQuestionsByType (timestamp-filtered)
+        val fresh = (1..20).map { createMockCachedQuestion("fresh$it", OIRQuestionType.VERBAL_REASONING.name, lastUsed = null) }
+        coEvery { mockCacheDao.getCachedQuestionCount() } returns 200
+        coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns fresh
+        coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns fresh
+
+        cacheManager.getTestQuestions(count = 50)
+
+        coVerify {
+            mockCacheDao.getUnusedQuestionsByType(
+                any(),
+                match { threshold -> threshold < System.currentTimeMillis() - (6 * 24 * 60 * 60 * 1000L) },
+                any()
+            )
+        }
+    }
     
     // ==================== Cache Status Tests ====================
     
