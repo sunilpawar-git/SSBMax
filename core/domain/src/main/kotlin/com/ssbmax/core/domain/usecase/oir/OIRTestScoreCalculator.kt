@@ -1,8 +1,7 @@
-package com.ssbmax.ui.tests.oir
+package com.ssbmax.core.domain.usecase.oir
 
-import android.util.Log
 import com.ssbmax.core.domain.model.*
-import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.core.domain.util.DomainLogger
 import javax.inject.Inject
 
 private const val TAG = "OIRScoreCalculator"
@@ -10,12 +9,12 @@ private const val TAG = "OIRScoreCalculator"
 /**
  * Calculates the final [OIRTestResult] from a completed [OIRTestSession].
  *
- * Extracted from [OIRTestViewModel] to keep the ViewModel under 300 lines and
- * to give the scoring logic a clear single responsibility.
- *
+ * Lives in the domain layer — zero Android dependencies.
  * Injected via Hilt so it can be tested independently.
  */
-class OIRTestScoreCalculator @Inject constructor() {
+class OIRTestScoreCalculator @Inject constructor(
+    private val logger: DomainLogger
+) {
 
     fun calculate(session: OIRTestSession): OIRTestResult {
         val correctAnswers   = session.answers.values.count { it.isCorrect }
@@ -25,7 +24,7 @@ class OIRTestScoreCalculator @Inject constructor() {
         val rawScore = session.answers.values.filter { it.isCorrect }.sumOf { answer ->
             session.questions.find { it.id == answer.questionId }?.difficulty?.points ?: 1
         }
-        val maxScore       = session.questions.sumOf { it.difficulty.points }
+        val maxScore        = session.questions.sumOf { it.difficulty.points }
         val percentageScore = if (maxScore > 0) (rawScore.toFloat() / maxScore) * 100 else 0f
 
         val categoryScores = OIRQuestionType.values().associateWith { type ->
@@ -54,14 +53,15 @@ class OIRTestScoreCalculator @Inject constructor() {
             )
         }
 
-        Log.d(TAG, "📋 Building answered-questions list (${session.questions.size} questions)")
+        logger.d(TAG, "📋 Building answered-questions list (${session.questions.size} questions)")
         val answeredQuestions = session.questions.mapNotNull { question ->
             val answer = session.answers[question.id] ?: return@mapNotNull null
             val correctOption = question.options.find { it.id == question.correctAnswerId }
             if (correctOption == null) {
-                ErrorLogger.log(
-                    Exception("Invalid correctAnswerId for ${question.id}"),
-                    "OIR scoring: correctAnswerId not found in options"
+                logger.e(
+                    TAG,
+                    "OIR scoring: correctAnswerId not found in options for ${question.id}",
+                    Exception("Invalid correctAnswerId for ${question.id}")
                 )
                 return@mapNotNull null
             }
@@ -73,24 +73,24 @@ class OIRTestScoreCalculator @Inject constructor() {
                 selectedOption = answer.selectedOptionId?.let { id -> question.options.find { it.id == id } }
             )
         }
-        Log.d(TAG, "✅ ${answeredQuestions.size} answered questions built")
+        logger.d(TAG, "✅ ${answeredQuestions.size} answered questions built")
 
         return OIRTestResult(
-            testId             = session.testId,
-            sessionId          = session.sessionId,
-            userId             = session.userId,
-            totalQuestions     = session.questions.size,
-            correctAnswers     = correctAnswers,
-            incorrectAnswers   = incorrectAnswers,
-            skippedQuestions   = skippedQuestions,
-            totalTimeSeconds   = OIRTestConfig().totalTimeMinutes * 60,
-            timeTakenSeconds   = ((System.currentTimeMillis() - session.startTime) / 1000).toInt(),
-            rawScore           = rawScore,
-            percentageScore    = percentageScore,
-            categoryScores     = categoryScores,
+            testId              = session.testId,
+            sessionId           = session.sessionId,
+            userId              = session.userId,
+            totalQuestions      = session.questions.size,
+            correctAnswers      = correctAnswers,
+            incorrectAnswers    = incorrectAnswers,
+            skippedQuestions    = skippedQuestions,
+            totalTimeSeconds    = OIRTestConfig().totalTimeMinutes * 60,
+            timeTakenSeconds    = ((System.currentTimeMillis() - session.startTime) / 1000).toInt(),
+            rawScore            = rawScore,
+            percentageScore     = percentageScore,
+            categoryScores      = categoryScores,
             difficultyBreakdown = difficultyScores,
-            answeredQuestions  = answeredQuestions,
-            completedAt        = System.currentTimeMillis()
+            answeredQuestions   = answeredQuestions,
+            completedAt         = System.currentTimeMillis()
         )
     }
 }

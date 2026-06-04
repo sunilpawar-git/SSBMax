@@ -11,6 +11,7 @@ import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
@@ -31,6 +32,7 @@ class GPETestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: GPETestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
     private val mockSubmissionRepo = mockk<SubmissionRepository>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -73,7 +75,7 @@ class GPETestViewModelTest : BaseViewModelTest() {
         every { mockObserveCurrentUser() } returns flowOf(mockUser)
         coEvery { mockSubscriptionManager.canTakeTest(TestType.GTO_GPE, any()) } returns 
             TestEligibility.Eligible(remainingTests = 8)
-        coEvery { mockTestContentRepo.createTestSession(any(), any(), any()) } returns 
+        coEvery { mockSessionRepo.createTestSession(any(), any(), any()) } returns 
             Result.success("session-gpe-123")
         coEvery { mockTestContentRepo.getGPEQuestions(any()) } returns 
             Result.success(listOf(mockQuestion))
@@ -99,6 +101,7 @@ class GPETestViewModelTest : BaseViewModelTest() {
 
         viewModel = GPETestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -135,7 +138,7 @@ class GPETestViewModelTest : BaseViewModelTest() {
         assertEquals(mockQuestion.resources, state.resources)
         assertEquals(GPEPhase.INSTRUCTIONS, state.currentPhase)
 
-        coVerify { mockTestContentRepo.createTestSession(mockUser.id, "gpe-standard", TestType.GTO_GPE) }
+        coVerify { mockSessionRepo.createTestSession(mockUser.id, "gpe-standard", TestType.GTO_GPE) }
         coVerify { mockTestContentRepo.getGPEQuestions("gpe-standard") }
     }
 

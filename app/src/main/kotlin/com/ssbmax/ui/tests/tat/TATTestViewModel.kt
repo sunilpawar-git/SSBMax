@@ -14,6 +14,7 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 
@@ -49,6 +50,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -198,7 +200,7 @@ class TATTestViewModel @Inject constructor(
                 
                 // Create test session
                 android.util.Log.d("TATTestViewModel", "📍 Step 3: Creating test session...")
-                val sessionResult = testContentRepository.createTestSession(
+                val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.TAT

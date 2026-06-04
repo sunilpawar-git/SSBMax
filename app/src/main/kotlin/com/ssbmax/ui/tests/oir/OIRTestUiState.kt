@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.oir
 
+import androidx.annotation.StringRes
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.OIRTestResult
 import com.ssbmax.core.domain.model.OIRTestSession
@@ -14,7 +15,7 @@ import com.ssbmax.core.domain.model.SubscriptionTier
  */
 data class OIRTestUiState(
     val isLoading: Boolean = true,
-    val error: String? = null,
+    @StringRes val errorResId: Int? = null,
     val currentQuestion: OIRQuestion? = null,
     val currentQuestionIndex: Int = 0,
     val totalQuestions: Int = 0,

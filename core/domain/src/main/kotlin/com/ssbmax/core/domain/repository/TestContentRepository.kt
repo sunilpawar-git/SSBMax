@@ -7,7 +7,7 @@ import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.SDTQuestion
 import com.ssbmax.core.domain.model.SRTSituation
 import com.ssbmax.core.domain.model.TATQuestion
-import com.ssbmax.core.domain.model.TestType
+
 import com.ssbmax.core.domain.model.WATWord
 
 // Type aliases for consistency
@@ -104,15 +104,6 @@ interface TestContentRepository {
     suspend fun getSDTQuestions(testId: String): Result<List<SDTQuestion>>
     
     /**
-     * Check if user has active test session for given test
-     * This prevents unauthorized access to test content
-     * @param userId User ID
-     * @param testId Test ID
-     * @return True if user has valid session
-     */
-    suspend fun hasActiveTestSession(userId: String, testId: String): Result<Boolean>
-    
-    /**
      * Get random Group Discussion topic
      */
     suspend fun getRandomGDTopic(): Result<String>
@@ -123,31 +114,8 @@ interface TestContentRepository {
     suspend fun getRandomLecturetteTopics(count: Int = 4): Result<List<String>>
     
     /**
-     * Create test session for user
-     * Required before accessing test content
-     * @param userId User ID
-     * @param testId Test ID
-     * @param testType Test type
-     * @return Session ID or error
-     */
-    suspend fun createTestSession(
-        userId: String,
-        testId: String,
-        testType: TestType
-    ): Result<String>
-    
-    /**
-     * End test session
-     * Invalidates access to test content
-     * @param sessionId Session ID
-     * @return Success or error
-     */
-    suspend fun endTestSession(sessionId: String): Result<Unit>
-    
-    /**
      * Clear in-memory cache of test content
      * Call this after test completion or on memory pressure
      */
     fun clearCache()
 }
-

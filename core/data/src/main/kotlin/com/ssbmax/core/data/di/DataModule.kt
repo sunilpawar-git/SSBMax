@@ -235,5 +235,16 @@ abstract class RepositoryModule {
     abstract fun bindUnifiedResultRepository(
         impl: com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
     ): com.ssbmax.core.domain.repository.UnifiedResultRepository
-}
 
+    @Binds
+    @Singleton
+    abstract fun bindTestUsageRecorder(
+        impl: com.ssbmax.core.data.repository.SubscriptionManager
+    ): com.ssbmax.core.domain.repository.TestUsageRecorder
+
+    @Binds
+    @Singleton
+    abstract fun bindTestSessionRepository(
+        impl: com.ssbmax.core.data.repository.TestSessionManagerImpl
+    ): com.ssbmax.core.domain.repository.TestSessionRepository
+}

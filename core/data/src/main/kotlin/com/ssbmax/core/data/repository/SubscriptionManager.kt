@@ -7,6 +7,7 @@ import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.repository.TestUsageRecorder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -36,7 +37,7 @@ class SubscriptionManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val securityLogger: SecurityEventLogger,
     private val debugConfig: com.ssbmax.core.data.debug.DebugConfig
-) {
+) : TestUsageRecorder {
     private val TAG = "SubscriptionManager"
     
     /**
@@ -128,7 +129,7 @@ class SubscriptionManager @Inject constructor(
      * SECURITY: Uses Firestore transaction for atomic increment
      * RACE CONDITION PREVENTION: Multiple simultaneous submissions handled correctly
      */
-    suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String? = null) {
+    override suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String?) {
         try {
             val currentMonth = getCurrentMonth()
             val docRef = firestore.collection("users")

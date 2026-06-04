@@ -7,6 +7,7 @@ import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
@@ -38,6 +39,7 @@ class WATTestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: WATTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
     private val mockSubmitWATTest = mockk<SubmitWATTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -67,13 +69,14 @@ class WATTestViewModelTest : BaseViewModelTest() {
     @Before
     fun setup() {
         every { mockObserveCurrentUser() } returns flowOf(mockUser)
-        coEvery { mockTestContentRepo.createTestSession(any(), any(), TestType.WAT) } returns Result.success("session-wat-123")
+        coEvery { mockSessionRepo.createTestSession(any(), any(), TestType.WAT) } returns Result.success("session-wat-123")
         coEvery { mockTestContentRepo.getWATQuestions(any()) } returns Result.success(mockWords)
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(mockUserProfile))
         coEvery { mockSubmitWATTest(any(), any()) } returns Result.success("submission-wat-123")
 
         viewModel = WATTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitWATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,

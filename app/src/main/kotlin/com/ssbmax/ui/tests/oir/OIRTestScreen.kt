@@ -86,8 +86,8 @@ fun OIRTestScreen(
                     message = stringResource(R.string.oir_loading),
                     modifier = Modifier.fillMaxSize()
                 )
-                uiState.error != null -> TestContentErrorState(
-                    error = uiState.error!!,
+                uiState.errorResId != null -> TestContentErrorState(
+                    error = stringResource(uiState.errorResId!!),
                     onRetry = { viewModel.loadTest() },
                     modifier = Modifier.fillMaxSize()
                 )

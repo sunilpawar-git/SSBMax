@@ -654,6 +654,10 @@
     <string name="oir_correct">Correct!</string>
     <string name="oir_incorrect">Incorrect</string>
     <string name="oir_error_loading">Error Loading Test</string>
+    <string name="oir_error_auth_required">Authentication required. Please login to continue.</string>
+    <string name="oir_error_load_failed">Failed to load test. Please try again.</string>
+    <string name="oir_error_submit_failed">Failed to submit test. Please try again.</string>
+    <string name="oir_error_invalid_question">Invalid question state. Please click Submit Test button.</string>
     <string name="oir_retry">Retry</string>
     <string name="oir_question_figure_description">OIR question figure</string>
 

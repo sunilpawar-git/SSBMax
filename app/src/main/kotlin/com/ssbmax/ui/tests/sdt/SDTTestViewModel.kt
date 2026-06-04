@@ -11,6 +11,7 @@ import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.utils.ErrorLogger
@@ -36,6 +37,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submitSDTTest: SubmitSDTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -97,7 +99,7 @@ class SDTTestViewModel @Inject constructor(
                 }
 
                 _uiState.update { it.copy(loadingMessage = "Loading questions...") }
-                testContentRepository.createTestSession(userId, testId, TestType.SD).getOrThrow()
+                testSessionRepository.createTestSession(userId, testId, TestType.SD).getOrThrow()
 
                 val questions = testContentRepository.getSDTQuestions(testId).getOrThrow()
                 if (questions.isEmpty()) {

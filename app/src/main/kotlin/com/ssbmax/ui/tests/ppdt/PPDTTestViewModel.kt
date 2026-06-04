@@ -6,6 +6,7 @@ import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +40,7 @@ import com.ssbmax.ui.tests.common.TestNavigationEvent
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -162,7 +164,7 @@ class PPDTTestViewModel @Inject constructor(
                 ) }
                 
                 // Create test session
-                val sessionResult = testContentRepository.createTestSession(
+                val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.PPDT

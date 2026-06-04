@@ -13,6 +13,7 @@ import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.utils.ErrorLogger
@@ -46,6 +47,7 @@ import com.ssbmax.ui.tests.common.TestNavigationEvent
 @HiltViewModel
 class WATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submitWATTest: SubmitWATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -167,7 +169,7 @@ class WATTestViewModel @Inject constructor(
                 ) }
                 
                 // Create test session
-                val sessionResult = testContentRepository.createTestSession(
+                val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.WAT

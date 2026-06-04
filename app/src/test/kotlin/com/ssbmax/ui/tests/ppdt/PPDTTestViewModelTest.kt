@@ -3,6 +3,7 @@ package com.ssbmax.ui.tests.ppdt
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
@@ -27,6 +28,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     private lateinit var viewModel: PPDTTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
     private val mockSubmissionRepo = mockk<com.ssbmax.core.domain.repository.SubmissionRepository>(relaxed = true)
     private val mockObserveCurrentUser = mockk<com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -65,7 +67,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         
         // Mock test session creation
         coEvery { 
-            mockTestContentRepo.createTestSession(any(), any(), TestType.PPDT) 
+            mockSessionRepo.createTestSession(any(), any(), TestType.PPDT) 
         } returns Result.success("session-ppdt-123")
         
         // Mock question loading
@@ -110,6 +112,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -144,6 +147,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -178,6 +182,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -202,6 +207,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -230,6 +236,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -259,6 +266,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -288,6 +296,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -324,6 +333,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -360,6 +370,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -392,6 +403,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -426,6 +438,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -456,6 +469,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -500,6 +514,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given - Legacy AI scoring removed, now using unified OLQ system
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -537,6 +552,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -566,6 +582,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -596,6 +613,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -628,6 +646,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -658,6 +677,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -694,6 +714,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -729,6 +750,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -754,6 +776,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = PPDTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmissionRepo,
             mockObserveCurrentUser,
             mockUserProfileRepo,
