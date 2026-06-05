@@ -122,7 +122,7 @@ Instead:
 2. **LLM only for non-critical enrichment** (tags, subtype, difficulty) — never for `questionText`, `correctAnswerId`, or `explanation`.
 3. **Always gate writes with a human-reviewable HTML preview** before uploading to Firebase.
 
-Reference implementation: `scripts/oir-extraction/` (`oir_extract_v2.py` + `upload-oir-batch.js`). Apply the same shape to future WAT/SRT/GPE content pipelines.
+Reference implementation: `scripts/oir-extraction/` (`oir_extract_v2.py` + `upload-oir-batch.js`). Apply the same shape to future WAT/SRT/GPE content pipelines. Full pipeline + serving architecture: `docs/architecture/OIR_Architecture.md`.
 
 ## Tech Stack Quick Reference
 
