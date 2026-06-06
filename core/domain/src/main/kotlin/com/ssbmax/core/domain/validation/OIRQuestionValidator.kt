@@ -158,11 +158,9 @@ object OIRQuestionValidator {
             }
         }
         
-        // Check option text
-        if (option.text.isBlank()) {
-            errors.add("Option '${option.id}' has empty text")
-        } else if (option.text.length < 1) {
-            warnings.add("Option '${option.id}' has very short text: '${option.text}'")
+        // Check option text — blank is valid for image-only options (non-verbal / spatial)
+        if (option.text.isBlank() && option.imageUrl == null) {
+            errors.add("Option '${option.id}' has empty text and no image")
         }
     }
     
