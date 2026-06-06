@@ -104,7 +104,8 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-que
 
 3. Repeat for each type (Non-Verbal, Numerical, Spatial)
 4. Questions are sampled **from all 1000 questions**, **from all 20 batches**, **randomly** — the `batchId` field is **ignored** during selection
-5. Final 50 are shuffled before presentation
+5. `OIRQuestionValidator.validateAndFilter` removes any structurally corrupt questions (blank text with no image, mismatched `correctAnswerId`, etc.) — valid questions proceed, invalid ones are logged and dropped silently
+6. Final set is shuffled before presentation
 
 **Example:** A user's first test might contain Q1 from batch_001 + Q87 from batch_002 + Q150 from batch_003, etc. — a random mix.
 
@@ -155,6 +156,7 @@ markQuestionsUsed()      → Room (7-day suppression)
 |---|---|
 | `core/data/.../OIRQuestionCacheManager.kt` | Sync / download / cache lifecycle |
 | `core/data/.../OIRQuestionSelector.kt` | Type-distribution selection + 7-day reuse logic |
+| `core/domain/.../validation/OIRQuestionValidator.kt` | Structural validation gate — filters corrupt questions before test assembly; image-only options (non-verbal/spatial) are valid with blank text |
 | `core/data/.../SubscriptionManager.kt` | Monthly limits — single source of truth |
 | `core/domain/.../usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → usage → submit → end session |
 
