@@ -63,7 +63,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_13_14, // Add GPE solution column
                 DatabaseMigrations.MIGRATION_14_15, // Update TAT character limits
                 DatabaseMigrations.MIGRATION_16_17, // Add OIR questionImageUrl column
-                DatabaseMigrations.MIGRATION_17_18  // Composite (type, lastUsed) index for OIR hot query
+                DatabaseMigrations.MIGRATION_17_18, // Composite (type, lastUsed) index for OIR hot query
+                DatabaseMigrations.MIGRATION_18_19  // Restore type and batchId indices on cached_oir_questions
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()

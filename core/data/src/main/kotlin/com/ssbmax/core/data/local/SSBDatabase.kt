@@ -62,7 +62,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 18, // Added composite (type, lastUsed) index for OIR hot query (migrated from 17)
+    version = 19, // Restore type and batchId indices on cached_oir_questions (migrated from 18)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

@@ -638,5 +638,26 @@ object DatabaseMigrations {
             database.execSQL("DROP INDEX IF EXISTS index_cached_oir_questions_lastUsed")
         }
     }
+
+    /**
+     * Migration from version 18 to 19
+     * Restores index_cached_oir_questions_type and index_cached_oir_questions_batchId on the
+     * cached_oir_questions table. Devices that received a fresh install at v17 (or that went
+     * through a destructive migration at that version) never got those two indices from the
+     * original MIGRATION_2_3. The entity @Index annotations were re-synced in a later commit,
+     * so we need this migration to make existing DBs match the entity definition.
+     */
+    val MIGRATION_18_19 = object : Migration(18, 19) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_oir_questions_type
+                ON cached_oir_questions(type)
+            """.trimIndent())
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_oir_questions_batchId
+                ON cached_oir_questions(batchId)
+            """.trimIndent())
+        }
+    }
 }
 
