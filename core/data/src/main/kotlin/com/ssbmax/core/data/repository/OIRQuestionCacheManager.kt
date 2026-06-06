@@ -36,28 +36,35 @@ class OIRQuestionCacheManager @Inject constructor(
     private val selector: OIRQuestionSelector
 ) {
     companion object {
-        private const val TAG                 = "OIRCacheManager"
+        private const val TAG                  = "OIRCacheManager"
         private const val FIRESTORE_COLLECTION = "test_content"
-        private const val FIRESTORE_OIR_DOC   = "oir"
-        private const val FIRESTORE_BATCHES   = "batches"
+        private const val FIRESTORE_OIR_DOC    = "oir"
+        private const val FIRESTORE_BATCHES    = "batches"
+        private val PHASE_1_BATCH_RANGE        = 1..4
+        private val PHASE_2_BATCH_RANGE        = 5..20
     }
 
     /**
      * Two-phase initial sync.
-     * Phase 1 (blocking): batches 1-4 — returns once enough questions exist for the first test.
+     * Phase 1 (blocking): batches 1-4 — returns once phase-1 batch metadata is complete.
      * Phase 2 (background): batches 5-20 — downloads while user is already in the test.
+     *
+     * Skip condition uses per-batch metadata (not total question count) so a single corrupt row
+     * cannot prevent the sync from being skipped on subsequent launches.
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
             Log.d(TAG, "Starting initial sync...")
-            val cachedCount = cacheDao.getCachedQuestionCount()
-            if (cachedCount >= 900) {
-                Log.d(TAG, "Cache already has $cachedCount questions, skipping initial sync")
+            val phase1Complete = PHASE_1_BATCH_RANGE.all { i ->
+                cacheDao.isBatchDownloaded("batch_pdf_%03d".format(i))
+            }
+            if (phase1Complete) {
+                Log.d(TAG, "Phase 1 batches already complete, skipping initial sync")
                 return Result.success(Unit)
             }
 
             // Phase 1: blocking
-            for (i in 1..4) {
+            for (i in PHASE_1_BATCH_RANGE) {
                 val batchId = "batch_pdf_%03d".format(i)
                 downloadBatch(batchId).getOrElse { e ->
                     Log.w(TAG, "Phase 1: failed to download $batchId: ${e.message}")
@@ -67,7 +74,7 @@ class OIRQuestionCacheManager @Inject constructor(
 
             // Phase 2: background
             CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                for (i in 5..20) {
+                for (i in PHASE_2_BATCH_RANGE) {
                     val batchId = "batch_pdf_%03d".format(i)
                     downloadBatch(batchId).getOrElse { e ->
                         Log.w(TAG, "Phase 2: failed to download $batchId: ${e.message}")

@@ -282,6 +282,39 @@ class OIRTestLoadingTest : OIRViewModelTestBase() {
         )
     }
 
+    // ==================== Phase 3: Network Error Tests ====================
+
+    @Test
+    fun `loadTest shows retryable error when subscription check returns NetworkError`() = runTest {
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.OIR, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.NetworkError
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse("Should not show limit reached for network error", state.isLimitReached)
+        assertFalse("Should not be loading", state.isLoading)
+        assertEquals(
+            "Should show the questions-unavailable error so user can retry",
+            com.ssbmax.R.string.oir_error_questions_unavailable,
+            state.errorResId
+        )
+    }
+
+    @Test
+    fun `loadTest does not increment usage when NetworkError occurs`() = runTest {
+        coEvery {
+            mockSubscriptionManager.canTakeTest(TestType.OIR, any())
+        } returns com.ssbmax.core.data.repository.TestEligibility.NetworkError
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { mockSubscriptionManager.recordTestUsage(any(), any()) }
+    }
+
     @Test
     fun `loadTest failure doesNotIncrementSubscriptionUsage`() = runTest {
         coEvery {

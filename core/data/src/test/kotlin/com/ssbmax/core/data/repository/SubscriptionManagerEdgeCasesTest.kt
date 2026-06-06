@@ -24,6 +24,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -206,28 +207,46 @@ class SubscriptionManagerEdgeCasesTest {
     }
     
     @Test
-    fun `TestEligibility has only Eligible and LimitReached states`() {
-        // Verify sealed class has exactly 2 subtypes (no bypass states)
+    fun `TestEligibility when expression is exhaustive over all state variants`() {
+        // Compiler-enforced: adding a new variant without updating all when expressions is a
+        // compile error. This test documents the intended variants and validates exhaustiveness.
         val eligibleInstance = TestEligibility.Eligible(remainingTests = 5)
-        val limitReachedInstance = TestEligibility.LimitReached(
-            tier = SubscriptionTier.FREE,
-            limit = 1,
-            usedCount = 1,
-            resetsAt = "Jan 1, 2025"
-        )
-        
-        // Verify types are distinct
-        assertNotEquals(
-            "Eligible and LimitReached should be different types",
-            eligibleInstance::class,
-            limitReachedInstance::class
-        )
-        
-        // Verify no other states exist (this would fail to compile if a third state was added)
+
         when (eligibleInstance as TestEligibility) {
-            is TestEligibility.Eligible -> assertTrue(true)
-            is TestEligibility.LimitReached -> fail("Should be Eligible")
+            is TestEligibility.Eligible      -> assertTrue(true)
+            is TestEligibility.LimitReached  -> fail("Should be Eligible")
+            is TestEligibility.NetworkError  -> fail("Should be Eligible")
         }
+    }
+
+    @Test
+    fun `canTakeTest returns NetworkError when Firestore throws IOException`() = runTest {
+        val user = UserProfile(
+            userId = TEST_USER_ID, fullName = "Test", age = 22,
+            gender = Gender.MALE, entryType = EntryType.GRADUATE,
+            subscriptionType = SubscriptionType.FREE
+        )
+        every { mockUserProfileRepo.getUserProfile(TEST_USER_ID) } returns flowOf(Result.success(user))
+        mockFirestoreNetworkError(TEST_USER_ID)
+
+        val eligibility = subscriptionManager.canTakeTest(TestType.OIR, TEST_USER_ID)
+
+        assertTrue("IOException must produce NetworkError", eligibility is TestEligibility.NetworkError)
+    }
+
+    @Test
+    fun `canTakeTest fails closed with LimitReached for unexpected non-network exceptions`() = runTest {
+        val user = UserProfile(
+            userId = TEST_USER_ID, fullName = "Test", age = 22,
+            gender = Gender.MALE, entryType = EntryType.GRADUATE,
+            subscriptionType = SubscriptionType.FREE
+        )
+        every { mockUserProfileRepo.getUserProfile(TEST_USER_ID) } returns flowOf(Result.success(user))
+        mockFirestoreException(TEST_USER_ID)  // throws RuntimeException (non-network)
+
+        val eligibility = subscriptionManager.canTakeTest(TestType.OIR, TEST_USER_ID)
+
+        assertTrue("Non-network errors must fail closed", eligibility is TestEligibility.LimitReached)
     }
     
     @Test
@@ -501,6 +520,33 @@ class SubscriptionManagerEdgeCasesTest {
         coEvery { mockTestUsageDao.insertOrReplace(any()) } just Runs
     }
     
+    private fun mockFirestoreNetworkError(userId: String) {
+        val mockCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockSubCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
+        val mockUsageDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
+
+        every { mockFirestore.collection("users") } returns mockCollectionRef
+        every { mockCollectionRef.document(userId) } returns mockDocRef
+        every { mockDocRef.collection("subscription") } returns mockSubCollectionRef
+        every { mockSubCollectionRef.document(any()) } returns mockUsageDocRef
+        every { mockUsageDocRef.get() } returns mockTask
+
+        every { mockTask.isSuccessful } returns false
+        every { mockTask.isComplete } returns true
+        every { mockTask.result } throws IOException("Connection refused")
+        every { mockTask.exception } returns IOException("Connection refused")
+
+        every { mockTask.addOnSuccessListener(any()) } returns mockTask
+        every { mockTask.addOnFailureListener(any()) } answers {
+            val listener = firstArg<com.google.android.gms.tasks.OnFailureListener>()
+            listener.onFailure(IOException("Connection refused"))
+            mockTask
+        }
+        every { mockTask.addOnCompleteListener(any()) } returns mockTask
+    }
+
     private fun mockFirestoreException(userId: String) {
         val mockCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
         val mockDocRef = mockk<DocumentReference>(relaxed = true)

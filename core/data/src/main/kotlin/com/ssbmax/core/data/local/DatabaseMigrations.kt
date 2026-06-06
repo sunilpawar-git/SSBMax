@@ -620,5 +620,23 @@ object DatabaseMigrations {
             database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN questionImageUrl TEXT")
         }
     }
+
+    /**
+     * Migration from version 17 to 18
+     * Replaces the separate lastUsed single-column index with a composite (type, lastUsed) index.
+     * The hot selection query filters WHERE type = ? AND (lastUsed IS NULL OR lastUsed < ?).
+     * SQLite stores NULLs at the start of an ASC column, so the composite index covers both
+     * the equality predicate on type and the range predicate on lastUsed in a single index scan.
+     * The redundant single-column lastUsed index is dropped; the type and batchId indexes are kept.
+     */
+    val MIGRATION_17_18 = object : Migration(17, 18) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_oir_type_lastUsed
+                ON cached_oir_questions(type, lastUsed)
+            """.trimIndent())
+            database.execSQL("DROP INDEX IF EXISTS index_cached_oir_questions_lastUsed")
+        }
+    }
 }
 

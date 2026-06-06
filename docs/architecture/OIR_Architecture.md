@@ -28,13 +28,17 @@ Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and
 
 ### Upload (upload-oir-batch.js)
 ```
-node upload-oir-batch.js batch_pdf_001            # live
+node upload-oir-batch.js batch_pdf_001            # live upload
 node upload-oir-batch.js batch_pdf_001 --dry-run  # offline validation only
+node upload-oir-batch.js batch_pdf_001 --verify   # HEAD-check all questionImageUrls in Firestore
+node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + patch gs:// placeholders
 ```
 1. Validates all local image files exist before touching Firebase
 2. Uploads PNGs to `gs://ssbmax-49e68.firebasestorage.app/oir/pdf_questions/` (public)
 3. Rewrites `questionImageUrl` placeholders to `https://storage.googleapis.com/...`
 4. Writes Firestore doc at `test_content/oir/batches/{batchId}`
+
+**Recommended post-upload step:** always run `--verify` after a live upload to confirm every `questionImageUrl` resolves with HTTP 200. If any are broken, `--repair` re-uploads only the missing Storage objects and patches the Firestore doc — no full re-upload needed.
 
 ### Upload Status
 All 20 sets extracted and uploaded (June 2026). Outputs live at `scripts/oir-extraction/out/`.
@@ -74,7 +78,7 @@ cached_oir_questions (1000 rows)
 |---|---|---|
 | Phase 1 (blocking) | 1–4 | Downloaded before first test can start (~200 questions) |
 | Phase 2 (background) | 5–20 | Downloaded while user takes the first test |
-| Subsequent launches | — | Skipped entirely if Room has ≥ 900 questions (zero Firestore reads) |
+| Subsequent launches | — | Skipped entirely if all 4 Phase 1 batch metadata entries are present in `oir_batch_metadata` (zero Firestore reads) |
 
 ### How a Test Is Assembled (Pool Model, Not Batch-Sequential)
 
@@ -88,6 +92,7 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-que
    ORDER BY RANDOM() 
    LIMIT 20
    ```
+   A composite index on `(type, lastUsed)` (DB v18) lets SQLite satisfy both predicates in a single index scan before applying `ORDER BY RANDOM()`. NULLs sort first in the ASC index, so `lastUsed IS NULL` is covered by the same range scan as `lastUsed < threshold`.
 2. Enforce type distribution:
 
 | Type | Count | Ratio |
@@ -121,12 +126,19 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-que
 | PREMIUM | Unlimited |
 
 - `canTakeTest(TestType.OIR, userId)` checked before loading — reads Firestore server-side to prevent cache-clearing bypass
+  - Returns `TestEligibility.Eligible` → proceed
+  - Returns `TestEligibility.LimitReached` → show upgrade prompt (also used as fail-closed fallback for unknown errors)
+  - Returns `TestEligibility.NetworkError` → show retryable error; security invariant preserved (only `IOException` / `FirebaseNetworkException` / Firestore `UNAVAILABLE` reach this path)
 - `recordTestUsage()` increments atomically via Firestore transaction after successful submission
 - `markQuestionsUsed()` updates Room for the 7-day reuse window
 
 ### Submit Flow
 ```
 canTakeTest()            → Firestore usage check (monthly gate)
+  ├─ NetworkError        → retryable error shown (UI stays on home screen)
+  ├─ LimitReached        → upgrade prompt shown (fail-closed for unknown errors too)
+  └─ Eligible            → continue ↓
+
 getTestQuestions(50)     → Room query with type distribution + 7-day preference
 [user takes test]
 SubmitOIRTestUseCase:

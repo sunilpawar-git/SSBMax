@@ -62,7 +62,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 17, // Added OIR questionImageUrl field (migrated from 16)
+    version = 18, // Added composite (type, lastUsed) index for OIR hot query (migrated from 17)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

@@ -94,6 +94,13 @@ class OIRTestViewModel @Inject constructor(
                         ) }
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(
+                            isLoading = false,
+                            errorResId = R.string.oir_error_questions_unavailable
+                        ) }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> Unit
                 }
             } catch (e: Exception) {

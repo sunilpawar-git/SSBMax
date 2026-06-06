@@ -49,6 +49,9 @@ class GTOTestLoader(
                     val message = "You've completed ${eligibility.usedCount} of ${eligibility.limit} tests this month on the ${eligibility.tier.displayName} plan. Your limit resets on ${eligibility.resetsAt}."
                     return LoadResult.LimitReached(message)
                 }
+                is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                    return LoadResult.Error("No connection. Please check your network and try again.")
+                }
                 is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                     // Continue
                 }

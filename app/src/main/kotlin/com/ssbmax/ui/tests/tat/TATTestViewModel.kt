@@ -187,6 +187,10 @@ class TATTestViewModel @Inject constructor(
                         android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         android.util.Log.d("TATTestViewModel", "✅ Test eligible!")
                         android.util.Log.d("TATTestViewModel", "   Remaining tests: ${eligibility.remainingTests}")

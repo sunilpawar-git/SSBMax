@@ -47,6 +47,9 @@ class GTOTestEligibilityChecker(
                     val message = "You've completed ${eligibility.usedCount} of ${eligibility.limit} tests this month on the ${eligibility.tier.displayName} plan. Your limit resets on ${eligibility.resetsAt}."
                     EligibilityResult.LimitReached(message)
                 }
+                is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                    EligibilityResult.Error("No connection. Please check your network and try again.")
+                }
                 is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                     val profileFlow = userProfileRepository.getUserProfile(userId)
                     val profileResult = profileFlow.first()

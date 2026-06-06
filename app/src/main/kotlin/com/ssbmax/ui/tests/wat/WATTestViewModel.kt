@@ -158,6 +158,10 @@ class WATTestViewModel @Inject constructor(
                         android.util.Log.d("WATTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         android.util.Log.d("WATTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
                         // Continue with test loading

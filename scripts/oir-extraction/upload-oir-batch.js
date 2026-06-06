@@ -4,6 +4,8 @@
  * Usage:
  *   node upload-oir-batch.js batch_pdf_001            # live upload
  *   node upload-oir-batch.js batch_pdf_001 --dry-run  # offline validation only
+ *   node upload-oir-batch.js batch_pdf_001 --verify   # HEAD-check all questionImageUrls in Firestore
+ *   node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + patch gs:// placeholders
  *
  * Live upload requires (same as the other scripts in ../):
  *   - npm install  (in SSBMax/scripts/ — firebase-admin, uuid)
@@ -22,7 +24,9 @@ const OUT_DIR = path.join(__dirname, 'out');
 const IMG_DIR = path.join(OUT_DIR, 'images');
 
 const batchId = process.argv[2];
-const dryRun = process.argv.includes('--dry-run');
+const dryRun   = process.argv.includes('--dry-run');
+const verify   = process.argv.includes('--verify');
+const repair   = process.argv.includes('--repair');
 
 if (!batchId) {
   console.error('❌ Usage: node upload-oir-batch.js <batchId> [--dry-run]');
@@ -68,15 +72,14 @@ async function main() {
     return;
   }
 
-  // ---- live upload
+  // ---- shared Firebase initialisation (used by live upload, verify, and repair)
   const admin = require('firebase-admin');
   const { v4: uuidv4 } = require('uuid');
-  // Service account path from env var (kept outside repo to avoid credentials in git)
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT ||
     path.join(process.env.HOME, 'Downloads/SSBMax/firebase-admin-key.json');
   if (!fs.existsSync(serviceAccountPath)) {
     console.error(`❌ Service account not found at ${serviceAccountPath}`);
-    console.error('   Set FIREBASE_SERVICE_ACCOUNT=/path/to/key.json or ensure ~/Downloads/SSBMax/firebase-admin-key.json exists');
+    console.error('   Set FIREBASE_SERVICE_ACCOUNT=/path/to/key.json');
     process.exit(1);
   }
   admin.initializeApp({
@@ -85,7 +88,81 @@ async function main() {
   });
   const bucket = admin.storage().bucket(BUCKET);
   const db = admin.firestore();
+  const docRef = db.collection('test_content').doc('oir').collection('batches').doc(batchId);
 
+  // ---- --verify: HEAD-check every questionImageUrl already written to Firestore
+  if (verify) {
+    console.log(`🔍 Verifying image URLs for ${batchId}...`);
+    const snap = await docRef.get();
+    if (!snap.exists) {
+      console.error(`❌ Firestore doc not found: test_content/oir/batches/${batchId}`);
+      process.exit(1);
+    }
+    const https = require('https');
+    const questions = snap.data().questions || [];
+    const broken = [];
+    for (const q of questions) {
+      if (!q.questionImageUrl) continue;
+      const ok = await new Promise((resolve) => {
+        const req = https.request(q.questionImageUrl, { method: 'HEAD' }, (res) => resolve(res.statusCode === 200));
+        req.on('error', () => resolve(false));
+        req.end();
+      });
+      if (!ok) broken.push({ id: q.id, url: q.questionImageUrl });
+    }
+    if (broken.length > 0) {
+      console.error(`❌ VERIFY FAILED — ${broken.length} broken image URL(s):`);
+      broken.forEach((b) => console.error(`   ${b.id}: ${b.url}`));
+      console.error('   Run with --repair to re-upload missing images and patch Firestore.');
+      process.exit(1);
+    }
+    console.log(`✅ VERIFY OK — all ${questions.filter((q) => q.questionImageUrl).length} image URLs resolve.`);
+    return;
+  }
+
+  // ---- --repair: re-upload only the images whose Storage objects are missing, then patch Firestore
+  if (repair) {
+    console.log(`🔧 Repair mode — re-uploading missing images for ${batchId}...`);
+    const snap = await docRef.get();
+    if (!snap.exists) {
+      console.error(`❌ Firestore doc not found — run a full upload first.`);
+      process.exit(1);
+    }
+    const storedQuestions = snap.data().questions || [];
+    let repaired = 0;
+    for (const { file, local } of figures) {
+      const destination = `${STORAGE_DIR}/${file}`;
+      const [exists] = await bucket.file(destination).exists();
+      if (!exists) {
+        await bucket.upload(local, {
+          destination,
+          metadata: { contentType: 'image/png', metadata: { firebaseStorageDownloadTokens: uuidv4() } },
+        });
+        await bucket.file(destination).makePublic();
+        console.log(`   ✅ Re-uploaded: ${file}`);
+        repaired++;
+      }
+    }
+    if (repaired === 0) {
+      console.log('   ℹ️  All images already present in Storage — no re-uploads needed.');
+    }
+    // Patch any placeholder gs:// URLs still in the stored questions
+    let patched = false;
+    for (const q of storedQuestions) {
+      if (q.questionImageUrl && q.questionImageUrl.startsWith('gs://')) {
+        q.questionImageUrl = publicUrl(q.questionImageUrl.split('/').pop());
+        patched = true;
+      }
+    }
+    if (patched) {
+      await docRef.update({ questions: storedQuestions });
+      console.log('   ✅ Patched gs:// placeholder URLs in Firestore.');
+    }
+    console.log(`✅ Repair complete (${repaired} image(s) re-uploaded).`);
+    return;
+  }
+
+  // ---- live upload
   console.log(`📤 Uploading ${figures.length} figures...`);
   for (const { file, local } of figures) {
     const destination = `${STORAGE_DIR}/${file}`;
@@ -105,7 +182,7 @@ async function main() {
     if (q.questionImageUrl) q.questionImageUrl = publicUrl(q.questionImageUrl.split('/').pop());
   }
 
-  await db.collection('test_content').doc('oir').collection('batches').doc(batchId).set({
+  await docRef.set({
     batchId: batch.batchId,
     version: batch.version,
     source: batch.source,
@@ -114,6 +191,7 @@ async function main() {
     questions: batch.questions,
   });
   console.log(`✅ Firestore: test_content/oir/batches/${batchId} (${batch.totalQuestions} questions)`);
+  console.log(`   Run with --verify to confirm all image URLs resolve.`);
 }
 
 main().then(() => process.exit(0)).catch((e) => { console.error('💥', e); process.exit(1); });

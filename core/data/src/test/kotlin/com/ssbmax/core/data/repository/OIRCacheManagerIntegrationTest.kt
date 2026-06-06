@@ -157,38 +157,39 @@ class OIRCacheManagerIntegrationTest {
     // ==================== Initial Sync Tests ====================
     
     @Test
-    fun `initialSync skips download when cache already has enough questions`() = runTest {
-        // Given - cache already has 900 questions (full 20-batch pool)
-        coEvery { mockCacheDao.getCachedQuestionCount() } returns 900
+    fun `initialSync skips entirely when all phase1 batches are already downloaded`() = runTest {
+        // Per-batch completeness check: all 4 phase-1 batches present → skip download loop
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns true
 
-        // When
         val result = cacheManager.initialSync()
 
-        // Then
         assertTrue("Should succeed without downloading", result.isSuccess)
-
-        // Verify no Firestore calls made
+        coVerify(exactly = 0) { cacheManager.downloadBatch(any()) }
         verify(exactly = 0) { mockFirestore.collection(any()) }
     }
-    
+
     @Test
-    fun `initialSync downloads batch when cache is empty`() = runTest {
-        // Given - empty cache, then filled after sync
-        coEvery { mockCacheDao.getCachedQuestionCount() } returnsMany listOf(0, 100)
+    fun `initialSync enters download loop when at least one phase1 batch is missing`() = runTest {
+        // 3 of 4 phase-1 batches present — must still attempt the missing one
+        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_001") } returns true
+        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_002") } returns true
+        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_003") } returns true
+        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_004") } returns false
+
+        cacheManager.initialSync()
+
+        coVerify(atLeast = 1) { cacheManager.downloadBatch("batch_pdf_004") }
+    }
+
+    @Test
+    fun `initialSync does not skip when batch metadata absent regardless of question count`() = runTest {
+        // 900+ questions in Room but no batch metadata → must not skip (metadata is SSOT for readiness)
         coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
-        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
-        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
-        
-        // Note: We skip complex Firestore mocking - this test validates the cache manager
-        // calls the DAO correctly. Firestore integration is tested separately or via E2E tests.
-        
-        // When - This will fail to download from Firestore (which is expected in unit test)
-        // but we're testing the cache logic path
-        val result = cacheManager.initialSync()
-        
-        // Then - Initial sync might fail due to missing Firestore, but that's acceptable
-        // The important part is the cache check logic works
-        coVerify { mockCacheDao.getCachedQuestionCount() }
+
+        cacheManager.initialSync()
+
+        // Should still enter the download loop
+        coVerify(atLeast = 1) { cacheManager.downloadBatch(any()) }
     }
     
     @Test

@@ -93,6 +93,10 @@ class SDTTestViewModel @Inject constructor(
                             resetsAt = eligibility.resetsAt) }
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         // User is eligible to take test
                     }
