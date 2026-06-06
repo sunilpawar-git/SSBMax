@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 18,
-    "identityHash": "3a7b32196c720a7c77c681d079c59ffe",
+    "identityHash": "1aab325c32ed159b2abff3e11dca3ea0",
     "entities": [
       {
         "tableName": "test_results",
@@ -253,7 +253,36 @@
             "id"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_oir_type_lastUsed",
+            "unique": false,
+            "columnNames": [
+              "type",
+              "lastUsed"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_oir_type_lastUsed` ON `${TABLE_NAME}` (`type`, `lastUsed`)"
+          },
+          {
+            "name": "index_cached_oir_questions_type",
+            "unique": false,
+            "columnNames": [
+              "type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cached_oir_questions_type` ON `${TABLE_NAME}` (`type`)"
+          },
+          {
+            "name": "index_cached_oir_questions_batchId",
+            "unique": false,
+            "columnNames": [
+              "batchId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cached_oir_questions_batchId` ON `${TABLE_NAME}` (`batchId`)"
+          }
+        ],
         "foreignKeys": []
       },
       {
@@ -1434,7 +1463,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a7b32196c720a7c77c681d079c59ffe')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1aab325c32ed159b2abff3e11dca3ea0')"
     ]
   }
 }
