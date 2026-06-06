@@ -43,10 +43,31 @@ All 20 sets extracted and uploaded (June 2026). Outputs live at `scripts/oir-ext
 
 ## Serving Layer (App Runtime)
 
-### Storage Layout
-- **Firestore:** `test_content/oir/batches/batch_pdf_001` … `batch_pdf_020` (1000 questions total)
-- **Firebase Storage:** `oir/pdf_questions/set{N}_q{MM}.png` (public HTTPS URLs)
-- **Room (local cache):** managed by `OIRQuestionCacheManager` + `OIRQuestionSelector`
+### Storage Layout & Organization
+
+**Firestore** (20 separate documents):
+```
+test_content/oir/batches/
+├─ batch_pdf_001 (50 Qs, source = Set 1)
+├─ batch_pdf_002 (50 Qs, source = Set 2)
+├─ ...
+└─ batch_pdf_020 (50 Qs, source = Set 20)
+```
+Each Firestore doc has `{"batchId", "version", "totalQuestions", "questions": [...]}`
+
+**Firebase Storage:** `oir/pdf_questions/set{N}_q{MM}.png` (public HTTPS URLs)
+
+**Room (local cache):** All 1000 questions **flattened into ONE table** (`cached_oir_questions`):
+```sql
+cached_oir_questions (1000 rows)
+├─ oir_pdf_s01_q0001 | VERBAL_REASONING      | batchId='batch_pdf_001' | lastUsed=null
+├─ oir_pdf_s01_q0002 | NON_VERBAL_REASONING  | batchId='batch_pdf_001' | lastUsed=null
+├─ ...
+├─ oir_pdf_s02_q0001 | VERBAL_REASONING      | batchId='batch_pdf_002' | lastUsed=2 days ago
+├─ ...
+└─ oir_pdf_s20_q0050 | SPATIAL_REASONING     | batchId='batch_pdf_020' | lastUsed=null
+```
+**Key:** The `batchId` column preserves which batch each question came from (for auditing/analytics), but **batches are NOT isolated** — all 1000 are pooled together.
 
 ### Two-Phase Cache on First Launch
 | Phase | Batches | Behaviour |
@@ -55,8 +76,19 @@ All 20 sets extracted and uploaded (June 2026). Outputs live at `scripts/oir-ext
 | Phase 2 (background) | 5–20 | Downloaded while user takes the first test |
 | Subsequent launches | — | Skipped entirely if Room has ≥ 900 questions (zero Firestore reads) |
 
-### How a Test Is Assembled
-Each OIR test is a **freshly sampled 50-question set** drawn from the 1000-question Room pool — users are NOT given the 20 PDF sets in order. `OIRQuestionSelector.selectQuestions(50)` enforces:
+### How a Test Is Assembled (Pool Model, Not Batch-Sequential)
+
+Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-question flattened Room pool** — **NOT** in batch order, and **NOT** from a single batch. `OIRQuestionSelector.selectQuestions(50)` works like this:
+
+1. Query Room for unused questions of each type (ignoring `batchId`):
+   ```sql
+   SELECT * FROM cached_oir_questions 
+   WHERE type = 'VERBAL_REASONING' 
+   AND (lastUsed IS NULL OR lastUsed < 7_days_ago) 
+   ORDER BY RANDOM() 
+   LIMIT 20
+   ```
+2. Enforce type distribution:
 
 | Type | Count | Ratio |
 |---|---|---|
@@ -65,8 +97,21 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the 1000-quest
 | Numerical Ability | 7 | 15% |
 | Spatial Reasoning | 3 | 5% |
 
-- **7-day reuse window:** questions unused in the last 7 days are preferred; already-used questions are only drawn when unused supply runs short
-- Final 50 are **shuffled** before presentation
+3. Repeat for each type (Non-Verbal, Numerical, Spatial)
+4. Questions are sampled **from all 1000 questions**, **from all 20 batches**, **randomly** — the `batchId` field is **ignored** during selection
+5. Final 50 are shuffled before presentation
+
+**Example:** A user's first test might contain Q1 from batch_001 + Q87 from batch_002 + Q150 from batch_003, etc. — a random mix.
+
+**7-day reuse window:** Questions unused in the last 7 days are preferred; already-used questions are only drawn when unused supply runs short. After test submission, `markQuestionsUsed()` updates `lastUsed` in Room.
+
+### Why This Architecture?
+
+| Design Decision | Reason |
+|---|---|
+| Firestore: 20 batch documents | Tracks download source, version history, audit trail; supports selective re-download |
+| Room: 1 flattened table | Enables efficient type-based random sampling via SQL `ORDER BY RANDOM()` + `WHERE type = ?` |
+| Selection: ignore `batchId` | Users get **diverse question coverage** across all 1000, not exhausting one batch before moving to the next |
 
 ### Subscription Limits (per calendar month)
 | Tier | OIR tests/month |
@@ -110,3 +155,50 @@ markQuestionsUsed()      → Room (7-day suppression)
 3. **Cache:** Follow two-phase pattern in a new `{TestType}QuestionCacheManager`
 4. **Selector:** Implement type-distribution ratios appropriate for the new test
 5. **Subscription limits:** Add `TestType.{NEW}` case to `SubscriptionManager.getTestLimitForTier()`
+
+---
+
+## Scaling & Expansion
+
+### Can We Add More Questions?
+
+**Yes.** The architecture is designed to scale from 1000 to 10,000+ questions with **zero logic changes**:
+
+| Component | Scaling Capacity | Bottleneck |
+|---|---|---|
+| Firestore batches | Unlimited (40 batches = 2000 Qs, 100 batches = 5000 Qs, etc.) | Storage cost, not logic |
+| Room local table | Android devices typically handle 10,000+ rows comfortably | Device storage, not SQL query speed |
+| Selection logic | Works identically | Query still does `ORDER BY RANDOM()` — indexes make it fast |
+| Two-phase cache | Adjust Phase 1 count if needed (currently 1–4 = 200 Qs) | Still blocking → background pattern |
+| 7-day reuse window | Works better with more questions | More unused questions available |
+
+### How to Add 1000+ More Questions
+
+1. **Extract new batches** via `oir_extract_v2.py`
+   - Add new sets to `SET_TABLE` in the script
+   - Run extraction for new sets
+   
+2. **Upload new batches** via `upload-oir-batch.js`
+   - Firestore docs automatically written at `test_content/oir/batches/batch_pdf_021`, `batch_pdf_022`, etc.
+   - Existing batches (001–020) remain untouched
+
+3. **App automatically downloads new batches**
+   - `initialSync()` will detect new batches and phase 2 will download them
+   - No code changes needed
+
+4. **Selection logic unchanged**
+   - Query still reads from flattened Room table
+   - Type distribution still enforced
+   - 7-day window still applied
+   - Users automatically get access to all 1000+ questions
+
+### Cost of Expansion
+
+| Scenario | Firestore Reads | Room Storage | User Impact |
+|---|---|---|---|
+| 1000 Qs (20 batches) | ~20 on first launch | ~50 MB | All batches in ~1 min |
+| 5000 Qs (100 batches) | ~100 on first launch | ~250 MB | Phase 1–4 blocks (few secs), then background |
+| 10,000 Qs (200 batches) | ~200 on first launch | ~500 MB | Consider increasing Phase 1 batches |
+
+**Optimization if scaling to 10k+:** Increase Phase 1 batches from 1–4 to 1–10 to reduce time-to-first-test.
+
