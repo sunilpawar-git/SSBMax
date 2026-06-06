@@ -269,17 +269,23 @@ class OIRTestViewModel @Inject constructor(
     }
 
     /**
-     * Enqueues a background Coil preload for the image of question[currentIndex + 1].
-     * No-op if on the last question or the next question has no image.
+     * Enqueues background Coil preloads for the figure and all option images of
+     * question[currentIndex + 1]. No-op if on the last question.
      */
     private fun prefetchNextImage(questions: List<OIRQuestion>, currentIndex: Int) {
-        val nextUrl = questions.getOrNull(currentIndex + 1)?.questionImageUrl ?: return
-        val request = ImageRequest.Builder(appContext)
-            .data(nextUrl)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .build()
-        imageLoader.enqueue(request)
+        val next = questions.getOrNull(currentIndex + 1) ?: return
+        buildList {
+            next.questionImageUrl?.let { add(it) }
+            next.options.mapNotNullTo(this) { it.imageUrl }
+        }.forEach { url ->
+            imageLoader.enqueue(
+                ImageRequest.Builder(appContext)
+                    .data(url)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .build()
+            )
+        }
     }
     
     // Scoring logic extracted to OIRTestScoreCalculator (single responsibility, testable)

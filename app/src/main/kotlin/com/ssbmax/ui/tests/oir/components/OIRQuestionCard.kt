@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.ssbmax.R
 import com.ssbmax.core.domain.model.OIROption
@@ -89,6 +90,8 @@ internal fun OIRQuestionView(
                     ImageRequest.Builder(context)
                         .data(imageUrl)
                         .crossfade(false)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
                         .build()
                 }
                 Card(
@@ -101,6 +104,8 @@ internal fun OIRQuestionView(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxWidth()
+                            // Reserve minimum height so options don't shift when the image loads.
+                            .heightIn(min = 200.dp)
                             .padding(12.dp)
                     )
                 }
@@ -136,6 +141,7 @@ internal fun OIROptionCard(
     isWrong: Boolean,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val backgroundColor = when {
         isCorrect -> MaterialTheme.colorScheme.tertiaryContainer
         isWrong   -> MaterialTheme.colorScheme.errorContainer
@@ -164,11 +170,21 @@ internal fun OIROptionCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (option.imageUrl != null) {
+                val stableOptionRequest = remember(option.imageUrl) {
+                    ImageRequest.Builder(context)
+                        .data(option.imageUrl)
+                        .crossfade(false)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .build()
+                }
                 AsyncImage(
-                    model = option.imageUrl,
+                    model = stableOptionRequest,
                     contentDescription = option.text,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 80.dp)
                 )
             } else {
                 Text(
