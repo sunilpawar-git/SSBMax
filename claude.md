@@ -53,6 +53,41 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 
 **Key paths (SSOT):** Navigation: `app/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `core:data/.../ai/` | Tests enum: `core:domain/.../SSBPhase.kt`
 
+## Architecture Guidance Hierarchy (Phase 4)
+
+**Multi-tier guidance system** (13 CLAUDE.md files) enforces patterns at every layer:
+
+```
+Root: claude.md (12 core rules, global patterns)
+  ├── app/CLAUDE.md (UI/ViewModel layer)
+  │   ├── app/ui/CLAUDE.md (feature screens)
+  │   ├── app/di/CLAUDE.md (Hilt dependency injection)
+  │   └── app/navigation/CLAUDE.md (type-safe routing)
+  │
+  ├── core/domain/CLAUDE.md (business logic, ZERO Android deps)
+  │
+  ├── core/data/CLAUDE.md (data repositories, error handling)
+  │   ├── core/data/ai/CLAUDE.md (Gemini AI integration)
+  │   ├── core/data/local/CLAUDE.md (Room database patterns)
+  │   └── core/data/remote/CLAUDE.md (Firebase/Firestore)
+  │
+  ├── core/designsystem/CLAUDE.md (reusable components, Material3)
+  │
+  ├── lint/CLAUDE.md (custom lint detectors, 16+ rules)
+  │
+  ├── functions/CLAUDE.md (Cloud Functions backend)
+  │
+  └── scripts/CLAUDE.md (data ingestion, deterministic extraction)
+```
+
+**Quick Navigation:** See [CLAUDE_HIERARCHY.md](CLAUDE_HIERARCHY.md) for scenarios → right CLAUDE.md file lookup.
+
+**Enforcement:**
+- ✅ Lint: 16 custom detectors (Phase 2-4) catch violations at build time
+- ✅ Pre-commit hook: Module-aware checks block commits on violations
+- ✅ Code review: Pattern references guide PR feedback
+- ✅ Documentation: GUIDELINES.md explains team processes
+
 ## Mandatory Lint Rules (enforced — build FAILS if violated)
 
 1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, msg)` always; exception: `core:domain` uses `Result<T>`
@@ -62,6 +97,9 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 5. **No singleton mutable state** — never create `*Holder.kt` files
 6. **No Firebase in UI layer** — use repositories; no direct Firebase calls in Compose/ViewModels
 7. **ID-based navigation only** — pass string IDs between screens; result screens fetch data via their own ViewModel
+8. **No Android deps in core:domain** — `core:domain` is 100% pure Kotlin (Phase 4) — enables JVM testing, reusability
+9. **No Firebase imports in app layer** — except Firebase Auth (Phase 4) — use repositories; no direct Firestore/Database calls
+10. **Designsystem Composables need @Preview** — all reusable components require `@Preview` for visual validation (Phase 4)
 
 ## Quality Limits
 

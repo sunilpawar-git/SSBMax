@@ -138,6 +138,11 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # checks:write lets the test reporter publish a PR check with inline
+    # annotations on failing tests (no more digging through HTML artifacts).
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout code
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -158,6 +163,27 @@ jobs:
             --build-cache \
             --parallel \
             --stacktrace
+
+      # Hard coverage gate at the thresholds defined per-module in build.gradle.kts.
+      # Reuses the test execution above via the build cache (tasks are up-to-date).
+      - name: Verify coverage thresholds
+        run: |
+          ./gradlew \
+            :app:jacocoTestCoverageVerification \
+            :core:data:jacocoTestCoverageVerification \
+            :core:domain:jacocoTestCoverageVerification \
+            --build-cache \
+            --parallel \
+            --stacktrace
+
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451 # v2
+        with:
+          name: Unit Test Results
+          path: '**/build/test-results/testDebugUnitTest/*.xml'
+          reporter: java-junit
+          fail-on-error: false
 
       - name: Upload Test Reports
         if: always()

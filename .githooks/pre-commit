@@ -133,7 +133,51 @@ if [ -n "$HOLDER_FILES" ]; then
 fi
 
 # ============================================
-# 7. Validate commit message doesn't contain secrets
+# 7. Module-Aware Checks (from CLAUDE.md guidelines)
+# ============================================
+echo "🔍 Running module-specific architecture checks..."
+
+# Check 7a: core:domain has no Android dependencies
+echo "  → Checking core:domain has no Android imports..."
+DOMAIN_FILES=$(echo "$KOTLIN_JAVA_FILES" | grep 'core/domain' || true)
+
+if [ -n "$DOMAIN_FILES" ]; then
+    if echo "$DOMAIN_FILES" | xargs grep -E '^import (android\.|androidx\.)', 2>/dev/null; then
+        echo -e "${RED}❌ ERROR: Android imports found in core:domain${NC}"
+        echo "core:domain must be 100% pure Kotlin (no Android dependencies)"
+        ERRORS=$((ERRORS + 1))
+    fi
+fi
+
+# Check 7b: app layer doesn't import Firebase (except Firebase Auth)
+echo "  → Checking app layer avoids Firebase imports..."
+APP_FILES=$(echo "$KOTLIN_JAVA_FILES" | grep 'app/src' | grep -v 'firebase.auth' || true)
+
+if [ -n "$APP_FILES" ]; then
+    if echo "$APP_FILES" | xargs grep -E '^import com\.(google\.firebase|firebase)\.' 2>/dev/null | grep -v 'firebase\.auth'; then
+        echo -e "${RED}❌ ERROR: Firebase imports in app layer (except Firebase Auth)${NC}"
+        echo "Use repositories from core:data layer instead"
+        ERRORS=$((ERRORS + 1))
+    fi
+fi
+
+# Check 7c: designsystem Composables should have @Preview
+echo "  → Checking designsystem Composables have @Preview..."
+DESIGNSYSTEM_COMPOSABLES=$(echo "$KOTLIN_JAVA_FILES" | grep 'designsystem/src' || true)
+
+if [ -n "$DESIGNSYSTEM_COMPOSABLES" ]; then
+    # Simple heuristic: if file contains @Composable and not in test, check for @Preview
+    for file in $DESIGNSYSTEM_COMPOSABLES; do
+        if grep -q '@Composable' "$file" && ! echo "$file" | grep -q 'Test'; then
+            if ! grep -q '@Preview' "$file"; then
+                echo -e "${YELLOW}⚠️  WARNING: Composable in designsystem should have @Preview: $file${NC}"
+            fi
+        fi
+    done
+fi
+
+# ============================================
+# 8. Validate commit message doesn't contain secrets
 # ============================================
 echo "🔍 Checking commit message (if available)..."
 

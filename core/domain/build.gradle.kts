@@ -90,9 +90,12 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
     sourceDirectories.setFrom(files("${project.projectDir}/src/main/kotlin"))
     classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(fileTree(project.buildDir) {
-        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
-    })
+    // Point at the exact AGP unit-test coverage file. Rooting a fileTree at the
+    // whole buildDir made Gradle treat every other task's output (e.g.
+    // packageDebugAssets) as an undeclared input, failing task validation.
+    executionData.setFrom(
+        layout.buildDirectory.file("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    )
 }
 
 tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
@@ -118,9 +121,12 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
 
     classDirectories.setFrom(files(debugTree))
     sourceDirectories.setFrom(files("${project.projectDir}/src/main/kotlin"))
-    executionData.setFrom(fileTree(project.buildDir) {
-        include("jacoco/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.ec", "**/testDebugUnitTest.exec", "**/testDebugUnitTest.ec")
-    })
+    // Point at the exact AGP unit-test coverage file. Rooting a fileTree at the
+    // whole buildDir made Gradle treat every other task's output (e.g.
+    // packageDebugAssets) as an undeclared input, failing task validation.
+    executionData.setFrom(
+        layout.buildDirectory.file("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    )
 
     violationRules {
         rule {
