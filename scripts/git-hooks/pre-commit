@@ -1,0 +1,58 @@
+#!/bin/bash
+# Git Pre-Commit Hook: Security Checks
+# Runs before every commit to catch security violations early.
+# Install: git config core.hooksPath scripts/git-hooks
+# 
+# Checks:
+# 1. Hardcoded API keys (GEMINI_API_KEY, sk_*, etc.)
+# 2. Sensitive files (local.properties, google-services.json, *.jks, *.key)
+# 3. Firestore rules syntax (firebase deploy --dry-run)
+# 4. Lint violations (./gradlew lintDebug)
+
+set -e
+
+echo "🔒 Running security pre-commit hooks..."
+
+# 1. Check for hardcoded API keys in staged files
+echo "Checking for hardcoded API keys..."
+if git diff --cached --name-only | grep -E "\.(kt|java|xml|gradle)$" > /dev/null; then
+  if git diff --cached | grep -E "GEMINI_API_KEY\s*=|SARVAM_API_KEY\s*=|ELEVENLABS_API_KEY\s*=|\"sk_|\"sk-|'sk_|'sk-" 2>/dev/null; then
+    echo "❌ ERROR: Hardcoded API key detected in staged files"
+    echo "   → Use local.properties or Firebase Remote Config instead"
+    exit 1
+  fi
+fi
+
+# 2. Check for sensitive files (shouldn't be committed)
+echo "Checking for sensitive files..."
+if git diff --cached --name-only | grep -E "local\.properties|google-services\.json|\.key|\.jks|\.keystore"; then
+  echo "❌ ERROR: Sensitive file staged for commit"
+  echo "   → Check .gitignore — these files must never be versioned"
+  exit 1
+fi
+
+# 3. Validate Firestore rules syntax (if rules file is staged)
+echo "Validating Firestore rules..."
+if git diff --cached --name-only | grep -E "firestore\.rules"; then
+  if command -v firebase &> /dev/null; then
+    if ! firebase deploy --only firestore:rules --dry-run 2>&1 | grep -q "Validating rules"; then
+      echo "❌ ERROR: firestore.rules validation failed"
+      echo "   → Run: firebase deploy --only firestore:rules --dry-run"
+      exit 1
+    fi
+  else
+    echo "⚠️  WARNING: firebase-tools not installed; skipping rules validation"
+    echo "   → Install: npm install -g firebase-tools"
+  fi
+fi
+
+# 4. Run lint checks (all modules)
+echo "Running lint checks..."
+if ! ./gradlew lintDebug --no-daemon --quiet 2>&1; then
+  echo "❌ ERROR: Lint checks failed"
+  echo "   → Fix lint issues: ./gradlew lintDebug"
+  exit 1
+fi
+
+echo "✅ All security checks passed"
+exit 0

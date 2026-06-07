@@ -21,6 +21,12 @@ import com.android.tools.lint.detector.api.CURRENT_API
  * 7. FirebaseInUILayerDetector - Prevents Firebase imports in UI layer (use domain abstractions)
  * 8. StateFlowValueAssignmentDetector - Enforces .update {} pattern for thread-safe StateFlow mutations
  * 9. NullableViewModelVarDetector - Prevents nullable mutable vars in ViewModels (use StateFlow)
+ *
+ * Security Lint Rules (Phase 2):
+ * 10. HardcodedApiKeyDetector - Prevents hardcoded API keys (Gemini, Sarvam, ElevenLabs, sk_/sk- patterns)
+ * 11. SensitiveDataInLogsDetector - Prevents logging PII (userId, email, authToken, password, etc)
+ * 12. UnsafeStringInputDetector - Warns on untrusted user input without validation
+ * 13. FirebaseRulesValidationDetector - Validates firestore.rules syntax at build time
  */
 class SSBMaxIssueRegistry : IssueRegistry() {
 
@@ -35,7 +41,12 @@ class SSBMaxIssueRegistry : IssueRegistry() {
         StateFlowValueAssignmentDetector.ISSUE,
         // StateFlow Migration - Phase 4 enforcement
         NullableViewModelVarDetector.NULLABLE_STATE_ISSUE,
-        NullableViewModelVarDetector.JOB_LEAK_ISSUE
+        NullableViewModelVarDetector.JOB_LEAK_ISSUE,
+        // Security Lint Rules (Phase 2)
+        HardcodedApiKeyDetector.ISSUE,
+        SensitiveDataInLogsDetector.ISSUE,
+        UnsafeStringInputDetector.ISSUE,
+        FirebaseRulesValidationDetector.ISSUE
     )
 
     override val api: Int = CURRENT_API
