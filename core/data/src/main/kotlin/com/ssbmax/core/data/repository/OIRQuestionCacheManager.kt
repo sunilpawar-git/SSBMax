@@ -9,9 +9,8 @@ import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.core.data.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -37,7 +36,8 @@ class OIRQuestionCacheManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val cacheDao: OIRQuestionCacheDao,
     private val gson: Gson,
-    private val selector: OIRQuestionSelector
+    private val selector: OIRQuestionSelector,
+    @ApplicationScope private val backgroundScope: CoroutineScope
 ) {
     companion object {
         private const val TAG                  = "OIRCacheManager"
@@ -95,7 +95,7 @@ class OIRQuestionCacheManager @Inject constructor(
             Log.d(TAG, "Initial sync phase 1 complete (batches 1..${minOf(PHASE_1_LAST, meta.batchCount)})")
 
             // Phase 2: background — the remaining batches up to batchCount.
-            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            backgroundScope.launch {
                 for (i in (PHASE_1_LAST + 1)..meta.batchCount) {
                     downloadBatch(batchId(i)).getOrElse { e -> Log.w(TAG, "Phase 2: $i failed: ${e.message}") }
                 }

@@ -19,7 +19,16 @@ import java.util.EnumSet
  *
  * See: docs/security/SECURITY.md, Phase 3 section
  */
-class FirebaseRulesValidationDetector : Detector() {
+class FirebaseRulesValidationDetector : Detector(), OtherFileScanner {
+
+    /**
+     * Declared as an OTHER-file scanner to match the [Scope.OTHER] in [ISSUE]'s
+     * implementation. Without implementing this interface, Lint's OtherFileVisitor
+     * casts the detector to OtherFileScanner and crashes (ClassCastException).
+     * The inherited [run] is a no-op, so this placeholder reports nothing until the
+     * Phase 3 firestore.rules validation is implemented.
+     */
+    override fun getApplicableFiles(): EnumSet<Scope> = Scope.OTHER_SCOPE
 
     companion object {
         private const val ISSUE_ID = "FirebaseRulesValidation"

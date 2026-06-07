@@ -14,6 +14,7 @@ import com.ssbmax.core.domain.model.OIRQuestionType
 import com.ssbmax.core.domain.model.QuestionDifficulty
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -58,7 +59,8 @@ class OIRCacheManagerIntegrationTest {
     private lateinit var mockFirestore: FirebaseFirestore
     private lateinit var mockCacheDao: OIRQuestionCacheDao
     private val gson = Gson()
-    
+    private val testScope = TestScope()
+
     @Before
     fun setup() {
         mockFirestore = mockk(relaxed = true)
@@ -76,7 +78,8 @@ class OIRCacheManagerIntegrationTest {
             firestore = mockFirestore,
             cacheDao  = mockCacheDao,
             gson      = gson,
-            selector  = selector
+            selector  = selector,
+            backgroundScope = testScope
         )
         cacheManager = spyk(cacheManager)
         coEvery { cacheManager.downloadBatch(any()) } returns Result.success(Unit)
@@ -176,7 +179,7 @@ class OIRCacheManagerIntegrationTest {
     }
 
     @Test
-    fun `initialSync reconciles (clear + redownload) when remote version differs`() = runTest {
+    fun `initialSync reconciles (clear + redownload) when remote version differs`() = testScope.runTest {
         coEvery { cacheManager.fetchMetaConfig() } returns
                 OIRQuestionCacheManager.MetaConfig(contentVersion = 3, batchCount = 28)
         coEvery { mockCacheDao.getSyncMetadata() } returns
@@ -219,7 +222,7 @@ class OIRCacheManagerIntegrationTest {
     }
 
     @Test
-    fun `initialSync enqueues background download up to batchCount`() = runTest {
+    fun `initialSync enqueues background download up to batchCount`() = testScope.runTest {
         coEvery { cacheManager.fetchMetaConfig() } returns
                 OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 28)
         coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
@@ -408,7 +411,8 @@ class OIRCacheManagerIntegrationTest {
             firestore = mockFirestore,
             cacheDao = mockCacheDao,
             gson = gson,
-            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
+            backgroundScope = testScope
         )
         cacheManagerReal.downloadBatch("batch_001")
 
@@ -441,7 +445,8 @@ class OIRCacheManagerIntegrationTest {
             firestore = mockFirestore,
             cacheDao = mockCacheDao,
             gson = gson,
-            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
+            backgroundScope = testScope
         )
         cacheManagerReal.downloadBatch("batch_001")
 
