@@ -237,9 +237,11 @@ def assign_images(doc, markers):
     return assigned
 
 
-def crop_question_figure(doc, q_num, rects):
+def composite_figure(doc, rects):
     """Composite the clean extracted images onto a white canvas at their relative
-    positions (watermark-free). vstack page-canvases if the figure spans two pages."""
+    positions (watermark-free) and return the PIL image (or None for no rects).
+    vstacks page-canvases if the figure spans two pages. Pure: callers own naming
+    and saving — shared by the v2 and Part-3 pipelines (DRY)."""
     if not rects:
         return None
     by_page = {}
@@ -264,15 +266,22 @@ def crop_question_figure(doc, q_num, rects):
             canvas.paste(im, (int(round((r.x0 - x0) * ZOOM)), int(round((r.y0 - y0) * ZOOM))))
         page_imgs.append(canvas)
     if len(page_imgs) == 1:
-        final = page_imgs[0]
-    else:
-        w = max(im.width for im in page_imgs)
-        h = sum(im.height for im in page_imgs) + 8 * (len(page_imgs) - 1)
-        final = Image.new("RGB", (w, h), "white")
-        y = 0
-        for im in page_imgs:
-            final.paste(im, (0, y))
-            y += im.height + 8
+        return page_imgs[0]
+    w = max(im.width for im in page_imgs)
+    h = sum(im.height for im in page_imgs) + 8 * (len(page_imgs) - 1)
+    final = Image.new("RGB", (w, h), "white")
+    y = 0
+    for im in page_imgs:
+        final.paste(im, (0, y))
+        y += im.height + 8
+    return final
+
+
+def crop_question_figure(doc, q_num, rects):
+    """Composite the clean extracted images and save under IMG_PREFIX naming."""
+    final = composite_figure(doc, rects)
+    if final is None:
+        return None
     fname = f"{IMG_PREFIX}_q{q_num:02d}.png"
     final.save(os.path.join(IMG_DIR, fname))
     return fname
