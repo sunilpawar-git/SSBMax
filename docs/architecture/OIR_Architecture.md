@@ -12,8 +12,12 @@ Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and
 ### Scripts
 | Script | Role |
 |---|---|
-| `scripts/oir-extraction/oir_extract_v2.py` | Extract questions, answers, figures from PDF |
-| `scripts/oir-extraction/upload-oir-batch.js` | Upload images → Storage, questions → Firestore |
+| `scripts/oir-extraction/oir_extract_v2.py` | Extract the 20 practice-set batches (001–020) from the SSBCrack PDF |
+| `scripts/oir-extraction/oir_extract_part3.py` | Extract the 8 topic-family batches (021–028) from `OIR PART 3`; reuses v2 helpers (`composite_figure`, `page_images`, `OPT_IDS`) |
+| `scripts/oir-extraction/upload-oir-batch.js` | Ingestion **gate** + upload images → Storage, questions → Firestore |
+| `scripts/set-oir-meta-config.js` | Publish `test_content/oir/meta/config` `{contentVersion, batchCount}` — the client reconciliation trigger |
+
+The upload script's `validateBatch()` is a **fail-closed ingestion gate**: it mirrors the error-level rules of the domain `OIRQuestionValidator` (non-empty options, `correctAnswerId` present unless a figure question, answer ∈ option ids, non-blank text) and rejects the write if any question violates them. The Kotlin validator stays the SSOT for the *rules*; the gate enforces them at write time.
 
 ### Extraction Pipeline (oir_extract_v2.py)
 1. **Page range mapping** — `SET_TABLE` hardcodes `(q_start, a_start, a_end)` for all 20 sets (no guessing)
@@ -41,7 +45,13 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 **Recommended post-upload step:** always run `--verify` after a live upload to confirm every `questionImageUrl` resolves with HTTP 200. If any are broken, `--repair` re-uploads only the missing Storage objects and patches the Firestore doc — no full re-upload needed.
 
 ### Upload Status
-All 20 sets extracted and uploaded (June 2026). Outputs live at `scripts/oir-extraction/out/`.
+All 20 practice-set batches (001–020) plus 8 Part-3 topic-family batches (021–028, 255 questions) extracted and uploaded (June 2026). Outputs live at `scripts/oir-extraction/out/`.
+
+> **Known legacy duds (deferred):** 140 questions in batches 001–020 are genuine free-response
+> fill-in-the-blank items (no options in the source). A free-response question type that rescues
+> them is planned for a later sprint (`~/.claude/plans/staged-splashing-sifakis.md`). Until then
+> they remain in Firestore but are **skipped at selection-time** (see Serving Layer) so they never
+> reach an assembled test.
 
 ---
 
@@ -49,21 +59,21 @@ All 20 sets extracted and uploaded (June 2026). Outputs live at `scripts/oir-ext
 
 ### Storage Layout & Organization
 
-**Firestore** (20 separate documents):
+**Firestore** (28 batch documents + 1 meta doc):
 ```
 test_content/oir/batches/
-├─ batch_pdf_001 (50 Qs, source = Set 1)
-├─ batch_pdf_002 (50 Qs, source = Set 2)
-├─ ...
-└─ batch_pdf_020 (50 Qs, source = Set 20)
+├─ batch_pdf_001..020 (50 Qs each, source = SSBCrack Sets 1–20)
+└─ batch_pdf_021..028 (255 Qs total, source = OIR PART 3 topic families)
+test_content/oir/meta/config = { contentVersion: Int, batchCount: Int }
 ```
-Each Firestore doc has `{"batchId", "version", "totalQuestions", "questions": [...]}`
+Each batch doc has `{"batchId", "version", "totalQuestions", "questions": [...]}`. The **meta doc** is
+the content-version SSOT that drives client reconciliation (see below).
 
 **Firebase Storage:** `oir/pdf_questions/set{N}_q{MM}.png` (public HTTPS URLs)
 
-**Room (local cache):** All 1000 questions **flattened into ONE table** (`cached_oir_questions`):
+**Room (local cache):** All questions (~1255 across 28 batches) **flattened into ONE table** (`cached_oir_questions`):
 ```sql
-cached_oir_questions (1000 rows)
+cached_oir_questions (~1255 rows)
 ├─ oir_pdf_s01_q0001 | VERBAL_REASONING      | batchId='batch_pdf_001' | lastUsed=null
 ├─ oir_pdf_s01_q0002 | NON_VERBAL_REASONING  | batchId='batch_pdf_001' | lastUsed=null
 ├─ ...
@@ -71,18 +81,36 @@ cached_oir_questions (1000 rows)
 ├─ ...
 └─ oir_pdf_s20_q0050 | SPATIAL_REASONING     | batchId='batch_pdf_020' | lastUsed=null
 ```
-**Key:** The `batchId` column preserves which batch each question came from (for auditing/analytics), but **batches are NOT isolated** — all 1000 are pooled together.
+**Key:** The `batchId` column preserves which batch each question came from (for auditing/analytics), but **batches are NOT isolated** — all questions are pooled together.
 
-### Two-Phase Cache on First Launch
+### Content-Version Reconciliation (Firestore is SSOT, Room mirrors)
+`OIRQuestionCacheManager.initialSync()` reads `test_content/oir/meta/config` and compares
+`remote.contentVersion` to the locally-stored value in the single-row `oir_sync_metadata` table
+(DB v20, `MIGRATION_19_20`):
+
+| Condition | Action |
+|---|---|
+| `remote.contentVersion != local` (incl. fresh install where local = null) | **Reconcile** — clear all questions + re-download `batch_pdf_001..batchCount`, then persist the new version |
+| version matches but some of `1..batchCount` missing | Top-up just the missing batches (idempotent) |
+| version matches and all present | Skip (zero Firestore reads) |
+
+So existing installs **self-heal** to new content on the next launch — bump `contentVersion` (and
+`batchCount` when batches are added) via `set-oir-meta-config.js`; **no Kotlin change** is needed for
+a future content drop. If the meta doc is unreadable, the manager falls back to a legacy 20-batch sync.
+
+> ⚠️ **Release gate (as of June 2026, app in dev):** the meta doc has **not** been published yet.
+> Batches 021–028 are uploaded but won't reach clients until `node scripts/set-oir-meta-config.js --commit`
+> is run **alongside the DB-v20 release**. Until then the app legacy-syncs batches 001–020 only.
+
+### Two-Phase Latency Model
 | Phase | Batches | Behaviour |
 |---|---|---|
-| Phase 1 (blocking) | 1–4 | Downloaded before first test can start (~200 questions) |
-| Phase 2 (background) | 5–20 | Downloaded while user takes the first test |
-| Subsequent launches | — | Skipped entirely if all 4 Phase 1 batch metadata entries are present in `oir_batch_metadata` (zero Firestore reads) |
+| Phase 1 (blocking) | 1–4 | Downloaded before first test can start |
+| Phase 2 (background) | 5..`batchCount` | Downloaded while user takes the first test |
 
 ### How a Test Is Assembled (Pool Model, Not Batch-Sequential)
 
-Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-question flattened Room pool** — **NOT** in batch order, and **NOT** from a single batch. `OIRQuestionSelector.selectQuestions(50)` works like this:
+Each OIR test is a **freshly sampled 50-question set** drawn from the **flattened Room pool (~1255 questions)** — **NOT** in batch order, and **NOT** from a single batch. `OIRQuestionSelector.selectQuestions(50)` works like this:
 
 1. Query Room for unused questions of each type (ignoring `batchId`):
    ```sql
@@ -93,19 +121,21 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **1000-que
    LIMIT 20
    ```
    A composite index on `(type, lastUsed)` (DB v18) lets SQLite satisfy both predicates in a single index scan before applying `ORDER BY RANDOM()`. NULLs sort first in the ASC index, so `lastUsed IS NULL` is covered by the same range scan as `lastUsed < threshold`.
-2. Enforce type distribution:
+2. Enforce type distribution — defined **once** in `OIRQuestionDistribution` (domain SSOT), read by the selector. The bank has zero spatial questions, so the live split targets the three populated types via a largest-remainder `counts(total)`:
 
-| Type | Count | Ratio |
+| Type | Count (of 50) | Ratio |
 |---|---|---|
 | Verbal Reasoning | 20 | 40% |
 | Non-Verbal Reasoning | 20 | 40% |
-| Numerical Ability | 7 | 15% |
-| Spatial Reasoning | 3 | 5% |
+| Numerical Ability | 10 | 20% |
 
-3. Repeat for each type (Non-Verbal, Numerical, Spatial)
-4. Questions are sampled **from all 1000 questions**, **from all 20 batches**, **randomly** — the `batchId` field is **ignored** during selection
-5. `OIRQuestionValidator.validateAndFilter` removes any structurally corrupt questions (blank text with no image, mismatched `correctAnswerId`, etc.) — valid questions proceed, invalid ones are logged and dropped silently
-6. Final set is shuffled before presentation
+   (`SPATIAL_REASONING` remains a valid enum value but is no longer a distribution target.)
+3. **Selection-time validation:** `fetchByType` over-fetches (×3) and drops anything the domain `OIRQuestionValidator` rejects, so legacy duds (e.g. the 140 optionless fill-in-blank questions) are skipped here and never reach the test — keeping the assembled set at full count without deleting the data. Smart redistribution tops up across the three live types if one is short.
+4. Questions are sampled **from the whole pool**, **from all batches**, **randomly** — `batchId` is **ignored** during selection.
+5. The runtime `OIRQuestionValidator.validateAndFilter` in `OIRTestViewModel` remains as a **defensive assertion** — post-reconcile it should never fire; if it does, it signals an upstream breach and is logged loudly.
+6. Final set is shuffled before presentation.
+
+**Validity is defined once (the domain `OIRQuestionValidator`) and enforced at three layers:** the ingestion gate (write-time, new content), the selector (selection-time, skips legacy duds), and the ViewModel (runtime assertion).
 
 **Example:** A user's first test might contain Q1 from batch_001 + Q87 from batch_002 + Q150 from batch_003, etc. — a random mix.
 
@@ -154,9 +184,12 @@ markQuestionsUsed()      → Room (7-day suppression)
 ### Key Files
 | File | Responsibility |
 |---|---|
-| `core/data/.../OIRQuestionCacheManager.kt` | Sync / download / cache lifecycle |
-| `core/data/.../OIRQuestionSelector.kt` | Type-distribution selection + 7-day reuse logic |
-| `core/domain/.../validation/OIRQuestionValidator.kt` | Structural validation gate — filters corrupt questions before test assembly; image-only options (non-verbal/spatial) are valid with blank text |
+| `core/data/.../OIRQuestionCacheManager.kt` | Sync lifecycle + content-version reconciliation (meta doc → clear/redownload/top-up) |
+| `core/data/.../OIRQuestionSelector.kt` | Type-distribution selection + selection-time validity filter + 7-day reuse logic |
+| `core/domain/.../model/OIRQuestionDistribution.kt` | Distribution SSOT (V40/NV40/N20, largest-remainder `counts()`) |
+| `core/data/.../local/entity/OIRSyncMetadataEntity.kt` | Single-row local content-version mirror (DB v20) |
+| `core/domain/.../validation/OIRQuestionValidator.kt` | Validity SSOT — enforced at ingestion (gate), selection (selector), and runtime (assertion) |
+| `scripts/oir-extraction/upload-oir-batch.js` (`validateBatch`) | Write-time enforcement of the validator's rules |
 | `core/data/.../SubscriptionManager.kt` | Monthly limits — single source of truth |
 | `core/domain/.../usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → usage → submit → end session |
 
