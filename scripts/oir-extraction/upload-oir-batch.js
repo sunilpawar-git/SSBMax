@@ -43,6 +43,76 @@ if (!fs.existsSync(batchPath)) {
 const batch = JSON.parse(fs.readFileSync(batchPath, 'utf8'));
 const publicUrl = (file) => `https://storage.googleapis.com/${BUCKET}/${STORAGE_DIR}/${file}`;
 
+/**
+ * Ingestion gate — fail-closed write-time enforcement of the SAME structural
+ * invariants that the runtime Kotlin validator treats as ERRORS. The Kotlin
+ * domain validator remains the single source of truth for the *rules*; this is
+ * the write-time enforcement of them, so a bad batch can never reach Firestore
+ * (and therefore never silently degrade an assembled test).
+ *
+ * Rule ↔ validator mapping (core/domain/.../validation/OIRQuestionValidator.kt,
+ * validate(); warnings there are tolerated here, only errors block):
+ *   id blank ......................... "Question ID is blank"
+ *   questionNumber <= 0 .............. "Invalid question number"
+ *   questionText blank ............... "Question text is empty or blank"
+ *   questionText has raw JSON ........ "Question text contains raw JSON"
+ *   options empty .................... "No options provided"
+ *   duplicate option ids ............. "Duplicate option IDs found"
+ *   option id blank / single-letter .. "Option #n has blank/single-letter ID"
+ *   option text blank & no image ..... "Option 'x' has empty text and no image"
+ *   correctAnswerId blank ............ "CorrectAnswerId is empty"
+ *        (allowed iff questionImageUrl present + options non-empty — the
+ *         multi-answer figure-question exception)
+ *   correctAnswerId single-letter .... "CorrectAnswerId is single letter"
+ *   correctAnswerId opt_<n>_<x> ...... "CorrectAnswerId has question number embedded"
+ *   correctAnswerId ∉ option ids ..... "does not match any option ID"
+ *   timeSeconds <= 0 ................. "Time allocation invalid"
+ */
+function validateBatch(b) {
+  const errors = [];
+  for (const q of b.questions) {
+    const id = (q.id || '').trim();
+    const push = (msg) => errors.push(`${id || '(no id)'}: ${msg}`);
+    if (!id) push('Question ID is blank');
+    if (!(q.questionNumber > 0)) push(`Invalid question number: ${q.questionNumber}`);
+    const text = q.questionText || '';
+    if (!text.trim()) push('Question text is empty or blank');
+    if (text.toLowerCase().includes('"question":')) push('Question text contains raw JSON');
+
+    const opts = q.options || [];
+    if (opts.length === 0) push('No options provided');
+    const optIds = opts.map((o) => o.id);
+    const dups = [...new Set(optIds.filter((x, i) => optIds.indexOf(x) !== i))];
+    if (dups.length) push(`Duplicate option IDs: ${dups.join(', ')}`);
+    opts.forEach((o, i) => {
+      if (!o.id || !o.id.trim()) push(`Option #${i + 1} has blank ID`);
+      else if (/^[a-dA-D]$/.test(o.id)) push(`Option #${i + 1} has single-letter ID '${o.id}'`);
+      if ((!o.text || !o.text.trim()) && !o.imageUrl) push(`Option '${o.id}' has empty text and no image`);
+    });
+
+    const ca = (q.correctAnswerId || '').trim();
+    const isMultiAnswerFigure = !ca && q.questionImageUrl && opts.length > 0;
+    if (!ca && !isMultiAnswerFigure) push('CorrectAnswerId is empty');
+    else if (ca) {
+      if (/^[a-dA-D]$/.test(ca)) push(`CorrectAnswerId is single letter '${ca}'`);
+      else if (/^opt_\d+_[a-d]$/.test(ca)) push(`CorrectAnswerId has question number embedded: '${ca}'`);
+      if (!opts.some((o) => o.id === ca)) push(`CorrectAnswerId '${ca}' does not match any option ID`);
+    }
+
+    if (!(q.timeSeconds > 0)) push(`Time allocation invalid: ${q.timeSeconds}`);
+  }
+  return errors;
+}
+
+const validationErrors = validateBatch(batch);
+if (validationErrors.length) {
+  console.error(`❌ INGESTION GATE REJECTED ${batchId} — ${validationErrors.length} invalid question(s):`);
+  validationErrors.slice(0, 40).forEach((e) => console.error(`   ${e}`));
+  if (validationErrors.length > 40) console.error(`   ... and ${validationErrors.length - 40} more`);
+  process.exit(1);
+}
+console.log(`🔒 Ingestion gate: all ${batch.questions.length} questions pass structural validation.`);
+
 // Collect the figure files referenced by this batch and validate they exist locally.
 const figures = [];
 let missing = [];
