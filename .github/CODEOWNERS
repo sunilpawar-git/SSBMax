@@ -1,0 +1,12 @@
+# Code ownership for review routing.
+# The owner is requested for review automatically on matching changes.
+
+# Default owner for everything in the repo.
+*                       @sunilpawar-git
+
+# CI / build / security-sensitive areas — explicit for visibility.
+/.github/               @sunilpawar-git
+/lint/                  @sunilpawar-git
+firestore.rules         @sunilpawar-git
+*.gradle.kts            @sunilpawar-git
+gradle/libs.versions.toml @sunilpawar-git
