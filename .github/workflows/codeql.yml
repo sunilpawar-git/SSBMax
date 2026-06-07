@@ -20,7 +20,7 @@ jobs:
   analyze:
     name: Analyze (java-kotlin)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       contents: read
       security-events: write   # required to upload results to the code-scanning tab
@@ -28,13 +28,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
+        with:
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
         with:
           languages: java-kotlin
-          # Source-only extraction — no Gradle build required, so the analysis
-          # can't be broken by the Android build the way autobuild can.
-          build-mode: none
+          # Manual build: Kotlin extraction needs a real compile to trace.
+          # build-mode:none yields "no source code seen" on Kotlin projects.
+          build-mode: manual
+
+      # Compile so CodeQL can trace the Kotlin/Java sources. --no-build-cache
+      # forces the compiler to actually run (a cache hit produces no trace and
+      # CodeQL would see no code).
+      - name: Build for CodeQL tracing
+        run: ./gradlew :app:assembleDebug --no-build-cache --stacktrace
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
