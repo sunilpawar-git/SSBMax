@@ -219,6 +219,34 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
+  # ── Detekt (Kotlin static analysis) ──────────────────────────────────
+  # Fails only on NEW smells; existing ones are grandfathered per-module via
+  # detekt-baseline.xml (a ratchet target to drive down over time).
+  detekt:
+    name: Detekt
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
+        with:
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Run Detekt
+        run: ./gradlew detekt --build-cache --parallel --stacktrace
+
+      - name: Upload Detekt Reports
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: detekt-reports
+          path: '**/build/reports/detekt/detekt.html'
+          retention-days: 7
+
   # ── Single required check for branch protection ──────────────────────
   # Make THIS the required status check in branch-protection rules; it stays
   # stable even as the jobs above are added or renamed.
@@ -226,13 +254,14 @@ jobs:
     name: CI Success
     runs-on: ubuntu-latest
     if: always()
-    needs: [wrapper-validation, security-scan, lint, unit-tests, build]
+    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build]
     steps:
       - name: Verify all jobs succeeded
         run: |
           echo "wrapper-validation: ${{ needs.wrapper-validation.result }}"
           echo "security-scan:      ${{ needs.security-scan.result }}"
           echo "lint:               ${{ needs.lint.result }}"
+          echo "detekt:             ${{ needs.detekt.result }}"
           echo "unit-tests:         ${{ needs.unit-tests.result }}"
           echo "build:              ${{ needs.build.result }}"
           if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then

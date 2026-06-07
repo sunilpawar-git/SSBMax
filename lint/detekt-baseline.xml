@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:HardcodedTextDetector.kt$HardcodedTextDetector.&lt;no name provided&gt;$value.isEmpty() || value.length == 1 || value.isBlank() || value.matches(Regex("""%\d*[ds]"""))</ID>
+    <ID>ComplexCondition:NavigationComplexObjectDetector.kt$NavigationComplexObjectDetector$typeName.endsWith("Type") || typeName.endsWith("Status") || typeName.endsWith("Mode") || typeName.endsWith("State") &amp;&amp; typeName.length &lt; 15</ID>
+    <ID>ComplexCondition:SingletonMutableStateDetector.kt$SingletonMutableStateDetector$typeName.contains("Mutable") || typeName.contains("ArrayList") || typeName.contains("HashMap") || typeName.contains("HashSet") || typeName.contains("LinkedList")</ID>
+    <ID>ComplexCondition:SingletonMutableStateDetector.kt$SingletonMutableStateDetector$typeName.contains("mutableStateOf") || typeName.contains("MutableState") || typeName.contains("MutableStateFlow") || typeName.contains("MutableSharedFlow")</ID>
+    <ID>MaxLineLength:StateFlowValueAssignmentDetector.kt$StateFlowValueAssignmentDetector.&lt;no name provided&gt;$message = "Use `$stateFlowName.update { it.copy(...) }` instead of `$stateFlowName.value = $stateFlowName.value.copy(...)` for thread-safe state updates"</ID>
+    <ID>MaxLineLength:StateFlowValueAssignmentDetectorTest.kt$StateFlowValueAssignmentDetectorTest$assertEquals("Use .update {} instead of .value = .value.copy()", issue.getBriefDescription(com.android.tools.lint.detector.api.TextFormat.TEXT))</ID>
+    <ID>NewLineAtEndOfFile:LogMethodDetector.kt$com.ssbmax.lint.LogMethodDetector.kt</ID>
+    <ID>ReturnCount:AppLayerFirebaseCallDetector.kt$AppLayerFirebaseCallDetector.&lt;no name provided&gt;$override fun visitImportStatement(node: UImportStatement)</ID>
+    <ID>ReturnCount:StateFlowValueAssignmentDetector.kt$StateFlowValueAssignmentDetector$private fun isStateFlowValueCopyCall(expr: org.jetbrains.uast.UExpression?): Boolean</ID>
+    <ID>UnusedParameter:HardcodedTextDetector.kt$HardcodedTextDetector$node: UCallExpression</ID>
+    <ID>UnusedPrivateMember:LogMethodDetector.kt$LogMethodDetector$private fun isLogClassReceiver(receiver: org.jetbrains.uast.UExpression?): Boolean</ID>
+    <ID>UnusedPrivateProperty:NullableViewModelVarDetectorIntegrationTest.kt$NullableViewModelVarDetectorIntegrationTest$val handler = detector.createUastHandler(mockContext!!)</ID>
+    <ID>UnusedPrivateProperty:SingletonMutableStateDetectorIntegrationTest.kt$SingletonMutableStateDetectorIntegrationTest$val handler = detector.createUastHandler(mockContext!!)</ID>
+    <ID>UnusedPrivateProperty:StateFlowValueAssignmentDetectorIntegrationTest.kt$StateFlowValueAssignmentDetectorIntegrationTest$val handler = detector.createUastHandler(mockContext!!)</ID>
+    <ID>WildcardImport:AppLayerFirebaseCallDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:AppLayerFirebaseCallDetector.kt$import org.jetbrains.uast.*</ID>
+    <ID>WildcardImport:AppLayerFirebaseCallDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ComponentMissingPreviewDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:ComponentMissingPreviewDetector.kt$import org.jetbrains.uast.*</ID>
+    <ID>WildcardImport:ComponentMissingPreviewDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:DomainLayerAndroidDepsDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:DomainLayerAndroidDepsDetector.kt$import org.jetbrains.uast.*</ID>
+    <ID>WildcardImport:DomainLayerAndroidDepsDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:FirebaseInUILayerDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:FirebaseRulesValidationDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:FirebaseRulesValidationDetectorTest.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:FirebaseRulesValidationDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:HardcodedApiKeyDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:HardcodedApiKeyDetectorTest.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:HardcodedApiKeyDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:HardcodedTextDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:HardcodedTextDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:LogMethodDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:NavigationComplexObjectDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:NullableViewModelVarDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:NullableViewModelVarDetectorIntegrationTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:PrintStackTraceDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:PrintStackTraceDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SensitiveDataInLogsDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:SensitiveDataInLogsDetectorTest.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:SensitiveDataInLogsDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SingletonMutableStateDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:SingletonMutableStateDetectorIntegrationTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:StateFlowValueAssignmentDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:StateFlowValueAssignmentDetectorIntegrationTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:StateFlowValueAssignmentDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:UnsafeStringInputDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:UnsafeStringInputDetectorTest.kt$import com.android.tools.lint.detector.api.*</ID>
+    <ID>WildcardImport:UnsafeStringInputDetectorTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ViewModelLifecycleDetector.kt$import com.android.tools.lint.detector.api.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

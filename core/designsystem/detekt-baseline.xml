@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>MatchingDeclarationName:Color.kt$SSBColors</ID>
+    <ID>WildcardImport:CoreDesignSystemTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SpacingTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ThemeTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>
