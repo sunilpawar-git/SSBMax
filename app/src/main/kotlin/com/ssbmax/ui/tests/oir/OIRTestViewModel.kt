@@ -196,8 +196,9 @@ class OIRTestViewModel @Inject constructor(
                 val subscriptionType = userProfileRepository.getUserProfile(session.userId).first()
                     .getOrNull()?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
                 val submissionId = submitOIRTestUseCase(session).getOrThrow()
-                // Mark served questions as used (best-effort) so next session gets fresh questions
-                runCatching { testContentRepository.markOIRQuestionsUsed(session.questions.map { it.id }) }
+                // Note: served questions are marked used inside SubmitOIRTestUseCase (step 6) —
+                // the single source of truth for submission orchestration. Do NOT mark them again
+                // here (that caused a duplicate write per submit).
                 testContentRepository.clearCache()
                 _uiState.update { it.copy(
                     session = session.copy(isCompleted = true),

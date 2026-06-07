@@ -145,6 +145,8 @@
     <string name="dashboard_tests">Tests</string>
     <string name="dashboard_last_updated_now">Updated just now</string>
     <string name="cd_refresh_dashboard">Refresh dashboard</string>
+    <string name="dashboard_some_unavailable">Some results couldn\'t load. Tap retry.</string>
+    <string name="dashboard_retry">Retry</string>
     
     <!-- Dashboard Test Names -->
     <string name="dashboard_test_oir">OIR</string>

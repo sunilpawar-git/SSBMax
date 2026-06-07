@@ -380,8 +380,36 @@ class OIRTestViewModelTest : BaseViewModelTest() {
         assertEquals("Should have 3 skipped", 3, result.skippedQuestions)
     }
     
+    @Test
+    fun `submitTest marks questions used exactly once via the use case, not directly`() = runTest {
+        // WHY: SubmitOIRTestUseCase (step 6) is the single source of truth for marking served
+        // questions used. The ViewModel previously ALSO called markOIRQuestionsUsed directly,
+        // producing a duplicate write per submit. This regression test pins the dedup: the
+        // ViewModel must orchestrate via the use case and must NOT mark questions used itself.
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        mockQuestions.forEach { question ->
+            viewModel.selectOption(question.correctAnswerId)
+            viewModel.nextQuestion()
+        }
+
+        // Clear recorded calls (these mocks are shared across tests) so the assertion window covers
+        // only this submit — while keeping the stubbed answers intact.
+        clearMocks(mockSubmitUseCase, mockTestContentRepo, answers = false)
+
+        // When
+        viewModel.submitTest()
+        advanceUntilIdle()
+
+        // Then: submission is orchestrated through the use case exactly once...
+        coVerify(exactly = 1) { mockSubmitUseCase(any()) }
+        // ...and the ViewModel does NOT mark questions used itself (the use case owns that).
+        coVerify(exactly = 0) { mockTestContentRepo.markOIRQuestionsUsed(any()) }
+    }
+
     // ==================== Timer Tests ====================
-    
+
     @Test
     fun `timer decrements every second`() = runTest {
         // Given

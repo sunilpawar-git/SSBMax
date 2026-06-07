@@ -1,6 +1,8 @@
 package com.ssbmax.core.domain.usecase.dashboard
 
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
+import com.ssbmax.core.domain.model.gto.GTOResultStatus
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
@@ -12,6 +14,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,7 +29,14 @@ data class ProcessedDashboardData(
     val topOLQs: List<Pair<OLQ, Float>>,
     val improvementOLQs: List<Pair<OLQ, Float>>,
     val overallAverageScore: Float?,
-    val cacheMetadata: CacheMetadata
+    val cacheMetadata: CacheMetadata,
+    /**
+     * Test types whose fetch timed out, errored, or whose analysis is still pending — i.e. a
+     * result was *expected* but couldn't be shown. Distinct from "never attempted" (which simply
+     * has no entry anywhere). The UI uses this to badge affected tiles with "couldn't load — retry"
+     * instead of treating the slot as empty. A partial dashboard is rendered regardless.
+     */
+    val unavailableTypes: Set<TestType> = emptySet()
 ) {
     companion object {
         /**
@@ -103,6 +114,14 @@ class GetOLQDashboardUseCase @Inject constructor(
     companion object {
         private const val TAG = "GetOLQDashboard"
         private const val CACHE_TTL_MS = 5 * 60 * 1000L // 5 minutes
+
+        /**
+         * Per-test-type fetch budget. Each test type's fetch is isolated under this timeout so one
+         * slow Firestore read can never blow up the whole dashboard load — the slow slot resolves
+         * as "unavailable" and the rest still render. Replaces the old single 10s umbrella that
+         * discarded everything when any one type was slow.
+         */
+        private const val PER_TYPE_TIMEOUT_MS = 6_000L
     }
 
     /**
@@ -196,47 +215,54 @@ class GetOLQDashboardUseCase @Inject constructor(
     private suspend fun fetchDashboardData(userId: String): ProcessedDashboardData = coroutineScope {
         logger.d(TAG, "🔍 Fetching all dashboard data in parallel for user: $userId")
 
-        // Launch all independent fetches concurrently so every Firestore query hits the
-        // network at the same time.  Previously they were sequential: OIR → PPDT → TAT →
-        // … → Lecturette → Interview.  On cold-start the early queries (GD, GPE, …) hit
-        // the local Firestore cache instantly, but Lecturette and Interview – completed
-        // most recently – were not yet cached.  By the time those sequential fetches ran,
-        // the cold-start Firestore connection was still being established, causing them to
-        // fail silently (.getOrNull() → null).  Parallel fetches establish the connection
-        // once for all queries, eliminating that race.
-        val oirJob = async { submissionRepository.getLatestOIRSubmission(userId).getOrNull() }
+        // Launch all independent fetches concurrently so every Firestore query hits the network at
+        // the same time. Each fetch is additionally isolated under PER_TYPE_TIMEOUT_MS (see
+        // fetchSlot): a slow or hung test-type fetch resolves to null + an entry in `unavailable`
+        // instead of stalling — and blowing the timeout on — the entire dashboard.
+        val unavailable = ConcurrentHashMap.newKeySet<TestType>()
 
-        // PPDT has a 2-step dependency (submission → OLQ result), so both steps are
-        // inside a single async block to keep them parallel with everything else.
-        val ppdtJob = async {
-            val submission = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
-            val olqResult = submission?.let {
-                submissionRepository.getPPDTResult(it.submissionId).getOrNull()
+        val oirJob = async {
+            fetchSlot(TestType.OIR, unavailable) {
+                submissionRepository.getLatestOIRSubmission(userId).getOrNull()
             }
-            Pair(submission, olqResult)
         }
 
-        val tatJob = async { getLatestCompletedOLQResult(userId, "TAT") }
-        val watJob = async { getLatestCompletedOLQResult(userId, "WAT") }
-        val srtJob = async { getLatestCompletedOLQResult(userId, "SRT") }
-        val sdJob  = async { getLatestCompletedOLQResult(userId, "SDT") }
+        // PPDT has a 2-step dependency (submission → OLQ result), so both steps are
+        // inside a single slot to keep them parallel with everything else.
+        val ppdtJob = async {
+            fetchSlot(TestType.PPDT, unavailable) {
+                val submission = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
+                val olqResult = submission?.let {
+                    submissionRepository.getPPDTResult(it.submissionId).getOrNull()
+                }
+                Pair(submission, olqResult)
+            }
+        }
 
-        // All 8 GTO tests in parallel – previously these were sequential, so the 5 tests
-        // with no submissions (PGT, HGT, GOR, IO, CT) each wasted a server round-trip
-        // before Lecturette's query even started.
-        val gtoJobs = GTOTestType.entries.associateWith { testType ->
-            async { gtoRepository.getUserResults(userId, testType).getOrNull()?.firstOrNull() }
+        val tatJob = async { fetchSlot(TestType.TAT, unavailable) { getLatestCompletedOLQResult(userId, "TAT") } }
+        val watJob = async { fetchSlot(TestType.WAT, unavailable) { getLatestCompletedOLQResult(userId, "WAT") } }
+        val srtJob = async { fetchSlot(TestType.SRT, unavailable) { getLatestCompletedOLQResult(userId, "SRT") } }
+        val sdJob  = async { fetchSlot(TestType.SD,  unavailable) { getLatestCompletedOLQResult(userId, "SDT") } }
+
+        // All 8 GTO tests in parallel, each via the lean getLatestResult path (one ordered query
+        // per type instead of fetching+joining every completed submission).
+        val gtoJobs = GTOTestType.entries.associateWith { gtoType ->
+            async { fetchGtoSlot(userId, gtoType, unavailable) }
         }
 
         // Interview fetched in parallel with everything above.
-        val interviewJob = async { interviewRepository.getLatestResult(userId).getOrNull() }
+        val interviewJob = async {
+            fetchSlot(TestType.IO, unavailable) {
+                interviewRepository.getLatestResult(userId).getOrNull()
+            }
+        }
 
         // ── Await all results ────────────────────────────────────────────────────────────
         val oirSubmission = oirJob.await()
         val oirResult = oirSubmission?.testResult
         logger.d(TAG, "   OIR submission found: ${oirSubmission != null}, score: ${oirResult?.percentageScore}")
 
-        val (ppdtSubmission, ppdtOLQResult) = ppdtJob.await()
+        val (ppdtSubmission, ppdtOLQResult) = ppdtJob.await() ?: Pair(null, null)
 
         val tatResult = tatJob.await()
         val watResult = watJob.await()
@@ -245,21 +271,12 @@ class GetOLQDashboardUseCase @Inject constructor(
         logger.d(TAG, "   Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")
 
         val gtoResults = mutableMapOf<GTOTestType, OLQAnalysisResult>()
-        gtoJobs.forEach { (testType, job) ->
+        gtoJobs.forEach { (gtoType, job) ->
             job.await()?.let { gtoResult ->
                 if (gtoResult.olqScores.isNotEmpty()) {
-                    gtoResults[testType] = OLQAnalysisResult(
+                    gtoResults[gtoType] = OLQAnalysisResult(
                         submissionId = gtoResult.submissionId,
-                        testType = when (testType) {
-                            GTOTestType.GROUP_DISCUSSION -> com.ssbmax.core.domain.model.TestType.GTO_GD
-                            GTOTestType.GROUP_PLANNING_EXERCISE -> com.ssbmax.core.domain.model.TestType.GTO_GPE
-                            GTOTestType.LECTURETTE -> com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE
-                            GTOTestType.PROGRESSIVE_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_PGT
-                            GTOTestType.HALF_GROUP_TASK -> com.ssbmax.core.domain.model.TestType.GTO_HGT
-                            GTOTestType.GROUP_OBSTACLE_RACE -> com.ssbmax.core.domain.model.TestType.GTO_GOR
-                            GTOTestType.INDIVIDUAL_OBSTACLES -> com.ssbmax.core.domain.model.TestType.GTO_IO
-                            GTOTestType.COMMAND_TASK -> com.ssbmax.core.domain.model.TestType.GTO_CT
-                        },
+                        testType = gtoTypeToTestType(gtoType),
                         olqScores = gtoResult.olqScores,
                         overallScore = gtoResult.overallScore,
                         overallRating = gtoResult.overallRating,
@@ -275,6 +292,9 @@ class GetOLQDashboardUseCase @Inject constructor(
 
         val interviewResult = interviewJob.await()
         logger.d(TAG, "   Interview result: ${interviewResult != null}")
+        if (unavailable.isNotEmpty()) {
+            logger.w(TAG, "   ⚠️ Unavailable test types (timed out / pending): ${unavailable.joinToString { it.name }}")
+        }
 
         // Build dashboard
         val dashboard = OLQDashboardData(
@@ -317,7 +337,8 @@ class GetOLQDashboardUseCase @Inject constructor(
                 cacheHit = false,
                 loadTimeMs = 0L,
                 forcedRefresh = false
-            ) // Will be replaced by invoke() with actual metadata
+            ), // Will be replaced by invoke() with actual metadata
+            unavailableTypes = unavailable.toSet()
         )
 
         logger.d(TAG, "✅ Dashboard built successfully")
@@ -328,6 +349,75 @@ class GetOLQDashboardUseCase @Inject constructor(
         logger.d(TAG, "   Overall average score: ${finalData.overallAverageScore}")
 
         finalData
+    }
+
+    /**
+     * Wraps a fetch result so a *successful null* (test never attempted) is distinguishable from a
+     * *timeout* (withTimeoutOrNull also returns null). Only the latter marks the slot unavailable.
+     */
+    private class Fetched<out T>(val value: T)
+
+    /**
+     * Run one test-type fetch under [PER_TYPE_TIMEOUT_MS]. On timeout, record [type] in
+     * [unavailable] and return null so the dashboard renders without it. A successful null (no
+     * submission) is returned as-is and does NOT mark the type unavailable.
+     */
+    private suspend fun <T> fetchSlot(
+        type: TestType,
+        unavailable: MutableSet<TestType>,
+        block: suspend () -> T?
+    ): T? {
+        val outcome = withTimeoutOrNull(PER_TYPE_TIMEOUT_MS) { Fetched(block()) }
+        if (outcome == null) {
+            logger.w(TAG, "   ⏱️ ${type.name} fetch timed out after ${PER_TYPE_TIMEOUT_MS}ms")
+            unavailable.add(type)
+            return null
+        }
+        return outcome.value
+    }
+
+    /**
+     * Fetch the latest GTO result for one type under the per-type timeout, mapping the
+     * [GTOResultStatus] into a nullable [com.ssbmax.core.domain.model.gto.GTOResult]:
+     * - Available → the result
+     * - AnalysisPending (submitted but unscored) → null + marked unavailable
+     * - NotAttempted → null (not marked)
+     * - timeout / transient failure → null + marked unavailable
+     */
+    private suspend fun fetchGtoSlot(
+        userId: String,
+        gtoType: GTOTestType,
+        unavailable: MutableSet<TestType>
+    ): com.ssbmax.core.domain.model.gto.GTOResult? {
+        val testType = gtoTypeToTestType(gtoType)
+        val outcome = withTimeoutOrNull(PER_TYPE_TIMEOUT_MS) {
+            Fetched(gtoRepository.getLatestResult(userId, gtoType).getOrNull())
+        }
+        if (outcome == null) {
+            logger.w(TAG, "   ⏱️ ${testType.name} fetch timed out after ${PER_TYPE_TIMEOUT_MS}ms")
+            unavailable.add(testType)
+            return null
+        }
+        return when (val status = outcome.value) {
+            is GTOResultStatus.Available -> status.result
+            GTOResultStatus.AnalysisPending -> {
+                unavailable.add(testType)
+                null
+            }
+            GTOResultStatus.NotAttempted, null -> null
+        }
+    }
+
+    /** Map a [GTOTestType] to its dashboard [TestType] constant. */
+    private fun gtoTypeToTestType(gtoType: GTOTestType): TestType = when (gtoType) {
+        GTOTestType.GROUP_DISCUSSION -> TestType.GTO_GD
+        GTOTestType.GROUP_PLANNING_EXERCISE -> TestType.GTO_GPE
+        GTOTestType.LECTURETTE -> TestType.GTO_LECTURETTE
+        GTOTestType.PROGRESSIVE_GROUP_TASK -> TestType.GTO_PGT
+        GTOTestType.HALF_GROUP_TASK -> TestType.GTO_HGT
+        GTOTestType.GROUP_OBSTACLE_RACE -> TestType.GTO_GOR
+        GTOTestType.INDIVIDUAL_OBSTACLES -> TestType.GTO_IO
+        GTOTestType.COMMAND_TASK -> TestType.GTO_CT
     }
 
     /**

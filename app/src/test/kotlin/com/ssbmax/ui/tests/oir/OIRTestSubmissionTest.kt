@@ -173,12 +173,16 @@ class OIRTestSubmissionTest : OIRViewModelTestBase() {
     // ==================== markQuestionsUsed (Bug 2) ====================
 
     @Test
-    fun `submitTest marks all served question IDs as used in cache`() = runTest {
+    fun `submitTest delegates marking to the use case and does NOT mark questions used itself`() = runTest {
+        // Bug 2 (revised): marking served questions used is owned solely by SubmitOIRTestUseCase
+        // (step 6) — the single source of truth. The ViewModel must NOT also mark them, which
+        // previously produced a duplicate write per submit. (The actual marking is verified in
+        // SubmitOIRTestUseCaseTest.) Here we pin that the ViewModel only delegates.
         viewModel = createViewModel()
         advanceUntilIdle()
 
         // Clear any calls made during auto-submit triggered by the timer running to zero
-        clearMocks(mockTestContentRepo, answers = false)
+        clearMocks(mockTestContentRepo, mockSubmitUseCase, answers = false)
 
         // Reload so there's a fresh session to submit
         viewModel.loadTest()
@@ -188,9 +192,9 @@ class OIRTestSubmissionTest : OIRViewModelTestBase() {
         viewModel.submitTest()
         advanceUntilIdle()
 
-        val expectedIds = mockQuestions.map { it.id }
-        coVerify(exactly = 1) {
-            mockTestContentRepo.markOIRQuestionsUsed(expectedIds)
-        }
+        // Submission is orchestrated through the use case...
+        coVerify(exactly = 1) { mockSubmitUseCase(any()) }
+        // ...and the ViewModel never marks questions used directly (no duplicate write).
+        coVerify(exactly = 0) { mockTestContentRepo.markOIRQuestionsUsed(any()) }
     }
 }

@@ -2,6 +2,7 @@ package com.ssbmax.core.domain.usecase.dashboard
 
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.gto.GTOResult
+import com.ssbmax.core.domain.model.gto.GTOResultStatus
 import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
@@ -39,7 +40,11 @@ class GetOLQDashboardUseCaseTest {
         submissionRepository = mockk(relaxed = true)
         gtoRepository = mockk(relaxed = true)
         interviewRepository = mockk(relaxed = true)
-        
+
+        // The dashboard now fetches GTO via the lean getLatestResult path. Default every type to
+        // NotAttempted so tests that don't care about GTO stay isolated; individual tests override.
+        coEvery { gtoRepository.getLatestResult(any(), any()) } returns Result.success(GTOResultStatus.NotAttempted)
+
         // Use NoOpLogger for testing (domain layer is now platform-independent)
         getOLQDashboardUseCase = GetOLQDashboardUseCase(
             submissionRepository,
@@ -156,10 +161,11 @@ class GetOLQDashboardUseCaseTest {
             aiConfidence = 80
         )
         
-        // Mock GTO repo to return this result for GD
-        coEvery { gtoRepository.getUserResults(any(), any()) } returns Result.success(emptyList())
-        coEvery { gtoRepository.getUserResults(userId, GTOTestType.GROUP_DISCUSSION) } returns Result.success(listOf(gdResult))
-        
+        // Mock GTO repo to return this result for GD via the lean latest-result path
+        coEvery { gtoRepository.getLatestResult(any(), any()) } returns Result.success(GTOResultStatus.NotAttempted)
+        coEvery { gtoRepository.getLatestResult(userId, GTOTestType.GROUP_DISCUSSION) } returns
+            Result.success(GTOResultStatus.Available(gdResult))
+
         // Mock others empty
         coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
         coEvery { submissionRepository.getLatestWATSubmission(any()) } returns Result.success(null)
@@ -345,6 +351,111 @@ class GetOLQDashboardUseCaseTest {
         assertNotNull(finalOirResult)
         assertEquals("The sessionId must be reconciled with the document ID for navigation consistency", 
             submissionId, finalOirResult?.sessionId)
+    }
+
+    // =========================================================================
+    // PER-TYPE ISOLATION TESTS (partial render)
+    // WHY: a single slow/failing test type must never discard the whole dashboard.
+    // =========================================================================
+
+    @Test
+    fun `one slow test type times out but dashboard still returns the others`() = runTest {
+        // Given: WAT loads instantly, but TAT's fetch hangs past the per-type budget (6s).
+        val userId = "user_timeout"
+        val watResult = createOLQResult(
+            submissionId = "wat_ok",
+            testType = TestType.WAT,
+            scores = mapOf(OLQ.REASONING_ABILITY to 5f)
+        )
+        val watSub = mockk<WATSubmission> { every { id } returns "wat_ok" }
+        coEvery { submissionRepository.getLatestWATSubmission(userId) } returns Result.success(watSub)
+        coEvery { submissionRepository.getWATResult("wat_ok") } returns Result.success(watResult)
+
+        // TAT hangs (7s > PER_TYPE_TIMEOUT_MS of 6s) — virtual time in runTest.
+        val tatSub = mockk<TATSubmission> { every { id } returns "tat_slow" }
+        coEvery { submissionRepository.getLatestTATSubmission(userId) } coAnswers {
+            kotlinx.coroutines.delay(7_000)
+            Result.success(tatSub)
+        }
+
+        coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+
+        // When
+        val result = getOLQDashboardUseCase(userId)
+
+        // Then: load succeeds (no wholesale failure), WAT is present, TAT is flagged unavailable.
+        assertTrue("Dashboard must succeed despite one slow type", result.isSuccess)
+        val data = result.getOrNull()
+        assertNotNull(data)
+        assertNotNull("WAT loaded fine and must be present", data?.dashboard?.phase2Results?.watResult)
+        assertNull("TAT timed out so it has no result", data?.dashboard?.phase2Results?.tatResult)
+        assertTrue(
+            "TAT must be flagged unavailable (timed out), not silently dropped",
+            data?.unavailableTypes?.contains(TestType.TAT) == true
+        )
+        assertFalse(
+            "WAT loaded successfully and must NOT be flagged unavailable",
+            data?.unavailableTypes?.contains(TestType.WAT) == true
+        )
+    }
+
+    @Test
+    fun `GTO analysis pending marks the type unavailable without a result`() = runTest {
+        // Given: a GD submission exists but is unscored (worker pending/failed) → AnalysisPending.
+        val userId = "user_gto_pending"
+        coEvery { gtoRepository.getLatestResult(any(), any()) } returns Result.success(GTOResultStatus.NotAttempted)
+        coEvery { gtoRepository.getLatestResult(userId, GTOTestType.GROUP_DISCUSSION) } returns
+            Result.success(GTOResultStatus.AnalysisPending)
+
+        coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestWATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+
+        // When
+        val result = getOLQDashboardUseCase(userId)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val data = result.getOrNull()
+        assertNull(
+            "Pending GTO analysis must not produce a score",
+            data?.dashboard?.phase2Results?.gtoResults?.get(GTOTestType.GROUP_DISCUSSION)
+        )
+        assertTrue(
+            "Pending GTO type must be surfaced as unavailable, not dropped silently",
+            data?.unavailableTypes?.contains(TestType.GTO_GD) == true
+        )
+    }
+
+    @Test
+    fun `not-attempted test types are NOT flagged unavailable`() = runTest {
+        // Given: a fresh user with no submissions at all.
+        val userId = "user_empty"
+        coEvery { submissionRepository.getLatestTATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestWATSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSRTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestSDTSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestOIRSubmission(any()) } returns Result.success(null)
+        coEvery { submissionRepository.getLatestPPDTSubmission(any()) } returns Result.success(null)
+        coEvery { interviewRepository.getLatestResult(any()) } returns Result.success(null)
+
+        // When
+        val result = getOLQDashboardUseCase(userId)
+
+        // Then: nothing is "unavailable" — empty slots are simply not-attempted.
+        assertTrue(result.isSuccess)
+        assertTrue(
+            "Never-attempted types must not be flagged unavailable",
+            result.getOrNull()?.unavailableTypes?.isEmpty() == true
+        )
     }
 
     // Helper to create test OLQ results

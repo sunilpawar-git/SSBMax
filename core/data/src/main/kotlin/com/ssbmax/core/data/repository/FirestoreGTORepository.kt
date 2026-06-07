@@ -7,7 +7,10 @@ import com.ssbmax.core.domain.model.gto.*
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.GTORepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
@@ -358,17 +361,7 @@ class FirestoreGTORepository @Inject constructor(
             // Map GTOTestType to TestType for querying
             // SubmissionRepository stores testType as TestType.GTO_GD, not GTOTestType.GROUP_DISCUSSION
             if (testType != null) {
-                val firestoreTestTypeName = when (testType) {
-                    GTOTestType.GROUP_DISCUSSION -> "GTO_GD"
-                    GTOTestType.GROUP_PLANNING_EXERCISE -> "GTO_GPE"
-                    GTOTestType.LECTURETTE -> "GTO_LECTURETTE"
-                    GTOTestType.PROGRESSIVE_GROUP_TASK -> "GTO_PGT"
-                    GTOTestType.HALF_GROUP_TASK -> "GTO_HGT"
-                    GTOTestType.GROUP_OBSTACLE_RACE -> "GTO_GOR"
-                    GTOTestType.INDIVIDUAL_OBSTACLES -> "GTO_IO"
-                    GTOTestType.COMMAND_TASK -> "GTO_CT"
-                }
-                query = query.whereEqualTo(FIELD_TEST_TYPE, firestoreTestTypeName)
+                query = query.whereEqualTo(FIELD_TEST_TYPE, gtoTestTypeToFirestoreName(testType))
             }
             
             val snapshot = query.get().await()
@@ -658,20 +651,21 @@ class FirestoreGTORepository @Inject constructor(
                 return Result.success(result)
             }
             
-            // Fallback: Check old location in submissions collection
+            // Fallback: legacy data — scores embedded on the submission doc, never migrated to
+            // gto_results. (New submissions store scores ONLY in gto_results, so a miss here means
+            // either a legacy row or an unscored submission.)
             Log.w(TAG, "Result not found in $COLLECTION_GTO_RESULTS, checking legacy location...")
-             val submission = getSubmission(submissionId).getOrThrow()
-            
-            if (submission.status != GTOSubmissionStatus.COMPLETED) {
-                return Result.failure(Exception("Submission not yet analyzed"))
-            }
-            
+            val submission = getSubmission(submissionId).getOrThrow()
+
             if (submission.olqScores.isEmpty()) {
-                return Result.failure(Exception("No OLQ scores available"))
+                // No scores in either place: analysis is still pending or has permanently failed.
+                // Surface a typed signal so the dashboard can show "analysis pending" instead of
+                // silently dropping the test type.
+                return Result.failure(GTOAnalysisUnavailableException(submissionId))
             }
-            
+
             val overallScore = submission.olqScores.values.map { it.score }.average().toFloat()
-            
+
             val result = GTOResult(
                 submissionId = submissionId,
                 userId = submission.userId,
@@ -681,10 +675,57 @@ class FirestoreGTORepository @Inject constructor(
                 overallRating = calculateRating(overallScore),
                 aiConfidence = submission.olqScores.values.map { it.confidence }.average().toInt()
             )
-            
+
+            // Lazy self-heal: migrate the legacy scores into gto_results so the next read hits the
+            // primary collection and skips this second round-trip. Best-effort — never fail the read.
+            runCatching {
+                firestore.collection(COLLECTION_GTO_RESULTS)
+                    .document(submissionId)
+                    .set(resultToFirestoreMap(result))
+                    .await()
+                Log.d(TAG, "🔧 Self-healed legacy result into $COLLECTION_GTO_RESULTS/$submissionId")
+            }.onFailure { Log.w(TAG, "Self-heal write-back failed for $submissionId: ${it.message}") }
+
             Result.success(result)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get test result", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getLatestResult(
+        userId: String,
+        testType: GTOTestType
+    ): Result<GTOResultStatus> {
+        return try {
+            // Lean path for the dashboard: fetch only the most-recent submission for this type
+            // (one ordered query), instead of fetching+joining every completed submission.
+            val snapshot = firestore.collection(COLLECTION_GTO_SUBMISSIONS)
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_TEST_TYPE, gtoTestTypeToFirestoreName(testType))
+                .orderBy(FIELD_SUBMITTED_AT, Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .await()
+
+            val doc = snapshot.documents.firstOrNull()
+                ?: return Result.success(GTOResultStatus.NotAttempted)
+
+            val submission = mapToSubmission(doc.data ?: emptyMap())
+
+            getTestResult(submission.id).fold(
+                onSuccess = { Result.success(GTOResultStatus.Available(it)) },
+                onFailure = { error ->
+                    if (error is GTOAnalysisUnavailableException) {
+                        // Submitted but unscored → analysis pending/failed (not a transient error).
+                        Result.success(GTOResultStatus.AnalysisPending)
+                    } else {
+                        Result.failure(error)
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get latest GTO result for $testType", e)
             Result.failure(e)
         }
     }
@@ -695,17 +736,25 @@ class FirestoreGTORepository @Inject constructor(
     ): Result<List<GTOResult>> {
         return try {
             val submissions = getUserSubmissions(userId, testType).getOrThrow()
-            val results = submissions
-                .filter { it.status == GTOSubmissionStatus.COMPLETED }
-                .mapNotNull { submission ->
-                    try {
-                        getTestResult(submission.id).getOrNull()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error getting result for submission: ${submission.id}", e)
-                        null
+            // Resolve each submission's result concurrently instead of serially — previously this
+            // was a serial mapNotNull, so N completed submissions cost N round-trips back to back.
+            val results = coroutineScope {
+                submissions
+                    .filter { it.status == GTOSubmissionStatus.COMPLETED }
+                    .map { submission ->
+                        async {
+                            try {
+                                getTestResult(submission.id).getOrNull()
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error getting result for submission: ${submission.id}", e)
+                                null
+                            }
+                        }
                     }
-                }
-            
+                    .awaitAll()
+                    .filterNotNull()
+            }
+
             Result.success(results)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get user results", e)
@@ -1094,6 +1143,45 @@ class FirestoreGTORepository @Inject constructor(
         )
     }
     
+    /**
+     * Map a [GTOTestType] to the string the submission documents are stored under.
+     * SubmissionRepository persists testType as TestType.GTO_GD, not GTOTestType.GROUP_DISCUSSION.
+     */
+    private fun gtoTestTypeToFirestoreName(testType: GTOTestType): String = when (testType) {
+        GTOTestType.GROUP_DISCUSSION -> "GTO_GD"
+        GTOTestType.GROUP_PLANNING_EXERCISE -> "GTO_GPE"
+        GTOTestType.LECTURETTE -> "GTO_LECTURETTE"
+        GTOTestType.PROGRESSIVE_GROUP_TASK -> "GTO_PGT"
+        GTOTestType.HALF_GROUP_TASK -> "GTO_HGT"
+        GTOTestType.GROUP_OBSTACLE_RACE -> "GTO_GOR"
+        GTOTestType.INDIVIDUAL_OBSTACLES -> "GTO_IO"
+        GTOTestType.COMMAND_TASK -> "GTO_CT"
+    }
+
+    /**
+     * Serialize a [GTOResult] into the `gto_results` document shape — mirrors the map written by
+     * [updateSubmissionOLQScores] so the lazy self-heal write-back is read-compatible.
+     */
+    private fun resultToFirestoreMap(result: GTOResult): Map<String, Any> {
+        val scoresMap = result.olqScores.mapKeys { it.key.name }.mapValues { entry ->
+            mapOf(
+                "score" to entry.value.score,
+                "confidence" to entry.value.confidence,
+                "reasoning" to entry.value.reasoning
+            )
+        }
+        return mapOf(
+            "submissionId" to result.submissionId,
+            "userId" to result.userId,
+            "testType" to result.testType.name,
+            "olqScores" to scoresMap,
+            "overallScore" to result.overallScore,
+            "overallRating" to result.overallRating,
+            "aiConfidence" to result.aiConfidence,
+            "analyzedAt" to result.analyzedAt
+        )
+    }
+
     private fun calculateRating(score: Float): String {
         return when {
             score <= 3f -> "Exceptional"

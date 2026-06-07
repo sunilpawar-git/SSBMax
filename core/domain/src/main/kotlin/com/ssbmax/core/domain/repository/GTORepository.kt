@@ -182,6 +182,18 @@ interface GTORepository {
         userId: String,
         testType: GTOTestType? = null
     ): Result<List<GTOResult>>
+
+    /**
+     * Get the latest result for a single test type — the lean path used by the dashboard.
+     *
+     * Resolves only the most-recent submission (one ordered query, not N), so it avoids the
+     * O(N×reads) cost of [getUserResults]. Returns a [GTOResultStatus] so the caller can tell
+     * "scored", "submitted but unscored" (analysis pending/failed) and "never attempted" apart.
+     */
+    suspend fun getLatestResult(
+        userId: String,
+        testType: GTOTestType
+    ): Result<GTOResultStatus>
     
     /**
      * Get average OLQ scores across all GTO tests
