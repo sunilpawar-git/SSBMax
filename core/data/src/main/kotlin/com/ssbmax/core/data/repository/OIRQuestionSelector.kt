@@ -6,8 +6,10 @@ import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.core.domain.model.OIRQuestionDistribution
 import com.ssbmax.core.domain.model.OIRQuestionType
 import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.core.domain.validation.OIRQuestionValidator
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,7 +17,7 @@ private const val TAG = "OIRQuestionSelector"
 
 /**
  * Selects 50 questions from the local Room cache, maintaining the required
- * V40 / NV40 / N15 / S5 type distribution.
+ * type distribution defined once in [OIRQuestionDistribution] (V40 / NV40 / N20).
  *
  * Extracted from [OIRQuestionCacheManager] to respect the 300-line file limit
  * and give this concern a clear single responsibility.
@@ -26,9 +28,6 @@ class OIRQuestionSelector @Inject constructor(
     private val gson: Gson
 ) {
     companion object {
-        private const val VERBAL_RATIO      = 0.40f
-        private const val NON_VERBAL_RATIO  = 0.40f
-        private const val NUMERICAL_RATIO   = 0.15f
         private const val UNUSED_THRESHOLD_DAYS = 7
     }
 
@@ -43,53 +42,38 @@ class OIRQuestionSelector @Inject constructor(
         val diffStr = difficulty?.let { " (difficulty: $it)" } ?: ""
         Log.d(TAG, "Generating test with $count questions$diffStr")
 
-        val verbalCount   = (count * VERBAL_RATIO).toInt()
-        val nonVerbalCount = (count * NON_VERBAL_RATIO).toInt()
-        val numericalCount = (count * NUMERICAL_RATIO).toInt()
-        val spatialCount  = count - verbalCount - nonVerbalCount - numericalCount
-
-        Log.d(TAG, "Distribution: V=$verbalCount, NV=$nonVerbalCount, N=$numericalCount, S=$spatialCount")
+        val targets = OIRQuestionDistribution.counts(count)
+        Log.d(TAG, "Distribution: " + targets.entries.joinToString { "${it.key}=${it.value}" })
 
         val unusedThreshold = System.currentTimeMillis() - (UNUSED_THRESHOLD_DAYS * 24 * 60 * 60 * 1000L)
 
-        var verbal    = fetchByType(OIRQuestionType.VERBAL_REASONING.name,    unusedThreshold, verbalCount,    difficulty)
-        var nonVerbal = fetchByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount, difficulty)
-        var numerical = fetchByType(OIRQuestionType.NUMERICAL_ABILITY.name,   unusedThreshold, numericalCount,  difficulty)
-        var spatial   = fetchByType(OIRQuestionType.SPATIAL_REASONING.name,   unusedThreshold, spatialCount,    difficulty)
+        // Selected questions per type (mutable so we can top-up on shortage).
+        val selected = targets.mapValues { (type, target) ->
+            fetchByType(type.name, unusedThreshold, target, difficulty)
+        }.toMutableMap()
 
-        val currentTotal = verbal.size + nonVerbal.size + numerical.size + spatial.size
+        val currentTotal = selected.values.sumOf { it.size }
         if (currentTotal < count) {
-            val shortage = count - currentTotal
-            Log.d(TAG, "⚠️ Short by $shortage questions, applying smart redistribution...")
-            Log.d(TAG, "Shortages: V=${verbalCount - verbal.size}, NV=${nonVerbalCount - nonVerbal.size}, " +
-                    "N=${numericalCount - numerical.size}, S=${spatialCount - spatial.size}")
+            var remaining = count - currentTotal
+            Log.d(TAG, "⚠️ Short by $remaining questions, applying smart redistribution across live types...")
 
-            var remaining = shortage
-            if (verbalCount - verbal.size <= 0 && remaining > 0) {
-                val extra = fetchByType(OIRQuestionType.VERBAL_REASONING.name, unusedThreshold, verbalCount + remaining, difficulty)
-                val gained = extra.size - verbal.size
-                if (gained > 0) { verbal = extra; remaining -= gained; Log.d(TAG, "✓ Added $gained extra verbal questions") }
-            }
-            if (nonVerbalCount - nonVerbal.size <= 0 && remaining > 0) {
-                val extra = fetchByType(OIRQuestionType.NON_VERBAL_REASONING.name, unusedThreshold, nonVerbalCount + remaining, difficulty)
-                val gained = extra.size - nonVerbal.size
-                if (gained > 0) { nonVerbal = extra; remaining -= gained; Log.d(TAG, "✓ Added $gained extra non-verbal questions") }
-            }
-            if (numericalCount - numerical.size <= 0 && remaining > 0) {
-                val extra = fetchByType(OIRQuestionType.NUMERICAL_ABILITY.name, unusedThreshold, numericalCount + remaining, difficulty)
-                val gained = extra.size - numerical.size
-                if (gained > 0) { numerical = extra; remaining -= gained; Log.d(TAG, "✓ Added $gained extra numerical questions") }
-            }
-            if (spatialCount - spatial.size <= 0 && remaining > 0) {
-                val extra = fetchByType(OIRQuestionType.SPATIAL_REASONING.name, unusedThreshold, spatialCount + remaining, difficulty)
-                val gained = extra.size - spatial.size
-                if (gained > 0) { spatial = extra; Log.d(TAG, "✓ Added $gained extra spatial questions") }
+            // Pull extra from any type that met its target (i.e. has more in the pool).
+            for ((type, target) in targets) {
+                if (remaining <= 0) break
+                if (selected.getValue(type).size < target) continue // this type is itself short — nothing extra to give
+                val extra = fetchByType(type.name, unusedThreshold, target + remaining, difficulty)
+                val gained = extra.size - selected.getValue(type).size
+                if (gained > 0) {
+                    selected[type] = extra
+                    remaining -= gained
+                    Log.d(TAG, "✓ Added $gained extra ${type.name} questions")
+                }
             }
 
-            Log.d(TAG, "✅ Smart redistribution complete: ${verbal.size + nonVerbal.size + numerical.size + spatial.size}/$count questions")
+            Log.d(TAG, "✅ Smart redistribution complete: ${selected.values.sumOf { it.size }}/$count questions")
         }
 
-        val all = (verbal + nonVerbal + numerical + spatial).shuffled()
+        val all = selected.values.flatten().shuffled()
         Log.d(TAG, "Selected ${all.size} questions")
         Result.success(all.map { toDomain(it) })
 
@@ -98,32 +82,45 @@ class OIRQuestionSelector @Inject constructor(
         Result.failure(e)
     }
 
+    /**
+     * Returns up to [count] STRUCTURALLY-VALID questions of [type]. We over-fetch
+     * (×3) and drop anything the domain [OIRQuestionValidator] rejects, so duds
+     * still present in the pool (e.g. the legacy optionless fill-in-the-blank
+     * questions) are skipped at selection-time rather than reaching the test and
+     * being filtered out downstream — keeping the assembled test at full count.
+     * The validator stays the single source of truth for validity; this enforces
+     * it at selection. Duds are not deleted, so they re-enter automatically once a
+     * future change makes them valid.
+     */
     private suspend fun fetchByType(
         type: String,
         unusedThreshold: Long,
         count: Int,
         difficulty: String?
     ): List<CachedOIRQuestionEntity> {
-        var questions = cacheDao.getUnusedQuestionsByType(type, unusedThreshold, count * 2)
-        if (difficulty != null) {
-            val filtered = questions.filter { it.difficulty == difficulty }
-            questions = if (filtered.isNotEmpty()) filtered else questions
-            Log.d(TAG, "Filtered to $difficulty: ${questions.size} $type questions")
-        }
+        var questions = filterValid(
+            applyDifficulty(cacheDao.getUnusedQuestionsByType(type, unusedThreshold, count * 3), difficulty)
+        )
         if (questions.size < count) {
-            Log.d(TAG, "Not enough unused $type questions (${questions.size}/$count), fetching any")
-            var all = cacheDao.getQuestionsByType(type, count * 2)
-            if (difficulty != null) {
-                val filtered = all.filter { it.difficulty == difficulty }
-                all = if (filtered.isNotEmpty()) filtered else {
-                    Log.d(TAG, "No $type questions with difficulty=$difficulty, using any difficulty")
-                    all
-                }
-            }
-            questions = all
+            Log.d(TAG, "Not enough unused valid $type (${questions.size}/$count), fetching any")
+            questions = filterValid(applyDifficulty(cacheDao.getQuestionsByType(type, count * 3), difficulty))
         }
         return questions.take(count)
     }
+
+    /** Prefer the requested difficulty, but fall back to any difficulty rather than starve the test. */
+    private fun applyDifficulty(
+        questions: List<CachedOIRQuestionEntity>,
+        difficulty: String?
+    ): List<CachedOIRQuestionEntity> {
+        if (difficulty == null) return questions
+        val filtered = questions.filter { it.difficulty == difficulty }
+        return if (filtered.isNotEmpty()) filtered else questions
+    }
+
+    /** Keep only questions that pass the domain validator (drops duds at selection). */
+    private fun filterValid(questions: List<CachedOIRQuestionEntity>): List<CachedOIRQuestionEntity> =
+        questions.filter { OIRQuestionValidator.validate(toDomain(it)).isValid }
 
     fun toEntity(
         questionMap: Map<String, Any>,

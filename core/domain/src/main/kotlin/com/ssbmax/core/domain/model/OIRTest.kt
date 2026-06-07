@@ -214,13 +214,6 @@ data class OIRTestConfig(
     val totalQuestions: Int = 50,
     val totalTimeMinutes: Int = 40,
     val passingPercentage: Float = 50f,
-    val questionDistribution: Map<OIRQuestionType, Int> = mapOf(
-        // Matches OIRQuestionSelector ratios: V=40%, NV=40%, N=15%, S=5% of 50
-        OIRQuestionType.VERBAL_REASONING to 20,
-        OIRQuestionType.NON_VERBAL_REASONING to 20,
-        OIRQuestionType.NUMERICAL_ABILITY to 7,
-        OIRQuestionType.SPATIAL_REASONING to 3
-    ),
     val showImmediateFeedback: Boolean = true,
     val allowReview: Boolean = true,
     val shuffleQuestions: Boolean = true
