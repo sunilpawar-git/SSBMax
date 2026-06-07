@@ -64,7 +64,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_14_15, // Update TAT character limits
                 DatabaseMigrations.MIGRATION_16_17, // Add OIR questionImageUrl column
                 DatabaseMigrations.MIGRATION_17_18, // Composite (type, lastUsed) index for OIR hot query
-                DatabaseMigrations.MIGRATION_18_19  // Restore type and batchId indices on cached_oir_questions
+                DatabaseMigrations.MIGRATION_18_19, // Restore type and batchId indices on cached_oir_questions
+                DatabaseMigrations.MIGRATION_19_20  // Add oir_sync_metadata table for content-version reconciliation
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()

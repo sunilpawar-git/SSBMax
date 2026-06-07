@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.OIRQuestionType
@@ -23,10 +24,13 @@ import javax.inject.Singleton
  *  - [OIRQuestionCacheManager] — sync / download / cache lifecycle operations
  *  - [OIRQuestionSelector]     — question selection & type-distribution logic
  *
- * Caching strategy:
- *   Phase 1 (blocking): batches 1-4 downloaded on first launch (enough for first test)
- *   Phase 2 (background): batches 5-20 downloaded while user takes the first test
- *   Cost: 20 Firestore reads on first install, 0 on subsequent launches.
+ * Caching strategy (content-version reconciliation; Firestore is SSOT):
+ *   - Read `test_content/oir/meta/config` → { contentVersion, batchCount }.
+ *   - If the remote contentVersion differs from the locally-stored one, clear and
+ *     re-download every batch (existing installs self-heal to current content).
+ *   - Otherwise download only the batches still missing (idempotent fast path).
+ *   Phase 1 (blocking): batches 1-4 — enough for the first test.
+ *   Phase 2 (background): batches 5..batchCount — downloaded while the user takes the test.
  */
 @Singleton
 class OIRQuestionCacheManager @Inject constructor(
@@ -40,53 +44,94 @@ class OIRQuestionCacheManager @Inject constructor(
         private const val FIRESTORE_COLLECTION = "test_content"
         private const val FIRESTORE_OIR_DOC    = "oir"
         private const val FIRESTORE_BATCHES    = "batches"
-        private val PHASE_1_BATCH_RANGE        = 1..4
-        private val PHASE_2_BATCH_RANGE        = 5..20
+        private const val FIRESTORE_META       = "meta"
+        private const val FIRESTORE_META_CONFIG = "config"
+        private const val PHASE_1_LAST         = 4
+        /** Used only when the meta doc is absent (legacy/rollout fallback). */
+        private const val LEGACY_BATCH_COUNT   = 20
     }
 
+    /** Remote OIR content config, from `test_content/oir/meta/config`. */
+    internal data class MetaConfig(val contentVersion: Int?, val batchCount: Int)
+
+    private fun batchId(i: Int) = "batch_pdf_%03d".format(i)
+
     /**
-     * Two-phase initial sync.
-     * Phase 1 (blocking): batches 1-4 — returns once phase-1 batch metadata is complete.
-     * Phase 2 (background): batches 5-20 — downloads while user is already in the test.
-     *
-     * Skip condition uses per-batch metadata (not total question count) so a single corrupt row
-     * cannot prevent the sync from being skipped on subsequent launches.
+     * Content-version-aware initial sync.
+     *  1. Read the meta doc.
+     *  2. If remote contentVersion != local → reconcile (clear + re-download all).
+     *  3. Else if some batches are missing → download just those (idempotent).
+     *  4. Else skip.
+     * Phase 1 (1..4) is blocking for first-test latency; the rest downloads in the background.
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
             Log.d(TAG, "Starting initial sync...")
-            val phase1Complete = PHASE_1_BATCH_RANGE.all { i ->
-                cacheDao.isBatchDownloaded("batch_pdf_%03d".format(i))
-            }
-            if (phase1Complete) {
-                Log.d(TAG, "Phase 1 batches already complete, skipping initial sync")
-                return Result.success(Unit)
-            }
+            val meta = fetchMetaConfig()
+            val localVersion = cacheDao.getSyncMetadata()?.contentVersion
+            val needsReconcile = meta.contentVersion != null && meta.contentVersion != localVersion
 
-            // Phase 1: blocking
-            for (i in PHASE_1_BATCH_RANGE) {
-                val batchId = "batch_pdf_%03d".format(i)
-                downloadBatch(batchId).getOrElse { e ->
-                    Log.w(TAG, "Phase 1: failed to download $batchId: ${e.message}")
+            if (needsReconcile) {
+                Log.d(TAG, "Content version changed (local=$localVersion, remote=${meta.contentVersion}) — reconciling")
+                cacheDao.deleteAllQuestions()
+                cacheDao.deleteAllBatchMetadata()
+            } else {
+                val allPresent = (1..meta.batchCount).all { cacheDao.isBatchDownloaded(batchId(it)) }
+                if (allPresent) {
+                    Log.d(TAG, "All ${meta.batchCount} batches present at version $localVersion, skipping sync")
+                    return Result.success(Unit)
                 }
+                Log.d(TAG, "Some batches missing, topping up (idempotent)")
             }
-            Log.d(TAG, "Initial sync phase 1 complete: batches 1-4 ready for first test")
 
-            // Phase 2: background
+            // Phase 1: blocking — enough batches for the first test.
+            for (i in 1..minOf(PHASE_1_LAST, meta.batchCount)) {
+                downloadBatch(batchId(i)).getOrElse { e -> Log.w(TAG, "Phase 1: $i failed: ${e.message}") }
+            }
+            // Persist the version now; any phase-2 gaps are caught by the missing-batch top-up next launch.
+            meta.contentVersion?.let {
+                cacheDao.upsertSyncMetadata(OIRSyncMetadataEntity(contentVersion = it, lastSyncAt = System.currentTimeMillis()))
+            }
+            Log.d(TAG, "Initial sync phase 1 complete (batches 1..${minOf(PHASE_1_LAST, meta.batchCount)})")
+
+            // Phase 2: background — the remaining batches up to batchCount.
             CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                for (i in PHASE_2_BATCH_RANGE) {
-                    val batchId = "batch_pdf_%03d".format(i)
-                    downloadBatch(batchId).getOrElse { e ->
-                        Log.w(TAG, "Phase 2: failed to download $batchId: ${e.message}")
-                    }
+                for (i in (PHASE_1_LAST + 1)..meta.batchCount) {
+                    downloadBatch(batchId(i)).getOrElse { e -> Log.w(TAG, "Phase 2: $i failed: ${e.message}") }
                 }
-                Log.d(TAG, "Initial sync phase 2 complete: all 20 batches ready")
+                Log.d(TAG, "Initial sync phase 2 complete: all ${meta.batchCount} batches ready")
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Initial sync failed", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Read `test_content/oir/meta/config`. Missing/unreadable doc → legacy fallback
+     * (no version, [LEGACY_BATCH_COUNT] batches) so the app still works before the meta
+     * doc is published.
+     */
+    internal suspend fun fetchMetaConfig(): MetaConfig {
+        return try {
+            val doc = firestore.collection(FIRESTORE_COLLECTION)
+                .document(FIRESTORE_OIR_DOC)
+                .collection(FIRESTORE_META)
+                .document(FIRESTORE_META_CONFIG)
+                .get().await()
+            if (!doc.exists()) {
+                Log.w(TAG, "Meta config absent — using legacy fallback ($LEGACY_BATCH_COUNT batches)")
+                return MetaConfig(contentVersion = null, batchCount = LEGACY_BATCH_COUNT)
+            }
+            MetaConfig(
+                contentVersion = (doc.getLong("contentVersion"))?.toInt(),
+                batchCount = (doc.getLong("batchCount"))?.toInt() ?: LEGACY_BATCH_COUNT
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to read meta config, using legacy fallback: ${e.message}")
+            MetaConfig(contentVersion = null, batchCount = LEGACY_BATCH_COUNT)
         }
     }
 

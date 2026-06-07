@@ -659,5 +659,23 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+
+    /**
+     * Adds the single-row [com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity] table
+     * that powers content-version reconciliation (Firestore is SSOT; Room mirrors it).
+     * Existing cached questions are untouched; the table starts empty so the next launch
+     * sees a null local version and reconciles to the remote content version.
+     */
+    val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS oir_sync_metadata (
+                    id INTEGER NOT NULL PRIMARY KEY,
+                    contentVersion INTEGER NOT NULL,
+                    lastSyncAt INTEGER NOT NULL
+                )
+            """.trimIndent())
+        }
+    }
 }
 

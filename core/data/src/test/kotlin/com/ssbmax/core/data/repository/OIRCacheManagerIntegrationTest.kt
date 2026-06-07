@@ -80,6 +80,11 @@ class OIRCacheManagerIntegrationTest {
         )
         cacheManager = spyk(cacheManager)
         coEvery { cacheManager.downloadBatch(any()) } returns Result.success(Unit)
+        // Default meta config (legacy fallback: no version, 20 batches). Tests that exercise
+        // reconciliation override this. Stubbing on the spyk keeps initialSync off real Firestore.
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = null, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns null
         coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns emptyList()
         coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns emptyList()
         coEvery { mockCacheDao.getQuestionCountByType(any()) } returns 0
@@ -97,8 +102,8 @@ class OIRCacheManagerIntegrationTest {
         // Given - 100 cached questions with proper distribution
         val verbalQuestions = (1..20).map { createMockCachedQuestion("v$it", OIRQuestionType.VERBAL_REASONING.name) }
         val nonVerbalQuestions = (1..20).map { createMockCachedQuestion("nv$it", OIRQuestionType.NON_VERBAL_REASONING.name) }
-        val numericalQuestions = (1..8).map { createMockCachedQuestion("num$it", OIRQuestionType.NUMERICAL_ABILITY.name) }
-        val spatialQuestions = (1..2).map { createMockCachedQuestion("sp$it", OIRQuestionType.SPATIAL_REASONING.name) }
+        val numericalQuestions = (1..10).map { createMockCachedQuestion("num$it", OIRQuestionType.NUMERICAL_ABILITY.name) }
+        val spatialQuestions = emptyList<com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity>()
         
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
         coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, any(), any()) } returns verbalQuestions
@@ -119,16 +124,16 @@ class OIRCacheManagerIntegrationTest {
         
         assertEquals("Should have 50 questions", 50, questions.size)
         
-        // Verify distribution (40/40/15/5)
+        // Verify distribution per OIRQuestionDistribution SSOT (V40/NV40/N20, no spatial)
         val verbalCount = questions.count { it.type == OIRQuestionType.VERBAL_REASONING }
         val nonVerbalCount = questions.count { it.type == OIRQuestionType.NON_VERBAL_REASONING }
         val numericalCount = questions.count { it.type == OIRQuestionType.NUMERICAL_ABILITY }
         val spatialCount = questions.count { it.type == OIRQuestionType.SPATIAL_REASONING }
-        
+
         assertEquals("Verbal should be 40%", 20, verbalCount)
         assertEquals("Non-verbal should be 40%", 20, nonVerbalCount)
-        assertEquals("Numerical should be 15%", 8, numericalCount)
-        assertEquals("Spatial should be ~5%", 2, spatialCount)
+        assertEquals("Numerical should be 20%", 10, numericalCount)
+        assertEquals("Spatial should be 0 (none in bank)", 0, spatialCount)
     }
     
     @Test
@@ -157,79 +162,85 @@ class OIRCacheManagerIntegrationTest {
     // ==================== Initial Sync Tests ====================
     
     @Test
-    fun `initialSync skips entirely when all phase1 batches are already downloaded`() = runTest {
-        // Per-batch completeness check: all 4 phase-1 batches present → skip download loop
+    fun `initialSync skips when version matches and all batches present`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
         coEvery { mockCacheDao.isBatchDownloaded(any()) } returns true
 
         val result = cacheManager.initialSync()
 
         assertTrue("Should succeed without downloading", result.isSuccess)
         coVerify(exactly = 0) { cacheManager.downloadBatch(any()) }
-        verify(exactly = 0) { mockFirestore.collection(any()) }
     }
 
     @Test
-    fun `initialSync enters download loop when at least one phase1 batch is missing`() = runTest {
-        // 3 of 4 phase-1 batches present — must still attempt the missing one
-        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_001") } returns true
-        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_002") } returns true
-        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_003") } returns true
-        coEvery { mockCacheDao.isBatchDownloaded("batch_pdf_004") } returns false
+    fun `initialSync reconciles (clear + redownload) when remote version differs`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 3, batchCount = 28)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns true // present, but version stale
 
         cacheManager.initialSync()
-
-        coVerify(atLeast = 1) { cacheManager.downloadBatch("batch_pdf_004") }
-    }
-
-    @Test
-    fun `initialSync does not skip when batch metadata absent regardless of question count`() = runTest {
-        // 900+ questions in Room but no batch metadata → must not skip (metadata is SSOT for readiness)
-        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
-
-        cacheManager.initialSync()
-
-        // Should still enter the download loop
-        coVerify(atLeast = 1) { cacheManager.downloadBatch(any()) }
-    }
-    
-    @Test
-    fun `initialSync downloads batches 1 to 4 synchronously before returning`() = runTest {
-        // Given - empty cache
-        coEvery { mockCacheDao.getCachedQuestionCount() } returns 0
-        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
-
-        // downloadBatch is already stubbed via spyk to return success
-
-        // When
-        val result = cacheManager.initialSync()
-
-        // Then - function returned successfully
-        assertTrue("initialSync should succeed", result.isSuccess)
-
-        // Batches 1-4 must be downloaded during the synchronous phase
-        val expectedBatches = (1..4).map { "batch_pdf_%03d".format(it) }
-        expectedBatches.forEach { batchId ->
-            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
-        }
-    }
-
-    @Test
-    fun `initialSync enqueues background download for batches 5 to 20`() = runTest {
-        // Given - empty cache
-        coEvery { mockCacheDao.getCachedQuestionCount() } returns 0
-        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
-
-        // When
-        cacheManager.initialSync()
-
-        // Allow background coroutine to run
         advanceUntilIdle()
 
-        // Then - batches 5-20 must eventually be downloaded in background
-        val backgroundBatches = (5..20).map { "batch_pdf_%03d".format(it) }
-        backgroundBatches.forEach { batchId ->
+        coVerify(exactly = 1) { mockCacheDao.deleteAllQuestions() }
+        coVerify(exactly = 1) { mockCacheDao.deleteAllBatchMetadata() }
+        // Re-downloads across the full 1..28 range despite batches being "present".
+        coVerify(atLeast = 1) { cacheManager.downloadBatch("batch_pdf_028") }
+    }
+
+    @Test
+    fun `initialSync tops up missing batches when version matches`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false // some missing → top-up
+
+        cacheManager.initialSync()
+
+        coVerify(exactly = 0) { mockCacheDao.deleteAllQuestions() } // top-up, not reconcile
+        coVerify(atLeast = 1) { cacheManager.downloadBatch(any()) }
+    }
+
+    @Test
+    fun `initialSync downloads batches 1 to 4 synchronously before returning`() = runTest {
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false // fresh install
+
+        val result = cacheManager.initialSync()
+
+        assertTrue("initialSync should succeed", result.isSuccess)
+        (1..4).map { "batch_pdf_%03d".format(it) }.forEach { batchId ->
             coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
         }
+    }
+
+    @Test
+    fun `initialSync enqueues background download up to batchCount`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 28)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        cacheManager.initialSync()
+        advanceUntilIdle()
+
+        (5..28).map { "batch_pdf_%03d".format(it) }.forEach { batchId ->
+            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
+        }
+    }
+
+    @Test
+    fun `initialSync persists the remote content version`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        cacheManager.initialSync()
+
+        coVerify { mockCacheDao.upsertSyncMetadata(match { it.contentVersion == 2 }) }
     }
 
     // ==================== Usage Tracking Tests ====================
@@ -452,8 +463,8 @@ class OIRCacheManagerIntegrationTest {
             type = type,
             subtype = null,
             questionText = "Sample question",
-            optionsJson = """[{"id":"A","text":"Option A"}]""",
-            correctAnswerId = "A",
+            optionsJson = """[{"id":"opt_a","text":"Option A"},{"id":"opt_b","text":"Option B"},{"id":"opt_c","text":"Option C"},{"id":"opt_d","text":"Option D"}]""",
+            correctAnswerId = "opt_a",
             explanation = "Sample explanation",
             difficulty = QuestionDifficulty.MEDIUM.name,
             tags = "test",
