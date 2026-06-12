@@ -31,9 +31,6 @@ import com.ssbmax.core.domain.model.OIROption
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.ui.tests.common.AnswerFeedbackEffect
 
-/**
- * Full question view: type badge, question text, optional figure, answer options, feedback.
- */
 @Composable
 internal fun OIRQuestionView(
     question: OIRQuestion,
@@ -51,77 +48,28 @@ internal fun OIRQuestionView(
         hapticFeedback = hapticFeedback
     )
 
-    val context = LocalContext.current
-
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item(key = "type-badge") {
-            AssistChip(
-                onClick = { },
-                label = {
-                    Text(question.type.displayName, style = MaterialTheme.typography.labelMedium)
-                },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            )
+            OIRTypeBadge(question.type.displayName)
         }
 
         item(key = "question-text") {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Text(
-                    text = question.questionText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(20.dp)
-                )
-            }
+            OIRQuestionTextCard(question.questionText)
         }
 
-        // Figure for non-verbal / spatial questions
         question.questionImageUrl?.let { imageUrl ->
             item(key = "figure") {
-                // remember(imageUrl) ensures the ImageRequest object is stable across timer
-                // recompositions — prevents Coil from restarting the load every second.
-                val stableRequest = remember(imageUrl) {
-                    ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(false)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .build()
-                }
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    AsyncImage(
-                        model = stableRequest,
-                        contentDescription = stringResource(R.string.oir_question_figure_description),
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // Reserve minimum height so options don't shift when the image loads.
-                            .heightIn(min = 200.dp)
-                            .padding(12.dp)
-                    )
-                }
+                OIRQuestionFigureCard(imageUrl)
             }
         }
 
         if (question.isMultiSelect) {
             item(key = "multi-select-hint") {
-                val hintRes = if (selectedOptionIds.size >= 2)
-                    R.string.oir_multi_select_selections_complete else R.string.oir_multi_select_hint
-                SuggestionChip(
-                    onClick = { },
-                    label = { Text(stringResource(hintRes), style = MaterialTheme.typography.labelMedium) }
-                )
+                OIRMultiSelectHint(selectedOptionIds.size)
             }
         }
 
@@ -152,9 +100,70 @@ internal fun OIRQuestionView(
     }
 }
 
-/**
- * Single answer option card with selection / correct / wrong visual states.
- */
+@Composable
+private fun OIRTypeBadge(displayName: String) {
+    AssistChip(
+        onClick = { },
+        label = {
+            Text(displayName, style = MaterialTheme.typography.labelMedium)
+        },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    )
+}
+
+@Composable
+private fun OIRQuestionTextCard(questionText: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Text(
+            text = questionText,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun OIRQuestionFigureCard(imageUrl: String) {
+    val context = LocalContext.current
+    val stableRequest = remember(imageUrl) {
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(false)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build()
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        AsyncImage(
+            model = stableRequest,
+            contentDescription = stringResource(R.string.oir_question_figure_description),
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 200.dp)
+                .padding(12.dp)
+        )
+    }
+}
+
+@Composable
+private fun OIRMultiSelectHint(selectionCount: Int) {
+    val hintRes = if (selectionCount >= 2)
+        R.string.oir_multi_select_selections_complete else R.string.oir_multi_select_hint
+    SuggestionChip(
+        onClick = { },
+        label = { Text(stringResource(hintRes), style = MaterialTheme.typography.labelMedium) }
+    )
+}
+
 @Composable
 internal fun OIROptionCard(
     option: OIROption,
@@ -165,18 +174,17 @@ internal fun OIROptionCard(
     isMultiSelect: Boolean = false,
     isDimmed: Boolean = false
 ) {
-    val context = LocalContext.current
     val backgroundColor = when {
         isCorrect -> MaterialTheme.colorScheme.tertiaryContainer
-        isWrong   -> MaterialTheme.colorScheme.errorContainer
+        isWrong -> MaterialTheme.colorScheme.errorContainer
         isSelected -> MaterialTheme.colorScheme.primaryContainer
-        else      -> MaterialTheme.colorScheme.surface
+        else -> MaterialTheme.colorScheme.surface
     }
     val borderColor = when {
         isCorrect -> MaterialTheme.colorScheme.tertiary
-        isWrong   -> MaterialTheme.colorScheme.error
+        isWrong -> MaterialTheme.colorScheme.error
         isSelected -> MaterialTheme.colorScheme.primary
-        else      -> MaterialTheme.colorScheme.outline
+        else -> MaterialTheme.colorScheme.outline
     }
 
     Card(
@@ -194,62 +202,83 @@ internal fun OIROptionCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (option.imageUrl != null) {
-                val stableOptionRequest = remember(option.imageUrl) {
-                    ImageRequest.Builder(context)
-                        .data(option.imageUrl)
-                        .crossfade(false)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .build()
-                }
-                AsyncImage(
-                    model = stableOptionRequest,
-                    contentDescription = option.text,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 80.dp)
-                )
-            } else {
-                Text(
-                    text = option.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            when {
-                isCorrect -> Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(24.dp)
-                )
-                isWrong -> Icon(
-                    imageVector = Icons.Default.Cancel,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(24.dp)
-                )
-                isSelected -> Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(if (isMultiSelect) RoundedCornerShape(4.dp) else CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
+            OIROptionContentInRow(option)
+            OIROptionIndicator(isCorrect, isWrong, isSelected, isMultiSelect)
         }
     }
 }
+
+@Composable
+private fun RowScope.OIROptionContentInRow(option: OIROption) {
+    val context = LocalContext.current
+    if (option.imageUrl != null) {
+        val stableRequest = remember(option.imageUrl) {
+            ImageRequest.Builder(context)
+                .data(option.imageUrl)
+                .crossfade(false)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .build()
+        }
+        AsyncImage(
+            model = stableRequest,
+            contentDescription = option.text,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = 80.dp)
+        )
+    } else {
+        Text(
+            text = option.text,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun OIROptionIndicator(
+    isCorrect: Boolean,
+    isWrong: Boolean,
+    isSelected: Boolean,
+    isMultiSelect: Boolean
+) {
+    when {
+        isCorrect -> Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.size(24.dp)
+        )
+        isWrong -> Icon(
+            imageVector = Icons.Default.Cancel,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(24.dp)
+        )
+        isSelected -> OIRSelectionIndicator(isMultiSelect)
+    }
+}
+
+@Composable
+private fun OIRSelectionIndicator(isMultiSelect: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .clip(if (isMultiSelect) RoundedCornerShape(4.dp) else CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
 
 /**
  * Post-answer feedback card showing correct/incorrect verdict and explanation.
