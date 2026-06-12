@@ -1,8 +1,15 @@
 package com.ssbmax.core.data.local.entity
 
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 class CachedOIRQuestionEntityTest {
+
+    @get:Rule
+    val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
+
 
     @Test
     fun entityInstance_canBeCreated() {
@@ -53,5 +60,58 @@ class CachedOIRQuestionEntityTest {
         assert(entity.subtype == null)
         assert(entity.questionImageUrl == null)
         assert(entity.lastUsed == null)
+    }
+
+    @Test
+    fun correctAnswerIds_defaultsToNull_forSingleAnswerQuestion() {
+        // Single-answer questions don't set correctAnswerIds; null means "use correctAnswerId"
+        val entity = CachedOIRQuestionEntity(
+            id = "single-1",
+            questionNumber = 5,
+            type = "NON_VERBAL_REASONING",
+            subtype = null,
+            questionText = "Which figure comes next?",
+            optionsJson = """["A","B","C","D","E"]""",
+            correctAnswerId = "opt_c",
+            explanation = "Pattern continues with figure C.",
+            questionImageUrl = "https://example.com/fig.png",
+            difficulty = "MEDIUM",
+            tags = "figure",
+            batchId = "batch_001",
+            cachedAt = 1000L,
+            lastUsed = null,
+            usageCount = 0
+        )
+
+        assert(entity.correctAnswerIds == null) {
+            "Single-answer entity should have correctAnswerIds = null by default"
+        }
+    }
+
+    @Test
+    fun correctAnswerIds_storesJsonForMultiAnswerQuestion() {
+        val json = """["opt_b","opt_c"]"""
+        val entity = CachedOIRQuestionEntity(
+            id = "multi-1",
+            questionNumber = 10,
+            type = "NON_VERBAL_REASONING",
+            subtype = null,
+            questionText = "Which two figures belong to Class A?",
+            optionsJson = """["A","B","C","D","E"]""",
+            correctAnswerId = "",
+            explanation = "Answer: 2 and 3.",
+            questionImageUrl = "https://example.com/fig2.png",
+            difficulty = "HARD",
+            tags = "figure,multi-select",
+            batchId = "batch_001",
+            cachedAt = 2000L,
+            lastUsed = null,
+            usageCount = 0,
+            correctAnswerIds = json
+        )
+
+        assert(entity.correctAnswerIds == json) {
+            "Multi-answer entity should store the JSON list of option IDs"
+        }
     }
 }

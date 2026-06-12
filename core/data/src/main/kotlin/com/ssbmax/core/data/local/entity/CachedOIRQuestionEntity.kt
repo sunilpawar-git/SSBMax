@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -47,6 +48,9 @@ data class CachedOIRQuestionEntity(
     
     val lastUsed: Long?, // Last time this question was used in a test
     
-    val usageCount: Int = 0 // How many times used in tests
+    val usageCount: Int = 0, // How many times used in tests
+
+    @ColumnInfo(name = "correctAnswerIds")
+    val correctAnswerIds: String? = null // JSON e.g. "[\"opt_b\",\"opt_c\"]"; null → single-answer
 )
 

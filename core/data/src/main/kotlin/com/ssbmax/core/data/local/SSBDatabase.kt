@@ -64,7 +64,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 20, // Add oir_sync_metadata table for content-version reconciliation (migrated from 19)
+    version = 21, // Add correctAnswerIds column for multi-answer OIR questions (migrated from 20)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

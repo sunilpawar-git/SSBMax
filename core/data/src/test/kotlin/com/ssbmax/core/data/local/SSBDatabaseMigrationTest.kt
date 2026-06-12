@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_11_12
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_16_17
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_17_18
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -319,6 +320,81 @@ class SSBDatabaseMigrationTest {
         }
         openHelper.close()
         context.deleteDatabase("migration-test-19-20")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate20To21_addsCorrectAnswerIdsColumn() = runTest {
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-20-21")
+            .callback(object : SupportSQLiteOpenHelper.Callback(20) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_oir_questions (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            questionNumber INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            subtype TEXT,
+                            questionText TEXT NOT NULL,
+                            optionsJson TEXT NOT NULL,
+                            correctAnswerId TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            questionImageUrl TEXT,
+                            difficulty TEXT NOT NULL,
+                            tags TEXT NOT NULL,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT INTO cached_oir_questions
+                        (id, questionNumber, type, questionText, optionsJson, correctAnswerId,
+                         explanation, difficulty, tags, batchId, cachedAt, usageCount)
+                        VALUES ('q1', 1, 'NON_VERBAL_REASONING', 'Which two belong to Class A?',
+                                '[]', '', 'Answer: 2 and 3.', 'HARD', '', 'batch_001', 0, 0)
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_20_21.migrate(this)
+            version = 21
+
+            // Column must exist in schema
+            query("PRAGMA table_info(cached_oir_questions)")
+                .use { cursor ->
+                    val columnNames = mutableSetOf<String>()
+                    while (cursor.moveToNext()) {
+                        columnNames.add(cursor.getString(1))
+                    }
+                    assert(columnNames.contains("correctAnswerIds")) {
+                        "Migration 20→21 failed: correctAnswerIds column not found"
+                    }
+                }
+
+            // Existing row preserved; new column is NULL for single-answer questions
+            query("SELECT correctAnswerIds FROM cached_oir_questions WHERE id = 'q1'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 20→21: existing row disappeared" }
+                    assert(cursor.isNull(0)) {
+                        "Migration 20→21: correctAnswerIds should be NULL for pre-migration rows"
+                    }
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-20-21")
     }
 }
 

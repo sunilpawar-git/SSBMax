@@ -677,5 +677,11 @@ object DatabaseMigrations {
             """.trimIndent())
         }
     }
+
+    val MIGRATION_20_21 = object : Migration(20, 21) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN correctAnswerIds TEXT")
+        }
+    }
 }
 
