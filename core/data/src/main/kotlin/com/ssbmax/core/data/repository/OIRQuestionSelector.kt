@@ -128,6 +128,7 @@ class OIRQuestionSelector @Inject constructor(
         index: Int
     ): CachedOIRQuestionEntity {
         @Suppress("UNCHECKED_CAST")
+        val correctAnswerIdsList = questionMap["correctAnswerIds"] as? List<String>
         return CachedOIRQuestionEntity(
             id             = questionMap["id"] as? String ?: "oir_q_${System.currentTimeMillis()}_$index",
             questionNumber = (questionMap["questionNumber"] as? Long)?.toInt() ?: index + 1,
@@ -143,11 +144,12 @@ class OIRQuestionSelector @Inject constructor(
             batchId        = batchId,
             cachedAt       = System.currentTimeMillis(),
             lastUsed       = null,
-            usageCount     = 0
+            usageCount     = 0,
+            correctAnswerIds = correctAnswerIdsList?.let { gson.toJson(it) }
         )
     }
 
-    private fun toDomain(entity: CachedOIRQuestionEntity): OIRQuestion {
+    internal fun toDomain(entity: CachedOIRQuestionEntity): OIRQuestion {
         val type = object : com.google.gson.reflect.TypeToken<List<Map<String, String>>>() {}.type
         val options = gson.fromJson<List<Map<String, String>>>(entity.optionsJson, type)
             .map { OIROption(id = it["id"] ?: "", text = it["text"] ?: "", imageUrl = it["imageUrl"]) }
@@ -158,6 +160,9 @@ class OIRQuestionSelector @Inject constructor(
             questionText    = entity.questionText,
             options         = options,
             correctAnswerId = entity.correctAnswerId,
+            correctAnswerIds = entity.correctAnswerIds
+                ?.let { gson.fromJson(it, Array<String>::class.java).toList() }
+                ?: emptyList(),
             explanation     = entity.explanation,
             difficulty      = QuestionDifficulty.valueOf(entity.difficulty),
             timeSeconds     = 60,

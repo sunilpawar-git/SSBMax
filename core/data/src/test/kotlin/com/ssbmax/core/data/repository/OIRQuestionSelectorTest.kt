@@ -107,6 +107,65 @@ class OIRQuestionSelectorTest {
         }
     }
 
+    // --- Phase 4: toEntity / toDomain correctAnswerIds serialisation ---
+
+    @Test
+    fun `toEntity with correctAnswerIds list serialises to JSON`() {
+        val questionMap = mapOf(
+            "id" to "q1",
+            "questionNumber" to 1L,
+            "type" to "VERBAL_REASONING",
+            "questionText" to "Which two figures belong to Class A?",
+            "options" to listOf(
+                mapOf("id" to "opt_a", "text" to "A"),
+                mapOf("id" to "opt_b", "text" to "B")
+            ),
+            "correctAnswerId" to "",
+            "correctAnswerIds" to listOf("opt_b", "opt_c"),
+            "explanation" to "Answer: 2 and 3.",
+            "difficulty" to "MEDIUM",
+            "tags" to listOf<String>()
+        )
+        val entity = selector.toEntity(questionMap, "batch1", 0)
+        // Must serialise the list as a JSON array; exact string form is Gson default
+        assertEquals("""["opt_b","opt_c"]""", entity.correctAnswerIds)
+    }
+
+    @Test
+    fun `toEntity with null correctAnswerIds stores null`() {
+        val questionMap = mapOf(
+            "id" to "q2",
+            "questionNumber" to 2L,
+            "type" to "VERBAL_REASONING",
+            "questionText" to "Single-answer question?",
+            "options" to listOf(mapOf("id" to "opt_a", "text" to "A")),
+            "correctAnswerId" to "opt_a",
+            "explanation" to "",
+            "difficulty" to "MEDIUM",
+            "tags" to listOf<String>()
+        )
+        val entity = selector.toEntity(questionMap, "batch1", 1)
+        assertEquals(null, entity.correctAnswerIds)
+    }
+
+    @Test
+    fun `toDomain with JSON correctAnswerIds deserialises to list`() {
+        val entity = makeEntity(OIRQuestionType.VERBAL_REASONING.name, "q3").copy(
+            correctAnswerIds = """["opt_b","opt_c"]"""
+        )
+        val domain = selector.toDomain(entity)
+        assertEquals(listOf("opt_b", "opt_c"), domain.correctAnswerIds)
+    }
+
+    @Test
+    fun `toDomain with null correctAnswerIds returns empty list`() {
+        val entity = makeEntity(OIRQuestionType.VERBAL_REASONING.name, "q4").copy(
+            correctAnswerIds = null
+        )
+        val domain = selector.toDomain(entity)
+        assertEquals(emptyList<String>(), domain.correctAnswerIds)
+    }
+
     /** A legacy optionless "dud" (no options, no image) — the validator must reject it. */
     private fun makeDud(type: String, id: String) = makeEntity(type, id).copy(
         optionsJson = "[]",
