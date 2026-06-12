@@ -100,7 +100,7 @@ console.log("Review the preview, then run: node upload.js");
 // Step 4: Upload only after approval
 async function uploadToFirestore(questions) {
   const db = admin.firestore();
-  const batch = db.batch();
+  let batch = db.batch();
   
   let count = 0;
   for (const q of questions) {
@@ -242,7 +242,7 @@ async function resumableUpload(questions, checkpointFile = ".upload_checkpoint")
     // No checkpoint, starting fresh
   }
   
-  const batch = db.batch();
+  let batch = db.batch();
   let batchCount = 0;
   
   for (let i = startIndex; i < questions.length; i++) {
@@ -259,6 +259,7 @@ async function resumableUpload(questions, checkpointFile = ".upload_checkpoint")
       try {
         await batch.commit();
         uploaded += batchCount;
+        batch = db.batch();
         batchCount = 0;
         
         // Save checkpoint (idempotent: safe to re-run)
@@ -369,10 +370,11 @@ Provide ONLY this JSON (no other text):
 }
 
 // Usage
-const extracted = extractFromPDF(pdf_file);       // Deterministic
-const validated = validateQuestions(extracted);    // Human review
-const enriched = await enrichWithGemini(validated); // Optional metadata
-await uploadToFirestore(enriched);                  // Final upload
+const extracted = extractFromPDF(pdf_file);            // Deterministic
+const validation = validateQuestions(extracted);       // Human review
+if (!validation.isValid) throw new Error(validation.errors.join('\n'));
+const enriched = await enrichWithGemini(extracted);    // Optional metadata
+await uploadToFirestore(enriched);                     // Final upload
 ```
 
 ---

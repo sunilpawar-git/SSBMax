@@ -83,8 +83,10 @@ service cloud.firestore {
     match /interviews/{interviewId} {
       allow read: if request.auth.uid != null && 
                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscriptionTier == "PREMIUM";
-      allow write: if request.auth.uid == resource.data.userId &&
-                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscriptionTier == "PREMIUM";
+      allow create: if request.auth.uid == request.resource.data.userId &&
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscriptionTier == "PREMIUM";
+      allow update, delete: if request.auth.uid == resource.data.userId &&
+                               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscriptionTier == "PREMIUM";
     }
   }
 }
@@ -271,7 +273,7 @@ export const batchUploadQuestions = functions.https.onCall(async (data) => {
     // Firestore batch limit: 500 writes per batch
     if (count % 500 === 0) {
       await batch.commit();
-      // Start new batch
+      batch = db.batch();
     }
   }
   

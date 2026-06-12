@@ -51,7 +51,7 @@ fun SSBCard(
 
 **Anti-patterns:**
 - ❌ `Color.Red` or `Color(0xFFFF0000)` — use `MaterialTheme.colorScheme.error`
-- ❌ Hardcoded `16.dp` padding — use `MaterialTheme.shapes`
+- ❌ Hardcoded `16.dp` padding — use a named spacing constant (e.g. `val SpacingMedium = 16.dp`)
 - ❌ Business logic in component — pass data in, output UI only
 - ❌ No @Preview — components should be visually testable
 

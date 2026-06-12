@@ -2,7 +2,7 @@
 
 **Scope:** Use cases, domain models, repository interfaces, Result<T> error handling. This file specializes [claude.md](../../claude.md) for the domain layer—where all business logic lives.
 
-**Core Principle:** Zero Android dependencies. Pure Kotlin. Every public method returns `Result<T>`, never throws. Domain layer is the SSOT for business rules.
+**Core Principle:** Zero Android dependencies. Pure Kotlin. Every public **use case** method returns `Result<T>`, never throws. Repository interfaces may throw; use cases catch and wrap. Domain layer is the SSOT for business rules.
 
 ---
 

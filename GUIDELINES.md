@@ -154,7 +154,7 @@ The CLAUDE.md hierarchy is a **living documentation system** for development pat
 
 **When:** Major architectural change or new phases completed.
 
-**File location:** `/Users/sunil/Downloads/SSBMax/claude.md`
+**File location:** `CLAUDE.md` (repo root)
 
 **Update these sections:**
 
