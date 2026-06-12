@@ -1,14 +1,11 @@
 package com.ssbmax.core.domain.model
 
-/**
- * OIR Test Question Types
- */
 enum class OIRQuestionType {
     VERBAL_REASONING,
     NON_VERBAL_REASONING,
     NUMERICAL_ABILITY,
     SPATIAL_REASONING;
-    
+
     val displayName: String
         get() = when (this) {
             VERBAL_REASONING -> "Verbal Reasoning"
@@ -18,9 +15,6 @@ enum class OIRQuestionType {
         }
 }
 
-/**
- * OIR Test Question
- */
 data class OIRQuestion(
     val id: String,
     val questionNumber: Int,
@@ -30,34 +24,31 @@ data class OIRQuestion(
     val correctAnswerId: String,
     val explanation: String,
     val difficulty: QuestionDifficulty,
-    val timeSeconds: Int = 60, // Time allocated for this question
-    val questionImageUrl: String? = null // Figure for non-verbal questions (cube/series/classification)
-)
+    val timeSeconds: Int = 60,
+    val questionImageUrl: String? = null,
+    val correctAnswerIds: List<String> = emptyList(),
+) {
+    val isMultiSelect: Boolean get() = correctAnswerIds.size > 1
+}
 
-/**
- * Option for an OIR question
- */
 data class OIROption(
     val id: String,
     val text: String,
-    val imageUrl: String? = null // For non-verbal questions
+    val imageUrl: String? = null,
 )
 
-/**
- * Question difficulty levels
- */
 enum class QuestionDifficulty {
     EASY,
     MEDIUM,
     HARD;
-    
+
     val displayName: String
         get() = when (this) {
             EASY -> "Easy"
             MEDIUM -> "Medium"
             HARD -> "Hard"
         }
-    
+
     val points: Int
         get() = when (this) {
             EASY -> 1
@@ -66,20 +57,15 @@ enum class QuestionDifficulty {
         }
 }
 
-/**
- * User's answer to an OIR question
- */
 data class OIRAnswer(
     val questionId: String,
     val selectedOptionId: String?,
     val isCorrect: Boolean = false,
     val timeTakenSeconds: Int = 0,
-    val skipped: Boolean = false
+    val skipped: Boolean = false,
+    val selectedOptionIds: Set<String> = emptySet(),
 )
 
-/**
- * OIR Test Session - tracks current test attempt
- */
 data class OIRTestSession(
     val sessionId: String,
     val userId: String,
@@ -90,29 +76,24 @@ data class OIRTestSession(
     val startTime: Long,
     val timeRemainingSeconds: Int,
     val isPaused: Boolean = false,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
 ) {
     val progress: Float
-        get() = if (questions.isNotEmpty()) {
-            answers.size.toFloat() / questions.size
-        } else 0f
-    
+        get() = if (questions.isNotEmpty()) answers.size.toFloat() / questions.size else 0f
+
     val currentQuestion: OIRQuestion?
         get() = questions.getOrNull(currentQuestionIndex)
-    
+
     val answeredCount: Int
         get() = answers.count { !it.value.skipped }
-    
+
     val skippedCount: Int
         get() = answers.count { it.value.skipped }
-    
+
     val unansweredCount: Int
         get() = questions.size - answers.size
 }
 
-/**
- * OIR Test Result - calculated after test completion
- */
 data class OIRTestResult(
     val testId: String,
     val sessionId: String,
@@ -128,11 +109,11 @@ data class OIRTestResult(
     val categoryScores: Map<OIRQuestionType, CategoryScore>,
     val difficultyBreakdown: Map<QuestionDifficulty, DifficultyScore>,
     val answeredQuestions: List<OIRAnsweredQuestion>,
-    val completedAt: Long
+    val completedAt: Long,
 ) {
     val passed: Boolean
-        get() = percentageScore >= 50f // Passing threshold
-    
+        get() = percentageScore >= 50f
+
     val grade: TestGrade
         get() = when {
             percentageScore >= 90 -> TestGrade.EXCELLENT
@@ -143,48 +124,38 @@ data class OIRTestResult(
         }
 }
 
-/**
- * Performance by question category
- */
 data class CategoryScore(
     val category: OIRQuestionType,
     val totalQuestions: Int,
     val correctAnswers: Int,
     val percentage: Float,
-    val averageTimeSeconds: Int
+    val averageTimeSeconds: Int,
 )
 
-/**
- * Performance by difficulty level
- */
 data class DifficultyScore(
     val difficulty: QuestionDifficulty,
     val totalQuestions: Int,
     val correctAnswers: Int,
-    val percentage: Float
+    val percentage: Float,
 )
 
-/**
- * Answered question with user's response and feedback
- */
 data class OIRAnsweredQuestion(
     val question: OIRQuestion,
     val userAnswer: OIRAnswer,
     val isCorrect: Boolean,
     val correctOption: OIROption,
-    val selectedOption: OIROption?
+    val selectedOption: OIROption?,
+    val correctOptions: List<OIROption> = emptyList(),
+    val selectedOptions: List<OIROption> = emptyList(),
 )
 
-/**
- * Test performance grade
- */
 enum class TestGrade {
     EXCELLENT,
     VERY_GOOD,
     GOOD,
     AVERAGE,
     NEEDS_IMPROVEMENT;
-    
+
     val displayName: String
         get() = when (this) {
             EXCELLENT -> "Excellent"
@@ -193,7 +164,7 @@ enum class TestGrade {
             AVERAGE -> "Average"
             NEEDS_IMPROVEMENT -> "Needs Improvement"
         }
-    
+
     val emoji: String
         get() = when (this) {
             EXCELLENT -> "🌟"
@@ -204,9 +175,6 @@ enum class TestGrade {
         }
 }
 
-/**
- * OIR Test Configuration
- */
 data class OIRTestConfig(
     val testId: String = "oir_standard",
     val title: String = "OIR Test",
@@ -216,12 +184,9 @@ data class OIRTestConfig(
     val passingPercentage: Float = 50f,
     val showImmediateFeedback: Boolean = true,
     val allowReview: Boolean = true,
-    val shuffleQuestions: Boolean = true
+    val shuffleQuestions: Boolean = true,
 )
 
-/**
- * OIR Test Submission - for saving completed tests to Firestore
- */
 data class OIRSubmission(
     val id: String,
     val userId: String,
@@ -230,6 +195,5 @@ data class OIRSubmission(
     val submittedAt: Long,
     val status: SubmissionStatus,
     val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null
+    val gradingTimestamp: Long? = null,
 )
-
