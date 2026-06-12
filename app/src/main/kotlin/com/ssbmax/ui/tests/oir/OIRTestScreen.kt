@@ -93,7 +93,7 @@ fun OIRTestScreen(
                 )
                 uiState.currentQuestion != null -> OIRQuestionView(
                     question = uiState.currentQuestion!!,
-                    selectedOptionId = uiState.selectedOptionId,
+                    selectedOptionId = uiState.selectedOptionIds.singleOrNull(),
                     onOptionSelected = { viewModel.selectOption(it) },
                     showFeedback = uiState.showFeedback,
                     isCorrect = uiState.isCurrentAnswerCorrect,

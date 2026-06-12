@@ -34,10 +34,6 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-/**
- * ViewModel for OIR Test Screen
- * Loads test questions from cloud via TestContentRepository
- */
 @HiltViewModel
 class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
@@ -149,19 +145,28 @@ class OIRTestViewModel @Inject constructor(
             ErrorLogger.log(Exception("Invalid question during runtime validation: ${question.id}"), "OIR question runtime validation failed: ${validationResult.toLogString()}")
         }
         val timeTaken = ((clock.nowMs() - _uiState.value.questionStartTimeMs) / 1000L).toInt().coerceAtLeast(0)
+        val current = _uiState.value.selectedOptionIds
+        val updated = when {
+            !question.isMultiSelect     -> setOf(optionId)
+            optionId in current         -> current - optionId   // toggle off
+            current.size >= 2           -> current              // cap at 2
+            else                        -> current + optionId   // toggle on
+        }
+        val isAnswerCorrect = if (question.isMultiSelect) updated == question.correctAnswerIds.toSet()
+                              else updated.singleOrNull() == question.correctAnswerId
         val answer = OIRAnswer(
             questionId = question.id,
-            selectedOptionId = optionId,
-            isCorrect = optionId == question.correctAnswerId,
+            selectedOptionId = updated.singleOrNull(),
+            selectedOptionIds = updated,
             timeTakenSeconds = timeTaken,
             skipped = false
         )
         _uiState.update { state ->
             state.copy(
                 session = session.copy(answers = session.answers + (question.id to answer)),
-                selectedOptionId = optionId,
+                selectedOptionIds = updated,
                 showFeedback = true,
-                isCurrentAnswerCorrect = answer.isCorrect,
+                isCurrentAnswerCorrect = isAnswerCorrect,
                 currentQuestionAnswered = true
             )
         }
@@ -261,7 +266,7 @@ class OIRTestViewModel @Inject constructor(
             currentQuestionIndex = session.currentQuestionIndex,
             totalQuestions = session.questions.size,
             timeRemainingSeconds = session.timeRemainingSeconds,
-            selectedOptionId = existingAnswer?.selectedOptionId,
+            selectedOptionIds = existingAnswer?.selectedOptionIds ?: emptySet(),
             showFeedback = existingAnswer != null,
             isCurrentAnswerCorrect = existingAnswer?.isCorrect ?: false,
             currentQuestionAnswered = existingAnswer != null
@@ -269,10 +274,6 @@ class OIRTestViewModel @Inject constructor(
         prefetchNextImage(session.questions, session.currentQuestionIndex)
     }
 
-    /**
-     * Enqueues background Coil preloads for the figure and all option images of
-     * question[currentIndex + 1]. No-op if on the last question.
-     */
     private fun prefetchNextImage(questions: List<OIRQuestion>, currentIndex: Int) {
         val next = questions.getOrNull(currentIndex + 1) ?: return
         buildList {
@@ -289,8 +290,6 @@ class OIRTestViewModel @Inject constructor(
         }
     }
     
-    // Scoring logic extracted to OIRTestScoreCalculator (single responsibility, testable)
-
     override fun onCleared() {
         super.onCleared()
         MemoryLeakTracker.unregisterViewModel("OIRTestViewModel")

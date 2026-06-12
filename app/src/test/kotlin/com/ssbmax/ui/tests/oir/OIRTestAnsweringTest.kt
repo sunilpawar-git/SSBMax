@@ -29,7 +29,7 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
         viewModel.uiState.test {
             val state = awaitItem()
 
-            assertEquals("Selected option should match", correctOptionId, state.selectedOptionId)
+            assertTrue("Selected option should match", correctOptionId in state.selectedOptionIds)
             assertTrue("Should show feedback", state.showFeedback)
             assertTrue("Answer should be marked correct", state.isCurrentAnswerCorrect)
             assertTrue("Question should be marked as answered", state.currentQuestionAnswered)
@@ -49,7 +49,7 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
         viewModel.uiState.test {
             val state = awaitItem()
 
-            assertEquals("Selected option should match", incorrectOptionId, state.selectedOptionId)
+            assertTrue("Selected option should match", incorrectOptionId in state.selectedOptionIds)
             assertTrue("Should show feedback", state.showFeedback)
             assertFalse("Answer should be marked incorrect", state.isCurrentAnswerCorrect)
             assertTrue("Question should be marked as answered", state.currentQuestionAnswered)
@@ -86,7 +86,7 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
             assertEquals("Should be on question 1", 1, state.currentQuestionIndex)
             assertNotNull("Should have current question", state.currentQuestion)
             assertEquals("Should be second question", mockQuestions[1].id, state.currentQuestion?.id)
-            assertNull("Selected option should be reset", state.selectedOptionId)
+            assertTrue("Selected options should be empty after navigation", state.selectedOptionIds.isEmpty())
             assertFalse("Feedback should be hidden", state.showFeedback)
         }
     }
@@ -207,6 +207,96 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
         val answer = viewModel.uiState.value.session?.answers?.get(mockQuestions[0].id)
         assertNotNull(answer)
         assertTrue("timeTakenSeconds should be >= 0", answer!!.timeTakenSeconds >= 0)
+    }
+
+    // ==================== Multi-Select Toggle Tests (Phase 6) ====================
+
+    private fun multiSelectQuestion() = com.ssbmax.core.domain.model.OIRQuestion(
+        id = "oir_multi_1",
+        questionNumber = 99,
+        type = com.ssbmax.core.domain.model.OIRQuestionType.NON_VERBAL_REASONING,
+        difficulty = com.ssbmax.core.domain.model.QuestionDifficulty.MEDIUM,
+        questionText = "Which two figures belong to Class A?",
+        options = listOf(
+            com.ssbmax.core.domain.model.OIROption("opt_a", "Figure 1"),
+            com.ssbmax.core.domain.model.OIROption("opt_b", "Figure 2"),
+            com.ssbmax.core.domain.model.OIROption("opt_c", "Figure 3"),
+            com.ssbmax.core.domain.model.OIROption("opt_d", "Figure 4"),
+            com.ssbmax.core.domain.model.OIROption("opt_e", "Figure 5"),
+        ),
+        correctAnswerId = "",
+        correctAnswerIds = listOf("opt_b", "opt_d"),
+        explanation = "Answer: 2 and 4."
+    )
+
+    @Test
+    fun `selectOption multiSelect togglesCorrectly — second tap on same option deselects it`() = runTest {
+        // WHY: multi-select questions require exactly 2 answers; tapping a selected option
+        // must remove it from the set so the user can correct their choice.
+        val question = multiSelectQuestion()
+        coEvery { mockTestContentRepo.getOIRTestQuestions(any(), any()) } returns Result.success(listOf(question))
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectOption("opt_b")
+        assertTrue("opt_b should be selected", "opt_b" in viewModel.uiState.value.selectedOptionIds)
+
+        viewModel.selectOption("opt_b") // deselect
+        assertTrue("opt_b should be removed on re-tap", viewModel.uiState.value.selectedOptionIds.isEmpty())
+    }
+
+    @Test
+    fun `selectOption multiSelect capsAtTwo — third tap on a new option is ignored`() = runTest {
+        // WHY: these questions ask for exactly 2; allowing >2 selections would corrupt scoring.
+        val question = multiSelectQuestion()
+        coEvery { mockTestContentRepo.getOIRTestQuestions(any(), any()) } returns Result.success(listOf(question))
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectOption("opt_b")
+        viewModel.selectOption("opt_d")
+        viewModel.selectOption("opt_c") // should be ignored — cap reached
+
+        val selected = viewModel.uiState.value.selectedOptionIds
+        assertEquals("Only 2 options should be selected", 2, selected.size)
+        assertTrue("opt_b should be selected", "opt_b" in selected)
+        assertTrue("opt_d should be selected", "opt_d" in selected)
+        assertFalse("opt_c tap should have been ignored", "opt_c" in selected)
+    }
+
+    @Test
+    fun `selectOption singleSelect replacesPreviousSelection`() = runTest {
+        // WHY: single-select questions must replace, not accumulate; otherwise the answer
+        // set would grow unboundedly and scoring would break.
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectOption("opt1")
+        viewModel.selectOption("opt2")
+
+        val selected = viewModel.uiState.value.selectedOptionIds
+        assertEquals("Only 1 option for single-select", 1, selected.size)
+        assertTrue("Latest selection should win", "opt2" in selected)
+        assertFalse("Previous selection should be replaced", "opt1" in selected)
+    }
+
+    @Test
+    fun `selectOption multiSelect isCurrentAnswerCorrect — true only when exact correct pair selected`() = runTest {
+        // WHY: isCurrentAnswerCorrect drives immediate visual feedback; it must be false
+        // for partial or wrong selections and true only for the exact correct pair.
+        val question = multiSelectQuestion()
+        coEvery { mockTestContentRepo.getOIRTestQuestions(any(), any()) } returns Result.success(listOf(question))
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectOption("opt_b") // 1 of 2 correct — partial
+        assertFalse("Partial selection should not be correct", viewModel.uiState.value.isCurrentAnswerCorrect)
+
+        viewModel.selectOption("opt_d") // both correct now
+        assertTrue("Complete correct pair should be correct", viewModel.uiState.value.isCurrentAnswerCorrect)
+
+        viewModel.selectOption("opt_b") // deselect one — incomplete again
+        assertFalse("Deselecting from correct pair should no longer be correct", viewModel.uiState.value.isCurrentAnswerCorrect)
     }
 
     // ==================== Phase 5-D RED: pauseTest session leak ====================

@@ -20,7 +20,7 @@ data class OIRTestUiState(
     val currentQuestionIndex: Int = 0,
     val totalQuestions: Int = 0,
     val timeRemainingSeconds: Int = 0,
-    val selectedOptionId: String? = null,
+    val selectedOptionIds: Set<String> = emptySet(),
     val showFeedback: Boolean = false,
     val isCurrentAnswerCorrect: Boolean = false,
     val currentQuestionAnswered: Boolean = false,
