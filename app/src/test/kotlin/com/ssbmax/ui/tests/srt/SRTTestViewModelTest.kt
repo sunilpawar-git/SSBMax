@@ -4,6 +4,7 @@ import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
@@ -50,6 +51,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: SRTTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
     private val mockSubmitSRTTest = mockk<SubmitSRTTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -86,7 +88,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         // Mock test session creation
         coEvery { 
-            mockTestContentRepo.createTestSession(any(), any(), TestType.SRT) 
+            mockSessionRepo.createTestSession(any(), any(), TestType.SRT) 
         } returns Result.success("session-srt-123")
         
         // Mock situation loading
@@ -112,6 +114,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -135,7 +138,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
             assertNotNull("Should have config", state.config)
         }
         
-        coVerify { mockTestContentRepo.createTestSession("test-user-123", "srt_standard", TestType.SRT) }
+        coVerify { mockSessionRepo.createTestSession("test-user-123", "srt_standard", TestType.SRT) }
         coVerify { mockTestContentRepo.getSRTQuestions("srt_standard") }
     }
     
@@ -149,6 +152,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -184,6 +188,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -209,6 +214,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -238,6 +244,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -264,6 +271,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -293,6 +301,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -328,6 +337,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -359,6 +369,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Given
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -393,6 +404,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -428,6 +440,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -469,6 +482,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -512,6 +526,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -549,6 +564,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
 
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -597,6 +613,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -636,6 +653,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -681,6 +699,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
 
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -728,6 +747,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -763,6 +783,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -808,6 +829,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -843,6 +865,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -868,6 +891,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // When
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
@@ -902,6 +926,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         
         viewModel = SRTTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitSRTTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,

@@ -305,6 +305,10 @@ class PIQTestViewModel @Inject constructor(
                         ) }
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         Log.d(TAG, "✅ PIQ: Eligible (${eligibility.remainingTests} tests remaining)")
                     }

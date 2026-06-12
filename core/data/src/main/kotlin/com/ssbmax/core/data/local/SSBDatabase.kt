@@ -27,6 +27,7 @@ import com.ssbmax.core.data.local.entity.GTOBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.InterviewBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.NotificationEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
@@ -45,6 +46,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         NotificationEntity::class,
         CachedOIRQuestionEntity::class,
         OIRBatchMetadataEntity::class,
+        OIRSyncMetadataEntity::class,
         TestUsageEntity::class,
         CachedWATWordEntity::class,
         WATBatchMetadataEntity::class,
@@ -62,7 +64,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 16, // Added PPDT context field (migrated from 15)
+    version = 21, // Add correctAnswerIds column for multi-answer OIR questions (migrated from 20)
     exportSchema = true
 )
 abstract class SSBDatabase : RoomDatabase() {

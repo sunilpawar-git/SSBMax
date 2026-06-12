@@ -3,6 +3,7 @@ package com.ssbmax.core.data.local.dao
 import androidx.room.*
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 
 /**
  * Data Access Object for OIR question caching
@@ -33,18 +34,18 @@ interface OIRQuestionCacheDao {
      * @param count Number of questions to fetch
      */
     @Query("""
-        SELECT * FROM cached_oir_questions 
-        WHERE type = :type 
-        AND (lastUsed IS NULL OR lastUsed < :olderThan) 
-        ORDER BY RANDOM() 
+        SELECT * FROM cached_oir_questions
+        WHERE type = :type
+        AND (lastUsed IS NULL OR lastUsed < :olderThan)
+        ORDER BY RANDOM()
         LIMIT :count
     """)
     suspend fun getUnusedQuestionsByType(
-        type: String, 
-        olderThan: Long, 
+        type: String,
+        olderThan: Long,
         count: Int
     ): List<CachedOIRQuestionEntity>
-    
+
     /**
      * Get all questions of a specific type (for fallback)
      */
@@ -170,6 +171,20 @@ interface OIRQuestionCacheDao {
      */
     @Query("DELETE FROM oir_batch_metadata")
     suspend fun deleteAllBatchMetadata()
+
+    // ============ Sync Metadata (content-version reconciliation) ============
+
+    /**
+     * Read the single-row content-version record (null on a fresh install).
+     */
+    @Query("SELECT * FROM oir_sync_metadata WHERE id = 0")
+    suspend fun getSyncMetadata(): OIRSyncMetadataEntity?
+
+    /**
+     * Persist the content-version after a successful reconcile/sync.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertSyncMetadata(metadata: OIRSyncMetadataEntity)
     
     // ============ Analytics Queries ============
     

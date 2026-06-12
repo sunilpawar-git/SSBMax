@@ -61,7 +61,12 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_11_12, // Add PIQ/SD usage columns
                 DatabaseMigrations.MIGRATION_12_13, // Add GPE image cache tables
                 DatabaseMigrations.MIGRATION_13_14, // Add GPE solution column
-                DatabaseMigrations.MIGRATION_14_15  // Update TAT character limits
+                DatabaseMigrations.MIGRATION_14_15, // Update TAT character limits
+                DatabaseMigrations.MIGRATION_16_17, // Add OIR questionImageUrl column
+                DatabaseMigrations.MIGRATION_17_18, // Composite (type, lastUsed) index for OIR hot query
+                DatabaseMigrations.MIGRATION_18_19, // Restore type and batchId indices on cached_oir_questions
+                DatabaseMigrations.MIGRATION_19_20, // Add oir_sync_metadata table for content-version reconciliation
+                DatabaseMigrations.MIGRATION_20_21  // Add correctAnswerIds column for multi-answer OIR questions
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -234,5 +239,16 @@ abstract class RepositoryModule {
     abstract fun bindUnifiedResultRepository(
         impl: com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
     ): com.ssbmax.core.domain.repository.UnifiedResultRepository
-}
 
+    @Binds
+    @Singleton
+    abstract fun bindTestUsageRecorder(
+        impl: com.ssbmax.core.data.repository.SubscriptionManager
+    ): com.ssbmax.core.domain.repository.TestUsageRecorder
+
+    @Binds
+    @Singleton
+    abstract fun bindTestSessionRepository(
+        impl: com.ssbmax.core.data.repository.TestSessionManagerImpl
+    ): com.ssbmax.core.domain.repository.TestSessionRepository
+}

@@ -1,14 +1,18 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.repository.TestUsageRecorder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,7 +40,7 @@ class SubscriptionManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val securityLogger: SecurityEventLogger,
     private val debugConfig: com.ssbmax.core.data.debug.DebugConfig
-) {
+) : TestUsageRecorder {
     private val TAG = "SubscriptionManager"
     
     /**
@@ -111,16 +115,27 @@ class SubscriptionManager @Inject constructor(
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error checking eligibility", e)
-            // SECURITY: On error, block test to prevent bypass
-            return TestEligibility.LimitReached(
-                tier = SubscriptionTier.FREE,
-                limit = 1,
-                usedCount = 1,
-                resetsAt = getMonthResetDate()
-            )
+            return if (e.isNetworkRelated()) {
+                Log.w(TAG, "Network error checking eligibility — user can retry", e)
+                TestEligibility.NetworkError
+            } else {
+                // SECURITY: Unknown errors fail closed — block the test to prevent bypass
+                Log.e(TAG, "❌ Unexpected error checking eligibility — failing closed", e)
+                TestEligibility.LimitReached(
+                    tier = SubscriptionTier.FREE,
+                    limit = 1,
+                    usedCount = 1,
+                    resetsAt = getMonthResetDate()
+                )
+            }
         }
     }
+
+    private fun Exception.isNetworkRelated(): Boolean =
+        this is IOException ||
+        this is FirebaseNetworkException ||
+        (this is FirebaseFirestoreException && code == FirebaseFirestoreException.Code.UNAVAILABLE) ||
+        cause?.let { c -> c is IOException || c is FirebaseNetworkException } == true
     
     /**
      * Record that a test was taken
@@ -128,7 +143,7 @@ class SubscriptionManager @Inject constructor(
      * SECURITY: Uses Firestore transaction for atomic increment
      * RACE CONDITION PREVENTION: Multiple simultaneous submissions handled correctly
      */
-    suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String? = null) {
+    override suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String?) {
         try {
             val currentMonth = getCurrentMonth()
             val docRef = firestore.collection("users")
@@ -405,7 +420,13 @@ class SubscriptionManager @Inject constructor(
 }
 
 /**
- * Result of eligibility check
+ * Result of eligibility check.
+ *
+ * [Eligible]     — user may proceed.
+ * [LimitReached] — monthly limit exhausted; shows upgrade prompt.
+ * [NetworkError] — transient connectivity failure; the ViewModel surfaces a retry action.
+ *                  Security invariant: unknown/unexpected exceptions use [LimitReached] (fail-closed),
+ *                  not [NetworkError], so only genuine network failures can produce a retry path.
  */
 sealed class TestEligibility {
     data class Eligible(val remainingTests: Int) : TestEligibility()
@@ -415,5 +436,6 @@ sealed class TestEligibility {
         val usedCount: Int,
         val resetsAt: String
     ) : TestEligibility()
+    object NetworkError : TestEligibility()
 }
 

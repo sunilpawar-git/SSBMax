@@ -1,6 +1,10 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
@@ -9,12 +13,18 @@ import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.domain.model.OIRQuestionType
 import com.ssbmax.core.domain.model.QuestionDifficulty
 import io.mockk.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 /**
  * Integration tests for OIRQuestionCacheManager
@@ -30,8 +40,12 @@ import org.junit.Test
  * They are temporarily ignored pending emulator setup or conversion to instrumented tests.
  * The cache manager logic is validated via ViewModel tests and E2E tests.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class OIRCacheManagerIntegrationTest {
-    
+
+    @get:Rule
+    val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
+
     companion object {
         @BeforeClass
         @JvmStatic
@@ -51,7 +65,8 @@ class OIRCacheManagerIntegrationTest {
     private lateinit var mockFirestore: FirebaseFirestore
     private lateinit var mockCacheDao: OIRQuestionCacheDao
     private val gson = Gson()
-    
+    private val testScope = TestScope()
+
     @Before
     fun setup() {
         mockFirestore = mockk(relaxed = true)
@@ -64,13 +79,21 @@ class OIRCacheManagerIntegrationTest {
         every { Log.i(any(), any()) } returns 0
         every { Log.v(any(), any()) } returns 0
         
+        val selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson)
         cacheManager = OIRQuestionCacheManager(
             firestore = mockFirestore,
-            cacheDao = mockCacheDao,
-            gson = gson
+            cacheDao  = mockCacheDao,
+            gson      = gson,
+            selector  = selector,
+            backgroundScope = testScope
         )
         cacheManager = spyk(cacheManager)
         coEvery { cacheManager.downloadBatch(any()) } returns Result.success(Unit)
+        // Default meta config (legacy fallback: no version, 20 batches). Tests that exercise
+        // reconciliation override this. Stubbing on the spyk keeps initialSync off real Firestore.
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = null, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns null
         coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns emptyList()
         coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns emptyList()
         coEvery { mockCacheDao.getQuestionCountByType(any()) } returns 0
@@ -88,8 +111,8 @@ class OIRCacheManagerIntegrationTest {
         // Given - 100 cached questions with proper distribution
         val verbalQuestions = (1..20).map { createMockCachedQuestion("v$it", OIRQuestionType.VERBAL_REASONING.name) }
         val nonVerbalQuestions = (1..20).map { createMockCachedQuestion("nv$it", OIRQuestionType.NON_VERBAL_REASONING.name) }
-        val numericalQuestions = (1..8).map { createMockCachedQuestion("num$it", OIRQuestionType.NUMERICAL_ABILITY.name) }
-        val spatialQuestions = (1..2).map { createMockCachedQuestion("sp$it", OIRQuestionType.SPATIAL_REASONING.name) }
+        val numericalQuestions = (1..10).map { createMockCachedQuestion("num$it", OIRQuestionType.NUMERICAL_ABILITY.name) }
+        val spatialQuestions = emptyList<com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity>()
         
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
         coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.VERBAL_REASONING.name, any(), any()) } returns verbalQuestions
@@ -110,16 +133,16 @@ class OIRCacheManagerIntegrationTest {
         
         assertEquals("Should have 50 questions", 50, questions.size)
         
-        // Verify distribution (40/40/15/5)
+        // Verify distribution per OIRQuestionDistribution SSOT (V40/NV40/N20, no spatial)
         val verbalCount = questions.count { it.type == OIRQuestionType.VERBAL_REASONING }
         val nonVerbalCount = questions.count { it.type == OIRQuestionType.NON_VERBAL_REASONING }
         val numericalCount = questions.count { it.type == OIRQuestionType.NUMERICAL_ABILITY }
         val spatialCount = questions.count { it.type == OIRQuestionType.SPATIAL_REASONING }
-        
+
         assertEquals("Verbal should be 40%", 20, verbalCount)
         assertEquals("Non-verbal should be 40%", 20, nonVerbalCount)
-        assertEquals("Numerical should be 15%", 8, numericalCount)
-        assertEquals("Spatial should be ~5%", 2, spatialCount)
+        assertEquals("Numerical should be 20%", 10, numericalCount)
+        assertEquals("Spatial should be 0 (none in bank)", 0, spatialCount)
     }
     
     @Test
@@ -148,40 +171,87 @@ class OIRCacheManagerIntegrationTest {
     // ==================== Initial Sync Tests ====================
     
     @Test
-    fun `initialSync skips download when cache already has enough questions`() = runTest {
-        // Given - cache already has 100 questions
-        coEvery { mockCacheDao.getCachedQuestionCount() } returns 100
-        
-        // When
+    fun `initialSync skips when version matches and all batches present`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns true
+
         val result = cacheManager.initialSync()
-        
-        // Then
+
         assertTrue("Should succeed without downloading", result.isSuccess)
-        
-        // Verify no Firestore calls made
-        verify(exactly = 0) { mockFirestore.collection(any()) }
+        coVerify(exactly = 0) { cacheManager.downloadBatch(any()) }
     }
-    
+
     @Test
-    fun `initialSync downloads batch when cache is empty`() = runTest {
-        // Given - empty cache, then filled after sync
-        coEvery { mockCacheDao.getCachedQuestionCount() } returnsMany listOf(0, 100)
-        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
-        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
-        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
-        
-        // Note: We skip complex Firestore mocking - this test validates the cache manager
-        // calls the DAO correctly. Firestore integration is tested separately or via E2E tests.
-        
-        // When - This will fail to download from Firestore (which is expected in unit test)
-        // but we're testing the cache logic path
-        val result = cacheManager.initialSync()
-        
-        // Then - Initial sync might fail due to missing Firestore, but that's acceptable
-        // The important part is the cache check logic works
-        coVerify { mockCacheDao.getCachedQuestionCount() }
+    fun `initialSync reconciles (clear + redownload) when remote version differs`() = testScope.runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 3, batchCount = 28)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns true // present, but version stale
+
+        cacheManager.initialSync()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { mockCacheDao.deleteAllQuestions() }
+        coVerify(exactly = 1) { mockCacheDao.deleteAllBatchMetadata() }
+        // Re-downloads across the full 1..28 range despite batches being "present".
+        coVerify(atLeast = 1) { cacheManager.downloadBatch("batch_pdf_028") }
     }
-    
+
+    @Test
+    fun `initialSync tops up missing batches when version matches`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.getSyncMetadata() } returns
+                com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity(contentVersion = 2, lastSyncAt = 1L)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false // some missing → top-up
+
+        cacheManager.initialSync()
+
+        coVerify(exactly = 0) { mockCacheDao.deleteAllQuestions() } // top-up, not reconcile
+        coVerify(atLeast = 1) { cacheManager.downloadBatch(any()) }
+    }
+
+    @Test
+    fun `initialSync downloads batches 1 to 4 synchronously before returning`() = runTest {
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false // fresh install
+
+        val result = cacheManager.initialSync()
+
+        assertTrue("initialSync should succeed", result.isSuccess)
+        (1..4).map { "batch_pdf_%03d".format(it) }.forEach { batchId ->
+            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
+        }
+    }
+
+    @Test
+    fun `initialSync enqueues background download up to batchCount`() = testScope.runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 28)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        cacheManager.initialSync()
+        advanceUntilIdle()
+
+        (5..28).map { "batch_pdf_%03d".format(it) }.forEach { batchId ->
+            coVerify(atLeast = 1) { cacheManager.downloadBatch(batchId) }
+        }
+    }
+
+    @Test
+    fun `initialSync persists the remote content version`() = runTest {
+        coEvery { cacheManager.fetchMetaConfig() } returns
+                OIRQuestionCacheManager.MetaConfig(contentVersion = 2, batchCount = 20)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+
+        cacheManager.initialSync()
+
+        coVerify { mockCacheDao.upsertSyncMetadata(match { it.contentVersion == 2 }) }
+    }
+
     // ==================== Usage Tracking Tests ====================
     
     @Test
@@ -198,6 +268,32 @@ class OIRCacheManagerIntegrationTest {
             mockCacheDao.markQuestionsUsed(
                 questionIds,
                 match { it > 0 } // Timestamp should be positive
+            )
+        }
+    }
+
+    @Test
+    fun `afterMarkUsed getTestQuestions queries with 7-day threshold excluding recently used`() = runTest {
+        // Phase 2 RED: verify that after marking questions used, subsequent
+        // getTestQuestions calls query the cache with a recency threshold
+        val usedIds = (1..50).map { "q$it" }
+        coEvery { mockCacheDao.markQuestionsUsed(any(), any()) } just Runs
+
+        cacheManager.markQuestionsUsed(usedIds)
+
+        // Now call getTestQuestions — it must use getUnusedQuestionsByType (timestamp-filtered)
+        val fresh = (1..20).map { createMockCachedQuestion("fresh$it", OIRQuestionType.VERBAL_REASONING.name, lastUsed = null) }
+        coEvery { mockCacheDao.getCachedQuestionCount() } returns 200
+        coEvery { mockCacheDao.getUnusedQuestionsByType(any(), any(), any()) } returns fresh
+        coEvery { mockCacheDao.getQuestionsByType(any(), any()) } returns fresh
+
+        cacheManager.getTestQuestions(count = 50)
+
+        coVerify {
+            mockCacheDao.getUnusedQuestionsByType(
+                any(),
+                match { threshold -> threshold < System.currentTimeMillis() - (6 * 24 * 60 * 60 * 1000L) },
+                any()
             )
         }
     }
@@ -276,7 +372,96 @@ class OIRCacheManagerIntegrationTest {
     }
     
     // ==================== Helper Methods ====================
-    
+
+    // ==================== Phase 4-B RED: totalQuestions field name fix ====================
+
+    private fun buildMockFirestoreChainForDownloadBatch(docData: Map<String, Any?>): DocumentSnapshot {
+        val mockDoc = mockk<DocumentSnapshot>(relaxed = true)
+        val mockBatchesCollection = mockk<CollectionReference>(relaxed = true)
+        val mockBatchDoc = mockk<DocumentReference>(relaxed = true)
+        val mockOirDocRef = mockk<DocumentReference>(relaxed = true)
+        val mockOirCollection = mockk<CollectionReference>(relaxed = true)
+
+        every { mockFirestore.collection(any()) } returns mockOirCollection
+        every { mockOirCollection.document(any()) } returns mockOirDocRef
+        every { mockOirDocRef.collection(any()) } returns mockBatchesCollection
+        every { mockBatchesCollection.document(any()) } returns mockBatchDoc
+        every { mockBatchDoc.get() } returns Tasks.forResult(mockDoc)
+        every { mockDoc.exists() } returns true
+        every { mockDoc.data } returns docData
+        return mockDoc
+    }
+
+    @Test
+    fun `downloadBatch withTotalQuestionsField usesCorrectCount`() = runTest {
+        // Arrange — batch doc uses new field name "totalQuestions"
+        val docData = mapOf<String, Any?>(
+            "totalQuestions" to 50L,
+            "version" to "1.0.0",
+            "questions" to listOf(
+                mapOf(
+                    "id" to "q1", "questionNumber" to 1L, "type" to "VERBAL_REASONING",
+                    "questionText" to "Q1", "options" to emptyList<Any>(),
+                    "correctAnswerId" to "A", "explanation" to "E",
+                    "difficulty" to "EASY", "tags" to listOf<String>()
+                )
+            )
+        )
+        buildMockFirestoreChainForDownloadBatch(docData)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
+        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
+
+        // Act — call real downloadBatch (un-stub the spyk for this test)
+        val cacheManagerReal = OIRQuestionCacheManager(
+            firestore = mockFirestore,
+            cacheDao = mockCacheDao,
+            gson = gson,
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
+            backgroundScope = testScope
+        )
+        cacheManagerReal.downloadBatch("batch_001")
+
+        // Assert — metadata was stored with questionCount == 50
+        coVerify {
+            mockCacheDao.insertBatchMetadata(match { it.questionCount == 50 })
+        }
+    }
+
+    @Test
+    fun `downloadBatch withMissingTotalQuestions fallsBackToQuestionListSize`() = runTest {
+        // Arrange — batch doc has no totalQuestions field; fallback to questions.size
+        val docData = mapOf<String, Any?>(
+            "version" to "1.0.0",
+            "questions" to listOf(
+                mapOf(
+                    "id" to "q1", "questionNumber" to 1L, "type" to "VERBAL_REASONING",
+                    "questionText" to "Q1", "options" to emptyList<Any>(),
+                    "correctAnswerId" to "A", "explanation" to "E",
+                    "difficulty" to "EASY", "tags" to listOf<String>()
+                )
+            )
+        )
+        buildMockFirestoreChainForDownloadBatch(docData)
+        coEvery { mockCacheDao.isBatchDownloaded(any()) } returns false
+        coEvery { mockCacheDao.insertQuestions(any()) } just Runs
+        coEvery { mockCacheDao.insertBatchMetadata(any()) } just Runs
+
+        val cacheManagerReal = OIRQuestionCacheManager(
+            firestore = mockFirestore,
+            cacheDao = mockCacheDao,
+            gson = gson,
+            selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
+            backgroundScope = testScope
+        )
+        cacheManagerReal.downloadBatch("batch_001")
+
+        // questionCount falls back to questions.size (1 question in mock)
+        coVerify {
+            mockCacheDao.insertBatchMetadata(match { it.questionCount == 1 })
+        }
+    }
+
     private fun createMockCachedQuestion(
         id: String,
         type: String = OIRQuestionType.VERBAL_REASONING.name,
@@ -289,8 +474,8 @@ class OIRCacheManagerIntegrationTest {
             type = type,
             subtype = null,
             questionText = "Sample question",
-            optionsJson = """[{"id":"A","text":"Option A"}]""",
-            correctAnswerId = "A",
+            optionsJson = """[{"id":"opt_a","text":"Option A"},{"id":"opt_b","text":"Option B"},{"id":"opt_c","text":"Option C"},{"id":"opt_d","text":"Option D"}]""",
+            correctAnswerId = "opt_a",
             explanation = "Sample explanation",
             difficulty = QuestionDifficulty.MEDIUM.name,
             tags = "test",

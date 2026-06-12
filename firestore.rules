@@ -462,6 +462,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if false;
     }
+
+    match /test_content/oir/batches/{batchId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
     
     // WAT Test Content
     match /test_content/wat/meta/{document} {

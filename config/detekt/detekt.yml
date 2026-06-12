@@ -1,0 +1,46 @@
+# Detekt configuration for SSBMax. Builds upon detekt's default rule set
+# (buildUponDefaultConfig = true), overriding only what's noisy for this
+# Compose + Hilt codebase. Existing issues are grandfathered via per-module
+# detekt-baseline.xml; this file governs what counts as an issue going forward.
+
+build:
+  maxIssues: 0           # New issues fail the build (existing ones are baselined).
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  LongMethod:
+    threshold: 80        # Compose builder funcs run long; default 60 is too strict here.
+  LongParameterList:
+    functionThreshold: 8 # Hilt @Inject constructors and Composables take many params.
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    active: false        # ViewModels/DAOs legitimately expose many functions.
+
+style:
+  MagicNumber:
+    active: false        # Too noisy for UI dimensions/animation specs.
+  ReturnCount:
+    max: 4
+  MaxLineLength:
+    maxLineLength: 140
+
+naming:
+  FunctionNaming:
+    # @Composable functions are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    active: true
+
+comments:
+  active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false        # Result<T> wrappers intentionally catch broad Exception.
+  SwallowedException:
+    active: false

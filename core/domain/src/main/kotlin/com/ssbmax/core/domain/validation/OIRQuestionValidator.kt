@@ -77,10 +77,20 @@ object OIRQuestionValidator {
             }
         }
         
-        // 5. Validate CorrectAnswerId Format
-        if (question.correctAnswerId.isBlank()) {
-            errors.add("CorrectAnswerId is empty")
-        } else {
+        // 5. Validate CorrectAnswerId / correctAnswerIds
+        val isMultiSelect = question.correctAnswerIds.size > 1
+        if (question.correctAnswerId.isBlank() && !isMultiSelect) {
+            errors.add("correctAnswerId is empty and no correctAnswerIds provided")
+        }
+        if (isMultiSelect) {
+            val optionIds = question.options.map { it.id }.toSet()
+            if (question.correctAnswerIds.size < 2)
+                errors.add("Multi-select question must have >= 2 correctAnswerIds")
+            question.correctAnswerIds.forEach { id ->
+                if (id !in optionIds) errors.add("correctAnswerIds contains unknown option: $id")
+            }
+        }
+        if (question.correctAnswerId.isNotBlank()) {
             // Check for common malformed patterns
             when {
                 // Single letter format (e.g., "a", "b", "c", "d")
@@ -94,9 +104,9 @@ object OIRQuestionValidator {
                     errors.add("CorrectAnswerId has question number embedded: '${question.correctAnswerId}' (should be 'opt_$correctFormat')")
                 }
                 
-                // Check if it follows standard format
-                !question.correctAnswerId.matches(Regex("opt_[a-d]")) -> {
-                    warnings.add("CorrectAnswerId format unusual: '${question.correctAnswerId}' (expected format: opt_a, opt_b, opt_c, or opt_d)")
+                // Check if it follows standard format (opt_a through opt_e)
+                !question.correctAnswerId.matches(Regex("opt_[a-e]")) -> {
+                    warnings.add("CorrectAnswerId format unusual: '${question.correctAnswerId}' (expected format: opt_a through opt_e)")
                 }
             }
             
@@ -147,17 +157,15 @@ object OIRQuestionValidator {
                 errors.add("Option #${index + 1} has single-letter ID '${option.id}' (should be 'opt_${option.id.lowercase()}')")
             }
             
-            // Standard format check
-            !option.id.matches(Regex("opt_[a-d]")) && !option.id.matches(Regex("opt_\\d+[a-d]")) -> {
-                warnings.add("Option #${index + 1} ID format unusual: '${option.id}' (expected: opt_a, opt_b, opt_c, or opt_d)")
+            // Standard format check (opt_a through opt_e for 5-option figure questions)
+            !option.id.matches(Regex("opt_[a-e]")) && !option.id.matches(Regex("opt_\\d+[a-e]")) -> {
+                warnings.add("Option #${index + 1} ID format unusual: '${option.id}' (expected: opt_a, opt_b, opt_c, opt_d, or opt_e)")
             }
         }
         
-        // Check option text
-        if (option.text.isBlank()) {
-            errors.add("Option '${option.id}' has empty text")
-        } else if (option.text.length < 1) {
-            warnings.add("Option '${option.id}' has very short text: '${option.text}'")
+        // Check option text — blank is valid for image-only options (non-verbal / spatial)
+        if (option.text.isBlank() && option.imageUrl == null) {
+            errors.add("Option '${option.id}' has empty text and no image")
         }
     }
     

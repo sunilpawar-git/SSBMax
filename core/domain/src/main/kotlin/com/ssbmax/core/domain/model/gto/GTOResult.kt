@@ -60,6 +60,31 @@ data class GTOResult(
 }
 
 /**
+ * Outcome of fetching the latest GTO result for a given test type.
+ *
+ * Distinguishes the three states the dashboard must render differently:
+ * - [Available]: a scored result exists.
+ * - [AnalysisPending]: a submission exists but has no scores yet (worker not finished, or
+ *   permanently failed) — the UI must show "analysis pending" rather than silently dropping the
+ *   test type.
+ * - [NotAttempted]: the user has no submission for this test type.
+ */
+sealed interface GTOResultStatus {
+    data class Available(val result: GTOResult) : GTOResultStatus
+    data object AnalysisPending : GTOResultStatus
+    data object NotAttempted : GTOResultStatus
+}
+
+/**
+ * Thrown by the result lookup when a submission exists but has no OLQ scores in either the
+ * `gto_results` collection or embedded on the submission — i.e. analysis is still pending or has
+ * permanently failed. Callers map this to [GTOResultStatus.AnalysisPending] rather than treating it
+ * as a generic/transient failure.
+ */
+class GTOAnalysisUnavailableException(submissionId: String) :
+    Exception("No OLQ scores available for submission $submissionId (analysis pending or failed)")
+
+/**
  * User's GTO progress tracking
  */
 data class GTOProgress(

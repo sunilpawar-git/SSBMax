@@ -145,6 +145,8 @@
     <string name="dashboard_tests">Tests</string>
     <string name="dashboard_last_updated_now">Updated just now</string>
     <string name="cd_refresh_dashboard">Refresh dashboard</string>
+    <string name="dashboard_some_unavailable">Some results couldn\'t load. Tap retry.</string>
+    <string name="dashboard_retry">Retry</string>
     
     <!-- Dashboard Test Names -->
     <string name="dashboard_test_oir">OIR</string>
@@ -644,7 +646,7 @@
     <string name="oir_question_format">Q %1$d/%2$d</string>
     <string name="oir_exit_test">Exit Test</string>
     <string name="oir_exit_title">Exit Test?</string>
-    <string name="oir_exit_message">Are you sure you want to exit? Your progress will be saved and you can resume later.</string>
+    <string name="oir_exit_message">Are you sure you want to exit? Your current progress will be lost.</string>
     <string name="oir_exit">Exit</string>
     <string name="oir_continue_test">Continue Test</string>
     <string name="oir_previous">Previous</string>
@@ -654,10 +656,15 @@
     <string name="oir_correct">Correct!</string>
     <string name="oir_incorrect">Incorrect</string>
     <string name="oir_error_loading">Error Loading Test</string>
+    <string name="oir_error_auth_required">Authentication required. Please login to continue.</string>
+    <string name="oir_error_load_failed">Failed to load test. Please try again.</string>
+    <string name="oir_error_submit_failed">Failed to submit test. Please try again.</string>
+    <string name="oir_error_invalid_question">Invalid question state. Please click Submit Test button.</string>
+    <string name="oir_error_questions_unavailable">OIR questions are temporarily unavailable. Please check your connection and try again.</string>
     <string name="oir_retry">Retry</string>
-    <string name="oir_difficulty_easy">Easy</string>
-    <string name="oir_difficulty_medium">Medium</string>
-    <string name="oir_difficulty_hard">Hard</string>
+    <string name="oir_question_figure_description">OIR question figure</string>
+    <string name="oir_multi_select_hint">Select exactly 2 options</string>
+    <string name="oir_multi_select_selections_complete">2 options selected</string>
 
     <!-- ============================================ -->
     <!-- PPDT TEST SCREEN - DETAILED STRINGS -->

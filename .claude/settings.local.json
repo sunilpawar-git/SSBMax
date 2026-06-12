@@ -55,7 +55,9 @@
       "Bash(tee:*)",
       "Bash(./gradlew:*)",
       "Bash(gh run:*)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(python3 *)",
+      "Bash(gh pr *)"
     ],
     "deny": [],
     "ask": []

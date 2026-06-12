@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -119,6 +120,14 @@ fun OLQDashboardCard(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
+            // Partial-load banner: shown when one or more test types timed out or are still
+            // being analyzed (see ProcessedDashboardData.unavailableTypes). The rest of the
+            // dashboard still renders; this offers a one-tap retry for the missing tiles.
+            if (processedData.unavailableTypes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                UnavailableResultsBanner(onRetry = onRefresh)
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Vertical Section Layout (Symmetrical & Balanced)
@@ -210,6 +219,46 @@ fun OLQDashboardCard(
                         textAlign = TextAlign.Center
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Banner shown when part of the dashboard couldn't load (a test type timed out or its analysis is
+ * still pending). Keeps the rest of the dashboard usable and offers a one-tap retry.
+ */
+@Composable
+private fun UnavailableResultsBanner(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("dashboard_unavailable_banner"),
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.errorContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = stringResource(R.string.dashboard_some_unavailable),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onRetry) {
+                Text(stringResource(R.string.dashboard_retry))
             }
         }
     }

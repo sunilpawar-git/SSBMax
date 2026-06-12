@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # Gradle dependencies (version catalog + build scripts)
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.google.devtools.ksp*"
+      firebase:
+        patterns:
+          - "com.google.firebase*"
+          - "com.google.gms*"
+    labels:
+      - dependencies
+
+  # GitHub Actions used by the workflows (keep pinned SHAs current)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci

@@ -14,6 +14,7 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 
@@ -49,6 +50,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -185,6 +187,10 @@ class TATTestViewModel @Inject constructor(
                         android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         android.util.Log.d("TATTestViewModel", "✅ Test eligible!")
                         android.util.Log.d("TATTestViewModel", "   Remaining tests: ${eligibility.remainingTests}")
@@ -198,7 +204,7 @@ class TATTestViewModel @Inject constructor(
                 
                 // Create test session
                 android.util.Log.d("TATTestViewModel", "📍 Step 3: Creating test session...")
-                val sessionResult = testContentRepository.createTestSession(
+                val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.TAT

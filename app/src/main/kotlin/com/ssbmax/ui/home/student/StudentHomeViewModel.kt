@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 /**
@@ -231,51 +230,47 @@ class StudentHomeViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Add 10-second timeout to prevent infinite loading
-                withTimeout(10_000) {
-                    getOLQDashboard(userId, forceRefresh)
-                        .onSuccess { processedData ->
-                            val metadata = processedData.cacheMetadata
-                            analyticsManager.trackFeatureUsed(
-                                featureName = if (metadata.cacheHit) "dashboard_cache_hit" else "dashboard_cache_miss",
-                                parameters = mapOf(
-                                    "load_time_ms" to metadata.loadTimeMs,
-                                    "forced_refresh" to metadata.forcedRefresh,
-                                    "user_id" to userId
-                                )
+                // No umbrella timeout here: GetOLQDashboardUseCase isolates each test-type fetch
+                // under its own per-type budget and returns a partial dashboard (with
+                // unavailableTypes populated) rather than failing wholesale. A single slow test type
+                // can no longer discard results that already loaded.
+                getOLQDashboard(userId, forceRefresh)
+                    .onSuccess { processedData ->
+                        val metadata = processedData.cacheMetadata
+                        analyticsManager.trackFeatureUsed(
+                            featureName = if (metadata.cacheHit) "dashboard_cache_hit" else "dashboard_cache_miss",
+                            parameters = mapOf(
+                                "load_time_ms" to metadata.loadTimeMs,
+                                "forced_refresh" to metadata.forcedRefresh,
+                                "user_id" to userId,
+                                "unavailable_types" to processedData.unavailableTypes.size
                             )
+                        )
 
-                            _uiState.update { it.copy(
-                                isDashboardLoading = false,
-                                isRefreshingDashboard = false,
-                                dashboard = processedData,
-                                lastRefreshTime = System.currentTimeMillis(),
-                                dashboardError = null
-                            ) }
-                        }
-                        .onFailure { error ->
-                            analyticsManager.trackFeatureUsed(
-                                featureName = "dashboard_cache_error",
-                                parameters = mapOf(
-                                    "error" to (error.message ?: "Unknown error"),
-                                    "user_id" to userId
-                                )
+                        _uiState.update { it.copy(
+                            isDashboardLoading = false,
+                            isRefreshingDashboard = false,
+                            dashboard = processedData,
+                            lastRefreshTime = System.currentTimeMillis(),
+                            dashboardError = null
+                        ) }
+                    }
+                    .onFailure { error ->
+                        analyticsManager.trackFeatureUsed(
+                            featureName = "dashboard_cache_error",
+                            parameters = mapOf(
+                                "error" to (error.message ?: "Unknown error"),
+                                "user_id" to userId
                             )
+                        )
 
-                            ErrorLogger.log(error, "Failed to load dashboard")
-                            _uiState.update { it.copy(
-                                isDashboardLoading = false,
-                                isRefreshingDashboard = false,
-                                dashboardError = error.message ?: "Failed to load dashboard"
-                            ) }
-                        }
-                }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.update { it.copy(
-                    isDashboardLoading = false,
-                    isRefreshingDashboard = false,
-                    dashboardError = "Dashboard timed out. Please retry."
-                ) }
+                        ErrorLogger.log(error, "Failed to load dashboard")
+                        _uiState.update { it.copy(
+                            isDashboardLoading = false,
+                            isRefreshingDashboard = false,
+                            dashboardError = error.message ?: "Failed to load dashboard"
+                        ) }
+                    }
             } catch (e: Exception) {
                 ErrorLogger.log(e, "Unexpected error in loadDashboard")
                 _uiState.update { it.copy(

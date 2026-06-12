@@ -4,6 +4,7 @@ import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
@@ -39,6 +40,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: TATTestViewModel
     private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
+    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
     private val mockSubmitTATTest = mockk<SubmitTATTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
@@ -75,7 +77,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
         
         // Mock test session creation
         coEvery { 
-            mockTestContentRepo.createTestSession(any(), any(), TestType.TAT) 
+            mockSessionRepo.createTestSession(any(), any(), TestType.TAT) 
         } returns Result.success("session-tat-123")
         
         // Mock question loading
@@ -114,7 +116,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertNotNull("Should have config", state.config)
         }
         
-        coVerify { mockTestContentRepo.createTestSession("test-user-123", "tat_standard", TestType.TAT) }
+        coVerify { mockSessionRepo.createTestSession("test-user-123", "tat_standard", TestType.TAT) }
         coVerify { mockTestContentRepo.getTATQuestions("tat_standard") }
     }
     
@@ -269,6 +271,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
     private fun createViewModel(): TATTestViewModel {
         return TATTestViewModel(
             mockTestContentRepo,
+            mockSessionRepo,
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,

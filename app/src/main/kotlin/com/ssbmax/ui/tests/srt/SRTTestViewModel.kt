@@ -11,6 +11,7 @@ import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.ui.tests.common.TestNavigationEvent
@@ -39,6 +40,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SRTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
+    private val testSessionRepository: TestSessionRepository,
     private val submitSRTTest: SubmitSRTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
@@ -118,6 +120,10 @@ class SRTTestViewModel @Inject constructor(
                         android.util.Log.d("SRTTestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
                         return@launch
                     }
+                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                        return@launch
+                    }
                     is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
                         android.util.Log.d("SRTTestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
                         // Continue with test loading
@@ -129,7 +135,7 @@ class SRTTestViewModel @Inject constructor(
                 ) }
                 
                 // Create test session
-                val sessionResult = testContentRepository.createTestSession(
+                val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.SRT

@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -66,14 +67,59 @@ class OIRQuestionCacheDaoTest {
         assertTrue(all.all { it.lastUsed == 5L })
     }
 
+    // ============ Phase 1: composite index behaviour ============
+
+    @Test
+    fun getUnusedQuestionsByType_includesNullLastUsedAndOldRows() = runTest {
+        val threshold = 1_000L
+        dao.insertQuestions(listOf(
+            entity(id = "a", type = "VERBAL_REASONING", lastUsed = null),    // null → included
+            entity(id = "b", type = "VERBAL_REASONING", lastUsed = 500L),    // old   → included
+            entity(id = "c", type = "VERBAL_REASONING", lastUsed = 2_000L),  // recent → excluded
+            entity(id = "d", type = "NON_VERBAL_REASONING", lastUsed = null) // wrong type → excluded
+        ))
+
+        val result = dao.getUnusedQuestionsByType("VERBAL_REASONING", threshold, 10)
+        val ids = result.map { it.id }.toSet()
+
+        assertTrue("null lastUsed must be included", "a" in ids)
+        assertTrue("old lastUsed must be included", "b" in ids)
+        assertFalse("recent lastUsed must be excluded", "c" in ids)
+        assertFalse("wrong type must be excluded", "d" in ids)
+    }
+
+    @Test
+    fun getUnusedQuestionsByType_respectsCountLimit() = runTest {
+        dao.insertQuestions((1..10).map { entity(id = "q$it", type = "VERBAL_REASONING", lastUsed = null) })
+
+        val result = dao.getUnusedQuestionsByType("VERBAL_REASONING", Long.MAX_VALUE, 3)
+
+        assertEquals(3, result.size)
+    }
+
+    @Test
+    fun getQuestionsByType_returnsOnlyRequestedType() = runTest {
+        dao.insertQuestions(listOf(
+            entity(id = "v1", type = "VERBAL_REASONING", lastUsed = null),
+            entity(id = "v2", type = "VERBAL_REASONING", lastUsed = null),
+            entity(id = "nv1", type = "NON_VERBAL_REASONING", lastUsed = null)
+        ))
+
+        val result = dao.getQuestionsByType("VERBAL_REASONING", 10)
+
+        assertEquals(2, result.size)
+        assertTrue(result.all { it.type == "VERBAL_REASONING" })
+    }
+
     private fun entity(
         id: String,
-        usage: Int,
-        lastUsed: Long?
+        usage: Int = 0,
+        lastUsed: Long? = null,
+        type: String = "VERBAL_REASONING"
     ): CachedOIRQuestionEntity = CachedOIRQuestionEntity(
         id = id,
         questionNumber = usage + 1,
-        type = "VERBAL",
+        type = type,
         subtype = "ANALOGY",
         questionText = "Q$id",
         optionsJson = """["A","B","C","D"]""",

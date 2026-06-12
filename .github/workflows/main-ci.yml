@@ -1,24 +1,53 @@
 name: SSBMax CI
 
+# Triggers cover every branch without a brittle name list:
+#  - pull_request runs on PRs from ANY source branch (feature/*, fix/*, etc.)
+#  - push runs only on protected branches, so PR commits aren't built twice.
 on:
-  push:
-    branches: [ main, develop, feature/*, feature/**, tech-debt/**, PsyTests ]
   pull_request:
+  push:
     branches: [ main, develop ]
+  merge_group:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes — but never cancel
+# a run on a protected branch (those builds gate merges / publish caches).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+# Least privilege by default; jobs opt into more where needed.
+permissions:
+  contents: read
 
 env:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=-Xmx4g"
+  GRADLE_OPTS: "-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=-Xmx4g"
 
 jobs:
+  # ── Supply-chain: verify the Gradle wrapper jar hasn't been tampered with ──
+  wrapper-validation:
+    name: Gradle Wrapper Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - name: Validate wrapper
+        uses: gradle/actions/wrapper-validation@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+
   # ── Security (runs in parallel with build jobs) ──────────────────────
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: API Key & Secret Detection (Files)
         run: |
@@ -74,10 +103,6 @@ jobs:
           fi
           echo "✅ Security checks passed"
 
-  # ── Shared setup anchor (used by lint, test, build) ──────────────────
-  # Each job repeats setup because GitHub Actions doesn't support YAML anchors
-  # across jobs. Gradle build cache keeps repeated compilation fast.
-
   # ── Lint (all modules) ───────────────────────────────────────────────
   lint:
     name: Lint
@@ -85,35 +110,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
+          persist-credentials: false
 
-      - name: Restore Gradle build cache
-        uses: actions/cache@v5
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            .gradle/build-cache
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: gradle-${{ runner.os }}-
-
-      - name: Create local.properties
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY || 'test_key' }}" >> local.properties
-
-      - name: Setup google-services.json
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
-        run: echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Run Lint (all modules)
         run: |
@@ -127,7 +132,7 @@ jobs:
 
       - name: Upload Lint Reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: lint-reports
           path: '**/build/reports/lint-results-*.html'
@@ -138,37 +143,22 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # checks:write lets the test reporter publish a PR check with inline
+    # annotations on failing tests (no more digging through HTML artifacts).
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
+          persist-credentials: false
 
-      - name: Restore Gradle build cache
-        uses: actions/cache@v5
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            .gradle/build-cache
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: gradle-${{ runner.os }}-
-
-      - name: Create local.properties
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY || 'test_key' }}" >> local.properties
-
-      - name: Setup google-services.json
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
-        run: echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Run All Unit Tests
         run: |
@@ -181,9 +171,30 @@ jobs:
             --parallel \
             --stacktrace
 
+      # Hard coverage gate at the thresholds defined per-module in build.gradle.kts.
+      # Reuses the test execution above via the build cache (tasks are up-to-date).
+      - name: Verify coverage thresholds
+        run: |
+          ./gradlew \
+            :app:jacocoTestCoverageVerification \
+            :core:data:jacocoTestCoverageVerification \
+            :core:domain:jacocoTestCoverageVerification \
+            --build-cache \
+            --parallel \
+            --stacktrace
+
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451 # v2
+        with:
+          name: Unit Test Results
+          path: '**/build/test-results/testDebugUnitTest/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: test-reports
           path: '**/build/reports/tests/'
@@ -197,52 +208,75 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
+          persist-credentials: false
 
-      - name: Restore Gradle build cache
-        uses: actions/cache@v5
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            .gradle/build-cache
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: gradle-${{ runner.os }}-
-
-      - name: Create local.properties
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY || 'test_key' }}" >> local.properties
-
-      - name: Setup google-services.json
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
-        run: echo "${GOOGLE_SERVICES_JSON}" > app/google-services.json
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
       - name: Assemble Debug APK
         run: ./gradlew :app:assembleDebug --build-cache --parallel --stacktrace
 
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
-      - name: CI Summary
+  # ── Detekt (Kotlin static analysis) ──────────────────────────────────
+  # Fails only on NEW smells; existing ones are grandfathered per-module via
+  # detekt-baseline.xml (a ratchet target to drive down over time).
+  detekt:
+    name: Detekt
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android
+        with:
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY || 'test_key' }}
+          google-services-json: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Run Detekt
+        run: ./gradlew detekt --build-cache --parallel --stacktrace
+
+      - name: Upload Detekt Reports
         if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: detekt-reports
+          path: '**/build/reports/detekt/detekt.html'
+          retention-days: 7
+
+  # ── Single required check for branch protection ──────────────────────
+  # Make THIS the required status check in branch-protection rules; it stays
+  # stable even as the jobs above are added or renamed.
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build]
+    steps:
+      - name: Verify all jobs succeeded
         run: |
-          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint (all modules) | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests (all modules) | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build APK | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "wrapper-validation: ${{ needs.wrapper-validation.result }}"
+          echo "security-scan:      ${{ needs.security-scan.result }}"
+          echo "lint:               ${{ needs.lint.result }}"
+          echo "detekt:             ${{ needs.detekt.result }}"
+          echo "unit-tests:         ${{ needs.unit-tests.result }}"
+          echo "build:              ${{ needs.build.result }}"
+          if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
+            echo "❌ One or more CI jobs failed."
+            exit 1
+          fi
+          echo "✅ All CI jobs passed."

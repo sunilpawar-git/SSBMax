@@ -604,10 +604,83 @@ object DatabaseMigrations {
             // Update all existing TAT images to have correct character limits
             database.execSQL("""
                 UPDATE cached_tat_images 
-                SET minCharacters = 50, 
+                SET minCharacters = 50,
                     maxCharacters = 1500
                 WHERE minCharacters = 150 AND maxCharacters = 800
             """.trimIndent())
+        }
+    }
+
+    /**
+     * Migration from version 16 to 17
+     * Adds questionImageUrl column to OIR question cache (figure-based non-verbal questions)
+     */
+    val MIGRATION_16_17 = object : Migration(16, 17) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN questionImageUrl TEXT")
+        }
+    }
+
+    /**
+     * Migration from version 17 to 18
+     * Replaces the separate lastUsed single-column index with a composite (type, lastUsed) index.
+     * The hot selection query filters WHERE type = ? AND (lastUsed IS NULL OR lastUsed < ?).
+     * SQLite stores NULLs at the start of an ASC column, so the composite index covers both
+     * the equality predicate on type and the range predicate on lastUsed in a single index scan.
+     * The redundant single-column lastUsed index is dropped; the type and batchId indexes are kept.
+     */
+    val MIGRATION_17_18 = object : Migration(17, 18) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_oir_type_lastUsed
+                ON cached_oir_questions(type, lastUsed)
+            """.trimIndent())
+            database.execSQL("DROP INDEX IF EXISTS index_cached_oir_questions_lastUsed")
+        }
+    }
+
+    /**
+     * Migration from version 18 to 19
+     * Restores index_cached_oir_questions_type and index_cached_oir_questions_batchId on the
+     * cached_oir_questions table. Devices that received a fresh install at v17 (or that went
+     * through a destructive migration at that version) never got those two indices from the
+     * original MIGRATION_2_3. The entity @Index annotations were re-synced in a later commit,
+     * so we need this migration to make existing DBs match the entity definition.
+     */
+    val MIGRATION_18_19 = object : Migration(18, 19) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_oir_questions_type
+                ON cached_oir_questions(type)
+            """.trimIndent())
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_cached_oir_questions_batchId
+                ON cached_oir_questions(batchId)
+            """.trimIndent())
+        }
+    }
+
+    /**
+     * Adds the single-row [com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity] table
+     * that powers content-version reconciliation (Firestore is SSOT; Room mirrors it).
+     * Existing cached questions are untouched; the table starts empty so the next launch
+     * sees a null local version and reconciles to the remote content version.
+     */
+    val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS oir_sync_metadata (
+                    id INTEGER NOT NULL PRIMARY KEY,
+                    contentVersion INTEGER NOT NULL,
+                    lastSyncAt INTEGER NOT NULL
+                )
+            """.trimIndent())
+        }
+    }
+
+    val MIGRATION_20_21 = object : Migration(20, 21) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN correctAnswerIds TEXT")
         }
     }
 }

@@ -1,118 +1,146 @@
-# CLAUDE.md
+# CLAUDE.md — AI Agent Instructions for SSBMax
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**Purpose:** Guidance for Claude, Cursor, and other LLM-based coding assistants working on this repository. Last updated: June 2026.
 
 ## What Is SSBMax
 
-Android app for SSB (Services Selection Board) preparation — India's military officer selection process. Candidates practice psychology tests (TAT, WAT, SRT, SD), GTO tasks (Group Discussion, Lecturette, GPE), and Interview simulation. The app uses Gemini AI for evaluation and question generation, Firebase for auth/storage, and Room for local caching.
+Android app for SSB (Services Selection Board) preparation — India's military officer selection process. Candidates practice psychology tests (TAT, WAT, SRT, SD), GTO tasks (Group Discussion, Lecturette, GPE), and Interview simulation. Tech stack: Gemini AI for evaluation, Firebase for auth/storage, Room DB for caching, Jetpack Compose (100% — no XML layouts).
 
-## Build & Test Commands
+## Your 12 Core Rules (Always follow)
 
-Always use the Gradle wrapper (`./gradlew`), never bare `gradle`.
+1. **State assumptions explicitly** — if uncertain, ask rather than guess; present multiple interpretations when ambiguous
+2. **Simplicity first** — minimum code solving the problem; no speculative features or premature abstractions
+3. **Surgical changes** — touch only what you must; clean up only your own mess; match existing style
+4. **Goal-driven execution** — define success criteria before coding; loop until verified
+5. **Use LLM for judgment** — classification, drafting, summarization, extraction; NOT for routing, retries, deterministic transforms
+6. **Token budgets are mandatory** — 4K per task, 30K per session; surface breaches, don't silently overrun
+7. **Surface conflicts, don't average** — if two patterns contradict, pick one and explain why
+8. **Read before you write** — understand exports, callers, shared utilities; "looks orthogonal" is dangerous
+9. **Tests verify intent** — tests must encode WHY behavior matters, not just WHAT it does
+10. **Checkpoint after every step** — summarize what was done, verified, and remains; if you lose track, stop and restate
+11. **Match codebase conventions** — conform > taste inside the codebase; flag harmful conventions separately
+12. **Fail loud** — surface uncertainty; never silently skip work or hide skipped tests
 
-```bash
-./gradlew assembleDebug                  # Build debug APK
-./gradlew testDebugUnitTest              # Run all unit tests
-./gradlew check                          # Run lint + tests
-./gradlew lintDebug                      # Lint only
-./gradlew :app:testDebugUnitTest         # Tests for app module only
-./gradlew :core:domain:test              # Tests for domain module only
-./gradlew :core:data:testDebugUnitTest   # Tests for data module only
-./gradlew :lint:test                     # Tests for custom lint rules
-./gradlew clean assembleDebug            # Clean build
-```
+## Guiding Principles (MVVM + DRY + SOLID + SSOT)
 
-Run a single test class:
-```bash
-./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.profile.UserProfileViewModelTest"
-./gradlew :core:domain:test --tests "*.GetOLQDashboardUseCaseTest"
-```
+**Single Source of Truth for every domain:**
+- `SubscriptionManager` → subscription limits (only place to define/fetch)
+- `SSBMaxDestinations` → navigation routes (only place for route definitions)
+- `SSBPhase` → test type enum (only place to define test types)
+
+Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase → Repository (interface in domain, impl in data) → Firebase/Room`
+
+## Development Method (TDD-First)
+
+**Before writing code:**
+1. **Define success criteria** — what assertions pass? what fail?
+2. **Plan test assertions WITH user** — no blind mocks; every assertion must encode WHY it matters (Rule 9)
+3. **Write test first** — implementation follows; tests specify contract
+4. **Phase ends with tech debt sweep** — phase complete only when task DONE + tech debt REMOVED (non-negotiable)
 
 ## Project Architecture
 
-**Multi-module Android app** using MVVM + Repository pattern, 100% Jetpack Compose (no XML layouts).
-
-### Modules (settings.gradle.kts)
+**Multi-module MVVM + Repository pattern:**
 
 | Module | Purpose |
 |---|---|
-| `app` | UI screens (Compose), ViewModels, navigation, DI modules |
-| `core:domain` | Use cases, domain models, repository interfaces, service interfaces. **ZERO Android dependencies** |
-| `core:data` | Repository implementations, Room DB, Firebase data sources, Gemini AI integration |
+| `app` | Compose screens, ViewModels, navigation, Hilt DI |
+| `core:domain` | Use cases, models, repository/service interfaces (ZERO Android dependencies) |
+| `core:data` | Repository implementations, Room DB, Firebase, Gemini AI |
 | `core:designsystem` | Shared Compose components, theme |
 | `core:common` | Shared utilities |
-| `lint` | Custom lint rules (see below) |
+| `lint` | Custom lint rules (build fails if violated) |
 
-### Data flow
+**Key paths (SSOT):** Navigation: `app/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `core:data/.../ai/` | Tests enum: `core:domain/.../SSBPhase.kt`
+
+## Architecture Guidance Hierarchy (Phase 4)
+
+**Multi-tier guidance system** (13 CLAUDE.md files) enforces patterns at every layer:
+
 ```
-Compose Screen → ViewModel → UseCase → Repository (interface in domain, impl in data) → Firebase/Room
+Root: claude.md (12 core rules, global patterns)
+  ├── app/CLAUDE.md (UI/ViewModel layer)
+  │   ├── app/ui/CLAUDE.md (feature screens)
+  │   ├── app/di/CLAUDE.md (Hilt dependency injection)
+  │   └── app/navigation/CLAUDE.md (type-safe routing)
+  │
+  ├── core/domain/CLAUDE.md (business logic, ZERO Android deps)
+  │
+  ├── core/data/CLAUDE.md (data repositories, error handling)
+  │   ├── core/data/ai/CLAUDE.md (Gemini AI integration)
+  │   ├── core/data/local/CLAUDE.md (Room database patterns)
+  │   └── core/data/remote/CLAUDE.md (Firebase/Firestore)
+  │
+  ├── core/designsystem/CLAUDE.md (reusable components, Material3)
+  │
+  ├── lint/CLAUDE.md (custom lint detectors, 16+ rules)
+  │
+  ├── functions/CLAUDE.md (Cloud Functions backend)
+  │
+  └── scripts/CLAUDE.md (data ingestion, deterministic extraction)
 ```
-- ViewModels expose `StateFlow<UiState>` collected with `collectAsStateWithLifecycle()`
-- Domain layer returns `Result<T>` — no Android dependencies, no ErrorLogger
-- Presentation layer maps domain errors to string resources
 
-### Key paths
-- Navigation routes: `app/src/main/kotlin/com/ssbmax/navigation/SSBMaxDestinations.kt`
-- Subscription limits (single source of truth): `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubscriptionManager.kt`
-- AI prompts & Gemini integration: `core/data/src/main/kotlin/com/ssbmax/core/data/ai/`
-- TestType enum: `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/SSBPhase.kt`
+**Quick Navigation:** See [CLAUDE_HIERARCHY.md](CLAUDE_HIERARCHY.md) for scenarios → right CLAUDE.md file lookup.
 
-### Test infrastructure
-- **Unit tests**: JUnit 4 + MockK + Turbine (Flow testing) + kotlinx-coroutines-test
-- **Compose tests**: `@HiltAndroidTest` with custom `HiltTestRunner`
-- **Test utilities**: `app/src/androidTest/kotlin/com/ssbmax/testing/` (BaseComposeTest, TestDataFactory, etc.)
-- Tests have a 60-second global timeout
+**Enforcement:**
+- ✅ Lint: 16 custom detectors (Phase 2-4) catch violations at build time
+- ✅ Pre-commit hook: Module-aware checks block commits on violations
+- ✅ Code review: Pattern references guide PR feedback
+- ✅ Documentation: GUIDELINES.md explains team processes
 
-## Mandatory Code Rules
+## Mandatory Lint Rules (enforced — build FAILS if violated)
 
-These are enforced by custom lint rules in `lint/` — the build will fail if violated.
-
-### ErrorLogger, not printStackTrace
-```kotlin
-// ✅ ErrorLogger.log(e, "context message")
-// ❌ e.printStackTrace()  — lint error: PrintStackTraceDetector
-```
-**Exception**: `core:domain` must NOT use ErrorLogger (Android dependency). Use `Result<T>` instead.
-
-### String resources for all user-facing text
-```kotlin
-// ✅ stringResource(R.string.key)
-// ❌ "Hardcoded text"  — lint error: HardcodedTextDetector
-```
-**Exception**: Domain layer business logic messages.
-
-### Thread-safe StateFlow updates
-```kotlin
-// ✅ _uiState.update { it.copy(isLoading = true) }
-// ❌ _uiState.value = _uiState.value.copy(...)  — lint error: StateFlowValueAssignmentDetector
-```
-ViewModels must expose `StateFlow<UiState>`, never `MutableStateFlow`.
-
-### No singleton mutable state
-```kotlin
-// ❌ object FooHolder { var state: X? = null }  — lint error: SingletonMutableStateDetector
-```
-Never create `*Holder.kt` files.
-
-### No Firebase in UI layer
-Direct Firebase calls in Compose screens or ViewModels are flagged by `FirebaseInUILayerDetector`. Always go through repositories.
-
-### ID-based navigation only
-Pass only IDs (strings) between screens via navigation. Never pass complex objects — result screens fetch data from Firestore/Room via their own ViewModel.
+1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, msg)` always; exception: `core:domain` uses `Result<T>`
+2. **NO hardcoded strings** — all UI strings externalized to `strings.xml` via `stringResource(R.string.key)`. Zero exceptions (not even domain layer)
+3. **Thread-safe StateFlow updates** — `_uiState.update { it.copy(...) }`, never direct assignment
+4. **Expose StateFlow, not MutableStateFlow** — ViewModels expose `StateFlow<UiState>` via `.asStateFlow()`
+5. **No singleton mutable state** — never create `*Holder.kt` files
+6. **No Firebase in UI layer** — use repositories; no direct Firebase calls in Compose/ViewModels
+7. **ID-based navigation only** — pass string IDs between screens; result screens fetch data via their own ViewModel
+8. **No Android deps in core:domain** — `core:domain` is 100% pure Kotlin (Phase 4) — enables JVM testing, reusability
+9. **No Firebase imports in app layer** — except Firebase Auth (Phase 4) — use repositories; no direct Firestore/Database calls
+10. **Designsystem Composables need @Preview** — all reusable components require `@Preview` for visual validation (Phase 4)
 
 ## Quality Limits
 
-- **Max 300 lines per file** — split if exceeded
-- **Max 50 lines per Composable** — extract sub-components
-- No hardcoded colors (use `MaterialTheme.colorScheme.*`)
-- No hardcoded dimensions (use `dp`/`sp` values)
-- Dependencies injected via Hilt — never manually constructed
+- **Max 300 lines per file** (split if exceeded)
+- **Max 50 lines per Composable** (extract sub-components)
+- No hardcoded colors/dimensions (use `MaterialTheme.*`, `dp`, `sp`)
+- Dependencies injected via Hilt (never manual construction)
+- If ViewModel/Repository logic changes → update/add tests; `./gradlew check` must pass
 
-## Testing Protocol
+## Content-Ingestion Principle (PDFs → Firestore)
 
-- If you change ViewModel or Repository logic, you **must** update or add tests
-- If `./gradlew check` fails, fix it before considering the task done
+**Keep LLM out of correctness path.** Vision-LLM extraction produces hallucinated data.
 
-## Tech Stack Quick Reference
+**Instead:**
+1. Parse deterministically — extract questions, options, answer keys from text layer (use `pymupdf`, NOT LLM)
+2. Map figures by geometry — position → question association; composite images onto canvas (no page renders)
+3. **LLM only for enrichment** — tags, difficulty, subtype; NEVER for `questionText`, `correctAnswerId`, `explanation`
+4. Gate writes with HTML preview before Firebase upload
 
-Kotlin 2.1.0, AGP 8.7.3, compileSdk/targetSdk 35, minSdk 26, JVM 21, Compose BOM 2024.05.00, Hilt 2.54, Room 2.6.1, Coroutines 1.9.0, Firebase BOM 33.7.0, Ktor 3.0.2, Gemini AI 0.9.0. Versions managed in `gradle/libs.versions.toml`.
+Reference: `scripts/oir-extraction/` + `docs/architecture/OIR_Architecture.md`
+
+## Security Principles (Gold Standard)
+
+- **Never hardcode secrets** — all API keys from `local.properties` or Firebase Config
+- **Firestore rules first** — Firebase security rules are SSOT for data access control
+- **Input validation** — sanitize all user inputs; prevent injection/XSS
+- **Encrypt PII** — user interview responses, assessment data encrypted at rest (if stored locally)
+- **No secrets in logs** — ErrorLogger must strip API keys, auth tokens, user IDs
+- **Dependencies audited** — run `./gradlew dependencyCheckAnalyze` monthly
+- **Full details:** See `docs/security/SECURITY.md`
+
+## Test Infrastructure & Build Commands
+
+**Setup:** JUnit 4 + MockK + Turbine + kotlinx-coroutines-test. Compose: `@HiltAndroidTest` + `HiltTestRunner`. Timeout: 60 sec/test.
+
+**Commands:**
+```bash
+./gradlew testDebugUnitTest    # All unit tests
+./gradlew check                # Lint + tests
+./gradlew :app:testDebugUnitTest  # App module
+```
+Full list: see `claude.local.md`.
+
+**Tech Stack:** Kotlin 2.1.0, AGP 8.7.3, compileSdk 35, minSdk 26, JVM 21, Compose BOM 2024.05.00, Hilt 2.54, Room 2.6.1, Firebase BOM 33.7.0, Gemini AI 0.9.0. Versions: `gradle/libs.versions.toml`.

@@ -7,6 +7,9 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_11_12
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_16_17
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_17_18
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -97,6 +100,301 @@ class SSBDatabaseMigrationTest {
             close()
         }
         openHelper.close()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate16To17_addsQuestionImageUrlColumn() = runTest {
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-16-17")
+            .callback(object : SupportSQLiteOpenHelper.Callback(16) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_oir_questions (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            questionNumber INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            subtype TEXT,
+                            questionText TEXT NOT NULL,
+                            optionsJson TEXT NOT NULL,
+                            correctAnswerId TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            difficulty TEXT NOT NULL,
+                            tags TEXT NOT NULL,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(
+                    db: SupportSQLiteDatabase,
+                    oldVersion: Int,
+                    newVersion: Int
+                ) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_16_17.migrate(this)
+            version = 17
+
+            query("PRAGMA table_info(cached_oir_questions)")
+                .use { cursor ->
+                    val columnNames = mutableSetOf<String>()
+                    while (cursor.moveToNext()) {
+                        columnNames.add(cursor.getString(1))
+                    }
+                    assert(columnNames.contains("questionImageUrl")) {
+                        "Migration 16→17 failed: questionImageUrl column not found"
+                    }
+                }
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-16-17")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate17To18_createsCompositeIndexOnTypeAndLastUsed() = runTest {
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-17-18")
+            .callback(object : SupportSQLiteOpenHelper.Callback(17) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_oir_questions (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            questionNumber INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            subtype TEXT,
+                            questionText TEXT NOT NULL,
+                            optionsJson TEXT NOT NULL,
+                            correctAnswerId TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            questionImageUrl TEXT,
+                            difficulty TEXT NOT NULL,
+                            tags TEXT NOT NULL,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_cached_oir_questions_type ON cached_oir_questions(type)"
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_cached_oir_questions_batchId ON cached_oir_questions(batchId)"
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_cached_oir_questions_lastUsed ON cached_oir_questions(lastUsed)"
+                    )
+                }
+
+                override fun onUpgrade(
+                    db: SupportSQLiteDatabase,
+                    oldVersion: Int,
+                    newVersion: Int
+                ) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_17_18.migrate(this)
+            version = 18
+
+            query("PRAGMA index_info(index_oir_type_lastUsed)")
+                .use { cursor ->
+                    val columns = mutableListOf<String>()
+                    while (cursor.moveToNext()) {
+                        columns.add(cursor.getString(2))
+                    }
+                    assert(columns.size == 2) {
+                        "Migration 17→18 failed: expected 2 columns in composite index, got ${columns.size}"
+                    }
+                    assert(columns[0] == "type") {
+                        "Migration 17→18 failed: first column should be 'type', got '${columns[0]}'"
+                    }
+                    assert(columns[1] == "lastUsed") {
+                        "Migration 17→18 failed: second column should be 'lastUsed', got '${columns[1]}'"
+                    }
+                }
+
+            query("PRAGMA index_list(cached_oir_questions)")
+                .use { cursor ->
+                    val indexNames = mutableSetOf<String>()
+                    while (cursor.moveToNext()) {
+                        indexNames.add(cursor.getString(1))
+                    }
+                    assert(indexNames.contains("index_oir_type_lastUsed")) {
+                        "Composite index index_oir_type_lastUsed not found"
+                    }
+                    assert(!indexNames.contains("index_cached_oir_questions_lastUsed")) {
+                        "Old index index_cached_oir_questions_lastUsed should be dropped"
+                    }
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-17-18")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate19To20_createsSyncMetadataTableAndPreservesQuestions() = runTest {
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-19-20")
+            .callback(object : SupportSQLiteOpenHelper.Callback(19) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_oir_questions (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            questionNumber INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            subtype TEXT,
+                            questionText TEXT NOT NULL,
+                            optionsJson TEXT NOT NULL,
+                            correctAnswerId TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            questionImageUrl TEXT,
+                            difficulty TEXT NOT NULL,
+                            tags TEXT NOT NULL,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    // Seed a row to prove the migration preserves existing questions.
+                    db.execSQL(
+                        """
+                        INSERT INTO cached_oir_questions
+                        (id, questionNumber, type, questionText, optionsJson, correctAnswerId,
+                         explanation, difficulty, tags, batchId, cachedAt, usageCount)
+                        VALUES ('q1', 1, 'VERBAL_REASONING', 'Q?', '[]', 'opt_a', '', 'MEDIUM', '',
+                                'batch_pdf_001', 0, 0)
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            DatabaseMigrations.MIGRATION_19_20.migrate(this)
+            version = 20
+
+            // New single-row metadata table exists and is writable.
+            query("SELECT name FROM sqlite_master WHERE type='table' AND name='oir_sync_metadata'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 19→20 failed: oir_sync_metadata table not created" }
+                }
+            execSQL("INSERT INTO oir_sync_metadata (id, contentVersion, lastSyncAt) VALUES (0, 2, 123)")
+            query("SELECT contentVersion FROM oir_sync_metadata WHERE id = 0").use { cursor ->
+                assert(cursor.moveToFirst() && cursor.getInt(0) == 2) {
+                    "Migration 19→20 failed: could not read back sync metadata"
+                }
+            }
+
+            // Existing question row preserved.
+            query("SELECT COUNT(*) FROM cached_oir_questions").use { cursor ->
+                cursor.moveToFirst()
+                assert(cursor.getInt(0) == 1) { "Migration 19→20 dropped existing questions" }
+            }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-19-20")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate20To21_addsCorrectAnswerIdsColumn() = runTest {
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-20-21")
+            .callback(object : SupportSQLiteOpenHelper.Callback(20) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_oir_questions (
+                            id TEXT PRIMARY KEY NOT NULL,
+                            questionNumber INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            subtype TEXT,
+                            questionText TEXT NOT NULL,
+                            optionsJson TEXT NOT NULL,
+                            correctAnswerId TEXT NOT NULL,
+                            explanation TEXT NOT NULL,
+                            questionImageUrl TEXT,
+                            difficulty TEXT NOT NULL,
+                            tags TEXT NOT NULL,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT INTO cached_oir_questions
+                        (id, questionNumber, type, questionText, optionsJson, correctAnswerId,
+                         explanation, difficulty, tags, batchId, cachedAt, usageCount)
+                        VALUES ('q1', 1, 'NON_VERBAL_REASONING', 'Which two belong to Class A?',
+                                '[]', '', 'Answer: 2 and 3.', 'HARD', '', 'batch_001', 0, 0)
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_20_21.migrate(this)
+            version = 21
+
+            // Column must exist in schema
+            query("PRAGMA table_info(cached_oir_questions)")
+                .use { cursor ->
+                    val columnNames = mutableSetOf<String>()
+                    while (cursor.moveToNext()) {
+                        columnNames.add(cursor.getString(1))
+                    }
+                    assert(columnNames.contains("correctAnswerIds")) {
+                        "Migration 20→21 failed: correctAnswerIds column not found"
+                    }
+                }
+
+            // Existing row preserved; new column is NULL for single-answer questions
+            query("SELECT correctAnswerIds FROM cached_oir_questions WHERE id = 'q1'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 20→21: existing row disappeared" }
+                    assert(cursor.isNull(0)) {
+                        "Migration 20→21: correctAnswerIds should be NULL for pre-migration rows"
+                    }
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-20-21")
     }
 }
 
