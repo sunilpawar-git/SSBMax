@@ -156,4 +156,80 @@ class OIRQuestionValidatorTest {
         assertFalse(result.isValid)
         assertTrue(result.errors.any { "does not match any option" in it })
     }
+
+    // -------------------------------------------------------------------------
+    // Phase 3: multi-select validation (correctAnswerIds-based, no image-URL workaround)
+    // -------------------------------------------------------------------------
+
+    private fun fiveImageOptions() = listOf(
+        imageOption("opt_a", "https://storage.googleapis.com/bucket/oir/fig_a.png"),
+        imageOption("opt_b", "https://storage.googleapis.com/bucket/oir/fig_b.png"),
+        imageOption("opt_c", "https://storage.googleapis.com/bucket/oir/fig_c.png"),
+        imageOption("opt_d", "https://storage.googleapis.com/bucket/oir/fig_d.png"),
+        imageOption("opt_e", "https://storage.googleapis.com/bucket/oir/fig_e.png")
+    )
+
+    private fun multiSelectQuestion() = OIRQuestion(
+        id = "oir_q_0101",
+        questionNumber = 101,
+        type = OIRQuestionType.NON_VERBAL_REASONING,
+        questionText = "Which two of the following figures belong to Class A?",
+        options = fiveImageOptions(),
+        correctAnswerId = "",
+        correctAnswerIds = listOf("opt_b", "opt_c"),
+        explanation = "Answer: 2 and 3.",
+        difficulty = QuestionDifficulty.MEDIUM,
+        timeSeconds = 60,
+        questionImageUrl = "https://storage.googleapis.com/bucket/oir/class_a.png"
+    )
+
+    @Test
+    fun `valid multi-select question with two correctAnswerIds passes validation`() {
+        val result = OIRQuestionValidator.validate(multiSelectQuestion())
+        assertTrue(
+            "Multi-select question with valid correctAnswerIds should pass. Errors: ${result.errors}",
+            result.isValid
+        )
+    }
+
+    @Test
+    fun `multi-select question with unknown option id in correctAnswerIds fails`() {
+        // correctAnswerIds references opt_z which doesn't exist in options
+        val q = multiSelectQuestion().copy(correctAnswerIds = listOf("opt_b", "opt_z"))
+        val result = OIRQuestionValidator.validate(q)
+        assertFalse(result.isValid)
+        assertTrue(result.errors.any { "unknown option" in it })
+    }
+
+    @Test
+    fun `multi-select question with only one correctAnswerIds entry fails`() {
+        // size > 1 triggers multi-select path, but correctAnswerIds has only 1 entry — invalid
+        val q = multiSelectQuestion().copy(correctAnswerIds = listOf("opt_b"))
+        val result = OIRQuestionValidator.validate(q)
+        // correctAnswerIds.size == 1 → isMultiSelect = false → blank correctAnswerId → error
+        assertFalse(result.isValid)
+        assertTrue(result.errors.any { "correctAnswerId is empty and no correctAnswerIds provided" in it })
+    }
+
+    @Test
+    fun `single-answer question with blank correctAnswerId and no correctAnswerIds fails`() {
+        // No image-URL workaround: blank correctAnswerId with empty correctAnswerIds is always an error
+        val q = verbalQuestion().copy(correctAnswerId = "", correctAnswerIds = emptyList())
+        val result = OIRQuestionValidator.validate(q)
+        assertFalse(result.isValid)
+        assertTrue(result.errors.any { "correctAnswerId is empty and no correctAnswerIds provided" in it })
+    }
+
+    @Test
+    fun `single-answer question with blank correctAnswerId but questionImageUrl now fails`() {
+        // Documents intent: the old image-URL workaround is gone.
+        // A question with a figure but no correctAnswerId and no correctAnswerIds must fail validation.
+        val q = nonVerbalQuestion().copy(correctAnswerId = "", correctAnswerIds = emptyList())
+        val result = OIRQuestionValidator.validate(q)
+        assertFalse(
+            "Image-URL workaround must be gone: blank correctAnswerId + no correctAnswerIds should fail even with a questionImageUrl",
+            result.isValid
+        )
+        assertTrue(result.errors.any { "correctAnswerId is empty and no correctAnswerIds provided" in it })
+    }
 }

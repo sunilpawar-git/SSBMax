@@ -142,7 +142,7 @@ echo "  → Checking core:domain has no Android imports..."
 DOMAIN_FILES=$(echo "$KOTLIN_JAVA_FILES" | grep 'core/domain' || true)
 
 if [ -n "$DOMAIN_FILES" ]; then
-    if echo "$DOMAIN_FILES" | xargs grep -E '^import (android\.|androidx\.)', 2>/dev/null; then
+    if echo "$DOMAIN_FILES" | xargs grep -E '^import (android\.|androidx\.)' 2>/dev/null; then
         echo -e "${RED}❌ ERROR: Android imports found in core:domain${NC}"
         echo "core:domain must be 100% pure Kotlin (no Android dependencies)"
         ERRORS=$((ERRORS + 1))

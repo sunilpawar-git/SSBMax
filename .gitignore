@@ -132,6 +132,8 @@ scripts/node_modules/
 !README.md
 !CHANGELOG.md
 !claude.md
+!CLAUDE_HIERARCHY.md
+!GUIDELINES.md
 !**/CLAUDE.md
 !docs/**/*.md
 

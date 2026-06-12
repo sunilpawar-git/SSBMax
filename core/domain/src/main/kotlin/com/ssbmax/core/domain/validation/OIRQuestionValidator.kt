@@ -77,15 +77,20 @@ object OIRQuestionValidator {
             }
         }
         
-        // 5. Validate CorrectAnswerId Format
-        // Multi-answer figure questions (e.g. "Which two belong to Class A?") have no single
-        // correctAnswerId — allow them if they have a figure and options.
-        val isMultiAnswerFigureQuestion = question.correctAnswerId.isBlank() &&
-            question.questionImageUrl != null &&
-            question.options.isNotEmpty()
-        if (question.correctAnswerId.isBlank() && !isMultiAnswerFigureQuestion) {
-            errors.add("CorrectAnswerId is empty")
-        } else if (question.correctAnswerId.isNotBlank()) {
+        // 5. Validate CorrectAnswerId / correctAnswerIds
+        val isMultiSelect = question.correctAnswerIds.size > 1
+        if (question.correctAnswerId.isBlank() && !isMultiSelect) {
+            errors.add("correctAnswerId is empty and no correctAnswerIds provided")
+        }
+        if (isMultiSelect) {
+            val optionIds = question.options.map { it.id }.toSet()
+            if (question.correctAnswerIds.size < 2)
+                errors.add("Multi-select question must have >= 2 correctAnswerIds")
+            question.correctAnswerIds.forEach { id ->
+                if (id !in optionIds) errors.add("correctAnswerIds contains unknown option: $id")
+            }
+        }
+        if (question.correctAnswerId.isNotBlank()) {
             // Check for common malformed patterns
             when {
                 // Single letter format (e.g., "a", "b", "c", "d")

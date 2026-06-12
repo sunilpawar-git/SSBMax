@@ -24,7 +24,10 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 /**
  * Unit tests for FirestoreGTORepository's result-resolution paths.
@@ -37,6 +40,9 @@ import org.junit.Test
  * - getLatestResult returns NotAttempted when the user has no submission for a type.
  */
 class FirestoreGTORepositoryTest {
+
+    @get:Rule
+    val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
 
     private lateinit var firestore: FirebaseFirestore
     private lateinit var taskCacheManager: GTOTaskCacheManager

@@ -21,7 +21,10 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 /**
  * Integration tests for OIRQuestionCacheManager
@@ -39,7 +42,10 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OIRCacheManagerIntegrationTest {
-    
+
+    @get:Rule
+    val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
+
     companion object {
         @BeforeClass
         @JvmStatic

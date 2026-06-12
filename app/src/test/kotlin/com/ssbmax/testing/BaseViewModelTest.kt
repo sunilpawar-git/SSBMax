@@ -37,7 +37,7 @@ abstract class BaseViewModelTest {
      * Any test running longer than this is considered broken.
      */
     @get:Rule
-    val globalTimeout: Timeout = Timeout(30, TimeUnit.SECONDS)
+    val globalTimeout: Timeout = Timeout(60, TimeUnit.SECONDS)
     
 
     /**

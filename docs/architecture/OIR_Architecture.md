@@ -45,7 +45,11 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 **Recommended post-upload step:** always run `--verify` after a live upload to confirm every `questionImageUrl` resolves with HTTP 200. If any are broken, `--repair` re-uploads only the missing Storage objects and patches the Firestore doc — no full re-upload needed.
 
 ### Upload Status
-All 20 practice-set batches (001–020) plus 8 Part-3 topic-family batches (021–028, 255 questions) extracted and uploaded (June 2026). Outputs live at `scripts/oir-extraction/out/`.
+✅ **All 28 batches extracted, uploaded, and meta doc PUBLISHED (June 7, 2026)**
+- Batches 001–020: 1,000 questions (SSBCrack original sets) + Batches 021–028: 255 questions (Part-3 topic families)
+- Total: ~1,255 questions live in Firestore
+- Images: All live at `gs://ssbmax.../oir/pdf_questions/` (public HTTPS)
+- Meta doc: `test_content/oir/meta/config` = `{ contentVersion: 2, batchCount: 28 }` (published)
 
 > **Known legacy duds (deferred):** 140 questions in batches 001–020 are genuine free-response
 > fill-in-the-blank items (no options in the source). A free-response question type that rescues
@@ -98,9 +102,11 @@ So existing installs **self-heal** to new content on the next launch — bump `c
 `batchCount` when batches are added) via `set-oir-meta-config.js`; **no Kotlin change** is needed for
 a future content drop. If the meta doc is unreadable, the manager falls back to a legacy 20-batch sync.
 
-> ⚠️ **Release gate (as of June 2026, app in dev):** the meta doc has **not** been published yet.
-> Batches 021–028 are uploaded but won't reach clients until `node scripts/set-oir-meta-config.js --commit`
-> is run **alongside the DB-v20 release**. Until then the app legacy-syncs batches 001–020 only.
+> ✅ **Release gate status (as of June 7, 2026):**
+> - Firestore side: **META DOC PUBLISHED** — `test_content/oir/meta/config` = `{ contentVersion: 2, batchCount: 28 }`
+> - DB side: **v20 migration ready** — `MIGRATION_19_20` creates `oir_sync_metadata` table; registered in DataModule
+> - App side: **Reconciliation code ready** — `OIRQuestionCacheManager` reads meta doc; Phase 1/2 caching active
+> - **Pending client release:** Merge PR #18 → ship v20 app build. Old builds fall back to legacy 20-batch sync (contentVersion reader absent). Once v20 ships, all users converge on 28-batch pool with ~1,255 questions.
 
 ### Two-Phase Latency Model
 | Phase | Batches | Behaviour |

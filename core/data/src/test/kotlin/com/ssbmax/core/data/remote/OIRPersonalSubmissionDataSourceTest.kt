@@ -15,7 +15,10 @@ import org.junit.AfterClass
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 /**
  * Phase 4-A RED tests: getLatestOIRSubmission must use server-first fetch.
@@ -25,6 +28,10 @@ import org.junit.Test
  * Looper to dispatch completion callbacks, causing UncompletedCoroutinesError.
  */
 class OIRPersonalSubmissionDataSourceTest {
+
+    @get:Rule
+    val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
+
 
     companion object {
         @BeforeClass
