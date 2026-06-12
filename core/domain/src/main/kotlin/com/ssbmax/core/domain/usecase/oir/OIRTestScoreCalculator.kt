@@ -82,7 +82,7 @@ class OIRTestScoreCalculator @Inject constructor(
         if (question.isMultiSelect) {
             answer.selectedOptionIds == question.correctAnswerIds.toSet()
         } else {
-            // selectedOptionId is legacy single-select; selectedOptionIds takes over once the ViewModel is updated
+            // selectedOptionId fallback covers old Firestore submissions that pre-date multi-select migration
             val selected = answer.selectedOptionIds.singleOrNull() ?: answer.selectedOptionId
             selected == question.correctAnswerId
         }
