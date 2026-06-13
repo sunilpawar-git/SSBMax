@@ -2,23 +2,16 @@
 """
 Step 2 — Generate PPDTImageContext for each extracted image via Gemini Vision.
 
-Input:   output/images/ppdt_image_NNN.jpg  (64 files from step1)
-         gender_map.json
-Output:  output/ppdt_context_draft.json    (64-entry list, one per image)
-         output/preview.html               (visual review page — MUST APPROVE before step3)
-
-The script calls Gemini 1.5 Flash once per image to produce structured PPDTImageContext JSON.
-Progress is saved after each image so the script is safe to interrupt and re-run.
+Input:   output/images/ppdt_image_NNN.jpg  (64 files from step1) + gender_map.json
+Output:  output/ppdt_context_draft.json    (64 entries) + output/preview.html (review gate)
 
 Usage:
-  python step2_generate_context.py                      # all 64 images
-  python step2_generate_context.py --ids 1 2 3 4        # specific image IDs only
-  python step2_generate_context.py --resume             # skip IDs already in draft JSON
-  python step2_generate_context.py --preview-only       # regenerate preview.html from existing draft
+  python step2_generate_context.py                # all 64 images
+  python step2_generate_context.py --ids 1 2 3    # specific IDs
+  python step2_generate_context.py --resume        # skip IDs already in draft JSON
+  python step2_generate_context.py --preview-only  # regenerate preview.html from draft
 
-Prerequisites:
-  export GEMINI_API_KEY=your_key
-  pip install -r requirements.txt
+API key read from GEMINI_API_KEY env var, or falls back to local.properties.
 """
 
 import argparse
@@ -86,6 +79,7 @@ def load_gender_map() -> dict[str, str]:
         raw = json.load(f)
     return {k: v for k, v in raw.items() if not k.startswith("_")}
 
+
 def load_draft() -> list[dict]:
     if DRAFT_JSON.exists():
         with open(DRAFT_JSON) as f:
@@ -123,22 +117,26 @@ def validate_entry(entry: dict) -> list[str]:
 
 def call_gemini(image_path: Path, api_key: str, retries: int = 3) -> dict | None:
     """Call Gemini Vision and return parsed PPDTImageContext dict, or None on failure."""
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
+    client = genai.Client(api_key=api_key)
     image_data = image_path.read_bytes()
-    image_part = {"mime_type": "image/jpeg", "data": image_data}
 
     for attempt in range(1, retries + 1):
         try:
-            response = model.generate_content(
-                [image_part, EXPANSION_PROMPT],
-                generation_config={"temperature": 0.2, "response_mime_type": "application/json"},
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                    EXPANSION_PROMPT,
+                ],
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    response_mime_type="application/json",
+                ),
             )
             text = response.text.strip()
-            # Strip markdown fences if model ignores the instruction
             if text.startswith("```"):
                 text = text.split("```")[1]
                 if text.startswith("json"):
@@ -252,8 +250,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        props_path = SCRIPT_DIR.parent.parent / "local.properties"
+        if props_path.exists():
+            for line in props_path.read_text().splitlines():
+                if line.startswith("GEMINI_API_KEY="):
+                    api_key = line.split("=", 1)[1].strip()
+                    break
     if not api_key and not args.preview_only:
-        print("ERROR: GEMINI_API_KEY environment variable not set.", file=sys.stderr)
+        print("ERROR: GEMINI_API_KEY not set. Add it to local.properties or export it.", file=sys.stderr)
         return 1
 
     existing_entries = load_draft()

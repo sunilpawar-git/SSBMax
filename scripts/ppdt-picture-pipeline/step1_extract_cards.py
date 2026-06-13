@@ -63,20 +63,31 @@ _QUADRANT_LABELS = ["TL", "TR", "BL", "BR"]
 def _detect_content_height(quadrant_arr: np.ndarray) -> int:
     """Return the row index where photo content ends (caption bar starts).
 
-    Scans from the bottom of the quadrant upward in sliding windows. When the
-    window mean drops below _DETECT_THRESHOLD the window is in photo territory —
-    the caption bar top is just below that transition.
+    Strategy: find the DARK SEPARATOR LINE — a very dark thin border (mean < 50)
+    that sits at the top of the caption bar, immediately followed by a bright
+    caption background (next 15-row mean > 180). This is more robust than
+    brightness-based scans which confuse light photo content (sky, walls) with
+    the caption bar background.
+
+    Scans the bottom 55% of the quadrant for the topmost qualifying separator.
+    Falls back to stripping 25% if no separator is found.
     """
     qh = quadrant_arr.shape[0]
-    min_content = int(qh * _MIN_CONTENT_RATIO)
+    start = int(qh * 0.45)
+    DARK_THRESHOLD = 55       # Separator line is near-black
+    BRIGHT_AFTER = 180        # Caption background immediately after separator
 
-    for r in range(qh - _DETECT_WINDOW, min_content, -1):
-        window_mean = quadrant_arr[r : r + _DETECT_WINDOW].mean()
-        if window_mean < _DETECT_THRESHOLD:
-            return r + _DETECT_WINDOW  # caption starts at r+WINDOW
+    best = None  # topmost valid separator found
+    for r in range(start, qh - 20):
+        row_mean = quadrant_arr[r].mean()
+        if row_mean < DARK_THRESHOLD:
+            # Verify caption bar follows (bright background for next 15 rows)
+            after_mean = quadrant_arr[r + 1 : r + 16].mean() if r + 16 <= qh else 0
+            if after_mean > BRIGHT_AFTER:
+                best = r
+                break  # First (topmost) separator is the photo/caption boundary
 
-    # Fallback: strip 25% from bottom
-    return int(qh * 0.75)
+    return best if best is not None else int(qh * 0.75)
 
 
 def extract_card(
