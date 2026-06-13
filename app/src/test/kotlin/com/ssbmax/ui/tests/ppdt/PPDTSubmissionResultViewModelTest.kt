@@ -90,6 +90,69 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         assertNull(state.ssbRecommendation)
     }
 
+    @Test
+    fun `uiState contains OLQ reasoning text when analysis is complete`() = runTest {
+        // WHY: Reasoning text is the primary learning tool — must be accessible in state
+        val testReasoning = "Hero did not show initiative"
+        val olqResult = OLQAnalysisResult(
+            submissionId = "submission-ppdt-123",
+            testType = TestType.PPDT,
+            olqScores = OLQ.values().associateWith { olq ->
+                OLQScore(
+                    score = 7,
+                    confidence = 80,
+                    reasoning = if (olq == OLQ.COURAGE) testReasoning else "Test reasoning"
+                )
+            },
+            overallScore = 7.0f,
+            overallRating = "Average",
+            strengths = emptyList(),
+            weaknesses = emptyList(),
+            recommendations = emptyList(),
+            analyzedAt = 0L,
+            aiConfidence = 80
+        )
+        val submission = mockSubmission.copy(analysisStatus = AnalysisStatus.COMPLETED)
+
+        coEvery { mockSubmissionRepo.observePPDTSubmission(any()) } returns flowOf(submission)
+        coEvery { mockSubmissionRepo.getPPDTResult(any()) } returns Result.success(olqResult)
+
+        viewModel.loadSubmission("submission-ppdt-123")
+        advanceUntilIdle()
+
+        val courageScore = viewModel.uiState.value.olqResult?.olqScores?.get(OLQ.COURAGE)
+        assertNotNull(courageScore)
+        assertEquals(testReasoning, courageScore!!.reasoning)
+    }
+
+    @Test
+    fun `uiState reasoning is empty string not null when AI returns no reasoning`() = runTest {
+        // WHY: UI must never crash on null reasoning — empty string is the safe default
+        val olqResult = OLQAnalysisResult(
+            submissionId = "submission-ppdt-123",
+            testType = TestType.PPDT,
+            olqScores = OLQ.values().associateWith { OLQScore(score = 7, confidence = 80, reasoning = "") },
+            overallScore = 7.0f,
+            overallRating = "Average",
+            strengths = emptyList(),
+            weaknesses = emptyList(),
+            recommendations = emptyList(),
+            analyzedAt = 0L,
+            aiConfidence = 80
+        )
+        val submission = mockSubmission.copy(analysisStatus = AnalysisStatus.COMPLETED)
+
+        coEvery { mockSubmissionRepo.observePPDTSubmission(any()) } returns flowOf(submission)
+        coEvery { mockSubmissionRepo.getPPDTResult(any()) } returns Result.success(olqResult)
+
+        viewModel.loadSubmission("submission-ppdt-123")
+        advanceUntilIdle()
+
+        val courageScore = viewModel.uiState.value.olqResult?.olqScores?.get(OLQ.COURAGE)
+        assertNotNull(courageScore)
+        assertEquals("", courageScore!!.reasoning)
+    }
+
     private fun createMockOLQScores(): Map<OLQ, OLQScore> {
         return OLQ.values().take(14).associateWith { olq ->
             OLQScore(
