@@ -9,10 +9,17 @@ import io.mockk.mockkStatic
 import io.mockk.every
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GeminiAIServiceTest {
+
+    @Test
+    fun `GeminiAIService temperature constant is zero for deterministic scoring`() {
+        // Temperature 0 ensures identical scores for identical stories
+        assertEquals(0.0f, GeminiAIService.TEMPERATURE)
+    }
 
     @Test
     fun generateAdaptiveQuestions_returnsFailure_whenModelThrows() = runTest {

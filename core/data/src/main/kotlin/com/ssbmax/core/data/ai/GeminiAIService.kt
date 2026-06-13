@@ -53,7 +53,7 @@ class GeminiAIService @Inject constructor(
         // Using gemini-2.5-flash: Latest production flash model
         // Note: gemini-1.5-flash is RETIRED since late 2024
         private const val MODEL_NAME = "gemini-2.5-flash"
-        private const val TEMPERATURE = 0.7f
+        const val TEMPERATURE = 0.0f  // Deterministic: identical story → identical score
         // Increased for comprehensive prompts with OLQ definitions
         private const val MAX_TOKENS = 8192
 

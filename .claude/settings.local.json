@@ -57,7 +57,14 @@
       "Bash(gh run:*)",
       "Bash(wait)",
       "Bash(python3 *)",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "Bash(gh api *)",
+      "Bash(git checkout *)",
+      "Bash(ls '/Users/sunil/Downloads/PPDT Images by Gemini/' | sort)",
+      "Read(//Users/sunil/Downloads/PPDT Images by Gemini/**)",
+      "Bash(head -488 '/Users/sunil/.claude/plans/analyse-the-entire-pipeline-lazy-rivest.md')",
+      "Bash(tail -n +584 '/Users/sunil/.claude/plans/analyse-the-entire-pipeline-lazy-rivest.md')",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []

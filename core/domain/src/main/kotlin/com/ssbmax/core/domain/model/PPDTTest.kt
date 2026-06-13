@@ -22,7 +22,7 @@ data class PPDTQuestion(
         "What will be the outcome?",
         "Write a clear, positive story"
     ),
-    val minCharacters: Int = 50,
+    val minCharacters: Int = 200,  // Matches UI enforcement in PPDTWritingPhase
     val maxCharacters: Int = 1500
 )
 
