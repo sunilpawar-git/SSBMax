@@ -1,0 +1,12 @@
+# Generated files — not committed.
+# Run step1→step2→(approve preview)→step3 to regenerate.
+*.jpg
+*.jpeg
+*.png
+ppdt_context_draft.json
+ppdt_context_draft.json.bak
+failed.json
+preview.html
+
+# Keep placeholder so the directory is tracked
+!.gitkeep

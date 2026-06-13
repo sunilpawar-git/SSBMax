@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+"""
+Step 3 — Upload 64 extracted images to Firebase Storage and overwrite Firestore batch_001.
+
+ONLY run after reviewing and approving preview.html from step2.
+
+Steps:
+  A) Delete all old files in gs://{BUCKET}/ppdt_images/batch_001/
+  B) Upload 64 new JPEGs with public-read access
+  C) Overwrite Firestore document test_content/ppdt/image_batches/batch_001
+
+Usage:
+  python step3_upload.py --service-account path/to/serviceAccount.json
+  python step3_upload.py --service-account path/to/key.json --dry-run
+  python step3_upload.py --service-account path/to/key.json --skip-delete
+
+Prerequisites:
+  pip install -r requirements.txt
+  Download service account JSON from Firebase Console → Project Settings → Service Accounts
+
+NOTE: After this script completes, update PPDTImageCacheManager.initialSync() in the Android
+      app to download 'batch_001' instead of 'batch_002_context_enhanced'.
+      (This Android change is part of Phase 6.)
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+SCRIPT_DIR = Path(__file__).parent
+OUTPUT_DIR = SCRIPT_DIR / "output"
+IMAGES_DIR = OUTPUT_DIR / "images"
+DRAFT_JSON = OUTPUT_DIR / "ppdt_context_draft.json"
+
+BUCKET = "ssbmax-49e68.firebasestorage.app"
+STORAGE_PREFIX = "ppdt_images/batch_001"
+FIRESTORE_BATCH_PATH = "test_content/ppdt/image_batches/batch_001"
+
+# Fields added for backward compatibility with existing PPDTImageCacheManager.
+# PPDTImageCacheManager currently reads: imageDescription, context, viewingTimeSeconds,
+# writingTimeMinutes, minCharacters, maxCharacters, category, difficulty.
+# These will be superseded by imageContext in Phase 6.
+COMPAT_DEFAULTS = {
+    "viewingTimeSeconds": 30,
+    "writingTimeMinutes": 4,
+    "minCharacters": 200,
+    "maxCharacters": 1000,
+    "category": "general",
+    "difficulty": "medium",
+}
+
+
+def load_draft() -> list[dict]:
+    if not DRAFT_JSON.exists():
+        raise FileNotFoundError(
+            f"Draft JSON not found: {DRAFT_JSON}\n"
+            "Run step2_generate_context.py first, then approve preview.html."
+        )
+    with open(DRAFT_JSON) as f:
+        return json.load(f)
+
+
+def init_firebase(service_account_path: str) -> tuple[Any, Any]:
+    """Initialize Firebase Admin SDK. Returns (bucket, firestore_client)."""
+    import firebase_admin
+    from firebase_admin import credentials, firestore, storage
+
+    cred = credentials.Certificate(service_account_path)
+    firebase_admin.initialize_app(cred, {"storageBucket": BUCKET})
+    bucket = storage.bucket()
+    db = firestore.client()
+    return bucket, db
+
+
+def delete_old_images(bucket: Any, dry_run: bool) -> int:
+    """Delete all blobs under the batch_001 prefix. Returns count deleted."""
+    blobs = list(bucket.list_blobs(prefix=STORAGE_PREFIX + "/"))
+    print(f"Found {len(blobs)} existing file(s) in gs://{BUCKET}/{STORAGE_PREFIX}/")
+    if dry_run:
+        for b in blobs:
+            print(f"  [DRY RUN] would delete: {b.name}")
+        return len(blobs)
+    for blob in blobs:
+        blob.delete()
+        print(f"  Deleted: {blob.name}")
+    return len(blobs)
+
+
+def upload_images(bucket: Any, entries: list[dict], dry_run: bool) -> dict[int, str]:
+    """Upload JPEGs to Storage. Returns {imageNumber: public_url}."""
+    urls: dict[int, str] = {}
+    for entry in entries:
+        img_id = entry["imageNumber"]
+        local_path = IMAGES_DIR / f"ppdt_image_{img_id:03d}.jpg"
+        if not local_path.exists():
+            print(f"  [SKIP] Local file not found: {local_path}", file=sys.stderr)
+            continue
+
+        remote_path = f"{STORAGE_PREFIX}/ppdt_image_{img_id:03d}.jpg"
+        url = f"https://storage.googleapis.com/{BUCKET}/{remote_path}"
+
+        if dry_run:
+            print(f"  [DRY RUN] would upload {local_path.name} → {remote_path}")
+            urls[img_id] = url
+            continue
+
+        blob = bucket.blob(remote_path)
+        blob.upload_from_filename(str(local_path), content_type="image/jpeg")
+        blob.make_public()
+        urls[img_id] = blob.public_url
+        print(f"  Uploaded: {local_path.name} → {blob.public_url}")
+
+    return urls
+
+
+def build_firestore_document(entries: list[dict], urls: dict[int, str]) -> dict:
+    """Build the Firestore batch_001 document from draft entries and upload URLs."""
+    images: list[dict] = []
+    for entry in sorted(entries, key=lambda e: e["imageNumber"]):
+        img_id = entry["imageNumber"]
+        url = urls.get(img_id, "")
+        ctx = entry.get("imageContext", {})
+
+        images.append({
+            "id": entry["id"],
+            "imageUrl": url,
+            "genderTag": entry.get("genderTag", "MIXED"),
+            "imageContext": ctx,
+            # Backward-compat fields for PPDTImageCacheManager (pre-Phase 6)
+            "imageDescription": ctx.get("sceneDescription", "Ambiguous scene for PPDT"),
+            "context": "",  # Deprecated — replaced by imageContext above
+            **COMPAT_DEFAULTS,
+        })
+
+    return {
+        "batchId": "batch_001",
+        "version": "2.0.0",
+        "totalImages": len(images),
+        "images": images,
+        "description": "64 Gemini-generated PPDT images with context (Phase 5)",
+    }
+
+
+def write_firestore(db: Any, document: dict, dry_run: bool) -> None:
+    if dry_run:
+        print(f"\n[DRY RUN] Would write {document['totalImages']} entries to {FIRESTORE_BATCH_PATH}")
+        sample = document["images"][0] if document["images"] else {}
+        print(f"  Sample entry keys: {list(sample.keys())}")
+        return
+    ref = db.document(FIRESTORE_BATCH_PATH)
+    ref.set(document)
+    print(f"\nFirestore updated: {FIRESTORE_BATCH_PATH}  ({document['totalImages']} images)")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Upload PPDT images to Firebase")
+    parser.add_argument("--service-account", required=True, metavar="PATH",
+                        help="Path to Firebase service account JSON key")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Validate everything without making changes to Firebase")
+    parser.add_argument("--skip-delete", action="store_true",
+                        help="Skip deleting old Storage files (useful for partial re-uploads)")
+    args = parser.parse_args(argv)
+
+    if not Path(args.service_account).exists():
+        print(f"ERROR: Service account file not found: {args.service_account}", file=sys.stderr)
+        return 1
+
+    entries = load_draft()
+    print(f"Loaded {len(entries)} entries from draft JSON.")
+
+    # Validate all entries before touching Firebase
+    from step2_generate_context import validate_entry
+    invalid = [(e["id"], validate_entry(e)) for e in entries if validate_entry(e)]
+    if invalid:
+        print("ERROR: Validation failures in draft JSON (fix before uploading):", file=sys.stderr)
+        for entry_id, errs in invalid:
+            print(f"  {entry_id}: {errs}", file=sys.stderr)
+        return 1
+
+    print("\n--- Step A: Initialize Firebase ---")
+    bucket, db = init_firebase(args.service_account)
+
+    print("\n--- Step B: Delete old Storage files ---")
+    if args.skip_delete:
+        print("[skipped via --skip-delete]")
+    else:
+        delete_old_images(bucket, dry_run=args.dry_run)
+
+    print("\n--- Step C: Upload new images ---")
+    urls = upload_images(bucket, entries, dry_run=args.dry_run)
+
+    print("\n--- Step D: Write Firestore batch_001 ---")
+    doc = build_firestore_document(entries, urls)
+    write_firestore(db, doc, dry_run=args.dry_run)
+
+    action = "DRY RUN complete" if args.dry_run else "Upload complete"
+    print(f"\n✓ {action}. {len(entries)} images processed.")
+    if not args.dry_run:
+        print("\nNEXT STEP: Update PPDTImageCacheManager.initialSync() in the Android app")
+        print("  Change: downloadBatch(\"batch_002_context_enhanced\")")
+        print("  To:     downloadBatch(\"batch_001\")")
+        print("  This is part of Phase 6.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
