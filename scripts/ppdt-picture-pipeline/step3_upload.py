@@ -10,13 +10,10 @@ Steps:
   C) Overwrite Firestore document test_content/ppdt/image_batches/batch_001
 
 Usage:
-  python step3_upload.py --service-account path/to/serviceAccount.json
-  python step3_upload.py --service-account path/to/key.json --dry-run
-  python step3_upload.py --service-account path/to/key.json --skip-delete
-
-Prerequisites:
-  pip install -r requirements.txt
-  Download service account JSON from Firebase Console → Project Settings → Service Accounts
+  python step3_upload.py                                    # uses gcloud ADC
+  python step3_upload.py --service-account path/to/key.json
+  python step3_upload.py --dry-run                          # validate without changes
+  python step3_upload.py --skip-delete                      # skip old file deletion
 
 NOTE: After this script completes, update PPDTImageCacheManager.initialSync() in the Android
       app to download 'batch_001' instead of 'batch_002_context_enhanced'.
@@ -62,13 +59,23 @@ def load_draft() -> list[dict]:
         return json.load(f)
 
 
-def init_firebase(service_account_path: str) -> tuple[Any, Any]:
-    """Initialize Firebase Admin SDK. Returns (bucket, firestore_client)."""
+def init_firebase(service_account_path: str | None) -> tuple[Any, Any]:
+    """Initialize Firebase Admin SDK. Returns (bucket, firestore_client).
+
+    Uses a service account key if provided, otherwise falls back to
+    Application Default Credentials (gcloud auth application-default login).
+    """
     import firebase_admin
     from firebase_admin import credentials, firestore, storage
 
-    cred = credentials.Certificate(service_account_path)
-    firebase_admin.initialize_app(cred, {"storageBucket": BUCKET})
+    if service_account_path:
+        cred = credentials.Certificate(service_account_path)
+    else:
+        cred = credentials.ApplicationDefault()
+        print("No service account provided — using Application Default Credentials.")
+
+    project_id = BUCKET.split(".")[0]  # "ssbmax-49e68" from bucket name
+    firebase_admin.initialize_app(cred, {"storageBucket": BUCKET, "projectId": project_id})
     bucket = storage.bucket()
     db = firestore.client()
     return bucket, db
@@ -156,15 +163,15 @@ def write_firestore(db: Any, document: dict, dry_run: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Upload PPDT images to Firebase")
-    parser.add_argument("--service-account", required=True, metavar="PATH",
-                        help="Path to Firebase service account JSON key")
+    parser.add_argument("--service-account", default=None, metavar="PATH",
+                        help="Path to Firebase service account JSON key (default: gcloud ADC)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Validate everything without making changes to Firebase")
     parser.add_argument("--skip-delete", action="store_true",
                         help="Skip deleting old Storage files (useful for partial re-uploads)")
     args = parser.parse_args(argv)
 
-    if not Path(args.service_account).exists():
+    if args.service_account and not Path(args.service_account).exists():
         print(f"ERROR: Service account file not found: {args.service_account}", file=sys.stderr)
         return 1
 
