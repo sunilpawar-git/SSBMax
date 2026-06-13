@@ -1,21 +1,21 @@
 package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
 import com.ssbmax.core.domain.model.GenderTag
+import com.ssbmax.core.domain.model.PPDTImageContext
 import com.ssbmax.core.domain.model.PPDTQuestion
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Manager for PPDT image progressive caching
- * Follows the same architecture as TAT
- * 
- * Note: This caches image metadata and URLs. Actual image files can be
- * downloaded on-demand using Firebase Storage or Coil's caching.
+ * Manager for PPDT image progressive caching.
+ * Phase 6: imageContextJson + genderTag now stored per-entity; gender filter is live.
  */
 @Singleton
 class PPDTImageCacheManager @Inject constructor(
@@ -25,71 +25,39 @@ class PPDTImageCacheManager @Inject constructor(
     companion object {
         private const val TAG = "PPDTCacheManager"
         private const val COLLECTION_PATH = "test_content/ppdt/image_batches"
-        private const val METADATA_PATH = "test_content/ppdt/meta"
-        private const val TARGET_CACHE_SIZE = 15 // Multiple PPDT images per test
-        private const val MIN_CACHE_SIZE = 5 // Minimum before resyncing
+        private const val TARGET_CACHE_SIZE = 15
+        private const val MIN_CACHE_SIZE = 5
     }
 
-    // Safe logging that works in unit tests
-    private fun logD(message: String) {
-        try {
-            Class.forName("android.util.Log")
-                .getMethod("d", String::class.java, String::class.java)
-                .invoke(null, TAG, message)
-        } catch (e: Exception) {
-            println("$TAG: $message")
-        }
-    }
+    private val gson = Gson()
 
-    private fun logW(message: String, throwable: Throwable? = null) {
-        try {
-            if (throwable != null) {
-                Class.forName("android.util.Log")
-                    .getMethod("w", String::class.java, String::class.java, Throwable::class.java)
-                    .invoke(null, TAG, message, throwable)
-            } else {
-                Class.forName("android.util.Log")
-                    .getMethod("w", String::class.java, String::class.java)
-                    .invoke(null, TAG, message)
-            }
-        } catch (e: Exception) {
-            println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
-        }
-    }
+    // Reflection-based logging so the class works in JVM unit tests (no android.util.Log on host JVM)
+    private fun logD(msg: String) = androidLog("d", msg)
+    private fun logW(msg: String, t: Throwable? = null) = androidLog("w", msg, t)
+    private fun logE(msg: String, t: Throwable? = null) = androidLog("e", msg, t)
 
-    private fun logE(message: String, throwable: Throwable? = null) {
+    private fun androidLog(level: String, msg: String, t: Throwable? = null) {
         try {
-            if (throwable != null) {
-                Class.forName("android.util.Log")
-                    .getMethod("e", String::class.java, String::class.java, Throwable::class.java)
-                    .invoke(null, TAG, message, throwable)
-            } else {
-                Class.forName("android.util.Log")
-                    .getMethod("e", String::class.java, String::class.java)
-                    .invoke(null, TAG, message)
-            }
-        } catch (e: Exception) {
-            System.err.println("$TAG: $message${throwable?.let { " - $it" } ?: ""}")
+            val log = Class.forName("android.util.Log")
+            if (t != null) log.getMethod(level, String::class.java, String::class.java, Throwable::class.java).invoke(null, TAG, msg, t)
+            else log.getMethod(level, String::class.java, String::class.java).invoke(null, TAG, msg)
+        } catch (_: Exception) {
+            if (level == "e") System.err.println("$TAG $level: $msg${t?.let { " — $it" } ?: ""}") else println("$TAG $level: $msg")
         }
     }
 
     /**
-     * Initialize cache with first batch
-     * Called when app starts or cache is empty
+     * Initialize cache with batch_001 (64 Phase-5 images with gender tags and structured context).
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
             logD("Starting initial sync...")
-            
             val currentCount = dao.getTotalImageCount()
             if (currentCount >= TARGET_CACHE_SIZE) {
                 logD("Cache already initialized ($currentCount images)")
                 return Result.success(Unit)
             }
-            
-            // Download first batch
-            downloadBatch("batch_002_context_enhanced").getOrThrow()
-            
+            downloadBatch("batch_001").getOrThrow()
             logD("Initial sync complete")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -97,35 +65,34 @@ class PPDTImageCacheManager @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     /**
-     * Download a specific batch from Firestore
+     * Download a specific batch from Firestore.
+     * Reads imageContext map and genderTag string from each image document.
      */
     suspend fun downloadBatch(batchId: String): Result<Unit> {
         return try {
             logD("Downloading batch: $batchId")
-            
             val doc = firestore.document("$COLLECTION_PATH/$batchId").get().await()
-            
-            if (!doc.exists()) {
-                throw Exception("Batch $batchId not found in Firestore")
-            }
-            
+            if (!doc.exists()) throw Exception("Batch $batchId not found in Firestore")
+
             @Suppress("UNCHECKED_CAST")
-            val imagesData = doc.get("images") as? List<Map<String, Any?>> 
+            val imagesData = doc.get("images") as? List<Map<String, Any?>>
                 ?: throw Exception("No images found in batch $batchId")
-            
+
             val version = doc.getString("version") ?: "1.0.0"
-            
+
             val images = imagesData.mapNotNull { imageMap ->
                 try {
+                    val imageContextJson = imageContextJsonFromMap(imageMap)
+                    val genderTag = genderTagFromString(imageMap["genderTag"] as? String)
                     CachedPPDTImageEntity(
                         id = imageMap["id"] as? String ?: return@mapNotNull null,
                         imageUrl = imageMap["imageUrl"] as? String ?: return@mapNotNull null,
-                        localFilePath = null, // Will be set when image is downloaded
-                        imageDescription = imageMap["imageDescription"] as? String 
+                        localFilePath = null,
+                        imageDescription = imageMap["imageDescription"] as? String
                             ?: "Picture showing an ambiguous scene",
-                        context = imageMap["context"] as? String ?: "",
+                        imageContextJson = imageContextJson,
                         viewingTimeSeconds = (imageMap["viewingTimeSeconds"] as? Long)?.toInt() ?: 30,
                         writingTimeMinutes = (imageMap["writingTimeMinutes"] as? Long)?.toInt() ?: 4,
                         minCharacters = (imageMap["minCharacters"] as? Long)?.toInt() ?: 200,
@@ -136,19 +103,17 @@ class PPDTImageCacheManager @Inject constructor(
                         cachedAt = System.currentTimeMillis(),
                         lastUsed = null,
                         usageCount = 0,
-                        imageDownloaded = false
+                        imageDownloaded = false,
+                        genderTag = genderTag
                     )
                 } catch (e: Exception) {
                     logW("Failed to parse image: ${imageMap["id"]}", e)
                     null
                 }
             }
-            
-            if (images.isEmpty()) {
-                throw Exception("No valid images parsed from batch $batchId")
-            }
-            
-            // Insert images and metadata
+
+            if (images.isEmpty()) throw Exception("No valid images parsed from batch $batchId")
+
             dao.insertImages(images)
             dao.insertBatchMetadata(
                 PPDTBatchMetadataEntity(
@@ -158,7 +123,6 @@ class PPDTImageCacheManager @Inject constructor(
                     version = version
                 )
             )
-            
             logD("Downloaded batch $batchId: ${images.size} images")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -166,63 +130,44 @@ class PPDTImageCacheManager @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     /**
-     * Select a random image from a cached pool, applying a gender filter when one is specified.
-     *
-     * The genderTag filter is a no-op until Phase 6 adds `genderTag` to [CachedPPDTImageEntity].
-     * Once Phase 6 ships, the filter will include MIXED + same-gender images.
-     *
-     * @param cached Pool of candidate images
-     * @param genderTag null = full pool; MALE/FEMALE = same-gender + MIXED
+     * Select a random image from the pool, filtered by gender.
+     * FEMALE/MALE users see images tagged same-gender OR MIXED.
+     * null genderTag = full pool (OTHER users, or no profile loaded).
      */
-    @Suppress("UnusedParameter") // Phase 6 activates filter when entity gains genderTag field
     fun selectRandomImage(
         cached: List<CachedPPDTImageEntity>,
         genderTag: GenderTag?
-    ): CachedPPDTImageEntity? = cached.randomOrNull()
+    ): CachedPPDTImageEntity? {
+        val pool = if (genderTag == null) {
+            cached
+        } else {
+            cached.filter { it.genderTag == GenderTag.MIXED || it.genderTag == genderTag }
+        }
+        return pool.randomOrNull()
+    }
 
     /**
-     * Get a single image for PPDT test, optionally filtered by gender.
-     * Note: PPDT typically shows one image at a time.
-     *
-     * @param genderTag Filter to apply (no-op until Phase 6 adds entity field)
+     * Get a single image for a PPDT test, optionally filtered by gender.
      */
     suspend fun getImageForTest(genderTag: GenderTag? = null): Result<PPDTQuestion> {
         return try {
             logD("Getting image for PPDT test (genderTag=$genderTag)")
-
-            // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
                 logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-
-            // Get least-used image; selectRandomImage applies gender filter (no-op until Phase 6)
             val cachedImages = dao.getLeastUsedImages(1)
             if (cachedImages.isEmpty()) throw NoSuchElementException("No images in cache")
 
             val image = selectRandomImage(cachedImages, genderTag)
                 ?: throw NoSuchElementException("No images available for genderTag=$genderTag")
 
-            // Mark as used
             dao.markImagesAsUsed(listOf(image.id))
-
-            // Convert to domain model
-            val question = PPDTQuestion(
-                id = image.id,
-                imageUrl = normalizeUrl(image.imageUrl) ?: image.imageUrl,
-                imageDescription = image.imageDescription,
-                context = image.context,
-                viewingTimeSeconds = image.viewingTimeSeconds,
-                writingTimeMinutes = image.writingTimeMinutes,
-                minCharacters = image.minCharacters,
-                maxCharacters = image.maxCharacters
-            )
-
-            logD("Retrieved image for PPDT test: ${question.id}")
-            Result.success(question)
+            logD("Retrieved image for PPDT test: ${image.id}")
+            Result.success(entityToQuestion(image))
         } catch (e: Exception) {
             logE("Failed to get image for test", e)
             Result.failure(e)
@@ -230,86 +175,44 @@ class PPDTImageCacheManager @Inject constructor(
     }
 
     /**
-     * Get a specific image by ID
+     * Get a specific image by ID.
      */
     suspend fun getImageById(imageId: String): Result<PPDTQuestion> {
         return try {
             val entity = dao.getImageById(imageId)
-            if (entity != null) {
-                // Return cached version
-                return Result.success(
-                    PPDTQuestion(
-                        id = entity.id,
-                        imageUrl = normalizeUrl(entity.imageUrl) ?: entity.imageUrl,
-                        imageDescription = entity.imageDescription,
-                        context = entity.context, // Map context
-                        viewingTimeSeconds = entity.viewingTimeSeconds,
-                        writingTimeMinutes = entity.writingTimeMinutes,
-                        minCharacters = entity.minCharacters,
-                        maxCharacters = entity.maxCharacters
-                    )
-                )
-            }
-
-            // Not in cache, try to fetch from batch metadata to see if we can find it
-            // For now, simpler to just return failure if not in cache, as we expect relevant images to be cached
-            // In a robust implementation, we might fetch from Firestore directly here if needed.
-            // But strict caching policy prevents ad-hoc Firestore reads for content.
-            Result.failure(Exception("Image not found in cache: $imageId"))
+                ?: return Result.failure(Exception("Image not found in cache: $imageId"))
+            Result.success(entityToQuestion(entity))
         } catch (e: Exception) {
             logE("Failed to get image by ID: $imageId", e)
             Result.failure(e)
         }
     }
-    
+
     /**
-     * Get multiple images for test (if needed for group discussions)
+     * Get multiple images for a test (e.g. group discussion practice).
      */
     suspend fun getImagesForTest(count: Int = 1): Result<List<PPDTQuestion>> {
         return try {
             logD("Getting $count images for PPDT test")
-            
-            // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
                 logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-
-            // Get least-used images to ensure variety
             val cachedImages = dao.getLeastUsedImages(count)
+            if (cachedImages.isEmpty()) throw Exception("No images in cache")
 
-            if (cachedImages.isEmpty()) {
-                throw Exception("No images in cache")
-            }
-
-            // Mark as used
             dao.markImagesAsUsed(cachedImages.map { it.id })
-
-            // Convert to domain model
-            val questions = cachedImages.map { entity ->
-                PPDTQuestion(
-                    id = entity.id,
-                    imageUrl = normalizeUrl(entity.imageUrl) ?: entity.imageUrl,
-                    imageDescription = entity.imageDescription,
-                    context = entity.context,
-                    viewingTimeSeconds = entity.viewingTimeSeconds,
-                    writingTimeMinutes = entity.writingTimeMinutes,
-                    minCharacters = entity.minCharacters,
-                    maxCharacters = entity.maxCharacters
-                )
-            }
-
-            logD("Retrieved ${questions.size} images for PPDT test")
-            Result.success(questions)
+            logD("Retrieved ${cachedImages.size} images for PPDT test")
+            Result.success(cachedImages.map { entityToQuestion(it) })
         } catch (e: Exception) {
             logE("Failed to get images for test", e)
             Result.failure(e)
         }
     }
-    
+
     /**
-     * Get cache status for diagnostics
+     * Get cache status for diagnostics.
      */
     suspend fun getCacheStatus(): PPDTCacheStatus {
         return try {
@@ -318,7 +221,6 @@ class PPDTImageCacheManager @Inject constructor(
             val batches = dao.getTotalBatchCount()
             val batchMetadata = dao.getAllBatchMetadata()
             val lastSyncTime = batchMetadata.maxOfOrNull { it.downloadedAt }
-            
             PPDTCacheStatus(
                 cachedImages = totalImages,
                 downloadedImages = downloadedImages,
@@ -331,18 +233,8 @@ class PPDTImageCacheManager @Inject constructor(
         }
     }
 
-    private fun normalizeUrl(raw: String?): String? {
-        return raw?.let {
-            if (it.startsWith("gs://")) {
-                it.replaceFirst("gs://", "https://storage.googleapis.com/")
-            } else {
-                it
-            }
-        }
-    }
-    
     /**
-     * Clear all cache (for debugging/testing)
+     * Clear all cached images and metadata.
      */
     suspend fun clearCache() {
         try {
@@ -353,15 +245,48 @@ class PPDTImageCacheManager @Inject constructor(
             logE("Failed to clear cache", e)
         }
     }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    private fun entityToQuestion(entity: CachedPPDTImageEntity): PPDTQuestion {
+        val imageContext = try {
+            gson.fromJson(entity.imageContextJson, PPDTImageContext::class.java)
+                ?: PPDTImageContext()
+        } catch (e: JsonSyntaxException) {
+            logW("Failed to parse PPDTImageContext for id=${entity.id}", e)
+            PPDTImageContext()
+        }
+        return PPDTQuestion(
+            id = entity.id,
+            imageUrl = normalizeUrl(entity.imageUrl) ?: entity.imageUrl,
+            imageDescription = entity.imageDescription,
+            imageContext = imageContext,
+            viewingTimeSeconds = entity.viewingTimeSeconds,
+            writingTimeMinutes = entity.writingTimeMinutes,
+            minCharacters = entity.minCharacters,
+            maxCharacters = entity.maxCharacters
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun imageContextJsonFromMap(imageMap: Map<String, Any?>): String {
+        val contextMap = imageMap["imageContext"] as? Map<String, Any?>
+        return if (contextMap != null) gson.toJson(contextMap) else "{}"
+    }
+
+    private fun genderTagFromString(raw: String?): GenderTag =
+        GenderTag.entries.firstOrNull { it.name == raw?.uppercase() } ?: GenderTag.MIXED
+
+    private fun normalizeUrl(raw: String?): String? =
+        raw?.let {
+            if (it.startsWith("gs://")) it.replaceFirst("gs://", "https://storage.googleapis.com/")
+            else it
+        }
 }
 
-/**
- * PPDT cache status for diagnostics
- */
 data class PPDTCacheStatus(
     val cachedImages: Int = 0,
-    val downloadedImages: Int = 0, // Images with local file cache
+    val downloadedImages: Int = 0,
     val batchesDownloaded: Int = 0,
     val lastSyncTime: Long? = null
 )
-

@@ -66,7 +66,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_17_18, // Composite (type, lastUsed) index for OIR hot query
                 DatabaseMigrations.MIGRATION_18_19, // Restore type and batchId indices on cached_oir_questions
                 DatabaseMigrations.MIGRATION_19_20, // Add oir_sync_metadata table for content-version reconciliation
-                DatabaseMigrations.MIGRATION_20_21  // Add correctAnswerIds column for multi-answer OIR questions
+                DatabaseMigrations.MIGRATION_20_21, // Add correctAnswerIds column for multi-answer OIR questions
+                DatabaseMigrations.MIGRATION_21_22  // Phase 6: context→imageContextJson + genderTag on ppdt images
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()

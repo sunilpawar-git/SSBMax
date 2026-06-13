@@ -113,7 +113,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 val questionResult = testContentRepository.getPPDTQuestion(submission.questionId)
                 val question = questionResult.getOrNull()
                 if (question != null) {
-                    imageContext = question.context
+                    imageContext = question.imageContext.sceneDescription
                     Log.d(TAG, "   Step 3a: Retrieved image context (${imageContext.length} chars)")
                 } else {
                     Log.w(TAG, "   ⚠️ Failed to retrieve PPDT question context for ID: ${submission.questionId}")

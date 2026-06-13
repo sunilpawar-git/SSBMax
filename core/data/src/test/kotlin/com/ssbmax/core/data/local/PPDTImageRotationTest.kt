@@ -193,6 +193,6 @@ class PPDTImageRotationTest {
         lastUsed = null,
         usageCount = usage,
         imageDownloaded = false,
-        context = "Test context for $id"
+        imageContextJson = "{}"
     )
 }

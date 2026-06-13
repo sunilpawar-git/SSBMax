@@ -2,6 +2,7 @@ package com.ssbmax.core.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.ssbmax.core.data.local.dao.GPEImageCacheDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
@@ -64,9 +65,10 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 21, // Add correctAnswerIds column for multi-answer OIR questions (migrated from 20)
+    version = 22, // Phase 6: context→imageContextJson + genderTag on cached_ppdt_images (migrated from 21)
     exportSchema = true
 )
+@TypeConverters(RoomTypeConverters::class)
 abstract class SSBDatabase : RoomDatabase() {
     
     /**

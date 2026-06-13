@@ -10,9 +10,11 @@ import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_11_12
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_16_17
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_17_18
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_21_22
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -395,6 +397,89 @@ class SSBDatabaseMigrationTest {
         }
         openHelper.close()
         context.deleteDatabase("migration-test-20-21")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate21To22_renamesContextToImageContextJsonAndAddsGenderTag() = runTest {
+        // WHY: Phase 6 replaces `context: String` with `imageContextJson: String` + `genderTag: GenderTag`
+        // on cached_ppdt_images. Existing rows must keep their data; genderTag defaults to MIXED so
+        // old images remain visible to all users (no accidental gender lock-out).
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-21-22")
+            .callback(object : SupportSQLiteOpenHelper.Callback(21) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS cached_ppdt_images (
+                            id TEXT NOT NULL,
+                            imageUrl TEXT NOT NULL,
+                            localFilePath TEXT,
+                            imageDescription TEXT NOT NULL,
+                            context TEXT NOT NULL DEFAULT '',
+                            viewingTimeSeconds INTEGER NOT NULL,
+                            writingTimeMinutes INTEGER NOT NULL,
+                            minCharacters INTEGER NOT NULL,
+                            maxCharacters INTEGER NOT NULL,
+                            category TEXT,
+                            difficulty TEXT,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL,
+                            imageDownloaded INTEGER NOT NULL,
+                            PRIMARY KEY (id)
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT INTO cached_ppdt_images
+                        (id, imageUrl, imageDescription, context, viewingTimeSeconds,
+                         writingTimeMinutes, minCharacters, maxCharacters, batchId,
+                         cachedAt, usageCount, imageDownloaded)
+                        VALUES ('img_001', 'https://example.com/img.jpg', 'A scene', 'old context text',
+                                30, 4, 200, 1000, 'batch_old', 0, 0, 0)
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_21_22.migrate(this)
+            version = 22
+
+            // imageContextJson column must exist; context column must be gone
+            query("PRAGMA table_info(cached_ppdt_images)").use { cursor ->
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) columns.add(cursor.getString(1))
+                assert(columns.contains("imageContextJson")) {
+                    "Migration 21→22: imageContextJson column not found"
+                }
+                assert(columns.contains("genderTag")) {
+                    "Migration 21→22: genderTag column not found"
+                }
+                assert(!columns.contains("context")) {
+                    "Migration 21→22: old 'context' column should be gone"
+                }
+            }
+
+            // Existing row preserved; imageContextJson defaults to '{}'; genderTag defaults to 'MIXED'
+            query("SELECT imageContextJson, genderTag FROM cached_ppdt_images WHERE id = 'img_001'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 21→22: existing row disappeared" }
+                    assertEquals("{}", cursor.getString(0))
+                    assertEquals("MIXED", cursor.getString(1))
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-21-22")
     }
 }
 

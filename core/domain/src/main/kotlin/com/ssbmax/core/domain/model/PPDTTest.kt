@@ -10,6 +10,26 @@ package com.ssbmax.core.domain.model
  */
 enum class GenderTag { MALE, FEMALE, MIXED }
 
+/** Controls how strictly story content is checked against the picture scene. */
+enum class DeviationTolerance { LOW, MEDIUM, HIGH }
+
+/**
+ * Structured context for a PPDT image, produced by the offline enrichment pipeline (Phase 5).
+ * Used by Phase 8 multimodal prompt builder to inject per-picture rubric into Gemini.
+ * All fields default to empty so pre-Phase-6 cached images degrade gracefully.
+ */
+data class PPDTImageContext(
+    val sceneDescription: String = "",
+    val coreElements: List<String> = emptyList(),
+    val ambiguousElements: List<String> = emptyList(),
+    val expectedThemes: List<String> = emptyList(),
+    val penalizedThemes: List<String> = emptyList(),
+    val primaryOLQs: List<String> = emptyList(),
+    val deviationTolerance: DeviationTolerance = DeviationTolerance.MEDIUM,
+    val exemplarGoodHints: List<String> = emptyList(),
+    val exemplarBadHints: List<String> = emptyList()
+)
+
 /**
  * PPDT Test Question - Contains image and prompts
  */
@@ -17,7 +37,7 @@ data class PPDTQuestion(
     val id: String,
     val imageUrl: String,
     val imageDescription: String, // Alt text for accessibility
-    val context: String = "", // Context for AI analysis
+    val imageContext: PPDTImageContext = PPDTImageContext(), // Structured context for AI analysis (Phase 6+)
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val guidelines: List<String> = listOf(
