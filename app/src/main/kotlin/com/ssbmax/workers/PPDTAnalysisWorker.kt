@@ -12,16 +12,18 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.scoring.EntryType
-import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import kotlinx.coroutines.flow.first
 
 /**
  * Background worker for analyzing PPDT submissions using Gemini AI
@@ -45,7 +47,8 @@ class PPDTAnalysisWorker @AssistedInject constructor(
     private val aiService: AIService,
     private val notificationHelper: NotificationHelper,
     private val testContentRepository: TestContentRepository,
-    private val getOLQDashboard: GetOLQDashboardUseCase
+    private val getOLQDashboard: GetOLQDashboardUseCase,
+    private val userProfileRepository: UserProfileRepository
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -91,9 +94,18 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 4. Determine Candidate Gender (Placeholder for now, TODO: Fetch from User Profile)
-            // Default to "male" if unknown variables, or "female" if name suggests (simplistic fallback)
-            val candidateGender = "male" // Placeholder until UserProfile is integrated in worker
+            // 4. Resolve candidate gender from UserProfile (falls back to "Unknown" on any error)
+            val candidateGender = try {
+                userProfileRepository.getUserProfile(submission.userId)
+                    .first()
+                    .getOrNull()
+                    ?.gender
+                    ?.displayName
+                    ?: "Unknown"
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to fetch user profile gender for PPDT analysis")
+                "Unknown"
+            }
 
             // 5. Fetch Image Context using questionId
             var imageContext = ""
