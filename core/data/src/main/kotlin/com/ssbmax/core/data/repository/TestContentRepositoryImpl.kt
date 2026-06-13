@@ -174,6 +174,20 @@ class TestContentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getPPDTQuestion(genderTag: GenderTag?): Result<PPDTQuestion> {
+        return try {
+            val cacheStatus = ppdtImageCacheManager.getCacheStatus()
+            if (cacheStatus.cachedImages == 0) {
+                Log.d(TAG, "Initializing PPDT image cache for gender-routed fetch...")
+                ppdtImageCacheManager.initialSync().getOrThrow()
+            }
+            ppdtImageCacheManager.getImageForTest(genderTag)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load PPDT question (genderTag=$genderTag): ${e.message}")
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getGPEQuestions(testId: String): Result<List<GPEQuestion>> {
         return try {
             gpeCache[testId]?.let { return Result.success(it) }

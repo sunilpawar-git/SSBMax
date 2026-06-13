@@ -671,6 +671,10 @@
     <!-- ============================================ -->
     <string name="ppdt_test">PPDT Test</string>
     <string name="ppdt_loading">Loading PPDT test from cloud...</string>
+    <string name="ppdt_profile_required_title">Complete Your Profile</string>
+    <string name="ppdt_profile_required_message">Your gender is needed for PPDT assessment. Set it in Settings before continuing.</string>
+    <string name="ppdt_profile_go_to_settings">Go to Settings</string>
+    <string name="ppdt_profile_required_cancel">Cancel</string>
 
     <!-- ============================================ -->
     <!-- PIQ TEST SCREEN - DETAILED STRINGS -->

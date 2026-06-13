@@ -448,7 +448,8 @@ _Update this section as bugs are found and improvements are made._
 
 | # | Area | Issue / Improvement | Status |
 |---|------|---------------------|--------|
-| — | — | — | — |
+| 1 | Gender routing | `getPPDTQuestion(genderTag)` filter is a **no-op** until Phase 6 adds `genderTag` field to `CachedPPDTImageEntity` + Room migration. Routing infrastructure is in place (Phase 3); activation is automatic once Phase 5 image upload + Phase 6 migration ship. | Deferred to Phase 6 |
+| 2 | `PPDTTestViewModel` | File is 620 lines (300-line limit). Requires split into `PPDTTestViewModel.kt` + `PPDTSubmitViewModel.kt` or similar. Pre-existing tech debt; not introduced by Phase 3. | Deferred |
 
 ---
 

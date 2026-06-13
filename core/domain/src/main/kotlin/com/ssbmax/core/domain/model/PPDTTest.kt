@@ -5,6 +5,12 @@ package com.ssbmax.core.domain.model
  */
 
 /**
+ * Gender classification for PPDT image routing.
+ * SSOT: defined here (Phase 3); used by repository filter (Phase 6 activates it).
+ */
+enum class GenderTag { MALE, FEMALE, MIXED }
+
+/**
  * PPDT Test Question - Contains image and prompts
  */
 data class PPDTQuestion(

@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
+import com.ssbmax.core.domain.model.GenderTag
 import com.ssbmax.core.domain.model.PPDTQuestion
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -167,13 +168,30 @@ class PPDTImageCacheManager @Inject constructor(
     }
     
     /**
-     * Get a single image for PPDT test
-     * Note: PPDT typically shows one image at a time
+     * Select a random image from a cached pool, applying a gender filter when one is specified.
+     *
+     * The genderTag filter is a no-op until Phase 6 adds `genderTag` to [CachedPPDTImageEntity].
+     * Once Phase 6 ships, the filter will include MIXED + same-gender images.
+     *
+     * @param cached Pool of candidate images
+     * @param genderTag null = full pool; MALE/FEMALE = same-gender + MIXED
      */
-    suspend fun getImageForTest(): Result<PPDTQuestion> {
+    @Suppress("UnusedParameter") // Phase 6 activates filter when entity gains genderTag field
+    fun selectRandomImage(
+        cached: List<CachedPPDTImageEntity>,
+        genderTag: GenderTag?
+    ): CachedPPDTImageEntity? = cached.randomOrNull()
+
+    /**
+     * Get a single image for PPDT test, optionally filtered by gender.
+     * Note: PPDT typically shows one image at a time.
+     *
+     * @param genderTag Filter to apply (no-op until Phase 6 adds entity field)
+     */
+    suspend fun getImageForTest(genderTag: GenderTag? = null): Result<PPDTQuestion> {
         return try {
-            logD("Getting image for PPDT test")
-            
+            logD("Getting image for PPDT test (genderTag=$genderTag)")
+
             // Check if cache needs refresh
             val currentCount = dao.getTotalImageCount()
             if (currentCount < MIN_CACHE_SIZE) {
@@ -181,14 +199,12 @@ class PPDTImageCacheManager @Inject constructor(
                 initialSync().getOrThrow()
             }
 
-            // Get least-used image to ensure variety
+            // Get least-used image; selectRandomImage applies gender filter (no-op until Phase 6)
             val cachedImages = dao.getLeastUsedImages(1)
+            if (cachedImages.isEmpty()) throw NoSuchElementException("No images in cache")
 
-            if (cachedImages.isEmpty()) {
-                throw Exception("No images in cache")
-            }
-
-            val image = cachedImages.first()
+            val image = selectRandomImage(cachedImages, genderTag)
+                ?: throw NoSuchElementException("No images available for genderTag=$genderTag")
 
             // Mark as used
             dao.markImagesAsUsed(listOf(image.id))

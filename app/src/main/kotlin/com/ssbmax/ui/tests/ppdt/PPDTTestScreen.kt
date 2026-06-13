@@ -19,6 +19,8 @@ import com.ssbmax.ui.tests.ppdt.components.phases.*
  * PPDT Test Screen - Image viewing + Story writing
  * Refactored to use component-based architecture
  */
+// Multiple UI states (loading/error/limit/profileGate/phases) require many branches; extraction is planned for Phase 4+
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PPDTTestScreen(
@@ -59,6 +61,15 @@ fun PPDTTestScreen(
                 // TODO: Navigate to upgrade screen
                 onNavigateBack()
             },
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+
+    // Phase 3: Block test if user has no profile set up
+    if (uiState.isProfileIncomplete) {
+        PPDTProfileRequiredDialog(
+            onGoToSettings = onNavigateBack,
             onDismiss = onNavigateBack
         )
         return

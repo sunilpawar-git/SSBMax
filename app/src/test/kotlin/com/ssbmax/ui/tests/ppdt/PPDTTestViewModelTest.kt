@@ -70,10 +70,10 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             mockSessionRepo.createTestSession(any(), any(), TestType.PPDT) 
         } returns Result.success("session-ppdt-123")
         
-        // Mock question loading
-        coEvery { 
-            mockTestContentRepo.getPPDTQuestions(any()) 
-        } returns Result.success(listOf(mockQuestion))
+        // Mock question loading — Phase 3: ViewModel now calls getPPDTQuestion(genderTag)
+        coEvery {
+            mockTestContentRepo.getPPDTQuestion(genderTag = any())
+        } returns Result.success(mockQuestion)
         
         // Mock user profile
         coEvery { 
@@ -139,9 +139,9 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     @Test
     fun `loadTest failure shows error message`() = runTest {
-        // Given - mock failure
-        coEvery { 
-            mockTestContentRepo.getPPDTQuestions(any()) 
+        // Given - mock failure on question fetch
+        coEvery {
+            mockTestContentRepo.getPPDTQuestion(genderTag = any())
         } returns Result.failure(Exception("Network error"))
         
         // When
@@ -173,11 +173,11 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     }
     
     @Test
-    fun `loadTest with empty questions shows error`() = runTest {
+    fun `loadTest with question fetch failure shows error`() = runTest {
         // Given
-        coEvery { 
-            mockTestContentRepo.getPPDTQuestions(any()) 
-        } returns Result.success(emptyList())
+        coEvery {
+            mockTestContentRepo.getPPDTQuestion(genderTag = any())
+        } returns Result.failure(Exception("No question available"))
         
         // When
         viewModel = PPDTTestViewModel(

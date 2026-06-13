@@ -11,7 +11,6 @@ import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,6 +77,25 @@ class PPDTTestViewModel @Inject constructor(
      */
     private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
         return subscriptionManager.canTakeTest(TestType.PPDT, userId)
+    }
+
+    /**
+     * Resolves the gender tag for image routing.
+     * Returns null (and updates uiState) when the test should be blocked due to missing profile.
+     * Returns the gender tag (possibly null for full pool) when the test should proceed.
+     */
+    private suspend fun resolveGenderTag(userId: String): GenderTag? {
+        val profileResult = userProfileRepository.getUserProfile(userId).first()
+        // Gate only when server explicitly confirms no profile exists (success + null profile)
+        if (profileResult.isSuccess && profileResult.getOrNull() == null) {
+            _uiState.update { it.copy(isLoading = false, loadingMessage = null, isProfileIncomplete = true) }
+            return null
+        }
+        return when (profileResult.getOrNull()?.gender) {
+            Gender.MALE -> GenderTag.MALE
+            Gender.FEMALE -> GenderTag.FEMALE
+            else -> null  // OTHER or profile fetch failed → full image pool
+        }
     }
     
     /**
@@ -166,32 +184,30 @@ class PPDTTestViewModel @Inject constructor(
                 _uiState.update { it.copy(
                     loadingMessage = "Fetching questions from cloud..."
                 ) }
-                
+
+                // Phase 3: Fetch user profile for gate + gender routing.
+                // resolveGenderTag sets isProfileIncomplete=true when gate blocks the test.
+                val genderTag = resolveGenderTag(userId)
+                if (_uiState.value.isProfileIncomplete) return@launch
+
                 // Create test session
                 val sessionResult = testSessionRepository.createTestSession(
                     userId = userId,
                     testId = testId,
                     testType = TestType.PPDT
                 )
-                
+
                 if (sessionResult.isFailure) {
                     throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
                 }
-                
-                // Fetch questions from cloud
-                val questionsResult = testContentRepository.getPPDTQuestions(testId)
-                
-                if (questionsResult.isFailure) {
-                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test questions")
+
+                // Fetch gender-appropriate question from cache
+                val questionResult = testContentRepository.getPPDTQuestion(genderTag = genderTag)
+                if (questionResult.isFailure) {
+                    throw questionResult.exceptionOrNull() ?: Exception("Failed to load test question")
                 }
-                
-                val questions = questionsResult.getOrNull() ?: emptyList()
-                
-                if (questions.isEmpty()) {
-                    throw Exception("No questions found for this test")
-                }
-                
-                val question = questions.first() // PPDT typically has one question
+                val question = questionResult.getOrNull()
+                    ?: throw NoSuchElementException("No question found for this test")
                 android.util.Log.d("PPDTTestViewModel", "📸 Loaded question: ${question.id}")
                 android.util.Log.d("PPDTTestViewModel", "📸 Question imageUrl: ${question.imageUrl}")
                 android.util.Log.d("PPDTTestViewModel", "📸 ImageUrl length: ${question.imageUrl.length}")
@@ -566,10 +582,12 @@ data class PPDTTestUiState(
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    // PHASE 1: New StateFlow fields (replacing nullable vars)
+    // Phase 1: New StateFlow fields (replacing nullable vars)
     val isTimerActive: Boolean = false,
     val timerStartTime: Long = 0L,
-    val session: PPDTTestSession? = null
+    val session: PPDTTestSession? = null,
+    // Phase 3: Profile gate — true when user has no profile set up
+    val isProfileIncomplete: Boolean = false
 )
 
 /**

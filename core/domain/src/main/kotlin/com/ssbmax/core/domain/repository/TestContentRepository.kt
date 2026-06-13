@@ -2,6 +2,7 @@ package com.ssbmax.core.domain.repository
 
 import com.ssbmax.core.domain.model.CacheStatus
 import com.ssbmax.core.domain.model.GPEQuestion
+import com.ssbmax.core.domain.model.GenderTag
 import com.ssbmax.core.domain.model.OIRQuestion
 import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.SDTQuestion
@@ -67,6 +68,18 @@ interface TestContentRepository {
      * @return Result with the PPDT question or error
      */
     suspend fun getPPDTQuestion(questionId: String): Result<PPDTQuestion>
+
+    /**
+     * Fetch a gender-appropriate PPDT question from the cached image pool.
+     * Used by the test flow to route female/male candidates to matching images.
+     *
+     * @param genderTag Filter for image gender classification.
+     *   MALE/FEMALE → show same-gender + MIXED images.
+     *   null → full pool (Gender.OTHER users, or profile fetch failed).
+     *   NOTE: Filter is a no-op until Phase 6 adds genderTag to the Room entity.
+     * @return Result with a random appropriate PPDTQuestion
+     */
+    suspend fun getPPDTQuestion(genderTag: GenderTag?): Result<PPDTQuestion>
 
     /**
      * Fetch GPE test questions from Firestore/Cache
