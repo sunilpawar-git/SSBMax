@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
+import com.ssbmax.core.domain.model.PPDTImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.QuestionSource
@@ -221,13 +222,23 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
     }
 
-    /**
-     * Analyze PPDT response (not yet implemented in cloud)
-     * Use GeminiAIService for psychology test analysis with direct API access
-     */
+    @Deprecated(
+        "Use analyzePPDTMultimodal for image-aware analysis",
+        ReplaceWith("analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)")
+    )
     override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> {
         Log.e(TAG, "PPDT analysis not yet supported in CloudGemini implementation")
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
+    override suspend fun analyzePPDTMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: PPDTImageContext,
+        candidateGender: String
+    ): Result<ResponseAnalysis> {
+        Log.e(TAG, "PPDT multimodal analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for PPDT multimodal analysis"))
     }
 
    /**

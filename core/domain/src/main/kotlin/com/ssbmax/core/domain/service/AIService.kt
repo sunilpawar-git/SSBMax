@@ -1,5 +1,6 @@
 package com.ssbmax.core.domain.service
 
+import com.ssbmax.core.domain.model.PPDTImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 
@@ -161,19 +162,35 @@ interface AIService {
     suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
 
     /**
-     * Analyze PPDT (Picture Perception & Description Test) submission for OLQ scores
-     *
-     * Analyzes PPDT story to assess Officer-Like Qualities based on:
-     * - Perception quality (how well the candidate understood the scene)
-     * - Imagination and creativity  
-     * - Character depiction and development
-     * - Narrative structure and coherence
-     * - Positivity vs pessimism in the story
+     * Analyze PPDT (Picture Perception & Description Test) submission for OLQ scores (text-only path).
      *
      * @param prompt Pre-generated PPDT analysis prompt from PsychologyTestPrompts
      * @return OLQ scores for all 15 qualities with reasoning
      */
+    @Deprecated(
+        "Use analyzePPDTMultimodal for image-aware analysis",
+        ReplaceWith("analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)")
+    )
     suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis>
+
+    /**
+     * Analyze PPDT submission using multimodal input (image bytes + story + per-picture rubric).
+     *
+     * Passes the actual picture to Gemini alongside the candidate's story, enabling the model
+     * to verify scene perception and score accordingly.
+     *
+     * @param imageBytes Raw JPEG bytes of the PPDT image (empty = text-only fallback)
+     * @param story Candidate's written story
+     * @param imageContext Structured per-picture rubric from the enrichment pipeline (Phase 5/6)
+     * @param candidateGender Gender string for protagonist-alignment scoring
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzePPDTMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: PPDTImageContext,
+        candidateGender: String
+    ): Result<ResponseAnalysis>
 
     /**
      * Health check for AI service availability
