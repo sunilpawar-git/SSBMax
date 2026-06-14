@@ -23,24 +23,6 @@ internal class GeminiPPDTAnalyzer(
         private const val TAG = "GeminiPPDTAnalyzer"
     }
 
-    @Deprecated(
-        "Use analyzePPDTMultimodal for image-aware analysis",
-        ReplaceWith("analyzePPDTMultimodal(ByteArray(0), prompt, PPDTImageContext(), \"\")")
-    )
-    suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> =
-        withContext(Dispatchers.IO) {
-            try {
-                withTimeout(responseTimeout) {
-                    Log.d(TAG, "📸 Analyzing PPDT (text-only path)")
-                    val response = model.generateContent(prompt)
-                    GeminiResponseParser.parseGTOAnalysisResponse(response.text ?: "")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ analyzePPDTResponse failed: ${e::class.java.simpleName}", e)
-                Result.failure(e)
-            }
-        }
-
     suspend fun analyzePPDTMultimodal(
         imageBytes: ByteArray,
         story: String,

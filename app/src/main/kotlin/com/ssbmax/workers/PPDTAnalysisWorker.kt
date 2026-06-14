@@ -5,7 +5,8 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.data.ai.prompts.PsychologyTestPrompts
+import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
@@ -22,20 +23,25 @@ import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 /**
- * Background worker for analyzing PPDT submissions using Gemini AI
+ * Background worker for analyzing PPDT submissions using Gemini AI (multimodal path).
  *
  * Triggered after user completes PPDT test and submits their story.
  * This worker:
  * 1. Fetches PPDT submission from Firestore
- * 2. Generates analysis prompt using PsychologyTestPrompts
- * 3. Analyzes with Gemini AI for OLQ scores (all 15 OLQs)
- * 4. Updates submission in Firestore with OLQ result
- * 5. Invalidates dashboard cache so fresh results are shown
- * 6. Sends push notification when complete
+ * 2. Resolves candidate gender from UserProfile
+ * 3. Fetches PPDT question (for imageUrl + imageContext rubric)
+ * 4. Downloads image bytes (best-effort — analysis continues with empty bytes if download fails)
+ * 5. Analyzes with Gemini AI multimodal for OLQ scores (all 15 OLQs)
+ * 6. Updates submission in Firestore with OLQ result
+ * 7. Invalidates dashboard cache so fresh results are shown
+ * 8. Sends push notification when complete
  *
  * The user is free to navigate away while this runs in the background.
  */
@@ -87,7 +93,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             // 2. Verify PENDING_ANALYSIS status (don't process if already done)
             if (submission.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) {
                 Log.w(TAG, "⚠️ PPDT submission not in PENDING_ANALYSIS state: ${submission.analysisStatus}")
-                return Result.success()  // Already processed, skip
+                return Result.success()
             }
 
             // 3. Update status to ANALYZING
@@ -107,43 +113,57 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 "Unknown"
             }
 
-            // 5. Fetch Image Context using questionId
-            var imageContext = ""
+            // 5. Fetch full question (imageUrl + imageContext rubric)
+            var ppdtQuestion: PPDTQuestion? = null
             try {
                 val questionResult = testContentRepository.getPPDTQuestion(submission.questionId)
-                val question = questionResult.getOrNull()
-                if (question != null) {
-                    imageContext = question.imageContext.sceneDescription
-                    Log.d(TAG, "   Step 3a: Retrieved image context (${imageContext.length} chars)")
+                ppdtQuestion = questionResult.getOrNull()
+                if (ppdtQuestion != null) {
+                    Log.d(TAG, "   Step 3: Retrieved PPDT question for ID: ${submission.questionId}")
                 } else {
-                    Log.w(TAG, "   ⚠️ Failed to retrieve PPDT question context for ID: ${submission.questionId}")
+                    Log.w(TAG, "   ⚠️ PPDT question not found for ID: ${submission.questionId}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "   ❌ Error fetching image context", e)
+                Log.e(TAG, "   ❌ Error fetching PPDT question", e)
             }
 
-            // 6. Generate PPDT analysis prompt with context and gender
-            val prompt = PsychologyTestPrompts.generatePPDTAnalysisPrompt(submission, imageContext, candidateGender)
-            Log.d(TAG, "   Step 3b: Generated PPDT analysis prompt with context")
+            // 6. Download image bytes (best-effort — analysis continues with empty bytes if download fails)
+            val imageBytes: ByteArray = ppdtQuestion?.imageUrl
+                ?.takeIf { it.isNotBlank() }
+                ?.let { imageUrl ->
+                    try {
+                        withContext(Dispatchers.IO) { URL(imageUrl).readBytes() }
+                    } catch (e: Exception) {
+                        ErrorLogger.log(e, "PPDT image download failed — proceeding with empty bytes")
+                        null
+                    }
+                } ?: ByteArray(0)
+            Log.d(TAG, "   Step 4: Image bytes prepared (${imageBytes.size} bytes)")
 
-            // 5. Analyze with Gemini AI (with retry logic)
-            val olqScores = analyzeSubmissionWithRetry(prompt)
+            // 7. Analyze with Gemini AI multimodal (with retry logic)
+            val imageContext = ppdtQuestion?.imageContext ?: PPDTImageContext()
+            val olqScores = analyzeSubmissionMultimodal(
+                imageBytes = imageBytes,
+                story = submission.story,
+                imageContext = imageContext,
+                candidateGender = candidateGender
+            )
             if (olqScores == null) {
                 Log.e(TAG, "❌ AI analysis failed after $MAX_AI_RETRIES retries")
                 handleAnalysisFailure(submissionId)
                 return Result.failure()
             }
 
-            Log.d(TAG, "   Step 4: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
+            Log.d(TAG, "   Step 5: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
 
-            // 5.5. Validate OLQ scores against SSB rules
+            // 7.5. Validate OLQ scores against SSB rules
             val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
-            Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+            Log.d(TAG, "   Step 6: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
             if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
                 Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
             }
 
-            // 6. Create OLQAnalysisResult
+            // 8. Create OLQAnalysisResult
             val overallScore = olqScores.values.map { it.score }.average().toFloat()
             val overallRating = when {
                 overallScore <= 3.0f -> "Exceptional"
@@ -152,13 +172,11 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 else -> "Needs Improvement"
             }
 
-            // Extract top 3 strengths (lowest scores)
             val strengths = olqScores.entries
                 .sortedBy { it.value.score }
                 .take(3)
                 .map { "${it.key.displayName} (${it.value.score})" }
 
-            // Extract top 3 weaknesses (highest scores)
             val weaknesses = olqScores.entries
                 .sortedByDescending { it.value.score }
                 .take(3)
@@ -180,26 +198,22 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 weaknesses = weaknesses,
                 recommendations = recommendations,
                 analyzedAt = System.currentTimeMillis(),
-                aiConfidence = 85  // Default confidence
+                aiConfidence = 85
             )
 
-            // 7. Update submission with OLQ result
-            // Note: updatePPDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
-            // Do NOT call updatePPDTAnalysisStatus separately - it causes redundant writes and potential sync issues
+            // 9. Update submission with OLQ result (atomically sets COMPLETED status)
             submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
-            Log.d(TAG, "   Step 5: Submission updated with OLQ result")
+            Log.d(TAG, "   Step 7: Submission updated with OLQ result")
 
-            // 8. Invalidate dashboard cache AFTER result is saved
-            // CRITICAL: This must happen AFTER the result is in Firestore, not at submission time.
-            // Otherwise, the next dashboard fetch caches empty PPDT result (analysis still in progress).
+            // 10. Invalidate dashboard cache AFTER result is in Firestore
             try {
                 getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
+                Log.d(TAG, "   Step 8: Dashboard cache invalidated for user: ${submission.userId}")
             } catch (e: Exception) {
                 Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
             }
 
-            // 9. Send notification
+            // 11. Send notification
             try {
                 notificationHelper.showPPDTResultsReadyNotification(submissionId)
                 Log.d(TAG, "✅ Push notification sent successfully!")
@@ -219,16 +233,24 @@ class PPDTAnalysisWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun analyzeSubmissionWithRetry(prompt: String): Map<OLQ, OLQScore>? {
+    private suspend fun analyzeSubmissionMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: PPDTImageContext,
+        candidateGender: String
+    ): Map<OLQ, OLQScore>? {
         repeat(MAX_AI_RETRIES) { attempt ->
             try {
-                Log.d(TAG, "   Attempt ${attempt + 1}/$MAX_AI_RETRIES: Calling Gemini AI...")
-                val analysisResult = aiService.analyzePPDTResponse(prompt)
-                
+                Log.d(TAG, "   Attempt ${attempt + 1}/$MAX_AI_RETRIES: Calling Gemini AI (multimodal)...")
+                val analysisResult = aiService.analyzePPDTMultimodal(
+                    imageBytes = imageBytes,
+                    story = story,
+                    imageContext = imageContext,
+                    candidateGender = candidateGender
+                )
+
                 if (analysisResult.isSuccess) {
                     val analysis = analysisResult.getOrNull()!!
-                    
-                    // Convert ResponseAnalysis to OLQScore map
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
                             score = scoreWithReasoning.score.toInt().coerceIn(1, 10),
@@ -236,8 +258,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                             reasoning = scoreWithReasoning.reasoning
                         )
                     }
-                    
-                    // Validate 15 OLQs
+
                     if (olqScores.size == 15) {
                         Log.d(TAG, "   ✅ AI returned all 15 OLQs")
                         return olqScores
@@ -248,23 +269,19 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             } catch (e: Exception) {
                 Log.w(TAG, "   ❌ AI call failed: ${e.message}")
             }
-            
+
             if (attempt < MAX_AI_RETRIES - 1) {
-                delay(RETRY_DELAY_MS * (attempt + 1)) // Exponential backoff
+                delay(RETRY_DELAY_MS * (attempt + 1))
             }
         }
         return null
     }
 
-    /**
-     * Handle analysis failure by marking as FAILED and sending notification
-     */
     private suspend fun handleAnalysisFailure(submissionId: String) {
         try {
             submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.FAILED)
             Log.d(TAG, "   Marked submission as FAILED")
-            
-            // Send failure notification to user
+
             try {
                 notificationHelper.showPPDTAnalysisFailedNotification(submissionId)
                 Log.d(TAG, "   Sent failure notification to user")

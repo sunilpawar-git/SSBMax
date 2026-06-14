@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.EntryType
 import com.ssbmax.core.domain.model.Gender
+import com.ssbmax.core.domain.model.PPDTImageContext
 import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.PPDTSubmission
 import com.ssbmax.core.domain.model.SubmissionStatus
@@ -32,7 +33,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -103,6 +104,12 @@ class PPDTAnalysisWorkerTest {
         entryType = EntryType.GRADUATE
     )
 
+    private fun buildFakeQuestion(imageUrl: String = "https://example.com/ppdt.jpg") = PPDTQuestion(
+        id = testQuestionId,
+        imageUrl = imageUrl,
+        imageDescription = "Scene description"
+    )
+
     private fun buildFakeResponseAnalysis() = ResponseAnalysis(
         olqScores = OLQ.values().associate { olq ->
             olq to OLQScoreWithReasoning(olq = olq, score = 5f, reasoning = "Adequate performance")
@@ -111,13 +118,13 @@ class PPDTAnalysisWorkerTest {
         keyInsights = listOf("Good initiative shown")
     )
 
-    private fun setupHappyPathMocks(promptSlot: CapturingSlot<String>) {
+    private fun setupHappyPathMocks(genderSlot: CapturingSlot<String>) {
         coEvery { submissionRepository.updatePPDTAnalysisStatus(any(), any()) } returns Result.success(Unit)
         coEvery { submissionRepository.updatePPDTOLQResult(any(), any()) } returns Result.success(Unit)
-        coEvery { testContentRepository.getPPDTQuestion(testQuestionId) } returns Result.success(
-            PPDTQuestion(id = testQuestionId, imageUrl = "https://example.com/ppdt.jpg", imageDescription = "Scene desc")
-        )
-        coEvery { aiService.analyzePPDTResponse(capture(promptSlot)) } returns Result.success(buildFakeResponseAnalysis())
+        coEvery { testContentRepository.getPPDTQuestion(testQuestionId) } returns Result.success(buildFakeQuestion())
+        coEvery {
+            aiService.analyzePPDTMultimodal(any(), any(), any(), capture(genderSlot))
+        } returns Result.success(buildFakeResponseAnalysis())
         coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
     }
 
@@ -133,52 +140,43 @@ class PPDTAnalysisWorkerTest {
     )
 
     @Test
-    fun `doWork uses male gender hint in prompt when user gender is MALE`() = runTest {
-        // WHY: AI prompt must reflect actual candidate gender for accurate OLQ assessment
-        val promptSlot = slot<String>()
+    fun `doWork passes Male candidateGender when user gender is MALE`() = runTest {
+        // WHY: AI multimodal path must receive correct gender so protagonist-alignment scoring is accurate
+        val genderSlot = slot<String>()
         coEvery { submissionRepository.getPPDTSubmission(testSubmissionId) } returns Result.success(buildFakeSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildFakeProfile(Gender.MALE)))
-        setupHappyPathMocks(promptSlot)
+        setupHappyPathMocks(genderSlot)
 
         createWorker().doWork()
 
-        assertTrue(
-            "Prompt must contain male protagonist hint for MALE candidates",
-            promptSlot.captured.contains("male protagonist", ignoreCase = true)
-        )
+        assertEquals("candidateGender must be 'Male' for MALE profile", "Male", genderSlot.captured)
     }
 
     @Test
-    fun `doWork uses female gender hint in prompt when user gender is FEMALE`() = runTest {
+    fun `doWork passes Female candidateGender when user gender is FEMALE`() = runTest {
         // WHY: Female candidates must not receive male-protagonist scoring guidance
-        val promptSlot = slot<String>()
+        val genderSlot = slot<String>()
         coEvery { submissionRepository.getPPDTSubmission(testSubmissionId) } returns Result.success(buildFakeSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildFakeProfile(Gender.FEMALE)))
-        setupHappyPathMocks(promptSlot)
+        setupHappyPathMocks(genderSlot)
 
         createWorker().doWork()
 
-        assertTrue(
-            "Prompt must contain female protagonist hint for FEMALE candidates",
-            promptSlot.captured.contains("female protagonist", ignoreCase = true)
-        )
+        assertEquals("candidateGender must be 'Female' for FEMALE profile", "Female", genderSlot.captured)
     }
 
     @Test
-    fun `doWork falls back to neutral gender hint when profile fetch fails`() = runTest {
+    fun `doWork passes Unknown candidateGender when profile fetch fails`() = runTest {
         // WHY: Worker must not crash if profile unavailable — analysis continues with neutral gender
-        val promptSlot = slot<String>()
+        val genderSlot = slot<String>()
         coEvery { submissionRepository.getPPDTSubmission(testSubmissionId) } returns Result.success(buildFakeSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.failure(Exception("network error")))
-        setupHappyPathMocks(promptSlot)
+        setupHappyPathMocks(genderSlot)
 
         val result = createWorker().doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
-        assertTrue(
-            "Prompt must use unconstrained gender hint when profile is unavailable",
-            promptSlot.captured.contains("not constrained", ignoreCase = true)
-        )
+        assertEquals("candidateGender must be 'Unknown' when profile fetch fails", "Unknown", genderSlot.captured)
     }
 
     @Test
@@ -200,7 +198,41 @@ class PPDTAnalysisWorkerTest {
 
         val result = createWorker().doWork()
 
-        coVerify(exactly = 0) { aiService.analyzePPDTResponse(any()) }
+        coVerify(exactly = 0) { aiService.analyzePPDTMultimodal(any(), any(), any(), any()) }
         assertEquals(ListenableWorker.Result.success(), result)
+    }
+
+    @Test
+    fun `doWork calls analyzePPDTMultimodal for analysis`() = runTest {
+        // WHY: Verifies the multimodal code path is actually used after Phase 8
+        val genderSlot = slot<String>()
+        coEvery { submissionRepository.getPPDTSubmission(testSubmissionId) } returns Result.success(buildFakeSubmission())
+        every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildFakeProfile(Gender.MALE)))
+        setupHappyPathMocks(genderSlot)
+
+        createWorker().doWork()
+
+        coVerify(exactly = 1) { aiService.analyzePPDTMultimodal(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `doWork falls back gracefully when image bytes unavailable`() = runTest {
+        // WHY: Any failure to get image bytes (blank URL) must not abort analysis — text-only fallback still runs
+        val genderSlot = slot<String>()
+        coEvery { submissionRepository.getPPDTSubmission(testSubmissionId) } returns Result.success(buildFakeSubmission())
+        every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildFakeProfile(Gender.MALE)))
+        coEvery { submissionRepository.updatePPDTAnalysisStatus(any(), any()) } returns Result.success(Unit)
+        coEvery { submissionRepository.updatePPDTOLQResult(any(), any()) } returns Result.success(Unit)
+        coEvery { testContentRepository.getPPDTQuestion(testQuestionId) } returns Result.success(
+            buildFakeQuestion(imageUrl = "")  // blank URL → image bytes skip, analysis proceeds
+        )
+        coEvery {
+            aiService.analyzePPDTMultimodal(any(), any(), any(), capture(genderSlot))
+        } returns Result.success(buildFakeResponseAnalysis())
+        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
+
+        val result = createWorker().doWork()
+
+        assertNotEquals("Worker must not fail when image bytes are unavailable", ListenableWorker.Result.failure(), result)
     }
 }

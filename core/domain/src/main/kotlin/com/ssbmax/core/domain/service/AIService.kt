@@ -162,18 +162,6 @@ interface AIService {
     suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
 
     /**
-     * Analyze PPDT (Picture Perception & Description Test) submission for OLQ scores (text-only path).
-     *
-     * @param prompt Pre-generated PPDT analysis prompt from PsychologyTestPrompts
-     * @return OLQ scores for all 15 qualities with reasoning
-     */
-    @Deprecated(
-        "Use analyzePPDTMultimodal for image-aware analysis",
-        ReplaceWith("analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)")
-    )
-    suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis>
-
-    /**
      * Analyze PPDT submission using multimodal input (image bytes + story + per-picture rubric).
      *
      * Passes the actual picture to Gemini alongside the candidate's story, enabling the model

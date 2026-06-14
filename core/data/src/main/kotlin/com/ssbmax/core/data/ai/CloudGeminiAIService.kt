@@ -222,15 +222,6 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
     }
 
-    @Deprecated(
-        "Use analyzePPDTMultimodal for image-aware analysis",
-        ReplaceWith("analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)")
-    )
-    override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> {
-        Log.e(TAG, "PPDT analysis not yet supported in CloudGemini implementation")
-        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
-    }
-
     override suspend fun analyzePPDTMultimodal(
         imageBytes: ByteArray,
         story: String,

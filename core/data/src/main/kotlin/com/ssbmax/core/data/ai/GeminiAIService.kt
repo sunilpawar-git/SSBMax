@@ -227,13 +227,6 @@ class GeminiAIService @Inject constructor(
             }
         }
 
-    @Deprecated(
-        "Use analyzePPDTMultimodal for image-aware analysis",
-        ReplaceWith("analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)")
-    )
-    override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> =
-        ppdtAnalyzer.analyzePPDTResponse(prompt)
-
     override suspend fun analyzePPDTMultimodal(
         imageBytes: ByteArray,
         story: String,
