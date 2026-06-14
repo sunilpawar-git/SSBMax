@@ -685,6 +685,19 @@ object DatabaseMigrations {
     }
 
     /**
+     * Migration from version 22 to 23
+     * Adds lastStalenessCheckAt to ppdt_batch_metadata so isCacheStale() can gate Firestore reads
+     * behind a 24h TTL — warm starts no longer hit Firestore on every launch.
+     */
+    val MIGRATION_22_23 = object : Migration(22, 23) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "ALTER TABLE ppdt_batch_metadata ADD COLUMN lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
+    /**
      * Migration from version 21 to 22
      * Replaces the unstructured `context: String` column on cached_ppdt_images with:
      *   - imageContextJson TEXT — JSON-serialized PPDTImageContext (defaults to '{}')

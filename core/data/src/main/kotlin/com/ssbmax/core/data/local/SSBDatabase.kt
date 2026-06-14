@@ -65,7 +65,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 22, // Phase 6: context→imageContextJson + genderTag on cached_ppdt_images (migrated from 21)
+    version = 23, // Phase 6b: lastStalenessCheckAt on ppdt_batch_metadata for 24h Firestore TTL (migrated from 22)
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)

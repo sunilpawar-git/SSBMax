@@ -64,16 +64,19 @@ class PPDTImageCacheManager @Inject constructor(
 
     /**
      * Returns true if the locally cached batch is outdated vs Firestore.
-     * Fetches only the version field (no image data downloaded).
+     * Skips the Firestore read entirely if the last check was within 24h (TTL gate).
+     * After a Firestore read, persists the check timestamp so the next 24h skips the read.
      */
     private suspend fun isCacheStale(batchId: String): Boolean {
         return try {
-            val localMeta = dao.getBatchMetadata(batchId)
-            if (localMeta == null) return true
+            val localMeta = dao.getBatchMetadata(batchId) ?: return true
+            val hoursSinceCheck = (System.currentTimeMillis() - localMeta.lastStalenessCheckAt) / 3_600_000
+            if (hoursSinceCheck < 24) return false  // warm start: TTL still valid, skip Firestore
             val doc = firestore.document("$COLLECTION_PATH/$batchId").get().await()
             val remoteVersion = doc.getString("version") ?: return false
             val isStale = remoteVersion != localMeta.version
             if (isStale) logD("Cache stale: local=${localMeta.version}, remote=$remoteVersion")
+            dao.insertBatchMetadata(localMeta.copy(lastStalenessCheckAt = System.currentTimeMillis()))
             isStale
         } catch (e: Exception) {
             logW("Version check failed, assuming cache is current: ${e.message}")
@@ -135,7 +138,8 @@ class PPDTImageCacheManager @Inject constructor(
                     batchId = batchId,
                     downloadedAt = System.currentTimeMillis(),
                     imageCount = images.size,
-                    version = version
+                    version = version,
+                    lastStalenessCheckAt = System.currentTimeMillis()
                 )
             )
             logD("Downloaded batch $batchId: ${images.size} images")

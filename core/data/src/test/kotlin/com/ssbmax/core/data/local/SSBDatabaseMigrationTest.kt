@@ -11,6 +11,7 @@ import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_16_17
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_17_18
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_21_22
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_22_23
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -480,6 +481,68 @@ class SSBDatabaseMigrationTest {
         }
         openHelper.close()
         context.deleteDatabase("migration-test-21-22")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun migrate22To23_addsLastStalenessCheckAtColumnWithDefaultZero() = runTest {
+        // WHY: 24h TTL on the Firestore version check requires persisting when the last check ran.
+        // The column defaults to 0 (epoch) so existing rows are treated as "never checked" — they
+        // will trigger a Firestore read on the next launch, which is correct and safe.
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-22-23")
+            .callback(object : SupportSQLiteOpenHelper.Callback(22) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS ppdt_batch_metadata (
+                            batchId TEXT PRIMARY KEY NOT NULL,
+                            downloadedAt INTEGER NOT NULL,
+                            imageCount INTEGER NOT NULL,
+                            version TEXT NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT INTO ppdt_batch_metadata (batchId, downloadedAt, imageCount, version)
+                        VALUES ('batch_001', 1000, 64, '2.0.0')
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_22_23.migrate(this)
+            version = 23
+
+            // Column must exist in schema
+            query("PRAGMA table_info(ppdt_batch_metadata)").use { cursor ->
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) columns.add(cursor.getString(1))
+                assert(columns.contains("lastStalenessCheckAt")) {
+                    "Migration 22→23 failed: lastStalenessCheckAt column not found in ppdt_batch_metadata"
+                }
+            }
+
+            // Existing row preserved; new column defaults to 0
+            query("SELECT lastStalenessCheckAt FROM ppdt_batch_metadata WHERE batchId = 'batch_001'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 22→23: existing row disappeared" }
+                    assertEquals(
+                        "lastStalenessCheckAt must default to 0 for pre-migration rows",
+                        0L, cursor.getLong(0)
+                    )
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-22-23")
     }
 }
 

@@ -170,6 +170,72 @@ class PPDTImageCacheManagerTest {
         )
     }
 
+    // ==================== Cache B: 24h TTL gates the Firestore version check ====================
+
+    @Test
+    fun `initialSync skips Firestore version check when last staleness check was within 24h TTL`() = runTest {
+        // WHY: Every warm start previously hit Firestore to compare batch versions.
+        // With the 24h TTL, a check done 23h ago is still valid — no Firestore round-trip needed.
+        coEvery { mockDao.getTotalImageCount() } returns 64
+        coEvery { mockDao.getBatchMetadata("batch_001") } returns localMeta(
+            version = "2.0.0",
+            lastStalenessCheckAt = System.currentTimeMillis() - 23 * 3_600_000L
+        )
+
+        val result = cacheManager.initialSync()
+
+        assertTrue("Should succeed", result.isSuccess)
+        verify(exactly = 0) { mockFirestore.document(any()) }
+        coVerify(exactly = 0) { mockDao.clearAllImages() }
+    }
+
+    @Test
+    fun `initialSync calls Firestore version check when 24h TTL has expired`() = runTest {
+        // WHY: After 24h the cached version info may be stale — must query Firestore to confirm.
+        coEvery { mockDao.getTotalImageCount() } returns 64
+        coEvery { mockDao.getBatchMetadata("batch_001") } returns localMeta(
+            version = "2.0.0",
+            lastStalenessCheckAt = System.currentTimeMillis() - 25 * 3_600_000L
+        )
+        setupFirestoreVersion("2.0.0", withImages = false)
+
+        val result = cacheManager.initialSync()
+
+        assertTrue("Should succeed", result.isSuccess)
+        verify(exactly = 1) { mockFirestore.document(any()) }
+        coVerify(exactly = 0) { mockDao.clearAllImages() }
+    }
+
+    @Test
+    fun `initialSync persists updated lastStalenessCheckAt after Firestore version check`() = runTest {
+        // WHY: The TTL gate is only useful if the timestamp is updated after each check.
+        // Without this, every startup after TTL expiry would hit Firestore indefinitely.
+        coEvery { mockDao.getTotalImageCount() } returns 64
+        coEvery { mockDao.getBatchMetadata("batch_001") } returns localMeta(
+            version = "2.0.0",
+            lastStalenessCheckAt = 0L
+        )
+        setupFirestoreVersion("2.0.0", withImages = false)
+
+        cacheManager.initialSync()
+
+        coVerify { mockDao.insertBatchMetadata(match { it.lastStalenessCheckAt > 0L }) }
+    }
+
+    @Test
+    fun `Room schema v23 has lastStalenessCheckAt column on ppdt_batch_metadata`() {
+        // WHY: Entity/migration drift on a NOT NULL column crashes Room on upgrade.
+        // Reading the generated schema JSON catches this before any device sees the migration.
+        val schemaJson = java.io.File(
+            "schemas/com.ssbmax.core.data.local.SSBDatabase/23.json"
+        ).readText()
+        assertTrue(
+            "Schema v23 must contain lastStalenessCheckAt — add field to PPDTBatchMetadataEntity " +
+                "and MIGRATION_22_23, then rebuild to regenerate 23.json",
+            schemaJson.contains("lastStalenessCheckAt")
+        )
+    }
+
     // ==================== Cache A: Gender filter must live at DAO layer ====================
 
     @Test
@@ -334,11 +400,12 @@ class PPDTImageCacheManagerTest {
 
     // ==================== Helpers ====================
 
-    private fun localMeta(version: String) = PPDTBatchMetadataEntity(
+    private fun localMeta(version: String, lastStalenessCheckAt: Long = 0L) = PPDTBatchMetadataEntity(
         batchId = "batch_001",
         downloadedAt = System.currentTimeMillis(),
         imageCount = 64,
-        version = version
+        version = version,
+        lastStalenessCheckAt = lastStalenessCheckAt
     )
 
     /** Sets up Firestore to return a version string. Pass withImages=true for full download tests. */
