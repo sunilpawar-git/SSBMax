@@ -64,10 +64,7 @@ class PPDTTestViewModel @Inject constructor(
         // Register for memory leak tracking
         trackMemoryLeaks("PPDTTestViewModel")
         android.util.Log.d("PPDTTestViewModel", "🚀 ViewModel initialized with leak tracking")
-        
-        loadTest()
-        
-        // Restore timer if test was in progress (configuration change recovery)
+        // loadTest() is called by PPDTTestScreen's LaunchedEffect(testId) — that is the SSOT call site
         restoreTimerIfNeeded()
     }
     

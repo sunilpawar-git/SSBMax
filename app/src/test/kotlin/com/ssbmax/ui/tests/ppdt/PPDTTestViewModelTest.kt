@@ -110,18 +110,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadTest success loads question and shows instructions`() = runTest {
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
         // Then
@@ -145,18 +135,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         } returns Result.failure(Exception("Network error"))
         
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
         // Then
@@ -180,18 +160,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         } returns Result.failure(Exception("No question available"))
         
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
         // Then
@@ -205,18 +175,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `startTest transitions to image viewing with 30s timer`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
         // When
@@ -234,18 +194,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `image viewing auto-advances to writing after 30 seconds`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -264,18 +214,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `proceedToNextPhase from viewing to writing transitions correctly`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -294,18 +234,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `proceedToNextPhase from writing to review requires min characters`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Auto-advance to writing
@@ -331,18 +261,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `returnToWriting transitions from review back to writing`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -368,18 +288,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `updateStory updates story text and character count`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -401,18 +311,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `canProceedToNextPhase validates min characters`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -436,18 +336,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `story enforces max characters of 1000`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Move to writing
@@ -467,18 +357,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submitTest creates submission with story and AI score`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -512,18 +392,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `submission includes complete story data`() = runTest {
         // Given - Legacy AI scoring removed, now using unified OLQ system
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000)
@@ -550,18 +420,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `viewing timer decrements correctly`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -580,18 +440,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `proceedToNextPhase transitions from image viewing to writing`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
         // Start test - should transition to IMAGE_VIEWING
@@ -611,18 +461,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `writing timer expiry auto-advances to review`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         advanceTimeBy(31000) // Viewing → Writing
@@ -644,18 +484,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `pauseTest cancels timer`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -675,18 +505,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `onCleared cancels timer job`() = runTest {
         // Given
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         viewModel.startTest()
         
@@ -728,6 +548,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // before it starts. The generation token (timerStartTime) makes finally{} a no-op when a
         // newer timer has taken ownership.
         viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
         advanceUntilIdle() // complete loading
         viewModel.startTest()
 
@@ -755,18 +576,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         )
         
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
@@ -791,18 +601,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         )
         
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
@@ -817,18 +616,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     @Test
     fun `loadTest calls canTakeTest with correct test type`() = runTest {
         // When
-        viewModel = PPDTTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
-            mockSubmissionRepo,
-            mockObserveCurrentUser,
-            mockUserProfileRepo,
-            mockDifficultyManager,
-            mockSubscriptionManager,
-            mockGetOLQDashboard,
-            mockSecurityLogger,
-            mockWorkManager
-        )
+        viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
         
