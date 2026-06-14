@@ -192,7 +192,7 @@ class PPDTImageCacheManagerTest {
     @Test
     fun `getImageForTest returns least-used image`() = runTest {
         coEvery { mockDao.getTotalImageCount() } returns 15
-        coEvery { mockDao.getLeastUsedImages(any()) } returns listOf(mockImages.first())
+        coEvery { mockDao.getLeastUsedImages(1) } returns listOf(mockImages.first())
 
         val result = cacheManager.getImageForTest()
 
@@ -200,7 +200,8 @@ class PPDTImageCacheManagerTest {
         val question = result.getOrNull()
         assertNotNull("Should return question", question)
         assertEquals("ppdt_001", question!!.id)
-        coVerify { mockDao.getLeastUsedImages(any()) }
+        // WHY count=1: SQL already orders by usageCount ASC, RANDOM() — no need to fetch a pool
+        coVerify { mockDao.getLeastUsedImages(1) }
         coVerify { mockDao.markImagesAsUsed(listOf("ppdt_001"), any()) }
     }
 

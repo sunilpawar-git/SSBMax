@@ -161,7 +161,7 @@ class PPDTImageCacheManager @Inject constructor(
             val image = if (genderTag != null) {
                 dao.getLeastUsedImagesByGender(genderTag.name, 1).firstOrNull()
             } else {
-                dao.getLeastUsedImages(TARGET_CACHE_SIZE).firstOrNull()
+                dao.getLeastUsedImages(1).firstOrNull()
             } ?: throw NoSuchElementException("No images available for genderTag=$genderTag")
 
             dao.markImagesAsUsed(listOf(image.id))
