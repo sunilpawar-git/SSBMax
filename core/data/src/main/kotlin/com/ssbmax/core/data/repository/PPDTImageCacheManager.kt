@@ -147,24 +147,8 @@ class PPDTImageCacheManager @Inject constructor(
     }
 
     /**
-     * Select a random image from the pool, filtered by gender.
-     * FEMALE/MALE users see images tagged same-gender OR MIXED.
-     * null genderTag = full pool (OTHER users, or no profile loaded).
-     */
-    fun selectRandomImage(
-        cached: List<CachedPPDTImageEntity>,
-        genderTag: GenderTag?
-    ): CachedPPDTImageEntity? {
-        val pool = if (genderTag == null) {
-            cached
-        } else {
-            cached.filter { it.genderTag == GenderTag.MIXED || it.genderTag == genderTag }
-        }
-        return pool.randomOrNull()
-    }
-
-    /**
      * Get a single image for a PPDT test, optionally filtered by gender.
+     * Gender-scoped requests go straight to the DAO — no in-memory post-filter (SSOT/SOLID SR).
      */
     suspend fun getImageForTest(genderTag: GenderTag? = null): Result<PPDTQuestion> {
         return try {
@@ -174,11 +158,11 @@ class PPDTImageCacheManager @Inject constructor(
                 logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-            val cachedImages = dao.getLeastUsedImages(TARGET_CACHE_SIZE)
-            if (cachedImages.isEmpty()) throw NoSuchElementException("No images in cache")
-
-            val image = selectRandomImage(cachedImages, genderTag)
-                ?: throw NoSuchElementException("No images available for genderTag=$genderTag")
+            val image = if (genderTag != null) {
+                dao.getLeastUsedImagesByGender(genderTag.name, 1).firstOrNull()
+            } else {
+                dao.getLeastUsedImages(TARGET_CACHE_SIZE).firstOrNull()
+            } ?: throw NoSuchElementException("No images available for genderTag=$genderTag")
 
             dao.markImagesAsUsed(listOf(image.id))
             logD("Retrieved image for PPDT test: ${image.id}")

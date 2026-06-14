@@ -69,12 +69,14 @@ class PPDTTestViewModel @Inject constructor(
         restoreTimerIfNeeded()
     }
     
-    /**
-     * Check if user is eligible to take the test based on subscription tier
-     * SECURITY: Server-side check via Firestore
-     */
-    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility {
-        return subscriptionManager.canTakeTest(TestType.PPDT, userId)
+    private suspend fun checkTestEligibility(userId: String): com.ssbmax.core.data.repository.TestEligibility =
+        subscriptionManager.canTakeTest(TestType.PPDT, userId)
+
+    private fun mapLoadError(e: Exception): String = when {
+        e.message?.contains("Firestore", ignoreCase = true) == true -> "Firestore connection failed: ${e.message}"
+        e.message?.contains("database", ignoreCase = true) == true -> "Database error: ${e.message}"
+        e.message?.contains("Cache", ignoreCase = true) == true -> "Cache initialization failed: ${e.message}"
+        else -> "Failed to load test. ${e.message ?: "Check your internet connection."}"
     }
 
     /**
@@ -230,22 +232,12 @@ class PPDTTestViewModel @Inject constructor(
                 updateUiFromSession()
                 
             } catch (e: Exception) {
-                val errorMsg = when {
-                    e.message?.contains("Firestore", ignoreCase = true) == true ->
-                        "Firestore connection failed: ${e.message}"
-                    e.message?.contains("database", ignoreCase = true) == true ->
-                        "Database error: ${e.message}"
-                    e.message?.contains("Cache", ignoreCase = true) == true ->
-                        "Cache initialization failed: ${e.message}"
-                    else ->
-                        "Failed to load test. ${e.message ?: "Check your internet connection."}"
-                }
                 ErrorLogger.log(e, "PPDT loadTest failed: ${e.message}")
                 android.util.Log.e("PPDTTestViewModel", "❌ loadTest exception: ${e.javaClass.simpleName} - ${e.message}", e)
                 _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
-                    error = errorMsg
+                    error = mapLoadError(e)
                 ) }
             }
         }
@@ -433,51 +425,36 @@ class PPDTTestViewModel @Inject constructor(
             isTimerActive = true,
             timerStartTime = myGeneration
         ) }
-
         viewModelScope.launch {
             android.util.Log.d("PPDTTestViewModel", "⏰ Starting timer for $seconds seconds")
-
             try {
-                while (isActive &&
-                       _uiState.value.isTimerActive &&
-                       _uiState.value.timeRemainingSeconds > 0) {
+                while (isActive && _uiState.value.isTimerActive && _uiState.value.timeRemainingSeconds > 0) {
                     delay(1000)
-
-                    // Check if timer should still run (isTimerActive can be set false by submitTest/pauseTest)
-                    if (!isActive || !_uiState.value.isTimerActive) break
-
+                    if (!isActive || !_uiState.value.isTimerActive) return@launch
                     val newTime = _uiState.value.timeRemainingSeconds - 1
                     _uiState.update { it.copy(timeRemainingSeconds = newTime) }
-
-                    if (newTime == 0 && isActive && _uiState.value.isTimerActive) {
-                        // Auto-proceed when time runs out
-                        when (_uiState.value.currentPhase) {
-                            PPDTPhase.IMAGE_VIEWING -> {
-                                proceedToNextPhase()
-                                // proceedToNextPhase() launched a new timer (startTimer(240)), which
-                                // incremented timerGeneration and became the new owner. Break now so
-                                // this coroutine's finally{} sees a different generation and is a no-op.
-                                break
-                            }
-                            PPDTPhase.WRITING -> proceedToNextPhase()
-                            else -> {}
-                        }
-                    }
+                    // IMAGE_VIEWING hands off to a new 240s timer; return so this coroutine's
+                    // finally{} sees a newer timerGeneration and is a no-op (generation-token invariant).
+                    if (newTime == 0 && advancePhaseOnTimeout()) return@launch
                 }
             } catch (e: CancellationException) {
                 android.util.Log.d("PPDTTestViewModel", "⏰ Timer cancelled")
-                throw e // Re-throw to properly cancel coroutine
+                throw e
             } finally {
-                // Only clear the flag if no newer timer has taken ownership.
-                // Without this token check, the dying 30s coroutine's finally{} can fire
-                // after startTimer(240) has already set isTimerActive=true — killing the
-                // writing-phase timer before it starts.
                 _uiState.update { current ->
                     if (current.timerStartTime == myGeneration) current.copy(isTimerActive = false)
                     else current
                 }
             }
         }.trackMemoryLeaks("PPDTTestViewModel", "phase-timer")
+    }
+
+    private fun advancePhaseOnTimeout(): Boolean {
+        return when (_uiState.value.currentPhase) {
+            PPDTPhase.IMAGE_VIEWING -> { proceedToNextPhase(); true }
+            PPDTPhase.WRITING -> { proceedToNextPhase(); false }
+            else -> false
+        }
     }
     
     private fun updateUiFromSession() {
