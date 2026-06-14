@@ -233,10 +233,22 @@ class PPDTTestViewModel @Inject constructor(
                 updateUiFromSession()
                 
             } catch (e: Exception) {
+                val errorMsg = when {
+                    e.message?.contains("Firestore", ignoreCase = true) == true ->
+                        "Firestore connection failed: ${e.message}"
+                    e.message?.contains("database", ignoreCase = true) == true ->
+                        "Database error: ${e.message}"
+                    e.message?.contains("Cache", ignoreCase = true) == true ->
+                        "Cache initialization failed: ${e.message}"
+                    else ->
+                        "Failed to load test. ${e.message ?: "Check your internet connection."}"
+                }
+                ErrorLogger.log(e, "PPDT loadTest failed: ${e.message}")
+                android.util.Log.e("PPDTTestViewModel", "❌ loadTest exception: ${e.javaClass.simpleName} - ${e.message}", e)
                 _uiState.update { it.copy(
                     isLoading = false,
                     loadingMessage = null,
-                    error = "Cloud connection required. Please check your internet connection."
+                    error = errorMsg
                 ) }
             }
         }

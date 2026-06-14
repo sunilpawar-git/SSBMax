@@ -317,7 +317,7 @@ class ImageUrlValidationTest {
             cachedAt = System.currentTimeMillis(),
             lastUsed = null,
             usageCount = 0,
-            imageDownloaded = false
+            imageDownloaded = 0
         )
     }
 

@@ -38,14 +38,20 @@ class PPDTImageCacheManager @Inject constructor(
 
     /**
      * Initialize cache with batch_001 (64 Phase-5 images with gender tags and structured context).
+     * Checks Firestore version; clears and re-downloads if the batch has been updated.
      */
     suspend fun initialSync(): Result<Unit> {
         return try {
             logD("Starting initial sync...")
             val currentCount = dao.getTotalImageCount()
             if (currentCount >= TARGET_CACHE_SIZE) {
-                logD("Cache already initialized ($currentCount images)")
-                return Result.success(Unit)
+                // Check if Firestore has a newer batch version before skipping
+                if (!isCacheStale("batch_001")) {
+                    logD("Cache already initialized ($currentCount images, version current)")
+                    return Result.success(Unit)
+                }
+                logD("Firestore has newer batch version — clearing stale cache and re-downloading")
+                dao.clearAllImages()
             }
             downloadBatch("batch_001").getOrThrow()
             logD("Initial sync complete")
@@ -53,6 +59,25 @@ class PPDTImageCacheManager @Inject constructor(
         } catch (e: Exception) {
             logE("Initial sync failed", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Returns true if the locally cached batch is outdated vs Firestore.
+     * Fetches only the version field (no image data downloaded).
+     */
+    private suspend fun isCacheStale(batchId: String): Boolean {
+        return try {
+            val localMeta = dao.getBatchMetadata(batchId)
+            if (localMeta == null) return true
+            val doc = firestore.document("$COLLECTION_PATH/$batchId").get().await()
+            val remoteVersion = doc.getString("version") ?: return false
+            val isStale = remoteVersion != localMeta.version
+            if (isStale) logD("Cache stale: local=${localMeta.version}, remote=$remoteVersion")
+            isStale
+        } catch (e: Exception) {
+            logW("Version check failed, assuming cache is current: ${e.message}")
+            false // on network error, don't wipe — serve stale rather than break
         }
     }
 
@@ -93,7 +118,7 @@ class PPDTImageCacheManager @Inject constructor(
                         cachedAt = System.currentTimeMillis(),
                         lastUsed = null,
                         usageCount = 0,
-                        imageDownloaded = false,
+                        imageDownloaded = 0,
                         genderTag = genderTag
                     )
                 } catch (e: Exception) {

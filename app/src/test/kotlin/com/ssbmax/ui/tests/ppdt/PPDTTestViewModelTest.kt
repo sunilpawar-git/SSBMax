@@ -166,8 +166,8 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
             assertFalse("Should not be loading", state.isLoading)
             assertNotNull("Should have error", state.error)
             assertTrue(
-                "Error should mention cloud connection",
-                state.error!!.contains("Cloud connection required")
+                "Error message should be non-empty on load failure",
+                state.error!!.isNotEmpty()
             )
         }
     }
@@ -197,7 +197,7 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         // Then
         val state = viewModel.uiState.value
         assertNotNull("Should have error", state.error)
-        assertTrue(state.error!!.contains("Cloud connection required"))
+        assertTrue("Error message should be non-empty on load failure", state.error!!.isNotEmpty())
     }
     
     // ==================== Phase Transitions ====================
@@ -697,6 +697,49 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         assertTrue("Timer was active", initialTime > 0)
     }
     
+    // ==================== Bug 1: No loadTest() in init {} ====================
+
+    @Test
+    fun `on ViewModel construction, getPPDTQuestion is not called`() = runTest {
+        // WHY: init{} calling loadTest() causes a double-fetch whenever LaunchedEffect(testId)
+        // in PPDTTestScreen also calls loadTest() — two concurrent fetches race for the same slot.
+        // SSOT rule: LaunchedEffect(testId) in the screen is the single call site.
+        viewModel = buildViewModel()
+        advanceUntilIdle()
+        coVerify(exactly = 0) { mockTestContentRepo.getPPDTQuestion(genderTag = any()) }
+    }
+
+    @Test
+    fun `after one loadTest call, getPPDTQuestion is called exactly once`() = runTest {
+        // WHY: With init{} bug, construction + one explicit loadTest() = two getPPDTQuestion
+        // calls. That wastes cache reads and can serve a different image than the one shown.
+        viewModel = buildViewModel()
+        viewModel.loadTest("ppdt_standard")
+        advanceUntilIdle()
+        coVerify(exactly = 1) { mockTestContentRepo.getPPDTQuestion(genderTag = any()) }
+    }
+
+    // ==================== Bug 2: Timer generation token ====================
+
+    @Test
+    fun `after IMAGE_VIEWING timer expires, writing phase timer is still active`() = runTest {
+        // WHY: The dying 30s coroutine's finally{} block unconditionally sets isTimerActive=false,
+        // which can fire AFTER startTimer(240) has already set it true — killing the writing timer
+        // before it starts. The generation token (timerStartTime) makes finally{} a no-op when a
+        // newer timer has taken ownership.
+        viewModel = buildViewModel()
+        advanceUntilIdle() // complete loading
+        viewModel.startTest()
+
+        advanceTimeBy(30_001) // let viewing timer expire and writing timer launch
+        advanceUntilIdle()    // let any pending finally{} blocks settle
+
+        val state = viewModel.uiState.value
+        assertEquals("Should auto-advance to WRITING phase", PPDTPhase.WRITING, state.currentPhase)
+        assertTrue("Writing timer must still be active — finally{} must not kill it", state.isTimerActive)
+        assertEquals("Writing timer must start at 240s", 240, state.timeRemainingSeconds)
+    }
+
     // ==================== Subscription Limit Tests ====================
     
     @Test
@@ -797,6 +840,19 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
     
     // ==================== Helper Methods ====================
     
+    private fun buildViewModel() = PPDTTestViewModel(
+        mockTestContentRepo,
+        mockSessionRepo,
+        mockSubmissionRepo,
+        mockObserveCurrentUser,
+        mockUserProfileRepo,
+        mockDifficultyManager,
+        mockSubscriptionManager,
+        mockGetOLQDashboard,
+        mockSecurityLogger,
+        mockWorkManager
+    )
+
     private fun createMockQuestion(): PPDTQuestion {
         return PPDTQuestion(
             id = "ppdt_q1",

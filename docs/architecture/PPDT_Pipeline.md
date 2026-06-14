@@ -529,6 +529,74 @@ _Update this section as bugs are found and improvements are made._
 | 3 | OLQ Reasoning in other tests | `PPDTOLQReasoningCard` is PPDT-only (Phase 4). TAT/WAT/SRT result screens do not yet show per-OLQ reasoning. When those screens need it, move the card into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
 | 4 | Profile gate condition | Gate triggers only when `profile == null` (server confirms no profile). If profile exists but gender field is null, the user is NOT gated — they get the full image pool. This is intentional (lenient). If stricter gating is required, update `resolveGenderTag()` condition. | Intentional design choice |
 | 5 | `analyzePPDTResponse` legacy | Text-only method fully removed from `AIService` interface and `GeminiAIService`. No callers remain. | ✅ Cleaned up in Phase 8 |
+| 6 | **Cache staleness after batch update** | `initialSync()` used a count-only guard (`if cachedImages >= 15 → skip`). After Phase 5 replaced all 64 images in Firestore, the app kept serving the old placeholder sketches indefinitely because the guard never checked the batch version. **Root cause:** no version comparison in `initialSync()`. **Fix:** `isCacheStale()` now fetches the Firestore `version` field and triggers `clearAllImages()` + re-download when local version differs. On network failure, stale cache is preserved (fail-safe). | ✅ Fixed June 2026 |
+| 7 | **Room migration schema mismatch** | `MIGRATION_21_22` created `cached_ppdt_images` with `maxCharacters DEFAULT 1000`, but `CachedPPDTImageEntity` had `maxCharacters = 1500`. Also, the entity lacked the 6 `@Index` annotations the migration created, and used `Boolean` for `imageDownloaded` instead of `Int`. Room validates entity schema against the live DB on every open and throws `IllegalStateException: Migration didn't properly handle cached_ppdt_images` when they diverge. **Fix:** entity defaults aligned to match migration SQL exactly; `@Index` annotations added; `imageDownloaded` changed to `Int`. | ✅ Fixed June 2026 |
+
+---
+
+## 23. Cache Invalidation Contract
+
+**Rule: every batch content update MUST bump the Firestore `version` field.**
+
+The Room cache is keyed by `batchId` (currently `batch_001`). The app will serve cached images forever unless a version change is detected. The version check in `initialSync()` is the only invalidation mechanism.
+
+### How version checking works
+
+```
+initialSync()
+  ├─ cachedImages < 15?  → download immediately (no version check needed)
+  └─ cachedImages >= 15? → isCacheStale("batch_001")
+        ├─ dao.getBatchMetadata("batch_001") == null → stale (no local record)
+        ├─ Firestore version == local version        → fresh, skip download
+        ├─ Firestore version != local version        → stale → clearAllImages() + downloadBatch()
+        └─ Firestore fetch fails (network error)     → assume fresh (fail-safe, don't wipe)
+```
+
+### Checklist before running step3_upload.py
+
+When re-running the content pipeline to update images:
+
+- [ ] **Bump the version** in `step3_upload.py`: change `"version": "2.0.0"` → `"3.0.0"` (or next)
+- [ ] Confirm the new version propagates into the Firestore document after upload
+- [ ] The app will auto-invalidate its cache on next test open — no app release needed
+
+Failure to bump the version = app continues serving the old images regardless of what was uploaded.
+
+### Entity ↔ Migration contract
+
+`CachedPPDTImageEntity` and `MIGRATION_21_22` in `DatabaseMigrations.kt` must stay in sync. Room validates every column name, type, and default against the live database on each open. A mismatch causes an immediate `IllegalStateException` crash.
+
+**Invariants that must match exactly:**
+
+| Field | Entity default | Migration SQL default |
+|-------|---------------|----------------------|
+| `maxCharacters` | `= 1000` | `DEFAULT 1000` |
+| `minCharacters` | `= 200` | `DEFAULT 200` |
+| `viewingTimeSeconds` | `= 30` | `DEFAULT 30` |
+| `writingTimeMinutes` | `= 4` | `DEFAULT 4` |
+| `imageDownloaded` | `Int = 0` | `INTEGER NOT NULL DEFAULT 0` |
+| `imageDescription` | `= "Picture showing an ambiguous scene"` | `DEFAULT 'Picture showing an ambiguous scene'` |
+| `imageContextJson` | `= "{}"` | `DEFAULT '{}'` |
+| `genderTag` | `GenderTag.MIXED` | `DEFAULT 'MIXED'` |
+
+**Indices** — entity must declare all 6 with `@Entity(indices = [...])`:
+`genderTag`, `imageDownloaded`, `usageCount`, `batchId`, `difficulty`, `category`
+
+When adding a new column: always add a `MIGRATION_N_(N+1)` **and** update the entity. Never rely on `fallbackToDestructiveMigration()` in production — it wipes all user cache silently.
+
+### Tests that enforce this contract
+
+`PPDTImageCacheManagerTest.kt` contains regression tests (June 2026) that enforce both invariants:
+
+| Test | What it catches |
+|------|----------------|
+| `initialSync re-downloads when Firestore batch version is newer` | Stale cache after content pipeline re-run |
+| `initialSync skips download when version matches Firestore` | Unnecessary re-downloads |
+| `initialSync re-downloads when no local batch metadata exists` | First install / cleared DB |
+| `initialSync does NOT wipe cache when Firestore version fetch fails` | Network error safety |
+| `CachedPPDTImageEntity default maxCharacters matches migration DEFAULT 1000` | Entity/migration drift |
+| `CachedPPDTImageEntity imageDownloaded default is Int 0 not Boolean` | Type mismatch with SQLite |
+| `CachedPPDTImageEntity annotation has all 6 indices required by migration` | Missing index annotations |
 
 ---
 

@@ -1,17 +1,18 @@
 package com.ssbmax.ui.tests.ppdt
 
-import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.validation.RecommendationOutcome
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -151,6 +152,50 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         val courageScore = viewModel.uiState.value.olqResult?.olqScores?.get(OLQ.COURAGE)
         assertNotNull(courageScore)
         assertEquals("", courageScore!!.reasoning)
+    }
+
+    // ==================== Bug 3: CancellationException must not produce error ====================
+
+    @Test
+    fun `ViewModel cancellation does not produce error UiState`() = runTest {
+        // WHY: When the user navigates away, viewModelScope is cancelled. The outer
+        // catch(e: Exception) block currently swallows CancellationException and sets
+        // error state. That causes a ghost error to flash when the user returns to the
+        // screen. CE is a control signal, not a fault — it must be re-thrown, not logged.
+        coEvery { mockSubmissionRepo.observePPDTSubmission(any()) } returns flow {
+            throw CancellationException("Simulated scope cancellation on navigate-away")
+        }
+
+        viewModel.loadSubmission("submission-ppdt-123")
+        advanceUntilIdle()
+
+        assertNull(
+            "CancellationException must not set error — it signals navigation, not a fault",
+            viewModel.uiState.value.error
+        )
+    }
+
+    // ==================== Bug 4: Exactly one loadResult call on COMPLETED ====================
+
+    @Test
+    fun `loadResult called exactly once when flow emits ANALYZING then COMPLETED`() = runTest {
+        // WHY: Firestore real-time listeners re-fire the COMPLETED snapshot on every update
+        // to the document. Without cancelling observation after COMPLETED is handled,
+        // each re-fire calls loadResult() again — hammering Firestore and producing duplicate
+        // UI updates. Cancelling the observation coroutine after terminal state is the fix.
+        val analyzing = mockSubmission.copy(analysisStatus = AnalysisStatus.ANALYZING)
+        val completed = mockSubmission.copy(analysisStatus = AnalysisStatus.COMPLETED)
+
+        coEvery { mockSubmissionRepo.observePPDTSubmission(any()) } returns flow {
+            emit(analyzing)
+            emit(completed)
+        }
+        coEvery { mockSubmissionRepo.getPPDTResult(any()) } returns Result.success(mockOLQResult)
+
+        viewModel.loadSubmission("submission-ppdt-123")
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { mockSubmissionRepo.getPPDTResult(any()) }
     }
 
     private fun createMockOLQScores(): Map<OLQ, OLQScore> {

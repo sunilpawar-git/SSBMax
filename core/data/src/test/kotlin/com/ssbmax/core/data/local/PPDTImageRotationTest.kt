@@ -192,7 +192,7 @@ class PPDTImageRotationTest {
         cachedAt = 0L,
         lastUsed = null,
         usageCount = usage,
-        imageDownloaded = false,
+        imageDownloaded = 0,
         imageContextJson = "{}"
     )
 }
