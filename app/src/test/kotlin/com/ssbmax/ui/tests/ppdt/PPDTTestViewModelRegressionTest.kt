@@ -28,23 +28,23 @@ class PPDTTestViewModelRegressionTest : PPDTTestViewModelTestBase() {
     // ==================== Bug 1: No loadTest() in init {} ====================
 
     @Test
-    fun `on ViewModel construction, getPPDTQuestion is not called`() = runTest {
+    fun `on ViewModel construction, load use case is not called`() = runTest {
         // WHY: init{} calling loadTest() causes a double-fetch whenever LaunchedEffect(testId)
         // in PPDTTestScreen also calls loadTest() — two concurrent fetches race for the same slot.
         // SSOT rule: LaunchedEffect(testId) in the screen is the single call site.
         val viewModel = buildViewModel()
         advanceUntilIdle()
-        coVerify(exactly = 0) { mockTestContentRepo.getPPDTQuestion(genderTag = any()) }
+        coVerify(exactly = 0) { mockLoadPPDTTest(any(), any()) }
     }
 
     @Test
-    fun `after one loadTest call, getPPDTQuestion is called exactly once`() = runTest {
-        // WHY: With init{} bug, construction + one explicit loadTest() = two getPPDTQuestion
-        // calls. That wastes cache reads and can serve a different image than the one shown.
+    fun `after one loadTest call, load use case is called exactly once`() = runTest {
+        // WHY: With init{} bug, construction + one explicit loadTest() = two LoadPPDTTestUseCase
+        // invocations. That wastes cache reads and can serve a different image than the one shown.
         val viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")
         advanceUntilIdle()
-        coVerify(exactly = 1) { mockTestContentRepo.getPPDTQuestion(genderTag = any()) }
+        coVerify(exactly = 1) { mockLoadPPDTTest(any(), any()) }
     }
 
     // ==================== Bug 2: Timer generation token ====================

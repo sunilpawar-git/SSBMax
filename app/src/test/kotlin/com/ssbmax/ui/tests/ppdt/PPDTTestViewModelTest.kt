@@ -39,8 +39,7 @@ class PPDTTestViewModelTest : PPDTTestViewModelTestBase() {
 
     @Test
     fun `loadTest failure shows error message`() = runTest {
-        coEvery { mockTestContentRepo.getPPDTQuestion(genderTag = any()) } returns
-            Result.failure(Exception("Network error"))
+        coEvery { mockLoadPPDTTest(any(), any()) } returns Result.failure(Exception("Network error"))
 
         val viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")
@@ -56,8 +55,7 @@ class PPDTTestViewModelTest : PPDTTestViewModelTestBase() {
 
     @Test
     fun `loadTest with question fetch failure shows error`() = runTest {
-        coEvery { mockTestContentRepo.getPPDTQuestion(genderTag = any()) } returns
-            Result.failure(Exception("No question available"))
+        coEvery { mockLoadPPDTTest(any(), any()) } returns Result.failure(Exception("No question available"))
 
         val viewModel = buildViewModel()
         viewModel.loadTest("ppdt_standard")

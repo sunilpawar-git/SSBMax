@@ -1,8 +1,8 @@
 package com.ssbmax.ui.tests.ppdt
 
 import com.ssbmax.core.domain.model.PPDTPhase
-import com.ssbmax.core.domain.model.PPDTQuestion
 import com.ssbmax.core.domain.model.PPDTSubmission
+import com.ssbmax.core.domain.model.PPDTTestSession
 import com.ssbmax.core.domain.model.SubscriptionTier
 import com.ssbmax.core.domain.model.SubscriptionType
 
@@ -33,23 +33,3 @@ data class PPDTTestUiState(
     val isProfileIncomplete: Boolean = false
 )
 
-data class PPDTTestSession(
-    val sessionId: String,
-    val userId: String,
-    val questionId: String,
-    val question: PPDTQuestion,
-    val startTime: Long,
-    val imageViewingStartTime: Long?,
-    val writingStartTime: Long?,
-    val currentPhase: PPDTPhase,
-    val story: String,
-    val isCompleted: Boolean,
-    val isPaused: Boolean
-)
-
-data class PPDTTestConfig(
-    val viewingTimeSeconds: Int = 30,
-    val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000
-)
