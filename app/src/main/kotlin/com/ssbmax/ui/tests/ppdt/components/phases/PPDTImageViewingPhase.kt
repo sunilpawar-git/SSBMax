@@ -33,23 +33,15 @@ fun PPDTImageViewingPhase(
 ) {
     val context = LocalContext.current
     val imageRequest = remember(imageUrl) {
-        ImageRequest.Builder(context)
-            .data(imageUrl)
-            .crossfade(true)
-            .build()
+        ImageRequest.Builder(context).data(imageUrl).crossfade(true).build()
     }
-
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
             Text(
                 text = stringResource(R.string.ppdt_image_observe_instruction),
@@ -58,34 +50,27 @@ fun PPDTImageViewingPhase(
                 textAlign = TextAlign.Center
             )
         }
-
         Spacer(Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(4f / 3f),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = imageRequest,
-                    contentDescription = stringResource(R.string.ppdt_image_content_description),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
-
+        PPDTImageCard(imageRequest)
         Spacer(Modifier.weight(1f))
+        PPDTTimerProgressBar(timeRemainingSeconds = timeRemainingSeconds, totalSeconds = 30)
+    }
+}
 
-        PPDTTimerProgressBar(
-            timeRemainingSeconds = timeRemainingSeconds,
-            totalSeconds = 30
-        )
+@Composable
+private fun PPDTImageCard(imageRequest: ImageRequest) {
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = stringResource(R.string.ppdt_image_content_description),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }
 

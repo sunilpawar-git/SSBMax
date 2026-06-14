@@ -61,14 +61,17 @@ class PPDTTestViewModel @Inject constructor(
         restoreTimerIfNeeded()
     }
 
+    private fun shouldRestoreTimer(s: PPDTTestUiState): Boolean {
+        val isInProgress = !s.isLoading && !s.isSubmitted && !s.isTimerActive
+        val isTimerablePhase = s.currentPhase == PPDTPhase.IMAGE_VIEWING ||
+            s.currentPhase == PPDTPhase.WRITING
+        return isInProgress && isTimerablePhase && s.timeRemainingSeconds > 0
+    }
+
     private fun restoreTimerIfNeeded() {
         viewModelScope.launch {
             val s = _uiState.value
-            if (!s.isLoading && !s.isSubmitted && s.timeRemainingSeconds > 0 &&
-                (s.currentPhase == PPDTPhase.IMAGE_VIEWING || s.currentPhase == PPDTPhase.WRITING) &&
-                !s.isTimerActive) {
-                startTimer(s.timeRemainingSeconds)
-            }
+            if (shouldRestoreTimer(s)) startTimer(s.timeRemainingSeconds)
         }
     }
 
@@ -83,7 +86,9 @@ class PPDTTestViewModel @Inject constructor(
                     testType = "PPDT"
                 )
                 securityLogger.logUnauthenticatedAccess(testType = TestType.PPDT, context = "PPDTTestViewModel.loadTest")
-                _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.") }
+                _uiState.update {
+                    it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
+                }
                 return@launch
             }
 
@@ -133,7 +138,12 @@ class PPDTTestViewModel @Inject constructor(
 
     fun startTest() {
         val session = _uiState.value.session ?: return
-        _uiState.update { it.copy(session = session.copy(currentPhase = PPDTPhase.IMAGE_VIEWING, imageViewingStartTime = System.currentTimeMillis())) }
+        _uiState.update {
+            it.copy(session = session.copy(
+                currentPhase = PPDTPhase.IMAGE_VIEWING,
+                imageViewingStartTime = System.currentTimeMillis()
+            ))
+        }
         updateUiFromSession()
         startTimer(30)
     }
@@ -142,7 +152,15 @@ class PPDTTestViewModel @Inject constructor(
         val session = _uiState.value.session ?: return
         when (session.currentPhase) {
             PPDTPhase.IMAGE_VIEWING -> {
-                _uiState.update { it.copy(isTimerActive = false, session = session.copy(currentPhase = PPDTPhase.WRITING, writingStartTime = System.currentTimeMillis())) }
+                _uiState.update {
+                    it.copy(
+                        isTimerActive = false,
+                        session = session.copy(
+                            currentPhase = PPDTPhase.WRITING,
+                            writingStartTime = System.currentTimeMillis()
+                        )
+                    )
+                }
                 updateUiFromSession()
                 startTimer(session.question.writingTimeMinutes * 60)
             }
@@ -223,8 +241,6 @@ class PPDTTestViewModel @Inject constructor(
                     // finally{} sees a newer timerGeneration and is a no-op (generation-token invariant).
                     if (newTime == 0 && advancePhaseOnTimeout()) return@launch
                 }
-            } catch (e: CancellationException) {
-                throw e
             } finally {
                 _uiState.update { current ->
                     if (current.timerStartTime == myGeneration) current.copy(isTimerActive = false) else current
