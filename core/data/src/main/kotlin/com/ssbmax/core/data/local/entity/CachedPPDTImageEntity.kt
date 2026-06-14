@@ -19,7 +19,7 @@ data class CachedPPDTImageEntity(
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000,
+    val maxCharacters: Int = 1500,
     val category: String? = null,
     val difficulty: String? = null,
     val batchId: String,

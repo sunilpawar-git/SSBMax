@@ -222,14 +222,43 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
     }
 
+    /**
+     * Analyze PPDT via Cloud Function (text-only fallback — image bytes not sent over cloud path).
+     * Constructs a text prompt from story + imageContext and submits as an inline response analysis.
+     * Full multimodal support requires a dedicated Cloud Function (tracked in PPDT_Pipeline.md §17).
+     */
     override suspend fun analyzePPDTMultimodal(
         imageBytes: ByteArray,
         story: String,
         imageContext: PPDTImageContext,
         candidateGender: String
-    ): Result<ResponseAnalysis> {
-        Log.e(TAG, "PPDT multimodal analysis not yet supported in CloudGemini implementation")
-        return Result.failure(UnsupportedOperationException("Use GeminiAIService for PPDT multimodal analysis"))
+    ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
+        try {
+            auth.currentUser
+                ?: return@withContext Result.failure(IllegalStateException("User not authenticated"))
+
+            withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                val sceneHint = if (imageContext.sceneDescription.isNotBlank())
+                    " Scene: ${imageContext.sceneDescription}." else ""
+                val data = hashMapOf(
+                    "questionText" to "PPDT Story Analysis. Candidate gender: $candidateGender.$sceneHint",
+                    "responseText" to story,
+                    "expectedOLQs" to imageContext.primaryOLQs,
+                    "responseMode" to "text"
+                )
+                val result = functions
+                    .getHttpsCallable(FUNCTION_ANALYZE_RESPONSE_INLINE)
+                    .call(data)
+                    .await()
+                val resultData = result.getData() ?: return@withTimeout Result.failure(
+                    IllegalStateException("Cloud function returned null data")
+                )
+                parseAnalysisResult(resultData)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "CloudGeminiAIService.analyzePPDTMultimodal failed", e)
+            Result.failure(e)
+        }
     }
 
    /**

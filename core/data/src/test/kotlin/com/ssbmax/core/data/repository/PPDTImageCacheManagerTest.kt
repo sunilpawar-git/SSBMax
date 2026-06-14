@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
@@ -25,8 +26,14 @@ class PPDTImageCacheManagerTest {
 
     @Before
     fun setup() {
-        cacheManager = PPDTImageCacheManager(mockDao, mockFirestore)
         clearAllMocks()
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.w(any(), any<String>()) } returns 0
+        every { Log.w(any(), any<String>(), any()) } returns 0
+        every { Log.e(any(), any<String>()) } returns 0
+        every { Log.e(any(), any<String>(), any()) } returns 0
+        cacheManager = PPDTImageCacheManager(mockDao, mockFirestore)
     }
 
     // ==================== Initial Sync Tests ====================
@@ -92,7 +99,7 @@ class PPDTImageCacheManagerTest {
     @Test
     fun `getImageForTest returns least-used image`() = runTest {
         coEvery { mockDao.getTotalImageCount() } returns 15
-        coEvery { mockDao.getLeastUsedImages(1) } returns listOf(mockImages.first())
+        coEvery { mockDao.getLeastUsedImages(any()) } returns listOf(mockImages.first())
 
         val result = cacheManager.getImageForTest()
 
@@ -101,7 +108,7 @@ class PPDTImageCacheManagerTest {
         assertNotNull("Should return question", question)
         assertEquals("ppdt_001", question!!.id)
 
-        coVerify { mockDao.getLeastUsedImages(1) }
+        coVerify { mockDao.getLeastUsedImages(any()) }
         coVerify { mockDao.markImagesAsUsed(listOf("ppdt_001"), any()) }
     }
 
@@ -109,7 +116,7 @@ class PPDTImageCacheManagerTest {
     fun `getImageForTest normalizes gs URLs to https`() = runTest {
         val gsImage = createMockImage("ppdt_gs", "gs://my-bucket/ppdt/image.jpg")
         coEvery { mockDao.getTotalImageCount() } returns 15
-        coEvery { mockDao.getLeastUsedImages(1) } returns listOf(gsImage)
+        coEvery { mockDao.getLeastUsedImages(any()) } returns listOf(gsImage)
 
         val result = cacheManager.getImageForTest()
 
@@ -126,7 +133,7 @@ class PPDTImageCacheManagerTest {
     fun `getImageForTest preserves https URLs unchanged`() = runTest {
         val httpsImage = createMockImage("ppdt_https", "https://storage.googleapis.com/bucket/img.jpg")
         coEvery { mockDao.getTotalImageCount() } returns 15
-        coEvery { mockDao.getLeastUsedImages(1) } returns listOf(httpsImage)
+        coEvery { mockDao.getLeastUsedImages(any()) } returns listOf(httpsImage)
 
         val result = cacheManager.getImageForTest()
 
@@ -160,7 +167,7 @@ class PPDTImageCacheManagerTest {
     @Test
     fun `getImageForTest fails when cache is empty`() = runTest {
         coEvery { mockDao.getTotalImageCount() } returns 15
-        coEvery { mockDao.getLeastUsedImages(1) } returns emptyList()
+        coEvery { mockDao.getLeastUsedImages(any()) } returns emptyList()
 
         val result = cacheManager.getImageForTest()
 

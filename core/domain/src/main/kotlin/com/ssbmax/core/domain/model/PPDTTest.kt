@@ -14,6 +14,27 @@ enum class GenderTag { MALE, FEMALE, MIXED }
 enum class DeviationTolerance { LOW, MEDIUM, HIGH }
 
 /**
+ * PPDT overall performance rating derived from average OLQ score (range 5–9, lower = better).
+ * SSOT: this enum owns the threshold logic; Worker calls fromScore() instead of inline when{}.
+ * displayKey matches the string stored in Firestore/Room and shown in the result screen.
+ */
+enum class PPDTRating(val displayKey: String) {
+    GOOD("Good"),
+    AVERAGE("Average"),
+    BELOW_AVERAGE("Below Average"),
+    NEEDS_IMPROVEMENT("Needs Improvement");
+
+    companion object {
+        fun fromScore(overallScore: Float): PPDTRating = when {
+            overallScore <= 5.5f -> GOOD
+            overallScore <= 6.5f -> AVERAGE
+            overallScore <= 7.5f -> BELOW_AVERAGE
+            else -> NEEDS_IMPROVEMENT
+        }
+    }
+}
+
+/**
  * Structured context for a PPDT image, produced by the offline enrichment pipeline (Phase 5).
  * Used by Phase 8 multimodal prompt builder to inject per-picture rubric into Gemini.
  * All fields default to empty so pre-Phase-6 cached images degrade gracefully.
@@ -161,7 +182,7 @@ data class PPDTTestConfig(
     val description: String = "Picture Perception & Description Test",
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 50,
+    val minCharacters: Int = 200,
     val maxCharacters: Int = 1500,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true

@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
@@ -34,9 +35,15 @@ class ImageUrlValidationTest {
 
     @Before
     fun setup() {
+        clearAllMocks()
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.w(any(), any<String>()) } returns 0
+        every { Log.w(any(), any<String>(), any()) } returns 0
+        every { Log.e(any(), any<String>()) } returns 0
+        every { Log.e(any(), any<String>(), any()) } returns 0
         tatCacheManager = TATImageCacheManager(mockTATDao, mockFirestore)
         ppdtCacheManager = PPDTImageCacheManager(mockPPDTDao, mockFirestore)
-        clearAllMocks()
     }
 
     // ==================== Mock Data URL Validation ====================
@@ -137,7 +144,7 @@ class ImageUrlValidationTest {
     fun `PPDT cache manager normalizes gs URLs to https`() = runTest {
         val gsImage = createPPDTEntity("ppdt_gs", "gs://my-bucket/ppdt/image001.jpg")
         coEvery { mockPPDTDao.getTotalImageCount() } returns 15
-        coEvery { mockPPDTDao.getLeastUsedImages(1) } returns listOf(gsImage)
+        coEvery { mockPPDTDao.getLeastUsedImages(any()) } returns listOf(gsImage)
 
         val result = ppdtCacheManager.getImageForTest()
 

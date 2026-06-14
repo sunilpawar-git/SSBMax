@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.ssbmax.core.domain.model.PPDTImageContext
 import com.ssbmax.core.domain.model.PPDTQuestion
+import com.ssbmax.core.domain.model.PPDTRating
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
@@ -100,18 +101,15 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updatePPDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 4. Resolve candidate gender from UserProfile (falls back to "Unknown" on any error)
-            val candidateGender = try {
-                userProfileRepository.getUserProfile(submission.userId)
-                    .first()
-                    .getOrNull()
-                    ?.gender
-                    ?.displayName
-                    ?: "Unknown"
+            // 4. Resolve candidate profile (gender + entryType); falls back on any error
+            val userProfile = try {
+                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
             } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to fetch user profile gender for PPDT analysis")
-                "Unknown"
+                ErrorLogger.log(e, "Failed to fetch user profile for PPDT analysis")
+                null
             }
+            val candidateGender = userProfile?.gender?.displayName ?: "Unknown"
+            val entryType = toScoringEntryType(userProfile?.entryType)
 
             // 5. Fetch full question (imageUrl + imageContext rubric)
             var ppdtQuestion: PPDTQuestion? = null
@@ -132,7 +130,13 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 ?.takeIf { it.isNotBlank() }
                 ?.let { imageUrl ->
                     try {
-                        withContext(Dispatchers.IO) { URL(imageUrl).readBytes() }
+                        withContext(Dispatchers.IO) {
+                            val conn = URL(imageUrl).openConnection().apply {
+                                connectTimeout = 10_000
+                                readTimeout = 20_000
+                            }
+                            conn.getInputStream().readBytes()
+                        }
                     } catch (e: Exception) {
                         ErrorLogger.log(e, "PPDT image download failed — proceeding with empty bytes")
                         null
@@ -156,8 +160,8 @@ class PPDTAnalysisWorker @AssistedInject constructor(
 
             Log.d(TAG, "   Step 5: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
 
-            // 7.5. Validate OLQ scores against SSB rules
-            val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+            // 7.5. Validate OLQ scores against SSB rules using actual candidate entry type
+            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
             Log.d(TAG, "   Step 6: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
             if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
                 Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
@@ -165,12 +169,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
 
             // 8. Create OLQAnalysisResult
             val overallScore = olqScores.values.map { it.score }.average().toFloat()
-            val overallRating = when {
-                overallScore <= 3.0f -> "Exceptional"
-                overallScore <= 5.0f -> "Good"
-                overallScore <= 7.0f -> "Average"
-                else -> "Needs Improvement"
-            }
+            val overallRating = PPDTRating.fromScore(overallScore).displayKey
 
             val strengths = olqScores.entries
                 .sortedBy { it.value.score }
@@ -198,7 +197,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 weaknesses = weaknesses,
                 recommendations = recommendations,
                 analyzedAt = System.currentTimeMillis(),
-                aiConfidence = 85
+                aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
             )
 
             // 9. Update submission with OLQ result (atomically sets COMPLETED status)
@@ -208,7 +207,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             // 10. Invalidate dashboard cache AFTER result is in Firestore
             try {
                 getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Step 8: Dashboard cache invalidated for user: ${submission.userId}")
+                Log.d(TAG, "   Step 8: Dashboard cache invalidated")
             } catch (e: Exception) {
                 Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
             }
@@ -226,7 +225,6 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             Result.success()
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ PPDT analysis failed", e)
             ErrorLogger.log(e, "PPDT analysis failed for submission: $submissionId")
             handleAnalysisFailure(submissionId)
             Result.failure()
@@ -253,7 +251,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                     val analysis = analysisResult.getOrNull()!!
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(1, 10),
+                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
                             confidence = analysis.overallConfidence,
                             reasoning = scoreWithReasoning.reasoning
                         )
@@ -275,6 +273,16 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             }
         }
         return null
+    }
+
+    // Maps UserProfile.EntryType (model) to scoring.EntryType (validation rules).
+    // ENTRY_10_PLUS_2 → NDA (most stringent), SERVICE → OTA, GRADUATE → GRADUATE.
+    private fun toScoringEntryType(
+        profileEntry: com.ssbmax.core.domain.model.EntryType?
+    ): EntryType = when (profileEntry) {
+        com.ssbmax.core.domain.model.EntryType.GRADUATE -> EntryType.GRADUATE
+        com.ssbmax.core.domain.model.EntryType.SERVICE -> EntryType.OTA
+        else -> EntryType.NDA
     }
 
     private suspend fun handleAnalysisFailure(submissionId: String) {

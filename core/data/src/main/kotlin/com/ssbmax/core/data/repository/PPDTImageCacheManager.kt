@@ -1,5 +1,6 @@
 package com.ssbmax.core.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -31,20 +32,9 @@ class PPDTImageCacheManager @Inject constructor(
 
     private val gson = Gson()
 
-    // Reflection-based logging so the class works in JVM unit tests (no android.util.Log on host JVM)
-    private fun logD(msg: String) = androidLog("d", msg)
-    private fun logW(msg: String, t: Throwable? = null) = androidLog("w", msg, t)
-    private fun logE(msg: String, t: Throwable? = null) = androidLog("e", msg, t)
-
-    private fun androidLog(level: String, msg: String, t: Throwable? = null) {
-        try {
-            val log = Class.forName("android.util.Log")
-            if (t != null) log.getMethod(level, String::class.java, String::class.java, Throwable::class.java).invoke(null, TAG, msg, t)
-            else log.getMethod(level, String::class.java, String::class.java).invoke(null, TAG, msg)
-        } catch (_: Exception) {
-            if (level == "e") System.err.println("$TAG $level: $msg${t?.let { " — $it" } ?: ""}") else println("$TAG $level: $msg")
-        }
-    }
+    private fun logD(msg: String) { Log.d(TAG, msg) }
+    private fun logW(msg: String, t: Throwable? = null) { if (t != null) Log.w(TAG, msg, t) else Log.w(TAG, msg) }
+    private fun logE(msg: String, t: Throwable? = null) { if (t != null) Log.e(TAG, msg, t) else Log.e(TAG, msg) }
 
     /**
      * Initialize cache with batch_001 (64 Phase-5 images with gender tags and structured context).
@@ -159,7 +149,7 @@ class PPDTImageCacheManager @Inject constructor(
                 logW("Cache below minimum ($currentCount < $MIN_CACHE_SIZE), syncing...")
                 initialSync().getOrThrow()
             }
-            val cachedImages = dao.getLeastUsedImages(1)
+            val cachedImages = dao.getLeastUsedImages(TARGET_CACHE_SIZE)
             if (cachedImages.isEmpty()) throw NoSuchElementException("No images in cache")
 
             val image = selectRandomImage(cachedImages, genderTag)
