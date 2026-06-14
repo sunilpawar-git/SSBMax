@@ -1,9 +1,9 @@
 # PPDT Pipeline Architecture
 
-**Last updated:** June 2026  
+**Last updated:** June 2026 (Phase 8 complete)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
-Picture Perception and Description Test (PPDT) is a Phase 1 psychology test in SSBMax. The candidate views a blurry image for 30 seconds, then writes a story based on what they perceived. The story is evaluated by Gemini AI against 15 Officer-Like Qualities (OLQs), and the result feeds the unified OLQ dashboard.
+Picture Perception and Description Test (PPDT) is a Phase 1 psychology test in SSBMax. The candidate views a blurry image for 30 seconds, then writes a story based on what they perceived. The story is evaluated by Gemini AI against 15 Officer-Like Qualities (OLQs) using multimodal analysis (image + story + per-picture rubric), and the result feeds the unified OLQ dashboard.
 
 ---
 
@@ -13,12 +13,13 @@ Picture Perception and Description Test (PPDT) is a Phase 1 psychology test in S
 StudentHomeScreen
   └─► TopicScreen (Phase 1 → Tests tab)
         └─► PPDTTestScreen
+              ├─ [0] PROFILE GATE (gender check — blocks if no profile)
               ├─ [1] INSTRUCTIONS
               ├─ [2] IMAGE_VIEWING  (30 s, auto-advance)
               ├─ [3] WRITING        (4 min, auto-advance)
               ├─ [4] REVIEW
               └─ [5] SUBMITTED ──► PPDTSubmissionResultScreen
-                                        └─► OLQ results (async via WorkManager)
+                                        └─► OLQ results + per-OLQ reasoning (async via WorkManager)
 ```
 
 ---
@@ -64,7 +65,8 @@ Default `testId` is `ppdt_standard`.
 ### Shared components
 
 - `PPDTComponents.kt` — `PPDTTopBar` (phase name, timer, exit), `PPDTBottomBar` (Next/Review/Submit), `TimerChip` (MM:SS, red when < 30 s)
-- `PPDTDialogs.kt` — `PPDTExitDialog`, `PPDTSubmitDialog`
+- `PPDTDialogs.kt` — `PPDTExitDialog`, `PPDTSubmitDialog`, `PPDTProfileRequiredDialog` (Phase 3 — shown when profile has no gender)
+- `PPDTOLQReasoningCard.kt` — expandable per-OLQ reasoning card shown in result screen (Phase 4)
 
 ---
 
@@ -101,7 +103,9 @@ data class PPDTTestUiState(
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
-    val resetsAt: String = ""
+    val resetsAt: String = "",
+
+    val isProfileIncomplete: Boolean = false   // Phase 3: true when profile has no gender → shows PPDTProfileRequiredDialog
 )
 ```
 
@@ -147,25 +151,49 @@ Both timers auto-advance the phase when they reach 0. `TimerChip` shows MM:SS an
 
 ```
 test_content/ppdt/image_batches/{batchId}
+  ├── totalImages: Int
   └── images: List<{
-        id, imageUrl (Firebase Storage URL),
-        imageDescription, context (for AI),
-        viewingTimeSeconds (30), writingTimeMinutes (4),
-        minCharacters (200), maxCharacters (1000),
+        id: String,
+        imageUrl: String,           ← Firebase Storage URL
+        imageDescription: String,
+        imageContext: {             ← structured PPDTImageContext (Phase 6)
+          sceneDescription, coreElements[], ambiguousElements[],
+          expectedThemes[], penalizedThemes[], primaryOLQs[],
+          deviationTolerance, exemplarGoodHints[], exemplarBadHints[]
+        },
+        genderTag: String,          ← "MALE" | "FEMALE" | "MIXED" (Phase 6)
+        viewingTimeSeconds: 30,
+        writingTimeMinutes: 4,
+        minCharacters: 200,
+        maxCharacters: 1000,
         category, difficulty
       }>
 ```
 
-Default batch: `batch_002_context_enhanced` (15+ images).
+Active batch: `batch_001` (64 images — replaced in Phase 5).
 
 ### Local cache (Room)
 
 - **Entity:** `CachedPPDTImageEntity` → table `cached_ppdt_images`
+  - Fields: `id`, `imageUrl`, `imageDescription`, `imageContextJson` (JSON-serialized `PPDTImageContext`), `genderTag` (default `MIXED`)
+  - DB version: **22** (migrated from 21 in Phase 6 — `context` column renamed to `imageContextJson`, `genderTag` column added)
 - **DAO:** `PPDTImageCacheDao` — queries include least-used selection, batch fetch, usage tracking
 - **Manager:** `core/data/.../repository/PPDTImageCacheManager.kt`
   - Target cache: 15 images; minimum: 5 (triggers `initialSync()`)
   - Selection: `getLeastUsedImages()` — rotates images so candidates don't repeat
-  - Progressive: batches downloaded on-demand
+  - Gender filter: `selectRandomImage(cached, genderTag)` — MALE users get MALE+MIXED pool; FEMALE users get FEMALE+MIXED pool; OTHER/unknown gets full pool
+
+### Gender-based image routing (Phase 3 + 6)
+
+```
+loadTest()
+  └─ resolveGenderTag(userId)
+       └─ UserProfileRepository.getUserProfile(userId)
+            ├─ profile == null (server confirms no profile) → isProfileIncomplete=true, stop
+            ├─ gender == MALE   → GenderTag.MALE   → MALE+MIXED pool
+            ├─ gender == FEMALE → GenderTag.FEMALE → FEMALE+MIXED pool
+            └─ gender == OTHER / network error → null → full pool (no filter)
+```
 
 ### Display (UI)
 
@@ -212,34 +240,66 @@ Steps in sequence:
 
 ## 9. Background Analysis — PPDTAnalysisWorker
 
-**File:** `app/.../workers/PPDTAnalysisWorker.kt`  
-**Trigger:** WorkManager, immediately after submission  
+**File:** `app/.../workers/PPDTAnalysisWorker.kt`
+**Trigger:** WorkManager, immediately after submission
 **Input:** `KEY_SUBMISSION_ID`
 
 | Step | Action |
 |------|--------|
 | 1 | Fetch submission; verify `analysisStatus == PENDING_ANALYSIS` (idempotency guard) |
 | 2 | Update Firestore: `analysisStatus → ANALYZING` |
-| 3 | Fetch image context: `TestContentRepository.getPPDTQuestion(questionId)` (Room cache → Firestore fallback) |
-| 4 | Build Gemini prompt: `PsychologyTestPrompts.generatePPDTAnalysisPrompt()` or `EnhancedPsychologyPrompts.buildPPDTPrompt()` |
-| 5 | Call Gemini AI: `GeminiAIService.analyzePPDTResponse(prompt)` — model `gemini-2.5-flash`, 60 s timeout, max 3 retries with exponential backoff |
-| 6 | Parse JSON response → 15 `OLQScore` objects |
-| 7 | SSB validation: `ValidationIntegration.validateScores(olqScores, EntryType.NDA)` — checks Factor II critical rules |
-| 8 | Build `OLQAnalysisResult`: overallScore (avg of 15), overallRating, top 3 strengths (lowest scores), bottom 3 weaknesses (highest scores) |
-| 9 | Atomic Firestore batch write: `ppdt_results/{submissionId}` (full result) + `submissions/{submissionId}` (status → COMPLETED) |
-| 10 | Invalidate dashboard cache: `GetOLQDashboardUseCase.invalidateCache(userId)` + push notification |
+| 3 | Resolve `candidateGender`: `UserProfileRepository.getUserProfile(userId).gender.displayName` — falls back to `"Unknown"` if fetch fails |
+| 4 | Fetch `PPDTQuestion` via `TestContentRepository.getPPDTQuestion(questionId)` — Room cache → Firestore fallback; includes `imageUrl` and structured `imageContext` |
+| 5 | Download image bytes from `imageUrl` (best-effort, `Dispatchers.IO`); on failure logs error and proceeds with `ByteArray(0)` |
+| 6 | Build multimodal Gemini prompt: `PPDTPrompts.generatePPDTMultimodalPrompt(story, imageContext, candidateGender)` — injects per-picture rubric (coreElements, penalizedThemes, primaryOLQs, deviationTolerance) |
+| 7 | Call Gemini AI: `GeminiAIService.analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)` — delegated to `GeminiPPDTAnalyzer`; model `gemini-2.5-flash`, 60 s timeout, max 3 retries with exponential backoff |
+| 8 | Parse JSON response → 15 `OLQScore` objects (each with `score`, `confidence`, `reasoning`) |
+| 9 | SSB validation: `ValidationIntegration.validateScores(olqScores, EntryType.NDA)` — checks Factor II critical rules |
+| 10 | Build `OLQAnalysisResult`: overallScore (avg of 15), overallRating, top 3 strengths, bottom 3 weaknesses |
+| 11 | Atomic Firestore batch write: `ppdt_results/{submissionId}` (full result) + `submissions/{submissionId}` (status → COMPLETED) |
+| 12 | Invalidate dashboard cache + push notification |
 
 **Error path:** On failure after retries → `analysisStatus = FAILED`, failure notification sent, `Result.failure()` returned to WorkManager.
+
+**Key implementation files:**
+- `PPDTAnalysisWorker.kt` — orchestration, image download, gender resolution
+- `GeminiPPDTAnalyzer.kt` (`core/data/.../ai/`) — multimodal Gemini call + response parsing
+- `PPDTPrompts.kt` (`core/data/.../ai/prompts/`) — `generatePPDTMultimodalPrompt()`
 
 ---
 
 ## 10. Gemini AI Prompt Design
 
-**Prompt builders:**
-- `core/data/.../ai/prompts/PsychologyTestPrompts.kt` → `generatePPDTAnalysisPrompt(submission, imageContext, candidateGender)`
-- `core/data/.../ai/prompts/EnhancedPsychologyPrompts.kt` → `buildPPDTPrompt(...)` (uses `SSBPromptCore` for standardised SSB context)
+**Prompt builder:** `core/data/.../ai/prompts/PPDTPrompts.kt` → `generatePPDTMultimodalPrompt(story, imageContext, candidateGender)`
 
-**Scoring scale:** 1–10, **LOWER = BETTER** (SSB convention — opposite of typical grading)
+The prompt sends **both image bytes and a per-picture rubric** to Gemini (multimodal). Gemini directly verifies scene accuracy from the image; the rubric controls what to reward and penalize.
+
+**Prompt structure:**
+```
+[IMAGE BYTES attached via content { inlineData(imageBytes, "image/jpeg") }]
+
+=== PICTURE BRIEFING ===
+Scene: {imageContext.sceneDescription}
+Core elements (MUST acknowledge — EFFECTIVE_INTELLIGENCE penalty if missed): ...
+Ambiguous elements (creative interpretation acceptable — picture is hazy): ...
+Penalized story themes (heavy penalty): ...
+Primary OLQs this picture tests: ...
+Deviation tolerance: LOW | MEDIUM | HIGH
+
+=== CANDIDATE STORY ===
+{story}  (Length: N chars | Writing time: 4 min)
+
+=== CANDIDATE PROFILE ===
+Gender: {candidateGender}
+
+=== SSB SCORING SCALE (LOWER = BETTER) ===
+[scoring rules block]
+
+=== OUTPUT FORMAT (JSON only) ===
+{ "olqScores": { "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 85, "reasoning": "..."}, ... } }
+```
+
+**Scoring scale:** 1–10, **LOWER = BETTER** (SSB convention)
 
 | Rating | Score Range |
 |--------|-------------|
@@ -248,34 +308,7 @@ Steps in sequence:
 | Average | ≤ 7 |
 | Needs Improvement | > 7 |
 
-**Story signals that BOOST scores (lower numbers):**
-
-| Signal | OLQs Boosted |
-|--------|-------------|
-| Proactive hero | INITIATIVE, COURAGE |
-| Teamwork / helping others | COOPERATION, SOCIAL_ADJUSTMENT |
-| Clear problem-solving | REASONING_ABILITY, EFFECTIVE_INTELLIGENCE |
-| Past-Present-Future structure | ORGANIZING_ABILITY |
-| Goal established in first 2–3 lines | SPEED_OF_DECISION |
-| Optimistic outcome through effort (not luck) | DETERMINATION, LIVELINESS |
-
-**Story signals that PENALISE (raise numbers):**
-
-- Material rewards (money, prize, trophy) — caps maximum score
-- Passive hero who is acted upon
-- Unclear narrative / no central goal
-
-**Mandatory JSON output from Gemini:**
-
-```json
-{
-  "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": { "score": 5, "confidence": 85, "reasoning": "..." },
-    "REASONING_ABILITY": { "score": 6, "confidence": 80, "reasoning": "..." }
-    // ... all 15 OLQs required
-  }
-}
-```
+**Determinism:** `TEMPERATURE = 0.0f` in `GeminiAIService.kt` — identical story → identical score always.
 
 ---
 
@@ -328,12 +361,29 @@ ppdt_results/{submissionId}
 
 ```
 test_content/ppdt/image_batches/{batchId}
-  ├── version: String
+  ├── totalImages: Int
   └── images: List<{
-        id, imageUrl, imageDescription, context,
-        viewingTimeSeconds, writingTimeMinutes,
-        minCharacters, maxCharacters,
-        category, difficulty
+        id: String,
+        imageUrl: String,
+        imageDescription: String,
+        imageContext: {
+          sceneDescription: String,
+          coreElements: List<String>,
+          ambiguousElements: List<String>,
+          expectedThemes: List<String>,
+          penalizedThemes: List<String>,
+          primaryOLQs: List<String>,
+          deviationTolerance: "LOW" | "MEDIUM" | "HIGH",
+          exemplarGoodHints: List<String>,
+          exemplarBadHints: List<String>
+        },
+        genderTag: "MALE" | "FEMALE" | "MIXED",
+        category: String,
+        difficulty: String,
+        viewingTimeSeconds: Int,
+        writingTimeMinutes: Int,
+        minCharacters: Int,
+        maxCharacters: Int
       }>
 ```
 
@@ -350,7 +400,7 @@ test_content/ppdt/image_batches/{batchId}
 | III — Social Effectiveness | DYNAMIC | INITIATIVE, SELF_CONFIDENCE, SPEED_OF_DECISION, INFLUENCE_GROUP, LIVELINESS | ±2 ticks |
 | IV — Character | CHARACTER | DETERMINATION, COURAGE, STAMINA | ±2 ticks |
 
-**Auto-reject rule:** Factor II overall score ≥ 8 → automatic rejection flag.  
+**Auto-reject rule:** Factor II overall score ≥ 8 → automatic rejection flag.
 **Critical OLQs:** REASONING_ABILITY, all Factor II, LIVELINESS, COURAGE — score ≥ 8 triggers review.
 
 ### Dashboard integration
@@ -386,20 +436,25 @@ data class PPDTSubmissionResultUiState(
 
 The result screen polls by observing the Flow — no manual refresh required.
 
+**Per-OLQ reasoning (Phase 4):** `PPDTSubmissionResultScreen` renders `PPDTOLQReasoningCard(olqResult)` when `analysisStatus == COMPLETED`. Each OLQ row is expandable and shows `OLQScore.reasoning` from the Gemini response — giving candidates specific feedback on why they scored low.
+
 ---
 
 ## 14. Domain Models Quick Reference
 
 | Class | File | Purpose |
 |-------|------|---------|
-| `PPDTQuestion` | `core/domain/.../model/PPDTTest.kt` | Image URL, context for AI, viewing/writing time config |
+| `PPDTQuestion` | `core/domain/.../model/PPDTTest.kt` | Image URL, `imageContext` (structured), `genderTag`, viewing/writing time config |
+| `PPDTImageContext` | same | Structured per-picture rubric: sceneDescription, coreElements, ambiguousElements, expectedThemes, penalizedThemes, primaryOLQs, deviationTolerance, exemplarHints |
+| `GenderTag` | same | `MALE`, `FEMALE`, `MIXED` — used for image routing and Room entity filtering |
+| `DeviationTolerance` | same | `LOW`, `MEDIUM`, `HIGH` — controls how strictly scene accuracy is enforced in prompt |
 | `PPDTSubmission` | same | Full submission including story, timings, `analysisStatus`, `olqResult` |
 | `PPDTPhase` | same | Enum: INSTRUCTIONS → IMAGE_VIEWING → WRITING → REVIEW → SUBMITTED |
 | `PPDTTestSession` | same | Active session tracking (sessionId, phaseId, startTimes) |
 | `PPDTTestConfig` | same | Defaults for timing & character limits |
 | `PPDTDetailedScores` | same | Instructor grading breakdown (perception, imagination, narration, characterDepiction, positivity) |
 | `PPDTInstructorReview` | same | Manual instructor review (instructorId, finalScore 0–100, agreedWithAI) |
-| `OLQAnalysisResult` | `core/domain/.../model/scoring/UnifiedOLQResult.kt` | Unified AI result (15 OLQ scores, overallScore, rating, strengths, weaknesses) |
+| `OLQAnalysisResult` | `core/domain/.../model/scoring/UnifiedOLQResult.kt` | Unified AI result (15 OLQ scores with reasoning, overallScore, rating, strengths, weaknesses) |
 | `OLQ` | `core/domain/.../model/interview/OLQ.kt` | Enum of all 15 qualities with Factor grouping & critical-flag metadata |
 | `AnalysisStatus` | `UnifiedOLQResult.kt` | PENDING_ANALYSIS, ANALYZING, COMPLETED, FAILED |
 
@@ -408,12 +463,21 @@ The result screen polls by observing the Flow — no manual refresh required.
 ## 15. Test Coverage
 
 | Test File | Module | What It Covers |
-|-----------|--------|---------------|
-| `PPDTTestViewModelTest.kt` | `app` | Question loading, phase transitions, story writing, submission |
+|-----------|--------|----------------|
+| `PPDTTestViewModelTest.kt` | `app` | Question loading (21 tests), phase transitions, story writing, submission, limit check |
+| `PPDTProfileGateTest.kt` | `app` | Profile gate (6 tests): isProfileIncomplete when profile missing, proceeds when gender set, no gate on network error, MALE/FEMALE/OTHER gender routing |
+| `PPDTAnalysisWorkerTest.kt` | `app` | Worker (7 tests): MALE/FEMALE/Unknown gender resolution, failure on missing submission, skip on non-PENDING status, multimodal call verified |
+| `PPDTSubmissionResultViewModelTest.kt` | `app` | Result screen (5 tests): OLQ reasoning in state, empty reasoning safe default, loading/completed flow |
+| `GeminiAIServiceTest.kt` | `core:data` | AI service (6 tests): analyzePPDTMultimodal success/failure, Content vs String call, empty-bytes edge case, temperature=0 |
+| `PPDTPromptTest.kt` | `core:data` | Prompt (4 tests): coreElements present, penalizedThemes present, candidateGender present, no `{placeholder}` or `null` in output |
+| `PPDTImageContextTest.kt` | `core:domain` | Domain model (3 tests): empty coreElements detectable, DeviationTolerance has exactly 3 values, PPDTQuestion defaults to empty context |
+| `PPDTImageContextMappingTest.kt` | `core:data` | JSON (2 tests): PPDTImageContext serializes/deserializes losslessly, CachedPPDTImageEntity defaults genderTag to MIXED |
+| `PPDTQuestionDefaultsTest.kt` | `core:domain` | Model defaults (2 tests): minCharacters=200 matches UI, maxCharacters=1000 |
 | `PPDTImageCacheManagerTest.kt` | `core:data` | Cache sync, eviction, status tracking |
 | `PPDTImageCacheDaoTest.kt` | `core:data` | Room DAO queries |
-| `PPDTPromptContextValidationTest.kt` | `core:data` | AI prompt generation validation |
 | `GetOLQDashboardUseCaseTest.kt` | `core:domain` | Dashboard aggregation logic, timeout/cache behaviour |
+
+**Total PPDT-specific tests (Phases 1–8): 56**
 
 Run all PPDT-relevant tests:
 
@@ -427,18 +491,30 @@ Run all PPDT-relevant tests:
 
 ## 16. Content Ingestion Scripts
 
-Images are uploaded to Firebase Storage and metadata written to Firestore via Node.js scripts in `scripts/`:
+### Python pipeline (active — Phase 5)
+
+**Directory:** `scripts/ppdt-picture-pipeline/`
 
 | Script | Purpose |
 |--------|---------|
-| `upload_ppdt_images.js` | Full ingestion with validation |
-| `upload_ppdt_images_simple.js` | Simple upload (no validation) |
-| `update_ppdt_urls_smart.js` | Update Storage URLs in Firestore |
-| `update_ppdt_image_urls_fixed.js` | URL correction |
-| `make_ppdt_images_public.js` | Public access config |
-| `add_remaining_ppdt_images.js` | Batch remainder handling |
+| `step1_extract_cards.py` | Crop 2×2 grid PNGs → 64 individual JPEGs, strip caption bars (bottom 18% of each quadrant) |
+| `step2_generate_context.py` | Gemini-expanded `PPDTImageContext` JSON for each image; checkpoint-based resumable; 1 req/s rate limit; HTML preview gate |
+| `step3_upload.py` | Delete old Storage images, upload 64 new JPEGs, overwrite Firestore `batch_001` (idempotent, `--dry-run` flag available) |
+| `gender_map.json` | Hardcoded gender classification for all 64 image IDs (MALE / FEMALE / MIXED) |
+| `preview_template.html` | Jinja2 template: image + context fields + genderTag badge side-by-side; red flag on invalid OLQ names |
 
-**Ingestion principle (from `CLAUDE.md`):** LLM is NOT used for `imageUrl`, `imageDescription`, or `context` fields — these are set deterministically. LLM is only used for enrichment tags (difficulty, category).
+**Ingestion principle (from `CLAUDE.md`):** LLM is NOT used for `imageUrl` or `imageDescription` — these are set deterministically. LLM (Gemini) is only used for enriching `PPDTImageContext` fields (themes, OLQs, hints). Human review of `preview.html` is a mandatory gate before any Firestore write.
+
+### Legacy Node.js scripts (superseded)
+
+| Script | Status |
+|--------|--------|
+| `upload_ppdt_images.js` | Superseded by Python pipeline |
+| `upload_ppdt_images_simple.js` | Superseded |
+| `update_ppdt_urls_smart.js` | Superseded |
+| `update_ppdt_image_urls_fixed.js` | Superseded |
+| `make_ppdt_images_public.js` | Superseded |
+| `add_remaining_ppdt_images.js` | Superseded |
 
 ---
 
@@ -448,9 +524,11 @@ _Update this section as bugs are found and improvements are made._
 
 | # | Area | Issue / Improvement | Status |
 |---|------|---------------------|--------|
-| 1 | Gender routing | `getPPDTQuestion(genderTag)` filter is a **no-op** until Phase 6 adds `genderTag` field to `CachedPPDTImageEntity` + Room migration. Routing infrastructure is in place (Phase 3); activation is automatic once Phase 5 image upload + Phase 6 migration ship. | Deferred to Phase 6 |
-| 2 | `PPDTTestViewModel` | File is 620 lines (300-line limit). Requires split into `PPDTTestViewModel.kt` + `PPDTSubmitViewModel.kt` or similar. Pre-existing tech debt; not introduced by Phase 3. | Deferred |
-| 3 | OLQ Reasoning display | `PPDTOLQReasoningCard` is PPDT-only (Phase 4). TAT/WAT/SRT result screens do not yet show per-OLQ reasoning. When those screens need it, move the card into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
+| 1 | Image download in worker | `URL(imageUrl).readBytes()` is a one-shot HTTP call with no timeout or retry. Should be replaced with OkHttp/Ktor for proper timeout + retry. Analysis proceeds with `ByteArray(0)` if download fails (graceful degradation). | Deferred |
+| 2 | `PPDTTestViewModel` file size | File is ~620 lines (300-line limit). Pre-existing tech debt; not introduced in Phases 1–8. Requires split into `PPDTTestViewModel.kt` + `PPDTSubmitViewModel.kt` or similar. | Deferred |
+| 3 | OLQ Reasoning in other tests | `PPDTOLQReasoningCard` is PPDT-only (Phase 4). TAT/WAT/SRT result screens do not yet show per-OLQ reasoning. When those screens need it, move the card into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
+| 4 | Profile gate condition | Gate triggers only when `profile == null` (server confirms no profile). If profile exists but gender field is null, the user is NOT gated — they get the full image pool. This is intentional (lenient). If stricter gating is required, update `resolveGenderTag()` condition. | Intentional design choice |
+| 5 | `analyzePPDTResponse` legacy | Text-only method fully removed from `AIService` interface and `GeminiAIService`. No callers remain. | ✅ Cleaned up in Phase 8 |
 
 ---
 
@@ -460,12 +538,18 @@ _Update this section as bugs are found and improvements are made._
 [StudentHomeScreen]
      │ tap PPDT
      ▼
-[PPDTTestScreen] ──loadTest("ppdt_standard")──► [TestContentRepository]
-                                                      │
-                                              Room cache hit?
-                                              ├─ YES: CachedPPDTImageEntity
-                                              └─ NO : Firestore test_content/ppdt/image_batches
-                                                        └─► Room insert
+[PPDTTestViewModel.loadTest()]
+     ├─ [1] checkSubscriptionEligibility()
+     ├─ [2] resolveGenderTag()              ← UserProfileRepository (Phase 3)
+     │         ├─ profile null → isProfileIncomplete=true → PPDTProfileRequiredDialog → stop
+     │         ├─ MALE/FEMALE → gender-filtered image pool
+     │         └─ OTHER / error → full pool
+     └─ [3] TestContentRepository.getPPDTQuestion(genderTag)
+                 │
+         Room cache hit?
+         ├─ YES: CachedPPDTImageEntity (imageContextJson + genderTag)
+         └─ NO : Firestore test_content/ppdt/image_batches/batch_001
+                   └─► Room insert
      │
      │ imageUrl in UiState
      ▼
@@ -483,15 +567,18 @@ _Update this section as bugs are found and improvements are made._
                                    │
      │                             │ (background)
      │                        [PPDTAnalysisWorker]
-     │                             ├── Fetch submission
-     │                             ├── Fetch image context (Room/Firestore)
-     │                             ├── Build prompt (PsychologyTestPrompts)
-     │                             ├── Gemini gemini-2.5-flash (60 s, 3 retries)
-     │                             ├── Validate 15 OLQ scores (SSB rules)
-     │                             ├── Firestore batch write:
-     │                             │     ppdt_results/{id}   ← full OLQAnalysisResult
-     │                             │     submissions/{id}    ← status COMPLETED
-     │                             └── Invalidate dashboard cache + push notification
+     │                             ├─ [1] Fetch submission + verify PENDING_ANALYSIS
+     │                             ├─ [2] Resolve candidateGender from UserProfile
+     │                             ├─ [3] Fetch PPDTQuestion (imageUrl + imageContext)
+     │                             ├─ [4] Download image bytes (best-effort)
+     │                             ├─ [5] generatePPDTMultimodalPrompt(story, imageContext, gender)
+     │                             ├─ [6] GeminiAIService.analyzePPDTMultimodal(imageBytes, story, context, gender)
+     │                             │       └─ GeminiPPDTAnalyzer → gemini-2.5-flash, temp=0, 60s, 3 retries
+     │                             ├─ [7] Validate 15 OLQ scores (SSB Factor II rules)
+     │                             ├─ [8] Firestore batch write:
+     │                             │       ppdt_results/{id}   ← full OLQAnalysisResult (with reasoning)
+     │                             │       submissions/{id}    ← status COMPLETED
+     │                             └─ [9] Invalidate dashboard cache + push notification
      │
      ▼
 [PPDTSubmissionResultScreen]
@@ -500,6 +587,7 @@ _Update this section as bugs are found and improvements are made._
      └─ analysisStatus == COMPLETED:
            getPPDTResult(submissionId) ──► ppdt_results/{id}
            Display OLQ scores, rating, strengths, weaknesses
+           PPDTOLQReasoningCard: expandable per-OLQ reasoning text   ← Phase 4
 
 [StudentHomeScreen → OLQDashboardCard]
      │ GetOLQDashboardUseCase (5-min cache, 6-s per-type timeout)
@@ -508,182 +596,41 @@ _Update this section as bugs are found and improvements are made._
 
 ---
 
-## 19. Current Gaps (Confirmed by Code Analysis)
+## 19. Gaps Fixed in Phases 1–8
 
-These are verified gaps in the current implementation, not assumptions:
+All gaps listed below were confirmed by code analysis before the improvement phases and are now resolved.
 
-| # | Gap | Where | Impact |
-|---|-----|--------|--------|
-| 1 | `PPDTQuestion.context` is empty string in production | `batch_001` has no context; `batch_002` referenced in code but doesn't exist in Firestore | Gemini gets zero picture-specific guidance — all 50 pictures scored identically |
-| 2 | Generic prompt — no per-picture rubric | `PsychologyTestPrompts.generatePPDTAnalysisPrompt()` | Gemini can't penalize wrong scene interpretation |
-| 3 | `candidateGender` hardcoded to `"male"` | `PPDTAnalysisWorker` | Every candidate, regardless of gender, gets male-protagonist guidance |
-| 4 | Gemini temperature not set (default ~0.7–1.0) | `GeminiAIService` | Score drift: same story submitted twice gets different scores |
-| 5 | `batch_001` uses placeholder images | `scripts/ppdt_batch_001.json` | No real pictures in production — `via.placeholder.com` URLs |
-| 6 | `minCharacters` inconsistency | Domain model says 50, UI enforces 200 | Inconsistent contract; neither is well-justified |
-| 7 | `OLQScore.reasoning` never shown in UI | `PPDTSubmissionResultScreen` | Candidates see a score number but not why — feedback loop broken |
-| 8 | No repeat-picture deduplication | `PPDTImageCacheManager.getLeastUsedImages()` rotates by count only | Same picture can repeat for frequent users; no anti-gaming logic |
+| # | Gap | Fix | Phase |
+|---|-----|-----|-------|
+| 1 | `PPDTQuestion.context` was empty string; no per-picture rubric | Replaced with structured `PPDTImageContext`; 64 images uploaded with full context | 5 + 6 |
+| 2 | Generic prompt — no per-picture rubric | `PPDTPrompts.generatePPDTMultimodalPrompt()` injects coreElements, penalizedThemes, primaryOLQs, deviationTolerance | 8 |
+| 3 | `candidateGender` hardcoded to `"male"` | `PPDTAnalysisWorker` resolves from `UserProfileRepository.getUserProfile(userId).gender` | 2 |
+| 4 | Gemini temperature not set (default ~0.7–1.0) → score drift | `TEMPERATURE = 0.0f` in `GeminiAIService` | 1 |
+| 5 | `batch_001` used 57 placeholder images | 64 Gemini-generated images extracted, gender-classified, context-enriched, and uploaded | 5 |
+| 6 | `minCharacters` inconsistency (domain=50, UI=200) | `PPDTQuestion.minCharacters` updated to 200 | 1 |
+| 7 | `OLQScore.reasoning` never shown in UI | `PPDTOLQReasoningCard` renders per-OLQ reasoning in result screen | 4 |
+| 8 | No gender-based image routing | Profile gate + `GenderTag` filter on image pool + Room migration | 3 + 6 |
 
----
-
-## 20. Target Architecture — Multimodal Evaluation
-
-**Decision:** Gemini receives the actual image bytes + the story (multimodal), not just a text description.  
-**Rationale:** Gemini 2.5 Flash supports vision. Direct image input is more accurate than relying on a human-written text description and eliminates the context-authoring bottleneck for verifying scene accuracy.
-
-### New evaluation flow (post-improvement)
-
-```
-PPDTAnalysisWorker
-  │
-  ├─ Fetch submission (story + questionId)
-  ├─ Fetch PPDTQuestion (imageUrl + structured PPDTImageContext)
-  ├─ Download image bytes from Firebase Storage          ← NEW
-  │
-  └─ GeminiAIService.analyzePPDTMultimodal(
-         imageBytes: ByteArray,                          ← NEW (actual picture)
-         story: String,
-         imageContext: PPDTImageContext,                 ← NOW structured (see Section 21)
-         candidateGender: String                         ← NOW from UserProfile
-     )
-```
-
-### Key API changes required
-
-| File | Current | Target |
-|------|---------|--------|
-| `GeminiAIService` | `analyzePPDTResponse(prompt: String)` | `analyzePPDTMultimodal(imageBytes, story, context, gender)` |
-| `PPDTAnalysisWorker` | Fetches text context only | Also downloads image bytes from Firebase Storage |
-| `GeminiAIService` | `temperature` not set (default) | `temperature = 0` for determinism |
-| `PPDTAnalysisWorker` | `candidateGender = "male"` hardcoded | Read from `UserProfileRepository.getUserProfile(userId).gender` |
+**Remaining (not part of Phases 1–8):** Repeat-picture deduplication beyond least-used count rotation — no anti-gaming logic for frequent users.
 
 ---
 
-## 21. New Per-Picture Context Schema — PPDTImageContext
+## 20. Phase Implementation History
 
-Replace `PPDTQuestion.context: String` with a structured domain class. The text `context` string is too loose — Gemini has no idea which elements are core vs. optional, which themes are penalized, or which OLQs a picture targets.
-
-### Kotlin domain class (new, in `core/domain/model/PPDTTest.kt`)
-
-```kotlin
-data class PPDTImageContext(
-    val sceneDescription: String,               // One-line human-readable scene summary
-    val coreElements: List<String>,             // Must be acknowledged → EFFECTIVE_INTELLIGENCE penalty if missed
-    val ambiguousElements: List<String>,        // Creative interpretation OK (hazy-tolerance)
-    val expectedThemes: List<String>,           // Acceptable story directions → positive scoring
-    val penalizedThemes: List<String>,          // Wrong/irrelevant story directions → heavy penalty
-    val primaryOLQs: List<String>,              // OLQ names this picture is designed to test
-    val deviationTolerance: DeviationTolerance, // How strictly scene accuracy is enforced
-    val exemplarGoodHints: List<String>,        // Few-shot positive examples for Gemini calibration
-    val exemplarBadHints: List<String>          // Few-shot negative examples for Gemini calibration
-)
-
-enum class DeviationTolerance { LOW, MEDIUM, HIGH }
-```
-
-### Firestore document shape (inside `test_content/ppdt/image_batches/{batchId}.images[]`)
-
-```json
-{
-  "id": "ppdt_img_rescue_001",
-  "imageUrl": "gs://ssbmax.appspot.com/ppdt/images/rescue_001.jpg",
-  "imageDescription": "Hazy sketch: struggling figure in water, group on bank",
-  "imageContext": {
-    "sceneDescription": "A person struggling in a water body; a group of bystanders watching from the bank",
-    "coreElements": ["water body", "struggling/drowning figure", "group of onlookers"],
-    "ambiguousElements": ["river vs. lake vs. sea", "number of bystanders", "time of day"],
-    "expectedThemes": ["rescue attempt", "leader takes charge", "community rallies to help", "overcoming fear"],
-    "penalizedThemes": ["story unrelated to water or rescue", "supernatural/magical rescue", "bystanders passively congratulated for watching"],
-    "primaryOLQs": ["COURAGE", "INITIATIVE", "SOCIAL_ADJUSTMENT", "SPEED_OF_DECISION"],
-    "deviationTolerance": "MEDIUM",
-    "exemplarGoodHints": ["Hero immediately assesses the situation and jumps in, directing others to get rope"],
-    "exemplarBadHints": ["Story about a drama being filmed near a lake with no connection to the drowning figure"]
-  },
-  "category": "rescue",
-  "difficulty": "medium",
-  "viewingTimeSeconds": 30,
-  "writingTimeMinutes": 4,
-  "minCharacters": 200,
-  "maxCharacters": 1000
-}
-```
-
-### Backward compatibility note
-The Room entity `CachedPPDTImageEntity.context: String` must be migrated to `imageContext: String` (JSON-serialized `PPDTImageContext`) with a Room database migration. Old records default to an empty `PPDTImageContext`.
+| Phase | What | Commit | Status |
+|-------|------|--------|--------|
+| 1 | Deterministic scoring (TEMPERATURE=0) + minCharacters=200 | `42a6c97` | ✅ Done |
+| 2 | Gender from UserProfile in PPDTAnalysisWorker | `308ca41` | ✅ Done |
+| 3 | Profile gate + gender-based image routing | `b778275` | ✅ Done |
+| 4 | OLQ reasoning in result screen (PPDTOLQReasoningCard) | `e9fc1e6` | ✅ Done |
+| 5 | Image replacement pipeline (Python: extract → context → upload) | `768c3d6` | ✅ Done |
+| 6 | PPDTImageContext + GenderTag domain model + Room migration 21→22 | `2abf352` | ✅ Done |
+| 7 | Multimodal GeminiAIService (analyzePPDTMultimodal + GeminiPPDTAnalyzer) | `1f49069` | ✅ Done |
+| 8 | Multimodal prompt rubric + worker image-aware analysis | `68c18f1` | ✅ Done |
 
 ---
 
-## 22. Multimodal Gemini Prompt Design
-
-The prompt sends both the image and a per-picture scoring rubric. Gemini directly verifies scene accuracy from the image, and the rubric tells it what to penalize.
-
-```
-[IMAGE ATTACHED — actual picture bytes]
-
-You are an SSB PPDT examiner. A candidate viewed this picture for 30 seconds (it was shown hazy and low-resolution) and then wrote a story. Evaluate the story.
-
-=== PICTURE BRIEFING ===
-Scene: {imageContext.sceneDescription}
-
-Core elements (candidate MUST acknowledge or loses EFFECTIVE_INTELLIGENCE marks):
-{imageContext.coreElements → bulleted list}
-
-Ambiguous elements (hazy picture — creative interpretation is acceptable):
-{imageContext.ambiguousElements → bulleted list}
-
-Expected story themes (score positively):
-{imageContext.expectedThemes → bulleted list}
-
-Penalized story themes (heavy penalty — story is off-target):
-{imageContext.penalizedThemes → bulleted list}
-
-Primary OLQs this picture tests: {imageContext.primaryOLQs}
-Deviation tolerance: {imageContext.deviationTolerance}
-
-Calibration examples:
-  GOOD story: {imageContext.exemplarGoodHints[0]}
-  BAD story: {imageContext.exemplarBadHints[0]}
-
-=== CANDIDATE STORY ===
-{story}
-(Length: {charactersCount} chars | Writing time: {writingTimeTakenMinutes} min)
-
-=== CANDIDATE PROFILE ===
-Gender: {candidateGender}
-[Note: candidate should ideally write a protagonist matching their gender]
-
-=== SSB SCORING SCALE (LOWER = BETTER) ===
-5 = Very Good | 6 = Good | 7 = Average | 8 = Poor | 9 = Fail/Garbage
-Use ONLY scores 5–9. Never use 1–4 or 10.
-
-=== MANDATORY SCORING RULES ===
-1. SCENE ACCURACY (check against the image you can see):
-   - Core elements missing from story → EFFECTIVE_INTELLIGENCE score ≥ 8
-   - Completely wrong scene interpretation → EFFECTIVE_INTELLIGENCE = 9, penalize Factor III OLQs
-   - Ambiguous elements mis-stated → no penalty (hazy tolerance)
-
-2. STORY QUALITY (standard SSB):
-   - Proactive hero, early goal → boost INITIATIVE, SPEED_OF_DECISION
-   - Teamwork, helping others → boost COOPERATION, SOCIAL_ADJUSTMENT
-   - Material reward (money/prize) → cap primary OLQ at 7
-   - Passive hero → penalize INITIATIVE, SELF_CONFIDENCE
-   - Past-Present-Future structure → boost ORGANIZING_ABILITY
-
-3. DETERMINISM: Score identically if given the same story. Do not vary.
-
-4. GARBAGE DETECTION: Gibberish/random text → score 9 for all OLQs.
-
-=== OUTPUT FORMAT (JSON only, no markdown, start with {) ===
-{
-  "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 6, "confidence": 85, "reasoning": "Candidate correctly identified the rescue scenario and showed practical judgment"},
-    ...all 15 OLQs...
-  }
-}
-```
-
----
-
-## 23. OLQ Coverage Matrix — 50-Picture Bank Design
+## 21. OLQ Coverage Matrix — 50-Picture Bank Design
 
 **Rule:** Design the matrix BEFORE generating or commissioning pictures. Each OLQ must appear as a "primary OLQ" in at least 4–6 pictures.
 
@@ -720,7 +667,7 @@ Use ONLY scores 5–9. Never use 1–4 or 10.
 
 ---
 
-## 24. Picture Creation Pipeline
+## 22. Picture Creation Pipeline
 
 ### Design principles
 - **B&W photograph style** — photo-realistic images of real human figures in real settings (NOT pencil sketches). Think staged black-and-white photographs.
@@ -728,7 +675,7 @@ Use ONLY scores 5–9. Never use 1–4 or 10.
 - **Low resolution + grainy** — Gaussian noise + slight blur applied over the base image. Not HD; deliberately hard to see clearly at a glance.
 - **Human figures present** — 1 to 6 people in realistic settings (office, outdoor, group meeting, etc.); no abstract or single-object images
 - **No text or labels** in the image
-- **Ambiguous but recognizable** — candidate can identify the core scene and characters but fine details are debatable (which is the point)
+- **Ambiguous but recognizable** — candidate can identify the core scene and characters but fine details are debatable
 
 ### Image style reference
 The SSB PPDT picture style (from actual SSB centres):
@@ -736,7 +683,7 @@ The SSB PPDT picture style (from actual SSB centres):
 - Photo-realistic human figures — real people, real environments
 - Grainy texture overlaid (film grain / noise)
 - Slightly reduced contrast — mid-tones flattened
-- PPDT: additional haze/blur layer (Gaussian blur ~2–4px radius) making it harder to discern fine details
+- PPDT: additional haze/blur layer (Gaussian blur ~2–4px radius)
 - TAT: same style but WITHOUT the haze layer — figures are clearly visible
 
 ### Image generation / sourcing approach
@@ -744,8 +691,8 @@ Option A (recommended): Commission or photograph staged B&W scenes matching each
 
 Option B: Use AI image generation (Midjourney/DALL-E) with realistic style, then apply B&W + grain + blur in post-processing:
 ```
-Prompt template: "black and white photograph, realistic human figures, [SCENE INTENT], 
-[NUMBER] people, indoor/outdoor setting, 1960s documentary style, grainy film texture, 
+Prompt template: "black and white photograph, realistic human figures, [SCENE INTENT],
+[NUMBER] people, indoor/outdoor setting, 1960s documentary style, grainy film texture,
 no text, monochrome"
 ```
 Then apply in ImageMagick/Pillow:
@@ -763,79 +710,7 @@ convert input.jpg -colorspace Gray -noise 4 output_tat.jpg
 - [ ] Does NOT suggest a single "correct" story — multiple valid interpretations exist
 - [ ] Ambiguous peripheral elements (good for creative deviation)
 - [ ] No culturally insensitive, violent, or inappropriate content
-- [ ] Matches the intended OLQ category from the matrix (Section 23)
+- [ ] Matches the intended OLQ category from the matrix (Section 21)
 - [ ] Aspect ratio consistent across the batch (~4:3)
-
-### Context generation script (one-time offline, per picture)
-**File:** `scripts/ppdt-picture-pipeline/generate_context.py`
-
-For each image:
-1. Send image to Gemini Vision with structured extraction prompt:
-   ```
-   "Analyze this SSB PPDT-style picture. Extract in JSON:
-   sceneDescription, coreElements[], ambiguousElements[], expectedThemes[],
-   penalizedThemes[], primaryOLQs[] (from: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY,
-   ORGANIZING_ABILITY, POWER_OF_EXPRESSION, SOCIAL_ADJUSTMENT, COOPERATION,
-   SENSE_OF_RESPONSIBILITY, INITIATIVE, SELF_CONFIDENCE, SPEED_OF_DECISION,
-   INFLUENCE_GROUP, LIVELINESS, DETERMINATION, COURAGE, STAMINA),
-   deviationTolerance (LOW|MEDIUM|HIGH)"
-   ```
-2. Human reviews JSON output in HTML preview (image left, extracted JSON right)
-3. Edit/approve
-4. Upload to Firestore `test_content/ppdt/image_batches/{batchId}`
-
-### Deployment gate (same pattern as OIR ingestion)
-- HTML preview with image + generated context side-by-side
-- Gate blocks Firestore write until approved
-- Batch operations (Firestore max 500 docs per write)
-- Checkpoint-based resumable uploads (idempotent by `id`)
-
----
-
-## 25. Pre-Test Profile Gate (Gender Check)
-
-### Problem
-`PPDTAnalysisWorker` hardcodes `candidateGender = "male"`. Gender is stored in the app's Settings → Profile screen but is never read before the test.
-
-### Design
-
-`PPDTTestViewModel.loadTest()` must run two checks in sequence before loading a picture:
-
-```
-loadTest(testId)
-  ├─ [1] checkSubscriptionEligibility()     ← already exists
-  ├─ [2] checkProfileCompleteness()         ← NEW
-  │        └─ UserProfileRepository.getUserProfile(userId)
-  │             ├─ gender is set → proceed
-  │             └─ gender is null/empty → emit ProfileIncompleteEvent, stop loading
-  └─ [3] loadPPDTQuestion(testId)           ← only if 1 & 2 pass
-```
-
-### UiState additions
-
-```kotlin
-data class PPDTTestUiState(
-    // ... existing fields ...
-    val isProfileIncomplete: Boolean = false,
-    val profileRequiredField: String? = null   // "gender" — tells UI which field is missing
-)
-```
-
-### UI behavior
-
-When `isProfileIncomplete == true`:
-- Show dialog: "Complete your profile to take PPDT. Your gender helps AI provide accurate assessment. Go to Settings → Profile."
-- Two buttons: "Go to Settings" (navigates to profile screen) and "Cancel" (goes back)
-- Test does NOT load until profile is complete
-
-### Worker fix (when implementing)
-
-In `PPDTAnalysisWorker`, replace:
-```kotlin
-val candidateGender = "male"  // TODO: get from user profile
-```
-with:
-```kotlin
-val candidateGender = userProfileRepository.getUserProfile(submission.userId)
-    .getOrNull()?.gender ?: "unknown"
-```
+- [ ] `genderTag` assigned and verified in `gender_map.json` before upload
+- [ ] `PPDTImageContext` reviewed in `preview.html` before `step3_upload.py` runs
