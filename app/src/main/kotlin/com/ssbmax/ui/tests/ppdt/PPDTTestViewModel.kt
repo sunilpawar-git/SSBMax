@@ -25,17 +25,6 @@ import java.util.UUID
 import javax.inject.Inject
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 
-/**
- * ViewModel for PPDT Test Screen
- * Loads test questions from cloud via TestContentRepository
- * 
- * MEMORY LEAK PREVENTION:
- * - Registers with MemoryLeakTracker for profiler verification
- * - viewModelScope automatically cancels all jobs in onCleared()
- * - Uses isTimerActive flag for timer lifecycle management
- * - Uses viewModelScope with isActive checks for cooperative cancellation
- * - No static references or context leaks
- */
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
@@ -79,11 +68,7 @@ class PPDTTestViewModel @Inject constructor(
         else -> "Failed to load test. ${e.message ?: "Check your internet connection."}"
     }
 
-    /**
-     * Resolves the gender tag for image routing.
-     * Returns null (and updates uiState) when the test should be blocked due to missing profile.
-     * Returns the gender tag (possibly null for full pool) when the test should proceed.
-     */
+    // Returns null (and sets isProfileIncomplete=true in state) when profile gate blocks the test.
     private suspend fun resolveGenderTag(userId: String): GenderTag? {
         val profileResult = userProfileRepository.getUserProfile(userId).first()
         // Gate only when server explicitly confirms no profile exists (success + null profile)
@@ -98,10 +83,6 @@ class PPDTTestViewModel @Inject constructor(
         }
     }
     
-    /**
-     * Restore timer after configuration change (e.g., screen rotation)
-     * If test was in progress, restart the timer
-     */
     private fun restoreTimerIfNeeded() {
         viewModelScope.launch {
             val state = _uiState.value
@@ -410,12 +391,11 @@ class PPDTTestViewModel @Inject constructor(
     
     fun pauseTest() {
         val session = _uiState.value.session ?: return
-        
+
         _uiState.update { it.copy(
             isTimerActive = false,
             session = session.copy(isPaused = true)
         ) }
-        // TODO: Save session state
     }
     
     private fun startTimer(seconds: Int) {
@@ -476,43 +456,6 @@ class PPDTTestViewModel @Inject constructor(
         ) }
     }
     
-    private fun generateMockQuestion(): PPDTQuestion {
-        return PPDTQuestion(
-            id = "ppdt_q1",
-            imageUrl = "https://example.com/ppdt-image.jpg",
-            imageDescription = "A hazy image showing people in a situation",
-            viewingTimeSeconds = 30,
-            writingTimeMinutes = 4,
-            minCharacters = 200,
-            maxCharacters = 1000
-        )
-    }
-    
-    private fun generateMockAIScore(story: String): PPDTAIScore {
-        // TODO: Actual AI scoring
-        return PPDTAIScore(
-            perceptionScore = 16f,
-            imaginationScore = 14f,
-            narrationScore = 15f,
-            characterDepictionScore = 14f,
-            positivityScore = 17f,
-            overallScore = 76f,
-            feedback = "Good overall story with positive outlook. Could improve imagination.",
-            strengths = listOf(
-                "Good character development",
-                "Positive and optimistic outlook",
-                "Clear narrative structure"
-            ),
-            areasForImprovement = listOf(
-                "Could add more imaginative elements",
-                "Describe the situation's background in more detail"
-            )
-        )
-    }
-    
-    /**
-     * Enqueue PPDTAnalysisWorker for background OLQ analysis
-     */
     private fun enqueuePPDTAnalysisWorker(submissionId: String) {
         val constraints = androidx.work.Constraints.Builder()
             .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
@@ -551,61 +494,4 @@ class PPDTTestViewModel @Inject constructor(
     }
 }
 
-/**
- * UI State for PPDT Test Screen
- */
-data class PPDTTestUiState(
-    val isLoading: Boolean = true,
-    val loadingMessage: String? = null,
-    val error: String? = null,
-    val currentPhase: PPDTPhase = PPDTPhase.INSTRUCTIONS,
-    val imageUrl: String = "",
-    val story: String = "",
-    val charactersCount: Int = 0,
-    val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000,
-    val timeRemainingSeconds: Int = 0,
-    val canProceedToNextPhase: Boolean = false,
-    val isSubmitted: Boolean = false,
-    val submissionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
-    val submission: PPDTSubmission? = null,  // Submission stored locally until Firestore integration complete
-    // Subscription limit fields
-    val isLimitReached: Boolean = false,
-    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
-    val testsLimit: Int = 1,
-    val testsUsed: Int = 0,
-    val resetsAt: String = "",
-    val isTimerActive: Boolean = false,
-    val timerStartTime: Long = 0L,
-    val session: PPDTTestSession? = null,
-    val isProfileIncomplete: Boolean = false
-)
-
-/**
- * Test Session for PPDT
- */
-data class PPDTTestSession(
-    val sessionId: String,
-    val userId: String,
-    val questionId: String,
-    val question: PPDTQuestion,
-    val startTime: Long,
-    val imageViewingStartTime: Long?,
-    val writingStartTime: Long?,
-    val currentPhase: PPDTPhase,
-    val story: String,
-    val isCompleted: Boolean,
-    val isPaused: Boolean
-)
-
-/**
- * Test Configuration for PPDT
- */
-data class PPDTTestConfig(
-    val viewingTimeSeconds: Int = 30,
-    val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 200,
-    val maxCharacters: Int = 1000
-)
 
