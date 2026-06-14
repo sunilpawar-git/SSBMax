@@ -105,6 +105,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(null))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -118,6 +119,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(buildProfile(Gender.MALE)))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -135,6 +137,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.failure(Exception("timeout")))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         viewModel.uiState.test {
@@ -151,6 +154,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(buildProfile(Gender.FEMALE)))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         coVerify { mockTestContentRepo.getPPDTQuestion(genderTag = GenderTag.FEMALE) }
@@ -162,6 +166,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(buildProfile(Gender.MALE)))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         coVerify { mockTestContentRepo.getPPDTQuestion(genderTag = GenderTag.MALE) }
@@ -174,6 +179,7 @@ class PPDTProfileGateTest : BaseViewModelTest() {
         coEvery { mockUserProfileRepo.getUserProfile(any()) } returns flowOf(Result.success(buildProfile(Gender.OTHER)))
 
         viewModel = buildViewModel()
+        viewModel.loadTest()  // screen's LaunchedEffect is SSOT — tests must mirror it
         advanceUntilIdle()
 
         coVerify { mockTestContentRepo.getPPDTQuestion(genderTag = null) }

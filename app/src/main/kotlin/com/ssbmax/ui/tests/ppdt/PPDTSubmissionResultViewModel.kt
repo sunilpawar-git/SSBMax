@@ -13,6 +13,9 @@ import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,10 +75,13 @@ class PPDTSubmissionResultViewModel @Inject constructor(
                     if (submission.analysisStatus == AnalysisStatus.COMPLETED) {
                         android.util.Log.d(TAG, "✅ Status is COMPLETED, loading result from ppdt_results...")
                         loadResult(submissionId)
+                        currentCoroutineContext().cancel()  // terminal state — stop observing Firestore
                     } else {
                         android.util.Log.d(TAG, "⏳ Status is ${submission.analysisStatus}, waiting for completion...")
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e  // CE is a control signal, not a fault
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "❌ Exception while observing submission", e)
                 ErrorLogger.logTestError(e, "Failed to load PPDT submission result", "PPDT")
@@ -127,13 +133,13 @@ class PPDTSubmissionResultViewModel @Inject constructor(
             } else {
                 android.util.Log.w(TAG, "⚠️ Result not yet available", result.exceptionOrNull())
             }
+        } catch (e: CancellationException) {
+            throw e  // CE is a control signal, not a fault
         } catch (e: Exception) {
             android.util.Log.e(TAG, "❌ Error loading OLQ result", e)
             ErrorLogger.logTestError(e, "Failed to load PPDT OLQ result", "PPDT")
         }
     }
-
-
 }
 
 /**

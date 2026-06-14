@@ -154,7 +154,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         assertEquals("", courageScore!!.reasoning)
     }
 
-    // ==================== Bug 3: CancellationException must not produce error ====================
+    // ==================== CancellationException must not produce error ====================
 
     @Test
     fun `ViewModel cancellation does not produce error UiState`() = runTest {
@@ -175,7 +175,7 @@ class PPDTSubmissionResultViewModelTest : BaseViewModelTest() {
         )
     }
 
-    // ==================== Bug 4: Exactly one loadResult call on COMPLETED ====================
+    // ==================== Exactly one loadResult call on COMPLETED ====================
 
     @Test
     fun `loadResult called exactly once when flow emits ANALYZING then COMPLETED`() = runTest {
