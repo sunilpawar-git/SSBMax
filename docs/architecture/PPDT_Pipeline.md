@@ -1,6 +1,6 @@
 # PPDT Pipeline Architecture
 
-**Last updated:** June 2026 (Phase 8 complete)
+**Last updated:** June 2026 (Phase 8 complete; bug-fix + cache improvement pass complete)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
 Picture Perception and Description Test (PPDT) is a Phase 1 psychology test in SSBMax. The candidate views a blurry image for 30 seconds, then writes a story based on what they perceived. The story is evaluated by Gemini AI against 15 Officer-Like Qualities (OLQs) using multimodal analysis (image + story + per-picture rubric), and the result feeds the unified OLQ dashboard.
@@ -58,7 +58,9 @@ Default `testId` is `ppdt_standard`.
 | Composable | File | Responsibility |
 |------------|------|----------------|
 | `PPDTInstructionsPhase` | `components/phases/PPDTInstructionsPhase.kt` | 5-point instruction card, "Start Test" button |
-| `PPDTImageViewingPhase` | `components/phases/PPDTImageViewingPhase.kt` | Coil `AsyncImage` + 30 s progress indicator |
+| `PPDTImageViewingPhase` | `components/phases/PPDTImageViewingPhase.kt` | Layout root: instruction card + image card + timer bar |
+| `PPDTImageCard` | `components/phases/PPDTImageViewingPhase.kt` | Private sub-composable: `AspectRatio(4:3)` image card with `ContentScale.Crop`; extracted to isolate stable content from per-second recomposition |
+| `PPDTTimerProgressBar` | `components/phases/PPDTImageViewingPhase.kt` | Private sub-composable: 30 s linear progress bar; only this recomposes on each second tick |
 | `PPDTWritingPhase` | `components/phases/PPDTWritingPhase.kt` | `OutlinedTextField` with char count (min 200, max 1000), keyboard padding |
 | `PPDTReviewPhase` | `components/phases/PPDTReviewPhase.kt` | Read-only story preview, "Edit Story" returns to WRITING |
 
@@ -139,9 +141,15 @@ SUBMITTED  ──[NavigateToResult event]──► result screen
 
 Both timers auto-advance the phase when they reach 0. `TimerChip` shows MM:SS and turns error-red when < 30 s remaining.
 
-### Configuration-change recovery
+### Configuration-change recovery + generation-token race guard
 
-`timerStartTime: Long` is stored in `UiState`. On ViewModel recreation, `restoreTimerIfNeeded()` computes elapsed time and resumes the timer with the remaining seconds — preventing both timer loss and timer restart on recomposition.
+`timerStartTime: Long` in `PPDTTestUiState` serves a **dual purpose**:
+
+1. **Config-change recovery:** `timeRemainingSeconds` is stored in UiState. On ViewModel recreation, `restoreTimerIfNeeded()` (via `shouldRestoreTimer()` helper) resumes the timer with the saved remaining seconds — no timer loss on device rotation.
+
+2. **Generation token:** Each `startTimer()` call increments `timerGeneration` (ViewModel-private `var`) and writes it into `timerStartTime`. The `finally` block of the dying timer coroutine checks `current.timerStartTime == myGeneration` before clearing `isTimerActive`. This prevents the 30 s IMAGE_VIEWING timer's `finally` block from flipping `isTimerActive = false` after the 240 s WRITING timer has already set it `true`.
+
+`shouldRestoreTimer(s)` encapsulates the three-condition guard: test is in progress, phase is timerable (IMAGE_VIEWING or WRITING), and no timer is already running. This keeps `restoreTimerIfNeeded()` readable and detekt-compliant (ComplexCondition limit = 4).
 
 ---
 
@@ -176,12 +184,13 @@ Active batch: `batch_001` (64 images — replaced in Phase 5).
 
 - **Entity:** `CachedPPDTImageEntity` → table `cached_ppdt_images`
   - Fields: `id`, `imageUrl`, `imageDescription`, `imageContextJson` (JSON-serialized `PPDTImageContext`), `genderTag` (default `MIXED`)
-  - DB version: **22** (migrated from 21 in Phase 6 — `context` column renamed to `imageContextJson`, `genderTag` column added)
+  - DB version: **23** (22→23 migration added `lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0` to `ppdt_batch_metadata`)
 - **DAO:** `PPDTImageCacheDao` — queries include least-used selection, batch fetch, usage tracking
+  - `getLeastUsedImagesByGender(tag, count)` — SQL-level gender filter (`WHERE genderTag = :tag OR genderTag = 'MIXED'`); eliminates the former in-memory `selectRandomImage()` call
 - **Manager:** `core/data/.../repository/PPDTImageCacheManager.kt`
   - Target cache: 15 images; minimum: 5 (triggers `initialSync()`)
-  - Selection: `getLeastUsedImages()` — rotates images so candidates don't repeat
-  - Gender filter: `selectRandomImage(cached, genderTag)` — MALE users get MALE+MIXED pool; FEMALE users get FEMALE+MIXED pool; OTHER/unknown gets full pool
+  - Selection: `getLeastUsedImagesByGender(genderTag, 1)` — SQL rotates + gender-filters in one query
+  - **24h TTL staleness gate:** `isCacheStale()` reads `lastStalenessCheckAt` from `PPDTBatchMetadataEntity`; if < 24 h since last check, skips the Firestore version call entirely. After a Firestore read, updates `lastStalenessCheckAt`. Eliminates the cold-start Firestore round-trip on every warm launch.
 
 ### Gender-based image routing (Phase 3 + 6)
 
@@ -202,10 +211,13 @@ loadTest()
 val imageRequest = remember(imageUrl) {
     ImageRequest.Builder(context).data(imageUrl).crossfade(true).build()
 }
-AsyncImage(model = imageRequest, contentScale = ContentScale.Fit)
+// Card is sized proportionally (4:3 landscape) — no whitespace bands above/below image
+Card(modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f)) {
+    AsyncImage(model = imageRequest, contentScale = ContentScale.Crop)
+}
 ```
 
-`remember(imageUrl)` keeps the request stable across recompositions; Coil handles HTTP disk cache.
+`remember(imageUrl)` keeps the request stable across recompositions; Coil handles HTTP disk cache. `aspectRatio(4f / 3f)` replaced `weight(1f)` to eliminate whitespace bands — PPDT images are landscape 4:3. `ContentScale.Crop` replaced `ContentScale.Fit` so the image fills the card without letter-boxing.
 
 ---
 
@@ -418,9 +430,11 @@ test_content/ppdt/image_batches/{batchId}
 `PPDTSubmissionResultViewModel.loadSubmission(submissionId)`:
 
 1. Opens real-time Firestore listener via `SubmissionRepository.observePPDTSubmission(submissionId)`
-2. When `analysisStatus == COMPLETED` detected → calls `SubmissionRepository.getPPDTResult(submissionId)` (reads `ppdt_results` collection)
+2. When `analysisStatus == COMPLETED` detected → calls `SubmissionRepository.getPPDTResult(submissionId)` (reads `ppdt_results` collection), then immediately calls `currentCoroutineContext().cancel()` to stop the listener — Firestore re-fires the COMPLETED snapshot on any subsequent document update, and without this cancel, each re-fire would call `getPPDTResult()` again (duplicate Firestore reads + duplicate UI updates)
 3. Builds `SSBRecommendationUIModel` from OLQ scores
 4. Exposes `PPDTSubmissionResultUiState` (implements `UnifiedResultUiState` — shared interface across all test result ViewModels)
+
+**`CancellationException` contract:** The `catch (e: Exception)` block always checks `if (e is CancellationException) throw e` first. Without this, a navigate-away (which cancels the scope) would be incorrectly treated as an error and set `uiState.error` — showing a false error to the user.
 
 ```kotlin
 data class PPDTSubmissionResultUiState(
@@ -467,17 +481,17 @@ The result screen polls by observing the Flow — no manual refresh required.
 | `PPDTTestViewModelTest.kt` | `app` | Question loading (21 tests), phase transitions, story writing, submission, limit check |
 | `PPDTProfileGateTest.kt` | `app` | Profile gate (6 tests): isProfileIncomplete when profile missing, proceeds when gender set, no gate on network error, MALE/FEMALE/OTHER gender routing |
 | `PPDTAnalysisWorkerTest.kt` | `app` | Worker (7 tests): MALE/FEMALE/Unknown gender resolution, failure on missing submission, skip on non-PENDING status, multimodal call verified |
-| `PPDTSubmissionResultViewModelTest.kt` | `app` | Result screen (5 tests): OLQ reasoning in state, empty reasoning safe default, loading/completed flow |
+| `PPDTSubmissionResultViewModelTest.kt` | `app` | Result screen (7 tests): OLQ reasoning in state, empty reasoning safe default, loading/completed flow; + `CancellationException` must not set `error` (navigate-away safety); + `loadResult` called exactly once on COMPLETED (no duplicate Firestore reads) |
 | `GeminiAIServiceTest.kt` | `core:data` | AI service (6 tests): analyzePPDTMultimodal success/failure, Content vs String call, empty-bytes edge case, temperature=0 |
 | `PPDTPromptTest.kt` | `core:data` | Prompt (4 tests): coreElements present, penalizedThemes present, candidateGender present, no `{placeholder}` or `null` in output |
 | `PPDTImageContextTest.kt` | `core:domain` | Domain model (3 tests): empty coreElements detectable, DeviationTolerance has exactly 3 values, PPDTQuestion defaults to empty context |
 | `PPDTImageContextMappingTest.kt` | `core:data` | JSON (2 tests): PPDTImageContext serializes/deserializes losslessly, CachedPPDTImageEntity defaults genderTag to MIXED |
 | `PPDTQuestionDefaultsTest.kt` | `core:domain` | Model defaults (2 tests): minCharacters=200 matches UI, maxCharacters=1000 |
-| `PPDTImageCacheManagerTest.kt` | `core:data` | Cache sync, eviction, status tracking |
+| `PPDTImageCacheManagerTest.kt` | `core:data` | Cache sync, eviction, status tracking; + 24h TTL gate (skips Firestore within 24h; calls Firestore after TTL expires); + gender SQL filter verified at DAO level (no in-memory filter) |
 | `PPDTImageCacheDaoTest.kt` | `core:data` | Room DAO queries |
 | `GetOLQDashboardUseCaseTest.kt` | `core:domain` | Dashboard aggregation logic, timeout/cache behaviour |
 
-**Total PPDT-specific tests (Phases 1–8): 56**
+**Total PPDT-specific tests (Phases 1–8 + bug-fix pass): 58**
 
 Run all PPDT-relevant tests:
 
@@ -531,6 +545,13 @@ _Update this section as bugs are found and improvements are made._
 | 5 | `analyzePPDTResponse` legacy | Text-only method fully removed from `AIService` interface and `GeminiAIService`. No callers remain. | ✅ Cleaned up in Phase 8 |
 | 6 | **Cache staleness after batch update** | `initialSync()` used a count-only guard (`if cachedImages >= 15 → skip`). After Phase 5 replaced all 64 images in Firestore, the app kept serving the old placeholder sketches indefinitely because the guard never checked the batch version. **Root cause:** no version comparison in `initialSync()`. **Fix:** `isCacheStale()` now fetches the Firestore `version` field and triggers `clearAllImages()` + re-download when local version differs. On network failure, stale cache is preserved (fail-safe). | ✅ Fixed June 2026 |
 | 7 | **Room migration schema mismatch** | `MIGRATION_21_22` created `cached_ppdt_images` with `maxCharacters DEFAULT 1000`, but `CachedPPDTImageEntity` had `maxCharacters = 1500`. Also, the entity lacked the 6 `@Index` annotations the migration created, and used `Boolean` for `imageDownloaded` instead of `Int`. Room validates entity schema against the live DB on every open and throws `IllegalStateException: Migration didn't properly handle cached_ppdt_images` when they diverge. **Fix:** entity defaults aligned to match migration SQL exactly; `@Index` annotations added; `imageDownloaded` changed to `Int`. | ✅ Fixed June 2026 |
+| 8 | **`loadTest()` called twice on startup** | `PPDTTestViewModel.init {}` called `loadTest()` directly AND `PPDTTestScreen`'s `LaunchedEffect(testId)` called it again. Result: two Firestore reads on every test open, double subscription-eligibility check, potential double-decrement of `ppdtTestsUsed`. **Fix:** removed `loadTest()` from `init {}`; `LaunchedEffect` is now the single call site (SSOT). | ✅ Fixed June 2026 |
+| 9 | **IMAGE_VIEWING timer flip race** | When the 30 s IMAGE_VIEWING timer expired and immediately launched the 240 s WRITING timer, the dying coroutine's `finally` block ran after the new timer set `isTimerActive = true` and flipped it back to `false`. Writing phase UI showed timer as stopped. **Fix:** `timerGeneration` counter (monotonically increasing); `finally` block only clears `isTimerActive` if `current.timerStartTime == myGeneration` (generation-token pattern). | ✅ Fixed June 2026 |
+| 10 | **Navigate-away shows error dialog** | `PPDTSubmissionResultViewModel.loadSubmission()` caught all `Exception` in one block. When the user navigated away, the scope was cancelled with `CancellationException`, which was caught and set `uiState.error = "Failed to load"` — showing a false error. **Fix:** re-throw `CancellationException` before the error-handling path. | ✅ Fixed June 2026 |
+| 11 | **Duplicate `getPPDTResult` calls** | Firestore real-time listeners re-fire the `COMPLETED` snapshot on any update to the document (e.g., when `PPDTAnalysisWorker` writes the result). Without cancellation, each re-fire called `getPPDTResult()` again. **Fix:** after handling `COMPLETED`, call `currentCoroutineContext().cancel()` to stop the listener — one call per result, guaranteed. | ✅ Fixed June 2026 |
+| 12 | **In-memory gender filter (performance)** | `getImageForTest()` fetched 15 images from Room and then filtered in-memory by `genderTag` via `selectRandomImage()`. On devices with many cached images, this scanned unnecessary rows. **Fix:** `getLeastUsedImagesByGender(tag, 1)` pushes the filter to SQL (`WHERE genderTag = :tag OR genderTag = 'MIXED'`); `selectRandomImage()` deleted. | ✅ Fixed June 2026 |
+| 13 | **Cold-start Firestore version check on every launch** | `isCacheStale()` called Firestore on every `initialSync()` when cache was full. On a device with good cache, this was a redundant network call. **Fix:** `lastStalenessCheckAt` column added to `ppdt_batch_metadata` (migration 22→23); if < 24 h since last check, skip Firestore entirely. | ✅ Fixed June 2026 |
+| 14 | **Image whitespace bands in IMAGE_VIEWING phase** | `Card(modifier = Modifier.weight(1f))` stretched the image to full screen height with empty bands above/below the landscape image. **Fix:** `Modifier.aspectRatio(4f / 3f)` sizes the card proportionally; `ContentScale.Crop` fills it without letter-boxing. | ✅ Fixed June 2026 |
 
 ---
 
@@ -546,10 +567,12 @@ The Room cache is keyed by `batchId` (currently `batch_001`). The app will serve
 initialSync()
   ├─ cachedImages < 15?  → download immediately (no version check needed)
   └─ cachedImages >= 15? → isCacheStale("batch_001")
-        ├─ dao.getBatchMetadata("batch_001") == null → stale (no local record)
-        ├─ Firestore version == local version        → fresh, skip download
-        ├─ Firestore version != local version        → stale → clearAllImages() + downloadBatch()
-        └─ Firestore fetch fails (network error)     → assume fresh (fail-safe, don't wipe)
+        ├─ dao.getBatchMetadata("batch_001") == null         → stale (no local record)
+        ├─ lastStalenessCheckAt within 24h                   → fresh, skip Firestore entirely (TTL gate)
+        └─ 24h TTL expired → fetch Firestore version field
+              ├─ Firestore version == local version           → fresh, update lastStalenessCheckAt
+              ├─ Firestore version != local version           → stale → clearAllImages() + downloadBatch()
+              └─ Firestore fetch fails (network error)        → assume fresh (fail-safe, don't wipe)
 ```
 
 ### Checklist before running step3_upload.py
@@ -597,6 +620,8 @@ When adding a new column: always add a `MIGRATION_N_(N+1)` **and** update the en
 | `CachedPPDTImageEntity default maxCharacters matches migration DEFAULT 1000` | Entity/migration drift |
 | `CachedPPDTImageEntity imageDownloaded default is Int 0 not Boolean` | Type mismatch with SQLite |
 | `CachedPPDTImageEntity annotation has all 6 indices required by migration` | Missing index annotations |
+| `initialSync skips Firestore version check when last staleness check was within 24h TTL` | Warm-start redundant Firestore call |
+| `initialSync calls Firestore version check when 24h TTL has expired` | TTL expiry triggers check correctly |
 
 ---
 
@@ -695,6 +720,20 @@ All gaps listed below were confirmed by code analysis before the improvement pha
 | 6 | PPDTImageContext + GenderTag domain model + Room migration 21→22 | `2abf352` | ✅ Done |
 | 7 | Multimodal GeminiAIService (analyzePPDTMultimodal + GeminiPPDTAnalyzer) | `1f49069` | ✅ Done |
 | 8 | Multimodal prompt rubric + worker image-aware analysis | `68c18f1` | ✅ Done |
+
+**Bug-fix + cache improvement pass (June 2026)** — surfaced from logcat analysis after Phase 8:
+
+| Fix | What | Commits | Status |
+|-----|------|---------|--------|
+| Bug 1 | Remove `loadTest()` from `init {}` — double-fetch on startup | `f4c8808` | ✅ Done |
+| Bug 2 | Timer generation token — prevents `finally` race on phase transition | `07ac86a` | ✅ Done |
+| Bug 3 | Re-throw `CancellationException` in result ViewModel — no false error on navigate-away | `b6f3b97` | ✅ Done |
+| Bug 4 | Cancel Firestore listener after `COMPLETED` — no duplicate `getPPDTResult` calls | `b6f3b97` | ✅ Done |
+| Cache A | `getLeastUsedImagesByGender()` at SQL layer — eliminates in-memory `selectRandomImage()` | `f4c8808` | ✅ Done |
+| Cache B | 24h TTL in `isCacheStale()` + `lastStalenessCheckAt` column (migration 22→23) | `9828980` | ✅ Done |
+| UI | `aspectRatio(4f/3f)` + `ContentScale.Crop` — no whitespace bands | `07ac86a` | ✅ Done |
+| UI | Extract `PPDTImageCard` + `PPDTTimerProgressBar` — isolate per-second recomposition | `07ac86a`, `4cb57c5` | ✅ Done |
+| Refactor | `LoadPPDTTestUseCase` + `SubmitPPDTTestUseCase` — extract domain use cases from ViewModel | `197a949` | ✅ Done |
 
 ---
 
