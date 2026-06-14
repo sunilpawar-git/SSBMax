@@ -675,6 +675,8 @@
     <string name="ppdt_profile_required_message">Your gender is needed for PPDT assessment. Set it in Settings before continuing.</string>
     <string name="ppdt_profile_go_to_settings">Go to Settings</string>
     <string name="ppdt_profile_required_cancel">Cancel</string>
+    <string name="ppdt_image_observe_instruction">Observe the image carefully. Try to identify characters, their mood, and what\'s happening.</string>
+    <string name="ppdt_image_content_description">PPDT Test Image</string>
 
     <!-- ============================================ -->
     <!-- PIQ TEST SCREEN - DETAILED STRINGS -->
