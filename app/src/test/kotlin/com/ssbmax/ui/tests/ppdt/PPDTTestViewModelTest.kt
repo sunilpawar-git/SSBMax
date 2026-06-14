@@ -552,8 +552,11 @@ class PPDTTestViewModelTest : BaseViewModelTest() {
         advanceUntilIdle() // complete loading
         viewModel.startTest()
 
-        advanceTimeBy(30_001) // let viewing timer expire and writing timer launch
-        advanceUntilIdle()    // let any pending finally{} blocks settle
+        advanceTimeBy(30_001) // viewing timer fires at t=30000; break exits loop immediately;
+        // finally{} fires within advanceTimeBy — generation token makes it a no-op.
+        // No advanceUntilIdle() here: it would drain the 240s writing timer to completion
+        // (advanceUntilIdle runs all foreground delay events), causing the 240s timer's own
+        // finally{} to set isTimerActive=false and defeat the assertion below.
 
         val state = viewModel.uiState.value
         assertEquals("Should auto-advance to WRITING phase", PPDTPhase.WRITING, state.currentPhase)

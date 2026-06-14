@@ -56,9 +56,10 @@ class PPDTTestViewModel @Inject constructor(
     // Navigation events (one-time events, consumed on collection)
     private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
-    
-    // PHASE 3: All state fully migrated to StateFlow (completed)
-    // Timer managed via viewModelScope + isTimerActive flag (no Job reference needed)
+
+    // Monotonically increasing counter; each startTimer() call gets a unique generation.
+    // Stored in timerStartTime so finally{} can confirm it is still the current owner.
+    private var timerGeneration = 0L
     
     init {
         // Register for memory leak tracking
@@ -182,7 +183,6 @@ class PPDTTestViewModel @Inject constructor(
                     loadingMessage = "Fetching questions from cloud..."
                 ) }
 
-                // Phase 3: Fetch user profile for gate + gender routing.
                 // resolveGenderTag sets isProfileIncomplete=true when gate blocks the test.
                 val genderTag = resolveGenderTag(userId)
                 if (_uiState.value.isProfileIncomplete) return@launch
@@ -270,7 +270,6 @@ class PPDTTestViewModel @Inject constructor(
         
         when (session.currentPhase) {
             PPDTPhase.IMAGE_VIEWING -> {
-                // PHASE 3: Signal timer to stop via isTimerActive flag
                 _uiState.update { it.copy(
                     isTimerActive = false,
                     session = session.copy(
@@ -283,7 +282,6 @@ class PPDTTestViewModel @Inject constructor(
             }
             PPDTPhase.WRITING -> {
                 if (_uiState.value.story.length >= session.question.minCharacters) {
-                    // PHASE 3: Signal timer to stop via isTimerActive flag
                     _uiState.update { it.copy(
                         isTimerActive = false,
                         session = session.copy(currentPhase = PPDTPhase.REVIEW)
@@ -315,7 +313,6 @@ class PPDTTestViewModel @Inject constructor(
     }
     
     fun submitTest() {
-        // PHASE 3: Signal timer to stop via isTimerActive flag
         _uiState.update { it.copy(isTimerActive = false) }
         
         val session = _uiState.value.session ?: return
@@ -422,7 +419,6 @@ class PPDTTestViewModel @Inject constructor(
     fun pauseTest() {
         val session = _uiState.value.session ?: return
         
-        // PHASE 3: Signal timer to stop via isTimerActive flag
         _uiState.update { it.copy(
             isTimerActive = false,
             session = session.copy(isPaused = true)
@@ -431,32 +427,38 @@ class PPDTTestViewModel @Inject constructor(
     }
     
     private fun startTimer(seconds: Int) {
-        // PHASE 3: Stop any existing timer by setting flag, then start new one
+        val myGeneration = ++timerGeneration
         _uiState.update { it.copy(
             timeRemainingSeconds = seconds,
             isTimerActive = true,
-            timerStartTime = System.currentTimeMillis()
+            timerStartTime = myGeneration
         ) }
-        
+
         viewModelScope.launch {
             android.util.Log.d("PPDTTestViewModel", "⏰ Starting timer for $seconds seconds")
-            
+
             try {
-                while (isActive && 
-                       _uiState.value.isTimerActive && 
+                while (isActive &&
+                       _uiState.value.isTimerActive &&
                        _uiState.value.timeRemainingSeconds > 0) {
                     delay(1000)
-                    
+
                     // Check if timer should still run (isTimerActive can be set false by submitTest/pauseTest)
                     if (!isActive || !_uiState.value.isTimerActive) break
-                    
+
                     val newTime = _uiState.value.timeRemainingSeconds - 1
                     _uiState.update { it.copy(timeRemainingSeconds = newTime) }
-                    
+
                     if (newTime == 0 && isActive && _uiState.value.isTimerActive) {
                         // Auto-proceed when time runs out
                         when (_uiState.value.currentPhase) {
-                            PPDTPhase.IMAGE_VIEWING -> proceedToNextPhase()
+                            PPDTPhase.IMAGE_VIEWING -> {
+                                proceedToNextPhase()
+                                // proceedToNextPhase() launched a new timer (startTimer(240)), which
+                                // incremented timerGeneration and became the new owner. Break now so
+                                // this coroutine's finally{} sees a different generation and is a no-op.
+                                break
+                            }
                             PPDTPhase.WRITING -> proceedToNextPhase()
                             else -> {}
                         }
@@ -466,8 +468,14 @@ class PPDTTestViewModel @Inject constructor(
                 android.util.Log.d("PPDTTestViewModel", "⏰ Timer cancelled")
                 throw e // Re-throw to properly cancel coroutine
             } finally {
-                // Ensure timer flag is cleared when loop exits
-                _uiState.update { it.copy(isTimerActive = false) }
+                // Only clear the flag if no newer timer has taken ownership.
+                // Without this token check, the dying 30s coroutine's finally{} can fire
+                // after startTimer(240) has already set isTimerActive=true — killing the
+                // writing-phase timer before it starts.
+                _uiState.update { current ->
+                    if (current.timerStartTime == myGeneration) current.copy(isTimerActive = false)
+                    else current
+                }
             }
         }.trackMemoryLeaks("PPDTTestViewModel", "phase-timer")
     }
@@ -550,7 +558,7 @@ class PPDTTestViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         
-        // PHASE 3: viewModelScope automatically cancels all child jobs
+        // viewModelScope automatically cancels all child jobs on clear
         android.util.Log.d("PPDTTestViewModel", "🧹 ViewModel onCleared() - viewModelScope auto-canceling all jobs")
         
         // Cancel navigation events channel
@@ -591,11 +599,9 @@ data class PPDTTestUiState(
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    // Phase 1: New StateFlow fields (replacing nullable vars)
     val isTimerActive: Boolean = false,
     val timerStartTime: Long = 0L,
     val session: PPDTTestSession? = null,
-    // Phase 3: Profile gate — true when user has no profile set up
     val isProfileIncomplete: Boolean = false
 )
 
