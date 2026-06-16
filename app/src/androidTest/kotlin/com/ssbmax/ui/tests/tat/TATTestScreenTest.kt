@@ -30,9 +30,9 @@ class TATTestScreenTest : BaseComposeTest() {
         
         // Setup test data
         testQuestions = listOf(
-            TestDataFactory.createTestTATQuestion(id = "tat-1", sequenceNumber = 1),
-            TestDataFactory.createTestTATQuestion(id = "tat-2", sequenceNumber = 2),
-            TestDataFactory.createTestTATQuestion(id = "tat-3", sequenceNumber = 3)
+            TestDataFactory.createTestTATQuestion(id = "tat-1", cardPosition = 1),
+            TestDataFactory.createTestTATQuestion(id = "tat-2", cardPosition = 2),
+            TestDataFactory.createTestTATQuestion(id = "tat-3", cardPosition = 3)
         )
         
         // Setup mocks

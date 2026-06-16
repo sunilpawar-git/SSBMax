@@ -31,7 +31,6 @@ class TestContentRepositoryImpl @Inject constructor(
     private val oirCache = ConcurrentHashMap<String, List<OIRQuestion>>()
     private val ppdtCache = ConcurrentHashMap<String, List<PPDTQuestion>>()
     private val gpeCache = ConcurrentHashMap<String, List<GPEQuestion>>()
-    private val tatCache = ConcurrentHashMap<String, List<TATQuestion>>()
     private val watCache = ConcurrentHashMap<String, List<WATWord>>()
     private val srtCache = ConcurrentHashMap<String, List<SRTSituation>>()
     
@@ -227,44 +226,16 @@ class TestContentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTATQuestions(testId: String): Result<List<TATQuestion>> {
+    override suspend fun getTATQuestions(testId: String, genderTag: GenderTag?): Result<List<TATQuestion>> {
         return try {
-            tatCache[testId]?.let { return Result.success(it) }
-
-            // Use cache manager for progressive loading (12 images per test)
-            Log.d("TestContent", "Fetching TAT images from cache manager")
-            
-            // Initialize cache if needed
-            val cacheStatus = tatImageCacheManager.getCacheStatus()
-            if (cacheStatus.cachedImages == 0 || cacheStatus.cachedImages < 12) {
-                // If we have less than 12 images, initialize cache
-                Log.d("TestContent", "Initializing TAT image cache (current: ${cacheStatus.cachedImages})...")
-                tatImageCacheManager.clearCache() // Clear old data if any
-                tatImageCacheManager.initialSync().getOrThrow()
-            }
-            
-            // Get 12 images for the test (11 regular + blank_slide randomly selected)
-            val questionsResult = tatImageCacheManager.getImagesForTest(12)
-            
-            if (questionsResult.isFailure) {
-                // Fallback to mock data if cache manager fails
-                Log.w("TestContent", "Cache manager failed, using mock data: ${questionsResult.exceptionOrNull()?.message}")
-                val mockQuestions = MockTestDataProvider.getTATQuestions()
-                tatCache[testId] = mockQuestions
-                return Result.success(mockQuestions)
-            }
-            
-            val tatQuestions = questionsResult.getOrNull() ?: emptyList()
-            tatCache[testId] = tatQuestions
-            
+            Log.d("TestContent", "Fetching TAT images from cache manager (genderTag=$genderTag)")
+            tatImageCacheManager.initialSync().getOrThrow()
+            val tatQuestions = tatImageCacheManager.getImagesForTest(genderTag).getOrThrow()
             Log.d("TestContent", "✅ Loaded ${tatQuestions.size} TAT images")
             Result.success(tatQuestions)
         } catch (e: Exception) {
-            // On any error, use mock data
             Log.w("TestContent", "Failed to load TAT images, using mock data: ${e.message}")
-            val mockQuestions = MockTestDataProvider.getTATQuestions()
-            tatCache[testId] = mockQuestions
-            Result.success(mockQuestions)
+            Result.success(MockTestDataProvider.getTATQuestions())
         }
     }
 
@@ -339,7 +310,6 @@ class TestContentRepositoryImpl @Inject constructor(
         oirCache.clear()
         ppdtCache.clear()
         gpeCache.clear()
-        tatCache.clear()
         watCache.clear()
         srtCache.clear()
     }

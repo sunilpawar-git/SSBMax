@@ -17,8 +17,8 @@ import java.util.UUID
 data class TATQuestion(
     val id: String = UUID.randomUUID().toString(),
     val imageUrl: String,
-    val sequenceNumber: Int, // 1-12
-    val prompt: String = "Write a story about what you see in the picture",
+    val cardPosition: Int, // 1–11 (pool slot); 12 = programmatic blank card
+    val imageContextJson: String = "{}", // JSON-serialized TATImageContext for AI scoring
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val minCharacters: Int = 150,

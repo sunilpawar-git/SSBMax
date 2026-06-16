@@ -89,11 +89,12 @@ interface TestContentRepository {
     suspend fun getGPEQuestions(testId: String): Result<List<GPEQuestion>>
 
     /**
-     * Fetch TAT test questions from Firestore
+     * Fetch TAT test questions from Firestore.
      * @param testId The specific test ID to load
-     * @return Result with list of TAT questions or error
+     * @param genderTag Gender filter for image pool selection (MALE/FEMALE see MIXED for all)
+     * @return Result with list of TAT questions (11 real + 1 blank card) or error
      */
-    suspend fun getTATQuestions(testId: String): Result<List<TATQuestion>>
+    suspend fun getTATQuestions(testId: String, genderTag: GenderTag? = null): Result<List<TATQuestion>>
     
     /**
      * Fetch WAT test words from Firestore/Cache

@@ -59,12 +59,16 @@ internal fun Map<String, Any?>.toTATQuestion(): TATQuestion? {
         TATQuestion(
             id = this["id"] as? String ?: return null,
             imageUrl = this["imageUrl"] as? String ?: return null,
-            sequenceNumber = (this["sequenceNumber"] as? Number)?.toInt() ?: return null,
-            prompt = this["prompt"] as? String ?: "Write a story about what you see in the picture",
+            cardPosition = (this["cardPosition"] as? Number)?.toInt() ?: return null,
+            imageContextJson = run {
+                @Suppress("UNCHECKED_CAST")
+                val ctx = this["imageContext"] as? Map<String, Any?>
+                if (ctx != null) com.google.gson.Gson().toJson(ctx) else "{}"
+            },
             viewingTimeSeconds = (this["viewingTimeSeconds"] as? Number)?.toInt() ?: 30,
             writingTimeMinutes = (this["writingTimeMinutes"] as? Number)?.toInt() ?: 4,
             minCharacters = (this["minCharacters"] as? Number)?.toInt() ?: 150,
-            maxCharacters = (this["maxCharacters"] as? Number)?.toInt() ?: 800
+            maxCharacters = (this["maxCharacters"] as? Number)?.toInt() ?: 1500
         )
     } catch (e: Exception) {
         null

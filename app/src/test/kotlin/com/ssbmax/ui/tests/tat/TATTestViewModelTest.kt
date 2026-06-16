@@ -269,18 +269,25 @@ class TATTestViewModelTest : BaseViewModelTest() {
     }
     
     private fun createMockTATQuestions(): List<TATQuestion> {
-        return (1..12).map { index ->
+        return (1..11).map { index ->
             TATQuestion(
                 id = "tat_q_$index",
                 imageUrl = "https://example.com/tat_$index.jpg",
-                sequenceNumber = index,
-                prompt = "Write a story about what you see in the picture",
+                cardPosition = index,
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4,
                 minCharacters = 150,
                 maxCharacters = 1500
             )
-        }
+        } + TATQuestion(
+            id = "blank_card",
+            imageUrl = "",
+            cardPosition = 12,
+            viewingTimeSeconds = 30,
+            writingTimeMinutes = 4,
+            minCharacters = 150,
+            maxCharacters = 1500
+        )
     }
 }
 

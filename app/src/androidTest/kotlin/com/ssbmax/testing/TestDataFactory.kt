@@ -71,12 +71,12 @@ object TestDataFactory {
     fun createTestTATQuestion(
         id: String = "tat-1",
         imageUrl: String = "https://example.com/tat1.jpg",
-        sequenceNumber: Int = 1
+        cardPosition: Int = 1
     ): TATQuestion {
         return TATQuestion(
             id = id,
             imageUrl = imageUrl,
-            sequenceNumber = sequenceNumber,
+            cardPosition = cardPosition,
             viewingTimeSeconds = 30,
             writingTimeMinutes = 4
         )

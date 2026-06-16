@@ -12,6 +12,7 @@ import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_17_18
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_21_22
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_22_23
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_23_24
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -543,6 +544,103 @@ class SSBDatabaseMigrationTest {
         }
         openHelper.close()
         context.deleteDatabase("migration-test-22-23")
+    }
+
+    @Test
+    fun migration23to24_rebuildsTATImagesAndAddsLastStalenessCheckAt() {
+        val factory = SupportSQLiteOpenHelper.Factory { config ->
+            FrameworkSQLiteOpenHelperFactory().create(config)
+        }
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-23-24")
+            .callback(object : SupportSQLiteOpenHelper.Callback(23) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    // Schema at version 23: old cached_tat_images with sequenceNumber/prompt columns
+                    db.execSQL("""
+                        CREATE TABLE cached_tat_images (
+                            id TEXT NOT NULL PRIMARY KEY,
+                            imageUrl TEXT NOT NULL,
+                            localFilePath TEXT,
+                            sequenceNumber INTEGER NOT NULL,
+                            prompt TEXT NOT NULL,
+                            viewingTimeSeconds INTEGER NOT NULL,
+                            writingTimeMinutes INTEGER NOT NULL,
+                            minCharacters INTEGER NOT NULL,
+                            maxCharacters INTEGER NOT NULL,
+                            category TEXT,
+                            difficulty TEXT,
+                            batchId TEXT NOT NULL,
+                            cachedAt INTEGER NOT NULL,
+                            lastUsed INTEGER,
+                            usageCount INTEGER NOT NULL,
+                            imageDownloaded INTEGER NOT NULL
+                        )
+                    """.trimIndent())
+                    db.execSQL("""
+                        CREATE TABLE tat_batch_metadata (
+                            batchId TEXT NOT NULL PRIMARY KEY,
+                            downloadedAt INTEGER NOT NULL,
+                            imageCount INTEGER NOT NULL,
+                            version TEXT NOT NULL
+                        )
+                    """.trimIndent())
+                    db.execSQL("""
+                        INSERT INTO cached_tat_images
+                        (id, imageUrl, localFilePath, sequenceNumber, prompt, viewingTimeSeconds,
+                         writingTimeMinutes, minCharacters, maxCharacters, category, difficulty,
+                         batchId, cachedAt, lastUsed, usageCount, imageDownloaded)
+                        VALUES ('old_id', 'https://example.com/img.jpg', NULL, 1,
+                                'Write a story', 30, 4, 50, 800, NULL, 'medium',
+                                'batch_001', 1000, NULL, 0, 0)
+                    """.trimIndent())
+                    db.execSQL("""
+                        INSERT INTO tat_batch_metadata (batchId, downloadedAt, imageCount, version)
+                        VALUES ('batch_001', 1000, 167, '1.0.0')
+                    """.trimIndent())
+                }
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_23_24.migrate(this)
+            version = 24
+
+            // Old rows discarded — table rebuilt with Phase 2 schema
+            query("SELECT COUNT(*) FROM cached_tat_images").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals("Old rows must be dropped after schema rebuild", 0, cursor.getInt(0))
+            }
+
+            // New schema must have cardPosition, genderTag, imageContextJson columns
+            query("PRAGMA table_info(cached_tat_images)").use { cursor ->
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) columns.add(cursor.getString(1))
+                assert(columns.contains("cardPosition")) { "Migration 23→24: cardPosition column missing" }
+                assert(columns.contains("genderTag")) { "Migration 23→24: genderTag column missing" }
+                assert(columns.contains("imageContextJson")) { "Migration 23→24: imageContextJson column missing" }
+                assert(!columns.contains("sequenceNumber")) { "Migration 23→24: sequenceNumber should be gone" }
+                assert(!columns.contains("prompt")) { "Migration 23→24: prompt should be gone" }
+            }
+
+            // tat_batch_metadata must have lastStalenessCheckAt with default 0
+            query("PRAGMA table_info(tat_batch_metadata)").use { cursor ->
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) columns.add(cursor.getString(1))
+                assert(columns.contains("lastStalenessCheckAt")) {
+                    "Migration 23→24: lastStalenessCheckAt missing in tat_batch_metadata"
+                }
+            }
+            query("SELECT lastStalenessCheckAt FROM tat_batch_metadata WHERE batchId = 'batch_001'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 23→24: existing batch row disappeared" }
+                    assertEquals("lastStalenessCheckAt must default to 0", 0L, cursor.getLong(0))
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-23-24")
     }
 }
 

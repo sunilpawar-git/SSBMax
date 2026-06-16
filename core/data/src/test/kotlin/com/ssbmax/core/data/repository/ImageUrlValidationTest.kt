@@ -52,7 +52,8 @@ class ImageUrlValidationTest {
     fun `mock TAT questions have non-empty image URLs`() {
         val questions = MockTestDataProvider.getTATQuestions()
         assertTrue("Mock TAT data should not be empty", questions.isNotEmpty())
-        questions.forEach { q ->
+        // Blank card (position 12) has empty URL by design — only validate real image cards
+        questions.filter { it.id != "blank_card" }.forEach { q ->
             assertTrue(
                 "TAT mock ${q.id} imageUrl must not be blank",
                 q.imageUrl.isNotBlank()
@@ -63,12 +64,12 @@ class ImageUrlValidationTest {
     @Test
     fun `mock TAT questions have valid URL format`() {
         val questions = MockTestDataProvider.getTATQuestions()
-        questions.forEach { q ->
+        // Blank card (position 12) has empty URL by design — only validate real image cards
+        questions.filter { it.id != "blank_card" }.forEach { q ->
             assertTrue(
                 "TAT mock ${q.id} imageUrl must start with https://",
                 q.imageUrl.startsWith("https://")
             )
-            // Verify it parses as a valid URL
             assertDoesNotThrow("TAT mock ${q.id} imageUrl must be valid URL") {
                 URL(q.imageUrl)
             }
@@ -106,10 +107,13 @@ class ImageUrlValidationTest {
     @Test
     fun `TAT cache manager normalizes gs URLs to https`() = runTest {
         val gsImage = createTATEntity("tat_gs", "gs://my-bucket/tat/image001.jpg")
-        coEvery { mockTATDao.getTotalImageCount() } returns 12
-        coEvery { mockTATDao.getLeastUsedImages(1) } returns listOf(gsImage)
+        val fallback = createTATEntity("fallback", "https://storage.googleapis.com/bucket/fallback.jpg")
+        coEvery { mockTATDao.getTotalImageCount() } returns 40
+        coEvery { mockTATDao.getLeastUsedImageByPosition(any(), any()) } answers {
+            if (firstArg<Int>() == 1) gsImage else fallback
+        }
 
-        val result = tatCacheManager.getImagesForTest(1)
+        val result = tatCacheManager.getImagesForTest()
 
         assertTrue("Should succeed", result.isSuccess)
         val url = result.getOrNull()!!.first().imageUrl
@@ -126,10 +130,10 @@ class ImageUrlValidationTest {
     @Test
     fun `TAT cache manager preserves https URLs`() = runTest {
         val httpsImage = createTATEntity("tat_https", "https://storage.googleapis.com/bucket/img.jpg")
-        coEvery { mockTATDao.getTotalImageCount() } returns 12
-        coEvery { mockTATDao.getLeastUsedImages(1) } returns listOf(httpsImage)
+        coEvery { mockTATDao.getTotalImageCount() } returns 40
+        coEvery { mockTATDao.getLeastUsedImageByPosition(any(), any()) } returns httpsImage
 
-        val result = tatCacheManager.getImagesForTest(1)
+        val result = tatCacheManager.getImagesForTest()
 
         assertTrue("Should succeed", result.isSuccess)
         assertEquals(
@@ -164,16 +168,17 @@ class ImageUrlValidationTest {
 
     @Test
     fun `TAT images returned from cache have valid https URLs`() = runTest {
-        val images = (1..12).map { i ->
-            createTATEntity("tat_$i", "https://storage.googleapis.com/bucket/tat_$i.jpg")
+        coEvery { mockTATDao.getTotalImageCount() } returns 40
+        coEvery { mockTATDao.getLeastUsedImageByPosition(any(), any()) } answers {
+            val pos = firstArg<Int>()
+            createTATEntity("tat_$pos", "https://storage.googleapis.com/bucket/tat_$pos.jpg")
         }
-        coEvery { mockTATDao.getTotalImageCount() } returns 12
-        coEvery { mockTATDao.getLeastUsedImages(12) } returns images
 
-        val result = tatCacheManager.getImagesForTest(12)
+        val result = tatCacheManager.getImagesForTest()
 
         assertTrue("Should succeed", result.isSuccess)
-        result.getOrNull()!!.forEach { q ->
+        // 11 real + 1 blank card; blank card has empty URL — only validate real images
+        result.getOrNull()!!.filter { it.id != "blank_card" }.forEach { q ->
             assertTrue(
                 "TAT ${q.id} URL must be https but got: ${q.imageUrl}",
                 q.imageUrl.startsWith("https://")
@@ -216,18 +221,23 @@ class ImageUrlValidationTest {
 
     @Test
     fun `mixed gs and https URLs all normalize to https`() = runTest {
-        val images = listOf(
-            createTATEntity("tat_gs1", "gs://bucket/a.jpg"),
-            createTATEntity("tat_https1", "https://storage.googleapis.com/bucket/b.jpg"),
-            createTATEntity("tat_gs2", "gs://other-bucket/path/c.jpg")
-        )
-        coEvery { mockTATDao.getTotalImageCount() } returns 12
-        coEvery { mockTATDao.getLeastUsedImages(3) } returns images
+        coEvery { mockTATDao.getTotalImageCount() } returns 40
+        coEvery { mockTATDao.getLeastUsedImageByPosition(any(), any()) } answers {
+            val pos = firstArg<Int>()
+            val url = when (pos) {
+                1 -> "gs://bucket/a.jpg"
+                2 -> "https://storage.googleapis.com/bucket/b.jpg"
+                3 -> "gs://other-bucket/path/c.jpg"
+                else -> "https://storage.googleapis.com/bucket/pos_$pos.jpg"
+            }
+            createTATEntity("tat_pos_$pos", url)
+        }
 
-        val result = tatCacheManager.getImagesForTest(3)
+        val result = tatCacheManager.getImagesForTest()
 
         assertTrue("Should succeed", result.isSuccess)
-        val urls = result.getOrNull()!!.map { it.imageUrl }
+        // Blank card has empty URL — only validate real images
+        val urls = result.getOrNull()!!.filter { it.id != "blank_card" }.map { it.imageUrl }
         urls.forEach { url ->
             assertTrue("All URLs must be https:// after normalization: $url", url.startsWith("https://"))
             assertFalse("No gs:// URLs should remain: $url", url.startsWith("gs://"))
@@ -237,13 +247,13 @@ class ImageUrlValidationTest {
     // ==================== Edge Cases ====================
 
     @Test
-    fun `mock TAT questions have sequential numbering`() {
+    fun `mock TAT questions have valid card positions`() {
         val questions = MockTestDataProvider.getTATQuestions()
         questions.forEachIndexed { index, q ->
             assertEquals(
-                "TAT question ${q.id} should have sequenceNumber ${index + 1}",
+                "TAT question ${q.id} should have cardPosition ${index + 1}",
                 index + 1,
-                q.sequenceNumber
+                q.cardPosition
             )
         }
     }
@@ -283,20 +293,19 @@ class ImageUrlValidationTest {
         return CachedTATImageEntity(
             id = id,
             imageUrl = imageUrl,
-            localFilePath = null,
-            sequenceNumber = 1,
-            prompt = "Write a story",
+            cardPosition = 1,
+            genderTag = "MIXED",
+            imageContextJson = "{}",
             viewingTimeSeconds = 30,
             writingTimeMinutes = 4,
             minCharacters = 150,
-            maxCharacters = 800,
+            maxCharacters = 1500,
             category = null,
             difficulty = "medium",
             batchId = "batch_001",
             cachedAt = System.currentTimeMillis(),
             lastUsed = null,
-            usageCount = 0,
-            imageDownloaded = false
+            usageCount = 0
         )
     }
 

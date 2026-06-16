@@ -68,7 +68,8 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_19_20, // Add oir_sync_metadata table for content-version reconciliation
                 DatabaseMigrations.MIGRATION_20_21, // Add correctAnswerIds column for multi-answer OIR questions
                 DatabaseMigrations.MIGRATION_21_22, // Phase 6: context→imageContextJson + genderTag on ppdt images
-                DatabaseMigrations.MIGRATION_22_23  // Phase 6: 24h TTL staleness-check column on ppdt_batch_metadata
+                DatabaseMigrations.MIGRATION_22_23, // Phase 6: 24h TTL staleness-check column on ppdt_batch_metadata
+                DatabaseMigrations.MIGRATION_23_24  // Phase 2 TAT: pool-aware schema + tat_batch_metadata TTL
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()

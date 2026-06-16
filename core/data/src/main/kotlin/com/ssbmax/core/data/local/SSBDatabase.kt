@@ -65,7 +65,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         InterviewBatchMetadataEntity::class,
         UserPerformanceEntity::class
     ],
-    version = 23, // Phase 6b: lastStalenessCheckAt on ppdt_batch_metadata for 24h Firestore TTL (migrated from 22)
+    version = 24, // Phase 2 TAT: pool-aware cached_tat_images schema + tat_batch_metadata staleness TTL (migrated from 23)
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)

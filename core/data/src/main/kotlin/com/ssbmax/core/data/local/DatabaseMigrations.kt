@@ -698,6 +698,55 @@ object DatabaseMigrations {
     }
 
     /**
+     * Migration from version 23 to 24
+     * Phase 2 TAT architecture upgrade:
+     *   cached_tat_images — replace sequenceNumber/prompt/localFilePath/imageDownloaded
+     *                        with cardPosition, genderTag, imageContextJson (pool-aware schema)
+     *   tat_batch_metadata — add lastStalenessCheckAt for 24h Firestore TTL gate
+     *
+     * SQLite < 3.25 cannot DROP columns, so we use the safe table-reconstruction pattern.
+     * Existing cached rows are discarded (the new image IDs follow tat_NNN_gender naming
+     * and the old rows would fail position-based queries anyway).
+     */
+    val MIGRATION_23_24 = object : Migration(23, 24) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Reconstruct cached_tat_images with the Phase 2 schema
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_tat_images_new (
+                    id TEXT NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    cardPosition INTEGER NOT NULL,
+                    genderTag TEXT NOT NULL DEFAULT 'MIXED',
+                    imageContextJson TEXT NOT NULL DEFAULT '{}',
+                    viewingTimeSeconds INTEGER NOT NULL DEFAULT 30,
+                    writingTimeMinutes INTEGER NOT NULL DEFAULT 4,
+                    minCharacters INTEGER NOT NULL DEFAULT 150,
+                    maxCharacters INTEGER NOT NULL DEFAULT 1500,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (id)
+                )
+            """.trimIndent())
+            // Old rows are incompatible (different ID format + missing cardPosition) — drop them
+            database.execSQL("DROP TABLE cached_tat_images")
+            database.execSQL("ALTER TABLE cached_tat_images_new RENAME TO cached_tat_images")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_cardPosition ON cached_tat_images(cardPosition)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_genderTag ON cached_tat_images(genderTag)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_usageCount ON cached_tat_images(usageCount)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_batchId ON cached_tat_images(batchId)")
+
+            // Add staleness-check TTL column to tat_batch_metadata
+            database.execSQL(
+                "ALTER TABLE tat_batch_metadata ADD COLUMN lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
+    /**
      * Migration from version 21 to 22
      * Replaces the unstructured `context: String` column on cached_ppdt_images with:
      *   - imageContextJson TEXT — JSON-serialized PPDTImageContext (defaults to '{}')
