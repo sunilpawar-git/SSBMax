@@ -17,6 +17,7 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.scoring.ScoringUtils
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.core.domain.validation.ValidationIntegration
@@ -109,7 +110,7 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 null
             }
             val candidateGender = userProfile?.gender?.displayName ?: "Unknown"
-            val entryType = toScoringEntryType(userProfile?.entryType)
+            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
 
             // 5. Fetch full question (imageUrl + imageContext rubric)
             var ppdtQuestion: PPDTQuestion? = null
@@ -273,16 +274,6 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             }
         }
         return null
-    }
-
-    // Maps UserProfile.EntryType (model) to scoring.EntryType (validation rules).
-    // ENTRY_10_PLUS_2 → NDA (most stringent), SERVICE → OTA, GRADUATE → GRADUATE.
-    private fun toScoringEntryType(
-        profileEntry: com.ssbmax.core.domain.model.EntryType?
-    ): EntryType = when (profileEntry) {
-        com.ssbmax.core.domain.model.EntryType.GRADUATE -> EntryType.GRADUATE
-        com.ssbmax.core.domain.model.EntryType.SERVICE -> EntryType.OTA
-        else -> EntryType.NDA
     }
 
     private suspend fun handleAnalysisFailure(submissionId: String) {

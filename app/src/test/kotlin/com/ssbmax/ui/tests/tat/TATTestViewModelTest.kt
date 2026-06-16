@@ -3,11 +3,10 @@ package com.ssbmax.ui.tests.tat
 import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
+import com.ssbmax.core.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,14 +38,12 @@ import org.junit.Test
 class TATTestViewModelTest : BaseViewModelTest() {
 
     private lateinit var viewModel: TATTestViewModel
-    private val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
-    private val mockSessionRepo = mockk<TestSessionRepository>(relaxed = true)
+    private val mockLoadTATTest = mockk<LoadTATTestUseCase>(relaxed = true)
     private val mockSubmitTATTest = mockk<SubmitTATTestUseCase>(relaxed = true)
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
-    private val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     private val mockWorkManager = mockk<WorkManager>(relaxed = true)
     
@@ -75,16 +72,9 @@ class TATTestViewModelTest : BaseViewModelTest() {
         // Mock current user
         every { mockObserveCurrentUser() } returns flowOf(mockUser)
         
-        // Mock test session creation
-        coEvery { 
-            mockSessionRepo.createTestSession(any(), any(), TestType.TAT) 
-        } returns Result.success("session-tat-123")
-        
-        // Mock question loading
-        coEvery { 
-            mockTestContentRepo.getTATQuestions(any()) 
-        } returns Result.success(mockQuestions)
-        
+        // Mock use case (session creation + question loading)
+        coEvery { mockLoadTATTest(any(), any()) } returns Result.success(mockQuestions)
+
         // Mock user profile
         coEvery { 
             mockUserProfileRepo.getUserProfile(any()) 
@@ -116,16 +106,13 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertNotNull("Should have config", state.config)
         }
         
-        coVerify { mockSessionRepo.createTestSession("test-user-123", "tat_standard", TestType.TAT) }
-        coVerify { mockTestContentRepo.getTATQuestions("tat_standard") }
+        coVerify { mockLoadTATTest("test-user-123", "tat_standard") }
     }
     
     @Test
     fun `loadTest failure shows error message`() = runTest {
         // Given - mock failure
-        coEvery { 
-            mockTestContentRepo.getTATQuestions(any()) 
-        } returns Result.failure(Exception("Network error"))
+        coEvery { mockLoadTATTest(any(), any()) } returns Result.failure(Exception("Network error"))
         
         // When
         viewModel = createViewModel()
@@ -270,14 +257,12 @@ class TATTestViewModelTest : BaseViewModelTest() {
     
     private fun createViewModel(): TATTestViewModel {
         return TATTestViewModel(
-            mockTestContentRepo,
-            mockSessionRepo,
+            mockLoadTATTest,
             mockSubmitTATTest,
             mockObserveCurrentUser,
             mockUserProfileRepo,
             mockSubscriptionManager,
             mockDifficultyManager,
-            mockGetOLQDashboard,
             mockSecurityLogger,
             mockWorkManager
         )
@@ -292,7 +277,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
                 prompt = "Write a story about what you see in the picture",
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4,
-                minCharacters = 50,
+                minCharacters = 150,
                 maxCharacters = 1500
             )
         }

@@ -94,9 +94,7 @@ fun TATTestScreen(
                 TATBottomBar(
                     phase = uiState.phase,
                     canMoveNext = uiState.canMoveToNextQuestion,
-                    canMovePrevious = uiState.canMoveToPreviousQuestion,
                     canSubmit = uiState.canSubmitTest,
-                    onPrevious = { viewModel.moveToPreviousQuestion() },
                     onNext = { viewModel.moveToNextQuestion() },
                     onSubmit = { showSubmitDialog = true }
                 )
@@ -126,7 +124,7 @@ fun TATTestScreen(
                         story = uiState.currentStory,
                         onStoryChange = { viewModel.updateStory(it) },
                         timeRemaining = uiState.writingTimeRemaining,
-                        minCharacters = uiState.currentQuestion?.minCharacters ?: 50,
+                        minCharacters = uiState.currentQuestion?.minCharacters ?: 150,
                         maxCharacters = uiState.currentQuestion?.maxCharacters ?: 1500,
                         charactersCount = uiState.currentStory.length,
                         sequenceNumber = uiState.currentQuestionIndex + 1

@@ -21,7 +21,7 @@ data class TATQuestion(
     val prompt: String = "Write a story about what you see in the picture",
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 50,
+    val minCharacters: Int = 150,
     val maxCharacters: Int = 1500
 )
 
@@ -141,7 +141,7 @@ data class TATTestConfig(
     val totalPictures: Int = 12,
     val viewingTimePerPictureSeconds: Int = 30,
     val writingTimePerPictureMinutes: Int = 4,
-    val minCharactersPerStory: Int = 50,
+    val minCharactersPerStory: Int = 150,
     val maxCharactersPerStory: Int = 1500,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true,

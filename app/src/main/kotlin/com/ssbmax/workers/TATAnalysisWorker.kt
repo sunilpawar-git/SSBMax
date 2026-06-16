@@ -12,8 +12,10 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.core.domain.scoring.ScoringUtils
 import com.ssbmax.core.domain.validation.ValidationIntegration
+
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
@@ -21,6 +23,7 @@ import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 /**
  * Background worker for analyzing TAT submissions using Gemini AI
@@ -40,6 +43,7 @@ class TATAnalysisWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val aiService: AIService,
     private val notificationHelper: NotificationHelper,
     private val getOLQDashboard: GetOLQDashboardUseCase
@@ -102,9 +106,15 @@ class TATAnalysisWorker @AssistedInject constructor(
 
             Log.d(TAG, "   Step 4: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
 
-            // 5.5. Validate OLQ scores against SSB rules
-            // TODO: Fetch actual entry type from user profile
-            val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+            // 5.5. Validate OLQ scores against SSB rules using candidate entry type
+            val userProfile = try {
+                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to fetch user profile for TAT analysis — defaulting to NDA")
+                null
+            }
+            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
+            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
             Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
             if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
                 Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
@@ -113,9 +123,9 @@ class TATAnalysisWorker @AssistedInject constructor(
             // 6. Create OLQAnalysisResult
             val overallScore = olqScores.values.map { it.score }.average().toFloat()
             val overallRating = when {
-                overallScore <= 3.0f -> "Exceptional"
-                overallScore <= 5.0f -> "Good"
-                overallScore <= 7.0f -> "Average"
+                overallScore <= 5.5f -> "Exceptional"
+                overallScore <= 6.5f -> "Good"
+                overallScore <= 7.5f -> "Average"
                 else -> "Needs Improvement"
             }
 
@@ -147,7 +157,7 @@ class TATAnalysisWorker @AssistedInject constructor(
                 weaknesses = weaknesses,
                 recommendations = recommendations,
                 analyzedAt = System.currentTimeMillis(),
-                aiConfidence = 85  // Default confidence
+                aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
             )
 
             // 7. Update submission with OLQ result
@@ -217,10 +227,10 @@ class TATAnalysisWorker @AssistedInject constructor(
                 if (analysisResult.isSuccess) {
                     val analysis = analysisResult.getOrNull()!!
 
-                    // Convert ResponseAnalysis to OLQScore map
+                    // Convert ResponseAnalysis to OLQScore map (5-9 SSB scale)
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(1, 10),
+                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
                             confidence = analysis.overallConfidence,
                             reasoning = scoreWithReasoning.reasoning
                         )
