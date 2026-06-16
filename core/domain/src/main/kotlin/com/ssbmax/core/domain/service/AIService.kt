@@ -1,6 +1,7 @@
 package com.ssbmax.core.domain.service
 
 import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 
@@ -178,6 +179,29 @@ interface AIService {
         story: String,
         imageContext: PPDTImageContext,
         candidateGender: String
+    ): Result<ResponseAnalysis>
+
+    /**
+     * Analyze a single TAT story using multimodal input (image bytes + story + per-picture rubric).
+     *
+     * Passes the actual picture to Gemini alongside the candidate's story, enabling the model
+     * to verify scene perception and score accordingly.
+     *
+     * @param imageBytes Raw JPEG bytes of the TAT image (empty = text-only fallback)
+     * @param story Candidate's written story for this picture
+     * @param imageContext Structured per-picture rubric from the enrichment pipeline
+     * @param candidateGender Gender string for protagonist-alignment scoring
+     * @param storyIndex 0-based index of this story in the submission (for context)
+     * @param totalStories Total number of stories in the submission
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int
     ): Result<ResponseAnalysis>
 
     /**

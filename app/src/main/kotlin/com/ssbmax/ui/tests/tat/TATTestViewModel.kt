@@ -1,13 +1,13 @@
 package com.ssbmax.ui.tests.tat
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.core.data.repository.SubscriptionManager
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
@@ -16,20 +16,18 @@ import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.core.domain.usecase.tat.LoadTATTestUseCase
-
+import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.TATAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -38,24 +36,19 @@ import javax.inject.Inject
 class TATTestViewModel @Inject constructor(
     private val loadTATTest: LoadTATTestUseCase,
     private val submitTATTest: SubmitTATTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    subscriptionManager: SubscriptionManager,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
-    private val workManager: WorkManager
-) : ViewModel() {
+    securityLogger: SecurityEventLogger,
+    workManager: WorkManager
+) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
 
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
     
     
-    // Navigation events (one-time events, consumed on collection)
-    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
-    val navigationEvents = _navigationEvents.receiveAsFlow()
-
     private var timerJob: Job? = null
-    private var timerGeneration = 0L
 
     init {
         trackMemoryLeaks("TATTestViewModel")
@@ -277,7 +270,7 @@ class TATTestViewModel @Inject constructor(
                     
                     // Emit navigation event (one-time, consumed by screen)
                     android.util.Log.d("TATTestViewModel", "📍 Step 8: Emitting navigation event...")
-                    _navigationEvents.trySend(
+                    sendNavigationEvent(
                         TestNavigationEvent.NavigateToResult(
                             submissionId = submissionId,
                             subscriptionType = subscriptionType
@@ -357,7 +350,7 @@ class TATTestViewModel @Inject constructor(
                 }
                 if (isActive) {
                     saveCurrentStoryToResponses()
-                    _uiState.update { it.copy(phase = TATPhase.REVIEW_CURRENT) }
+                    _uiState.update { it.copy(phase = TATPhase.REVIEW) }
                 }
             } finally {
                 _uiState.update { current ->
@@ -372,36 +365,18 @@ class TATTestViewModel @Inject constructor(
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-
         val workRequest = OneTimeWorkRequestBuilder<TATAnalysisWorker>()
             .setInputData(workDataOf(TATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints)
             .build()
-
-        workManager.enqueueUniqueWork(
-            "tat_analysis_$submissionId",
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+        enqueueAnalysisWork("tat_analysis_$submissionId", workRequest)
     }
 
     override fun onCleared() {
         super.onCleared()
-
         timerJob?.cancel()
-        android.util.Log.d("TATTestViewModel", "🧹 ViewModel onCleared() - timer cancelled")
-
-        // Cancel navigation events channel
-        _navigationEvents.close()
-
-        // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("TATTestViewModel")
 
-        // Force GC to help profiler detect cleanup
         MemoryLeakTracker.forceGcAndLog("TATTestViewModel-Cleared")
-
-        android.util.Log.d("TATTestViewModel", "✅ TATTestViewModel cleanup complete")
     }
 }
-
-

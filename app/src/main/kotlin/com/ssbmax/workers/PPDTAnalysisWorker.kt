@@ -16,7 +16,6 @@ import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.scoring.EntryType
 import com.ssbmax.core.domain.scoring.ScoringUtils
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase

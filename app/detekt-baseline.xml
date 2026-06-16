@@ -7,7 +7,6 @@
     <ID>ComplexCondition:GPETestViewModel.kt$GPETestViewModel$!state.isLoading &amp;&amp; !state.isSubmitted &amp;&amp; state.timeRemainingSeconds &gt; 0 &amp;&amp; (state.currentPhase == GPEPhase.IMAGE_VIEWING || state.currentPhase == GPEPhase.PLANNING) &amp;&amp; !state.isTimerActive</ID>
     <ID>ComplexCondition:OIRTestViewModel.kt$OIRTestViewModel$!state.isLoading &amp;&amp; !state.isCompleted &amp;&amp; state.timeRemainingSeconds &gt; 0 &amp;&amp; state.totalQuestions &gt; 0 &amp;&amp; !state.isTimerActive</ID>
     <ID>ComplexCondition:OIRTestViewModel.kt$OIRTestViewModel$isActive &amp;&amp; _uiState.value.isTimerActive &amp;&amp; _uiState.value.timeRemainingSeconds &gt; 0 &amp;&amp; !_uiState.value.isCompleted</ID>
-    <ID>ComplexCondition:PPDTTestViewModel.kt$PPDTTestViewModel$!state.isLoading &amp;&amp; !state.isSubmitted &amp;&amp; state.timeRemainingSeconds &gt; 0 &amp;&amp; (state.currentPhase == PPDTPhase.IMAGE_VIEWING || state.currentPhase == PPDTPhase.WRITING) &amp;&amp; !state.isTimerActive</ID>
     <ID>ComplexCondition:TestResultHandler.kt$TestResultHandler$testType == TestType.OIR || testType == TestType.PPDT || testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ || testType == TestType.GTO_GD || testType == TestType.GTO_LECTURETTE || testType == TestType.GTO_GPE</ID>
     <ID>ComplexCondition:WATTestViewModel.kt$WATTestViewModel$!state.isLoading &amp;&amp; state.phase == WATPhase.IN_PROGRESS &amp;&amp; state.timeRemaining &gt; 0 &amp;&amp; !state.isTimerActive</ID>
     <ID>CyclomaticComplexMethod:AndroidTTSService.kt$AndroidTTSService$private fun selectBestVoice(tts: TextToSpeech)</ID>
@@ -61,11 +60,8 @@
     <ID>ForbiddenComment:NotificationHelperTest.kt$NotificationHelperTest$* NotificationHelperTest - temporarily ignored due to Robolectric SDK version mismatch * TODO: Re-enable when Robolectric supports SDK 35</ID>
     <ID>ForbiddenComment:PIQTestViewModel.kt$PIQTestViewModel$// TODO: Extract actual OIR number from OIR test result when available</ID>
     <ID>ForbiddenComment:PIQTestViewModel.kt$PIQTestViewModel$// TODO: Implement draft loading from Firestore</ID>
-    <ID>ForbiddenComment:PPDTAnalysisWorker.kt$PPDTAnalysisWorker$// 4. Determine Candidate Gender (Placeholder for now, TODO: Fetch from User Profile)</ID>
     <ID>ForbiddenComment:PPDTSubmissionResultViewModel.kt$PPDTSubmissionResultViewModel$// TODO: Get from user profile</ID>
     <ID>ForbiddenComment:PPDTTestScreen.kt$// TODO: Navigate to upgrade screen</ID>
-    <ID>ForbiddenComment:PPDTTestViewModel.kt$PPDTTestViewModel$// TODO: Actual AI scoring</ID>
-    <ID>ForbiddenComment:PPDTTestViewModel.kt$PPDTTestViewModel$// TODO: Save session state</ID>
     <ID>ForbiddenComment:Phase1DetailViewModel.kt$Phase1DetailViewModel$// TODO: Track attempts count in domain model if needed</ID>
     <ID>ForbiddenComment:Phase2DetailViewModel.kt$Phase2DetailViewModel$// TODO: Track attempts count in domain model if needed</ID>
     <ID>ForbiddenComment:SRTTestScreen.kt$// TODO: Navigate to upgrade screen</ID>
@@ -109,7 +105,6 @@
     <ID>ForbiddenComment:StudyMaterialDetailScreen.kt$/* TODO: Filter by tag */</ID>
     <ID>ForbiddenComment:StudyMaterialsViewModel.kt$StudyMaterialsViewModel$* ViewModel for Study Materials Screen * Note: Study materials are currently stored as code-based content * TODO: Migrate to Firestore-based StudyMaterialRepository for dynamic content</ID>
     <ID>ForbiddenComment:StudyMaterialsViewModel.kt$StudyMaterialsViewModel$// TODO: Move to Firestore-based dynamic content system</ID>
-    <ID>ForbiddenComment:TATAnalysisWorker.kt$TATAnalysisWorker$// TODO: Fetch actual entry type from user profile</ID>
     <ID>ForbiddenComment:TestDetailGradingScreen.kt$// TODO: Display actual submission content based on test type</ID>
     <ID>ForbiddenComment:TestDetailGradingViewModel.kt$TestDetailGradingViewModel$// TODO: Trigger Cloud Function to send FCM push notification</ID>
     <ID>ForbiddenComment:TestResultHandlerTest.kt$TestResultHandlerTest$* TestResultHandlerTest - temporarily ignored due to Robolectric SDK version mismatch * TODO: Re-enable when Robolectric supports SDK 35</ID>
@@ -164,7 +159,6 @@
     <ID>LongMethod:MemoryLeakTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) /** * Debug screen for memory leak verification * * ONLY AVAILABLE IN DEBUG BUILDS * * Use this screen to: * 1. Run controlled leak test scenarios * 2. Monitor memory usage with Android Profiler * 3. Verify that ViewModels are properly cleaned up * * To access: Add to navigation graph in debug builds only */ @Composable fun MemoryLeakTestScreen( viewModel: MemoryLeakTestViewModel = viewModel(), onNavigateBack: () -&gt; Unit = {} )</ID>
     <ID>LongMethod:MockPaymentScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MockPaymentScreen( plan: SubscriptionPlan, onPaymentSuccess: () -&gt; Unit, onNavigateBack: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:NotificationSettingsSection.kt$@Composable private fun NotificationSettingsSectionContent( preferences: NotificationPreferences?, onTogglePushNotifications: (Boolean) -&gt; Unit, onToggleGradingComplete: (Boolean) -&gt; Unit, onToggleFeedbackAvailable: (Boolean) -&gt; Unit, onToggleBatchInvitation: (Boolean) -&gt; Unit, onToggleGeneralAnnouncement: (Boolean) -&gt; Unit, onToggleStudyReminders: (Boolean) -&gt; Unit, onToggleTestReminders: (Boolean) -&gt; Unit, onToggleMarketplaceUpdates: (Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:OIRQuestionCard.kt$@Composable internal fun OIROptionCard( option: OIROption, isSelected: Boolean, isCorrect: Boolean, isWrong: Boolean, onClick: () -&gt; Unit )</ID>
     <ID>LongMethod:OIRSubmissionResultViewModel.kt$OIRSubmissionResultViewModel$private fun parseOIRTestResult(data: Map&lt;String, Any&gt;): OIRTestResult?</ID>
     <ID>LongMethod:OIRTestResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun OIRTestResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit = {}, onRetakeTest: () -&gt; Unit = {}, onReviewAnswers: () -&gt; Unit = {}, viewModel: OIRSubmissionResultViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:OLQDashboardCard.kt$@Composable fun OLQDashboardCard( processedData: ProcessedDashboardData, onNavigateToResult: (TestType, String) -&gt; Unit = { _, _ -&gt; }, isLoading: Boolean = false, isRefreshing: Boolean = false, onRefresh: () -&gt; Unit = {}, modifier: Modifier = Modifier )</ID>
@@ -178,10 +172,7 @@
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission</ID>
     <ID>LongMethod:PPDTAnalysisWorker.kt$PPDTAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:PPDTImageViewingPhase.kt$@Composable fun PPDTImageViewingPhase( imageUrl: String, timeRemainingSeconds: Int )</ID>
     <ID>LongMethod:PPDTInstructionsPhase.kt$@Composable fun PPDTInstructionsPhase(onStart: () -&gt; Unit)</ID>
-    <ID>LongMethod:PPDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PPDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: PPDTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:PPDTTestViewModel.kt$PPDTTestViewModel$fun loadTest(testId: String = "ppdt_standard")</ID>
     <ID>LongMethod:PaymentSuccessScreen.kt$@Composable fun PaymentSuccessScreen( plan: SubscriptionPlan, onNavigateToHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:Phase2DetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Phase2DetailScreen( onNavigateBack: () -&gt; Unit = {}, onNavigateToTopic: (String) -&gt; Unit = {}, viewModel: Phase2DetailViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:Phase2DetailViewModel.kt$Phase2DetailViewModel$private fun loadPhase2Tests()</ID>
@@ -212,7 +203,6 @@
     <ID>LongMethod:TATImageViewingPhase.kt$@Composable fun TATImageViewingPhase( imageUrl: String, timeRemaining: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TATInstructionsPhase.kt$@Composable fun TATInstructionsPhase(onStart: () -&gt; Unit)</ID>
     <ID>LongMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:TATTestViewModel.kt$TATTestViewModel$fun loadTest(testId: String)</ID>
     <ID>LongMethod:TATTestViewModel.kt$TATTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:TATWritingPhase.kt$@Composable fun TATWritingPhase( story: String, onStoryChange: (String) -&gt; Unit, timeRemaining: Int, minCharacters: Int, maxCharacters: Int, charactersCount: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TopicContentLoader.kt$TopicContentLoader$private fun getIntroduction(testType: String): String</ID>
@@ -227,17 +217,15 @@
     <ID>LongParameterList:LecturetteTestPhases.kt$( selectedTopic: String, speechTranscript: String, charCount: Int, timeRemaining: String, isTimeLow: Boolean, onTranscriptChanged: (String) -&gt; Unit, onProceedToReview: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
     <ID>LongParameterList:NotificationSettingsSection.kt$( preferences: NotificationPreferences?, onTogglePushNotifications: (Boolean) -&gt; Unit, onToggleGradingComplete: (Boolean) -&gt; Unit, onToggleFeedbackAvailable: (Boolean) -&gt; Unit, onToggleBatchInvitation: (Boolean) -&gt; Unit, onToggleGeneralAnnouncement: (Boolean) -&gt; Unit, onToggleStudyReminders: (Boolean) -&gt; Unit, onToggleTestReminders: (Boolean) -&gt; Unit, onToggleMarketplaceUpdates: (Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongParameterList:OIRTestViewModel.kt$OIRTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val securityLogger: SecurityEventLogger, private val scoreCalculator: OIRTestScoreCalculator, private val submitOIRTestUseCase: SubmitOIRTestUseCase, private val clock: Clock, @ApplicationContext private val appContext: Context, private val imageLoader: ImageLoader )</ID>
-    <ID>LongParameterList:PPDTTestViewModel.kt$PPDTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger, private val workManager: androidx.work.WorkManager )</ID>
     <ID>LongParameterList:SDTTestScreen.kt$( question: String, questionNumber: Int, totalQuestions: Int, answer: String, onAnswerChange: (String) -&gt; Unit, charCount: Int, minChars: Int, maxChars: Int, timeRemaining: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:SDTTestViewModel.kt$SDTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSDTTest: SubmitSDTTestUseCase, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger, private val workManager: WorkManager )</ID>
+    <ID>LongParameterList:SDTTestViewModel.kt$SDTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSDTTest: SubmitSDTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LongParameterList:SRTInProgressView.kt$( situation: String, situationNumber: Int, totalSituations: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, minChars: Int, maxChars: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:SRTTestViewModel.kt$SRTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSRTTest: SubmitSRTTestUseCase, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger, private val workManager: WorkManager )</ID>
+    <ID>LongParameterList:SRTTestViewModel.kt$SRTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSRTTest: SubmitSRTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LongParameterList:SSBMaxDrawer.kt$( userProfile: UserProfile?, isLoadingProfile: Boolean = false, currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onEditProfile: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongParameterList:SubscriptionManagementViewModel.kt$SubscriptionTierModel$( val displayName: String, val price: String, val oirTestLimit: Int, val tatTestLimit: Int, val watTestLimit: Int, val srtTestLimit: Int, val ppdtTestLimit: Int, val piqTestLimit: Int, val sdTestLimit: Int, val gtoTestLimit: Int, val interviewTestLimit: Int, val features: List&lt;String&gt; )</ID>
-    <ID>LongParameterList:TATTestViewModel.kt$TATTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitTATTest: SubmitTATTestUseCase, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger, private val workManager: WorkManager )</ID>
     <ID>LongParameterList:UnifiedOLQResultTemplate.kt$( uiState: T, paddingValues: PaddingValues, submissionConfirmationContent: @Composable (T) -&gt; Unit, testSpecificContent: (@Composable (T) -&gt; Unit)?, submissionStatus: SubmissionStatus?, showInstructorReview: Boolean, onNavigateHome: () -&gt; Unit, onRetry: (() -&gt; Unit)? )</ID>
     <ID>LongParameterList:WATInProgressView.kt$( word: String, wordNumber: Int, totalWords: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, onSubmit: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:WATTestViewModel.kt$WATTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitWATTest: SubmitWATTestUseCase, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger, private val workManager: WorkManager )</ID>
+    <ID>LongParameterList:WATTestViewModel.kt$WATTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitWATTest: SubmitWATTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LoopWithTooManyJumpStatements:ArchitectureTest.kt$ArchitectureTest$for</ID>
     <ID>LoopWithTooManyJumpStatements:ErrorHandlingArchitectureTest.kt$ErrorHandlingArchitectureTest$for</ID>
     <ID>LoopWithTooManyJumpStatements:MemoryLeakDetectionTest.kt$MemoryLeakDetectionTest$for</ID>
@@ -300,16 +288,13 @@
     <ID>MaxLineLength:OIRTestLoadingTest.kt$OIRTestLoadingTest$android.util.Log.d("TEST", "isLoading: ${state.isLoading}, errorResId: ${state.errorResId}, isLimitReached: ${state.isLimitReached}")</ID>
     <ID>MaxLineLength:OIRTestViewModel.kt$OIRTestViewModel$ErrorLogger.log(Exception("Invalid OIR question: ${inv.questionId}"), "OIR question validation failed: ${inv.toLogString()}")</ID>
     <ID>MaxLineLength:OIRTestViewModel.kt$OIRTestViewModel$ErrorLogger.log(Exception("Invalid question during runtime validation: ${question.id}"), "OIR question runtime validation failed: ${validationResult.toLogString()}")</ID>
-    <ID>MaxLineLength:OIRTestViewModelTest.kt$OIRTestViewModelTest$android.util.Log.d("TEST", "isLoading: ${state.isLoading}, errorResId: ${state.errorResId}, isLimitReached: ${state.isLimitReached}")</ID>
     <ID>MaxLineLength:PIQTestScreen.kt$Text(stringResource(R.string.piq_10th_standard), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))</ID>
     <ID>MaxLineLength:PIQTestScreen.kt$Text(stringResource(R.string.piq_12th_standard), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))</ID>
     <ID>MaxLineLength:PIQTestScreen.kt$Text(stringResource(R.string.piq_post_graduation), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))</ID>
     <ID>MaxLineLength:PIQTestScreen.kt$nextButtonText = if (uiState.currentPage == PIQPage.PAGE_2) stringResource(R.string.piq_review) else stringResource(R.string.piq_next)</ID>
     <ID>MaxLineLength:PIQTestViewModel.kt$PIQTestViewModel$ErrorLogger.log(Exception("User not authenticated during PIQ submission"), "PIQ submission failed: user not authenticated")</ID>
-    <ID>MaxLineLength:PPDTImageViewingPhase.kt$android.util.Log.e("PPDTTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)</ID>
     <ID>MaxLineLength:PPDTInstructionsPhase.kt$text = "Your story should include:\n• What led to this situation?\n• What is happening now?\n• What will be the outcome?"</ID>
     <ID>MaxLineLength:PPDTTestViewModel.kt$PPDTTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
-    <ID>MaxLineLength:PPDTTestViewModelTest.kt$PPDTTestViewModelTest$val story = "This is a detailed story about what I perceived in the hazy image. The characters showed leadership, courage, and determination in facing the challenge. ".repeat(2)</ID>
     <ID>MaxLineLength:Phase1DetailScreen.kt$phaseDescription = "The screening tests consist of Officer Intelligence Rating (OIR) and Picture Perception &amp; Description Test (PPDT). Candidates must clear this stage to proceed to Phase 2."</ID>
     <ID>MaxLineLength:Phase1DetailViewModel.kt$Phase1DetailViewModel$description</ID>
     <ID>MaxLineLength:Phase2DetailViewModel.kt$Phase2DetailViewModel$"Half Group Task, Lecturette, and Command Task. Assessed on leadership, cooperation, and problem-solving."</ID>
@@ -320,7 +305,6 @@
     <ID>MaxLineLength:SDTTestScreen.kt$Text</ID>
     <ID>MaxLineLength:SDTTestScreen.kt$Text(stringResource(R.string.sdt_instructions_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)</ID>
     <ID>MaxLineLength:SDTTestViewModel.kt$SDTTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
-    <ID>MaxLineLength:SDTTestViewModel.kt$SDTTestViewModel$private</ID>
     <ID>MaxLineLength:SRTTestViewModel.kt$SRTTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
     <ID>MaxLineLength:SRTTestViewModel.kt$SRTTestViewModel$android.util.Log.d("SRTTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage% (${validCount}/${totalCount})")</ID>
     <ID>MaxLineLength:SRTTestViewModelTest.kt$SRTTestViewModelTest$"You are the captain of your college team. During an important match, you notice that your best player is not feeling well but insists on playing." to SRTCategory.LEADERSHIP</ID>
@@ -328,9 +312,7 @@
     <ID>MaxLineLength:StudentNavGraph.kt$com.ssbmax.core.domain.model.TestType.OIR -&gt; SSBMaxDestinations.OIRTestResult.createRoute(submissionId)</ID>
     <ID>MaxLineLength:StudentTestsScreen.kt$text = "${test.questionCount} ${if (test.questionCount == 1) stringResource(R.string.student_tests_question_single) else stringResource(R.string.student_tests_question_plural)}"</ID>
     <ID>MaxLineLength:SubscriptionManagementScreen.kt$answer = "Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period."</ID>
-    <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$ErrorLogger.log(Exception("Unauthenticated TAT test access attempt"), "SECURITY: Unauthenticated test access attempt blocked")</ID>
     <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$ErrorLogger.log(Exception("User not authenticated during TAT submission"), "TAT submission failed: user not authenticated")</ID>
-    <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
     <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$android.util.Log.d("TATTestViewModel", "✅ Performance recorded ($difficulty): $scorePercentage% (${validCount}/${totalCount})")</ID>
     <ID>MaxLineLength:TopicScreen.kt$label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") }</ID>
     <ID>MaxLineLength:TopicViewModel.kt$TopicViewModel$Log.d(TAG, "✓ Loaded $testType from cloud: ${materials.size} materials (${cloudMaterials.size} cloud + ${materials.size - cloudMaterials.size} local)")</ID>
@@ -366,15 +348,12 @@
     <ID>ReturnCount:WATSubmissionResultViewModel.kt$WATSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>ThrowsCount:GPETestViewModel.kt$GPETestViewModel$fun loadTest(testId: String = "gpe_standard")</ID>
     <ID>ThrowsCount:OIRTestViewModel.kt$OIRTestViewModel$fun loadTest(testId: String = "oir_standard")</ID>
-    <ID>ThrowsCount:PPDTTestViewModel.kt$PPDTTestViewModel$fun loadTest(testId: String = "ppdt_standard")</ID>
     <ID>ThrowsCount:SRTTestViewModel.kt$SRTTestViewModel$fun loadTest(testId: String)</ID>
-    <ID>ThrowsCount:TATTestViewModel.kt$TATTestViewModel$fun loadTest(testId: String)</ID>
     <ID>ThrowsCount:WATTestViewModel.kt$WATTestViewModel$fun loadTest(testId: String)</ID>
     <ID>TooGenericExceptionThrown:AdminContentManager.kt$AdminContentManager$throw Exception("Material not found: $materialId")</ID>
     <ID>TooGenericExceptionThrown:GPETestViewModel.kt$GPETestViewModel$throw Exception("No scenarios found for this test")</ID>
     <ID>TooGenericExceptionThrown:OIRTestViewModel.kt$OIRTestViewModel$throw Exception("All questions failed validation.")</ID>
     <ID>TooGenericExceptionThrown:OIRTestViewModel.kt$OIRTestViewModel$throw Exception("No questions available.")</ID>
-    <ID>TooGenericExceptionThrown:PPDTTestViewModel.kt$PPDTTestViewModel$throw Exception("No questions found for this test")</ID>
     <ID>TooGenericExceptionThrown:SDTTestViewModel.kt$SDTTestViewModel$throw Exception("No questions found")</ID>
     <ID>TooGenericExceptionThrown:SRTTestViewModel.kt$SRTTestViewModel$throw Exception("No situations found for this test")</ID>
     <ID>TooGenericExceptionThrown:StudentHomeViewModelTest.kt$StudentHomeViewModelTest$throw Exception("Network error")</ID>
@@ -405,7 +384,6 @@
     <ID>UnusedParameter:PIQTestScreen.kt$testId: String</ID>
     <ID>UnusedParameter:PPDTReviewPhase.kt$imageUrl: String</ID>
     <ID>UnusedParameter:PPDTSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
-    <ID>UnusedParameter:PPDTTestViewModel.kt$PPDTTestViewModel$story: String</ID>
     <ID>UnusedParameter:Phase1DetailScreen.kt$topicId: String</ID>
     <ID>UnusedParameter:Phase2DetailScreen.kt$topicId: String</ID>
     <ID>UnusedParameter:PhaseProgressRibbon.kt$topicId: String</ID>
@@ -434,8 +412,6 @@
     <ID>UnusedParameter:WATSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:WATTestScreen.kt$modifier: Modifier = Modifier</ID>
     <ID>UnusedPrivateMember:DrawerHeader.kt$@Composable private fun ProfileAvatar( initials: String, modifier: Modifier = Modifier )</ID>
-    <ID>UnusedPrivateMember:PPDTTestViewModel.kt$PPDTTestViewModel$private fun generateMockAIScore(story: String): PPDTAIScore</ID>
-    <ID>UnusedPrivateMember:PPDTTestViewModel.kt$PPDTTestViewModel$private fun generateMockQuestion(): PPDTQuestion</ID>
     <ID>UnusedPrivateProperty:BillingRepository.kt$BillingRepository$@ApplicationContext private val context: Context</ID>
     <ID>UnusedPrivateProperty:FAQViewModelTest.kt$FAQViewModelTest$val searchCount = viewModel.uiState.value.displayedFAQs.size</ID>
     <ID>UnusedPrivateProperty:GDTestViewModel.kt$GDTestViewModel$private val gtoRepository: GTORepository</ID>
@@ -450,19 +426,14 @@
     <ID>UnusedPrivateProperty:LecturetteTestViewModel.kt$LecturetteTestViewModel$private val gtoRepository: GTORepository</ID>
     <ID>UnusedPrivateProperty:LoginScreen.kt$val context = LocalContext.current</ID>
     <ID>UnusedPrivateProperty:MemoryLeakTestScreen.kt$val context = LocalContext.current</ID>
-    <ID>UnusedPrivateProperty:OIRTestViewModelTest.kt$OIRTestViewModelTest$private val mockDifficultyManager = mockk&lt;com.ssbmax.core.data.repository.DifficultyProgressionManager&gt;(relaxed = true)</ID>
-    <ID>UnusedPrivateProperty:OIRTestViewModelTest.kt$OIRTestViewModelTest$private val mockSubmissionRepo = mockk&lt;com.ssbmax.core.domain.repository.SubmissionRepository&gt;(relaxed = true)</ID>
     <ID>UnusedPrivateProperty:PIQFormWebView.kt$val context = LocalContext.current</ID>
     <ID>UnusedPrivateProperty:PIQSubmissionResultViewModel.kt$PIQSubmissionResultViewModel.Companion$private const val TAG = "PIQResultViewModel"</ID>
-    <ID>UnusedPrivateProperty:PPDTTestViewModel.kt$PPDTTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
-    <ID>UnusedPrivateProperty:PPDTTestViewModel.kt$PPDTTestViewModel$val config = PPDTTestConfig()</ID>
     <ID>UnusedPrivateProperty:SDTTestViewModel.kt$SDTTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
     <ID>UnusedPrivateProperty:SRTTestViewModel.kt$SRTTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
     <ID>UnusedPrivateProperty:SpeechToTextManager.kt$SpeechToTextManager$private var accumulatedTranscription = StringBuilder()</ID>
     <ID>UnusedPrivateProperty:StudentHomeViewModel.kt$StudentHomeViewModel$private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository</ID>
     <ID>UnusedPrivateProperty:StudyMaterialDetailScreen.kt$val materialId = categoryId // Alias for compatibility</ID>
     <ID>UnusedPrivateProperty:SubscriptionManagementViewModel.kt$SubscriptionManagementViewModel.Companion$private const val TAG = "SubscriptionVM"</ID>
-    <ID>UnusedPrivateProperty:TATTestViewModel.kt$TATTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
     <ID>UnusedPrivateProperty:TestProgressTrackingContractTest.kt$TestProgressTrackingContractTest$private val submissionRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepository.kt"</ID>
     <ID>UnusedPrivateProperty:WATTestViewModel.kt$WATTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
     <ID>UseCheckOrError:AuthViewModel.kt$AuthViewModel$throw IllegalStateException("Failed to get Android Intent from GoogleSignInData")</ID>
@@ -680,10 +651,6 @@
     <ID>WildcardImport:PIQTestViewModelTest.kt$import kotlinx.coroutines.test.*</ID>
     <ID>WildcardImport:PPDTComponents.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTDialogs.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTDialogs.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTImageViewingPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTImageViewingPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PPDTInstructionsPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTInstructionsPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PPDTReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
@@ -697,7 +664,6 @@
     <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.phases.*</ID>
     <ID>WildcardImport:PPDTTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PPDTTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
     <ID>WildcardImport:PPDTTestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.material3.*</ID>

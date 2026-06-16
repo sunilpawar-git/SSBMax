@@ -1,9 +1,7 @@
 package com.ssbmax.ui.tests.ppdt
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -18,18 +16,17 @@ import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.core.domain.usecase.ppdt.SubmitPPDTTestUseCase
+import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.PPDTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -37,23 +34,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PPDTTestViewModel @Inject constructor(
-    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    observeCurrentUser: ObserveCurrentUserUseCase,
     private val loadPPDTTest: LoadPPDTTestUseCase,
     private val submitPPDTTest: SubmitPPDTTestUseCase,
     private val difficultyManager: DifficultyProgressionManager,
-    private val subscriptionManager: SubscriptionManager,
-    private val securityLogger: SecurityEventLogger,
-    private val workManager: WorkManager
-) : ViewModel() {
+    subscriptionManager: SubscriptionManager,
+    securityLogger: SecurityEventLogger,
+    workManager: WorkManager
+) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
 
     private val _uiState = MutableStateFlow(PPDTTestUiState())
     val uiState: StateFlow<PPDTTestUiState> = _uiState.asStateFlow()
-
-    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
-    val navigationEvents = _navigationEvents.receiveAsFlow()
-
-    // Monotonically increasing counter; each startTimer() call gets a unique generation.
-    private var timerGeneration = 0L
 
     init {
         trackMemoryLeaks("PPDTTestViewModel")
@@ -211,7 +202,7 @@ class PPDTTestViewModel @Inject constructor(
                         isSubmitted = true, submissionId = result.submissionId,
                         subscriptionType = result.subscriptionType, submission = result.submission
                     ) }
-                    _navigationEvents.trySend(TestNavigationEvent.NavigateToResult(
+                    sendNavigationEvent(TestNavigationEvent.NavigateToResult(
                         submissionId = result.submissionId, subscriptionType = result.subscriptionType
                     ))
                 }
@@ -271,12 +262,11 @@ class PPDTTestViewModel @Inject constructor(
         val workRequest = OneTimeWorkRequestBuilder<PPDTAnalysisWorker>()
             .setInputData(workDataOf(PPDTAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints).build()
-        workManager.enqueueUniqueWork("ppdt_analysis_$submissionId", ExistingWorkPolicy.KEEP, workRequest)
+        enqueueAnalysisWork("ppdt_analysis_$submissionId", workRequest)
     }
 
     override fun onCleared() {
         super.onCleared()
-        _navigationEvents.close()
         MemoryLeakTracker.unregisterViewModel("PPDTTestViewModel")
         MemoryLeakTracker.forceGcAndLog("PPDTTestViewModel-Cleared")
     }

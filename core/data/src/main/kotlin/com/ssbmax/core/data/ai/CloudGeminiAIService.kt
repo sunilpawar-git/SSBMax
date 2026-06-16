@@ -6,6 +6,7 @@ import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.QuestionSource
@@ -220,6 +221,22 @@ class CloudGeminiAIService @Inject constructor() : AIService {
     override suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis> {
         Log.e(TAG, "SD analysis not yet supported in CloudGemini implementation")
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    }
+
+    /**
+     * Analyze TAT story multimodal (not yet implemented in cloud)
+     * Use GeminiAIService for per-story multimodal TAT analysis with direct API access.
+     */
+    override suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int
+    ): Result<ResponseAnalysis> {
+        Log.e(TAG, "Per-story TAT multimodal analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for per-story TAT multimodal analysis"))
     }
 
     /**

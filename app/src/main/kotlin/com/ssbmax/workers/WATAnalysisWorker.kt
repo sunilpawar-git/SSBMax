@@ -12,7 +12,8 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.scoring.EntryType
+import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.core.domain.scoring.ScoringUtils
 import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.notifications.NotificationHelper
@@ -21,12 +22,14 @@ import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class WATAnalysisWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val aiService: AIService,
     private val notificationHelper: NotificationHelper,
     private val getOLQDashboard: GetOLQDashboardUseCase
@@ -56,8 +59,14 @@ class WATAnalysisWorker @AssistedInject constructor(
             val prompt = PsychologyTestPrompts.generateWATAnalysisPrompt(submission)
             val olqScores = analyzeSubmissionWithRetry(prompt) ?: return handleAnalysisFailure(submissionId)
 
-            // SSB validation
-            val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+            val userProfile = try {
+                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
+            } catch (e: Exception) {
+                ErrorLogger.log(e, "Failed to fetch user profile for WAT analysis — defaulting to NDA")
+                null
+            }
+            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
+            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
             Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
             if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
                 Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
@@ -96,7 +105,7 @@ class WATAnalysisWorker @AssistedInject constructor(
                     val analysis = analysisResult.getOrNull()!!
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
                         OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(1, 10),
+                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
                             confidence = analysis.overallConfidence,
                             reasoning = scoreWithReasoning.reasoning
                         )
@@ -126,9 +135,9 @@ class WATAnalysisWorker @AssistedInject constructor(
     private fun createOLQResult(submissionId: String, olqScores: Map<OLQ, OLQScore>): OLQAnalysisResult {
         val overallScore = olqScores.values.map { it.score }.average().toFloat()
         val overallRating = when {
-            overallScore <= 3.0f -> "Exceptional"
-            overallScore <= 5.0f -> "Good"
-            overallScore <= 7.0f -> "Average"
+            overallScore <= 5.5f -> "Exceptional"
+            overallScore <= 6.5f -> "Good"
+            overallScore <= 7.5f -> "Average"
             else -> "Needs Improvement"
         }
         val strengths = olqScores.entries.sortedBy { it.value.score }.take(3)
@@ -150,7 +159,7 @@ class WATAnalysisWorker @AssistedInject constructor(
                 "Maintain quick and positive responses"
             ),
             analyzedAt = System.currentTimeMillis(),
-            aiConfidence = 85
+            aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
         )
     }
 

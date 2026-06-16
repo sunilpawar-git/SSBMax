@@ -1,13 +1,13 @@
 package com.ssbmax.ui.tests.wat
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.core.data.repository.SubscriptionManager
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.core.domain.model.*
@@ -16,59 +16,41 @@ import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
+import com.ssbmax.ui.tests.common.BaseTestViewModel
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.WATAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.ssbmax.ui.tests.common.TestNavigationEvent
 
-/**
- * ViewModel for WAT Test Screen
- * Loads test questions from cloud via TestContentRepository
- *
- * MEMORY LEAK PREVENTION:
- * - Registers with MemoryLeakTracker for profiler verification
- * - Properly cancels timerJob in onCleared()
- * - Uses viewModelScope for all coroutines (auto-cancelled)
- * - No static references or context leaks
- */
 @HiltViewModel
 class WATTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submitWATTest: SubmitWATTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    subscriptionManager: SubscriptionManager,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
-    private val workManager: WorkManager
-) : ViewModel() {
+    securityLogger: SecurityEventLogger,
+    workManager: WorkManager
+) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
 
     private val _uiState = MutableStateFlow(WATTestUiState())
     val uiState: StateFlow<WATTestUiState> = _uiState.asStateFlow()
     
-    // Navigation events (one-time events, consumed on collection)
-    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
-    val navigationEvents = _navigationEvents.receiveAsFlow()
-    
-    // Timer Job reference for explicit cancellation (prevents "rushing" bug)
     private var timerJob: Job? = null
-
-    // PHASE 3: Job removed - timer managed by viewModelScope lifecycle
 
     init {
         // Register for memory leak tracking
@@ -87,8 +69,6 @@ class WATTestViewModel @Inject constructor(
         viewModelScope.launch {
             val state = _uiState.value
             
-            // PHASE 2: Check isTimerActive instead of timerJob
-            // Only restore if we're in active phase with time remaining
             if (!state.isLoading && 
                 state.phase == WATPhase.IN_PROGRESS && 
                 state.timeRemaining > 0 && 
@@ -294,7 +274,6 @@ class WATTestViewModel @Inject constructor(
     }
     
     private fun completeTest() {
-        // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
         _uiState.update { it.copy(
             isTimerActive = false,
             phase = WATPhase.COMPLETED
@@ -384,7 +363,7 @@ class WATTestViewModel @Inject constructor(
                     ) }
 
                     // Emit navigation event (one-time, consumed by screen)
-                    _navigationEvents.trySend(
+                    sendNavigationEvent(
                         TestNavigationEvent.NavigateToResult(
                             submissionId = submissionId,
                             subscriptionType = subscriptionType
@@ -407,7 +386,6 @@ class WATTestViewModel @Inject constructor(
     }
     
     private fun startWordTimer() {
-        // PHASE 2 FIX: Cancel previous timer to prevent concurrency bug
         timerJob?.cancel()
         
         val timePerWord = _uiState.value.config?.timePerWordSeconds ?: 15
@@ -418,7 +396,6 @@ class WATTestViewModel @Inject constructor(
             timerStartTime = System.currentTimeMillis()
         ) }
 
-        // PHASE 2 FIX: Store Job reference and use delta-based calculation
         val startTime = System.currentTimeMillis()
         val endTime = startTime + (timePerWord * 1000)
         
@@ -457,11 +434,6 @@ class WATTestViewModel @Inject constructor(
         }
     }
     
-    // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
-    
-    
-
-    
     /**
      * Enqueue WATAnalysisWorker for background OLQ analysis
      */
@@ -469,37 +441,18 @@ class WATTestViewModel @Inject constructor(
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-
         val workRequest = OneTimeWorkRequestBuilder<WATAnalysisWorker>()
             .setInputData(workDataOf(WATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints)
             .build()
-
-        workManager.enqueueUniqueWork(
-            "wat_analysis_$submissionId",
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+        enqueueAnalysisWork("wat_analysis_$submissionId", workRequest)
     }
 
     override fun onCleared() {
         super.onCleared()
-
-        // PHASE 2 FIX: Explicitly cancel timer
         timerJob?.cancel()
-        
-        android.util.Log.d("WATTestViewModel", "🧹 ViewModel onCleared() - timer cancelled")
-
-        // Cancel navigation events channel
-        _navigationEvents.close()
-
-        // Unregister from memory leak tracker
         MemoryLeakTracker.unregisterViewModel("WATTestViewModel")
-
-        // Force GC to help profiler detect cleanup
         MemoryLeakTracker.forceGcAndLog("WATTestViewModel-Cleared")
-
-        android.util.Log.d("WATTestViewModel", "✅ WATTestViewModel cleanup complete")
     }
 }
 
@@ -529,7 +482,6 @@ data class WATTestUiState(
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    // PHASE 1: New StateFlow fields (replacing nullable vars)
     val isTimerActive: Boolean = false,
     val timerStartTime: Long = 0L
 ) {

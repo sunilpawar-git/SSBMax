@@ -130,7 +130,7 @@ fun TATTestScreen(
                         sequenceNumber = uiState.currentQuestionIndex + 1
                     )
                 }
-                TATPhase.REVIEW_CURRENT -> {
+                TATPhase.REVIEW -> {
                     TATReviewPhase(
                         story = uiState.currentStory,
                         charactersCount = uiState.currentStory.length,

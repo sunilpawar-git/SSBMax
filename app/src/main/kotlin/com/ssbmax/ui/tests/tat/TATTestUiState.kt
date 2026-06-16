@@ -47,7 +47,7 @@ data class TATTestUiState(
         get() = when (phase) {
             TATPhase.WRITING -> currentStory.length >= (currentQuestion?.minCharacters ?: 150) &&
                                 currentStory.length <= (currentQuestion?.maxCharacters ?: 1500)
-            TATPhase.REVIEW_CURRENT -> true
+            TATPhase.REVIEW -> true
             else -> false
         }
 

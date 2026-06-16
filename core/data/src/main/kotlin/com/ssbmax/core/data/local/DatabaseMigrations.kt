@@ -801,5 +801,32 @@ object DatabaseMigrations {
             database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_genderTag ON cached_ppdt_images(genderTag)")
         }
     }
+
+    val MIGRATION_24_25 = object : Migration(24, 25) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS tat_story_assessments (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    submissionId TEXT NOT NULL,
+                    questionId TEXT NOT NULL,
+                    storyIndex INTEGER NOT NULL,
+                    story TEXT NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    olqScoresJson TEXT NOT NULL DEFAULT '{}',
+                    overallScore REAL NOT NULL DEFAULT 0.0,
+                    overallRating TEXT NOT NULL DEFAULT '',
+                    aiConfidence INTEGER NOT NULL DEFAULT 0,
+                    analyzedAt INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_tat_story_assessments_submissionId ON tat_story_assessments(submissionId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_tat_story_assessments_questionId ON tat_story_assessments(questionId)")
+            database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                    "index_tat_story_assessments_submissionId_storyIndex " +
+                    "ON tat_story_assessments(submissionId, storyIndex)"
+            )
+        }
+    }
 }
 

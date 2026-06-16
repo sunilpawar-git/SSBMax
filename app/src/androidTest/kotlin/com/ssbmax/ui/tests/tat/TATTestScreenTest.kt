@@ -337,7 +337,7 @@ class TATTestScreenTest : BaseComposeTest() {
         // Given: Review phase
         val testStory = "This is a test story with sufficient length to meet the minimum character requirement."
         uiStateFlow.value = uiStateFlow.value.copy(
-            phase = TATPhase.REVIEW_CURRENT,
+            phase = TATPhase.REVIEW,
             currentQuestionIndex = 0,
             currentStory = testStory
         )

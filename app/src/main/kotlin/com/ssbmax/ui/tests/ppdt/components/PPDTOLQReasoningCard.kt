@@ -1,113 +1,20 @@
 package com.ssbmax.ui.tests.ppdt.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.ssbmax.R
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.ui.components.result.OLQResultContent
 
 @Composable
 fun PPDTOLQReasoningCard(
     olqResult: OLQAnalysisResult,
     modifier: Modifier = Modifier
 ) {
-    var expandedOLQ by remember { mutableStateOf<OLQ?>(null) }
-
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            Text(
-                text = stringResource(R.string.ppdt_olq_reasoning_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            HorizontalDivider()
-            olqResult.olqScores.entries.forEachIndexed { index, (olq, score) ->
-                PPDTOLQReasoningRow(
-                    olq = olq,
-                    score = score,
-                    isExpanded = expandedOLQ == olq,
-                    onToggle = { expandedOLQ = if (expandedOLQ == olq) null else olq }
-                )
-                if (index < olqResult.olqScores.size - 1) {
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PPDTOLQReasoningRow(
-    olq: OLQ,
-    score: OLQScore,
-    isExpanded: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = olq.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "${score.score} — ${score.rating}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = stringResource(R.string.ppdt_olq_reasoning_expand_hint),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        AnimatedVisibility(visible = isExpanded) {
-            Text(
-                text = score.reasoning.ifBlank { stringResource(R.string.ppdt_olq_reasoning_unavailable) },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 6.dp)
-            )
-        }
-    }
+    OLQResultContent(olqResult = olqResult, modifier = modifier)
 }
 
 @Preview(showBackground = true)

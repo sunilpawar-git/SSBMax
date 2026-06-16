@@ -76,7 +76,7 @@ class TATTimerRegressionTest {
     @Test
     fun `story loss regression - saveCurrentStoryToResponses called before REVIEW transition`() {
         // Verifies the fix: writing timer expiry calls saveCurrentStoryToResponses()
-        // BEFORE _uiState.update { phase = REVIEW_CURRENT }.
+        // BEFORE _uiState.update { phase = REVIEW }.
         // If the save happens AFTER the phase transition (or not at all),
         // navigating away from REVIEW without confirming loses the story.
         var storySaved = false
@@ -84,7 +84,7 @@ class TATTimerRegressionTest {
 
         // Simulate correct order: save first, then transition
         storySaved = true          // saveCurrentStoryToResponses()
-        phaseTransitioned = true   // _uiState.update { phase = REVIEW_CURRENT }
+        phaseTransitioned = true   // _uiState.update { phase = REVIEW }
 
         assertTrue("Story must be saved before phase transitions to REVIEW", storySaved)
         assertTrue("Phase must transition to REVIEW after story is saved", phaseTransitioned)

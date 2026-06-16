@@ -118,7 +118,7 @@ enum class TATPhase {
     INSTRUCTIONS,
     IMAGE_VIEWING,
     WRITING,
-    REVIEW_CURRENT,
+    REVIEW,
     SUBMITTED;
     
     val displayName: String
@@ -126,7 +126,7 @@ enum class TATPhase {
             INSTRUCTIONS -> "Instructions"
             IMAGE_VIEWING -> "Viewing Image"
             WRITING -> "Writing Story"
-            REVIEW_CURRENT -> "Review"
+            REVIEW -> "Review"
             SUBMITTED -> "Submitted"
         }
 }

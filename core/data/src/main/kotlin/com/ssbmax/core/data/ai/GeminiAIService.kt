@@ -5,6 +5,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
 import com.ssbmax.core.data.ai.prompts.SSBInterviewPrompts
 import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.service.AIService
@@ -48,6 +49,10 @@ class GeminiAIService @Inject constructor(
 
     private val ppdtAnalyzer: GeminiPPDTAnalyzer by lazy {
         GeminiPPDTAnalyzer(model, RESPONSE_ANALYSIS_TIMEOUT)
+    }
+
+    private val tatStoryAnalyzer: GeminiTATStoryAnalyzer by lazy {
+        GeminiTATStoryAnalyzer(model, RESPONSE_ANALYSIS_TIMEOUT)
     }
 
     override suspend fun generatePIQBasedQuestions(
@@ -234,6 +239,18 @@ class GeminiAIService @Inject constructor(
         candidateGender: String
     ): Result<ResponseAnalysis> =
         ppdtAnalyzer.analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)
+
+    override suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int
+    ): Result<ResponseAnalysis> =
+        tatStoryAnalyzer.analyzeTATStoryMultimodal(
+            imageBytes, story, imageContext, candidateGender, storyIndex, totalStories
+        )
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {

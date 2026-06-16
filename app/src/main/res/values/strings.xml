@@ -1355,6 +1355,9 @@
     <string name="ppdt_olq_reasoning_title">Score Breakdown</string>
     <string name="ppdt_olq_reasoning_expand_hint">Tap for reasoning</string>
     <string name="ppdt_olq_reasoning_unavailable">No reasoning available</string>
+    <string name="olq_result_score_breakdown_title">Score Breakdown</string>
+    <string name="olq_result_expand_hint">Tap for reasoning</string>
+    <string name="olq_result_reasoning_unavailable">No reasoning available</string>
     <string name="result_sdt_title">SDT Test Results</string>
     <string name="result_sdt_characters_label">Characters: %d</string>
     <string name="result_analyzing_title">Analyzing Your Response…</string>

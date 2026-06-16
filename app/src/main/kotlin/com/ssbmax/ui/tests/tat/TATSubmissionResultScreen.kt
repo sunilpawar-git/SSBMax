@@ -8,6 +8,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
+import com.ssbmax.ui.components.result.OLQResultContent
 import com.ssbmax.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.ui.components.result.UnifiedOLQResultTemplate
 
@@ -35,6 +36,9 @@ fun TATSubmissionResultScreen(
         testTitle = stringResource(R.string.result_tat_title),
         submissionConfirmationContent = { state ->
             TATSubmissionCard(state)
+        },
+        testSpecificContent = { state ->
+            state.olqResult?.let { OLQResultContent(olqResult = it) }
         },
         submissionStatus = uiState.submission?.status,
         onNavigateHome = onNavigateHome,
