@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkContinuation
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.SubscriptionManager
@@ -19,7 +20,8 @@ import com.ssbmax.core.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.workers.TATAnalysisWorker
+import com.ssbmax.workers.TATStoryAnalysisWorker
+import com.ssbmax.workers.TATSynthesisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -91,12 +93,20 @@ class TATTestViewModel @Inject constructor(
 
                 _uiState.update { it.copy(loadingMessage = "Fetching questions from cloud...") }
 
-                val questions = loadTATTest(userId, testId).getOrElse { e ->
-                    ErrorLogger.log(e, "Failed to load TAT test: $testId")
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null,
-                        error = "Cloud connection required. Please check your internet connection.") }
+                val loadResult = loadTATTest(userId, testId)
+                if (loadResult.isFailure) {
+                    val e = loadResult.exceptionOrNull()!!
+                    if (e is com.ssbmax.core.domain.usecase.tat.LoadTATTestUseCase.ProfileIncompleteException) {
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null,
+                            isProfileIncomplete = true) }
+                    } else {
+                        ErrorLogger.log(e, "Failed to load TAT test: $testId")
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null,
+                            error = "Cloud connection required. Please check your internet connection.") }
+                    }
                     return@launch
                 }
+                val questions = loadResult.getOrThrow()
 
                 if (questions.isEmpty()) {
                     val e = Exception("No TAT questions found for test: $testId")
@@ -227,10 +237,14 @@ class TATTestViewModel @Inject constructor(
                 result.onSuccess { submissionId ->
                     android.util.Log.d("TATTestViewModel", "✅ Submission successful! ID: $submissionId")
 
-                    // Enqueue TATAnalysisWorker for OLQ analysis
-                    android.util.Log.d("TATTestViewModel", "📍 Step 4a: Enqueueing TATAnalysisWorker...")
-                    enqueueTATAnalysisWorker(submissionId)
-                    android.util.Log.d("TATTestViewModel", "✅ TATAnalysisWorker enqueued successfully")
+                    // Enqueue per-story analysis workers chained with synthesis worker
+                    android.util.Log.d("TATTestViewModel", "📍 Step 4a: Enqueueing progressive synthesis chain...")
+                    try {
+                        enqueueSynthesisChain(submissionId, submission.stories)
+                        android.util.Log.d("TATTestViewModel", "✅ Per-story + synthesis chain enqueued")
+                    } catch (e: Exception) {
+                        ErrorLogger.log(e, "Failed to enqueue TAT synthesis chain — submission saved, analysis deferred")
+                    }
 
                     // Calculate score for analytics (stories with >150 chars are "valid")
                     val validCount = submission.stories.count { it.charactersCount >= 150 }
@@ -361,15 +375,32 @@ class TATTestViewModel @Inject constructor(
         }.also { it.trackMemoryLeaks("TATTestViewModel", "writing-timer") }
     }
     
-    private fun enqueueTATAnalysisWorker(submissionId: String) {
+    private fun enqueueSynthesisChain(
+        submissionId: String,
+        stories: List<com.ssbmax.core.domain.model.TATStoryResponse>
+    ) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        val workRequest = OneTimeWorkRequestBuilder<TATAnalysisWorker>()
-            .setInputData(workDataOf(TATAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
+        val storyRequests = stories.mapIndexed { index, story ->
+            OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
+                .setInputData(
+                    workDataOf(
+                        TATStoryAnalysisWorker.KEY_SUBMISSION_ID to submissionId,
+                        TATStoryAnalysisWorker.KEY_QUESTION_ID to story.questionId,
+                        TATStoryAnalysisWorker.KEY_STORY_INDEX to index
+                    )
+                )
+                .setConstraints(constraints)
+                .build()
+        }
+        val synthesisRequest = OneTimeWorkRequestBuilder<TATSynthesisWorker>()
+            .setInputData(workDataOf(TATSynthesisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints)
             .build()
-        enqueueAnalysisWork("tat_analysis_$submissionId", workRequest)
+        WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
+            .then(synthesisRequest)
+            .enqueue()
     }
 
     override fun onCleared() {

@@ -15,16 +15,20 @@ class LoadTATTestUseCase @Inject constructor(
     private val testSessionRepository: TestSessionRepository,
     private val userProfileRepository: UserProfileRepository
 ) {
+    class ProfileIncompleteException : Exception("User profile is incomplete or not found")
+
     suspend operator fun invoke(userId: String, testId: String): Result<List<TATQuestion>> = runCatching {
-        val genderTag = userProfileRepository.getUserProfile(userId).first()
-            .getOrNull()
-            ?.let { profile ->
-                when (profile.gender) {
-                    Gender.MALE -> GenderTag.MALE
-                    Gender.FEMALE -> GenderTag.FEMALE
-                    else -> null
-                }
+        val profileResult = userProfileRepository.getUserProfile(userId).first()
+        if (profileResult.isSuccess && profileResult.getOrNull() == null) {
+            throw ProfileIncompleteException()
+        }
+        val genderTag = profileResult.getOrNull()?.let { profile ->
+            when (profile.gender) {
+                Gender.MALE -> GenderTag.MALE
+                Gender.FEMALE -> GenderTag.FEMALE
+                else -> null
             }
+        }
         testSessionRepository.createTestSession(userId, testId, TestType.TAT).getOrThrow()
         testContentRepository.getTATQuestions(testId, genderTag).getOrThrow()
     }

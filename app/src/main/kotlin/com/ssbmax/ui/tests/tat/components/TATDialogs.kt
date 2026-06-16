@@ -4,12 +4,36 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 /**
  * TAT Test Dialogs
  * Extracted from TATTestScreen.kt to improve maintainability
  */
+
+@Composable
+fun TATProfileRequiredDialog(
+    onGoToSettings: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.tat_profile_required_title)) },
+        text = { Text(stringResource(R.string.tat_profile_required_message)) },
+        confirmButton = {
+            Button(onClick = onGoToSettings) {
+                Text(stringResource(R.string.tat_profile_go_to_settings))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.tat_profile_required_cancel))
+            }
+        }
+    )
+}
 
 @Composable
 fun TATExitDialog(

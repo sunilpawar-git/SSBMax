@@ -52,6 +52,15 @@ fun TATTestScreen(
         }
     }
 
+    // Show profile incomplete dialog (gender needed for image pool selection)
+    if (uiState.isProfileIncomplete) {
+        TATProfileRequiredDialog(
+            onGoToSettings = onNavigateBack,
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+
     // Show subscription limit dialog if test limit reached
     if (uiState.isLimitReached) {
         com.ssbmax.ui.tests.common.TestLimitReachedDialog(

@@ -26,6 +26,7 @@ data class TATTestUiState(
     val subscriptionType: SubscriptionType? = null,
     val submission: TATSubmission? = null,
     val error: String? = null,
+    val isProfileIncomplete: Boolean = false,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
