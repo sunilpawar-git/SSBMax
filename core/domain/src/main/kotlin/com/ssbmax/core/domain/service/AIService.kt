@@ -224,7 +224,8 @@ data class ResponseAnalysis(
     val olqScores: Map<OLQ, OLQScoreWithReasoning>,
     val overallConfidence: Int,
     val keyInsights: List<String>,
-    val suggestedFollowUp: String? = null
+    val suggestedFollowUp: String? = null,
+    val notRecommended: Boolean = false
 ) {
     init {
         require(overallConfidence in 0..100) { "Confidence must be between 0 and 100" }

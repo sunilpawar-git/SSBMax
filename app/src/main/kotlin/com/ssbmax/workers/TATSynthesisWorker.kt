@@ -77,7 +77,11 @@ class TATSynthesisWorker @AssistedInject constructor(
 
         val assessments = tatStoryAssessmentDao.getBySubmissionId(submissionId)
         val validAssessments = assessments.filter { it.overallRating != FAILED_MARKER }
-        Log.d(TAG, "   ${assessments.size} total assessments, ${validAssessments.size} valid (${assessments.size - validAssessments.size} failed placeholders)")
+        Log.d(
+            TAG,
+            "   ${assessments.size} total assessments, ${validAssessments.size} valid " +
+                "(${assessments.size - validAssessments.size} failed placeholders)"
+        )
         if (validAssessments.size < MIN_STORY_THRESHOLD) {
             Log.e(TAG, "❌ Too few valid story assessments: ${validAssessments.size} < $MIN_STORY_THRESHOLD")
             handleFailure(submissionId)

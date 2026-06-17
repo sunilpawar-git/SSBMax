@@ -8,13 +8,15 @@ import com.ssbmax.core.domain.model.TATImageContext
  */
 internal object TATStoryAnalysisPrompts {
 
+    @Suppress("UnusedParameter")
     fun generateTATStoryMultimodalPrompt(
         story: String,
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
         totalStories: Int,
-        charactersCount: Int = story.length
+        charactersCount: Int = story.length,
+        imageGenderTag: String = "MIXED"
     ): String = buildString {
         appendLine(
             "You are an SSB TAT examiner. The candidate viewed the attached picture for " +

@@ -395,7 +395,9 @@ class TATTestViewModel @Inject constructor(
 
         val storyRequests = stories.mapIndexed { index, story ->
             val question = questionById[story.questionId]
-            android.util.Log.d("TATTestViewModel", "   Building work request for story $index: ${story.questionId} (imageUrl=${question?.imageUrl?.takeLast(20) ?: "MISSING"})")
+            android.util.Log.d("TATTestViewModel",
+                "   Building work request for story $index: ${story.questionId} " +
+                    "(imageUrl=${question?.imageUrl?.takeLast(20) ?: "MISSING"})")
             OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
                 .setInputData(
                     workDataOf(

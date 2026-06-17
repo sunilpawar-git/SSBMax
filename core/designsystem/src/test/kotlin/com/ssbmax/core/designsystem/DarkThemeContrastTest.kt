@@ -3,7 +3,7 @@ package com.ssbmax.core.designsystem
 import androidx.compose.ui.graphics.Color
 import com.ssbmax.core.designsystem.theme.SSBColors
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertTrue
 import kotlin.math.pow
 
 /**
@@ -149,10 +149,6 @@ class DarkThemeContrastTest {
     @Test
     fun `olive green is properly contrasted in dark theme`() {
         // WHY: Secondary olive color should not be too dark
-        val oliveLuminance = getRelativeLuminance(SSBColors.OliveGreen)
-        val oliveLightLuminance = getRelativeLuminance(SSBColors.OliveGreenLight)
-        val darkSurfaceLuminance = getRelativeLuminance(SSBColors.SurfaceDark)
-        
         // Olive light should contrast well with dark surface
         assertTrue(
             "OliveGreenLight should have sufficient contrast with dark surface",

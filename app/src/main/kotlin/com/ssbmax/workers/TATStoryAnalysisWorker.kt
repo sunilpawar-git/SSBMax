@@ -82,7 +82,7 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
             ?: run {
                 // Transient Firestore read failure — retry so WorkManager retries the worker
                 Log.e(TAG, "❌ TAT submission not found: $submissionId (will retry)")
-                throw IllegalStateException("TAT submission not found: $submissionId")
+                error("TAT submission not found: $submissionId")
             }
 
         val storyResponse = submission.stories.find { it.questionId == questionId }
