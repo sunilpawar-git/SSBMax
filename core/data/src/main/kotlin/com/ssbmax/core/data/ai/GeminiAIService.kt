@@ -29,13 +29,24 @@ class GeminiAIService @Inject constructor(
         private const val TAG = "GeminiAIService"
         private const val MODEL_NAME = "gemini-2.5-flash"
         const val TEMPERATURE = 0.0f  // Deterministic: identical story → identical score
+
+        // Tier 1 — single-item analysis: TAT per-story, PPDT, WAT, SD, interview response
         private const val MAX_TOKENS = 8192
-        private const val QUESTION_GENERATION_TIMEOUT = 45_000L
+        // Tier 2 — multi-item / growing context: SRT (60 situations), interview Q-gen,
+        //          adaptive Q-gen (Q&A history grows to ~6K tokens for long sessions)
+        private const val MAX_LARGE_CONTEXT_TOKENS = 12288
+        // Tier 3 — full-transcript synthesis: TAT synthesis (12 stories × thinking),
+        //          interview feedback (full Q&A transcript + OLQ scores)
+        private const val MAX_SYNTHESIS_TOKENS = 16384
+
         private const val RESPONSE_ANALYSIS_TIMEOUT = 60_000L
-        private const val FEEDBACK_GENERATION_TIMEOUT = 40_000L
+        private const val QUESTION_GENERATION_TIMEOUT = 60_000L
+        private const val LARGE_CONTEXT_TIMEOUT = 90_000L
+        private const val SYNTHESIS_TIMEOUT = 120_000L
         private const val HEALTH_CHECK_TIMEOUT = 10_000L
     }
 
+    // Tier 1 — single-item analysis (worst case ~7K tokens)
     private val model: GenerativeModel by lazy {
         GenerativeModel(
             modelName = MODEL_NAME,
@@ -43,6 +54,30 @@ class GeminiAIService @Inject constructor(
             generationConfig = generationConfig {
                 temperature = TEMPERATURE
                 maxOutputTokens = MAX_TOKENS
+            }
+        )
+    }
+
+    // Tier 2 — multi-item / growing context (worst case ~10K tokens)
+    private val largeContextModel: GenerativeModel by lazy {
+        GenerativeModel(
+            modelName = MODEL_NAME,
+            apiKey = apiKey,
+            generationConfig = generationConfig {
+                temperature = TEMPERATURE
+                maxOutputTokens = MAX_LARGE_CONTEXT_TOKENS
+            }
+        )
+    }
+
+    // Tier 3 — full-transcript synthesis (worst case ~13K tokens)
+    private val synthesisModel: GenerativeModel by lazy {
+        GenerativeModel(
+            modelName = MODEL_NAME,
+            apiKey = apiKey,
+            generationConfig = generationConfig {
+                temperature = TEMPERATURE
+                maxOutputTokens = MAX_SYNTHESIS_TOKENS
             }
         )
     }
@@ -69,7 +104,8 @@ class GeminiAIService @Inject constructor(
                     difficulty = difficulty,
                     targetOLQs = targetOLQs
                 )
-                val response = model.generateContent(prompt)
+                // Tier 2: OLQ_DEFINITIONS + PIQ_TO_OLQ_MAPPING + PIQ context = ~3K tokens input
+                val response = largeContextModel.generateContent(prompt)
                 GeminiResponseParser.parseQuestionResponse(response)
             }
         } catch (e: Exception) {
@@ -85,7 +121,7 @@ class GeminiAIService @Inject constructor(
         count: Int
     ): Result<List<InterviewQuestion>> = withContext(Dispatchers.IO) {
         try {
-            withTimeout(QUESTION_GENERATION_TIMEOUT) {
+            withTimeout(LARGE_CONTEXT_TIMEOUT) {
                 val qaHistory = previousQuestions.zip(previousResponses).map { (q, a) -> q.questionText to a }
                 val prompt = SSBInterviewPrompts.buildAdaptiveQuestionPrompt(
                     piqContext = buildContextFromQA(previousQuestions),
@@ -93,7 +129,8 @@ class GeminiAIService @Inject constructor(
                     weakOLQs = weakOLQs,
                     count = count
                 )
-                val response = model.generateContent(prompt)
+                // Tier 2: Q&A history grows to ~6K tokens for a 25-question session
+                val response = largeContextModel.generateContent(prompt)
                 GeminiResponseParser.parseQuestionResponse(response)
             }
         } catch (e: Exception) {
@@ -141,14 +178,15 @@ class GeminiAIService @Inject constructor(
         olqScores: Map<OLQ, Float>
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            withTimeout(FEEDBACK_GENERATION_TIMEOUT) {
+            withTimeout(SYNTHESIS_TIMEOUT) {
                 val qaHistory = questions.zip(responses).map { (q, a) -> q.questionText to a }
                 val prompt = SSBInterviewPrompts.buildFeedbackPrompt(
                     piqContext = "(Full PIQ context not available for feedback generation)",
                     questionAnswerPairs = qaHistory,
                     olqScores = olqScores
                 )
-                val response = model.generateContent(prompt)
+                // Tier 3: full Q&A transcript — 25 questions = ~7.5K tokens input alone
+                val response = synthesisModel.generateContent(prompt)
                 val feedbackText = response.text ?: return@withTimeout Result.failure(
                     IllegalStateException("No feedback generated")
                 )
@@ -179,9 +217,9 @@ class GeminiAIService @Inject constructor(
     override suspend fun analyzeTATResponse(prompt: String): Result<ResponseAnalysis> =
         withContext(Dispatchers.IO) {
             try {
-                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
-                    Log.d(TAG, "📤 Sending TAT analysis to Gemini")
-                    val response = model.generateContent(prompt)
+                withTimeout(SYNTHESIS_TIMEOUT) {
+                    Log.d(TAG, "📤 Sending TAT synthesis to Gemini (maxTokens=$MAX_SYNTHESIS_TOKENS)")
+                    val response = synthesisModel.generateContent(prompt)
                     GeminiResponseParser.parseGTOAnalysisResponse(response.text ?: "")
                 }
             } catch (e: Exception) {
@@ -207,9 +245,10 @@ class GeminiAIService @Inject constructor(
     override suspend fun analyzeSRTResponse(prompt: String): Result<ResponseAnalysis> =
         withContext(Dispatchers.IO) {
             try {
-                withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                withTimeout(LARGE_CONTEXT_TIMEOUT) {
                     Log.d(TAG, "📤 Sending SRT analysis to Gemini")
-                    val response = model.generateContent(prompt)
+                    // Tier 2: 60 situation+response pairs — verbose edge case pushes past 8K
+                    val response = largeContextModel.generateContent(prompt)
                     GeminiResponseParser.parseGTOAnalysisResponse(response.text ?: "")
                 }
             } catch (e: Exception) {

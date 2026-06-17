@@ -336,7 +336,7 @@ WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
 | 4 | Download image bytes from `imageUrl` (best-effort, 10 s connect / 20 s read); on failure proceeds with `ByteArray(0)` |
 | 5 | Parse `TATImageContext` from `imageContextJson` (JSON → domain model) |
 | 6 | Resolve `candidateGender` from `UserProfileRepository` |
-| 7 | Call `aiService.analyzeTATStoryMultimodal(imageBytes, story, imageContext, candidateGender, storyIndex, totalStories)` → `GeminiTATStoryAnalyzer` → `gemini-2.5-flash`, 60 s timeout |
+| 7 | Call `aiService.analyzeTATStoryMultimodal(imageBytes, story, imageContext, candidateGender, storyIndex, totalStories)` → `GeminiTATStoryAnalyzer` → `gemini-2.5-flash`, **60 s timeout, `model` (Tier 1, 8192 output tokens)** |
 | 8 | If AI returns < 14 OLQs → retry up to 3 times with exponential backoff |
 | 9 | If all retries exhausted → save `FAILED` placeholder to Room, return `Result.success()` (does NOT break synthesis chain) |
 | 10 | Parse `olqScores: Map<OLQ, OLQScore>` — each `OLQScore(score coerceIn(5,9), confidence, reasoning)` |
@@ -363,8 +363,8 @@ WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
 | 2 | Filter out `FAILED` placeholders → `validAssessments` |
 | 3 | If `validAssessments.size < MIN_STORY_THRESHOLD` (6) → `handleFailure()` + `Result.failure()` |
 | 4 | Update Firestore: `data.analysisStatus → ANALYZING` |
-| 5 | Build cross-story synthesis prompt: `TATSynthesisPrompts.buildPrompt(validAssessments)` |
-| 6 | Call `aiService.analyzeTATResponse(prompt)` — text synthesis, up to 3 retries |
+| 5 | Build cross-story synthesis prompt: `TATSynthesisPrompts.buildPrompt(validAssessments)` — compact format, ~8.4K chars (see §11) |
+| 6 | Call `aiService.analyzeTATResponse(prompt)` — **`synthesisModel` (Tier 3, 16384 output tokens, 120 s timeout)**, up to 3 retries |
 | 7 | Resolve `entryType` from `UserProfileRepository` → `ScoringUtils.toScoringEntryType()` |
 | 8 | SSB validation: `ValidationIntegration.validateScores(olqScores, entryType)` — Factor II critical rules |
 | 9 | Build `OLQAnalysisResult`: overallScore (avg), overallRating, top 3 strengths, bottom 3 weaknesses |
@@ -430,6 +430,18 @@ Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
 - Compute final 15 OLQ scores by considering evidence across all stories
 - Identify cross-story narrative patterns (consistency, evolution, contradictions)
 - Weight blank card (position 12) more heavily (imagination under no visual stimulus)
+
+**Compact format (critical for token budget):** Per-story OLQ data is stripped to scores only via `compactOlqScores()` — `DETERMINATION:6, COURAGE:7, ...` (~180 chars/story) instead of the full reasoning JSON (~3000 chars/story). Story text is capped at 200 chars. This keeps the total prompt to ~8.4K chars, well within the 16384-token output budget of `synthesisModel`.
+
+**Token budget — Gemini model tiers** (`GeminiAIService.kt`):
+
+| Tier | Model instance | `maxOutputTokens` | Timeout | Used for |
+|------|---------------|-------------------|---------|----------|
+| 1 | `model` | 8192 | 60 s | Per-story TAT, PPDT, WAT, SD, Interview response analysis, GTO |
+| 2 | `largeContextModel` | 12288 | 90 s | SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript) |
+| 3 | `synthesisModel` | 16384 | 120 s | TAT synthesis, Interview feedback (full Q&A transcript) |
+
+Rationale: `gemini-2.5-flash` is a thinking model. `maxOutputTokens` covers thinking + response combined. Cross-story synthesis consumes ~5–8K thinking tokens before writing the JSON response — 8192 is insufficient (confirmed by `MAX_TOKENS` failures in production on June 17, 2026).
 
 ---
 
@@ -708,7 +720,7 @@ Run all TAT-relevant tests:
      │                        ├─ Fetch TATQuestion (imageUrl + imageContextJson) from cache
      │                        ├─ Download image bytes (best-effort)
      │                        ├─ generateTATStoryMultimodalPrompt(story, imageContext, gender, index)
-     │                        ├─ GeminiAIService.analyzeTATStoryMultimodal → gemini-2.5-flash
+     │                        ├─ GeminiAIService.analyzeTATStoryMultimodal → gemini-2.5-flash (model, Tier 1, 8192 tokens, 60s)
      │                        ├─ On AI success: insert TATStoryAssessmentEntity into Room
      │                        └─ On AI failure: insert FAILED placeholder → return Result.success()
      │                             (NEVER returns Result.failure() — ensures synthesis always runs)
@@ -718,8 +730,8 @@ Run all TAT-relevant tests:
      │                        ├─ Filter out FAILED placeholders → validAssessments
      │                        ├─ If validAssessments < 6 → FAILED
      │                        ├─ Update Firestore: data.analysisStatus → ANALYZING
-     │                        ├─ TATSynthesisPrompts.buildPrompt(validAssessments)
-     │                        ├─ GeminiAIService.analyzeTATResponse(prompt)
+     │                        ├─ TATSynthesisPrompts.buildPrompt(validAssessments)  ← compact format, ~8.4K chars
+     │                        ├─ GeminiAIService.analyzeTATResponse(prompt)  ← synthesisModel, Tier 3, 16384 tokens, 120s
      │                        ├─ ValidationIntegration.validateScores(olqScores, entryType)
      │                        ├─ Firestore batch write:
      │                        │     psych_results/{id}     ← OLQAnalysisResult (with userId)
@@ -766,7 +778,9 @@ Run all TAT-relevant tests:
 
 | Fix | What | Status |
 |-----|------|--------|
-| Synthesis chain never ran | `TATStoryAnalysisWorker` returned `Result.failure()` on AI failure → `WorkContinuation.combine()` blocked synthesis. Fix: save FAILED placeholder to Room, return `Result.success()` | ✅ Fixed June 2026 |
+| Synthesis chain never ran | `TATStoryAnalysisWorker` returned `Result.failure()` on AI failure → `WorkContinuation.combine()` blocked synthesis. Fix: save FAILED placeholder (`overallRating="FAILED"`) to Room, return `Result.success()`. `TATSynthesisWorker` filters placeholders before synthesis. | ✅ Fixed June 2026 |
+| Synthesis always failed (`MAX_TOKENS`) | `TATSynthesisPrompts.buildPrompt()` embedded full `olqScoresJson` per story (~3000 chars/story × 12 = ~36K chars). `gemini-2.5-flash` uses 5–8K thinking tokens before writing the response; combined output exceeded `MAX_TOKENS=8192`. Fix: (1) `compactOlqScores()` strips reasoning, sends `OLQ:score` pairs only (~180 chars/story); (2) story text capped at 200 chars. Total prompt: ~8.4K chars. (3) `synthesisModel` uses `maxOutputTokens=16384`, 120s timeout (Tier 3). | ✅ Fixed June 2026 |
+| Token budget — all Gemini calls | Added three-tier model config in `GeminiAIService`: Tier 1 (8192), Tier 2 (12288), Tier 3 (16384). Prevents `MAX_TOKENS` failures for SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript), and Interview feedback (full transcript). | ✅ Fixed June 2026 |
 
 ---
 
