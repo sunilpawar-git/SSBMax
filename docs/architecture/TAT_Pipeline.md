@@ -1,6 +1,6 @@
 # TAT Pipeline Architecture
 
-**Last updated:** June 17, 2026 (Phase 3 complete + parser array format fix + notification permission fix + §22 gold-standard upgrade guide)
+**Last updated:** June 17, 2026 (Phase 4 prompt upgrade — R1–R14 rubric + OLQ correlation + notRecommended + R15 display order)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
 Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time, 30 s each) and a blank card (card 12), then writes a 4-minute story for each. All 12 stories are evaluated by Gemini AI — each story individually via a per-story multimodal worker, then synthesized holistically — against 15 Officer-Like Qualities (OLQs), feeding the unified OLQ dashboard.
@@ -326,7 +326,7 @@ WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
 
 **File:** `app/.../workers/TATStoryAnalysisWorker.kt`
 **Trigger:** WorkManager, immediately after submission (one worker per story, in parallel)
-**Input:** `KEY_SUBMISSION_ID`, `KEY_QUESTION_ID`, `KEY_STORY_INDEX`, `KEY_IMAGE_URL`, `KEY_IMAGE_CONTEXT_JSON`
+**Input:** `KEY_SUBMISSION_ID`, `KEY_QUESTION_ID`, `KEY_STORY_INDEX`, `KEY_IMAGE_URL`, `KEY_IMAGE_CONTEXT_JSON`, `KEY_IMAGE_GENDER_TAG`
 
 `KEY_IMAGE_URL` and `KEY_IMAGE_CONTEXT_JSON` are bundled by `TATTestViewModel.enqueueSynthesisChain()` at submission time from `state.questions` — the exact set shown to the user. **The worker never calls `getTATQuestions()`.**
 
@@ -398,6 +398,12 @@ Primary OLQs this picture tests: ...
 Deviation tolerance: LOW | MEDIUM | HIGH
 Story position: {storyIndex+1} of {totalStories}
 
+=== STORY STRUCTURE RUBRIC ===
+[Murray's compact 3-tier need table: POOR / AVERAGE / GOOD need categories]
+[R1–R11 scoring rules — one line per rule, ~12 words each]
+NOTE: Scores are capped at 9. Multiple rules can stack on same OLQ.
+[Hero-gender alignment check (R4) injected ONLY when imageGenderTag == "MIXED"]
+
 === CANDIDATE STORY ===
 {story}
 
@@ -414,6 +420,8 @@ Gender: {candidateGender}
 Each OLQ entry: score (int 5-9), confidence (int 0-100), reasoning (string).
 Key: olqScores containing all 15 OLQ keys.
 ```
+
+**`imageGenderTag`:** `"MIXED"` | `"MALE"` | `"FEMALE"` — passed via `KEY_IMAGE_GENDER_TAG` input data from `TATTestViewModel.enqueueSynthesisChain()`. The rubric injects the hero-gender alignment check (R4) only when `imageGenderTag == "MIXED"`. For `MALE`/`FEMALE`-tagged images the hero gender is unambiguous, so R4 is skipped.
 
 **Scoring scale: 5–9, LOWER = BETTER** (SSB convention)
 
@@ -435,6 +443,14 @@ Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
 
 **Compact format (critical for token budget):** Per-story OLQ data is stripped to scores only via `compactOlqScores()` — `DETERMINATION:6, COURAGE:7, ...` (~180 chars/story) instead of the full reasoning JSON (~3000 chars/story). Story text is capped at 200 chars. This keeps the total prompt to ~8.4K chars, well within the 16384-token output budget of `synthesisModel`.
 
+**SSB scoring rules (sprint June 2026):** Synthesis prompt now includes:
+- `=== SCORING RULES ===` extended: blank card story carries **1.5× weight** (§13 blank card weighting, previously noted in this doc but absent from the actual prompt).
+- `=== OLQ CORRELATION CONSTRAINTS ===` (R13): EI score generally ≥ RA; Factor III avg (INI/SC/SOD/AIG/LIV) ≤ Factor I avg (EI/RA/OA/POE); SC anchors INI/SOD/AIG.
+- `=== REJECTION FLAG ===` (R14): if any synthesised OLQ score ≥ 8, Gemini sets `"notRecommended": true` in response.
+- Format updated: `{"notRecommended": false, "olqScores": {...}, "overallConfidence": 78}`.
+
+**`notRecommended` is an advisory field:** `GeminiResponseParser.parseGTOAnalysisResponse()` extracts it via `json.optBoolean("notRecommended", false)` and propagates it as `ResponseAnalysis.notRecommended`. `ValidationIntegration.validateScores()` is the SSOT for `RecommendationOutcome` — its R14 rule (any `limitationCount > 0` → `NOT_RECOMMENDED`) fires before `SSBScoreValidator` is consulted and is authoritative. Gemini's flag is a signal, not a decision.
+
 **Prompt schema hardening (commit `230ffb1`):** Synthesis prompt now includes an explicit critical instructions section and a full JSON skeleton example. Key constraints enforced in the prompt:
 - `olqScores` MUST be a JSON object keyed by OLQ name — NOT an array
 - All 15 OLQs are mandatory keys
@@ -449,6 +465,10 @@ Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
 | 1 | `model` | 8192 | 60 s | Per-story TAT, PPDT, WAT, SD, Interview response analysis, GTO |
 | 2 | `largeContextModel` | 12288 | 90 s | SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript) |
 | 3 | `synthesisModel` | 16384 | 120 s | TAT synthesis, Interview feedback (full Q&A transcript) |
+
+**Prompt input token estimates (June 2026 sprint):**
+- Per-story prompt: ~450 tokens input (+150 from `=== STORY STRUCTURE RUBRIC ===`, R1–R11 rules). Tier 1 (8192 output) comfortably handles this.
+- Synthesis prompt: ~420 tokens input (+120 from OLQ correlation constraints, rejection flag, updated format). Tier 3 (16384 output) comfortably handles this.
 
 Rationale: `gemini-2.5-flash` is a thinking model. `maxOutputTokens` covers thinking + response combined. Cross-story synthesis consumes ~5–8K thinking tokens before writing the JSON response — 8192 is insufficient (confirmed by `MAX_TOKENS` failures in production on June 17, 2026).
 
@@ -541,7 +561,7 @@ data class TATStoryAssessmentEntity(
 | III — Social Effectiveness | DYNAMIC | INITIATIVE, SELF_CONFIDENCE, SPEED_OF_DECISION, INFLUENCE_GROUP, LIVELINESS | ±2 ticks |
 | IV — Character | CHARACTER | DETERMINATION, COURAGE, STAMINA | ±2 ticks |
 
-**Auto-reject rule:** Factor II overall score ≥ 8 → automatic rejection flag (enforced by `ValidationIntegration`).
+**R14 — Any limitation → NOT_RECOMMENDED (absolute):** Any single OLQ score ≥ 8 → `RecommendationOutcome.NOT_RECOMMENDED`, enforced by `ValidationIntegration.validateScores()`. R14 fires before `SSBScoreValidator.determineRecommendation()` is consulted and is unconditional — it subsumes the old Factor II auto-reject and per-entry-type limitation-count logic. Factor II auto-reject (`factorIIAutoReject` flag) is still computed and stored in `OLQScoreValidationResult` for display purposes.
 
 ### TATImageContext — per-picture rubric
 
@@ -577,6 +597,17 @@ data class TATImageContext(
 | 10 | DETERMINATION, COURAGE | High-risk adversity |
 | 11 | SELF_CONFIDENCE, INITIATIVE | Individual agency under scrutiny |
 | 12 (blank) | EFFECTIVE_INTELLIGENCE, INITIATIVE, ORGANIZING_ABILITY | Pure imagination — heavily weighted |
+
+### OLQ display order (R15)
+
+`ResultSections.olqCategorySection()` now iterates `OLQ.entries.filter { it.category == category }` instead of `olqScores.entries`. This guarantees within-factor display order follows the `OLQ.kt` enum declaration (SSOT):
+
+| Factor | Display order |
+|--------|--------------|
+| I — INTELLECTUAL | EI → RA → OA → POE |
+| II — SOCIAL | SA → COOP → SOR |
+| III — DYNAMIC | INI → SC → SOD → AIG → LIV |
+| IV — CHARACTER | DET → COU → STA |
 
 ### Dashboard integration
 
@@ -782,6 +813,7 @@ Run all TAT-relevant tests:
 | 1 | 8 bug fixes (B1-B7) + LoadTATTestUseCase extraction + TATTestUiState to own file | `86c78bf` | ✅ Done |
 | 2 | Progressive architecture + image infrastructure (flat pool, cardPosition, genderTag, Room migration, 24h TTL) | `c5b0281` | ✅ Done |
 | 3 | Profile gate + TATSynthesisPrompts + TATSynthesisWorker + TATStoryAnalysisWorker + BaseTestViewModel | `eeb7105` | ✅ Done |
+| 4 | Gold-standard assessment: R1–R11 per-story rubric + imageGenderTag wiring; R12–R14 synthesis OLQ correlations + notRecommended field + ValidationIntegration R14 absolute rule; R15 OLQ display order | `012955d`–`267baa8` | ✅ Done |
 
 **Bug fixes (post-Phase 3):**
 
@@ -1112,7 +1144,13 @@ All AI parameters are in source code. No Firebase writes needed. Requires code c
 | Story prompt structure | `core/data/.../ai/prompts/TATStoryAnalysisPrompts.kt` | full file | — | Edit `generateTATStoryMultimodalPrompt()` |
 | Synthesis prompt structure | `core/data/.../ai/prompts/TATSynthesisPrompts.kt` | full file | — | Edit `buildPrompt()` |
 
-**After any prompt change:** Run `./gradlew :core:data:testDebugUnitTest --tests "*GeminiResponseParser*"` to verify parsers still handle both response formats.
+**After any prompt change:** Run the full prompt test suite to verify parsers and rubric contract:
+```bash
+./gradlew :core:data:testDebugUnitTest --tests "*TATStoryPromptRules*"
+./gradlew :core:data:testDebugUnitTest --tests "*TATSynthesisPromptRules*"
+./gradlew :core:data:testDebugUnitTest --tests "*GeminiResponseParser*"
+./gradlew :core:domain:testDebugUnitTest --tests "*ValidationIntegration*"
+```
 
 ---
 
