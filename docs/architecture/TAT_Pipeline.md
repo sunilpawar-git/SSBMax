@@ -1,6 +1,6 @@
 # TAT Pipeline Architecture
 
-**Last updated:** June 17, 2026 (Phase 3 complete + parser array format fix + notification permission fix)
+**Last updated:** June 17, 2026 (Phase 3 complete + parser array format fix + notification permission fix + §22 gold-standard upgrade guide)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
 Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time, 30 s each) and a blank card (card 12), then writes a 4-minute story for each. All 12 stories are evaluated by Gemini AI — each story individually via a per-story multimodal worker, then synthesized holistically — against 15 Officer-Like Qualities (OLQs), feeding the unified OLQ dashboard.
@@ -845,10 +845,371 @@ core/data/src/main/kotlin/com/ssbmax/core/data/
         └── TATSynthesisPrompts.kt
 
 scripts/tat-picture-pipeline/
-├── tat_image_contexts.json          ← 167 TATImageContext records (generated Phase 0)
-├── preview.html                     ← HTML preview gate (reviewed Phase 0)
-└── step1_upload.py                  ← upload 167 images to Firebase Storage + Firestore
+├── step0_generate_context.py        ← Gemini Vision extraction (generates tat_image_contexts.json)
+├── step1_upload.py                  ← Firebase Storage + Firestore batch upload
+├── tat_image_contexts.json          ← 167 TATImageContext records (production-final)
+└── output/
+    ├── tat_context_draft.json       ← working draft (step0 writes here, then promoted)
+    └── preview.html                 ← HTML review gate (visual inspection before upload)
 
 docs/architecture/
 └── TAT_Pipeline.md                  ← this file
+```
+
+---
+
+## 22. Upgrade Guide — Gold Standard
+
+> **Purpose:** Every TAT image-pool change starts here. Choose your scenario, follow the exact steps, and refer back for field names, constraints, and safety checks. No other file should be needed.
+
+---
+
+### Quick-Reference: Which Procedure?
+
+| What you want to do | Procedure |
+|---|---|
+| Fix wording in a few image contexts (no image file change) | **A — Context-only patch** |
+| Remove one or more images from the pool permanently | **B — Nuke images** |
+| Replace a source PNG with a better version | **C — Replace image** |
+| Add brand-new images to the pool | **D — Add images** |
+| Change viewing / writing timers globally | **E — Tune timing** |
+| Change synthesis / analysis AI parameters | **F — Tune AI parameters** |
+
+---
+
+### Pool Balance Constraints (check before any removal or addition)
+
+These constraints keep the test assembly SQL working correctly. Violating them causes `getLeastUsedImageByPosition()` to return null for a position, which silently breaks test construction.
+
+| Constraint | Minimum | Current | Buffer |
+|---|---|---|---|
+| Images per position (1–11) | 10 | 14–16 | ~4–6 |
+| FEMALE+MIXED images per position | 3 | varies | check after change |
+| Total images | 33 (emergency minimum) | 167 | — |
+
+Run this check after any structural change before uploading:
+
+```bash
+python step0_generate_context.py --preview-only   # regenerates preview.html from current draft
+```
+
+Open `output/preview.html` — it shows position counts and highlights positions below threshold in red.
+
+---
+
+### Procedure A — Context-Only Patch (no image file change)
+
+**When:** Fix a scene description, change primaryOLQs, update penalizedThemes, adjust deviationTolerance — for one or a few images. No PNG files change.
+
+**Speed:** Fastest path. No Gemini API calls, no Storage re-upload needed.
+
+**Steps:**
+
+1. Edit `tat_image_contexts.json` directly. Locate the entry by `"id"` (e.g., `"tat_027_male"`).
+
+2. Fix the relevant `imageContext` field(s). Valid field names and values:
+
+   | Field | Type | Constraints |
+   |---|---|---|
+   | `sceneDescription` | string | 1 sentence, objective |
+   | `coreElements` | list\<string\> | 3–5 items |
+   | `ambiguousElements` | list\<string\> | 2–3 items |
+   | `expectedThemes` | list\<string\> | 3–4 items |
+   | `penalizedThemes` | list\<string\> | 2–3 items |
+   | `primaryOLQs` | list\<string\> | 2–4, exact OLQ names from §22 constants |
+   | `deviationTolerance` | string | `"LOW"` \| `"MEDIUM"` \| `"HIGH"` |
+   | `exemplarGoodHints` | list\<string\> | 1–2 items |
+   | `exemplarBadHints` | list\<string\> | 1–2 items |
+
+3. Dry-run validate:
+   ```bash
+   cd scripts/tat-picture-pipeline
+   python step1_upload.py --dry-run --skip-storage-upload
+   ```
+   Fix any validation errors reported.
+
+4. Upload (Firestore only, skip Storage re-upload since no image files changed):
+   ```bash
+   python step1_upload.py --skip-delete
+   ```
+   This re-uploads all 167 JPEGs (idempotent — same files) and writes the updated Firestore doc with the bumped version. Total time: ~5 min.
+
+5. **Verify:** Open Firebase Console → Firestore → `test_content/tat/image_batches/batch_001` → confirm `version` incremented and the patched image entry has correct context.
+
+6. **Android pick-up:** Version change detected on next app launch (24h TTL gate — force immediate by clearing app data in Settings or waiting 24h). Room cache cleared + re-synced automatically.
+
+> **Faster alternative for single-image emergency fix:** Directly edit the Firestore document in Firebase Console — find the image in the `images` array, edit `imageContext` fields in place, then manually increment `version` (e.g., `"1.0.1"` → `"1.0.2"`). No scripts needed. Android will pick up the change within 24h.
+
+---
+
+### Procedure B — Nuke Images (remove from pool)
+
+**When:** An image is inappropriate, causes recurring AI failures, is too ambiguous for reliable scoring, or needs to be retired.
+
+**Critical check first:** Verify pool balance won't fall below minimums after removal (see constraints table above). If removing all images at a given card position, you must add replacements in the same run.
+
+**Steps:**
+
+1. Note the `id`(s) to remove (e.g., `"tat_027_male"`).
+
+2. Remove entries from `tat_image_contexts.json`. Delete the entire JSON object for each image to nuke.
+
+3. Check pool balance:
+   ```bash
+   python step0_generate_context.py --preview-only
+   ```
+   Open `output/preview.html`. Any position showing red (< 10 images total or < 3 FEMALE+MIXED) means you must add replacement images before proceeding.
+
+4. If balance is healthy, dry-run:
+   ```bash
+   python step1_upload.py --dry-run
+   ```
+   Confirm `totalImages` in output equals your new count (167 − N).
+
+5. Upload:
+   ```bash
+   python step1_upload.py
+   ```
+   - Deletes ALL old Storage files under `tat_images/batch_001/`
+   - Re-uploads remaining images (nuked image JPEGs are not uploaded)
+   - Writes Firestore doc with updated `totalImages` and bumped version
+
+6. **Verify Firestore:** `totalImages` matches, nuked image IDs absent from `images` array.
+
+7. **Note:** Nuked image JPEGs are gone from Firebase Storage permanently. If you need them back, they must be re-uploaded from the original PNG source.
+
+> **The nuked image ID must NOT appear in Room.** Room re-syncs from the Firestore batch — since it's not in the new batch, it won't be cached. Existing Room rows for that ID are cleared as part of `clearAllImages()` + full re-download.
+
+---
+
+### Procedure C — Replace an Image (better source PNG)
+
+**When:** A source PNG was cropped poorly, has print artifacts, is too dark/light, or you have a higher-quality version of the same scene.
+
+**Steps:**
+
+1. Replace the PNG in your source directory (`/Users/sunil/Downloads/TAT Work/Cropped_images/`). Use the **exact same filename** (e.g., `27Men.png`). This preserves the `id` (`tat_027_male`) and its position assignment.
+
+2. Regenerate context for just this scene number:
+   ```bash
+   python step0_generate_context.py --ids 27 --resume
+   ```
+   Gemini re-analyses only scene 27 (all gender variants). The `output/tat_context_draft.json` is updated.
+
+3. Review output for scene 27 in `output/preview.html` (open in browser). Confirm scene description, OLQs, and hints look correct.
+
+4. If context needs manual adjustment, edit `output/tat_context_draft.json` directly for the affected entry.
+
+5. Promote draft to production:
+   ```bash
+   cp output/tat_context_draft.json tat_image_contexts.json
+   ```
+
+6. Upload:
+   ```bash
+   python step1_upload.py
+   ```
+   The new JPEG for scene 27 replaces the old one in Storage. All 167 entries written to Firestore. Version bumped.
+
+7. **Verify:** Public URL for the replaced image loads the new version. Check in browser:
+   `https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/tat_images/batch_001/tat_027_male.jpg`
+
+---
+
+### Procedure D — Add New Images
+
+**When:** Expanding the pool, adding a new gender variant for an under-represented position, or adding entirely new scenes.
+
+**File-naming convention (must follow exactly):**
+
+```
+{sceneNumber}{Gender}.png
+  sceneNumber : integer (use next available, e.g., 66 if current max is 65)
+  Gender      : "Men" | "Women" | "Mixed"
+
+Examples: 66Men.png, 66Women.png, 66Mixed.png
+```
+
+**Steps:**
+
+1. Add new PNG(s) to source directory (`/Users/sunil/Downloads/TAT Work/Cropped_images/`).
+
+2. Generate context for new images only:
+   ```bash
+   python step0_generate_context.py --resume
+   ```
+   `--resume` skips all 167 existing IDs; only processes new files. Appends to `output/tat_context_draft.json`.
+
+3. Check position assignment in `output/preview.html`. The greedy algorithm assigns position based on `primaryOLQs` — verify placement makes sense.
+
+   If you want to override position for a specific image, edit `output/tat_context_draft.json` directly and change `cardPosition`.
+
+4. Verify pool balance still healthy (all positions ≥ 10, ≥ 3 FEMALE+MIXED).
+
+5. Promote and upload:
+   ```bash
+   cp output/tat_context_draft.json tat_image_contexts.json
+   python step1_upload.py --dry-run   # verify totalImages = 167 + N
+   python step1_upload.py
+   ```
+
+6. **Verify Firestore:** `totalImages` = 167 + N. New image IDs present. Version bumped.
+
+---
+
+### Procedure E — Tune Timing (viewing/writing durations)
+
+**Two separate systems control timing.** Both must be updated for a change to take effect.
+
+| Where | Controls | File |
+|---|---|---|
+| Firestore (`viewingTimeSeconds`, `writingTimeMinutes` per image in batch_001) | Image download → `TATQuestion` fields | `step1_upload.py` defaults, lines ~180–185 |
+| `TATTestConfig` defaults in domain model | Fallback when no config loaded | `core/domain/.../model/TATTest.kt` |
+| `TATTestViewModel` timer launch | Actual countdown | reads from `TATTestConfig` via `LoadTATTestUseCase` |
+
+**To change globally (e.g., writing time 4 min → 5 min):**
+
+1. Edit `step1_upload.py` — find the image builder block:
+   ```python
+   "viewingTimeSeconds": 30,      # change here
+   "writingTimeMinutes": 4,       # change here
+   "minCharacters": 150,
+   "maxCharacters": 1500,
+   ```
+
+2. Edit `TATTestConfig` defaults in `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/TATTest.kt`:
+   ```kotlin
+   data class TATTestConfig(
+       val viewingTimeSeconds: Int = 30,   // change here
+       val writingTimeMinutes: Int = 4,    // change here
+       val minCharacters: Int = 150,
+       val maxCharacters: Int = 1500
+   )
+   ```
+
+3. Re-run step1 to push the new Firestore values:
+   ```bash
+   python step1_upload.py
+   ```
+
+4. Build and release a new app version (the `TATTestConfig` change requires a code release).
+
+> **Note:** Changing only step1 (Firestore) without a code release means existing app installs still use the old `TATTestConfig` defaults. Both must be in sync.
+
+---
+
+### Procedure F — Tune AI Parameters
+
+All AI parameters are in source code. No Firebase writes needed. Requires code change + app build.
+
+| Parameter | File | Line (approx) | Current Value | Notes |
+|---|---|---|---|---|
+| `MIN_STORY_THRESHOLD` | `app/.../workers/TATSynthesisWorker.kt` | ~53 | `6` | Min valid stories for synthesis to proceed |
+| `MAX_AI_RETRIES` (synthesis) | same | ~52 | `3` | Retries for holistic synthesis call |
+| `MAX_AI_RETRIES` (per-story) | `app/.../workers/TATStoryAnalysisWorker.kt` | ~30 | `3` | Retries per per-story worker |
+| Per-story model tier | `core/data/.../ai/GeminiAIService.kt` | Tier 1 | `model` (8192 tokens, 60 s) | Upgrade to `largeContextModel` if stories are very long |
+| Synthesis model tier | same | Tier 3 | `synthesisModel` (16384 tokens, 120 s) | Do not downgrade — 8192 consistently hits MAX_TOKENS |
+| Story prompt structure | `core/data/.../ai/prompts/TATStoryAnalysisPrompts.kt` | full file | — | Edit `generateTATStoryMultimodalPrompt()` |
+| Synthesis prompt structure | `core/data/.../ai/prompts/TATSynthesisPrompts.kt` | full file | — | Edit `buildPrompt()` |
+
+**After any prompt change:** Run `./gradlew :core:data:testDebugUnitTest --tests "*GeminiResponseParser*"` to verify parsers still handle both response formats.
+
+---
+
+### §22 Constants — Copy-Paste Reference
+
+**Valid OLQ names (exact, case-sensitive):**
+```
+EFFECTIVE_INTELLIGENCE   REASONING_ABILITY   ORGANIZING_ABILITY
+POWER_OF_EXPRESSION      SOCIAL_ADJUSTMENT   COOPERATION
+SENSE_OF_RESPONSIBILITY  INITIATIVE          SELF_CONFIDENCE
+SPEED_OF_DECISION        INFLUENCE_GROUP     LIVELINESS
+DETERMINATION            COURAGE             STAMINA
+```
+
+**Card positions (1–11; 12 = blank card, programmatic):**
+```
+1  Individual Adversity / Initiative
+2  Social / Group Cooperation
+3  Persistence / Stamina
+4  Crisis / Quick Decision
+5  Planning / Organizing
+6  Duty / Responsibility
+7  Leadership / Influence
+8  Energy / Social Engagement
+9  Problem Solving / Analysis
+10 Courage / Determination
+11 Self-Reliance / Confidence
+```
+
+**Firebase paths:**
+```
+Firestore doc  : test_content/tat/image_batches/batch_001
+Storage prefix : gs://ssbmax-49e68.firebasestorage.app/tat_images/batch_001/
+Public URL     : https://storage.googleapis.com/ssbmax-49e68.firebasestorage.app/tat_images/batch_001/{imageId}.jpg
+```
+
+**Gender tags:** `"MALE"` | `"FEMALE"` | `"MIXED"`
+
+**Deviation tolerance:** `"LOW"` | `"MEDIUM"` | `"HIGH"`
+
+**Image ID format:** `tat_{NNN}_{gender}` where NNN = zero-padded scene number, gender = `male` | `female` | `mixed`
+Example: scene 27, male variant → `tat_027_male`
+
+---
+
+### Pre-Upload Safety Checklist (run before every `step1_upload.py`)
+
+```
+[ ] Firestore backup: export batch_001 JSON from Firebase Console (takes 30 s)
+[ ] preview.html reviewed: all positions ≥ 10 images, ≥ 3 FEMALE+MIXED per position
+[ ] No red warnings in preview.html
+[ ] dry-run passed: python step1_upload.py --dry-run (zero errors)
+[ ] totalImages count is correct in dry-run output
+[ ] Git commit of tat_image_contexts.json before upload (so you can roll back context)
+```
+
+**Roll-back procedure** (if upload produces wrong results):
+1. Restore `tat_image_contexts.json` from git: `git checkout -- scripts/tat-picture-pipeline/tat_image_contexts.json`
+2. Re-run `step1_upload.py` — this bumps version again and re-uploads the previous set
+3. Android clients pick up the restored version within 24h (or immediately after app relaunch)
+
+---
+
+### Step 0 Script Quick Reference
+
+```bash
+# Full re-generation (all 167 images) — ~15 min, costs Gemini API quota
+python step0_generate_context.py
+
+# Resume interrupted run (skips already-processed IDs)
+python step0_generate_context.py --resume
+
+# Re-process specific scenes only (e.g., scenes 12, 27, 43)
+python step0_generate_context.py --ids 12 27 43
+
+# Rebuild preview.html from existing draft (no API calls)
+python step0_generate_context.py --preview-only
+
+# Promote draft to production after review
+cp output/tat_context_draft.json tat_image_contexts.json
+```
+
+### Step 1 Script Quick Reference
+
+```bash
+# Validate only — no Firebase writes
+python step1_upload.py --dry-run
+
+# Full upload (delete old Storage + re-upload all + write Firestore)
+python step1_upload.py
+
+# Re-upload all images + write Firestore, but skip Storage deletion
+python step1_upload.py --skip-delete
+
+# Skip input validation (not recommended — use only if validation script is wrong)
+python step1_upload.py --skip-validate
+
+# Use explicit service account (instead of Application Default Credentials)
+python step1_upload.py --service-account /path/to/key.json
 ```
