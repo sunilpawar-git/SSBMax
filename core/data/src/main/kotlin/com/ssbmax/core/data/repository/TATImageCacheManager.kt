@@ -243,6 +243,7 @@ class TATImageCacheManager @Inject constructor(
             imageUrl = normalizeUrl(entity.imageUrl),
             cardPosition = entity.cardPosition,
             imageContextJson = entity.imageContextJson,
+            genderTag = entity.genderTag,
             viewingTimeSeconds = entity.viewingTimeSeconds,
             writingTimeMinutes = entity.writingTimeMinutes,
             minCharacters = entity.minCharacters,

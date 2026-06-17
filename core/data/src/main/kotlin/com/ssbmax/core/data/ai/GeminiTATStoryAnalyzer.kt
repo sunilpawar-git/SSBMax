@@ -29,7 +29,8 @@ internal class GeminiTATStoryAnalyzer(
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
-        totalStories: Int
+        totalStories: Int,
+        imageGenderTag: String = "MIXED"
     ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
         try {
             withTimeout(responseTimeout) {
@@ -39,7 +40,8 @@ internal class GeminiTATStoryAnalyzer(
                     imageContext = imageContext,
                     candidateGender = candidateGender,
                     storyIndex = storyIndex,
-                    totalStories = totalStories
+                    totalStories = totalStories,
+                    imageGenderTag = imageGenderTag
                 )
                 val contentParts = content {
                     if (imageBytes.isNotEmpty()) {

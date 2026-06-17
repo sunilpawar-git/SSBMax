@@ -233,7 +233,8 @@ class CloudGeminiAIService @Inject constructor() : AIService {
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
-        totalStories: Int
+        totalStories: Int,
+        imageGenderTag: String
     ): Result<ResponseAnalysis> {
         Log.e(TAG, "Per-story TAT multimodal analysis not yet supported in CloudGemini implementation")
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for per-story TAT multimodal analysis"))

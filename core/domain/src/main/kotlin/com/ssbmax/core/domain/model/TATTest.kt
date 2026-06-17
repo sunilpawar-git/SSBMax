@@ -19,6 +19,7 @@ data class TATQuestion(
     val imageUrl: String,
     val cardPosition: Int, // 1–11 (pool slot); 12 = programmatic blank card
     val imageContextJson: String = "{}", // JSON-serialized TATImageContext for AI scoring
+    val genderTag: String = "MIXED", // MALE/FEMALE/MIXED — controls R4 protagonist gender rule
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
     val minCharacters: Int = 150,

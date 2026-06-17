@@ -201,7 +201,8 @@ interface AIService {
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
-        totalStories: Int
+        totalStories: Int,
+        imageGenderTag: String = "MIXED"
     ): Result<ResponseAnalysis>
 
     /**

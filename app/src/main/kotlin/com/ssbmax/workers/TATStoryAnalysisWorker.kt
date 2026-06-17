@@ -50,6 +50,7 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         const val KEY_STORY_INDEX = "story_index"
         const val KEY_IMAGE_URL = "image_url"
         const val KEY_IMAGE_CONTEXT_JSON = "image_context_json"
+        const val KEY_IMAGE_GENDER_TAG = "image_gender_tag"
         const val FAILED_MARKER = "FAILED"
         private const val TAG = "TATStoryAnalysisWorker"
         private const val MAX_AI_RETRIES = 3
@@ -95,6 +96,7 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
 
         val imageUrl = inputData.getString(KEY_IMAGE_URL) ?: ""
         val imageContextJson = inputData.getString(KEY_IMAGE_CONTEXT_JSON)
+        val imageGenderTag = inputData.getString(KEY_IMAGE_GENDER_TAG) ?: "MIXED"
 
         val imageBytes = downloadImageBytes(imageUrl)
         val imageContext = parseImageContext(imageContextJson)
@@ -107,7 +109,8 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
             imageContext = imageContext,
             candidateGender = candidateGender,
             storyIndex = storyIndex,
-            totalStories = submission.stories.size
+            totalStories = submission.stories.size,
+            imageGenderTag = imageGenderTag
         )
         if (olqScores == null) {
             // AI analysis exhausted retries. Save placeholder so synthesis can still run.
@@ -253,7 +256,8 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
-        totalStories: Int
+        totalStories: Int,
+        imageGenderTag: String = "MIXED"
     ): Map<OLQ, OLQScore>? {
         repeat(MAX_AI_RETRIES) { attempt ->
             try {
@@ -264,9 +268,9 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
                     imageContext = imageContext,
                     candidateGender = candidateGender,
                     storyIndex = storyIndex,
-                    totalStories = totalStories
+                    totalStories = totalStories,
+                    imageGenderTag = imageGenderTag
                 )
-
                 if (result.isSuccess) {
                     val analysis = result.getOrNull()!!
                     val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->

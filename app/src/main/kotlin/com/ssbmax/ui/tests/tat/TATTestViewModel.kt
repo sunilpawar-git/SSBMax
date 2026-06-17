@@ -405,7 +405,8 @@ class TATTestViewModel @Inject constructor(
                         TATStoryAnalysisWorker.KEY_QUESTION_ID to story.questionId,
                         TATStoryAnalysisWorker.KEY_STORY_INDEX to index,
                         TATStoryAnalysisWorker.KEY_IMAGE_URL to (question?.imageUrl ?: ""),
-                        TATStoryAnalysisWorker.KEY_IMAGE_CONTEXT_JSON to (question?.imageContextJson ?: "{}")
+                        TATStoryAnalysisWorker.KEY_IMAGE_CONTEXT_JSON to (question?.imageContextJson ?: "{}"),
+                        TATStoryAnalysisWorker.KEY_IMAGE_GENDER_TAG to (question?.genderTag ?: "MIXED")
                     )
                 )
                 .setConstraints(constraints)

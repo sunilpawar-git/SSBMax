@@ -285,10 +285,11 @@ class GeminiAIService @Inject constructor(
         imageContext: TATImageContext,
         candidateGender: String,
         storyIndex: Int,
-        totalStories: Int
+        totalStories: Int,
+        imageGenderTag: String
     ): Result<ResponseAnalysis> =
         tatStoryAnalyzer.analyzeTATStoryMultimodal(
-            imageBytes, story, imageContext, candidateGender, storyIndex, totalStories
+            imageBytes, story, imageContext, candidateGender, storyIndex, totalStories, imageGenderTag
         )
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {

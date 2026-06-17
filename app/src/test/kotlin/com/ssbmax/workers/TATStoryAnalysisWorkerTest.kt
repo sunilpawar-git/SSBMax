@@ -143,7 +143,7 @@ class TATStoryAnalysisWorkerTest {
         every { workerParams.inputData } returns buildInputData(imageUrl = "")
         coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
-        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
             Result.success(buildFullOLQAnalysis())
 
         val result = createWorker().doWork()
@@ -152,7 +152,7 @@ class TATStoryAnalysisWorkerTest {
         // that imageUrl comes from inputData (the worker no longer has TestContentRepository)
         assertEquals("Worker must succeed when imageUrl is in inputData", ListenableWorker.Result.success(), result)
         // AI was called (analysis ran even with empty imageBytes — blank card / graceful degradation)
-        coVerify(exactly = 1) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -162,14 +162,14 @@ class TATStoryAnalysisWorkerTest {
         every { workerParams.inputData } returns buildInputData(imageUrl = "")
         coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
-        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
             Result.success(buildFullOLQAnalysis())
 
         val result = createWorker().doWork()
 
         assertNotEquals("Worker must not fail for blank card (empty imageUrl)", ListenableWorker.Result.failure(), result)
         // AI was still called even with no image bytes
-        coVerify(exactly = 1) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     // ───────────── chain safety — FAILED placeholder ─────────────
@@ -187,7 +187,7 @@ class TATStoryAnalysisWorkerTest {
 
         assertEquals("Worker must return success (not failure) when story is missing", ListenableWorker.Result.success(), result)
         // AI must NOT be called — no story to analyze
-        coVerify(exactly = 0) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) }
         // Placeholder saved so synthesis can count this story
         coVerify(exactly = 1) { tatStoryAssessmentDao.insert(match { it.overallRating == TATStoryAnalysisWorker.FAILED_MARKER }) }
     }
@@ -199,7 +199,7 @@ class TATStoryAnalysisWorkerTest {
         every { workerParams.inputData } returns buildInputData()
         coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
-        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
             Result.failure(Exception("Gemini API overloaded"))
 
         val result = createWorker().doWork()
@@ -231,7 +231,7 @@ class TATStoryAnalysisWorkerTest {
         every { workerParams.inputData } returns buildInputData()
         coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile(Gender.MALE)))
-        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), capture(genderSlot), any(), any()) } returns
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), capture(genderSlot), any(), any(), any()) } returns
             Result.success(buildFullOLQAnalysis())
 
         createWorker().doWork()

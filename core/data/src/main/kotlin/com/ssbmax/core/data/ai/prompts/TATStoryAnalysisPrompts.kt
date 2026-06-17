@@ -8,7 +8,14 @@ import com.ssbmax.core.domain.model.TATImageContext
  */
 internal object TATStoryAnalysisPrompts {
 
-    @Suppress("UnusedParameter")
+    // Murray's 3-tier need taxonomy (R5) — shared by rubric builder and tests (DRY / SSOT)
+    internal val MURRAY_NEEDS_TAXONOMY = """
+        |Need tier | Examples                                  | Label
+        |GOOD      | Achievement, Affiliation, Dominance, Order | Positive drive
+        |AVERAGE   | Deference, Exhibition, Understanding       | Neutral/contextual
+        |POOR      | Aggression, Harm-avoidance, Succorance     | Negative/escapist
+    """.trimMargin()
+
     fun generateTATStoryMultimodalPrompt(
         story: String,
         imageContext: TATImageContext,
@@ -31,6 +38,7 @@ internal object TATStoryAnalysisPrompts {
         appendLine("=== CANDIDATE PROFILE ===")
         appendLine("Gender: $candidateGender")
         appendLine()
+        append(buildStoryScoringRubric(charactersCount, imageGenderTag))
         append(buildScoringSection())
     }
 
@@ -67,6 +75,33 @@ internal object TATStoryAnalysisPrompts {
             appendLine(label)
             items.forEach { appendLine("$prefix$it") }
         }
+    }
+
+    private fun buildStoryScoringRubric(charactersCount: Int, imageGenderTag: String): String = buildString {
+        appendLine("=== STORY STRUCTURE RUBRIC ===")
+        appendLine("Apply these SSB-specific rules when scoring:")
+        appendLine()
+        appendLine("NEED TAXONOMY (R5 — Murray):")
+        appendLine(MURRAY_NEEDS_TAXONOMY)
+        appendLine()
+        appendLine("SCORING RULES (R1–R11):")
+        appendLine("R1  EFFECTIVE_INTELLIGENCE  — Hero must acknowledge all core image elements; each missed element -1")
+        appendLine("R2  ORGANIZING_ABILITY      — Logical 3-act structure (situation→action→resolution); missing act -1")
+        appendLine("R3  POWER_OF_EXPRESSION     — Story < 500 chars: -1 POE; story > 1200 chars with padding: -1 POE")
+        if (imageGenderTag == "MIXED") {
+            appendLine("R4  SELF_CONFIDENCE         — MIXED image: protagonist gender must match candidate gender; mismatch -1 SC")
+        }
+        appendLine("R5  REASONING_ABILITY       — Dominant need must be GOOD tier; POOR need as dominant: -1 RA")
+        appendLine("R6  COOPERATION             — At least one support character who aids the hero; absent: -1 COOP")
+        appendLine("R7  SENSE_OF_RESPONSIBILITY — Hero must resolve the central problem; unresolved: -1 SOR")
+        appendLine("R8  INITIATIVE              — Hero must take the first proactive action; reactive-only hero: -1 INI")
+        appendLine("R9  SENSE_OF_RESPONSIBILITY — Hero acting for material reward (money/fame) rather than duty: -1 SOR")
+        appendLine("R10 SPEED_OF_DECISION       — Hero must commit to a decision by mid-story; prolonged indecision: -1 SOD")
+        appendLine("R11 COURAGE                 — At least one adversity or setback in the story; none present: -1 COU")
+        appendLine()
+        appendLine("NOTE: Scores are capped at 9. Multiple rules can stack on the same OLQ.")
+        appendLine("Current story length: $charactersCount chars")
+        appendLine()
     }
 
     private fun buildScoringSection(): String = buildString {
