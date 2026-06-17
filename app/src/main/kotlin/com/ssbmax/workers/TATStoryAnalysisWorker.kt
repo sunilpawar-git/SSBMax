@@ -11,7 +11,6 @@ import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
@@ -40,7 +39,6 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val submissionRepository: SubmissionRepository,
-    private val testContentRepository: TestContentRepository,
     private val userProfileRepository: UserProfileRepository,
     private val aiService: AIService,
     private val tatStoryAssessmentDao: TATStoryAssessmentDao
@@ -50,6 +48,8 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         const val KEY_SUBMISSION_ID = "submission_id"
         const val KEY_QUESTION_ID = "question_id"
         const val KEY_STORY_INDEX = "story_index"
+        const val KEY_IMAGE_URL = "image_url"
+        const val KEY_IMAGE_CONTEXT_JSON = "image_context_json"
         const val FAILED_MARKER = "FAILED"
         private const val TAG = "TATStoryAnalysisWorker"
         private const val MAX_AI_RETRIES = 3
@@ -93,12 +93,11 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
             return Result.success()
         }
 
-        val questions = testContentRepository.getTATQuestions(submission.testId).getOrNull() ?: emptyList()
-        val tatQuestion = questions.find { it.id == questionId }
-        val imageUrl = tatQuestion?.imageUrl ?: ""
+        val imageUrl = inputData.getString(KEY_IMAGE_URL) ?: ""
+        val imageContextJson = inputData.getString(KEY_IMAGE_CONTEXT_JSON)
 
         val imageBytes = downloadImageBytes(imageUrl)
-        val imageContext = parseImageContext(tatQuestion?.imageContextJson)
+        val imageContext = parseImageContext(imageContextJson)
         val candidateGender = fetchCandidateGender(submission.userId)
         Log.d(TAG, "   Step 1: Image bytes prepared (${imageBytes.size} bytes)")
 

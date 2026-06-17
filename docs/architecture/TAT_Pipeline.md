@@ -1,6 +1,6 @@
 # TAT Pipeline Architecture
 
-**Last updated:** June 2026 (Phase 3 complete + synthesis chain bug fix)
+**Last updated:** June 2026 (Phase 3 complete + imageBytes=0 multimodal fix)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
 Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time, 30 s each) and a blank card (card 12), then writes a 4-minute story for each. All 12 stories are evaluated by Gemini AI — each story individually via a per-story multimodal worker, then synthesized holistically — against 15 Officer-Like Qualities (OLQs), feeding the unified OLQ dashboard.
@@ -326,13 +326,15 @@ WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
 
 **File:** `app/.../workers/TATStoryAnalysisWorker.kt`
 **Trigger:** WorkManager, immediately after submission (one worker per story, in parallel)
-**Input:** `KEY_SUBMISSION_ID`, `KEY_QUESTION_ID`, `KEY_STORY_INDEX`
+**Input:** `KEY_SUBMISSION_ID`, `KEY_QUESTION_ID`, `KEY_STORY_INDEX`, `KEY_IMAGE_URL`, `KEY_IMAGE_CONTEXT_JSON`
+
+`KEY_IMAGE_URL` and `KEY_IMAGE_CONTEXT_JSON` are bundled by `TATTestViewModel.enqueueSynthesisChain()` at submission time from `state.questions` — the exact set shown to the user. **The worker never calls `getTATQuestions()`.**
 
 | Step | Action |
 |------|--------|
 | 1 | Fetch `TATSubmission` from Firestore — if not found, **throw** (WorkManager retries the worker) |
 | 2 | Find `TATStoryResponse` by `questionId` — if missing, save `FAILED` placeholder, return `Result.success()` |
-| 3 | Fetch questions via `TestContentRepository.getTATQuestions(testId)` — find question for `imageUrl` + `imageContextJson` |
+| 3 | Read `imageUrl` and `imageContextJson` from `inputData` (passed by ViewModel at enqueue time) |
 | 4 | Download image bytes from `imageUrl` (best-effort, 10 s connect / 20 s read); on failure proceeds with `ByteArray(0)` |
 | 5 | Parse `TATImageContext` from `imageContextJson` (JSON → domain model) |
 | 6 | Resolve `candidateGender` from `UserProfileRepository` |
@@ -717,7 +719,7 @@ Run all TAT-relevant tests:
      │                  [TATStoryAnalysisWorker × N]
      │                        ├─ Fetch submission from Firestore
      │                        ├─ Find story by questionId
-     │                        ├─ Fetch TATQuestion (imageUrl + imageContextJson) from cache
+     │                        ├─ Read imageUrl + imageContextJson from inputData (bundled by ViewModel at enqueue)
      │                        ├─ Download image bytes (best-effort)
      │                        ├─ generateTATStoryMultimodalPrompt(story, imageContext, gender, index)
      │                        ├─ GeminiAIService.analyzeTATStoryMultimodal → gemini-2.5-flash (model, Tier 1, 8192 tokens, 60s)
@@ -758,7 +760,7 @@ Run all TAT-relevant tests:
 | # | Area | Issue / Improvement | Status |
 |---|------|---------------------|--------|
 | 1 | Image download in story worker | `URL(imageUrl).openConnection()` with manual timeout. Should use OkHttp/Ktor for proper timeout + retry. Analysis proceeds with `ByteArray(0)` if download fails (graceful degradation). | Deferred |
-| 2 | `getTATQuestions()` ignores `testId` | `TestContentRepository.getTATQuestions(testId)` ignores `testId` and draws a fresh random 12 from the pool. Workers calling this get a DIFFERENT random 12 than what the user saw — correct question is often not found by ID, falls back to empty imageUrl/imageContext. Degrades analysis quality. Fix: store the selected 12 question IDs in the submission doc and have the worker read them from there instead of re-querying. | Deferred |
+| 2 | `getTATQuestions()` ignores `testId` | ~~`TestContentRepository.getTATQuestions(testId)` ignores `testId` and draws a fresh random 12 from the pool. Workers calling this get a DIFFERENT random 12 than what the user saw.~~ Fixed June 2026: `TATTestViewModel.enqueueSynthesisChain()` now bundles `KEY_IMAGE_URL` + `KEY_IMAGE_CONTEXT_JSON` into each worker's `inputData` from `state.questions`. Worker reads them directly — no repository call needed. | ✅ Fixed June 2026 |
 | 3 | OLQ Reasoning in result screen | `TATSubmissionResultScreen` doesn't yet render expandable per-OLQ reasoning cards (unlike PPDT which has `PPDTOLQReasoningCard`). When added, move the pattern into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
 | 4 | `analysisStatus` absent on fresh submission | `TATSubmission.toFirestoreMap()` deliberately omits `analysisStatus`. It is created by `updateTATAnalysisStatus()` on first worker write. The result screen handles this correctly (defaults to `PENDING_ANALYSIS`). Intentional but worth documenting. | Intentional design |
 | 5 | `MIN_STORY_THRESHOLD = 6` hardcoded | Synthesis proceeds if ≥ 6 of 12 stories succeed. If the user wrote only 6 stories total and all fail AI analysis, synthesis is skipped. Consider making the threshold dynamic (e.g., `max(6, stories.size / 2)`). | Deferred |
@@ -781,6 +783,7 @@ Run all TAT-relevant tests:
 | Synthesis chain never ran | `TATStoryAnalysisWorker` returned `Result.failure()` on AI failure → `WorkContinuation.combine()` blocked synthesis. Fix: save FAILED placeholder (`overallRating="FAILED"`) to Room, return `Result.success()`. `TATSynthesisWorker` filters placeholders before synthesis. | ✅ Fixed June 2026 |
 | Synthesis always failed (`MAX_TOKENS`) | `TATSynthesisPrompts.buildPrompt()` embedded full `olqScoresJson` per story (~3000 chars/story × 12 = ~36K chars). `gemini-2.5-flash` uses 5–8K thinking tokens before writing the response; combined output exceeded `MAX_TOKENS=8192`. Fix: (1) `compactOlqScores()` strips reasoning, sends `OLQ:score` pairs only (~180 chars/story); (2) story text capped at 200 chars. Total prompt: ~8.4K chars. (3) `synthesisModel` uses `maxOutputTokens=16384`, 120s timeout (Tier 3). | ✅ Fixed June 2026 |
 | Token budget — all Gemini calls | Added three-tier model config in `GeminiAIService`: Tier 1 (8192), Tier 2 (12288), Tier 3 (16384). Prevents `MAX_TOKENS` failures for SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript), and Interview feedback (full transcript). | ✅ Fixed June 2026 |
+| imageBytes=0 — all 12 stories got text-only analysis | `TATStoryAnalysisWorker` called `TestContentRepository.getTATQuestions()` to recover `imageUrl`. That method ignores `testId` and returns a fresh random 12, so `questions.find { it.id == questionId }` always returned `null` → `imageUrl=""` → `ByteArray(0)`. Fix: `TATTestViewModel.enqueueSynthesisChain()` now bundles `KEY_IMAGE_URL` + `KEY_IMAGE_CONTEXT_JSON` per worker from `state.questions` (the exact set the user saw). Worker removed `TestContentRepository` dependency entirely. | ✅ Fixed June 2026 |
 
 ---
 

@@ -253,8 +253,50 @@ class TATTestViewModelTest : BaseViewModelTest() {
         }
     }
     
+    // ==================== Work Request Invariants ====================
+
+    @Test
+    fun `loadTest populates questions with non-empty imageUrls`() = runTest {
+        // WHY: state.questions.imageUrl is the source bundled into each work request by
+        // enqueueSynthesisChain. If imageUrl is blank at load time, every worker receives
+        // empty bytes and analysis falls back to text-only (June 2026 bug root cause).
+        viewModel = createViewModel()
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            // All picture cards (excluding blank card at position 12) must have imageUrls
+            val pictureCards = state.questions.filter { it.cardPosition < 12 }
+            assertTrue("Must have loaded picture cards", pictureCards.isNotEmpty())
+            pictureCards.forEach { question ->
+                assertFalse(
+                    "Picture card ${question.id} (pos ${question.cardPosition}) must have non-empty imageUrl",
+                    question.imageUrl.isBlank()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `loadTest questions have unique IDs matching what worker KEY_QUESTION_ID receives`() = runTest {
+        // WHY: enqueueSynthesisChain looks up each question by story.questionId.
+        // If question IDs are not stable (e.g., random UUIDs regenerated on every load),
+        // the lookup fails and KEY_IMAGE_URL is passed as empty string.
+        viewModel = createViewModel()
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            val ids = state.questions.map { it.id }
+            assertEquals("All question IDs must be unique", ids.distinct().size, ids.size)
+            assertTrue("IDs must be non-empty strings", ids.all { it.isNotBlank() })
+        }
+    }
+
     // ==================== Helper Methods ====================
-    
+
     private fun createViewModel(): TATTestViewModel {
         return TATTestViewModel(
             mockLoadTATTest,

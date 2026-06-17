@@ -240,7 +240,7 @@ class TATTestViewModel @Inject constructor(
                     // Enqueue per-story analysis workers chained with synthesis worker
                     android.util.Log.d("TATTestViewModel", "📍 Step 4a: Enqueueing progressive synthesis chain...")
                     try {
-                        enqueueSynthesisChain(submissionId, submission.stories)
+                        enqueueSynthesisChain(submissionId, submission.stories, state.questions)
                         android.util.Log.d("TATTestViewModel", "✅ Per-story + synthesis chain enqueued")
                     } catch (e: Exception) {
                         ErrorLogger.log(e, "Failed to enqueue TAT synthesis chain — submission saved, analysis deferred")
@@ -377,7 +377,8 @@ class TATTestViewModel @Inject constructor(
     
     private fun enqueueSynthesisChain(
         submissionId: String,
-        stories: List<com.ssbmax.core.domain.model.TATStoryResponse>
+        stories: List<com.ssbmax.core.domain.model.TATStoryResponse>,
+        questions: List<com.ssbmax.core.domain.model.TATQuestion>
     ) {
         android.util.Log.d("TATTestViewModel", "📋 enqueueSynthesisChain called with ${stories.size} stories")
 
@@ -386,18 +387,23 @@ class TATTestViewModel @Inject constructor(
             return
         }
 
+        val questionById = questions.associateBy { it.id }
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val storyRequests = stories.mapIndexed { index, story ->
-            android.util.Log.d("TATTestViewModel", "   Building work request for story $index: ${story.questionId}")
+            val question = questionById[story.questionId]
+            android.util.Log.d("TATTestViewModel", "   Building work request for story $index: ${story.questionId} (imageUrl=${question?.imageUrl?.takeLast(20) ?: "MISSING"})")
             OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
                 .setInputData(
                     workDataOf(
                         TATStoryAnalysisWorker.KEY_SUBMISSION_ID to submissionId,
                         TATStoryAnalysisWorker.KEY_QUESTION_ID to story.questionId,
-                        TATStoryAnalysisWorker.KEY_STORY_INDEX to index
+                        TATStoryAnalysisWorker.KEY_STORY_INDEX to index,
+                        TATStoryAnalysisWorker.KEY_IMAGE_URL to (question?.imageUrl ?: ""),
+                        TATStoryAnalysisWorker.KEY_IMAGE_CONTEXT_JSON to (question?.imageContextJson ?: "{}")
                     )
                 )
                 .setConstraints(constraints)
