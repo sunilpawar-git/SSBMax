@@ -20,6 +20,7 @@ import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.TATStoryAnalysisWorker.Companion.FAILED_MARKER
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
@@ -75,16 +76,18 @@ class TATSynthesisWorker @AssistedInject constructor(
         Log.d(TAG, "🔄 Starting TAT synthesis: $submissionId")
 
         val assessments = tatStoryAssessmentDao.getBySubmissionId(submissionId)
-        if (assessments.size < MIN_STORY_THRESHOLD) {
-            Log.e(TAG, "❌ Too few story assessments: ${assessments.size} < $MIN_STORY_THRESHOLD")
+        val validAssessments = assessments.filter { it.overallRating != FAILED_MARKER }
+        Log.d(TAG, "   ${assessments.size} total assessments, ${validAssessments.size} valid (${assessments.size - validAssessments.size} failed placeholders)")
+        if (validAssessments.size < MIN_STORY_THRESHOLD) {
+            Log.e(TAG, "❌ Too few valid story assessments: ${validAssessments.size} < $MIN_STORY_THRESHOLD")
             handleFailure(submissionId)
             return Result.failure()
         }
-        Log.d(TAG, "   ${assessments.size} story assessments ready for synthesis")
+        Log.d(TAG, "   ${validAssessments.size} story assessments ready for synthesis")
 
         submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
 
-        val prompt = TATSynthesisPrompts.buildPrompt(assessments)
+        val prompt = TATSynthesisPrompts.buildPrompt(validAssessments)
         val olqScores = analyzeWithRetry(prompt) ?: run {
             Log.e(TAG, "❌ AI synthesis failed after $MAX_AI_RETRIES retries")
             handleFailure(submissionId)

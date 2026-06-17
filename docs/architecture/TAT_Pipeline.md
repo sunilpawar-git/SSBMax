@@ -1,20 +1,21 @@
 # TAT Pipeline Architecture
 
-**Last updated:** June 2026 (baseline audit complete; upgrade roadmap locked)
-**Status:** Living document — update when fixing bugs, improving flow, or adding features. Tracks current state AND target architecture.
+**Last updated:** June 2026 (Phase 3 complete + synthesis chain bug fix)
+**Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
-Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time) and a blank card (card 12), each for 30 seconds, then writes a story for each within 4 minutes. All 12 stories are evaluated together by Gemini AI against 15 Officer-Like Qualities (OLQs), and the result feeds the unified OLQ dashboard.
+Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time, 30 s each) and a blank card (card 12), then writes a 4-minute story for each. All 12 stories are evaluated by Gemini AI — each story individually via a per-story multimodal worker, then synthesized holistically — against 15 Officer-Like Qualities (OLQs), feeding the unified OLQ dashboard.
 
 **TAT vs PPDT:**
 
 | Aspect | PPDT | TAT |
 |--------|------|-----|
 | Images | 1 image per test | 11 picture cards + 1 blank card |
-| Story | 1 story | 12 stories |
+| Stories | 1 story | 12 stories |
 | Image clarity | Deliberately hazy/blurred | Clear B&W photo-realistic |
-| Analysis | Single multimodal Gemini call | 12 per-story assessments → 1 holistic synthesis (target) |
-| Assessment depth | Per-image rubric (PPDTImageContext) | Per-image rubric (TATImageContext) + cross-story synthesis |
+| Image pool | 64 images, gender-tagged | 167 images, gender-tagged, position-assigned |
+| Analysis | Single multimodal Gemini call | 12 parallel per-story workers → 1 holistic synthesis worker |
 | Blank card | Not applicable | Card 12 — candidate projects from imagination |
+| Room cache size | 64 images | 167 images |
 
 ---
 
@@ -24,16 +25,17 @@ Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The can
 StudentHomeScreen
   └─► TopicScreen (Phase 1 → Tests tab)
         └─► TATTestScreen
-              ├─ [0] INSTRUCTIONS
-              ├─ [1..12] For each card:
+              ├─ [0] PROFILE GATE (gender check — blocks if no profile)
+              ├─ [1] INSTRUCTIONS
+              ├─ [2..13] For each card (1–12):
               │    ├─ IMAGE_VIEWING  (30 s, auto-advance)
               │    ├─ WRITING        (4 min, auto-advance)
-              │    └─ REVIEW_CURRENT (user confirms → next card)
-              └─ SUBMITTED ──► TATSubmissionResultScreen
-                                    └─► OLQ results + per-OLQ reasoning (async via WorkManager)
+              │    └─ REVIEW         (confirm → next card)
+              └─ [14] SUBMITTED ──► TATSubmissionResultScreen
+                                         └─► OLQ results + per-OLQ reasoning (async via WorkManager)
 ```
 
-Card 12 is a blank card — no image shown, candidate writes a story from imagination.
+Card 12 is the blank card — no image shown, candidate writes a story from imagination.
 
 ---
 
@@ -63,23 +65,21 @@ Card 12 is a blank card — no image shown, candidate writes a story from imagin
 | `TATTestScreen` | `app/.../ui/tests/tat/TATTestScreen.kt` | `TATTestViewModel.kt` |
 | `TATSubmissionResultScreen` | `app/.../ui/tests/tat/TATSubmissionResultScreen.kt` | `TATSubmissionResultViewModel.kt` |
 
+`TATTestViewModel` extends `BaseTestViewModel` (Phase 3) which provides: `observeCurrentUser`, `subscriptionManager`, `securityLogger`, `workManager`, `sendNavigationEvent()`, and the `timerGeneration` counter used by the generation-token timer pattern.
+
 ### Phase composables
 
 | Composable | File | Responsibility |
 |------------|------|----------------|
 | `TATInstructionsPhase` | `components/phases/TATInstructionsPhase.kt` | Instructions card, "Start Test" button |
-| `TATImageViewingPhase` | `components/phases/TATImageViewingPhase.kt` | Image display + 30 s viewing timer |
-| `TATWritingPhase` | `components/phases/TATWritingPhase.kt` | `OutlinedTextField` + char count + 4 min timer |
+| `TATImageViewingPhase` | `components/phases/TATImageViewingPhase.kt` | Image display + 30 s timer bar |
+| `TATWritingPhase` | `components/phases/TATWritingPhase.kt` | `OutlinedTextField` + char count (min 150, max 1500) + 4 min timer |
 | `TATReviewPhase` | `components/phases/TATReviewPhase.kt` | Read-only story preview, "Edit" / "Confirm" buttons |
 
 ### Shared components
 
-- `TATComponents.kt` — `TATTopBar`, `TATBottomBar`, `TimerChip`
-- `TATDialogs.kt` — `TATExitDialog`, `TATSubmitDialog`
-
-### Known issue: file over limit
-
-`TATTestViewModel.kt` is **677 lines** (limit 300). `TATTestUiState` is defined at the bottom of the same file — it should be its own file `TATTestUiState.kt`.
+- `TATComponents.kt` — `TATTopBar`, `TATBottomBar`, `TimerChip` (MM:SS, red when < 30 s)
+- `TATDialogs.kt` — `TATExitDialog`, `TATSubmitDialog`, `TATProfileRequiredDialog`
 
 ---
 
@@ -101,187 +101,98 @@ data class TATTestUiState(
     val viewingTimeRemaining: Int = 30,
     val writingTimeRemaining: Int = 240,
     val startTime: Long = System.currentTimeMillis(),
+    val isTimerActive: Boolean = false,
+    val timerStartTime: Long = 0L,          // generation token — see §5
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
     val subscriptionType: SubscriptionType? = null,
-    val submission: TATSubmission? = null,   // ⚠️ architectural smell — see §10
+    val submission: TATSubmission? = null,
     val error: String? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    val isTimerActive: Boolean = false,
-    val timerStartTime: Long = 0L
+    val isProfileIncomplete: Boolean = false
 )
 ```
-
-**Computed properties:**
-- `currentQuestion: TATQuestion?` — `questions.getOrNull(currentQuestionIndex)`
-- `completedStories: Int` — `responses.size`
-- `progress: Float` — `completedStories / questions.size`
-- `canMoveToNextQuestion: Boolean` — story meets minCharacters AND phase is WRITING or REVIEW_CURRENT
-- `canMoveToPreviousQuestion: Boolean` — `currentQuestionIndex > 0 && phase == WRITING` (⚠️ Bug B7 — must be removed)
-- `canSubmitTest: Boolean` — `completedStories >= questions.size`
 
 **Phase transition (repeated 12 times, once per card):**
 
 ```
-[Per card N]
-IMAGE_VIEWING (30 s, auto-advance)
+INSTRUCTIONS
+  ──[startTest()]──►
+[Per card N = 1..12]
+IMAGE_VIEWING  (30 s timer)
   ──[timer = 0, auto]──►
-WRITING (240 s, auto-advance)
-  ──[story ≥ minChars, user taps Next]──►
-REVIEW_CURRENT
-  ──[editCurrentStory()]──► WRITING (restart timer ← Bug B1 risk)
+WRITING  (240 s timer)
+  ──[timer = 0, auto OR user taps Review]──►
+    saveCurrentStoryToResponses()
+    ──►
+REVIEW
+  ──[editCurrentStory()]──► WRITING (resume; timer restarts)
   ──[confirmCurrentStory()]──►
     if N < 12 → IMAGE_VIEWING for card N+1
-    if N = 12 → SUBMITTED ──► TATSubmissionResultScreen
+    if N = 12 → isTimerActive = false
+               ──[submitTest()]──► SUBMITTED ──[NavigateToResult event]──► result screen
 ```
 
-**`TATPhase` enum:** `INSTRUCTIONS`, `IMAGE_VIEWING`, `WRITING`, `REVIEW_CURRENT`, `SUBMITTED`
-
-> **Target rename:** `REVIEW_CURRENT` → `REVIEW` (Phase 3)
+**`TATPhase` enum:** `INSTRUCTIONS`, `IMAGE_VIEWING`, `WRITING`, `REVIEW`, `SUBMITTED`
 
 ---
 
 ## 5. Timer Logic
 
-### Current implementation (dual-Job, has race condition)
+### Generation-token pattern (Phase 1 bug fix)
 
-| Phase | Duration | Trigger |
-|-------|----------|---------|
-| IMAGE_VIEWING | 30 s | `startTest()` / next card |
-| WRITING | 240 s | IMAGE_VIEWING timer expiry |
-
-Two separate Job fields: `viewingTimerJob: Job?` and `writingTimerJob: Job?`. Both use **delta-based** calculation (`endTime - System.currentTimeMillis()`, update every 200 ms).
-
-**Bug B1 — Timer race condition:**
-
-```
-startViewingTimer()
-  └─► viewingTimerJob = launch {
-        ...timer loop...
-        // expires:
-        _uiState.update { it.copy(phase = WRITING, isTimerActive = false) }  // ← sets false
-        startWritingTimer()  ← immediately sets isTimerActive = true
-      } finally {
-        _uiState.update { it.copy(isTimerActive = false) }  // ← races with writing timer!
-      }
-```
-
-The `finally` block of the viewing timer coroutine fires **after** `startWritingTimer()` sets `isTimerActive = true`, flipping it back to `false`. Writing timer bar appears frozen.
-
-**Config-change recovery:** `timerStartTime: Long` stored in UiState; `restoreTimerIfNeeded()` restarts the appropriate timer on ViewModel recreation. Partially effective but the dual-Job pattern makes it fragile.
-
-### Target implementation (generation-token pattern — same as PPDT)
+Both timers (viewing 30 s, writing 240 s) share a single `timerJob: Job?`. Each `startViewingTimer()` / `startWritingTimer()` call increments `timerGeneration` (ViewModel-private `var`) and stamps it into `UiState.timerStartTime`. The `finally` block of the expiring coroutine checks `current.timerStartTime == myGeneration` before clearing `isTimerActive`. This prevents the viewing timer's `finally` from flipping `isTimerActive = false` after the writing timer has already set it `true`.
 
 ```kotlin
-private var timerGeneration = 0L  // ViewModel-private, not in UiState
-
-private fun startTimer(seconds: Int) {
-    val myGeneration = ++timerGeneration
-    _uiState.update { it.copy(timerStartTime = myGeneration, isTimerActive = true, ...) }
-    timerJob = viewModelScope.launch {
-        try { /* timer loop */ }
-        finally {
-            _uiState.update { current ->
-                if (current.timerStartTime == myGeneration)
-                    current.copy(isTimerActive = false)
-                else current   // ← safe: newer timer already started
-            }
+// startViewingTimer / startWritingTimer — same pattern for both:
+timerJob?.cancel()
+val myGeneration = ++timerGeneration
+_uiState.update { it.copy(timerStartTime = myGeneration, isTimerActive = true, ...) }
+val endTime = System.currentTimeMillis() + (seconds * 1000L)
+timerJob = viewModelScope.launch {
+    try {
+        while (isActive) {
+            val remaining = ((endTime - System.currentTimeMillis()) / 1000).toInt()
+            if (remaining <= 0) break
+            _uiState.update { it.copy(viewingTimeRemaining = remaining) }   // or writingTimeRemaining
+            delay(200)
+        }
+        if (isActive) { /* phase transition */ }
+    } finally {
+        _uiState.update { current ->
+            if (current.timerStartTime == myGeneration) current.copy(isTimerActive = false)
+            else current
         }
     }
 }
 ```
 
-Single `timerJob: Job?` replaces dual Jobs. Generation token guards against stale `finally` blocks.
+| Phase | Duration | Trigger |
+|-------|----------|---------|
+| IMAGE_VIEWING | 30 s | `startTest()` / `moveToNextQuestion()` |
+| WRITING | 240 s | `startViewingTimer()` coroutine auto-advance |
 
 ---
 
-## 6. loadTest() Flow
+## 6. Image Loading Pipeline
 
-**Current (all inlined in ViewModel, 140 lines):**
+### Source (Firestore)
 
-```
-loadTest(testId)
-  Step 1: observeCurrentUser().first() — 3 s timeout
-  Step 2: subscriptionManager.canTakeTest(TestType.TAT, userId)
-           → LimitReached → show limit dialog, stop
-           → NetworkError → show error, stop
-           → Eligible → continue
-  Step 3: testSessionRepository.createTestSession(userId, testId, TestType.TAT)
-  Step 4: testContentRepository.getTATQuestions(testId)
-           → currently calls TATImageCacheManager (see §7)
-  → _uiState.update { phase = INSTRUCTIONS, questions = questions }
-```
-
-**Bugs / gaps:**
-- No gender resolution → no gender-based image routing (compare: PPDT resolves `genderTag` before fetching images)
-- No `createDraftSubmission()` → submission is created only at `submitTest()`, not at test start
-- `testContentRepository.getTATQuestions()` uses only `batch_001` (see §7)
-- No profile gate dialog (PPDT has `PPDTProfileRequiredDialog`)
-
-**Target (Phase 2):**
-
-```
-loadTest(testId)
-  → Auth check + subscription check (LoadTATTestUseCase)
-  → Resolve genderTag from UserProfile (same pattern as PPDTTestViewModel)
-      → no gender → isProfileIncomplete = true → show TATProfileRequiredDialog → stop
-      → gender set → MALE/FEMALE/MIXED pool routing
-  → TATSubmissionRepository.createDraftSubmission() → IN_PROGRESS submission
-  → TATImageCacheManager.getImagesForTest(genderTag) → 12 questions (11 cards + blank)
-```
-
----
-
-## 7. Image Loading Pipeline
-
-### Current state (broken)
-
-**Firestore source:**
 ```
 test_content/tat/image_batches/batch_001
-  ├── totalImages: Int
-  └── images: List<{id, imageUrl, ...}>
-```
-
-Only `batch_001` is ever downloaded. `TATImageCacheManager.initialSync()` calls `downloadBatch("batch_001")` hardcoded.
-
-**Room cache (current):**
-- Entity: `CachedTATImageEntity` → table `cached_tat_images`
-- Fields: `id`, `imageUrl`, `batchId`, `usageCount`, `cachedAt`
-- Missing: `cardPosition`, `imageContextJson`, `genderTag` (all needed for target)
-- `TARGET_CACHE_SIZE = 12`, `MIN_CACHE_SIZE = 4`
-
-**No staleness gate:** `initialSync()` only checks `currentCount >= TARGET_CACHE_SIZE`. Does not compare Firestore `version` field. No `lastStalenessCheckAt`.
-
-**No gender routing:** `getImagesForTest()` calls `getLeastUsedImages(count)` — no gender filter.
-
-**No `cardPosition` field:** Images have no concept of which position in the 12-card sequence they belong to. All 12 images are returned in database order.
-
-### Target state (Phase 0 content + Phase 2 code)
-
-**Image pool:**
-- 132 images = 11 card positions × 12 batch variants
-- 1 blank card (position 12) — added programmatically, no Firestore image
-
-**Firestore schema (target):**
-```
-test_content/tat/image_batches/{batchId}    (batch_001 through batch_012)
-  ├── totalImages: 11
-  ├── version: "1.0.0"
+  ├── totalImages: 167
+  ├── version: "1.0.1"
   └── images: List<{
-        id: String,                // "tat_b01_c01"
-        imageUrl: String,          // Firebase Storage URL
-        cardPosition: Int,         // 1–11 (fixed test sequence position)
-        imageContext: {            // TATImageContext — same 9 fields as PPDTImageContext
-          sceneDescription, coreElements[], ambiguousElements[],
-          expectedThemes[], penalizedThemes[], primaryOLQs[],
-          deviationTolerance, exemplarGoodHints[], exemplarBadHints[]
-        },
+        id: "tat_001_male",               ← tat_{N}_{genderSuffix}
+        sourceFile: "1Men.png",
+        imageUrl: String,                  ← Firebase Storage URL
+        cardPosition: Int,                 ← 1–11 (fixed sequence position)
         genderTag: "MALE" | "FEMALE" | "MIXED",
+        imageContext: { 9 fields },        ← TATImageContext (see §13)
         category: String,
         difficulty: String,
         viewingTimeSeconds: 30,
@@ -291,294 +202,330 @@ test_content/tat/image_batches/{batchId}    (batch_001 through batch_012)
       }>
 ```
 
-**Room schema (target additions to `CachedTATImageEntity`):**
-- `cardPosition: Int` — 1-11; used for position-based selection query
-- `imageContextJson: String = "{}"` — serialised `TATImageContext`
-- `genderTag: String = "MIXED"` — same as `CachedPPDTImageEntity`
-- `@Index` on: `cardPosition`, `genderTag`, `usageCount`, `batchId`
+**Flat pool design:** All 167 images in one `batch_001` document — no batch rotation. Images are selected per card position at test-load time using least-used + gender SQL filter.
 
-**New DAO method:**
-```sql
-SELECT * FROM cached_tat_images
-WHERE cardPosition = :cardPosition
-AND (genderTag = :genderTag OR genderTag = 'MIXED')
-ORDER BY usageCount ASC, RANDOM()
-LIMIT 1
-```
+**Image ID convention:** `tat_{N}_{suffix}` where suffix = `male`, `female`, or `mixed`. Gender derived from source filename: `1Men.png → MALE`, `1Women.png → FEMALE`, `1Mixed.png → MIXED`.
 
-**`TATImageCacheManager.getImagesForTest(genderTag)` (target):**
+### Local cache (Room)
+
+- **Entity:** `CachedTATImageEntity` → table `cached_tat_images`
+  - Key fields: `id`, `batchId`, `cardPosition`, `genderTag = "MIXED"`, `imageUrl`, `imageContextJson = "{}"`, `usageCount = 0`
+  - `@Entity(indices = [@Index("cardPosition"), @Index("genderTag"), @Index("usageCount"), @Index("batchId")])`
+- **DAO:** `TATImageCacheDao` — primary selection query:
+  ```sql
+  SELECT * FROM cached_tat_images
+  WHERE cardPosition = :cardPosition
+  AND (genderTag = :genderTag OR genderTag = 'MIXED')
+  ORDER BY usageCount ASC, RANDOM()
+  LIMIT 1
+  ```
+- **Manager:** `core/data/.../repository/TATImageCacheManager.kt`
+  - `TARGET_CACHE_SIZE = 167`, `MINIMUM_CACHE_SIZE = 33` (3 per position triggers resync)
+  - **24h TTL staleness gate:** `isCacheStale()` reads `lastStalenessCheckAt` from `TATBatchMetadataEntity`; skips Firestore version call within 24 h. After Firestore read, updates `lastStalenessCheckAt`.
+  - **Version-based invalidation:** if Firestore `version` ≠ local version → `clearAllImages()` + `downloadBatch()`
+
+### `getImagesForTest(genderTag)` logic
+
 ```
-for cardPosition in 1..11:
+For cardPosition in 1..11:
     getLeastUsedImageByPosition(cardPosition, genderTag)
-append blank card at position 12 (from TATTestConfig, no Firestore query)
+    if null → getLeastUsedImageByPosition(cardPosition, "MIXED")  // fallback
+Append blank card at position 12 (programmatic, no Room query)
 markImagesAsUsed(selectedIds)
-return 12 TATQuestions in fixed sequence
+Return 12 TATQuestions in fixed card-position sequence
 ```
 
-**Staleness gate (target — same as PPDTImageCacheManager):**
-- `TATBatchMetadataEntity` gets new field `lastStalenessCheckAt: Long = 0L`
-- `isCacheStale(batchId)` → reads last check time; if < 24 h, skips Firestore version call
-- On Firestore read: bumps `lastStalenessCheckAt`, compares `version` field
-- Cache invalidated by bumping `version` in Firestore (done by upload script)
+### Gender-based image routing (Phase 2)
 
-**Gender-based image routing (target — same as PPDT):**
 ```
 loadTest()
-  └─ UserProfileRepository.getUserProfile(userId)
-       ├─ profile == null (server confirms no profile) → isProfileIncomplete=true, stop
+  └─ LoadTATTestUseCase → UserProfileRepository.getUserProfile(userId)
+       ├─ profile == null → ProfileIncompleteException → TATProfileRequiredDialog → stop
        ├─ gender == MALE   → GenderTag.MALE   → MALE+MIXED pool
        ├─ gender == FEMALE → GenderTag.FEMALE → FEMALE+MIXED pool
        └─ gender == OTHER / network error → null → full pool (no filter)
 ```
 
-**Display (UI):**
-```kotlin
-// TATImageViewingPhase.kt (current)
-AsyncImage(model = imageUrl, contentScale = ContentScale.Crop)
+### Cache invalidation contract
+
+**Every content pipeline run MUST bump the Firestore `version` field.** The Room cache is served indefinitely until a version change is detected.
+
 ```
-
-TAT images are clear B&W (no blur). Same `AspectRatio + ContentScale.Crop` layout as PPDT.
-
-**Blank card (position 12) — target UI:**
-```kotlin
-if (isBlankCard) {
-    // Hide image, show prompt
-    Text(stringResource(R.string.tat_blank_card_prompt))
-    // "Imagine any situation and write a story about it"
-} else {
-    AsyncImage(model = imageUrl, ...)
-}
+initialSync()
+  ├─ cachedImages < 33?  → download immediately
+  └─ cachedImages >= 33? → isCacheStale("batch_001")
+        ├─ lastStalenessCheckAt within 24h → fresh (TTL gate, skip Firestore)
+        └─ 24h expired → fetch Firestore version
+              ├─ version matches → update lastStalenessCheckAt
+              ├─ version differs → clearAllImages() + downloadBatch()
+              └─ Firestore fetch fails → assume fresh (fail-safe)
 ```
 
 ---
 
-## 8. Subscription Check
+## 7. Subscription Check
 
-Called in `loadTest()` via `SubscriptionManager.canTakeTest(TestType.TAT, userId)`:
+Called in `loadTest()` before test content loads:
 
 ```
-TestEligibility.Eligible     → continue
-TestEligibility.LimitReached → isLimitReached = true → show TestLimitReachedDialog
-TestEligibility.NetworkError → show error state
+SubscriptionManager.canTakeTest(TestType.TAT, userId)
+  → TestEligibility.Eligible     → continue
+  → TestEligibility.LimitReached → isLimitReached = true → TestLimitReachedDialog → stop
+  → TestEligibility.NetworkError → show error state → stop
 ```
 
-**SSOT for limits:** `core/data/.../repository/SubscriptionManager.kt`
+Usage persisted in Firestore: `users/{userId}/subscription/usage_{month}.tatTestsUsed` (incremented atomically at submission via `recordTestUsage()`).
+
+Debug override: `BuildConfig.BYPASS_SUBSCRIPTION_LIMITS = true` returns 999 remaining.
 
 ---
 
-## 9. Per-Card Story Cycle
+## 8. Submission Flow
 
-Repeated 12 times (once per card, including blank card):
+`TATTestViewModel.submitTest()` steps (in sequence):
 
-```
-[Card N starts]
-IMAGE_VIEWING phase
-  ├─ Image displayed (or blank card prompt for card 12)
-  ├─ 30 s countdown timer
-  └─ Timer expires → auto-advance to WRITING
+1. Stop timer (`isTimerActive = false`)
+2. Get current user (3 s timeout)
+3. Get user profile → resolve `subscriptionType`
+4. Build `TATSubmission` with `stories = state.responses`, `analysisStatus = PENDING_ANALYSIS`
+5. Write to Firestore: `submissions/{submissionId}` via `SubmitTATTestUseCase`
+6. Enqueue `enqueueSynthesisChain(submissionId, stories)` via WorkManager
+7. Record performance analytics (`DifficultyProgressionManager`)
+8. Increment `tatTestsUsed` via `SubscriptionManager.recordTestUsage()`
+9. Emit `TestNavigationEvent.NavigateToResult(submissionId)` → result screen
 
-WRITING phase
-  ├─ OutlinedTextField (currentStory)
-  ├─ Char count display (min 150, max 1500)
-  ├─ 4 min countdown timer
-  └─ Timer expires OR user taps "Review" → REVIEW_CURRENT
-     ⚠️ Bug B6: timer expiry moves to REVIEW_CURRENT but currentStory NOT yet
-                saved to responses[]. Story lost if user exits from review.
+**WorkManager chain (step 6):**
 
-REVIEW_CURRENT phase
-  ├─ Read-only story preview
-  ├─ "Edit Story" → back to WRITING (timer restarts ← Bug B1 risk)
-  └─ "Confirm" → confirmCurrentStory() → moveToNextQuestion()
-                  ⚠️ Bug B7: moveToPreviousQuestion() also exists → allows
-                              editing confirmed stories → breaks analysis model
-
-[moveToNextQuestion()]
-  ├─ Saves currentStory to responses[] (⚠️ only place it's saved — see Bug B6)
-  ├─ if N < 12 → next card's IMAGE_VIEWING
-  └─ if N = 12 → isTimerActive = false (test complete, allow submit)
-```
-
-**Target (Phase 2) — per-card confirm:**
-```
-confirmCurrentStory()
-  → saveCurrentStoryToResponses()   ← always called first (fixes B6)
-  → enqueue TATStoryAnalysisWorker(submissionId, storyIndex=N, imageId, storyText)
-  → advance to next card (or mark complete)
-
-No moveToPreviousQuestion() — removed entirely (fixes B7)
-```
-
----
-
-## 10. submitTest() Flow
-
-**Current:**
-
-```
-submitTest()
-  Step 1: observeCurrentUser().first() — 3 s timeout
-  Step 2: userProfileRepository.getUserProfile() → resolve subscriptionType
-  Step 3: Create TATSubmission object (local, in ViewModel)
-          {userId, testId, stories=responses, analysisStatus=PENDING_ANALYSIS}
-  Step 4: submitTATTest(submission, batchId=null)
-          → writes to Firestore: submissions/{submissionId}
-  Step 4a: enqueueTATAnalysisWorker(submissionId)
-  Step 5: Record analytics (difficultyManager.recordPerformance)
-  Step 6: subscriptionManager.recordTestUsage(TAT, userId, submissionId)
-  Step 7: _uiState.update { isSubmitted=true, submission=submission, phase=SUBMITTED }
-          ⚠️ Stores full TATSubmission in UiState "to bypass Firestore permission issues"
-  Step 8: _navigationEvents.trySend(NavigateToResult)
-```
-
-**WorkManager enqueue:**
 ```kotlin
-workManager.enqueueUniqueWork(
-    "tat_analysis_$submissionId",
-    ExistingWorkPolicy.KEEP,
-    OneTimeWorkRequestBuilder<TATAnalysisWorker>()
-        .setInputData(workDataOf(KEY_SUBMISSION_ID to submissionId))
-        .setConstraints(Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED).build())
+// N = stories.size (typically 11–12)
+val storyRequests = stories.mapIndexed { index, story ->
+    OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
+        .setInputData(workDataOf(
+            KEY_SUBMISSION_ID to submissionId,
+            KEY_QUESTION_ID to story.questionId,
+            KEY_STORY_INDEX to index
+        ))
+        .setConstraints(networkConnected)
         .build()
-)
+}
+val synthesisRequest = OneTimeWorkRequestBuilder<TATSynthesisWorker>()
+    .setInputData(workDataOf(KEY_SUBMISSION_ID to submissionId))
+    .setConstraints(networkConnected)
+    .build()
+
+WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
+    .then(synthesisRequest)
+    .enqueue()
 ```
 
-**Target (Phase 2):**
-```
-submitTest()
-  → TATSubmissionRepository.finalizeSubmission(submissionId, allStories)
-      updates Firestore: {status=SUBMITTED_PENDING_REVIEW, analysisStatus=PENDING_SYNTHESIS}
-  → enqueue TATSynthesisWorker(submissionId)
-  (no local TATSubmission in UiState — result screen fetches from Firestore)
-```
+`combine()` runs synthesis only after ALL story workers complete — but story workers now always return `Result.success()` (see §9), so the synthesis always runs.
 
 ---
 
-## 11. TATAnalysisWorker (Current — bulk text-only, has bugs)
+## 9. Background Analysis — TATStoryAnalysisWorker (×N, per story)
 
-**File:** `app/src/main/kotlin/com/ssbmax/workers/TATAnalysisWorker.kt` (285 lines)
+**File:** `app/.../workers/TATStoryAnalysisWorker.kt`
+**Trigger:** WorkManager, immediately after submission (one worker per story, in parallel)
+**Input:** `KEY_SUBMISSION_ID`, `KEY_QUESTION_ID`, `KEY_STORY_INDEX`
 
-**Flow:**
-```
-doWork()
-  1. Get TATSubmission from Firestore by submissionId
-  2. Verify status == PENDING_ANALYSIS (idempotency guard)
-  3. Update status → ANALYZING
-  4. PsychologyTestPrompts.generateTATAnalysisPrompt(submission)
-     → feeds all 12 stories as text blob; no image bytes; no TATImageContext
-  5. aiService.analyzeText(prompt) — text-only Gemini call
-     → retry up to 3 attempts (own loop)
-     → outer try/catch also uses runAttemptCount < MAX_AI_RETRIES → double retry (9 total)
-  6. ValidationIntegration.validateScores(olqScores, EntryType.NDA)  ← Bug B4
-  7. Build OLQAnalysisResult { overallScore, overallRating, strengths, weaknesses }
-  8. submissionRepository.updateTATOLQResult(submissionId, olqResult)
-  9. getOLQDashboard.invalidateCache(userId)
- 10. notificationHelper.showTATResultsReadyNotification(submissionId)
-```
+| Step | Action |
+|------|--------|
+| 1 | Fetch `TATSubmission` from Firestore — if not found, **throw** (WorkManager retries the worker) |
+| 2 | Find `TATStoryResponse` by `questionId` — if missing, save `FAILED` placeholder, return `Result.success()` |
+| 3 | Fetch questions via `TestContentRepository.getTATQuestions(testId)` — find question for `imageUrl` + `imageContextJson` |
+| 4 | Download image bytes from `imageUrl` (best-effort, 10 s connect / 20 s read); on failure proceeds with `ByteArray(0)` |
+| 5 | Parse `TATImageContext` from `imageContextJson` (JSON → domain model) |
+| 6 | Resolve `candidateGender` from `UserProfileRepository` |
+| 7 | Call `aiService.analyzeTATStoryMultimodal(imageBytes, story, imageContext, candidateGender, storyIndex, totalStories)` → `GeminiTATStoryAnalyzer` → `gemini-2.5-flash`, 60 s timeout |
+| 8 | If AI returns < 14 OLQs → retry up to 3 times with exponential backoff |
+| 9 | If all retries exhausted → save `FAILED` placeholder to Room, return `Result.success()` (does NOT break synthesis chain) |
+| 10 | Parse `olqScores: Map<OLQ, OLQScore>` — each `OLQScore(score coerceIn(5,9), confidence, reasoning)` |
+| 11 | Insert `TATStoryAssessmentEntity` into Room |
 
-**Confirmed bugs:**
+**Key design decision:** The worker always returns `Result.success()`. Failures are represented as `overallRating = "FAILED"` placeholder records in Room. This ensures `WorkContinuation.combine()` always proceeds to `TATSynthesisWorker`.
 
-| # | Bug | Location | Impact |
-|---|-----|----------|--------|
-| B2 | `overallScore <= 3.0f → "Exceptional"` — never true on 5-9 scale | ~line 115 | Every user gets "Needs Improvement" |
-| B3 | `aiConfidence = 85` hardcoded | ~line 150 | Inaccurate confidence shown |
-| B4 | `EntryType.NDA` hardcoded; no UserProfileRepository injection | ~line 107 | Wrong SSB validation for OTA/GRADUATE |
-
-**Rating scale fix (B2):**
-```kotlin
-// Current prompt output: 5–9 scale (5=Exceptional, 9=Fail)
-// Fix:
-overallScore <= 5.5f -> "Exceptional"
-overallScore <= 6.5f -> "Good"
-overallScore <= 7.5f -> "Average"
-else -> "Needs Improvement"
-```
+**Key implementation files:**
+- `TATStoryAnalysisWorker.kt` — orchestration, image download, gender resolution
+- `GeminiTATStoryAnalyzer.kt` (`core/data/.../ai/`) — multimodal Gemini call + response parsing
+- `TATStoryAnalysisPrompts.kt` (`core/data/.../ai/prompts/`) — `generateTATStoryMultimodalPrompt()`
 
 ---
 
-## 12. Target: Progressive Assessment Architecture (Phase 2)
+## 10. Background Analysis — TATSynthesisWorker (×1, holistic)
 
-Replaces the single bulk Gemini call with a two-tier system: **12 lightweight per-story workers + 1 deep holistic synthesis worker**.
+**File:** `app/.../workers/TATSynthesisWorker.kt`
+**Trigger:** WorkManager, after ALL `TATStoryAnalysisWorker` instances complete (WorkManager chain)
+**Input:** `KEY_SUBMISSION_ID`
 
-### TATStoryAnalysisWorker (×12, per story)
+| Step | Action |
+|------|--------|
+| 1 | Read all `TATStoryAssessmentEntity` for `submissionId` from Room |
+| 2 | Filter out `FAILED` placeholders → `validAssessments` |
+| 3 | If `validAssessments.size < MIN_STORY_THRESHOLD` (6) → `handleFailure()` + `Result.failure()` |
+| 4 | Update Firestore: `data.analysisStatus → ANALYZING` |
+| 5 | Build cross-story synthesis prompt: `TATSynthesisPrompts.buildPrompt(validAssessments)` |
+| 6 | Call `aiService.analyzeTATResponse(prompt)` — text synthesis, up to 3 retries |
+| 7 | Resolve `entryType` from `UserProfileRepository` → `ScoringUtils.toScoringEntryType()` |
+| 8 | SSB validation: `ValidationIntegration.validateScores(olqScores, entryType)` — Factor II critical rules |
+| 9 | Build `OLQAnalysisResult`: overallScore (avg), overallRating, top 3 strengths, bottom 3 weaknesses |
+| 10 | Firestore write: `psych_results/{submissionId}` with `userId` (required by security rules) |
+| 11 | Update `data.analysisStatus → COMPLETED` in `submissions/{submissionId}` |
+| 12 | Invalidate OLQ dashboard cache + send push notification |
+
+**Error path:** On failure after all retries → `data.analysisStatus = FAILED`, failure notification sent.
+
+`MIN_STORY_THRESHOLD = 6` — synthesis proceeds if at least 6 of 12 stories have valid AI analysis (handles network failures on a subset of stories gracefully).
+
+---
+
+## 11. Gemini AI Prompt Design
+
+### Per-story prompt (`TATStoryAnalysisPrompts.generateTATStoryMultimodalPrompt`)
+
+Sends **both image bytes and a per-picture rubric** to Gemini (multimodal). Structure mirrors the PPDT prompt:
 
 ```
-TATStoryAnalysisWorker(submissionId, storyIndex=N, imageId, storyText)
-  → read TATImageContext from Room (by imageId)
-  → TATStoryAnalysisPrompts.buildPrompt(storyText, imageContext, candidateGender)
-  → Gemini call → extracts TATStoryAssessment:
-      olqIndicators: Map<OLQ, Float>   ← evidence weights 0.0–1.0 (NOT final scores)
-      heroCharacteristics: List<String>
-      dominantThemes: List<String>
-      psychSignals: List<String>
-      narrativeQuality: Float
-  → upsert TATStoryAssessmentEntity into Room (id = "${submissionId}_${storyIndex}")
-  → retry 3×; on all failures, store {failed=true}
-  WorkManager unique name: "tat_story_${submissionId}_${storyIndex}", REPLACE policy
+[IMAGE BYTES attached via content { blob("image/jpeg", imageBytes) }]   ← skipped for blank card
+
+=== PICTURE BRIEFING ===
+Scene: {imageContext.sceneDescription}
+Core elements (MUST acknowledge): ...
+Ambiguous elements (creative interpretation acceptable): ...
+Penalized story themes: ...
+Primary OLQs this picture tests: ...
+Deviation tolerance: LOW | MEDIUM | HIGH
+Story position: {storyIndex+1} of {totalStories}
+
+=== CANDIDATE STORY ===
+{story}
+
+=== CANDIDATE PROFILE ===
+Gender: {candidateGender}
+
+=== CRITICAL INSTRUCTIONS ===
+1. Return ONLY a single JSON object
+2. NO markdown code blocks
+3. ALL 15 OLQs MUST be present
+4. Use EXACT enum names
+5. Response must START with { and END with }
+
+Each OLQ entry: score (int 5-9), confidence (int 0-100), reasoning (string).
+Key: olqScores containing all 15 OLQ keys.
 ```
 
-Enqueued **as each story is confirmed** (not at submitTest). All 12 may run concurrently.
+**Scoring scale: 5–9, LOWER = BETTER** (SSB convention)
 
-### TATSynthesisWorker (×1, at submitTest)
+| Rating | Score Range |
+|--------|-------------|
+| Exceptional | ≤ 5.5 |
+| Good | ≤ 6.5 |
+| Average | ≤ 7.5 |
+| Needs Improvement | > 7.5 |
+
+**Determinism:** `TEMPERATURE = 0.0f` in `GeminiAIService.kt` — identical story → identical score.
+
+### Synthesis prompt (`TATSynthesisPrompts.buildPrompt`)
+
+Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
+- Compute final 15 OLQ scores by considering evidence across all stories
+- Identify cross-story narrative patterns (consistency, evolution, contradictions)
+- Weight blank card (position 12) more heavily (imagination under no visual stimulus)
+
+---
+
+## 12. Firestore Data Model
+
+### `submissions/{submissionId}`
 
 ```
-TATSynthesisWorker(submissionId)
-  → verify submission is PENDING_SYNTHESIS
-  → fetch user profile → gender, entryType
-  → poll Room for TATStoryAssessmentEntity every 5 s, up to 12 attempts (60 s total)
-      break when completedCount ≥ 8 OR all 12 present
-  → if completedCount < 8 → enqueue TATAnalysisWorker (fallback), return
-  → TATSynthesisPrompts.buildPrompt(all assessments ordered by storyIndex, profile)
-  → deep Gemini call → holistic 15 OLQ scores + per-OLQ reasoning + cross-story analysis
-  → write OLQAnalysisResult → psych_results/{submissionId}
-  → update submission → COMPLETED
-  → invalidate OLQ dashboard cache → send notification
-  Retry 3×; on all retries exhausted → enqueue TATAnalysisWorker (fallback)
+submissions/{submissionId}
+  ├── id: String
+  ├── userId: String
+  ├── testType: "TAT"
+  ├── testId: String
+  ├── status: "SUBMITTED_PENDING_REVIEW" | "COMPLETED"
+  ├── submittedAt: Long
+  └── data: Map
+      ├── id, userId, testId, stories: List<storyMap>
+      ├── totalTimeTakenMinutes: Int
+      ├── submittedAt: Long
+      ├── status: String
+      ├── analysisStatus: String   ← PENDING_ANALYSIS | ANALYZING | COMPLETED | FAILED
+      └── olqResult: Map?          ← populated only in legacy/transitional path
 ```
 
-### New Room entity: `TATStoryAssessmentEntity`
+**Note:** `analysisStatus` is NOT written in the initial `submitTAT()` call (it's absent from `toFirestoreMap()`). It is created by `updateTATAnalysisStatus()` when the synthesis worker fires. Result screen handles this correctly by defaulting to `PENDING_ANALYSIS` when the field is absent.
+
+### `psych_results/{submissionId}` (written by TATSynthesisWorker)
+
+```
+psych_results/{submissionId}
+  ├── submissionId: String
+  ├── userId: String              ← required by Firestore security rules
+  ├── testType: "TAT"
+  ├── olqScores: Map<OLQ, { score: Int, confidence: Int, reasoning: String }>
+  ├── overallScore: Float          ← average of 15 scores (5–9 SSB scale)
+  ├── overallRating: String
+  ├── strengths: List<String>      ← top 3 lowest-score OLQs
+  ├── weaknesses: List<String>     ← top 3 highest-score OLQs
+  ├── recommendations: List<String>
+  ├── aiConfidence: Int
+  └── analyzedAt: Long
+```
+
+### `test_content/tat/image_batches/batch_001`
+
+```
+test_content/tat/image_batches/batch_001
+  ├── totalImages: 167
+  ├── version: "1.0.1"
+  └── images: List<{ id, sourceFile, imageUrl, cardPosition, genderTag, imageContext{9 fields},
+                      category, difficulty, viewingTimeSeconds, writingTimeMinutes,
+                      minCharacters, maxCharacters }>
+```
+
+### `tat_story_assessments` (Room — bridge between per-story and synthesis workers)
 
 ```kotlin
 @Entity(tableName = "tat_story_assessments",
-        indices = [Index("submissionId"), Index(value=["submissionId","storyIndex"], unique=true)])
+        indices = [Index("submissionId"), Index("questionId"),
+                   Index(value = ["submissionId", "storyIndex"], unique = true)])
 data class TATStoryAssessmentEntity(
-    @PrimaryKey val id: String,          // "${submissionId}_${storyIndex}"
+    @PrimaryKey val id: String,
     val submissionId: String,
+    val questionId: String,
     val storyIndex: Int,
-    val imageId: String,
-    val olqIndicatorsJson: String,       // Map<OLQ, Float> serialized
-    val heroCharacteristicsJson: String,
-    val narrativeQuality: Float,
-    val psychSignalsJson: String,
-    val dominantThemesJson: String,
-    val analyzedAt: Long,
+    val story: String,
+    val imageUrl: String,
+    val olqScoresJson: String,      // JSON array of {olq, score, confidence, reasoning}
+    val overallScore: Float,
+    val overallRating: String,      // "FAILED" = placeholder for failed story analysis
     val aiConfidence: Int,
-    val failed: Boolean = false,
-    val analysisStatus: String = "PENDING"
+    val analyzedAt: Long
 )
 ```
 
-### New domain model: `TATStoryAssessment`
+`overallRating = "FAILED"` is the sentinel that marks a placeholder inserted when per-story AI analysis exhausts all retries. `TATSynthesisWorker` filters these out before synthesis.
 
-```kotlin
-data class TATStoryAssessment(
-    val submissionId: String,
-    val storyIndex: Int,                      // 0-11
-    val imageId: String,
-    val olqIndicators: Map<OLQ, Float>,       // Evidence weights 0.0-1.0 (NOT final OLQ scores)
-    val heroCharacteristics: List<String>,
-    val narrativeQuality: Float,
-    val psychSignals: List<String>,
-    val dominantThemes: List<String>,
-    val analyzedAt: Long,
-    val aiConfidence: Int,
-    val failed: Boolean = false
-)
-```
+---
 
-### New domain model: `TATImageContext`
+## 13. OLQ Scoring System & Dashboard
+
+### 15 Officer-Like Qualities (4 SSB Factors)
+
+| Factor | Category | OLQs | Variance |
+|--------|----------|------|---------|
+| I — Planning & Organizing | INTELLECTUAL | EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, ORGANIZING_ABILITY, POWER_OF_EXPRESSION | ±1 tick |
+| II — Social Adjustment ⚠️ CRITICAL | SOCIAL | SOCIAL_ADJUSTMENT, COOPERATION, SENSE_OF_RESPONSIBILITY | ±1 tick |
+| III — Social Effectiveness | DYNAMIC | INITIATIVE, SELF_CONFIDENCE, SPEED_OF_DECISION, INFLUENCE_GROUP, LIVELINESS | ±2 ticks |
+| IV — Character | CHARACTER | DETERMINATION, COURAGE, STAMINA | ±2 ticks |
+
+**Auto-reject rule:** Factor II overall score ≥ 8 → automatic rejection flag (enforced by `ValidationIntegration`).
+
+### TATImageContext — per-picture rubric
 
 Identical structure to `PPDTImageContext`:
+
 ```kotlin
 data class TATImageContext(
     val sceneDescription: String = "",
@@ -587,274 +534,239 @@ data class TATImageContext(
     val expectedThemes: List<String> = emptyList(),
     val penalizedThemes: List<String> = emptyList(),
     val primaryOLQs: List<String> = emptyList(),
-    val deviationTolerance: DeviationTolerance = DeviationTolerance.MEDIUM,
+    val deviationTolerance: String = "MEDIUM",   // "LOW" | "MEDIUM" | "HIGH"
     val exemplarGoodHints: List<String> = emptyList(),
     val exemplarBadHints: List<String> = emptyList()
 )
 ```
 
----
+### Card position → OLQ focus mapping
 
-## 13. AI Scoring Model
-
-### OLQ Framework
-
-15 Officer-Like Qualities assessed across 4 SSB Factors:
-
-| Factor | OLQs |
-|--------|------|
-| Factor I — Effective Intelligence | Effective Intelligence, Reasoning Ability, Organizing Ability, Power of Expression |
-| Factor II — Social Adaptability | Social Adaptability, Cooperation, Sense of Responsibility, Group Influence |
-| Factor III — Dynamic Quality | Speed of Decision, Ability to Influence, Liveliness |
-| Factor IV — Courage | Determination, Stamina, Self Confidence, Courage |
-
-**Scoring scale: 5–9** (lower is better)
-- 5 = Exceptional
-- 6 = Very Good
-- 7 = Average (SSB pass threshold)
-- 8 = Below Average
-- 9 = Fail
-
-**Critical SSB Rule (Factor II):** If average Factor II score ≥ 8, candidate is auto-rejected regardless of other scores. This must be validated in `ValidationIntegration`.
-
-**Rating bands (correct for 5-9 scale):**
-```
-overallScore <= 5.5 → "Exceptional"
-overallScore <= 6.5 → "Good"
-overallScore <= 7.5 → "Average"
-else               → "Needs Improvement"
-```
-
-### Per-story assessment scope (TATStoryAnalysisWorker)
-
-Extracts **evidence weights** (0.0–1.0), NOT final OLQ scores:
-- `olqIndicators: Map<OLQ, Float>` — how much this story evidences each OLQ
-- `heroCharacteristics: List<String>` — psychological traits of the story's protagonist
-- `dominantThemes: List<String>` — recurring narrative motifs
-- `psychSignals: List<String>` — psychological signals (proactive/reactive, optimistic/pessimistic)
-- `narrativeQuality: Float` — narrative structure score 0.0–1.0
-
-### Holistic synthesis scope (TATSynthesisWorker)
-
-Reads all 12 `TATStoryAssessment` entries and computes:
-- Final 15 OLQ scores (5–9 scale) with per-OLQ reasoning
-- Cross-story OLQ pattern (consistent strength vs inconsistent vs deteriorating)
-- Narrative evolution (story 1 → 12: does hero agency improve?)
-- Dominant personality themes across all 12 stories
-- Contradiction flags (e.g., high Determination in stories 1-4, absent in 9-12)
-
----
-
-## 14. TATImageContext per Card Position
-
-Real SSB TAT cards probe specific OLQs by design. Each card position has an intended OLQ focus that `TATImageContext.primaryOLQs` must reflect:
-
-| Card Position | Intended OLQ Focus | Scene Category |
+| Position | Primary OLQs | Scene Intent |
 |---|---|---|
-| 1 | Initiative, Self-Confidence | Individual adversity |
-| 2 | Cooperation, Social Adjustment | Group/social scenario |
-| 3 | Determination, Stamina | Persistence under pressure |
-| 4 | Speed of Decision, Courage | Emergency / urgency |
-| 5 | Organizing Ability, Effective Intelligence | Planning / leadership |
-| 6 | Sense of Responsibility, Cooperation | Duty / community |
-| 7 | Influence Group, Power of Expression | Communication / leadership |
-| 8 | Liveliness, Social Adjustment | Energy / positive engagement |
-| 9 | Reasoning Ability, Effective Intelligence | Problem solving |
-| 10 | Determination, Courage | Adversity / risk |
-| 11 | Self-Confidence, Initiative | Individual agency |
-| 12 (blank) | EI, Initiative, Organizing Ability | Imagination — heavily weighted |
+| 1 | INITIATIVE, SELF_CONFIDENCE | Solo challenge, individual start |
+| 2 | COOPERATION, SOCIAL_ADJUSTMENT | Group/social scenario |
+| 3 | DETERMINATION, STAMINA | Persistence under pressure |
+| 4 | SPEED_OF_DECISION, COURAGE | Emergency / urgency |
+| 5 | ORGANIZING_ABILITY, EFFECTIVE_INTELLIGENCE | Planning, coordination |
+| 6 | SENSE_OF_RESPONSIBILITY, COOPERATION | Duty, community, service |
+| 7 | INFLUENCE_GROUP, POWER_OF_EXPRESSION | Communication, persuasion |
+| 8 | LIVELINESS, SOCIAL_ADJUSTMENT | Energy, positive engagement |
+| 9 | REASONING_ABILITY, EFFECTIVE_INTELLIGENCE | Problem solving, analysis |
+| 10 | DETERMINATION, COURAGE | High-risk adversity |
+| 11 | SELF_CONFIDENCE, INITIATIVE | Individual agency under scrutiny |
+| 12 (blank) | EFFECTIVE_INTELLIGENCE, INITIATIVE, ORGANIZING_ABILITY | Pure imagination — heavily weighted |
 
-Each of the 12 batch variants for a given position uses a different image but must probe the same primary OLQs.
+### Dashboard integration
 
----
-
-## 15. Result Screen
-
-**`TATSubmissionResultScreen.kt`** / **`TATSubmissionResultViewModel.kt`**
-
-Result is loaded by `submissionId` (passed as nav arg). Shows:
-- Per-OLQ scores with reasoning
-- Overall score + rating band
-- Strengths (lowest 3 OLQ scores) + weaknesses (highest 3)
-- Recommendations
-
-**Current issue:** `submission: TATSubmission?` stored in `TATTestUiState` to "bypass Firestore permission issues". Result screen uses this local copy instead of fetching from Firestore. This is an architectural smell — result screen should fetch independently via ViewModel.
+- **`GetOLQDashboardUseCase`** fetches all test results in parallel with 6-second per-type timeouts.
+- TAT result arrives via `OLQDashboardData.Phase1Results.tatOLQResult` from `psych_results/{submissionId}`.
+- **5-minute in-memory cache** reduces Firestore reads; invalidated by `TATSynthesisWorker` after synthesis completes.
 
 ---
 
-## 16. Firestore Schema
+## 14. Result Screen Flow
 
-### Submission document
+`TATSubmissionResultViewModel.loadSubmission(submissionId)`:
 
-```
-submissions/{submissionId}
-  ├── userId: String
-  ├── testType: "TAT"
-  ├── testId: String
-  ├── status: "IN_PROGRESS" | "SUBMITTED_PENDING_REVIEW" | "COMPLETED" | "FAILED"
-  ├── analysisStatus: "NOT_STARTED" | "PENDING_ANALYSIS" | "ANALYZING" | "PENDING_SYNTHESIS" | "COMPLETED" | "FAILED"
-  ├── stories: List<{questionId, story, charactersCount, viewingTimeTaken, writingTimeTaken, submittedAt}>
-  ├── totalTimeTakenMinutes: Int
-  ├── submittedAt: Timestamp
-  └── olqResult: OLQAnalysisResult? (null until COMPLETED)
+1. Opens real-time Firestore listener: `submissionRepository.observeSubmission(submissionId)` (generic listener returning raw map)
+2. Parses `data.analysisStatus` from each snapshot
+3. When `analysisStatus == COMPLETED` but `olqResult` absent from submission doc → calls `submissionRepository.getTATResult(submissionId)` → reads `psych_results/{submissionId}`
+4. Tracks `hasSeenCompleteWithOLQ` flag — once COMPLETED+OLQ is seen, regresses to incomplete state are ignored (prevents Firestore re-fires from wiping the result from UI)
+5. Parses `TATSubmission` from snapshot map; attaches fetched `OLQAnalysisResult`
+6. Builds `SSBRecommendationUIModel` from `ValidationIntegration.validateScores(scores, EntryType.NDA)`
+
+```kotlin
+data class TATSubmissionResultUiState(
+    override val isLoading: Boolean = true,
+    val submission: TATSubmission? = null,
+    override val ssbRecommendation: SSBRecommendationUIModel? = null,
+    override val error: String? = null
+) : UnifiedResultUiState {
+    override val analysisStatus get() = submission?.analysisStatus ?: PENDING_ANALYSIS
+    override val olqResult get() = submission?.olqResult
+}
 ```
 
-### Result document
-
-```
-psych_results/{submissionId}
-  ├── submissionId: String
-  ├── testType: "TAT"
-  ├── olqScores: Map<OLQ, {score, confidence, reasoning}>
-  ├── overallScore: Float
-  ├── overallRating: String
-  ├── strengths: List<String>
-  ├── weaknesses: List<String>
-  ├── recommendations: List<String>
-  ├── analyzedAt: Timestamp
-  └── aiConfidence: Int
-```
+The result screen polls by observing the Flow — no manual refresh required. While `analysisStatus == PENDING_ANALYSIS | ANALYZING`, a loading indicator is shown.
 
 ---
 
-## 17. Known Bugs (Baseline — pre-upgrade)
+## 15. Domain Models Quick Reference
 
-| # | Bug | File | Line | Impact | Fix Phase |
-|---|-----|------|------|--------|-----------|
-| B1 | Timer race: viewing `finally` sets `isTimerActive=false` after writing timer starts | `TATTestViewModel.kt` | ~517 | Writing timer bar appears frozen | Phase 1 |
-| B2 | `overallRating` thresholds wrong for 5-9 scale (`<=3.0` never true) | `TATAnalysisWorker.kt` | ~115 | Every user gets "Needs Improvement" | Phase 1 |
-| B3 | `aiConfidence = 85` hardcoded | `TATAnalysisWorker.kt` | ~150 | Inaccurate confidence shown | Phase 1 |
-| B4 | `EntryType.NDA` hardcoded; user profile never consulted | `TATAnalysisWorker.kt` | ~107 | Wrong SSB validation for OTA/GRADUATE | Phase 1 |
-| B5 | `minCharacters` has 3 inconsistent values: domain=50, config=50, analytics=150 | `TATTest.kt`, `TATTestConfig`, `submitTest()` | Multiple | Wrong UI char-count validation | Phase 1 |
-| B6 | Writing timer expiry → `REVIEW_CURRENT` but `currentStory` not saved to `responses[]` | `TATTestViewModel.kt` | ~560 | Story lost if user exits from review | Phase 1 |
-| B7 | `moveToPreviousQuestion()` allows editing confirmed stories | `TATTestViewModel.kt` | ~314 | Breaks per-story analysis model | Phase 1 |
-
----
-
-## 18. Content Pipeline (Phase 0)
-
-Produces the 132 `TATImageContext` records that Phase 2 depends on. This is a **content session**, not a code session, and must complete before Phase 2 goes to production.
-
-**What you provide:**
-- ~124 individual image files (PNG/JPG) — 11 card positions × ~11-12 batch variants
-- 1 MD description file — one description entry per image
-
-**What I produce:**
-- Full 9-field `TATImageContext` per image (read image + description → generate context)
-- `cardPosition` assignment, `genderTag` classification (MALE/FEMALE/MIXED), `category`, `difficulty`
-- `preview.html` — HTML preview gate showing each image + full context (mandatory review before any upload)
-- `gender_map.json` — ground-truth gender classification after your review
-- `scripts/tat-picture-pipeline/step2_upload.py` — upload script (idempotent, --dry-run mode)
-
-**Blank card (position 12):**
-- No image file — handled programmatically
-- `TATImageContext` still generated with `isBlankCard=true`, high `deviationTolerance`, `primaryOLQs = [EI, INITIATIVE, ORGANIZING_ABILITY]`
-
-**Scripts location:** `scripts/tat-picture-pipeline/`
+| Class | File | Purpose |
+|-------|------|---------|
+| `TATQuestion` | `core/domain/.../model/TATTest.kt` | Image URL, `imageContextJson`, `cardPosition`, `genderTag`, timing config |
+| `TATImageContext` | same | Per-picture rubric: sceneDescription, coreElements, ambiguousElements, expectedThemes, penalizedThemes, primaryOLQs, deviationTolerance, exemplarHints |
+| `GenderTag` | same | `MALE`, `FEMALE`, `MIXED` |
+| `TATStoryResponse` | same | Per-story: questionId, story text, char count, timing |
+| `TATSubmission` | same | Full submission: stories list, timings, `analysisStatus`, `olqResult` |
+| `TATPhase` | same | `INSTRUCTIONS` → `IMAGE_VIEWING` → `WRITING` → `REVIEW` → `SUBMITTED` |
+| `TATTestConfig` | same | Defaults: viewingTime=30s, writingTime=4min, minCharacters=150, maxCharacters=1500 |
+| `OLQAnalysisResult` | `core/domain/.../model/scoring/UnifiedOLQResult.kt` | Unified AI result (15 OLQ scores with reasoning, overallScore, rating, strengths, weaknesses) |
+| `AnalysisStatus` | same | `PENDING_ANALYSIS`, `ANALYZING`, `COMPLETED`, `FAILED` |
+| `TATStoryAssessmentEntity` | `core/data/.../local/entity/` | Room bridge between per-story workers and synthesis worker |
 
 ---
 
-## 19. Upgrade Roadmap
+## 16. Test Coverage
 
-| Phase | What | Depends on |
-|-------|------|------------|
-| **Phase 0** | Content pipeline — 132 TATImageContext records, upload to Firebase | Separate content session |
-| **Phase 1** | Bug fixes B1-B7, extract LoadTATTestUseCase, move TATTestUiState to own file | Nothing (independent) |
-| **Phase 2** | Progressive assessment architecture, image infrastructure, gender routing, blank card | Phase 0 content live |
-| **Phase 3** | BaseTestViewModel (5 psych tests), WAT/SRT/SD bug fixes, multimodal per-story, shared OLQResultContent | Phase 2 complete |
+| Test File | Module | What It Covers |
+|-----------|--------|----------------|
+| `TATTestViewModelTest.kt` | `app` | Question loading, phase transitions, story writing, submission |
+| `TATSubmissionResultViewModelTest.kt` | `app` | Loading/ANALYZING/COMPLETED states, OLQ parsing |
+| `TATAnalysisWorkerTest.kt` | `app` | Gender resolution, missing submission, skip on wrong status |
+| `TATStoryAnalysisWorkerTest.kt` | `app` | Per-story multimodal call, FAILED placeholder on AI failure, story-not-found path |
+| `TATSynthesisWorkerTest.kt` | `app` | Threshold check, FAILED placeholder filtering, synthesis flow |
+| `TATImageCacheManagerTest.kt` | `core:data` | Cache sync, TTL gate, position-based selection |
+| `TATImageCacheDaoTest.kt` | `core:data` | `getLeastUsedImageByPosition()` SQL |
 
-### Phase 0 deliverables
+Run all TAT-relevant tests:
 
-| Deliverable | Path |
-|-------------|------|
-| Image contexts | `scripts/tat-picture-pipeline/tat_image_contexts.json` |
-| Gender map | `scripts/tat-picture-pipeline/gender_map.json` |
-| HTML preview | `scripts/tat-picture-pipeline/preview.html` |
-| Upload script | `scripts/tat-picture-pipeline/step2_upload.py` |
-| Firestore content live | `test_content/tat/image_batches/batch_001..batch_012` |
-
-### Phase 1 — Quick wins (8 isolated fixes)
-
-1. **1.1** Fix timer race — generation-token pattern (Bug B1)
-2. **1.2** Fix rating thresholds for 5-9 scale (Bug B2)
-3. **1.3** Fix `minCharacters = 150` everywhere (Bug B5)
-4. **1.4** Inject `UserProfileRepository` into `TATAnalysisWorker`, resolve `entryType` (Bug B4)
-5. **1.5** Use actual `aiConfidence` from Gemini response (Bug B3)
-6. **1.6** Extract `LoadTATTestUseCase` + move `TATTestUiState` to own file
-7. **1.7** Fix story loss — `saveCurrentStoryToResponses()` before timer-expiry phase transition (Bug B6)
-8. **1.8** Remove `moveToPreviousQuestion()` entirely (Bug B7)
-
-### Phase 2 — New files
-
-| File | Type |
-|------|------|
-| `core/domain/.../model/TATImageContext.kt` | New domain model |
-| `core/domain/.../model/TATStoryAssessment.kt` | New domain model |
-| `core/data/.../local/entity/TATStoryAssessmentEntity.kt` | New Room entity |
-| `core/data/.../local/dao/TATStoryAssessmentDao.kt` | New DAO |
-| `app/.../workers/TATStoryAnalysisWorker.kt` | New WorkManager worker |
-| `app/.../workers/TATSynthesisWorker.kt` | New WorkManager worker |
-| `core/data/.../ai/prompts/TATStoryAnalysisPrompts.kt` | New AI prompts |
-| `core/data/.../ai/prompts/TATSynthesisPrompts.kt` | New AI prompts |
-| `app/.../ui/tests/tat/components/TATProfileRequiredDialog.kt` | New dialog |
-
-### Phase 2 — Modified files
-
-| File | Change |
-|------|--------|
-| `TATTestViewModel.kt` | Gender routing, profile gate, createDraft, per-story worker enqueue, finalizeSubmission |
-| `TATSubmissionRepository.kt` | `createDraftSubmission()`, `finalizeSubmission()` |
-| `TATImageCacheManager.kt` | 12-batch sync, staleness gate, position-based selection, blank card |
-| `CachedTATImageEntity.kt` | `cardPosition`, `imageContextJson`, `genderTag`, @Index |
-| `TATBatchMetadataEntity.kt` | `lastStalenessCheckAt` |
-| `TATImageCacheDao.kt` | `getLeastUsedImageByPosition()` |
-| `TATTest.kt` | `TATImageContext` + `genderTag` + `cardPosition` + `isBlankCard` on `TATQuestion`; new enums |
-| `TATImageViewingPhase.kt` | Blank card UI branch |
-| `TATInstructionsPhase.kt` | Blank card instruction bullet |
-| Room migration file | New table + new columns |
-
----
-
-## 20. Verification Plan
-
-### After Phase 0
-- Open app → start TAT test → verify real TAT images load from Firebase Storage in correct card-position order
-- Verify male candidate sees MALE+MIXED pool; female sees FEMALE+MIXED pool
-- Verify card 12 shows blank card UI (no image)
-
-### After Phase 1
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "*TAT*"
-./gradlew :app:lintDebug
+./gradlew :core:data:testDebugUnitTest --tests "*TAT*"
+./gradlew :core:domain:testDebugUnitTest --tests "*TAT*"
 ```
-Manual checks:
-- Rotate device during IMAGE_VIEWING → writing timer still starts correctly (B1)
-- Submit test → result shows "Good" or "Average" for average stories (B2)
-- Check `minCharacters` validation triggers at 150 chars (B5)
-- Confirm story 3 → verify no "Previous" button (B7)
-- Let writing timer expire → verify story is saved before REVIEW (B6)
 
-### After Phase 2
-```bash
-./gradlew :core:data:testDebugUnitTest --tests "*Migration*"
-./gradlew :app:testDebugUnitTest --tests "*TATStory*"
-./gradlew :app:testDebugUnitTest --tests "*TATSynthesis*"
-./gradlew check
-```
-Manual checks:
-- Complete TAT → result screen shows cross-story theme analysis
-- Kill app after story 6 → reopen → fresh test (orphan cleaned at next login)
-- Confirm story 5 → no "Previous" button visible
-- Card 12 → blank background + imagination prompt shown
+---
 
-### After Phase 3
-```bash
-./gradlew testDebugUnitTest
-./gradlew check
+## 17. Content Pipeline (Phase 0 — Complete)
+
+**Python script directory:** `scripts/tat-picture-pipeline/`
+
+| Step | Script | Purpose |
+|------|--------|---------|
+| — | _(Claude multimodal session)_ | Read all 167 PNGs, extract embedded description text, generate `TATImageContext` per image |
+| — | _(HTML preview gate)_ | `preview.html` — each image + full context + cardPosition + genderTag; red flags on invalid OLQ names or uneven position distribution |
+| 1 | `step1_upload.py` | Reads 167 PNGs + `tat_image_contexts.json`; derives gender from filename; uploads to Firebase Storage + writes Firestore `batch_001` (idempotent, bumps `version`) |
+
+**Phase 0 results:**
+
+| Item | Value |
+|------|-------|
+| Images uploaded | 167/167 (0 errors) |
+| Storage path | `tat_images/batch_001/tat_NNN_gender.jpg` |
+| Firestore | `test_content/tat/image_batches/batch_001` — 167 images, v1.0.1 |
+| Card positions | 14–16 per position, ≥ 9 FEMALE+MIXED per position |
+| Gender pool | MALE: 65, FEMALE: 39, MIXED: 63 |
+
+**Gender ID convention:**
+
+| Filename suffix | GenderTag | Notes |
+|----------------|-----------|-------|
+| `{N}Men.png` | MALE | Male-specific scenario |
+| `{N}Women.png` | FEMALE | Female-specific scenario |
+| `{N}Mixed.png` | MIXED | Gender-neutral — available to all |
+
+**Checklist before re-running `step1_upload.py`:**
+- [ ] Bump `version` field in script: e.g., `"1.0.1"` → `"1.0.2"`
+- [ ] Run with `--dry-run` first, verify log output
+- [ ] After upload, confirm new version is live in Firestore console
+- [ ] App will auto-invalidate Room cache within 24 h of TTL expiry (no app release needed)
+
+---
+
+## 18. Data Flow Diagram (End-to-End)
+
 ```
-Manual checks:
-- TAT and PPDT result screens both use shared `OLQResultContent` composable
-- WAT/SRT/SD results show correct rating bands (≤5.5 = Exceptional, etc.)
+[StudentHomeScreen]
+     │ tap TAT
+     ▼
+[TATTestViewModel.loadTest()]
+     ├─ [1] checkSubscriptionEligibility()
+     ├─ [2] LoadTATTestUseCase → resolveGenderTag(userId)
+     │         ├─ profile null → isProfileIncomplete=true → TATProfileRequiredDialog → stop
+     │         ├─ MALE/FEMALE → gender-filtered image pool
+     │         └─ OTHER / error → full pool
+     └─ [3] TATImageCacheManager.getImagesForTest(genderTag)
+                 → 11 position-based images (least-used, gender-filtered) + 1 blank card
+     │
+     │ 12 TATQuestions in UiState
+     ▼
+[Per-card loop: cards 1–12]
+[TATImageViewingPhase] ──Coil AsyncImage──► Firebase Storage
+     │ 30 s timer
+     ▼
+[TATWritingPhase] ──story text──► UiState
+     │ 4 min timer / user Review
+     ▼
+[TATReviewPhase]
+     │ confirmCurrentStory() → saveCurrentStoryToResponses()
+     │                       → if card 12: allow submitTest()
+     ▼
+[TATTestViewModel.submitTest()]
+     │
+     ├──► Firestore: submissions/{id} (data.stories + analysisStatus absent initially)
+     ├──► SubscriptionManager: increment tatTestsUsed
+     └──► WorkManager: WorkContinuation.combine(N story workers).then(synthesis worker)
+                                   │
+     │                             │ (background, parallel)
+     │                  [TATStoryAnalysisWorker × N]
+     │                        ├─ Fetch submission from Firestore
+     │                        ├─ Find story by questionId
+     │                        ├─ Fetch TATQuestion (imageUrl + imageContextJson) from cache
+     │                        ├─ Download image bytes (best-effort)
+     │                        ├─ generateTATStoryMultimodalPrompt(story, imageContext, gender, index)
+     │                        ├─ GeminiAIService.analyzeTATStoryMultimodal → gemini-2.5-flash
+     │                        ├─ On AI success: insert TATStoryAssessmentEntity into Room
+     │                        └─ On AI failure: insert FAILED placeholder → return Result.success()
+     │                             (NEVER returns Result.failure() — ensures synthesis always runs)
+     │
+     │                  [TATSynthesisWorker × 1, after ALL story workers]
+     │                        ├─ Read all TATStoryAssessmentEntity from Room
+     │                        ├─ Filter out FAILED placeholders → validAssessments
+     │                        ├─ If validAssessments < 6 → FAILED
+     │                        ├─ Update Firestore: data.analysisStatus → ANALYZING
+     │                        ├─ TATSynthesisPrompts.buildPrompt(validAssessments)
+     │                        ├─ GeminiAIService.analyzeTATResponse(prompt)
+     │                        ├─ ValidationIntegration.validateScores(olqScores, entryType)
+     │                        ├─ Firestore batch write:
+     │                        │     psych_results/{id}     ← OLQAnalysisResult (with userId)
+     │                        │     data.analysisStatus    ← COMPLETED
+     │                        └─ Invalidate dashboard cache + push notification
+     │
+     ▼
+[TATSubmissionResultScreen]
+     │ observeSubmission() real-time listener
+     ├─ analysisStatus == PENDING/ANALYZING: show loading
+     └─ analysisStatus == COMPLETED:
+           getTATResult(submissionId) ──► psych_results/{id}
+           Display OLQ scores, rating, strengths, weaknesses, per-OLQ reasoning
+
+[StudentHomeScreen → OLQDashboardCard]
+     │ GetOLQDashboardUseCase (5-min cache, 6-s per-type timeout)
+     └── Phase1Results.tatOLQResult ──► unified OLQ dashboard
+```
+
+---
+
+## 19. Known Issues & Improvement Areas
+
+| # | Area | Issue / Improvement | Status |
+|---|------|---------------------|--------|
+| 1 | Image download in story worker | `URL(imageUrl).openConnection()` with manual timeout. Should use OkHttp/Ktor for proper timeout + retry. Analysis proceeds with `ByteArray(0)` if download fails (graceful degradation). | Deferred |
+| 2 | `getTATQuestions()` ignores `testId` | `TestContentRepository.getTATQuestions(testId)` ignores `testId` and draws a fresh random 12 from the pool. Workers calling this get a DIFFERENT random 12 than what the user saw — correct question is often not found by ID, falls back to empty imageUrl/imageContext. Degrades analysis quality. Fix: store the selected 12 question IDs in the submission doc and have the worker read them from there instead of re-querying. | Deferred |
+| 3 | OLQ Reasoning in result screen | `TATSubmissionResultScreen` doesn't yet render expandable per-OLQ reasoning cards (unlike PPDT which has `PPDTOLQReasoningCard`). When added, move the pattern into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
+| 4 | `analysisStatus` absent on fresh submission | `TATSubmission.toFirestoreMap()` deliberately omits `analysisStatus`. It is created by `updateTATAnalysisStatus()` on first worker write. The result screen handles this correctly (defaults to `PENDING_ANALYSIS`). Intentional but worth documenting. | Intentional design |
+| 5 | `MIN_STORY_THRESHOLD = 6` hardcoded | Synthesis proceeds if ≥ 6 of 12 stories succeed. If the user wrote only 6 stories total and all fail AI analysis, synthesis is skipped. Consider making the threshold dynamic (e.g., `max(6, stories.size / 2)`). | Deferred |
+
+---
+
+## 20. Phase Implementation History
+
+| Phase | What | Commit | Status |
+|-------|------|--------|--------|
+| 0 | Content pipeline — 167 images extracted, gender-tagged, TATImageContext generated, uploaded to Firebase | `95c6e12` | ✅ Done |
+| 1 | 8 bug fixes (B1-B7) + LoadTATTestUseCase extraction + TATTestUiState to own file | `86c78bf` | ✅ Done |
+| 2 | Progressive architecture + image infrastructure (flat pool, cardPosition, genderTag, Room migration, 24h TTL) | `c5b0281` | ✅ Done |
+| 3 | Profile gate + TATSynthesisPrompts + TATSynthesisWorker + TATStoryAnalysisWorker + BaseTestViewModel | `eeb7105` | ✅ Done |
+
+**Bug fixes (post-Phase 3):**
+
+| Fix | What | Status |
+|-----|------|--------|
+| Synthesis chain never ran | `TATStoryAnalysisWorker` returned `Result.failure()` on AI failure → `WorkContinuation.combine()` blocked synthesis. Fix: save FAILED placeholder to Room, return `Result.success()` | ✅ Fixed June 2026 |
 
 ---
 
@@ -864,7 +776,8 @@ Manual checks:
 app/src/main/kotlin/com/ssbmax/
 ├── ui/tests/tat/
 │   ├── TATTestScreen.kt
-│   ├── TATTestViewModel.kt           ← 677 lines (over 300 limit — Phase 1 extract)
+│   ├── TATTestViewModel.kt
+│   ├── TATTestUiState.kt
 │   ├── TATSubmissionResultScreen.kt
 │   └── TATSubmissionResultViewModel.kt
 │   └── components/
@@ -876,33 +789,40 @@ app/src/main/kotlin/com/ssbmax/
 │           ├── TATWritingPhase.kt
 │           └── TATReviewPhase.kt
 └── workers/
-    └── TATAnalysisWorker.kt          ← current analysis worker (kept as fallback)
+    ├── TATStoryAnalysisWorker.kt   ← per-story multimodal (parallel)
+    └── TATSynthesisWorker.kt       ← holistic synthesis (chained after all story workers)
 
 core/domain/src/main/kotlin/com/ssbmax/core/domain/
 ├── model/
-│   └── TATTest.kt                    ← TATQuestion, TATSubmission, TATPhase, TATTestConfig
+│   └── TATTest.kt                  ← TATQuestion, TATSubmission, TATPhase, TATTestConfig
 ├── repository/
-│   └── SubmissionRepository.kt       ← getTATSubmission(), updateTATAnalysisStatus()
-└── usecase/submission/
-    └── SubmitTATTestUseCase.kt
+│   └── SubmissionRepository.kt     ← getTATSubmission(), updateTATAnalysisStatus(), updateTATOLQResult()
+└── usecase/
+    ├── tat/LoadTATTestUseCase.kt
+    └── submission/SubmitTATTestUseCase.kt
 
 core/data/src/main/kotlin/com/ssbmax/core/data/
-├── repository/
-│   └── TATImageCacheManager.kt       ← image cache (Phase 2: major rewrite)
+├── repository/TATImageCacheManager.kt
+├── remote/TATSubmissionRepository.kt
 ├── local/
 │   ├── entity/
-│   │   └── CachedTATImageEntity.kt   ← Phase 2: add cardPosition, imageContextJson, genderTag
+│   │   ├── CachedTATImageEntity.kt
+│   │   ├── TATBatchMetadataEntity.kt
+│   │   └── TATStoryAssessmentEntity.kt   ← Room bridge: per-story → synthesis
 │   └── dao/
-│       └── TATImageCacheDao.kt       ← Phase 2: add getLeastUsedImageByPosition()
-└── ai/prompts/
-    └── PsychologyTestPrompts.kt      ← generateTATAnalysisPrompt() lives here
+│       ├── TATImageCacheDao.kt
+│       └── TATStoryAssessmentDao.kt
+└── ai/
+    ├── GeminiTATStoryAnalyzer.kt
+    └── prompts/
+        ├── TATStoryAnalysisPrompts.kt
+        └── TATSynthesisPrompts.kt
+
+scripts/tat-picture-pipeline/
+├── tat_image_contexts.json          ← 167 TATImageContext records (generated Phase 0)
+├── preview.html                     ← HTML preview gate (reviewed Phase 0)
+└── step1_upload.py                  ← upload 167 images to Firebase Storage + Firestore
 
 docs/architecture/
-└── TAT_Pipeline.md                   ← this file
-
-scripts/tat-picture-pipeline/         ← Phase 0 (to be created)
-├── tat_image_contexts.json
-├── gender_map.json
-├── preview.html
-└── step2_upload.py
+└── TAT_Pipeline.md                  ← this file
 ```

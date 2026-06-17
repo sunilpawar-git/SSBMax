@@ -379,10 +379,19 @@ class TATTestViewModel @Inject constructor(
         submissionId: String,
         stories: List<com.ssbmax.core.domain.model.TATStoryResponse>
     ) {
+        android.util.Log.d("TATTestViewModel", "📋 enqueueSynthesisChain called with ${stories.size} stories")
+
+        if (stories.isEmpty()) {
+            android.util.Log.e("TATTestViewModel", "❌ No stories to analyze — skipping synthesis chain")
+            return
+        }
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
+
         val storyRequests = stories.mapIndexed { index, story ->
+            android.util.Log.d("TATTestViewModel", "   Building work request for story $index: ${story.questionId}")
             OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
                 .setInputData(
                     workDataOf(
@@ -394,13 +403,24 @@ class TATTestViewModel @Inject constructor(
                 .setConstraints(constraints)
                 .build()
         }
+
+        android.util.Log.d("TATTestViewModel", "📦 Built ${storyRequests.size} story work requests")
+
         val synthesisRequest = OneTimeWorkRequestBuilder<TATSynthesisWorker>()
             .setInputData(workDataOf(TATSynthesisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints)
             .build()
-        WorkContinuation.combine(storyRequests.map { workManager.beginWith(it) })
+
+        android.util.Log.d("TATTestViewModel", "🔗 Combining ${storyRequests.size} story workers + synthesis worker")
+
+        val continuations = storyRequests.map { workManager.beginWith(it) }
+        android.util.Log.d("TATTestViewModel", "🔗 Created ${continuations.size} continuations")
+
+        WorkContinuation.combine(continuations)
             .then(synthesisRequest)
             .enqueue()
+
+        android.util.Log.d("TATTestViewModel", "✅ Synthesis chain enqueued successfully")
     }
 
     override fun onCleared() {

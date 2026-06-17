@@ -50,6 +50,7 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         const val KEY_SUBMISSION_ID = "submission_id"
         const val KEY_QUESTION_ID = "question_id"
         const val KEY_STORY_INDEX = "story_index"
+        const val FAILED_MARKER = "FAILED"
         private const val TAG = "TATStoryAnalysisWorker"
         private const val MAX_AI_RETRIES = 3
         private const val RETRY_DELAY_MS = 2000L
@@ -78,10 +79,19 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         Log.d(TAG, "🔄 Starting per-story TAT analysis: submission=$submissionId, story=$storyIndex")
 
         val submission = submissionRepository.getTATSubmission(submissionId).getOrNull()
-            ?: return Result.failure().also { Log.e(TAG, "❌ TAT submission not found: $submissionId") }
+            ?: run {
+                // Transient Firestore read failure — retry so WorkManager retries the worker
+                Log.e(TAG, "❌ TAT submission not found: $submissionId (will retry)")
+                throw IllegalStateException("TAT submission not found: $submissionId")
+            }
 
         val storyResponse = submission.stories.find { it.questionId == questionId }
-            ?: return Result.failure().also { Log.e(TAG, "❌ Story not found: questionId=$questionId") }
+        if (storyResponse == null) {
+            // Story ID mismatch — data issue, retry won't help. Save placeholder so chain continues.
+            Log.e(TAG, "❌ Story not found: questionId=$questionId — saving placeholder, not blocking chain")
+            saveFailedPlaceholder(submissionId, questionId, storyIndex, "", "")
+            return Result.success()
+        }
 
         val questions = testContentRepository.getTATQuestions(submission.testId).getOrNull() ?: emptyList()
         val tatQuestion = questions.find { it.id == questionId }
@@ -99,8 +109,12 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
             candidateGender = candidateGender,
             storyIndex = storyIndex,
             totalStories = submission.stories.size
-        ) ?: return Result.failure().also {
-            Log.e(TAG, "❌ Per-story AI analysis failed after $MAX_AI_RETRIES retries")
+        )
+        if (olqScores == null) {
+            // AI analysis exhausted retries. Save placeholder so synthesis can still run.
+            Log.e(TAG, "❌ Per-story AI analysis failed after $MAX_AI_RETRIES retries — saving placeholder, not blocking chain")
+            saveFailedPlaceholder(submissionId, questionId, storyIndex, storyResponse.story, imageUrl)
+            return Result.success()
         }
 
         Log.d(TAG, "   Step 2: AI analysis complete — ${olqScores.size}/15 OLQs")
@@ -158,6 +172,34 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         } catch (e: Exception) {
             ErrorLogger.log(e, "Failed to fetch user profile for TAT story analysis — defaulting")
             "Unknown"
+        }
+    }
+
+    private suspend fun saveFailedPlaceholder(
+        submissionId: String,
+        questionId: String,
+        storyIndex: Int,
+        story: String,
+        imageUrl: String
+    ) {
+        try {
+            tatStoryAssessmentDao.insert(
+                TATStoryAssessmentEntity(
+                    id = UUID.randomUUID().toString(),
+                    submissionId = submissionId,
+                    questionId = questionId,
+                    storyIndex = storyIndex,
+                    story = story,
+                    imageUrl = imageUrl,
+                    olqScoresJson = "[]",
+                    overallScore = 0f,
+                    overallRating = FAILED_MARKER,
+                    aiConfidence = 0,
+                    analyzedAt = System.currentTimeMillis()
+                )
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to save placeholder for story $storyIndex: ${e.message}")
         }
     }
 
