@@ -128,6 +128,7 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("androidx.test:core:1.5.0")
     testImplementation(libs.room.testing)
+    testImplementation("org.json:json:20231013")
     
     // Android instrumented tests (integration tests with Firebase Emulator)
     androidTestImplementation(libs.androidx.junit)

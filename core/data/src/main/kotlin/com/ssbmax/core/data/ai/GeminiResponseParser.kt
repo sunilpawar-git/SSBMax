@@ -168,6 +168,13 @@ internal object GeminiResponseParser {
         return when {
             "```json" in responseText -> responseText.substringAfter("```json").substringBefore("```").trim()
             "```" in responseText -> responseText.substringAfter("```").substringBefore("```").trim()
+            // Array format: [ comes before { (e.g. [{olq,score,...},...])
+            "[" in responseText && "]" in responseText &&
+                responseText.indexOf('[') < (responseText.indexOf('{').takeIf { it >= 0 } ?: Int.MAX_VALUE) -> {
+                val start = responseText.indexOf('[')
+                val end = responseText.lastIndexOf(']') + 1
+                responseText.substring(start, end).trim()
+            }
             "{" in responseText && "}" in responseText -> {
                 val start = responseText.indexOf('{')
                 val end = responseText.lastIndexOf('}') + 1
