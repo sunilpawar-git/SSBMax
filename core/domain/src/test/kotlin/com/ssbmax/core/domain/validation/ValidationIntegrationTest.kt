@@ -165,17 +165,17 @@ class ValidationIntegrationTest {
     // ===========================================
 
     @Test
-    fun `validateScores returns BORDERLINE for close cases`() {
+    fun `validateScores returns NOT_RECOMMENDED for any limitations`() {
+        // R14: any limitation = NOT_RECOMMENDED (supersedes old entry-type-based borderline logic)
         val scores = createScoresMap(allScore = 5).toMutableMap()
-        // 3-4 limitations for NDA (max 4) is borderline
         scores[OLQ.EFFECTIVE_INTELLIGENCE] = OLQScore(8, 80, "Poor")
         scores[OLQ.DETERMINATION] = OLQScore(8, 80, "Poor")
         scores[OLQ.STAMINA] = OLQScore(8, 80, "Poor")
-        
+
         val result = ValidationIntegration.validateScores(scores, EntryType.NDA)
-        
-        assertEquals("3 limitations for NDA should be borderline", 
-            RecommendationOutcome.BORDERLINE, result.recommendation)
+
+        assertEquals("Any limitation must yield NOT_RECOMMENDED (R14)",
+            RecommendationOutcome.NOT_RECOMMENDED, result.recommendation)
     }
 
     // ===========================================

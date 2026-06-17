@@ -30,9 +30,19 @@ object TATSynthesisPrompts {
         appendLine()
         appendLine("=== SCORING RULES ===")
         appendLine("- Weight later stories slightly more (recency effect).")
+        appendLine("- Blank card story carries 1.5× weight in synthesis (§13 — blank card penalises avoidance).")
         appendLine("- Consistent patterns are more reliable than single-story outliers.")
         appendLine("- A single exceptional story cannot compensate for a generally poor performance.")
         appendLine("- Use SSB scale: 5=Very Good (best), 6=Good, 7=Average, 8=Poor, 9=Fail.")
+        appendLine()
+        appendLine("=== OLQ CORRELATION CONSTRAINTS ===")
+        appendLine("- EI score generally ≥ RA score; Effective Intelligence anchors Reasoning Ability.")
+        appendLine("- Factor III (INI/SC/SOD/AIG/LIV) average ≤ Factor I (EI/RA/OA/POE) average.")
+        appendLine("- SC anchors INI, SOD, AIG — large divergence between SC and these OLQs is implausible.")
+        appendLine()
+        appendLine("=== REJECTION FLAG ===")
+        appendLine("- If ANY synthesised OLQ score is ≥ 8 (Poor), set notRecommended: true.")
+        appendLine("- A single score of 8 indicates a character flaw too significant to overlook.")
         appendLine()
         appendLine("=== ALL 15 OLQs (mandatory) ===")
         appendLine(
@@ -46,12 +56,12 @@ object TATSynthesisPrompts {
         appendLine("2. olqScores is a JSON OBJECT keyed by OLQ name (not an array).")
         appendLine("3. ALL 15 OLQs MUST appear as keys inside olqScores.")
         appendLine("4. Each value: { \"score\": int 5-9, \"confidence\": int 0-100, \"reasoning\": string }.")
-        appendLine("5. overallConfidence (int 0-100) at the top level.")
+        appendLine("5. overallConfidence (int 0-100) and notRecommended (bool) at the top level.")
         appendLine("6. Response MUST start with { and end with }.")
         appendLine()
         appendLine("=== EXACT FORMAT (copy this structure) ===")
         appendLine(
-            "{\"olqScores\":{\"EFFECTIVE_INTELLIGENCE\":{\"score\":7,\"confidence\":80,\"reasoning\":\"...\"}," +
+            "{\"notRecommended\":false,\"olqScores\":{\"EFFECTIVE_INTELLIGENCE\":{\"score\":7,\"confidence\":80,\"reasoning\":\"...\"}," +
                 "\"REASONING_ABILITY\":{\"score\":6,\"confidence\":75,\"reasoning\":\"...\"}," +
                 "\"... all 15 OLQs ...\"},\"overallConfidence\":78}"
         )

@@ -52,12 +52,14 @@ internal object GeminiResponseParser {
             val avgConfidence = olqScoresJson.keys().asSequence()
                 .mapNotNull { olqScoresJson.optJSONObject(it)?.optInt("confidence") }
                 .average().toInt().coerceIn(0, 100)
+            val notRecommended = json.optBoolean("notRecommended", false)
             Result.success(
                 ResponseAnalysis(
                     olqScores = olqScores,
                     overallConfidence = avgConfidence,
                     keyInsights = emptyList(),
-                    suggestedFollowUp = null
+                    suggestedFollowUp = null,
+                    notRecommended = notRecommended
                 )
             )
         } catch (e: Exception) {
