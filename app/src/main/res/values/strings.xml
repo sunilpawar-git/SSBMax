@@ -635,8 +635,11 @@
     <!-- ============================================ -->
     <string name="tat_test">TAT Test</string>
     <string name="tat_picture_number">Picture %1$d/12</string>
-
     <string name="tat_loading">Loading TAT test images from cloud...</string>
+    <string name="tat_viewing_picture">Viewing Picture %1$d</string>
+    <string name="tat_observe_carefully">Observe carefully</string>
+    <string name="tat_picture_content_description">TAT Picture %1$d</string>
+    <string name="tat_blank_slide_instruction">Blank Slide\n(Use your imagination)</string>
 
     <!-- ============================================ -->
     <!-- OIR TEST SCREEN - DETAILED STRINGS -->

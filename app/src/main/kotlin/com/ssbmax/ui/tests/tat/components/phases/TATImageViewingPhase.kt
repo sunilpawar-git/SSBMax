@@ -12,16 +12,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.ssbmax.R
 
 /**
  * TAT Image Viewing Phase
  * Shows the image for 30 seconds (or blank slide for #12)
+ *
+ * Fixed: Image card uses aspectRatio(4f/3f) instead of weight(1f) to prevent blank space bands.
+ * ContentScale.Crop fills card without letterboxing.
  */
 @Composable
 fun TATImageViewingPhase(
@@ -32,7 +38,8 @@ fun TATImageViewingPhase(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .testTag("tat_image_viewing_column"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Card(
@@ -50,12 +57,12 @@ fun TATImageViewingPhase(
             ) {
                 Column {
                     Text(
-                        "Viewing Picture $sequenceNumber",
+                        stringResource(R.string.tat_viewing_picture),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        "Observe carefully",
+                        stringResource(R.string.tat_observe_carefully),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -79,65 +86,16 @@ fun TATImageViewingPhase(
             }
         }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            // Check if this is the 12th image (blank slide for imagination test)
-            if (sequenceNumber == 12) {
-                // Show blank white box for imagination test
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Blank Slide\n(Use your imagination)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray.copy(alpha = 0.3f),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                // Existing image loading code for regular TAT images (1-11)
-                val context = LocalContext.current
-
-                // CRITICAL FIX: Create stable ImageRequest with remember(imageUrl)
-                // This ensures the request is ONLY recreated when imageUrl changes
-                val imageRequest = remember(imageUrl) {
-                    android.util.Log.d("TATTestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
-                    ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .listener(
-                            onStart = {
-                                android.util.Log.d("TATTestScreen", "🖼️ Coil: Loading started")
-                            },
-                            onSuccess = { _, _ ->
-                                android.util.Log.d("TATTestScreen", "✅ Coil: Image loaded successfully!")
-                            },
-                            onError = { _, result ->
-                                android.util.Log.e("TATTestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
-                            }
-                        )
-                        .build()
-                }
-
-                // AsyncImage with stable model - won't restart on recomposition
-                AsyncImage(
-                    model = imageRequest,
-                    contentDescription = "TAT Picture $sequenceNumber",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
-                )
-            }
+        // Image card with fixed aspectRatio(4f/3f) — prevents blank space bands
+        if (sequenceNumber == 12) {
+            TATBlankSlideCard()
+        } else {
+            TATImageCard(imageUrl = imageUrl, sequenceNumber = sequenceNumber)
         }
 
-        // Full-width timer progress bar (matches PPDT implementation)
+        Spacer(Modifier.weight(1f))
+
+        // Full-width timer progress bar at bottom
         LinearProgressIndicator(
             progress = { timeRemaining / 30f },
             modifier = Modifier.fillMaxWidth(),
@@ -147,5 +105,67 @@ fun TATImageViewingPhase(
                 MaterialTheme.colorScheme.primary
             }
         )
+    }
+}
+
+/**
+ * TAT Image Card — displays picture with fixed 4:3 aspect ratio
+ * ContentScale.Crop fills card without letterboxing (blank bands)
+ */
+@Composable
+private fun TATImageCard(imageUrl: String, sequenceNumber: Int) {
+    val context = LocalContext.current
+    val imageRequest = remember(imageUrl) {
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(true)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .build()
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(4f / 3f)
+            .testTag("tat_image_card"),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = stringResource(R.string.tat_picture_content_description, sequenceNumber),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+}
+
+/**
+ * TAT Blank Slide Card (Picture #12) — imagination test
+ */
+@Composable
+private fun TATBlankSlideCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(4f / 3f)
+            .testTag("tat_blank_slide_card"),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.tat_blank_slide_instruction),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray.copy(alpha = 0.3f),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
