@@ -42,12 +42,19 @@ object TATSynthesisPrompts {
         )
         appendLine()
         appendLine("=== CRITICAL INSTRUCTIONS ===")
-        appendLine("1. Return ONLY a single JSON object.")
-        appendLine("2. NO markdown code blocks (no backtick markers).")
-        appendLine("3. ALL 15 OLQs MUST be present inside olqScores.")
-        appendLine("4. Each OLQ entry: { score (int 5-9), confidence (int 0-100), reasoning (string) }.")
-        appendLine("5. Include overallConfidence (int 0-100) at the top level.")
+        appendLine("1. Return ONLY a single JSON object — NO arrays, NO markdown, NO extra text.")
+        appendLine("2. olqScores is a JSON OBJECT keyed by OLQ name (not an array).")
+        appendLine("3. ALL 15 OLQs MUST appear as keys inside olqScores.")
+        appendLine("4. Each value: { \"score\": int 5-9, \"confidence\": int 0-100, \"reasoning\": string }.")
+        appendLine("5. overallConfidence (int 0-100) at the top level.")
         appendLine("6. Response MUST start with { and end with }.")
+        appendLine()
+        appendLine("=== EXACT FORMAT (copy this structure) ===")
+        appendLine(
+            "{\"olqScores\":{\"EFFECTIVE_INTELLIGENCE\":{\"score\":7,\"confidence\":80,\"reasoning\":\"...\"}," +
+                "\"REASONING_ABILITY\":{\"score\":6,\"confidence\":75,\"reasoning\":\"...\"}," +
+                "\"... all 15 OLQs ...\"},\"overallConfidence\":78}"
+        )
     }
 
     private fun compactOlqScores(olqScoresJson: String): String {

@@ -21,6 +21,11 @@ internal object GeminiResponseParser {
                 return Result.failure(IllegalStateException("Empty response from Gemini"))
             }
             val cleanJson = extractJsonFromResponse(jsonText)
+            // Array format: Gemini sometimes returns [{olq, score, confidence, reasoning}, ...]
+            // instead of the canonical {olqScores: {OLQ_KEY: {score, confidence, reasoning}}}
+            if (cleanJson.trimStart().startsWith("[")) {
+                return parseGTOArrayFormat(cleanJson)
+            }
             val json = JSONObject(cleanJson)
             val olqScoresJson = json.getJSONObject("olqScores")
             val olqScores = mutableMapOf<OLQ, OLQScoreWithReasoning>()
@@ -57,6 +62,46 @@ internal object GeminiResponseParser {
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse GTO analysis response", e)
+            Result.failure(e)
+        }
+    }
+
+    private fun parseGTOArrayFormat(cleanJson: String): Result<ResponseAnalysis> {
+        return try {
+            val arr = JSONArray(cleanJson)
+            val olqScores = mutableMapOf<OLQ, OLQScoreWithReasoning>()
+            for (i in 0 until arr.length()) {
+                val item = arr.getJSONObject(i)
+                val olqKey = item.optString("olq")
+                val olq = OLQ.entries.find {
+                    it.name.equals(olqKey, ignoreCase = true) ||
+                        it.displayName.equals(olqKey, ignoreCase = true)
+                }
+                if (olq != null) {
+                    olqScores[olq] = OLQScoreWithReasoning(
+                        olq = olq,
+                        score = item.optDouble("score", 6.0).toFloat(),
+                        reasoning = item.optString("reasoning", ""),
+                        evidence = emptyList()
+                    )
+                }
+            }
+            if (olqScores.isEmpty()) {
+                return Result.failure(IllegalStateException("No OLQ scores parsed from array response"))
+            }
+            val avgConfidence = (0 until arr.length())
+                .mapNotNull { arr.optJSONObject(it)?.optInt("confidence") }
+                .average().toInt().coerceIn(0, 100)
+            Result.success(
+                ResponseAnalysis(
+                    olqScores = olqScores,
+                    overallConfidence = avgConfidence,
+                    keyInsights = emptyList(),
+                    suggestedFollowUp = null
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse GTO array format response", e)
             Result.failure(e)
         }
     }
