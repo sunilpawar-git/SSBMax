@@ -1,6 +1,6 @@
 # TAT Pipeline Architecture
 
-**Last updated:** June 2026 (Phase 3 complete + imageBytes=0 multimodal fix)
+**Last updated:** June 17, 2026 (Phase 3 complete + parser array format fix + notification permission fix)
 **Status:** Living document — update when fixing bugs, improving flow, or adding features.
 
 Thematic Apperception Test (TAT) is a Phase 1 psychology test in SSBMax. The candidate is shown 11 picture cards (one at a time, 30 s each) and a blank card (card 12), then writes a 4-minute story for each. All 12 stories are evaluated by Gemini AI — each story individually via a per-story multimodal worker, then synthesized holistically — against 15 Officer-Like Qualities (OLQs), feeding the unified OLQ dashboard.
@@ -435,6 +435,13 @@ Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
 
 **Compact format (critical for token budget):** Per-story OLQ data is stripped to scores only via `compactOlqScores()` — `DETERMINATION:6, COURAGE:7, ...` (~180 chars/story) instead of the full reasoning JSON (~3000 chars/story). Story text is capped at 200 chars. This keeps the total prompt to ~8.4K chars, well within the 16384-token output budget of `synthesisModel`.
 
+**Prompt schema hardening (commit `230ffb1`):** Synthesis prompt now includes an explicit critical instructions section and a full JSON skeleton example. Key constraints enforced in the prompt:
+- `olqScores` MUST be a JSON object keyed by OLQ name — NOT an array
+- All 15 OLQs are mandatory keys
+- Response MUST start with `{` and end with `}`
+
+**Response format fallback (commit `d39bfab`):** Gemini occasionally returns a flat array `[{"olq":"EFFECTIVE_INTELLIGENCE","score":7,...}]` despite the prompt, instead of the canonical `{"olqScores":{...}}` object. `GeminiResponseParser.parseGTOAnalysisResponse()` now detects this (`cleanJson.trimStart().startsWith("[")`) and dispatches to `parseGTOArrayFormat()` (`GeminiResponseParser.kt:69–107`). A secondary bug in `extractJsonFromResponse()` was also fixed: it previously found the first `{` and last `}`, stripping the `[` and `]` from array responses before the array check could fire. Fixed by checking `indexOf('[') < indexOf('{')` first. Two regression tests in `core/data/src/test/.../GeminiResponseParserTest.kt` guard both parsing paths.
+
 **Token budget — Gemini model tiers** (`GeminiAIService.kt`):
 
 | Tier | Model instance | `maxOutputTokens` | Timeout | Used for |
@@ -784,6 +791,8 @@ Run all TAT-relevant tests:
 | Synthesis always failed (`MAX_TOKENS`) | `TATSynthesisPrompts.buildPrompt()` embedded full `olqScoresJson` per story (~3000 chars/story × 12 = ~36K chars). `gemini-2.5-flash` uses 5–8K thinking tokens before writing the response; combined output exceeded `MAX_TOKENS=8192`. Fix: (1) `compactOlqScores()` strips reasoning, sends `OLQ:score` pairs only (~180 chars/story); (2) story text capped at 200 chars. Total prompt: ~8.4K chars. (3) `synthesisModel` uses `maxOutputTokens=16384`, 120s timeout (Tier 3). | ✅ Fixed June 2026 |
 | Token budget — all Gemini calls | Added three-tier model config in `GeminiAIService`: Tier 1 (8192), Tier 2 (12288), Tier 3 (16384). Prevents `MAX_TOKENS` failures for SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript), and Interview feedback (full transcript). | ✅ Fixed June 2026 |
 | imageBytes=0 — all 12 stories got text-only analysis | `TATStoryAnalysisWorker` called `TestContentRepository.getTATQuestions()` to recover `imageUrl`. That method ignores `testId` and returns a fresh random 12, so `questions.find { it.id == questionId }` always returned `null` → `imageUrl=""` → `ByteArray(0)`. Fix: `TATTestViewModel.enqueueSynthesisChain()` now bundles `KEY_IMAGE_URL` + `KEY_IMAGE_CONTEXT_JSON` per worker from `state.questions` (the exact set the user saw). Worker removed `TestContentRepository` dependency entirely. | ✅ Fixed June 2026 |
+| Synthesis failed all 3 retries — `JSONException: Value [...] cannot be converted to JSONObject` | `GeminiResponseParser.parseGTOAnalysisResponse()` called `JSONObject(cleanJson)` and only handled the `{"olqScores":{...}}` object format. Gemini returned a flat array `[{olq, score, confidence, reasoning}]`. Fix: (1) prompt hardened with explicit JSON schema example and "NO arrays" constraint; (2) parser now detects array format and dispatches to `parseGTOArrayFormat()`; (3) `extractJsonFromResponse()` fixed to preserve `[` `]` brackets when array starts before `{`. | ✅ Fixed June 17, 2026 (`230ffb1`, `d39bfab`) |
+| `POST_NOTIFICATIONS` permission not requested for psychology tests | Permission was only requested in `StartInterviewScreen`. TAT/WAT/SRT/SDT/PPDT workers post local notifications on completion, but Android 13+ silently drops them without the runtime permission. Users who never visited Interview setup never got prompted. Fix: centralized permission request in `StudentHomeScreen` `LaunchedEffect(Unit)` — fires once on home load, covers all test types. | ✅ Fixed June 17, 2026 (`cf785a2`) |
 
 ---
 
