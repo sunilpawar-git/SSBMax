@@ -57,7 +57,7 @@ fun TATImageViewingPhase(
             ) {
                 Column {
                     Text(
-                        stringResource(R.string.tat_viewing_picture),
+                        stringResource(R.string.tat_image_number, sequenceNumber, 12),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
