@@ -88,6 +88,7 @@ class TATSynthesisWorker @AssistedInject constructor(
         submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
 
         val prompt = TATSynthesisPrompts.buildPrompt(validAssessments)
+        Log.d(TAG, "   Synthesis prompt length: ${prompt.length} chars")
         val olqScores = analyzeWithRetry(prompt) ?: run {
             Log.e(TAG, "❌ AI synthesis failed after $MAX_AI_RETRIES retries")
             handleFailure(submissionId)
@@ -174,9 +175,11 @@ class TATSynthesisWorker @AssistedInject constructor(
                     } else {
                         Log.w(TAG, "   ⚠️ AI returned only ${olqScores.size}/15 OLQs — retrying")
                     }
+                } else {
+                    Log.e(TAG, "   ❌ AI returned failure: ${result.exceptionOrNull()?.message}")
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "   ❌ AI call failed: ${e.message}")
+                Log.e(TAG, "   ❌ AI call threw exception: ${e.message}")
             }
             if (attempt < MAX_AI_RETRIES - 1) delay(RETRY_DELAY_MS * (attempt + 1))
         }

@@ -1,6 +1,7 @@
 package com.ssbmax.core.data.ai.prompts
 
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
+import org.json.JSONArray
 
 object TATSynthesisPrompts {
 
@@ -16,8 +17,8 @@ object TATSynthesisPrompts {
                 "--- Story ${a.storyIndex + 1} | score: ${a.overallScore}" +
                     " | rating: ${a.overallRating} | confidence: ${a.aiConfidence}% ---"
             )
-            appendLine("Text: ${a.story.take(300)}${if (a.story.length > 300) "..." else ""}")
-            appendLine("Per-story OLQ scores: ${a.olqScoresJson}")
+            appendLine("Text: ${a.story.take(200)}${if (a.story.length > 200) "..." else ""}")
+            appendLine("OLQ scores: ${compactOlqScores(a.olqScoresJson)}")
         }
         appendLine()
         appendLine("=== SYNTHESIS TASK ===")
@@ -47,5 +48,17 @@ object TATSynthesisPrompts {
         appendLine("4. Each OLQ entry: { score (int 5-9), confidence (int 0-100), reasoning (string) }.")
         appendLine("5. Include overallConfidence (int 0-100) at the top level.")
         appendLine("6. Response MUST start with { and end with }.")
+    }
+
+    private fun compactOlqScores(olqScoresJson: String): String {
+        return try {
+            val arr = JSONArray(olqScoresJson)
+            (0 until arr.length()).joinToString(", ") { i ->
+                val obj = arr.getJSONObject(i)
+                "${obj.getString("olq")}:${obj.getInt("score")}"
+            }
+        } catch (e: Exception) {
+            olqScoresJson.take(100)
+        }
     }
 }
