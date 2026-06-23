@@ -82,7 +82,11 @@ fun TATTestScreen(
                         Text(stringResource(R.string.tat_test))
                         if (uiState.currentQuestion != null) {
                             Text(
-                                stringResource(R.string.tat_picture_number, uiState.currentQuestionIndex + 1),
+                                stringResource(
+                                    R.string.tat_picture_number,
+                                    uiState.currentQuestionIndex + 1,
+                                    uiState.questions.size
+                                ),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -144,8 +148,15 @@ fun TATTestScreen(
                         story = uiState.currentStory,
                         charactersCount = uiState.currentStory.length,
                         sequenceNumber = uiState.currentQuestionIndex + 1,
+                        isLastQuestion = uiState.isLastQuestion,
                         onEdit = { viewModel.editCurrentStory() },
-                        onConfirm = { viewModel.confirmCurrentStory() }
+                        onConfirm = {
+                            if (uiState.isLastQuestion) {
+                                showSubmitDialog = true
+                            } else {
+                                viewModel.confirmCurrentStory()
+                            }
+                        }
                     )
                 }
                 TATPhase.SUBMITTED -> {
@@ -187,6 +198,7 @@ fun TATTestScreen(
     if (showSubmitDialog) {
         TATSubmitDialog(
             completedStories = uiState.completedStories,
+            totalStories = uiState.questions.size,
             onDismiss = { showSubmitDialog = false },
             onSubmit = {
                 showSubmitDialog = false

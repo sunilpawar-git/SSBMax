@@ -48,14 +48,14 @@ class TATTestViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(TATTestUiState())
     val uiState: StateFlow<TATTestUiState> = _uiState.asStateFlow()
-    
-    
+
+
     private var timerJob: Job? = null
 
     init {
         trackMemoryLeaks("TATTestViewModel")
     }
-    
+
     fun loadTest(testId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...") }
@@ -124,7 +124,7 @@ class TATTestViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun startTest() {
         _uiState.update { it.copy(
             phase = TATPhase.IMAGE_VIEWING,
@@ -132,11 +132,11 @@ class TATTestViewModel @Inject constructor(
         ) }
         startViewingTimer()
     }
-    
+
     fun updateStory(story: String) {
         _uiState.update { it.copy(currentStory = story) }
     }
-    
+
     private fun saveCurrentStoryToResponses() {
         val state = _uiState.value
         val currentQuestion = state.currentQuestion
@@ -168,25 +168,31 @@ class TATTestViewModel @Inject constructor(
             ) }
             startViewingTimer()
         } else {
-            _uiState.update { it.copy(isTimerActive = false) }
+            _uiState.update {
+                it.copy(
+                    isTimerActive = false,
+                    phase = TATPhase.REVIEW
+                )
+            }
         }
     }
-    
+
     fun editCurrentStory() {
         _uiState.update { it.copy(phase = TATPhase.WRITING) }
         startWritingTimer()
     }
-    
+
     fun confirmCurrentStory() {
         moveToNextQuestion()
     }
-    
+
     fun submitTest() {
         viewModelScope.launch {
             android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
             android.util.Log.d("TATTestViewModel", "📤 submitTest() called")
             android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
-            
+
+            saveCurrentStoryToResponses()
             _uiState.update { it.copy(isLoading = true) }
 
             var currentUserId: String? = null
@@ -206,7 +212,7 @@ class TATTestViewModel @Inject constructor(
                     return@launch
                 }
                 android.util.Log.d("TATTestViewModel", "✅ User ID: $currentUserId")
-                
+
                 // Get user profile for subscription type
                 android.util.Log.d("TATTestViewModel", "📍 Step 2: Getting user profile...")
                 val userProfileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
@@ -215,7 +221,7 @@ class TATTestViewModel @Inject constructor(
                 val userProfile = userProfileResult.getOrNull()
                 val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
                 android.util.Log.d("TATTestViewModel", "✅ Subscription type: $subscriptionType")
-                
+
                 // Create submission
                 android.util.Log.d("TATTestViewModel", "📍 Step 3: Creating submission...")
                 val state = _uiState.value
@@ -229,11 +235,11 @@ class TATTestViewModel @Inject constructor(
                     olqResult = null  // Will be populated by worker
                 )
                 android.util.Log.d("TATTestViewModel", "✅ Submission created with ${submission.stories.size} stories")
-                
+
                 // Submit to Firestore (but also store locally to bypass permission issues)
                 android.util.Log.d("TATTestViewModel", "📍 Step 4: Submitting to Firestore...")
                 val result = submitTATTest(submission, batchId = null)
-                
+
                 result.onSuccess { submissionId ->
                     android.util.Log.d("TATTestViewModel", "✅ Submission successful! ID: $submissionId")
 
@@ -250,7 +256,7 @@ class TATTestViewModel @Inject constructor(
                     val validCount = submission.stories.count { it.charactersCount >= 150 }
                     val totalCount = submission.stories.size
                     val scorePercentage = if (totalCount > 0) (validCount.toFloat() / totalCount) * 100 else 0f
-                    
+
                     // Record performance for analytics (using recommended difficulty)
                     android.util.Log.d("TATTestViewModel", "📍 Step 5: Recording performance analytics...")
                     val difficulty = difficultyManager.getRecommendedDifficulty("TAT")
@@ -263,7 +269,7 @@ class TATTestViewModel @Inject constructor(
                         timeSeconds = (submission.totalTimeTakenMinutes * 60).toFloat()
                     )
                     android.util.Log.d("TATTestViewModel", "✅ Performance recorded ($difficulty): $scorePercentage% (${validCount}/${totalCount})")
-                    
+
                     // Record test usage for subscription tracking (with submissionId for idempotency)
                     android.util.Log.d("TATTestViewModel", "📍 Step 6: Recording test usage for subscription...")
                     android.util.Log.d("TATTestViewModel", "   userId: $currentUserId")
@@ -281,7 +287,7 @@ class TATTestViewModel @Inject constructor(
                         submission = submission,  // Store locally to show results directly
                         phase = TATPhase.SUBMITTED
                     ) }
-                    
+
                     // Emit navigation event (one-time, consumed by screen)
                     android.util.Log.d("TATTestViewModel", "📍 Step 8: Emitting navigation event...")
                     sendNavigationEvent(
@@ -290,7 +296,7 @@ class TATTestViewModel @Inject constructor(
                             subscriptionType = subscriptionType
                         )
                     )
-                    
+
                     android.util.Log.d("TATTestViewModel", "✅ TAT test submission complete!")
                     android.util.Log.d("TATTestViewModel", "════════════════════════════════════════")
                 }.onFailure { error ->
@@ -311,7 +317,7 @@ class TATTestViewModel @Inject constructor(
             }
         }
     }
-    
+
     private fun startViewingTimer() {
         timerJob?.cancel()
         val myGeneration = ++timerGeneration
@@ -374,7 +380,7 @@ class TATTestViewModel @Inject constructor(
             }
         }.also { it.trackMemoryLeaks("TATTestViewModel", "writing-timer") }
     }
-    
+
     private fun enqueueSynthesisChain(
         submissionId: String,
         stories: List<com.ssbmax.core.domain.model.TATStoryResponse>,

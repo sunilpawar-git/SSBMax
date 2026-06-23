@@ -64,7 +64,19 @@
       "Read(//Users/sunil/Downloads/PPDT Images by Gemini/**)",
       "Bash(head -488 '/Users/sunil/.claude/plans/analyse-the-entire-pipeline-lazy-rivest.md')",
       "Bash(tail -n +584 '/Users/sunil/.claude/plans/analyse-the-entire-pipeline-lazy-rivest.md')",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git stash *)",
+      "Bash(pip3 list *)",
+      "Bash(pip install *)",
+      "Bash(pip3 install *)",
+      "Bash(git rm *)",
+      "Bash(python step1_extract_cards.py)",
+      "Bash(python3 step2_generate_context.py)",
+      "Bash(open /Users/sunil/Downloads/SSBMax/scripts/ppdt-picture-pipeline/output/preview.html)",
+      "Bash(git -C /Users/sunil/Downloads/SSBMax status --short)",
+      "Bash(git -C /Users/sunil/Downloads/SSBMax log --oneline -5)",
+      "Bash(ls -lah \"/Users/sunil/Downloads/TAT Work/Cropped_images/\" | head -20)",
+      "Read(//Users/sunil/Downloads/TAT Work/Cropped_images/**)"
     ],
     "deny": [],
     "ask": []

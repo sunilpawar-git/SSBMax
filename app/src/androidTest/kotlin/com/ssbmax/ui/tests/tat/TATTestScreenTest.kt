@@ -27,14 +27,15 @@ class TATTestScreenTest : BaseComposeTest() {
     @Before
     override fun setup() {
         super.setup()
-        
+
         // Setup test data
-        testQuestions = listOf(
-            TestDataFactory.createTestTATQuestion(id = "tat-1", cardPosition = 1),
-            TestDataFactory.createTestTATQuestion(id = "tat-2", cardPosition = 2),
-            TestDataFactory.createTestTATQuestion(id = "tat-3", cardPosition = 3)
-        )
-        
+        testQuestions = (1..12).map { position ->
+            TestDataFactory.createTestTATQuestion(
+                id = "tat-$position",
+                cardPosition = position
+            )
+        }
+
         // Setup mocks
         mockViewModel = mockk(relaxed = true)
         uiStateFlow = MutableStateFlow(
@@ -46,7 +47,7 @@ class TATTestScreenTest : BaseComposeTest() {
             )
         )
         every { mockViewModel.uiState } returns uiStateFlow
-        
+
         // Reset flags
         testCompleteCalled = false
         navigateBackCalled = false
@@ -66,11 +67,11 @@ class TATTestScreenTest : BaseComposeTest() {
         composeTestRule
             .onNodeWithText("TAT Test")
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithText("TAT - Thematic Apperception Test", substring = true)
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithText("Start Test")
             .assertIsDisplayed()
@@ -115,7 +116,7 @@ class TATTestScreenTest : BaseComposeTest() {
         composeTestRule
             .onNodeWithText("Picture 1/12", substring = true)
             .assertIsDisplayed()
-        
+
         // Timer should be visible (30 seconds or counting down)
         composeTestRule
             .onNodeWithText("30", substring = true)
@@ -143,7 +144,7 @@ class TATTestScreenTest : BaseComposeTest() {
         composeTestRule
             .onNodeWithText("Write Your Story", substring = true)
             .assertIsDisplayed()
-        
+
         // Character count should be visible
         composeTestRule
             .onNodeWithText("0", substring = true)
@@ -197,7 +198,7 @@ class TATTestScreenTest : BaseComposeTest() {
         composeTestRule
             .onNodeWithText("3/12")
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithText("Picture 4/12", substring = true)
             .assertIsDisplayed()
@@ -225,7 +226,7 @@ class TATTestScreenTest : BaseComposeTest() {
             .onAllNodesWithContentDescription("Previous", substring = true)
             .onFirst()
             .assertIsDisplayed()
-        
+
         // Next button
         composeTestRule
             .onAllNodesWithContentDescription("Next", substring = true)
@@ -260,7 +261,7 @@ class TATTestScreenTest : BaseComposeTest() {
         composeTestRule.waitUntil(timeoutMillis = 3000) {
             testCompleteCalled
         }
-        
+
         assert(testCompleteCalled) { "Test complete callback should be called" }
     }
 
@@ -354,5 +355,41 @@ class TATTestScreenTest : BaseComposeTest() {
             .onNodeWithText(testStory, substring = true)
             .assertIsDisplayed()
     }
-}
 
+    @Test
+    fun lastQuestion_reviewShowsSubmitInsteadOfNext() {
+        // Given: Last question in review with valid story
+        val testStory = "A".repeat(200)
+        uiStateFlow.value = uiStateFlow.value.copy(
+            phase = TATPhase.REVIEW,
+            currentQuestionIndex = testQuestions.lastIndex,
+            currentStory = testStory,
+            responses = testQuestions.dropLast(1).mapIndexed { index, question ->
+                com.ssbmax.core.domain.model.TATStoryResponse(
+                    questionId = question.id,
+                    story = "Story $index",
+                    charactersCount = 200,
+                    viewingTimeTakenSeconds = 30,
+                    writingTimeTakenSeconds = 240,
+                    submittedAt = index.toLong()
+                )
+            }
+        )
+
+        composeTestRule.setContent {
+            TATTestScreen(
+                testId = "test-123",
+                viewModel = mockViewModel
+            )
+        }
+
+        // Then: Final CTA should surface submission, not next
+        composeTestRule
+            .onNodeWithText("Submit Test")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Next")
+            .assertDoesNotExist()
+    }
+}

@@ -12,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -46,7 +47,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     private val mockWorkManager = mockk<WorkManager>(relaxed = true)
-    
+
     private val mockQuestions = createMockTATQuestions()
     private val mockUser = SSBMaxUser(
         id = "test-user-123",
@@ -66,104 +67,104 @@ class TATTestViewModelTest : BaseViewModelTest() {
         subscriptionType = SubscriptionType.FREE,
         createdAt = System.currentTimeMillis()
     )
-    
+
     @Before
     fun setup() {
         // Mock current user
         every { mockObserveCurrentUser() } returns flowOf(mockUser)
-        
+
         // Mock use case (session creation + question loading)
         coEvery { mockLoadTATTest(any(), any()) } returns Result.success(mockQuestions)
 
         // Mock user profile
-        coEvery { 
-            mockUserProfileRepo.getUserProfile(any()) 
+        coEvery {
+            mockUserProfileRepo.getUserProfile(any())
         } returns flowOf(Result.success(mockUserProfile))
-        
+
         // Mock submission
-        coEvery { 
-            mockSubmitTATTest(any(), any()) 
+        coEvery {
+            mockSubmitTATTest(any(), any())
         } returns Result.success("submission-tat-123")
     }
-    
+
     // ==================== Test Loading ====================
-    
+
     @Test
     fun `loadTest success loads 12 questions and shows instructions`() = runTest {
         // When
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
-            
+
             assertFalse("Should not be loading", state.isLoading)
             assertNull("Should not have error", state.error)
             assertEquals("Should have 12 questions", 12, state.questions.size)
             assertEquals("Should be in instructions phase", TATPhase.INSTRUCTIONS, state.phase)
             assertNotNull("Should have config", state.config)
         }
-        
+
         coVerify { mockLoadTATTest("test-user-123", "tat_standard") }
     }
-    
+
     @Test
     fun `loadTest failure shows error message`() = runTest {
         // Given - mock failure
         coEvery { mockLoadTATTest(any(), any()) } returns Result.failure(Exception("Network error"))
-        
+
         // When
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
-            
+
             assertFalse("Should not be loading", state.isLoading)
             assertNotNull("Should have error message", state.error)
             assertTrue("Error should be non-empty", !state.error.isNullOrBlank())
         }
     }
-    
+
     // ==================== Story Input ====================
-    
+
     @Test
     fun `updateStory updates current image story text`() = runTest {
         // Given
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // When
         viewModel.updateStory("This is my TAT story about the image.")
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
-            assertEquals("Story should be updated", 
-                "This is my TAT story about the image.", 
+            assertEquals("Story should be updated",
+                "This is my TAT story about the image.",
                 state.currentStory)
         }
     }
-    
+
     @Test
     fun `updateStory handles long stories correctly`() = runTest {
         // Given
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         val longStory = "A".repeat(1000)
-        
+
         // When
         viewModel.updateStory(longStory)
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
@@ -171,57 +172,57 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertTrue("Story length should be tracked", state.currentStory.length == 1000)
         }
     }
-    
+
     // ==================== Question Navigation ====================
-    
+
     @Test
     fun `currentQuestionIndex starts at 0`() = runTest {
         // Given
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
             assertEquals("Should start at question 0", 0, state.currentQuestionIndex)
         }
     }
-    
+
     @Test
     fun `responses list stores completed stories`() = runTest {
         // Given
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
             assertTrue("Responses should start empty", state.responses.isEmpty())
         }
     }
-    
+
     // ==================== Submission ====================
-    
+
     @Test
     fun `submitTest submits all stories successfully`() = runTest {
         // Given
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // Add story to first image
         viewModel.updateStory("Story for image 1")
         advanceUntilIdle()
-        
+
         // When
         viewModel.submitTest()
         advanceUntilIdle()
-        
+
         // Then
         coVerify { mockSubmitTATTest(any(), any()) }
-        
+
         viewModel.uiState.test {
             val state = awaitItem()
             assertTrue("Should be submitted", state.isSubmitted)
@@ -229,22 +230,22 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertEquals("Phase should be SUBMITTED", TATPhase.SUBMITTED, state.phase)
         }
     }
-    
+
     @Test
     fun `submitTest failure shows error`() = runTest {
         // Given
-        coEvery { 
-            mockSubmitTATTest(any(), any()) 
+        coEvery {
+            mockSubmitTATTest(any(), any())
         } returns Result.failure(Exception("Submission failed"))
-        
+
         viewModel = createViewModel()
         viewModel.loadTest("tat_standard")
         advanceUntilIdle()
-        
+
         // When
         viewModel.submitTest()
         advanceUntilIdle()
-        
+
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
@@ -252,7 +253,29 @@ class TATTestViewModelTest : BaseViewModelTest() {
             assertNotNull("Should have error", state.error)
         }
     }
-    
+
+    @Test
+    fun `submitTest saves current story before creating submission`() = runTest {
+        // Given
+        val submissionSlot = slot<TATSubmission>()
+        coEvery { mockSubmitTATTest(capture(submissionSlot), any()) } returns Result.success("submission-tat-123")
+
+        viewModel = createViewModel()
+        viewModel.loadTest("tat_standard")
+        advanceUntilIdle()
+
+        viewModel.updateStory("A".repeat(200))
+        advanceUntilIdle()
+
+        // When
+        viewModel.submitTest()
+        advanceUntilIdle()
+
+        // Then
+        assertEquals("Current story should be included in submission", 1, submissionSlot.captured.stories.size)
+        assertEquals("A".repeat(200), submissionSlot.captured.stories.first().story)
+    }
+
     // ==================== Work Request Invariants ====================
 
     @Test
@@ -309,7 +332,7 @@ class TATTestViewModelTest : BaseViewModelTest() {
             mockWorkManager
         )
     }
-    
+
     private fun createMockTATQuestions(): List<TATQuestion> {
         return (1..11).map { index ->
             TATQuestion(
@@ -332,4 +355,3 @@ class TATTestViewModelTest : BaseViewModelTest() {
         )
     }
 }
-

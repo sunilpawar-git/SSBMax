@@ -44,14 +44,17 @@ data class TATTestUiState(
     val progress: Float
         get() = if (questions.isEmpty()) 0f else (completedStories.toFloat() / questions.size)
 
+    val isLastQuestion: Boolean
+        get() = questions.isNotEmpty() && currentQuestionIndex == questions.lastIndex
+
     val canMoveToNextQuestion: Boolean
         get() = when (phase) {
             TATPhase.WRITING -> currentStory.length >= (currentQuestion?.minCharacters ?: 150) &&
-                                currentStory.length <= (currentQuestion?.maxCharacters ?: 1500)
+                currentStory.length <= (currentQuestion?.maxCharacters ?: 1500)
             TATPhase.REVIEW -> true
             else -> false
         }
 
     val canSubmitTest: Boolean
-        get() = completedStories >= questions.size
+        get() = completedStories >= questions.size || (isLastQuestion && canMoveToNextQuestion)
 }

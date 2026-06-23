@@ -1,0 +1,597 @@
+# Execution Strategy Overview
+
+## Goals covered by this plan
+We will address all remaining concerns except the blank-card multimodal path, which you confirmed is intentional:
+
+1. Non-atomic final Firestore persistence
+2. Ignored repository `Result<Unit>` values in workers
+3. Excessive parallelism in per-story analysis
+4. `ANALYZING` status starts too late
+5. Partial-data synthesis is not surfaced transparently
+6. Notification/cache invalidation can happen before final persistence is truly consumable
+7. Retry/backoff policy is weak for burst failures
+8. Comment/code drift and maintainability risks
+
+---
+
+# Phase 0 — Baseline Stabilization and Safety Net
+
+## Objective
+Restore a fully green baseline before touching TAT architecture.
+
+## Why this phase exists
+Your rule says every phase must end with a successful build and all tests passing.
+We already know the workspace currently has a failing Android test compile path.
+
+## Scope
+- Fix the unrelated existing red build issue(s), especially:
+  - `app/src/androidTest/kotlin/com/ssbmax/ui/tests/oir/OIRTestScreenTest.kt`
+- Confirm the project can build and test cleanly before TAT changes begin.
+- Add characterization tests around current TAT worker/repository behavior so we preserve intended behavior while refactoring.
+
+## Files likely involved
+- `app/src/androidTest/kotlin/com/ssbmax/ui/tests/oir/OIRTestScreenTest.kt`
+- TAT test files only for characterization:
+  - `app/src/test/kotlin/com/ssbmax/workers/TATStoryAnalysisWorkerTest.kt`
+  - `app/src/test/kotlin/com/ssbmax/workers/TATSynthesisWorkerTest.kt` if missing
+  - repository tests in `core/data`
+
+## TDD tasks
+Before changing production TAT code:
+- Add/extend tests that document current intended behavior:
+  - story worker saves placeholder on unrecoverable AI failure
+  - synthesis proceeds when enough valid stories exist
+  - blank-card path is allowed
+  - current result fallback behavior remains intact until Phase 1 changes it
+
+## Implementation tasks
+- Fix the unrelated OIR androidTest compile failure.
+- Make no TAT architectural changes yet except safe test scaffolding.
+
+## Security checks
+- Ensure no test helpers weaken production security assumptions.
+- Do not introduce test-only bypasses into production code.
+
+## Validation gate
+Run until green:
+- `./gradlew :app:compileDebugAndroidTestKotlin`
+- `./gradlew :app:testDebugUnitTest`
+- `./gradlew check`
+
+## Exit criteria
+- Full workspace baseline is green.
+- Characterization tests for TAT pipeline exist and pass.
+- No production TAT behavior changed yet.
+
+---
+
+# Phase 1 — Repository Finalization Contract Hardening
+
+## Objective
+Fix the final persistence consistency problem at the repository boundary.
+
+## Main issue being solved
+### Issue
+Final TAT result persistence is split across separate writes/documents and the app can observe `COMPLETED` before the result is consumable.
+
+### Problem caused
+- Result screen sees `COMPLETED`
+- `olqResult` is not yet fetchable/visible
+- fallback fetch is required
+- UI temporarily enters inconsistent state
+
+## Proposed solution
+Introduce a **single repository finalization contract** for TAT result completion.
+
+### Design
+Add a dedicated repository method, for example:
+- `finalizeTATAnalysisResult(submissionId, olqResult, metadata)`
+
+This method must:
+1. Persist final result to `psych_results`
+2. Persist final submission completion metadata to `submissions`
+3. Only mark completion once final result persistence has succeeded
+4. Return failure if any step fails
+
+### Preferred persistence semantics
+At minimum, submission metadata should include:
+- `analysisStatus = COMPLETED`
+- `resultUpdatedAt`
+- optional `hasOlqResult = true`
+- optional `resultSource = psych_results`
+
+This keeps submission state self-describing even if the full result body is stored elsewhere.
+
+### Architecture rationale
+This keeps SSOT at the repository layer:
+- workers don’t manually coordinate multi-step persistence
+- all finalization logic lives in one place
+- future test types can reuse the pattern
+
+## Files likely involved
+- `core/domain/src/main/kotlin/com/ssbmax/core/domain/repository/SubmissionRepository.kt`
+- `core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt`
+- `core/data/src/main/kotlin/com/ssbmax/core/data/remote/PsychTestSubmissionRepository.kt`
+- `core/data/src/main/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepository.kt`
+
+## TDD tasks
+Write tests first:
+### Unit tests
+- finalization succeeds only when both persistence targets succeed
+- completion metadata is not written on partial failure
+- `userId` is preserved for Firestore rule compliance
+- repository returns failure when `psych_results` write fails
+- repository returns failure when submission metadata write fails
+
+### Integration tests
+- Firestore emulator or repository integration tests verifying:
+  - final result is available before completion is observable as final
+  - submission metadata is coherent after finalization
+
+## Implementation tasks
+- Add new repository method
+- Refactor existing `updateTATOLQResult` callers to use the new method
+- Keep old methods only if still used elsewhere; otherwise deprecate/remove to avoid ambiguity
+- Update comments and names to reflect actual behavior
+
+## Security checks
+- Preserve Firestore security compatibility (`userId` on psych_results)
+- No broadened write scope
+- No leakage of story text or sensitive payloads in logs
+
+## Validation gate
+- Targeted repository unit tests
+- Targeted repository integration tests
+- `./gradlew :core:data:testDebugUnitTest`
+- `./gradlew check`
+
+## Exit criteria
+- Final result persistence has one authoritative contract
+- No more repository ambiguity about what “complete” means
+- All tests/build green
+
+---
+
+# Phase 2 — Worker Reliability and Explicit Failure Semantics
+
+## Objective
+Make worker success/failure reflect actual persistence success.
+
+## Main issues being solved
+### Issue 1
+Workers ignore `Result<Unit>` returned by repository write methods.
+
+### Problem caused
+- silent persistence failures
+- worker continues as if success occurred
+- notifications/cache invalidation may run despite failed writes
+
+### Issue 2
+Notification and cache invalidation occur too loosely relative to persistence confirmation.
+
+### Problem caused
+- app may tell user results are ready before the final state is truly durable/consumable
+
+## Proposed solution
+Make `TATSynthesisWorker` fail-fast on repository failures and perform side effects only after verified finalization.
+
+### Design
+- Replace unchecked repository calls with explicit success handling:
+  - `getOrThrow()` style or explicit branching
+- Finalization sequence:
+  1. finalize result in repository
+  2. verify success
+  3. invalidate dashboard cache
+  4. send results-ready notification
+- On failure:
+  - retry if transient
+  - mark failed only after retry exhaustion
+
+## Files likely involved
+- `app/src/main/kotlin/com/ssbmax/workers/TATSynthesisWorker.kt`
+- possibly supporting helpers extracted from it to stay under 300 LOC
+
+## TDD tasks
+### Unit tests
+- worker retries when repository finalization returns failure
+- worker does not send notification when finalization fails
+- worker does not invalidate cache when finalization fails
+- worker marks failed only after retry exhaustion
+- worker succeeds only after finalization succeeds
+
+### Integration tests
+- worker + fake repository + fake notification/cache collaborator tests
+- if possible, WorkManager test harness with `TestListenableWorkerBuilder`
+
+## Implementation tasks
+- Refactor `TATSynthesisWorker` to explicit success/failure flow
+- Extract helper functions/classes if needed to keep file size clean
+- Ensure comments/logs match behavior
+
+## Security checks
+- Ensure no extra sensitive payloads are logged during failure handling
+- Verify failure paths do not expose internal errors to UI unsafely
+
+## Validation gate
+- `./gradlew :app:testDebugUnitTest --tests "*TATSynthesisWorkerTest"`
+- broader app unit tests
+- `./gradlew check`
+
+## Exit criteria
+- Worker no longer assumes repository writes succeeded
+- notification/cache invalidation are persistence-safe
+- build/tests all green
+
+---
+
+# Phase 3 — Status Lifecycle Correction and Work Orchestration Refactor
+
+## Objective
+Start `ANALYZING` at the correct time and refactor orchestration out of oversized files.
+
+## Main issue being solved
+### Issue
+`ANALYZING` begins too late—only when synthesis starts.
+
+### Problem caused
+During active per-story processing, the submission still appears as `PENDING_ANALYSIS`, which is misleading.
+
+## Proposed solution
+Move orchestration and early state transition into a dedicated collaborator.
+
+### Design
+Introduce a small orchestration component, e.g.:
+- `TATAnalysisOrchestrator`
+- or `StartTATAnalysisPipelineUseCase`
+
+Responsibilities:
+1. Set `analysisStatus = ANALYZING` immediately after submission success and before/while enqueuing work
+2. Build the worker plan
+3. Hand back a clear success/failure result to the ViewModel
+
+### Why this phase is also a refactor phase
+`TATTestViewModel` is already oversized.
+Under your 300-line rule, any touched orchestration logic should be extracted now.
+
+## Files likely involved
+- `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt`
+- new orchestrator/use case file(s)
+- maybe DI module wiring if needed
+
+## TDD tasks
+### Unit tests
+- when submission succeeds, status changes to `ANALYZING` before pipeline execution
+- if pipeline enqueue fails, appropriate error handling occurs
+- ViewModel delegates orchestration rather than owning low-level chain construction
+
+### Integration tests
+- ViewModel + orchestrator collaboration tests
+- verify submission result screen observes `ANALYZING` earlier than before
+
+## Implementation tasks
+- Extract work-start responsibility from ViewModel
+- shrink `TATTestViewModel` below 300 lines
+- maintain MVVM boundaries:
+  - UI/ViewModel triggers use case/orchestrator
+  - worker planning does not live inside UI logic
+
+## Security checks
+- no direct Firebase calls from UI/ViewModel
+- repository-only status updates remain enforced
+
+## Validation gate
+- targeted ViewModel tests
+- targeted orchestrator tests
+- `./gradlew :app:testDebugUnitTest --tests "*TATTestViewModelTest"`
+- `./gradlew check`
+
+## Exit criteria
+- `ANALYZING` reflects actual active processing
+- `TATTestViewModel` is architecturally cleaner and under size limit
+- all tests/build green
+
+---
+
+# Phase 4 — Controlled Concurrency for Story Analysis
+
+## Objective
+Reduce Gemini timeout/retry pressure by batching or throttling story analysis execution.
+
+## Main issue being solved
+### Issue
+All 12 story workers are launched almost simultaneously.
+
+### Problem caused
+- burst load on Gemini/network
+- 60-second timeouts
+- retries that extend overall pipeline duration
+- unreliable latency under load
+
+## Proposed solution
+Introduce deterministic bounded concurrency in the work plan.
+
+### Recommended approach
+Batch the 12 stories into small groups:
+- 3 or 4 concurrent workers per batch
+
+Example:
+- Batch 1: stories 0–2
+- Batch 2: stories 3–5
+- Batch 3: stories 6–8
+- Batch 4: stories 9–11
+- Then synthesis
+
+### Why batching over worker-side semaphores
+- cleaner
+- easier to test
+- WorkManager graph stays explicit
+- no global mutable state required
+
+### Architecture
+Extract a planner, e.g.:
+- `TATAnalysisWorkPlanner`
+
+Planner responsibilities:
+- transform submission + questions into batch plan
+- construct work requests without embedding scheduling logic in the ViewModel
+
+This also helps DRY and keeps files below 300 lines.
+
+## Files likely involved
+- extracted planner/use case file
+- `TATTestViewModel` or orchestrator
+- maybe worker input data builders
+
+## TDD tasks
+### Unit tests
+- planner creates correct number of story batches
+- each story appears exactly once
+- synthesis depends on all batches
+- blank card remains included in one batch
+- total order/coverage remains correct
+
+### Integration tests
+- WorkManager graph tests or planner contract tests with realistic 12-story input
+- worker chain smoke test if existing infrastructure supports it
+
+## Implementation tasks
+- replace current “fan out 12 separate continuations immediately” logic
+- wire planner into orchestrator/use case
+- keep behavior deterministic
+
+## Security checks
+- no shared mutable singleton state
+- no hidden cross-request caches that can leak between submissions
+
+## Validation gate
+- targeted planner/orchestrator tests
+- worker tests still passing
+- `./gradlew :app:testDebugUnitTest`
+- `./gradlew check`
+
+## Exit criteria
+- story analysis concurrency is bounded
+- pipeline remains complete and deterministic
+- build/tests all green
+
+---
+
+# Phase 5 — Partial-Assessment Transparency
+
+## Objective
+If synthesis completes using degraded evidence, make that explicit in domain and UI.
+
+## Main issue being solved
+### Issue
+Synthesis can succeed with partial valid stories, but the result may look identical to a full-quality analysis.
+
+### Problem caused
+- misleading confidence
+- reduced trust
+- harder debugging/support conversations
+
+## Proposed solution
+Add explicit degradation metadata to the final TAT analysis result model and display logic.
+
+### Recommended metadata
+- `validStoriesCount`
+- `failedStoriesCount`
+- `usedPartialAssessment`
+- optional `analysisNotice` or `analysisWarnings`
+
+### UI behavior
+- if `failedStoriesCount > 0`, show a subtle warning/info note
+- do not hardcode text; use string resources
+- keep design-system color usage only
+
+## Files likely involved
+- `core/domain` result model(s)
+- repository mapper(s)
+- `TATSynthesisWorker`
+- `TATSubmissionResultViewModel`
+- `TATSubmissionResultScreen`
+- strings resource file
+
+## TDD tasks
+### Unit tests
+- synthesis populates degradation metadata correctly
+- full 12/12 case does not mark partial analysis
+- partial cases mark flags correctly
+
+### UI/ViewModel tests
+- result VM exposes degradation state
+- UI shows warning only when needed
+- strings come from resources
+
+## Implementation tasks
+- extend model(s)
+- populate in synthesis
+- map through repository/viewmodel
+- render in result UI
+
+## Security checks
+- no exposure of internal exception details to user-facing warning text
+- warning text remains generic and safe
+
+## Validation gate
+- targeted worker tests
+- result ViewModel/UI tests
+- `./gradlew :app:testDebugUnitTest`
+- `./gradlew :app:compileDebugAndroidTestKotlin`
+- `./gradlew check`
+
+## Exit criteria
+- degraded analyses are transparent
+- no hardcoded strings/colors introduced
+- build/tests green
+
+---
+
+# Phase 6 — Retry/Backoff Hardening and Documentation Alignment
+
+## Objective
+Reduce retry storms and clean up code/documentation drift.
+
+## Main issues being solved
+### Issue 1
+Backoff is too simple for burst failures.
+
+### Problem caused
+Retries can pile back into the same overload window.
+
+### Issue 2
+Comments/documentation no longer match actual architecture.
+
+### Problem caused
+Maintenance confusion and future regression risk.
+
+## Proposed solution
+### Retry policy
+Extract pure backoff helpers:
+- exponential backoff with jitter
+- deterministic testable policy object
+
+Apply to:
+- `TATStoryAnalysisWorker`
+- `TATSynthesisWorker` if needed
+
+### Documentation alignment
+Update:
+- misleading comments about atomic completion
+- worker/repository responsibility descriptions
+- test names/comments if architecture changed
+
+## Files likely involved
+- `TATStoryAnalysisWorker.kt`
+- `TATSynthesisWorker.kt`
+- small backoff helper file
+- docs/comments/tests
+
+## TDD tasks
+### Unit tests
+- backoff helper returns expected bounded delays
+- jitter remains within safe range
+- retry sequence matches policy
+
+### Integration tests
+- worker tests verify retry helper is used
+
+## Implementation tasks
+- add helper
+- replace inline retry delays
+- update comments/docs
+- keep files under 300 lines
+
+## Security checks
+- logs remain sanitized
+- no accidental exposure of raw prompts/story text in retry diagnostics
+
+## Validation gate
+- targeted worker tests
+- full unit suite
+- `./gradlew check`
+
+## Exit criteria
+- retry policy is more resilient
+- comments/docs reflect reality
+- all tests/build green
+
+---
+
+# Architecture Notes to Enforce Throughout
+
+## MVVM / SOLID / SSOT rules
+- UI must not coordinate worker graphs directly
+- ViewModel should delegate orchestration
+- repository owns persistence semantics
+- worker owns execution, not business policy
+- planner/orchestrator/use case owns work graph creation
+- final result truth should be clearly defined and consistent
+
+## File size control
+We should proactively expect refactors in:
+- `TATTestViewModel.kt`
+- possibly `TATSynthesisWorker.kt`
+- possibly repository mapper files if they grow
+
+If any touched file approaches ~260–280 lines, split immediately.
+
+## Resource discipline
+Any new user-facing text added in Phase 5 must go to:
+- `app/src/main/res/values/strings.xml`
+
+No hardcoded UI text or colors.
+
+## Security discipline
+During all phases:
+- preserve Firestore auth/security rule compatibility
+- avoid logging story bodies, prompts, or sensitive identifiers unnecessarily
+- do not weaken repository boundaries
+- do not introduce insecure global mutable coordination state
+
+---
+
+# Recommended phase order summary
+
+| Phase | Focus | Must be green before next? |
+|---|---|---|
+| 0 | Baseline stabilization | Yes |
+| 1 | Repository finalization contract | Yes |
+| 2 | Worker failure semantics | Yes |
+| 3 | Early `ANALYZING` + orchestration refactor | Yes |
+| 4 | Bounded concurrency | Yes |
+| 5 | Partial-result transparency | Yes |
+| 6 | Retry/backoff + docs alignment | Yes |
+
+---
+
+# Phase Handoff Protocol Template
+
+At the end of **every** phase, I will stop and provide:
+
+## Phase Summary
+### 1. Tech debt incurred
+- explicit list of any temporary complexity introduced
+
+### 2. Immediate resolution steps taken
+- exact refactors/cleanup performed in the same phase
+- confirmation that no debt was deferred
+
+### 3. Verification
+- exact commands run
+- whether build succeeded
+- whether all tests passed
+
+### 4. Go / No-Go decision
+- proceed only if:
+  - build is green
+  - all tests are green
+  - no unresolved debt remains from that phase
+
+---
+
+# My recommendation
+
+Start with **Phase 0 immediately**, because without a green baseline the rest of the plan would violate your rules from the first step.
+
+If you want, I can now convert this into an **implementation checklist with exact files, tests, and commands for Phase 0 only** so we execute it strictly one phase at a time.
