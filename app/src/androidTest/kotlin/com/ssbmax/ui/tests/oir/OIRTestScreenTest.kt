@@ -1,6 +1,7 @@
 package com.ssbmax.ui.tests.oir
 
 import androidx.compose.ui.test.*
+import com.ssbmax.R
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
@@ -24,7 +25,7 @@ class OIRTestScreenTest : BaseComposeTest() {
     @Before
     override fun setup() {
         super.setup()
-        
+
         // Setup test data
         testQuestions = listOf(
             TestDataFactory.createTestOIRQuestion(
@@ -52,7 +53,7 @@ class OIRTestScreenTest : BaseComposeTest() {
                 correctAnswerId = "opt2"
             )
         )
-        
+
         // Setup mocks
         mockViewModel = mockk(relaxed = true)
         uiStateFlow = MutableStateFlow(
@@ -63,7 +64,7 @@ class OIRTestScreenTest : BaseComposeTest() {
             )
         )
         every { mockViewModel.uiState } returns uiStateFlow
-        
+
         testCompleteCalled = false
     }
 
@@ -176,7 +177,7 @@ class OIRTestScreenTest : BaseComposeTest() {
         // Given: Error state
         uiStateFlow.value = uiStateFlow.value.copy(
             isLoading = false,
-            error = "Failed to load OIR test"
+            errorResId = R.string.oir_error_load_failed
         )
 
         composeTestRule.setContent {
@@ -189,7 +190,7 @@ class OIRTestScreenTest : BaseComposeTest() {
 
         // Then: Error message should be visible
         composeTestRule
-            .onNodeWithText("Failed to load OIR test", substring = true)
+            .onNodeWithText("Failed to load test", substring = true)
             .assertIsDisplayed()
     }
 
@@ -218,7 +219,7 @@ class OIRTestScreenTest : BaseComposeTest() {
         composeTestRule.waitUntil(timeoutMillis = 3000) {
             testCompleteCalled
         }
-        
+
         assert(testCompleteCalled) { "Test complete callback should be called" }
     }
 
@@ -249,4 +250,3 @@ class OIRTestScreenTest : BaseComposeTest() {
             .assertIsDisplayed()
     }
 }
-

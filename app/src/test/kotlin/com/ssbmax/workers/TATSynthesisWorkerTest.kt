@@ -1,0 +1,190 @@
+package com.ssbmax.workers
+
+import android.content.Context
+import android.util.Log
+import androidx.work.ListenableWorker
+import androidx.work.WorkerParameters
+import androidx.work.workDataOf
+import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
+import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
+import com.ssbmax.core.domain.model.EntryType
+import com.ssbmax.core.domain.model.Gender
+import com.ssbmax.core.domain.model.TATSubmission
+import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.core.domain.model.scoring.AnalysisStatus
+import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.core.domain.service.OLQScoreWithReasoning
+import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.notifications.NotificationHelper
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class TATSynthesisWorkerTest {
+
+    private lateinit var context: Context
+    private lateinit var workerParams: WorkerParameters
+    private lateinit var tatStoryAssessmentDao: TATStoryAssessmentDao
+    private lateinit var submissionRepository: SubmissionRepository
+    private lateinit var userProfileRepository: UserProfileRepository
+    private lateinit var aiService: AIService
+    private lateinit var notificationHelper: NotificationHelper
+    private lateinit var getOLQDashboard: GetOLQDashboardUseCase
+
+    private val submissionId = "tat-sub-123"
+    private val userId = "user-456"
+
+    @Before
+    fun setUp() {
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any<String>(), any<String>()) } returns 0
+        every { Log.e(any<String>(), any<String>(), any()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+        every { Log.i(any(), any()) } returns 0
+
+        context = mockk(relaxed = true)
+        workerParams = mockk(relaxed = true)
+        tatStoryAssessmentDao = mockk(relaxed = true)
+        submissionRepository = mockk(relaxed = true)
+        userProfileRepository = mockk(relaxed = true)
+        aiService = mockk(relaxed = true)
+        notificationHelper = mockk(relaxed = true)
+        getOLQDashboard = mockk(relaxed = true)
+
+        every { workerParams.inputData } returns workDataOf(TATSynthesisWorker.KEY_SUBMISSION_ID to submissionId)
+        every { workerParams.runAttemptCount } returns 0
+        coEvery { submissionRepository.updateTATAnalysisStatus(any(), any()) } returns Result.success(Unit)
+        coEvery { submissionRepository.updateTATOLQResult(any(), any()) } returns Result.success(Unit)
+        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
+    }
+
+    @Test
+    fun `fails when valid story count is below threshold`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns (0 until 5).map { buildAssessment(it) }
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.failure(), result)
+        coVerify(exactly = 1) { submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED) }
+        coVerify(exactly = 0) { aiService.analyzeTATResponse(any()) }
+    }
+
+    @Test
+    fun `filters failed placeholders before synthesis`() = runTest {
+        val promptSlot = slot<String>()
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6, failedCount = 2)
+        coEvery { aiService.analyzeTATResponse(capture(promptSlot)) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        assertFalse(promptSlot.captured.contains(TATStoryAnalysisWorker.FAILED_MARKER))
+        assertFalse(promptSlot.captured.contains("placeholder-story"))
+    }
+
+    @Test
+    fun `writes final result through repository on success`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) {
+            submissionRepository.updateTATOLQResult(
+                submissionId,
+                match { it.submissionId == submissionId && it.testType == TestType.TAT }
+            )
+        }
+    }
+
+    @Test
+    fun `marks submission failed after retry exhaustion`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.failure(Exception("Gemini overloaded"))
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.failure(), result)
+        coVerify(exactly = 3) { aiService.analyzeTATResponse(any()) }
+        coVerify(exactly = 1) { submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED) }
+    }
+
+    private fun createWorker() = TATSynthesisWorker(
+        context = context,
+        params = workerParams,
+        tatStoryAssessmentDao = tatStoryAssessmentDao,
+        submissionRepository = submissionRepository,
+        userProfileRepository = userProfileRepository,
+        aiService = aiService,
+        notificationHelper = notificationHelper,
+        getOLQDashboard = getOLQDashboard
+    )
+
+    private fun buildAssessments(validCount: Int, failedCount: Int = 0): List<TATStoryAssessmentEntity> =
+        buildList {
+            repeat(validCount) { index -> add(buildAssessment(index)) }
+            repeat(failedCount) { index -> add(buildAssessment(validCount + index, valid = false)) }
+        }
+
+    private fun buildAssessment(index: Int, valid: Boolean = true) = TATStoryAssessmentEntity(
+        id = "assessment-$index",
+        submissionId = submissionId,
+        questionId = "tat_$index",
+        storyIndex = index,
+        story = if (valid) "candidate-story-$index" else "placeholder-story-$index",
+        imageUrl = "https://example.com/tat_$index.jpg",
+        olqScoresJson = "[{\"olq\":\"EFFECTIVE_INTELLIGENCE\",\"score\":6}]",
+        overallScore = if (valid) 6.0f else 0f,
+        overallRating = if (valid) "Good" else TATStoryAnalysisWorker.FAILED_MARKER,
+        aiConfidence = if (valid) 80 else 0,
+        analyzedAt = 1_717_171_000L + index
+    )
+
+    private fun buildSubmission() = TATSubmission(
+        id = submissionId,
+        userId = userId,
+        testId = "tat_standard",
+        stories = emptyList(),
+        totalTimeTakenMinutes = 45,
+        submittedAt = 1_717_171_100L,
+        analysisStatus = AnalysisStatus.ANALYZING
+    )
+
+    private fun buildUserProfile() = UserProfile(
+        userId = userId,
+        fullName = "Test Aspirant",
+        age = 22,
+        gender = Gender.MALE,
+        entryType = EntryType.GRADUATE
+    )
+
+    private fun buildResponseAnalysis() = ResponseAnalysis(
+        olqScores = OLQ.entries.associateWith { olq ->
+            OLQScoreWithReasoning(olq = olq, score = 6f, reasoning = "Consistent evidence")
+        },
+        overallConfidence = 82,
+        keyInsights = listOf("Steady performance across stories")
+    )
+}

@@ -125,8 +125,8 @@ class TATStoryAnalysisWorkerTest {
     // ───────────── imageUrl from inputData — no repository ─────────────
 
     @Test
-    fun `diagnostic - confirm worker returns retry when exception thrown`() = runTest {
-        // Intentionally cause a failure to confirm retry behavior
+    fun `doWork returns retry when an unexpected exception is thrown`() = runTest {
+        // Unexpected worker exceptions should surface as WorkManager retries.
         every { workerParams.inputData } returns buildInputData(imageUrl = "")
         coEvery { submissionRepository.getTATSubmission(any()) } throws RuntimeException("TEST EXCEPTION - this is expected")
 
@@ -156,19 +156,19 @@ class TATStoryAnalysisWorkerTest {
     }
 
     @Test
-    fun `doWork proceeds with empty imageBytes when imageUrl is blank (blank card)`() = runTest {
-        // WHY: Card 12 (blank card) has no image. Worker must still run AI analysis
-        // using text-only mode — graceful degradation, not failure.
+    fun `downloads blank image as zero bytes and still calls multimodal analyzer`() = runTest {
+        val imageBytesSlot = slot<ByteArray>()
         every { workerParams.inputData } returns buildInputData(imageUrl = "")
         coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
         every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
-        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
-            Result.success(buildFullOLQAnalysis())
+        coEvery {
+            aiService.analyzeTATStoryMultimodal(capture(imageBytesSlot), any(), any(), any(), any(), any(), any())
+        } returns Result.success(buildFullOLQAnalysis())
 
         val result = createWorker().doWork()
 
         assertNotEquals("Worker must not fail for blank card (empty imageUrl)", ListenableWorker.Result.failure(), result)
-        // AI was still called even with no image bytes
+        assertEquals("Blank card must be analyzed with zero-byte image input", 0, imageBytesSlot.captured.size)
         coVerify(exactly = 1) { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) }
     }
 
@@ -206,6 +206,29 @@ class TATStoryAnalysisWorkerTest {
 
         assertEquals("Worker must return success after AI exhausts retries", ListenableWorker.Result.success(), result)
         coVerify(exactly = 1) { tatStoryAssessmentDao.insert(match { it.overallRating == TATStoryAnalysisWorker.FAILED_MARKER }) }
+    }
+
+    @Test
+    fun `saves assessment when ai returns valid olq scores`() = runTest {
+        every { workerParams.inputData } returns buildInputData()
+        coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
+            Result.success(buildFullOLQAnalysis())
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) {
+            tatStoryAssessmentDao.insert(match {
+                it.submissionId == testSubmissionId &&
+                    it.questionId == testQuestionId &&
+                    it.overallRating == "Good" &&
+                    it.overallScore == 6f &&
+                    it.aiConfidence == 75 &&
+                    it.olqScoresJson.contains("EFFECTIVE_INTELLIGENCE")
+            })
+        }
     }
 
     @Test
