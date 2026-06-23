@@ -89,9 +89,7 @@ class TATSynthesisWorker @AssistedInject constructor(
         }
         Log.d(TAG, "   ${validAssessments.size} story assessments ready for synthesis")
 
-        submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
-            .onFailure { e -> Log.w(TAG, "⚠️ Failed to set ANALYZING status: ${e.message}") }
-
+        // ANALYZING status is now set by TATAnalysisPipelineOrchestrator before workers start.
         val prompt = TATSynthesisPrompts.buildPrompt(validAssessments)
         Log.d(TAG, "   Synthesis prompt length: ${prompt.length} chars")
         val olqScores = analyzeWithRetry(prompt) ?: run {

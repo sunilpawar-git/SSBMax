@@ -203,7 +203,6 @@
     <ID>LongMethod:TATImageViewingPhase.kt$@Composable fun TATImageViewingPhase( imageUrl: String, timeRemaining: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TATInstructionsPhase.kt$@Composable fun TATInstructionsPhase(onStart: () -&gt; Unit)</ID>
     <ID>LongMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:TATTestViewModel.kt$TATTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:TATWritingPhase.kt$@Composable fun TATWritingPhase( story: String, onStoryChange: (String) -&gt; Unit, timeRemaining: Int, minCharacters: Int, maxCharacters: Int, charactersCount: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TopicContentLoader.kt$TopicContentLoader$private fun getIntroduction(testType: String): String</ID>
     <ID>LongMethod:UpgradeScreen.kt$@Composable private fun AnimatedPlanCard( plan: SubscriptionPlan, currentTier: SubscriptionTier, selectedBillingCycle: BillingCycle, isVisible: Boolean, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -312,8 +311,6 @@
     <ID>MaxLineLength:StudentNavGraph.kt$com.ssbmax.core.domain.model.TestType.OIR -&gt; SSBMaxDestinations.OIRTestResult.createRoute(submissionId)</ID>
     <ID>MaxLineLength:StudentTestsScreen.kt$text = "${test.questionCount} ${if (test.questionCount == 1) stringResource(R.string.student_tests_question_single) else stringResource(R.string.student_tests_question_plural)}"</ID>
     <ID>MaxLineLength:SubscriptionManagementScreen.kt$answer = "Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period."</ID>
-    <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$ErrorLogger.log(Exception("User not authenticated during TAT submission"), "TAT submission failed: user not authenticated")</ID>
-    <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$android.util.Log.d("TATTestViewModel", "✅ Performance recorded ($difficulty): $scorePercentage% (${validCount}/${totalCount})")</ID>
     <ID>MaxLineLength:TopicScreen.kt$label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") }</ID>
     <ID>MaxLineLength:TopicViewModel.kt$TopicViewModel$Log.d(TAG, "✓ Loaded $testType from cloud: ${materials.size} materials (${cloudMaterials.size} cloud + ${materials.size - cloudMaterials.size} local)")</ID>
     <ID>MaxLineLength:UserProfileViewModel.kt$UserProfileViewModel$Log.d(TAG, "📝 Current state: fullName=${state.fullName}, age=${state.age}, gender=${state.gender}, entryType=${state.entryType}")</ID>
