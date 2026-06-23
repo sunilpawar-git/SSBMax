@@ -46,13 +46,6 @@ class PsychTestSubmissionRepository @Inject constructor(
     suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
         tatRepo.finalizeTATAnalysisResult(submissionId, olqResult)
 
-    @Deprecated(
-        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
-        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
-    )
-    suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        tatRepo.updateTATOLQResult(submissionId, olqResult)
-
     suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> =
         tatRepo.getTATResult(submissionId)
 

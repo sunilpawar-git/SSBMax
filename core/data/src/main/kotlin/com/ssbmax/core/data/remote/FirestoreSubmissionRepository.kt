@@ -153,13 +153,6 @@ class FirestoreSubmissionRepository @Inject constructor(
     override suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
         psychRepo.finalizeTATAnalysisResult(submissionId, olqResult)
 
-    @Deprecated(
-        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
-        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
-    )
-    override suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        psychRepo.updateTATOLQResult(submissionId, olqResult)
-
     override fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> =
         psychRepo.observeTATSubmission(submissionId)
 

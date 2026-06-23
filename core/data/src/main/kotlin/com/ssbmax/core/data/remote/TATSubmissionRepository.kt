@@ -148,38 +148,6 @@ class TATSubmissionRepository @Inject constructor() {
         }
     }
 
-    /**
-     * @deprecated Use [finalizeTATAnalysisResult] for the synthesis pipeline.
-     * Kept for backward compatibility with [com.ssbmax.workers.TATAnalysisWorker].
-     */
-    @Deprecated(
-        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
-        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
-    )
-    suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
-        return try {
-            val submissionDoc = submissionsCollection.document(submissionId).get().await()
-            val userId = submissionDoc.getString(FIELD_USER_ID)
-                ?: throw Exception("Cannot find userId for submission: $submissionId")
-
-            val olqResultMap = OLQMapper.toFirestoreMap(olqResult).toMutableMap()
-            olqResultMap["userId"] = userId // Required by Firestore security rules
-
-            Log.d(TAG, "📝 Writing OLQ result to psych_results for submission: $submissionId, userId: $userId")
-            psychResultsCollection.document(submissionId).set(olqResultMap, SetOptions.merge()).await()
-            Log.d(TAG, "✅ Successfully wrote OLQ result to psych_results")
-
-            submissionsCollection.document(submissionId)
-                .update(mapOf("$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED))
-                .await()
-            Log.d(TAG, "✅ Successfully updated analysis status to COMPLETED")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to update OLQ result: ${e.message}", e)
-            Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
-        }
-    }
-
     suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> {
         return try {
             // Priority 1: Fetch from psych_results (New Architecture)

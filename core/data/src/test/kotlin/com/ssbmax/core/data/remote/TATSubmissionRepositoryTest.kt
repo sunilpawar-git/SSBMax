@@ -182,17 +182,17 @@ class TATSubmissionRepositoryTest {
     // ===========================
 
     @Test
-    fun `updateTATOLQResult legacy path is not used by synthesis finalization contract`() {
-        // Compile-time safety net: verify both methods exist on the class (suspend functions are
-        // compiled to JVM methods whose names contain the Kotlin function name as a prefix).
+    fun `finalizeTATAnalysisResult is the sole completion contract`() {
+        // Verifies the atomic finalization contract exists and the legacy
+        // updateTATOLQResult method has been removed (TATAnalysisWorker was deleted).
         val methodNames = TATSubmissionRepository::class.java.declaredMethods.map { it.name }
         assertTrue(
-            "finalizeTATAnalysisResult must exist as a JVM method",
+            "finalizeTATAnalysisResult must be the only completion contract",
             methodNames.any { it.contains("finalizeTATAnalysisResult") }
         )
         assertTrue(
-            "updateTATOLQResult must remain for legacy workers",
-            methodNames.any { it.contains("updateTATOLQResult") }
+            "updateTATOLQResult must not exist — legacy path removed with TATAnalysisWorker",
+            methodNames.none { it.contains("updateTATOLQResult") }
         )
     }
 

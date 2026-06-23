@@ -156,20 +156,6 @@ interface SubmissionRepository {
     ): Result<Unit>
 
     /**
-     * Update TAT OLQ result.
-     * @deprecated Use [finalizeTATAnalysisResult] for atomic result persistence.
-     * Kept for backward compatibility with [com.ssbmax.workers.TATAnalysisWorker].
-     */
-    @Deprecated(
-        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
-        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
-    )
-    suspend fun updateTATOLQResult(
-        submissionId: String,
-        olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-    ): Result<Unit>
-
-    /**
      * Observe TAT submission in real-time
      */
     fun observeTATSubmission(submissionId: String): Flow<TATSubmission?>

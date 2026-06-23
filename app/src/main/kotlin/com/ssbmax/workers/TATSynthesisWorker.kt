@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.first
  *
  * Runs after all per-story TATStoryAnalysisWorker instances complete (WorkManager chain).
  * Reads their Room assessments, sends a cross-story prompt to Gemini, and writes the
- * final OLQAnalysisResult to Firestore — replacing the old single-call TATAnalysisWorker.
+ * final OLQAnalysisResult to Firestore.
  */
 @HiltWorker
 class TATSynthesisWorker @AssistedInject constructor(
@@ -90,6 +90,7 @@ class TATSynthesisWorker @AssistedInject constructor(
         Log.d(TAG, "   ${validAssessments.size} story assessments ready for synthesis")
 
         submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
+            .onFailure { e -> Log.w(TAG, "⚠️ Failed to set ANALYZING status: ${e.message}") }
 
         val prompt = TATSynthesisPrompts.buildPrompt(validAssessments)
         Log.d(TAG, "   Synthesis prompt length: ${prompt.length} chars")
@@ -224,11 +225,12 @@ class TATSynthesisWorker @AssistedInject constructor(
     }
 
     private suspend fun handleFailure(submissionId: String) {
+        submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED)
+            .onFailure { e -> ErrorLogger.log(e, "Failed to mark TAT synthesis as FAILED") }
         try {
-            submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED)
             notificationHelper.showTATAnalysisFailedNotification(submissionId)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to mark TAT synthesis as FAILED")
+            ErrorLogger.log(e, "Failed to send TAT analysis failure notification")
         }
     }
 }
