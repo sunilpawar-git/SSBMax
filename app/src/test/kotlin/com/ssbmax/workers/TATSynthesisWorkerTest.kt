@@ -71,7 +71,7 @@ class TATSynthesisWorkerTest {
         every { workerParams.inputData } returns workDataOf(TATSynthesisWorker.KEY_SUBMISSION_ID to submissionId)
         every { workerParams.runAttemptCount } returns 0
         coEvery { submissionRepository.updateTATAnalysisStatus(any(), any()) } returns Result.success(Unit)
-        coEvery { submissionRepository.updateTATOLQResult(any(), any()) } returns Result.success(Unit)
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns Result.success(Unit)
         coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
     }
 
@@ -112,11 +112,102 @@ class TATSynthesisWorkerTest {
 
         assertEquals(ListenableWorker.Result.success(), result)
         coVerify(exactly = 1) {
-            submissionRepository.updateTATOLQResult(
+            submissionRepository.finalizeTATAnalysisResult(
                 submissionId,
                 match { it.submissionId == submissionId && it.testType == TestType.TAT }
             )
         }
+    }
+
+    @Test
+    fun `retries when finalizeTATAnalysisResult returns failure`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns
+            Result.failure(Exception("Firestore write failed"))
+        // runAttemptCount = 0, so MAX_AI_RETRIES (3) allows retrying
+        every { workerParams.runAttemptCount } returns 0
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.retry(), result)
+    }
+
+    @Test
+    fun `marks failed after retry exhaustion on finalization failure`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns
+            Result.failure(Exception("Firestore write failed"))
+        // Simulate exhausted retries
+        every { workerParams.runAttemptCount } returns 3
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.failure(), result)
+        coVerify(exactly = 1) { submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED) }
+    }
+
+    @Test
+    fun `does not show success notification when finalization fails`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns
+            Result.failure(Exception("Firestore unavailable"))
+
+        createWorker().doWork()
+
+        coVerify(exactly = 0) { notificationHelper.showTATResultsReadyNotification(any()) }
+    }
+
+    @Test
+    fun `does not invalidate dashboard cache when finalization fails`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns
+            Result.failure(Exception("Firestore unavailable"))
+
+        createWorker().doWork()
+
+        coVerify(exactly = 0) { getOLQDashboard.invalidateCache(any()) }
+    }
+
+    @Test
+    fun `shows success notification only after finalization succeeds`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        // Finalization succeeds
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns Result.success(Unit)
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) { notificationHelper.showTATResultsReadyNotification(submissionId) }
+    }
+
+    @Test
+    fun `invalidates dashboard cache only after finalization succeeds`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+        // Finalization succeeds
+        coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns Result.success(Unit)
+
+        val result = createWorker().doWork()
+
+        assertEquals(ListenableWorker.Result.success(), result)
+        coVerify(exactly = 1) { getOLQDashboard.invalidateCache(userId) }
     }
 
     @Test

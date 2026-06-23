@@ -105,36 +105,73 @@ class TATSubmissionRepository @Inject constructor() {
         }
     }
 
+    /**
+     * Atomically finalizes a TAT analysis result.
+     *
+     * Step 1: Persist OLQ result to `psych_results` (with userId for Firestore security rules).
+     * Step 2: Only after Step 1 succeeds, mark the submission COMPLETED with self-describing
+     *         metadata so observers can never see COMPLETED before the result is consumable.
+     *
+     * Returns [Result.failure] if any step fails. Callers must not trigger side effects
+     * (cache invalidation, notifications) until this returns success.
+     */
+    suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
+        return try {
+            val submissionDoc = submissionsCollection.document(submissionId).get().await()
+            val userId = submissionDoc.getString(FIELD_USER_ID)
+                ?: return Result.failure(Exception("Cannot find userId for submission: $submissionId"))
+
+            val olqResultMap = OLQMapper.toFirestoreMap(olqResult).toMutableMap()
+            olqResultMap["userId"] = userId // Required by Firestore security rules
+
+            Log.d(TAG, "📝 Persisting OLQ result to psych_results for $submissionId, userId: $userId")
+            psychResultsCollection.document(submissionId).set(olqResultMap, SetOptions.merge()).await()
+            Log.d(TAG, "✅ OLQ result persisted to psych_results")
+
+            // Mark COMPLETED only after result is durable — prevents COMPLETED being
+            // observable before the result is consumable.
+            val now = System.currentTimeMillis()
+            submissionsCollection.document(submissionId).update(
+                mapOf(
+                    "$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED,
+                    "$FIELD_DATA.resultUpdatedAt" to now,
+                    "$FIELD_DATA.hasOlqResult" to true,
+                    "$FIELD_DATA.resultSource" to "psych_results"
+                )
+            ).await()
+            Log.d(TAG, "✅ Submission $submissionId marked COMPLETED with result metadata")
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to finalize TAT analysis result: ${e.message}", e)
+            Result.failure(Exception("Failed to finalize TAT analysis result: ${e.message}", e))
+        }
+    }
+
+    /**
+     * @deprecated Use [finalizeTATAnalysisResult] for the synthesis pipeline.
+     * Kept for backward compatibility with [com.ssbmax.workers.TATAnalysisWorker].
+     */
+    @Deprecated(
+        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
+        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
+    )
     suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> {
         return try {
-            // First, fetch the userId from the submission document
-            // This is required by Firestore security rules for psych_results
             val submissionDoc = submissionsCollection.document(submissionId).get().await()
             val userId = submissionDoc.getString(FIELD_USER_ID)
                 ?: throw Exception("Cannot find userId for submission: $submissionId")
 
             val olqResultMap = OLQMapper.toFirestoreMap(olqResult).toMutableMap()
-            // CRITICAL: Add userId for Firestore security rules compliance
-            olqResultMap["userId"] = userId
+            olqResultMap["userId"] = userId // Required by Firestore security rules
 
             Log.d(TAG, "📝 Writing OLQ result to psych_results for submission: $submissionId, userId: $userId")
-
-            // 1. Write to psych_results collection (with userId for security rules)
-            psychResultsCollection.document(submissionId)
-                .set(olqResultMap, SetOptions.merge())
-                .await()
-
+            psychResultsCollection.document(submissionId).set(olqResultMap, SetOptions.merge()).await()
             Log.d(TAG, "✅ Successfully wrote OLQ result to psych_results")
 
-            // 2. Update analysis status in submissions collection
             submissionsCollection.document(submissionId)
-                .update(
-                    mapOf(
-                        "$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED
-                    )
-                )
+                .update(mapOf("$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED))
                 .await()
-
             Log.d(TAG, "✅ Successfully updated analysis status to COMPLETED")
             Result.success(Unit)
         } catch (e: Exception) {

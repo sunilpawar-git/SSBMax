@@ -11,14 +11,14 @@ import javax.inject.Singleton
 
 /**
  * Firestore Submission Repository Facade
- * 
+ *
  * Delegates all operations to specialized domain repositories:
  * - Common: Generic CRUD, observation
  * - Archive: Archival operations
  * - GTO: Group Testing Officer tests (GPE, GD, Lecturette)
  * - Personal: Personal tests (PIQ, OIR, PPDT)
  * - Psych: Psychology tests (TAT, WAT, SRT, SDT)
- * 
+ *
  * Refactored from monolithic 1,900+ lines to pure facade.
  */
 @Singleton
@@ -35,17 +35,17 @@ class FirestoreSubmissionRepository @Inject constructor(
     // ===========================
 
     override suspend fun submitGPE(
-        submission: GTOSubmission.GPESubmission, 
+        submission: GTOSubmission.GPESubmission,
         batchId: String?
     ): Result<String> = gtoRepo.submitGPE(submission, batchId)
 
     override suspend fun submitGD(
-        submission: GTOSubmission.GDSubmission, 
+        submission: GTOSubmission.GDSubmission,
         batchId: String?
     ): Result<String> = gtoRepo.submitGD(submission, batchId)
 
     override suspend fun submitLecturette(
-        submission: GTOSubmission.LecturetteSubmission, 
+        submission: GTOSubmission.LecturetteSubmission,
         batchId: String?
     ): Result<String> = gtoRepo.submitLecturette(submission, batchId)
 
@@ -79,7 +79,7 @@ class FirestoreSubmissionRepository @Inject constructor(
     ): Result<Unit> = commonRepo.updateSubmissionStatus(submissionId, status)
 
     // Custom methods (not in interface, but kept for compatibility)
-    suspend fun deleteSubmission(submissionId: String): Result<Unit> = 
+    suspend fun deleteSubmission(submissionId: String): Result<Unit> =
         commonRepo.deleteSubmission(submissionId)
 
     suspend fun updateWithInstructorGrading(
@@ -105,7 +105,7 @@ class FirestoreSubmissionRepository @Inject constructor(
 
     override suspend fun submitPIQ(submission: PIQSubmission, batchId: String?): Result<String> =
         personalRepo.submitPIQ(submission, batchId)
-        
+
     override suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?> =
         personalRepo.getLatestPIQSubmission(userId)
 
@@ -150,6 +150,13 @@ class FirestoreSubmissionRepository @Inject constructor(
     override suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         psychRepo.updateTATAnalysisStatus(submissionId, status)
 
+    override suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        psychRepo.finalizeTATAnalysisResult(submissionId, olqResult)
+
+    @Deprecated(
+        message = "Use finalizeTATAnalysisResult for atomic result persistence with completion metadata.",
+        replaceWith = ReplaceWith("finalizeTATAnalysisResult(submissionId, olqResult)")
+    )
     override suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
         psychRepo.updateTATOLQResult(submissionId, olqResult)
 
@@ -159,7 +166,7 @@ class FirestoreSubmissionRepository @Inject constructor(
     // WAT
     override suspend fun submitWAT(submission: WATSubmission, batchId: String?): Result<String> =
         psychRepo.submitWAT(submission, batchId)
-        
+
     override suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> =
         psychRepo.getWATSubmission(submissionId)
 
@@ -181,10 +188,10 @@ class FirestoreSubmissionRepository @Inject constructor(
     // SRT
     override suspend fun submitSRT(submission: SRTSubmission, batchId: String?): Result<String> =
         psychRepo.submitSRT(submission, batchId)
-        
+
     override suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> =
         psychRepo.getSRTSubmission(submissionId)
-        
+
     override suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> =
         psychRepo.getLatestSRTSubmission(userId)
 
@@ -203,10 +210,10 @@ class FirestoreSubmissionRepository @Inject constructor(
     // SDT
     override suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> =
         psychRepo.submitSDT(submission, batchId)
-        
+
     override suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> =
         psychRepo.getSDTSubmission(submissionId)
-        
+
     override suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> =
         psychRepo.getLatestSDTSubmission(userId)
 

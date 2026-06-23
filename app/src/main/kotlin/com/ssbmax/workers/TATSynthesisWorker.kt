@@ -113,31 +113,20 @@ class TATSynthesisWorker @AssistedInject constructor(
         Log.d(TAG, "   SSB validation — ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
 
         val overallScore = olqScores.values.map { it.score }.average().toFloat()
-        val strengths = olqScores.entries.sortedBy { it.value.score }.take(3)
-            .map { "${it.key.displayName} (${it.value.score})" }
-        val weaknesses = olqScores.entries.sortedByDescending { it.value.score }.take(3)
-            .map { "${it.key.displayName} (${it.value.score})" }
-        val avgConfidence = olqScores.values.map { it.confidence }.average().toInt()
+        val olqResult = buildOlqResult(submissionId, olqScores, overallScore)
 
-        val olqResult = OLQAnalysisResult(
-            submissionId = submissionId,
-            testType = TestType.TAT,
-            olqScores = olqScores,
-            overallScore = overallScore,
-            overallRating = ratingFromScore(overallScore),
-            strengths = strengths,
-            weaknesses = weaknesses,
-            recommendations = listOf(
-                "Review your narrative arcs across all 12 stories",
-                "Focus on strengthening: ${weaknesses.joinToString(", ")}",
-                "Maintain proactive and optimistic storytelling"
-            ),
-            analyzedAt = System.currentTimeMillis(),
-            aiConfidence = avgConfidence
-        )
-
-        submissionRepository.updateTATOLQResult(submissionId, olqResult)
-        Log.d(TAG, "   OLQ result written to Firestore")
+        // Finalize result atomically: psych_results first, then COMPLETED status.
+        // Side effects only happen after confirmed durable persistence.
+        val finalizeResult = submissionRepository.finalizeTATAnalysisResult(submissionId, olqResult)
+        if (finalizeResult.isFailure) {
+            Log.e(TAG, "❌ Finalization failed: ${finalizeResult.exceptionOrNull()?.message}")
+            return if (runAttemptCount < MAX_AI_RETRIES) Result.retry()
+            else {
+                handleFailure(submissionId)
+                Result.failure()
+            }
+        }
+        Log.d(TAG, "   OLQ result finalized in Firestore")
 
         submission?.userId?.let { userId ->
             try {
@@ -198,6 +187,33 @@ class TATSynthesisWorker @AssistedInject constructor(
             }
         }
         return mutable
+    }
+
+    private fun buildOlqResult(
+        submissionId: String,
+        olqScores: Map<OLQ, OLQScore>,
+        overallScore: Float
+    ): OLQAnalysisResult {
+        val strengths = olqScores.entries.sortedBy { it.value.score }.take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+        val weaknesses = olqScores.entries.sortedByDescending { it.value.score }.take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+        return OLQAnalysisResult(
+            submissionId = submissionId,
+            testType = TestType.TAT,
+            olqScores = olqScores,
+            overallScore = overallScore,
+            overallRating = ratingFromScore(overallScore),
+            strengths = strengths,
+            weaknesses = weaknesses,
+            recommendations = listOf(
+                "Review your narrative arcs across all 12 stories",
+                "Focus on strengthening: ${weaknesses.joinToString(", ")}",
+                "Maintain proactive and optimistic storytelling"
+            ),
+            analyzedAt = System.currentTimeMillis(),
+            aiConfidence = olqScores.values.map { it.confidence }.average().toInt()
+        )
     }
 
     private fun ratingFromScore(score: Float): String = when {
