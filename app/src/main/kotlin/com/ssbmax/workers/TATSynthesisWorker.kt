@@ -112,7 +112,14 @@ class TATSynthesisWorker @AssistedInject constructor(
         Log.d(TAG, "   SSB validation — ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
 
         val overallScore = olqScores.values.map { it.score }.average().toFloat()
-        val olqResult = buildOlqResult(submissionId, olqScores, overallScore)
+        val failedCount = assessments.size - validAssessments.size
+        val olqResult = buildOlqResult(
+            submissionId = submissionId,
+            olqScores = olqScores,
+            overallScore = overallScore,
+            validStoriesCount = validAssessments.size,
+            failedStoriesCount = failedCount
+        )
 
         // Finalize result atomically: psych_results first, then COMPLETED status.
         // Side effects only happen after confirmed durable persistence.
@@ -191,7 +198,9 @@ class TATSynthesisWorker @AssistedInject constructor(
     private fun buildOlqResult(
         submissionId: String,
         olqScores: Map<OLQ, OLQScore>,
-        overallScore: Float
+        overallScore: Float,
+        validStoriesCount: Int,
+        failedStoriesCount: Int
     ): OLQAnalysisResult {
         val strengths = olqScores.entries.sortedBy { it.value.score }.take(3)
             .map { "${it.key.displayName} (${it.value.score})" }
@@ -211,7 +220,10 @@ class TATSynthesisWorker @AssistedInject constructor(
                 "Maintain proactive and optimistic storytelling"
             ),
             analyzedAt = System.currentTimeMillis(),
-            aiConfidence = olqScores.values.map { it.confidence }.average().toInt()
+            aiConfidence = olqScores.values.map { it.confidence }.average().toInt(),
+            validStoriesCount = validStoriesCount,
+            failedStoriesCount = failedStoriesCount,
+            usedPartialAssessment = failedStoriesCount > 0
         )
     }
 

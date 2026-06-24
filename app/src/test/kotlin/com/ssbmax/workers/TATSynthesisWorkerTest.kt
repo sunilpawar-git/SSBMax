@@ -211,6 +211,77 @@ class TATSynthesisWorkerTest {
     }
 
     @Test
+    fun `sets usedPartialAssessment false for 12 valid stories`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 12)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        createWorker().doWork()
+
+        coVerify {
+            submissionRepository.finalizeTATAnalysisResult(
+                submissionId,
+                match { !it.usedPartialAssessment }
+            )
+        }
+    }
+
+    @Test
+    fun `sets usedPartialAssessment true when some stories are failed placeholders`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns
+            buildAssessments(validCount = 9, failedCount = 3)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        createWorker().doWork()
+
+        coVerify {
+            submissionRepository.finalizeTATAnalysisResult(
+                submissionId,
+                match { it.usedPartialAssessment }
+            )
+        }
+    }
+
+    @Test
+    fun `populates validStoriesCount correctly`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns
+            buildAssessments(validCount = 9, failedCount = 3)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        createWorker().doWork()
+
+        coVerify {
+            submissionRepository.finalizeTATAnalysisResult(
+                submissionId,
+                match { it.validStoriesCount == 9 }
+            )
+        }
+    }
+
+    @Test
+    fun `populates failedStoriesCount correctly`() = runTest {
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns
+            buildAssessments(validCount = 9, failedCount = 3)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.success(buildResponseAnalysis())
+        coEvery { submissionRepository.getTATSubmission(submissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(userId) } returns flowOf(Result.success(buildUserProfile()))
+
+        createWorker().doWork()
+
+        coVerify {
+            submissionRepository.finalizeTATAnalysisResult(
+                submissionId,
+                match { it.failedStoriesCount == 3 }
+            )
+        }
+    }
+
+    @Test
     fun `marks submission failed after retry exhaustion`() = runTest {
         coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
         coEvery { aiService.analyzeTATResponse(any()) } returns Result.failure(Exception("Gemini overloaded"))

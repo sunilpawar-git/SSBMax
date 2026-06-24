@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -96,6 +97,45 @@ class TATSubmissionResultViewModelTest : BaseViewModelTest() {
         assertEquals(false, state.isLoading)
         assertNull(state.submission)
         assertEquals("Submission not found", state.error)
+    }
+
+    @Test
+    fun `exposes partial assessment state when result is degraded`() = runTest {
+        val degradedResult = baseOlqResult.copy(
+            validStoriesCount = 9,
+            failedStoriesCount = 3,
+            usedPartialAssessment = true
+        )
+        every { submissionRepository.observeSubmission(submissionId) } returns
+            flowOf(
+                createFirestoreSubmissionMap(
+                    buildSubmission(analysisStatus = AnalysisStatus.COMPLETED, olqResult = degradedResult),
+                    includeOlqResult = true
+                )
+            )
+
+        viewModel.loadSubmission(submissionId)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.usesPartialAssessment)
+    }
+
+    @Test
+    fun `does not expose warning state for full valid analysis`() = runTest {
+        every { submissionRepository.observeSubmission(submissionId) } returns
+            flowOf(
+                createFirestoreSubmissionMap(
+                    buildSubmission(analysisStatus = AnalysisStatus.COMPLETED, olqResult = baseOlqResult),
+                    includeOlqResult = true
+                )
+            )
+
+        viewModel.loadSubmission(submissionId)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.usesPartialAssessment)
     }
 
     @Test
@@ -210,7 +250,10 @@ class TATSubmissionResultViewModelTest : BaseViewModelTest() {
                 "weaknesses" to olqResult.weaknesses,
                 "recommendations" to olqResult.recommendations,
                 "analyzedAt" to olqResult.analyzedAt,
-                "aiConfidence" to olqResult.aiConfidence
+                "aiConfidence" to olqResult.aiConfidence,
+                "validStoriesCount" to olqResult.validStoriesCount,
+                "failedStoriesCount" to olqResult.failedStoriesCount,
+                "usedPartialAssessment" to olqResult.usedPartialAssessment
             )
         }
 

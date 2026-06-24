@@ -1358,6 +1358,8 @@
     <string name="result_ppdt_story_submitted">Your PPDT story has been submitted for analysis</string>
     <string name="result_sdt_responses_completed">Completed: %1$d / 4 questions</string>
     <string name="result_tat_title">TAT Test Results</string>
+    <string name="result_tat_partial_assessment_title">Partial Assessment</string>
+    <string name="result_tat_partial_assessment_message">This result is based on %1$d of %2$d stories — the rest could not be analyzed. Scores may be less precise than a full assessment.</string>
     <string name="result_wat_title">WAT Test Results</string>
     <string name="result_srt_title">SRT Test Results</string>
     <string name="result_ppdt_title">PPDT Test Results</string>
