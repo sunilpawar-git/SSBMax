@@ -17,7 +17,10 @@ data class OLQAnalysisResult(
     val weaknesses: List<String>,
     val recommendations: List<String>,
     val analyzedAt: Long,
-    val aiConfidence: Int  // 0-100
+    val aiConfidence: Int,  // 0-100
+    val validStoriesCount: Int = 0,
+    val failedStoriesCount: Int = 0,
+    val usedPartialAssessment: Boolean = false
 )
 
 /**

@@ -51,7 +51,7 @@ fun ComposeContentTestRule.enterTextInField(label: String, text: String) {
 /**
  * Waits for a condition to be true
  */
-fun ComposeContentTestRule.waitUntil(
+fun ComposeContentTestRule.waitUntilCondition(
     timeoutMillis: Long = 5000L,
     condition: () -> Boolean
 ) {
@@ -88,4 +88,3 @@ fun ComposeContentTestRule.waitForTag(
         this.onAllNodes(androidx.compose.ui.test.hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty()
     }
 }
-

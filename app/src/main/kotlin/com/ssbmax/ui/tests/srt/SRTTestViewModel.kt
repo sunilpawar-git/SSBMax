@@ -1,65 +1,55 @@
 package com.ssbmax.ui.tests.srt
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.core.data.repository.SubscriptionManager
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
+import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.SRTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
-/**
- * ViewModel for SRT Test Screen
- * Loads test questions from cloud via TestContentRepository
- */
 @HiltViewModel
 class SRTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submitSRTTest: SubmitSRTTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    subscriptionManager: SubscriptionManager,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
-    private val workManager: WorkManager
-) : ViewModel() {
-    
-    // Timer Job reference
+    securityLogger: SecurityEventLogger,
+    workManager: WorkManager
+) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
+
     private var timerJob: Job? = null
-    
+
     private val _uiState = MutableStateFlow(SRTTestUiState())
     val uiState: StateFlow<SRTTestUiState> = _uiState.asStateFlow()
-    
-    // Navigation events (one-time events, consumed on collection)
-    private val _navigationEvents = Channel<TestNavigationEvent>(Channel.BUFFERED)
-    val navigationEvents = _navigationEvents.receiveAsFlow()
     
     /**
      * Check if user is eligible to take the test based on subscription tier
@@ -427,7 +417,7 @@ class SRTTestViewModel @Inject constructor(
                     ) }
 
                     // Emit navigation event (one-time, consumed by screen)
-                    _navigationEvents.trySend(
+                    sendNavigationEvent(
                         TestNavigationEvent.NavigateToResult(
                             submissionId = submissionId,
                             subscriptionType = subscriptionType
@@ -458,23 +448,16 @@ class SRTTestViewModel @Inject constructor(
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-
         val workRequest = OneTimeWorkRequestBuilder<SRTAnalysisWorker>()
             .setInputData(workDataOf(SRTAnalysisWorker.KEY_SUBMISSION_ID to submissionId))
             .setConstraints(constraints)
             .build()
-
-        workManager.enqueueUniqueWork(
-            "srt_analysis_$submissionId",
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+        enqueueAnalysisWork("srt_analysis_$submissionId", workRequest)
     }
 
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
-        _navigationEvents.close()
     }
 }
 

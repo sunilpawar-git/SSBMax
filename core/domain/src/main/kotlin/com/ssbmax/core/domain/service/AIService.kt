@@ -1,5 +1,7 @@
 package com.ssbmax.core.domain.service
 
+import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 
@@ -161,19 +163,47 @@ interface AIService {
     suspend fun analyzeSDResponse(prompt: String): Result<ResponseAnalysis>
 
     /**
-     * Analyze PPDT (Picture Perception & Description Test) submission for OLQ scores
+     * Analyze PPDT submission using multimodal input (image bytes + story + per-picture rubric).
      *
-     * Analyzes PPDT story to assess Officer-Like Qualities based on:
-     * - Perception quality (how well the candidate understood the scene)
-     * - Imagination and creativity  
-     * - Character depiction and development
-     * - Narrative structure and coherence
-     * - Positivity vs pessimism in the story
+     * Passes the actual picture to Gemini alongside the candidate's story, enabling the model
+     * to verify scene perception and score accordingly.
      *
-     * @param prompt Pre-generated PPDT analysis prompt from PsychologyTestPrompts
+     * @param imageBytes Raw JPEG bytes of the PPDT image (empty = text-only fallback)
+     * @param story Candidate's written story
+     * @param imageContext Structured per-picture rubric from the enrichment pipeline (Phase 5/6)
+     * @param candidateGender Gender string for protagonist-alignment scoring
      * @return OLQ scores for all 15 qualities with reasoning
      */
-    suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis>
+    suspend fun analyzePPDTMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: PPDTImageContext,
+        candidateGender: String
+    ): Result<ResponseAnalysis>
+
+    /**
+     * Analyze a single TAT story using multimodal input (image bytes + story + per-picture rubric).
+     *
+     * Passes the actual picture to Gemini alongside the candidate's story, enabling the model
+     * to verify scene perception and score accordingly.
+     *
+     * @param imageBytes Raw JPEG bytes of the TAT image (empty = text-only fallback)
+     * @param story Candidate's written story for this picture
+     * @param imageContext Structured per-picture rubric from the enrichment pipeline
+     * @param candidateGender Gender string for protagonist-alignment scoring
+     * @param storyIndex 0-based index of this story in the submission (for context)
+     * @param totalStories Total number of stories in the submission
+     * @return OLQ scores for all 15 qualities with reasoning
+     */
+    suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int,
+        imageGenderTag: String = "MIXED"
+    ): Result<ResponseAnalysis>
 
     /**
      * Health check for AI service availability
@@ -195,7 +225,8 @@ data class ResponseAnalysis(
     val olqScores: Map<OLQ, OLQScoreWithReasoning>,
     val overallConfidence: Int,
     val keyInsights: List<String>,
-    val suggestedFollowUp: String? = null
+    val suggestedFollowUp: String? = null,
+    val notRecommended: Boolean = false
 ) {
     init {
         require(overallConfidence in 0..100) { "Confidence must be between 0 and 100" }

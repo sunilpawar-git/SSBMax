@@ -210,7 +210,8 @@ private fun getScoreContainerColor(rating: String) = when (rating) {
     "Exceptional", "Excellent" -> MaterialTheme.colorScheme.tertiaryContainer
     "Very Good", "Good" -> MaterialTheme.colorScheme.primaryContainer
     "Average" -> MaterialTheme.colorScheme.secondaryContainer
-    else -> MaterialTheme.colorScheme.surfaceVariant
+    "Below Average" -> MaterialTheme.colorScheme.surfaceVariant
+    else -> MaterialTheme.colorScheme.errorContainer
 }
 
 /**
@@ -221,7 +222,8 @@ private fun getRatingColor(rating: String) = when (rating) {
     "Exceptional", "Excellent" -> MaterialTheme.colorScheme.tertiary
     "Very Good", "Good" -> MaterialTheme.colorScheme.primary
     "Average" -> MaterialTheme.colorScheme.onSurfaceVariant
-    else -> MaterialTheme.colorScheme.error
+    "Below Average" -> MaterialTheme.colorScheme.error
+    else -> MaterialTheme.colorScheme.onErrorContainer
 }
 
 /**

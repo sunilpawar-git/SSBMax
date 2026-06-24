@@ -114,12 +114,16 @@ object ValidationIntegration {
             .mapKeys { (category, _) -> category.ssbFactorNumber }
             .mapValues { it.value?.toFloat() ?: 0f }
 
-        // 6. Determine recommendation
-        val recommendationResult = SSBScoreValidator.determineRecommendation(scoreMap, entryType)
-        val recommendation = when (recommendationResult.recommendation) {
-            Recommendation.NOT_RECOMMENDED -> RecommendationOutcome.NOT_RECOMMENDED
-            Recommendation.DOUBTFUL -> RecommendationOutcome.BORDERLINE
-            Recommendation.RECOMMENDED -> RecommendationOutcome.RECOMMENDED
+        // 6. Determine recommendation — R14: any limitation is absolute NOT_RECOMMENDED
+        val recommendation = if (limitationResult.count > 0) {
+            RecommendationOutcome.NOT_RECOMMENDED
+        } else {
+            val recommendationResult = SSBScoreValidator.determineRecommendation(scoreMap, entryType)
+            when (recommendationResult.recommendation) {
+                Recommendation.NOT_RECOMMENDED -> RecommendationOutcome.NOT_RECOMMENDED
+                Recommendation.DOUBTFUL -> RecommendationOutcome.BORDERLINE
+                Recommendation.RECOMMENDED -> RecommendationOutcome.RECOMMENDED
+            }
         }
 
         // Build summary

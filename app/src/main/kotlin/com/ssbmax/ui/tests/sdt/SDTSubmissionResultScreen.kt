@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
+import com.ssbmax.ui.components.result.OLQResultContent
 import com.ssbmax.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.ui.components.result.UnifiedOLQResultTemplate
 
@@ -45,6 +46,7 @@ fun SDTSubmissionResultScreen(
         },
         testSpecificContent = { state ->
             SDTResponsesList(state)
+            state.olqResult?.let { OLQResultContent(olqResult = it) }
         },
         submissionStatus = uiState.submission?.status,
         onNavigateHome = onNavigateHome

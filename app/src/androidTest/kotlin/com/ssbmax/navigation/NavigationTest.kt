@@ -33,7 +33,7 @@ class NavigationTest : BaseComposeTest() {
         }
 
         // Then: Start destination should be Splash
-        assert(navController.currentDestination == null || 
+        assert(navController.currentDestination == null ||
                navController.currentBackStackEntry?.destination?.route?.contains("splash") == true) {
             "Start destination should be splash"
         }
@@ -43,14 +43,14 @@ class NavigationTest : BaseComposeTest() {
     fun navigation_fromLoginToHome_works() {
         // This test verifies the Login -> Home navigation flow
         // In a real scenario, we'd set up the full nav graph and trigger login success
-        
+
         composeTestRule.setContent {
             navController = TestNavHostController(LocalContext.current)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
         }
 
         // Verify navigation controller is initialized
-        assert(navController != null) { "Nav controller should be initialized" }
+        assert(::navController.isInitialized) { "Nav controller should be initialized" }
     }
 
     @Test
@@ -65,14 +65,14 @@ class NavigationTest : BaseComposeTest() {
         // navController.navigate(SSBMaxDestinations.Phase1Detail.route)
 
         // Then: Verify navigation (simplified test)
-        assert(navController != null) { "Nav controller should support phase navigation" }
+        assert(::navController.isInitialized) { "Nav controller should support phase navigation" }
     }
 
     @Test
     fun navigation_toTestScreens_preservesTestId() {
         // Given: Navigation to TAT test
         val testId = "test-123"
-        
+
         composeTestRule.setContent {
             navController = TestNavHostController(LocalContext.current)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
@@ -80,7 +80,7 @@ class NavigationTest : BaseComposeTest() {
 
         // When: Navigate to test with ID
         val route = SSBMaxDestinations.TATTest.createRoute(testId)
-        
+
         // Then: Route should contain test ID
         assert(route.contains(testId)) { "Route should contain test ID" }
         assert(route.contains("test/tat")) { "Route should be TAT test route" }
@@ -89,19 +89,19 @@ class NavigationTest : BaseComposeTest() {
     @Test
     fun navigation_createRoutes_generatesCorrectPaths() {
         // Test route generation for different screens
-        
+
         // TAT Test
         val tatRoute = SSBMaxDestinations.TATTest.createRoute("tat-123")
         assert(tatRoute == "test/tat/tat-123") { "TAT route should be correct" }
-        
+
         // WAT Test
         val watRoute = SSBMaxDestinations.WATTest.createRoute("wat-456")
         assert(watRoute == "test/wat/wat-456") { "WAT route should be correct" }
-        
+
         // OIR Test
         val oirRoute = SSBMaxDestinations.OIRTest.createRoute("oir-789")
         assert(oirRoute == "test/oir/oir-789") { "OIR route should be correct" }
-        
+
         // SRT Test
         val srtRoute = SSBMaxDestinations.SRTTest.createRoute("srt-012")
         assert(srtRoute == "test/srt/srt-012") { "SRT route should be correct" }
@@ -110,11 +110,11 @@ class NavigationTest : BaseComposeTest() {
     @Test
     fun navigation_resultRoutes_generateCorrectly() {
         // Test result route generation
-        
+
         // TAT Result
         val tatResultRoute = SSBMaxDestinations.TATSubmissionResult.createRoute("sub-123")
         assert(tatResultRoute == "test/tat/result/sub-123") { "TAT result route should be correct" }
-        
+
         // WAT Result
         val watResultRoute = SSBMaxDestinations.WATSubmissionResult.createRoute("sub-456")
         assert(watResultRoute == "test/wat/result/sub-456") { "WAT result route should be correct" }
@@ -149,7 +149,7 @@ class NavigationTest : BaseComposeTest() {
         }
 
         // Then: Nav controller should be initialized
-        assert(navController != null) { "Navigation controller should be initialized" }
+        assert(::navController.isInitialized) { "Navigation controller should be initialized" }
     }
 
     @Test
@@ -157,26 +157,26 @@ class NavigationTest : BaseComposeTest() {
         // Test interview result route generation (used for deep linking from notifications)
         val resultId = "result-abc123"
         val route = SSBMaxDestinations.InterviewResult.createRoute(resultId)
-        
-        assert(route == "interview/result/$resultId") { 
-            "Interview result route should match deep link format. Expected: interview/result/$resultId, got: $route" 
+
+        assert(route == "interview/result/$resultId") {
+            "Interview result route should match deep link format. Expected: interview/result/$resultId, got: $route"
         }
     }
 
     @Test
     fun navigation_interviewRoutes_areValid() {
         // Verify all interview-related destinations have valid routes
-        assert(SSBMaxDestinations.StartInterview.route.isNotEmpty()) { 
-            "StartInterview route should not be empty" 
+        assert(SSBMaxDestinations.StartInterview.route.isNotEmpty()) {
+            "StartInterview route should not be empty"
         }
-        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) { 
-            "VoiceInterviewSession route should contain sessionId parameter" 
+        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) {
+            "VoiceInterviewSession route should contain sessionId parameter"
         }
-        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) { 
-            "VoiceInterviewSession route should contain sessionId parameter" 
+        assert(SSBMaxDestinations.VoiceInterviewSession.route.contains("{sessionId}")) {
+            "VoiceInterviewSession route should contain sessionId parameter"
         }
-        assert(SSBMaxDestinations.InterviewResult.route.contains("{resultId}")) { 
-            "InterviewResult route should contain resultId parameter" 
+        assert(SSBMaxDestinations.InterviewResult.route.contains("{resultId}")) {
+            "InterviewResult route should contain resultId parameter"
         }
     }
 
@@ -186,14 +186,14 @@ class NavigationTest : BaseComposeTest() {
         // Deep link format: ssbmax://interview/result/{resultId}
         // Navigation route: interview/result/{resultId}
         val resultId = "test-result-123"
-        
+
         // Use DeepLinkParser to build and parse (tests round-trip)
         val deepLink = com.ssbmax.utils.DeepLinkParser.buildInterviewResultDeepLink(resultId)
         val processedRoute = com.ssbmax.utils.DeepLinkParser.parseToRoute(deepLink)
-        
+
         // Verify it matches the route we'd navigate to
         val expectedRoute = SSBMaxDestinations.InterviewResult.createRoute(resultId)
-        
+
         assert(processedRoute == expectedRoute) {
             "Processed deep link should match navigation route. " +
             "Processed: $processedRoute, Expected: $expectedRoute"
@@ -208,4 +208,3 @@ class NavigationTest : BaseComposeTest() {
         }
     }
 }
-

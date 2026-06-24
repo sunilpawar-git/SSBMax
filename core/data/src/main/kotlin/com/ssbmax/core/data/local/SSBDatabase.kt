@@ -2,7 +2,9 @@ package com.ssbmax.core.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.ssbmax.core.data.local.dao.GPEImageCacheDao
+import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
@@ -33,6 +35,7 @@ import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
+import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 
@@ -62,11 +65,13 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         GTOBatchMetadataEntity::class,
         CachedInterviewQuestionEntity::class,
         InterviewBatchMetadataEntity::class,
-        UserPerformanceEntity::class
+        UserPerformanceEntity::class,
+        TATStoryAssessmentEntity::class
     ],
-    version = 21, // Add correctAnswerIds column for multi-answer OIR questions (migrated from 20)
+    version = 25, // Phase 3 TAT: tat_story_assessments table for per-story multimodal analysis cache (migrated from 24)
     exportSchema = true
 )
+@TypeConverters(RoomTypeConverters::class)
 abstract class SSBDatabase : RoomDatabase() {
     
     /**
@@ -128,7 +133,12 @@ abstract class SSBDatabase : RoomDatabase() {
      * User performance DAO for adaptive difficulty
      */
     abstract fun userPerformanceDao(): UserPerformanceDao
-    
+
+    /**
+     * TAT per-story assessment cache DAO
+     */
+    abstract fun tatStoryAssessmentDao(): TATStoryAssessmentDao
+
     companion object {
         const val DATABASE_NAME = "ssbmax_database"
     }

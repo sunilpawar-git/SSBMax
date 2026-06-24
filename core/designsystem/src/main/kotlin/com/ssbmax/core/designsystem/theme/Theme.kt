@@ -17,13 +17,13 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColorScheme = darkColorScheme(
     primary = SSBColors.MilitaryGold,
     onPrimary = SSBColors.NavyBlueDark,
-    primaryContainer = SSBColors.MilitaryGoldDark,
-    onPrimaryContainer = SSBColors.NavyBlue,
+    primaryContainer = SSBColors.MilitaryGoldLight,  // Changed: lighter gold for better contrast
+    onPrimaryContainer = SSBColors.NavyBlueDark,     // Changed: darker text for readability
     
-    secondary = SSBColors.OliveGreen,
-    onSecondary = SSBColors.SurfaceLight,
-    secondaryContainer = SSBColors.OliveGreenDark,
-    onSecondaryContainer = SSBColors.OliveGreenLight,
+    secondary = SSBColors.OliveGreenLight,            // Changed: lighter olive for visibility
+    onSecondary = SSBColors.NavyBlueDark,             // Changed: dark text instead of white
+    secondaryContainer = SSBColors.OliveGreenLight,   // Changed: lighter for better contrast
+    onSecondaryContainer = SSBColors.NavyBlueDark,    // Changed: darker text for readability
     
     tertiary = SSBColors.NavyBlueLight,
     onTertiary = SSBColors.SurfaceLight,

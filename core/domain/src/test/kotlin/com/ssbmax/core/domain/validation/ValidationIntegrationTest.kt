@@ -5,6 +5,7 @@ import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.scoring.EntryType
 import com.ssbmax.core.domain.scoring.SSBScoringRules
 import org.junit.Assert.*
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 /**
@@ -164,17 +165,17 @@ class ValidationIntegrationTest {
     // ===========================================
 
     @Test
-    fun `validateScores returns BORDERLINE for close cases`() {
+    fun `validateScores returns NOT_RECOMMENDED for any limitations`() {
+        // R14: any limitation = NOT_RECOMMENDED (supersedes old entry-type-based borderline logic)
         val scores = createScoresMap(allScore = 5).toMutableMap()
-        // 3-4 limitations for NDA (max 4) is borderline
         scores[OLQ.EFFECTIVE_INTELLIGENCE] = OLQScore(8, 80, "Poor")
         scores[OLQ.DETERMINATION] = OLQScore(8, 80, "Poor")
         scores[OLQ.STAMINA] = OLQScore(8, 80, "Poor")
-        
+
         val result = ValidationIntegration.validateScores(scores, EntryType.NDA)
-        
-        assertEquals("3 limitations for NDA should be borderline", 
-            RecommendationOutcome.BORDERLINE, result.recommendation)
+
+        assertEquals("Any limitation must yield NOT_RECOMMENDED (R14)",
+            RecommendationOutcome.NOT_RECOMMENDED, result.recommendation)
     }
 
     // ===========================================
@@ -201,6 +202,33 @@ class ValidationIntegrationTest {
         
         // Should still process partial scores
         assertEquals("Should have 0 limitations from these scores", 0, result.limitationCount)
+    }
+
+    // ===========================================
+    // R14: ANY OLQ >= 8 → NOT_RECOMMENDED
+    // ===========================================
+
+    @Test
+    fun `any single OLQ score of 8 yields NOT_RECOMMENDED`() {
+        // WHY: R14 — SSB doctrine: one limitation = not recommended; current code allows up to 4 for NDA
+        val scores = createScoresMap(allScore = 6).toMutableMap()
+        scores[OLQ.ORGANIZING_ABILITY] = OLQScore(8, 80, "Poor organizing")
+
+        val result = ValidationIntegration.validateScores(scores, EntryType.NDA)
+
+        assertEquals("Single OLQ >= 8 must yield NOT_RECOMMENDED (R14)",
+            RecommendationOutcome.NOT_RECOMMENDED, result.recommendation)
+    }
+
+    @Test
+    fun `all OLQ scores at 7 do not trigger NOT_RECOMMENDED`() {
+        // WHY: boundary guard — 7 is average, not a limitation; R14 must not fire for average candidates
+        val scores = createScoresMap(allScore = 7)
+
+        val result = ValidationIntegration.validateScores(scores, EntryType.NDA)
+
+        assertNotEquals("Scores of 7 must not trigger NOT_RECOMMENDED",
+            RecommendationOutcome.NOT_RECOMMENDED, result.recommendation)
     }
 
     // ===========================================

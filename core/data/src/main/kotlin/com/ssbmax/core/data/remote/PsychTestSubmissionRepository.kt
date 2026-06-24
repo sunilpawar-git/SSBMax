@@ -43,8 +43,8 @@ class PsychTestSubmissionRepository @Inject constructor(
     suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> =
         tatRepo.updateTATAnalysisStatus(submissionId, status)
 
-    suspend fun updateTATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        tatRepo.updateTATOLQResult(submissionId, olqResult)
+    suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
+        tatRepo.finalizeTATAnalysisResult(submissionId, olqResult)
 
     suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> =
         tatRepo.getTATResult(submissionId)

@@ -15,6 +15,7 @@ import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
+import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.repository.FirestoreGTORepository
@@ -66,7 +67,11 @@ object DatabaseModule {
                 DatabaseMigrations.MIGRATION_17_18, // Composite (type, lastUsed) index for OIR hot query
                 DatabaseMigrations.MIGRATION_18_19, // Restore type and batchId indices on cached_oir_questions
                 DatabaseMigrations.MIGRATION_19_20, // Add oir_sync_metadata table for content-version reconciliation
-                DatabaseMigrations.MIGRATION_20_21  // Add correctAnswerIds column for multi-answer OIR questions
+                DatabaseMigrations.MIGRATION_20_21, // Add correctAnswerIds column for multi-answer OIR questions
+                DatabaseMigrations.MIGRATION_21_22, // Phase 6: context→imageContextJson + genderTag on ppdt images
+                DatabaseMigrations.MIGRATION_22_23, // Phase 6: 24h TTL staleness-check column on ppdt_batch_metadata
+                DatabaseMigrations.MIGRATION_23_24, // Phase 2 TAT: pool-aware schema + tat_batch_metadata TTL
+                DatabaseMigrations.MIGRATION_24_25  // Phase 3 TAT: tat_story_assessments table for per-story multimodal cache
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
         .build()
@@ -130,6 +135,11 @@ object DatabaseModule {
     @Provides
     fun provideUserPerformanceDao(database: SSBDatabase): UserPerformanceDao {
         return database.userPerformanceDao()
+    }
+
+    @Provides
+    fun provideTATStoryAssessmentDao(database: SSBDatabase): TATStoryAssessmentDao {
+        return database.tatStoryAssessmentDao()
     }
     
     @Provides

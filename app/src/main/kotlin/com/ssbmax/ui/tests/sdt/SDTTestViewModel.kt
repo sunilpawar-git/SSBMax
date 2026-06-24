@@ -1,19 +1,21 @@
 package com.ssbmax.ui.tests.sdt
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.ssbmax.core.data.repository.SubscriptionManager
+import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.core.domain.usecase.submission.SubmitSDTTestUseCase
+import com.ssbmax.ui.tests.common.BaseTestViewModel
+import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.SDTAnalysisWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,38 +28,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for SDT Test Screen
- * Loads 4 standard questions with 15-minute shared timer
- */
 @HiltViewModel
 class SDTTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submitSDTTest: SubmitSDTTestUseCase,
-    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
-    private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
+    subscriptionManager: SubscriptionManager,
     private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
-    private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
-    private val workManager: WorkManager
-) : ViewModel() {
+    securityLogger: SecurityEventLogger,
+    workManager: WorkManager
+) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
 
     private val _uiState = MutableStateFlow(SDTTestUiState())
     val uiState: StateFlow<SDTTestUiState> = _uiState.asStateFlow()
 
-
-    // Navigation events (one-time events, consumed on collection)
-    private val _navigationEvents = kotlinx.coroutines.channels.Channel<com.ssbmax.ui.tests.common.TestNavigationEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
-    val navigationEvents = _navigationEvents.receiveAsFlow()
-
-    // Timer Job reference for explicit cancellation (prevents "rushing" bug)
-    private var timerJob: kotlinx.coroutines.Job? = null
+    private var timerJob: Job? = null
 
     companion object {
         private const val TAG = "SDTTestViewModel"
@@ -165,7 +156,6 @@ class SDTTestViewModel @Inject constructor(
                 currentAnswer = ""
             ) }
         } else {
-            // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
             _uiState.update { it.copy(isTimerActive = false) }
             _uiState.update { it.copy(phase = SDTPhase.REVIEW) }
         }
@@ -195,7 +185,6 @@ class SDTTestViewModel @Inject constructor(
         if (state.currentQuestionIndex < state.questions.size - 1) {
             _uiState.update { it.copy(currentQuestionIndex = state.currentQuestionIndex + 1) }
         } else {
-            // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
             _uiState.update { it.copy(
                 isTimerActive = false,
                 phase = SDTPhase.REVIEW
@@ -229,7 +218,6 @@ class SDTTestViewModel @Inject constructor(
             }
 
             try {
-                // PHASE 2: stopTimer() removed - viewModelScope auto-cancels
                 _uiState.update { it.copy(isTimerActive = false) }
 
                 val subscriptionType = userProfileRepository.getUserProfile(currentUserId).first()
@@ -286,8 +274,8 @@ class SDTTestViewModel @Inject constructor(
                         phase = SDTPhase.SUBMITTED) }
 
                     // Emit navigation event (one-time, consumed by screen)
-                    _navigationEvents.trySend(
-                        com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult(
+                    sendNavigationEvent(
+                        TestNavigationEvent.NavigateToResult(
                             submissionId = submissionId,
                             subscriptionType = subscriptionType
                         )
@@ -304,7 +292,6 @@ class SDTTestViewModel @Inject constructor(
     }
 
     private fun startTimer() {
-        // PHASE 4 FIX: Cancel previous timer to prevent concurrency bug
         timerJob?.cancel()
         
         val totalTimeMinutes = 15
@@ -316,7 +303,6 @@ class SDTTestViewModel @Inject constructor(
             timerStartTime = System.currentTimeMillis()
         ) }
         
-        // PHASE 4 FIX: Delta-based calculation for 15-minute timer
         val startTime = System.currentTimeMillis()
         val endTime = startTime + (totalTimeSeconds * 1000)
         
@@ -348,8 +334,6 @@ class SDTTestViewModel @Inject constructor(
         }
     }
 
-    // PHASE 3: stopTimer() removed - viewModelScope automatically cancels all jobs
-
     /**
      * Enqueue SDTAnalysisWorker for background OLQ analysis
      */
@@ -363,21 +347,12 @@ class SDTTestViewModel @Inject constructor(
             .setConstraints(constraints)
             .build()
 
-        workManager.enqueueUniqueWork(
-            "sdt_analysis_$submissionId",
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+        enqueueAnalysisWork("sdt_analysis_$submissionId", workRequest)
     }
 
     override fun onCleared() {
         super.onCleared()
-        
-        // PHASE 4 FIX: Explicitly cancel timer
         timerJob?.cancel()
-        
-        android.util.Log.d(TAG, "🧹 ViewModel onCleared() - timer cancelled")
-        _navigationEvents.close()
     }
 }
 
@@ -402,7 +377,6 @@ data class SDTTestUiState(
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",
-    // PHASE 1: New StateFlow fields (replacing nullable vars)
     val isTimerActive: Boolean = false,
     val timerStartTime: Long = 0L,
     val submission: SDTSubmission? = null

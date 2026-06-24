@@ -11,6 +11,7 @@ data class PPDTBatchMetadataEntity(
     @PrimaryKey val batchId: String,
     val downloadedAt: Long,
     val imageCount: Int,
-    val version: String
+    val version: String,
+    val lastStalenessCheckAt: Long = 0L
 )
 

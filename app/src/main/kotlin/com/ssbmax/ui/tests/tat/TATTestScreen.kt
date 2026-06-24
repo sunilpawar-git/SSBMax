@@ -52,6 +52,15 @@ fun TATTestScreen(
         }
     }
 
+    // Show profile incomplete dialog (gender needed for image pool selection)
+    if (uiState.isProfileIncomplete) {
+        TATProfileRequiredDialog(
+            onGoToSettings = onNavigateBack,
+            onDismiss = onNavigateBack
+        )
+        return
+    }
+
     // Show subscription limit dialog if test limit reached
     if (uiState.isLimitReached) {
         com.ssbmax.ui.tests.common.TestLimitReachedDialog(
@@ -73,7 +82,11 @@ fun TATTestScreen(
                         Text(stringResource(R.string.tat_test))
                         if (uiState.currentQuestion != null) {
                             Text(
-                                stringResource(R.string.tat_picture_number, uiState.currentQuestionIndex + 1),
+                                stringResource(
+                                    R.string.tat_picture_number,
+                                    uiState.currentQuestionIndex + 1,
+                                    uiState.questions.size
+                                ),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -94,9 +107,7 @@ fun TATTestScreen(
                 TATBottomBar(
                     phase = uiState.phase,
                     canMoveNext = uiState.canMoveToNextQuestion,
-                    canMovePrevious = uiState.canMoveToPreviousQuestion,
                     canSubmit = uiState.canSubmitTest,
-                    onPrevious = { viewModel.moveToPreviousQuestion() },
                     onNext = { viewModel.moveToNextQuestion() },
                     onSubmit = { showSubmitDialog = true }
                 )
@@ -126,19 +137,26 @@ fun TATTestScreen(
                         story = uiState.currentStory,
                         onStoryChange = { viewModel.updateStory(it) },
                         timeRemaining = uiState.writingTimeRemaining,
-                        minCharacters = uiState.currentQuestion?.minCharacters ?: 50,
+                        minCharacters = uiState.currentQuestion?.minCharacters ?: 150,
                         maxCharacters = uiState.currentQuestion?.maxCharacters ?: 1500,
                         charactersCount = uiState.currentStory.length,
                         sequenceNumber = uiState.currentQuestionIndex + 1
                     )
                 }
-                TATPhase.REVIEW_CURRENT -> {
+                TATPhase.REVIEW -> {
                     TATReviewPhase(
                         story = uiState.currentStory,
                         charactersCount = uiState.currentStory.length,
                         sequenceNumber = uiState.currentQuestionIndex + 1,
+                        isLastQuestion = uiState.isLastQuestion,
                         onEdit = { viewModel.editCurrentStory() },
-                        onConfirm = { viewModel.confirmCurrentStory() }
+                        onConfirm = {
+                            if (uiState.isLastQuestion) {
+                                showSubmitDialog = true
+                            } else {
+                                viewModel.confirmCurrentStory()
+                            }
+                        }
                     )
                 }
                 TATPhase.SUBMITTED -> {
@@ -180,6 +198,7 @@ fun TATTestScreen(
     if (showSubmitDialog) {
         TATSubmitDialog(
             completedStories = uiState.completedStories,
+            totalStories = uiState.questions.size,
             onDismiss = { showSubmitDialog = false },
             onSubmit = {
                 showSubmitDialog = false

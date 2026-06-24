@@ -60,6 +60,18 @@ interface PPDTImageCacheDao {
      */
     @Query("SELECT * FROM cached_ppdt_images ORDER BY usageCount ASC, RANDOM() LIMIT :count")
     suspend fun getLeastUsedImages(count: Int): List<CachedPPDTImageEntity>
+
+    /**
+     * Get least used images filtered by gender — FEMALE/MALE sees same-gender + MIXED;
+     * pushes the filter to SQL so no in-memory post-filter is needed (SSOT/SOLID SR).
+     */
+    @Query("""
+        SELECT * FROM cached_ppdt_images
+        WHERE genderTag = :tag OR genderTag = 'MIXED'
+        ORDER BY usageCount ASC, RANDOM()
+        LIMIT :count
+    """)
+    suspend fun getLeastUsedImagesByGender(tag: String, count: Int): List<CachedPPDTImageEntity>
     
     /**
      * Get images that have been downloaded locally

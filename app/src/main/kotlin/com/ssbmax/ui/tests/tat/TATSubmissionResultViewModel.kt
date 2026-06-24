@@ -254,7 +254,10 @@ class TATSubmissionResultViewModel @Inject constructor(
                 weaknesses = (data["weaknesses"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 recommendations = (data["recommendations"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: 0L,
-                aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0
+                aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0,
+                validStoriesCount = (data["validStoriesCount"] as? Number)?.toInt() ?: 0,
+                failedStoriesCount = (data["failedStoriesCount"] as? Number)?.toInt() ?: 0,
+                usedPartialAssessment = data["usedPartialAssessment"] as? Boolean ?: false
             )
         } catch (e: Exception) {
             ErrorLogger.logTestError(e, "Error parsing OLQ result", "TAT")
@@ -276,5 +279,7 @@ data class TATSubmissionResultUiState(
         get() = submission?.analysisStatus ?: AnalysisStatus.PENDING_ANALYSIS
     override val olqResult: OLQAnalysisResult?
         get() = submission?.olqResult
+    val usesPartialAssessment: Boolean
+        get() = submission?.olqResult?.usedPartialAssessment == true
 }
 

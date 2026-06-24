@@ -317,6 +317,7 @@ class NotificationHelper @Inject constructor(
     }
 
     private fun showPsychologyTestResultNotification(submissionId: String, testType: String, titleResId: Int, bodyResId: Int) {
+        Log.d(TAG, "📢 show${testType}ResultsReadyNotification — submissionId: $submissionId")
         try {
             val deepLink = "ssbmax://test/${testType.lowercase()}/result/$submissionId"
             val intent = Intent(context, MainActivity::class.java).apply {

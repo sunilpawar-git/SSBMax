@@ -1,0 +1,650 @@
+Global execution rules for every phase
+
+## Must always hold
+- [ ] Build must succeed before phase is complete
+- [ ] All tests must pass before phase is complete
+- [ ] No touched file may exceed `300` LOC
+- [ ] No hardcoded user-facing strings
+- [ ] No hardcoded colors
+- [ ] No direct Firebase calls from UI/ViewModel
+- [ ] No security relaxations or test-only production bypasses
+- [ ] Use `./gradlew` only
+
+## Required final command for every phase
+- [ ] `./gradlew check`
+
+## Required handoff before next phase
+Provide:
+1. Tech debt incurred
+2. How it was immediately resolved
+3. Confirmation build succeeds and all tests pass
+
+---
+
+# Phase 0 — Baseline Stabilization + Characterization Safety Net
+
+## Objective
+Restore a clean baseline and freeze current intended TAT behavior in tests before architectural refactors.
+
+---
+
+## Files to touch
+
+### Fix baseline red build
+- [ ] `app/src/androidTest/kotlin/com/ssbmax/ui/tests/oir/OIRTestScreenTest.kt`
+
+### Add/update characterization tests
+- [ ] `app/src/test/kotlin/com/ssbmax/workers/TATStoryAnalysisWorkerTest.kt`
+- [ ] `app/src/test/kotlin/com/ssbmax/workers/TATSynthesisWorkerTest.kt`
+  - If missing, **create it**
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModelTest.kt`
+  - If missing, **create it**
+
+---
+
+## Tests to write/update
+
+### `TATStoryAnalysisWorkerTest`
+Add/confirm these tests:
+- [ ] `returns success and saves placeholder when story is missing`
+- [ ] `returns success and saves placeholder when ai retries are exhausted`
+- [ ] `downloads blank image as zero bytes and still calls multimodal analyzer`
+- [ ] `saves assessment when ai returns valid olq scores`
+
+### `TATSynthesisWorkerTest`
+Add/confirm these tests:
+- [ ] `fails when valid story count is below threshold`
+- [ ] `filters failed placeholders before synthesis`
+- [ ] `writes final result through repository on success`
+- [ ] `marks submission failed after retry exhaustion`
+
+### `TATSubmissionResultViewModelTest`
+Add/confirm these tests:
+- [ ] `fetches result separately when status is completed but snapshot has no result`
+- [ ] `does not regress when analysis status is pending or analyzing`
+
+### `OIRTestScreenTest`
+- [ ] Fix compile mismatch causing current Android test compile failure
+- [ ] Ensure no broken constructor/copy usage remains
+
+---
+
+## Implementation checklist
+
+- [ ] Fix `OIRTestScreenTest.kt` so `:app:compileDebugAndroidTestKotlin` succeeds
+- [ ] Add missing TAT characterization tests
+- [ ] Keep all TAT production code behavior unchanged in this phase
+- [ ] If any test file approaches 300 LOC, split helper/test data into companion helper file
+
+---
+
+## Commands to run
+
+### 1. Compile Android tests first
+```bash
+./gradlew :app:compileDebugAndroidTestKotlin
+```
+
+### 2. Run targeted TAT unit tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATStoryAnalysisWorkerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATSynthesisWorkerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATSubmissionResultViewModelTest"
+```
+
+### 3. Run app unit tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+### 4. Run full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 0
+Do **not** proceed to Phase 1 until:
+- [ ] `:app:compileDebugAndroidTestKotlin` succeeds
+- [ ] all three targeted TAT tests pass
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 0 handoff checklist
+- [ ] Tech debt list written
+- [ ] Any temporary test scaffolding cleaned up
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Phase 1 — Repository Finalization Contract
+
+## Objective
+Replace the ambiguous final-write flow with one authoritative repository finalization contract.
+
+---
+
+## Files to touch
+
+### Domain contract
+- [ ] `core/domain/src/main/kotlin/com/ssbmax/core/domain/repository/SubmissionRepository.kt`
+
+### Repository implementation
+- [ ] `core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt`
+- [ ] `core/data/src/main/kotlin/com/ssbmax/core/data/remote/PsychTestSubmissionRepository.kt`
+- [ ] `core/data/src/main/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepository.kt`
+
+### Tests
+- [ ] `core/data/src/test/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepositoryTest.kt`
+  - Create if missing
+- [ ] `core/data/src/androidTest/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepositoryIntegrationTest.kt`
+  - Create if missing
+
+---
+
+## New/updated API to implement
+
+Add a dedicated contract, e.g. one exact method:
+- [ ] `finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit>`
+
+### Required behavior
+- [ ] Persist result to `psych_results`
+- [ ] Persist final completion metadata to `submissions`
+- [ ] Only expose `COMPLETED` after result persistence succeeds
+- [ ] Return `Result.failure(...)` on any failed step
+
+---
+
+## Tests to write first
+
+### `TATSubmissionRepositoryTest`
+- [ ] `finalizeTATAnalysisResult succeeds when both writes succeed`
+- [ ] `finalizeTATAnalysisResult fails when psych_results write fails`
+- [ ] `finalizeTATAnalysisResult fails when submission metadata write fails`
+- [ ] `finalizeTATAnalysisResult preserves userId for security rules`
+- [ ] `updateTATOLQResult legacy path is no longer used by synthesis path`
+  - If legacy method remains, mark deprecated and test that new flow is used
+
+### `TATSubmissionRepositoryIntegrationTest`
+- [ ] `completed state is not observable before final result persistence`
+- [ ] `submission metadata is coherent after finalization`
+- [ ] `result can be fetched successfully after finalization`
+
+---
+
+## Implementation checklist
+
+- [ ] Add new repository contract to `SubmissionRepository`
+- [ ] Implement it in `TATSubmissionRepository`
+- [ ] Thread new contract through:
+  - `PsychTestSubmissionRepository`
+  - `FirestoreSubmissionRepository`
+- [ ] Update comments so they describe the new finalization semantics accurately
+- [ ] If legacy methods remain, mark them clearly as lower-level/internal or deprecated
+- [ ] Keep repository file under 300 LOC; extract helper if needed
+
+---
+
+## Commands to run
+
+### 1. Targeted core:data unit tests
+```bash
+./gradlew :core:data:testDebugUnitTest --tests "com.ssbmax.core.data.remote.TATSubmissionRepositoryTest"
+```
+
+### 2. Targeted integration test
+```bash
+./gradlew :core:data:connectedDebugAndroidTest --tests "com.ssbmax.core.data.remote.TATSubmissionRepositoryIntegrationTest"
+```
+
+### 3. Full data module tests
+```bash
+./gradlew :core:data:testDebugUnitTest
+```
+
+### 4. Full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 1
+Do **not** proceed to Phase 2 until:
+- [ ] repository finalization tests pass
+- [ ] integration test passes
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 1 handoff checklist
+- [ ] Tech debt list written
+- [ ] Any legacy contract ambiguity resolved now
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Phase 2 — Worker Reliability + Explicit Failure Handling
+
+## Objective
+Make `TATSynthesisWorker` reflect real persistence outcomes and only trigger side effects after verified success.
+
+---
+
+## Files to touch
+
+### Worker
+- [ ] `app/src/main/kotlin/com/ssbmax/workers/TATSynthesisWorker.kt`
+
+### Optional helper extraction to stay under 300 LOC
+- [ ] `app/src/main/kotlin/com/ssbmax/workers/TATSynthesisCompletionCoordinator.kt`
+  - Create if needed
+
+### Tests
+- [ ] `app/src/test/kotlin/com/ssbmax/workers/TATSynthesisWorkerTest.kt`
+- [ ] `app/src/test/kotlin/com/ssbmax/workers/TATSynthesisCompletionCoordinatorTest.kt`
+  - Create if helper is extracted
+
+---
+
+## Tests to write first
+
+### `TATSynthesisWorkerTest`
+- [ ] `retries when finalizeTATAnalysisResult returns failure`
+- [ ] `does not show success notification when finalization fails`
+- [ ] `does not invalidate dashboard cache when finalization fails`
+- [ ] `marks failed after retry exhaustion`
+- [ ] `shows success notification only after finalization succeeds`
+- [ ] `invalidates dashboard cache only after finalization succeeds`
+
+### `TATSynthesisCompletionCoordinatorTest` (if extracted)
+- [ ] `calls finalization before side effects`
+- [ ] `skips side effects on failed finalization`
+- [ ] `returns failure to caller when repository finalization fails`
+
+---
+
+## Implementation checklist
+
+- [ ] Replace unchecked repository writes with explicit `Result` handling
+- [ ] Use new Phase 1 finalization contract instead of low-level completion flow
+- [ ] Ensure notification and cache invalidation happen **after** successful finalization
+- [ ] Ensure failure path retries correctly
+- [ ] Update logs/comments to match actual behavior
+- [ ] Extract helper if file size approaches 300 LOC
+
+---
+
+## Commands to run
+
+### 1. Targeted worker tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATSynthesisWorkerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATSynthesisCompletionCoordinatorTest"
+```
+
+### 2. Full app unit tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+### 3. Full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 2
+Do **not** proceed to Phase 3 until:
+- [ ] worker reliability tests pass
+- [ ] no unchecked repository finalization remains in `TATSynthesisWorker`
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 2 handoff checklist
+- [ ] Tech debt list written
+- [ ] Any helper extraction complete and cleaned up
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Phase 3 — Early `ANALYZING` + Orchestration Refactor
+
+## Objective
+Start `ANALYZING` when analysis actually begins and remove pipeline orchestration from the ViewModel.
+
+---
+
+## Files to touch
+
+### ViewModel
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt`
+
+### New orchestrator
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisPipelineOrchestrator.kt`
+
+### Tests
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModelTest.kt`
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisPipelineOrchestratorTest.kt`
+  - Create if missing
+
+---
+
+## Tests to write first
+
+### `TATAnalysisPipelineOrchestratorTest`
+- [ ] `sets analysis status to analyzing before enqueuing work`
+- [ ] `returns failure when status update fails`
+- [ ] `returns failure when work enqueue fails`
+- [ ] `builds pipeline only after successful submission id is available`
+
+### `TATTestViewModelTest`
+- [ ] `delegates pipeline start to orchestrator after submit success`
+- [ ] `does not directly build work chain anymore`
+- [ ] `shows error when orchestrator fails`
+- [ ] `submission still contains all stories before pipeline begins`
+
+---
+
+## Implementation checklist
+
+- [ ] Extract pipeline-start logic from `TATTestViewModel`
+- [ ] Create `TATAnalysisPipelineOrchestrator`
+- [ ] Move `analysisStatus = ANALYZING` to pipeline start
+- [ ] Make ViewModel delegate to orchestrator instead of building WorkManager graph directly
+- [ ] Keep ViewModel under 300 LOC
+- [ ] Keep MVVM boundaries clean: ViewModel coordinates use case/orchestrator, not low-level worker topology
+
+---
+
+## Commands to run
+
+### 1. Targeted orchestrator + ViewModel tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATAnalysisPipelineOrchestratorTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATTestViewModelTest"
+```
+
+### 2. Full app unit tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+### 3. Full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 3
+Do **not** proceed to Phase 4 until:
+- [ ] `ANALYZING` is set at pipeline start
+- [ ] ViewModel no longer owns worker-chain orchestration
+- [ ] `TATTestViewModel.kt` stays under 300 LOC
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 3 handoff checklist
+- [ ] Tech debt list written
+- [ ] Refactor completed without leaving orchestration split across layers
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Phase 4 — Controlled Concurrency for Story Analysis
+
+## Objective
+Limit story-analysis fan-out so Gemini is not hit with all 12 multimodal calls at once.
+
+---
+
+## Files to touch
+
+### New planner
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisWorkPlanner.kt`
+
+### Orchestrator
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisPipelineOrchestrator.kt`
+
+### ViewModel (only if orchestration call signature changes)
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt`
+
+### Tests
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisWorkPlannerTest.kt`
+  - Create if missing
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATAnalysisPipelineOrchestratorTest.kt`
+
+---
+
+## Tests to write first
+
+### `TATAnalysisWorkPlannerTest`
+- [ ] `creates bounded batches for 12 stories`
+- [ ] `includes every story exactly once`
+- [ ] `includes blank card in planned work`
+- [ ] `creates synthesis dependency after all batches`
+- [ ] `preserves questionId and storyIndex correctly`
+
+### `TATAnalysisPipelineOrchestratorTest`
+- [ ] `uses work planner instead of direct full fan out`
+- [ ] `enqueues bounded concurrency graph`
+- [ ] `fails safely when planner input is invalid`
+
+---
+
+## Implementation checklist
+
+- [ ] Create `TATAnalysisWorkPlanner`
+- [ ] Replace direct 12-way fan-out with batched concurrency plan (recommended: 3 or 4 at a time)
+- [ ] Keep work graph deterministic
+- [ ] Ensure synthesis still depends on all story batches
+- [ ] Do not introduce any singleton mutable coordination state
+- [ ] Keep planner/orchestrator files under 300 LOC
+
+---
+
+## Commands to run
+
+### 1. Targeted planner/orchestrator tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATAnalysisWorkPlannerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATAnalysisPipelineOrchestratorTest"
+```
+
+### 2. Worker regression tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATStoryAnalysisWorkerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATSynthesisWorkerTest"
+```
+
+### 3. Full app unit tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+### 4. Full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 4
+Do **not** proceed to Phase 5 until:
+- [ ] planner tests pass
+- [ ] batched concurrency is in place
+- [ ] story-worker and synthesis-worker regressions still pass
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 4 handoff checklist
+- [ ] Tech debt list written
+- [ ] No hidden concurrency state introduced
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Phase 5 — Partial-Assessment Transparency in Domain + UI
+
+## Objective
+When synthesis completes with partial valid stories, surface that truthfully in domain and result UI.
+
+---
+
+## Files to touch
+
+### Domain model
+- [ ] `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/scoring/UnifiedOLQResult.kt`
+
+### Worker
+- [ ] `app/src/main/kotlin/com/ssbmax/workers/TATSynthesisWorker.kt`
+
+### Result ViewModel/UI
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModel.kt`
+- [ ] `app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultScreen.kt`
+
+### String resources
+- [ ] `app/src/main/res/values/strings.xml`
+
+### Tests
+- [ ] `app/src/test/kotlin/com/ssbmax/workers/TATSynthesisWorkerTest.kt`
+- [ ] `app/src/test/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultViewModelTest.kt`
+- [ ] `app/src/androidTest/kotlin/com/ssbmax/ui/tests/tat/TATSubmissionResultScreenTest.kt`
+  - Create if missing
+
+---
+
+## Domain/model additions to implement
+Add explicit degradation metadata to `OLQAnalysisResult`, e.g.:
+- [ ] `validStoriesCount: Int`
+- [ ] `failedStoriesCount: Int`
+- [ ] `usedPartialAssessment: Boolean`
+
+If needed, add:
+- [ ] `analysisNotice: String?`
+  Prefer UI-computed resource text over storing raw user-facing string in domain.
+
+---
+
+## Tests to write first
+
+### `TATSynthesisWorkerTest`
+- [ ] `sets usedPartialAssessment false for 12 valid stories`
+- [ ] `sets usedPartialAssessment true when some stories are failed placeholders`
+- [ ] `populates validStoriesCount correctly`
+- [ ] `populates failedStoriesCount correctly`
+
+### `TATSubmissionResultViewModelTest`
+- [ ] `exposes partial assessment state when result is degraded`
+- [ ] `does not expose warning state for full valid analysis`
+
+### `TATSubmissionResultScreenTest`
+- [ ] `shows degradation notice when usedPartialAssessment is true`
+- [ ] `does not show degradation notice when usedPartialAssessment is false`
+- [ ] `uses string resource based text only`
+
+---
+
+## Implementation checklist
+
+- [ ] Extend `OLQAnalysisResult` with degradation metadata
+- [ ] Populate metadata inside `TATSynthesisWorker`
+- [ ] Thread metadata through repository parsing/mapping if required
+- [ ] Update `TATSubmissionResultViewModel` to expose degradation UI state
+- [ ] Update `TATSubmissionResultScreen` to render a subtle warning/info card
+- [ ] Add all new user-facing text to `strings.xml`
+- [ ] Do not hardcode colors; use existing Material theme tokens
+- [ ] Keep all touched files under 300 LOC
+
+---
+
+## Commands to run
+
+### 1. Domain/app targeted tests
+```bash
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.workers.TATSynthesisWorkerTest"
+./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.tests.tat.TATSubmissionResultViewModelTest"
+```
+
+### 2. Android UI compile + targeted UI test
+```bash
+./gradlew :app:compileDebugAndroidTestKotlin
+./gradlew :app:connectedDebugAndroidTest --tests "com.ssbmax.ui.tests.tat.TATSubmissionResultScreenTest"
+```
+
+### 3. Full app unit tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+### 4. Full gate
+```bash
+./gradlew check
+```
+
+---
+
+## Stop condition for Phase 5
+Do **not** proceed further until:
+- [ ] degradation metadata is present and correct
+- [ ] result screen shows resource-based partial-analysis notice when applicable
+- [ ] Android test compile succeeds
+- [ ] `./gradlew check` succeeds
+
+---
+
+## Phase 5 handoff checklist
+- [ ] Tech debt list written
+- [ ] No hardcoded strings/colors introduced
+- [ ] Build green confirmed
+- [ ] All tests green confirmed
+
+---
+
+# Execution order summary
+
+## Run exactly in this order
+1. [ ] Phase 0
+2. [ ] Phase 1
+3. [ ] Phase 2
+4. [ ] Phase 3
+5. [ ] Phase 4
+6. [ ] Phase 5
+
+## Hard rule
+- [ ] Do **not** start the next phase without explicit phase summary and green verification from the current phase
+
+---
+
+# Reusable Phase Summary template
+
+Use this at the end of **every** phase:
+
+## Phase Summary
+### 1. Tech debt incurred
+- [ ] List each debt item explicitly
+
+### 2. Immediate resolution performed
+- [ ] List exact cleanup/refactors completed now
+- [ ] Confirm nothing was deferred
+
+### 3. Verification
+- [ ] Commands run:
+  - `...`
+- [ ] Build succeeds
+- [ ] All tests pass
+
+### 4. Phase status
+- [ ] COMPLETE / NOT COMPLETE

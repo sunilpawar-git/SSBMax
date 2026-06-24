@@ -49,18 +49,18 @@ object MockDataFactory {
     fun createMockTATQuestion(
         id: String = "tat-question-1",
         imageUrl: String = "https://example.com/tat-image-1.jpg",
-        sequenceNumber: Int = 1,
-        prompt: String = "Write a story about what you see in the picture",
+        cardPosition: Int = 1,
+        imageContextJson: String = "{}",
         viewingTimeSeconds: Int = 30,
         writingTimeMinutes: Int = 4,
         minCharacters: Int = 150,
-        maxCharacters: Int = 800
+        maxCharacters: Int = 1500
     ): TATQuestion {
         return TATQuestion(
             id = id,
             imageUrl = imageUrl,
-            sequenceNumber = sequenceNumber,
-            prompt = prompt,
+            cardPosition = cardPosition,
+            imageContextJson = imageContextJson,
             viewingTimeSeconds = viewingTimeSeconds,
             writingTimeMinutes = writingTimeMinutes,
             minCharacters = minCharacters,
@@ -157,13 +157,15 @@ object MockDataFactory {
     
     // Test lists
     fun createMockTATQuestions(count: Int = 12): List<TATQuestion> {
-        return (1..count).map { i ->
+        return (1..minOf(count, 11)).map { i ->
             createMockTATQuestion(
                 id = "tat-question-$i",
                 imageUrl = "https://example.com/tat-image-$i.jpg",
-                sequenceNumber = i
+                cardPosition = i
             )
-        }
+        } + if (count >= 12) listOf(
+            createMockTATQuestion(id = "blank_card", imageUrl = "", cardPosition = 12)
+        ) else emptyList()
     }
     
     fun createMockWATWords(count: Int = 60): List<WATWord> {

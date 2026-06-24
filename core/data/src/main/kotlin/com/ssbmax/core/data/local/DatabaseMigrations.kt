@@ -683,5 +683,150 @@ object DatabaseMigrations {
             database.execSQL("ALTER TABLE cached_oir_questions ADD COLUMN correctAnswerIds TEXT")
         }
     }
+
+    /**
+     * Migration from version 22 to 23
+     * Adds lastStalenessCheckAt to ppdt_batch_metadata so isCacheStale() can gate Firestore reads
+     * behind a 24h TTL — warm starts no longer hit Firestore on every launch.
+     */
+    val MIGRATION_22_23 = object : Migration(22, 23) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "ALTER TABLE ppdt_batch_metadata ADD COLUMN lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
+    /**
+     * Migration from version 23 to 24
+     * Phase 2 TAT architecture upgrade:
+     *   cached_tat_images — replace sequenceNumber/prompt/localFilePath/imageDownloaded
+     *                        with cardPosition, genderTag, imageContextJson (pool-aware schema)
+     *   tat_batch_metadata — add lastStalenessCheckAt for 24h Firestore TTL gate
+     *
+     * SQLite < 3.25 cannot DROP columns, so we use the safe table-reconstruction pattern.
+     * Existing cached rows are discarded (the new image IDs follow tat_NNN_gender naming
+     * and the old rows would fail position-based queries anyway).
+     */
+    val MIGRATION_23_24 = object : Migration(23, 24) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Reconstruct cached_tat_images with the Phase 2 schema
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_tat_images_new (
+                    id TEXT NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    cardPosition INTEGER NOT NULL,
+                    genderTag TEXT NOT NULL DEFAULT 'MIXED',
+                    imageContextJson TEXT NOT NULL DEFAULT '{}',
+                    viewingTimeSeconds INTEGER NOT NULL DEFAULT 30,
+                    writingTimeMinutes INTEGER NOT NULL DEFAULT 4,
+                    minCharacters INTEGER NOT NULL DEFAULT 150,
+                    maxCharacters INTEGER NOT NULL DEFAULT 1500,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (id)
+                )
+            """.trimIndent())
+            // Old rows are incompatible (different ID format + missing cardPosition) — drop them
+            database.execSQL("DROP TABLE cached_tat_images")
+            database.execSQL("ALTER TABLE cached_tat_images_new RENAME TO cached_tat_images")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_cardPosition ON cached_tat_images(cardPosition)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_genderTag ON cached_tat_images(genderTag)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_usageCount ON cached_tat_images(usageCount)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_tat_images_batchId ON cached_tat_images(batchId)")
+
+            // Add staleness-check TTL column to tat_batch_metadata
+            database.execSQL(
+                "ALTER TABLE tat_batch_metadata ADD COLUMN lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
+    /**
+     * Migration from version 21 to 22
+     * Replaces the unstructured `context: String` column on cached_ppdt_images with:
+     *   - imageContextJson TEXT — JSON-serialized PPDTImageContext (defaults to '{}')
+     *   - genderTag TEXT       — MALE / FEMALE / MIXED routing tag (defaults to 'MIXED')
+     *
+     * SQLite < 3.25 (Android API < 34) cannot RENAME or DROP columns, so we use the safe
+     * table-reconstruction pattern: create new → copy → drop old → rename.
+     * Existing row data is preserved; the old `context` text is discarded (it was empty for
+     * all batch_001 images anyway — structured context now comes from the Phase 5 pipeline).
+     */
+    val MIGRATION_21_22 = object : Migration(21, 22) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS cached_ppdt_images_new (
+                    id TEXT NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    localFilePath TEXT,
+                    imageDescription TEXT NOT NULL DEFAULT 'Picture showing an ambiguous scene',
+                    imageContextJson TEXT NOT NULL DEFAULT '{}',
+                    viewingTimeSeconds INTEGER NOT NULL DEFAULT 30,
+                    writingTimeMinutes INTEGER NOT NULL DEFAULT 4,
+                    minCharacters INTEGER NOT NULL DEFAULT 200,
+                    maxCharacters INTEGER NOT NULL DEFAULT 1000,
+                    category TEXT,
+                    difficulty TEXT,
+                    batchId TEXT NOT NULL,
+                    cachedAt INTEGER NOT NULL,
+                    lastUsed INTEGER,
+                    usageCount INTEGER NOT NULL DEFAULT 0,
+                    imageDownloaded INTEGER NOT NULL DEFAULT 0,
+                    genderTag TEXT NOT NULL DEFAULT 'MIXED',
+                    PRIMARY KEY (id)
+                )
+            """.trimIndent())
+            database.execSQL("""
+                INSERT INTO cached_ppdt_images_new
+                (id, imageUrl, localFilePath, imageDescription, imageContextJson,
+                 viewingTimeSeconds, writingTimeMinutes, minCharacters, maxCharacters,
+                 category, difficulty, batchId, cachedAt, lastUsed, usageCount, imageDownloaded, genderTag)
+                SELECT id, imageUrl, localFilePath, imageDescription, '{}',
+                       viewingTimeSeconds, writingTimeMinutes, minCharacters, maxCharacters,
+                       category, difficulty, batchId, cachedAt, lastUsed, usageCount, imageDownloaded, 'MIXED'
+                FROM cached_ppdt_images
+            """.trimIndent())
+            database.execSQL("DROP TABLE cached_ppdt_images")
+            database.execSQL("ALTER TABLE cached_ppdt_images_new RENAME TO cached_ppdt_images")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_category ON cached_ppdt_images(category)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_difficulty ON cached_ppdt_images(difficulty)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_batchId ON cached_ppdt_images(batchId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_usageCount ON cached_ppdt_images(usageCount)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_imageDownloaded ON cached_ppdt_images(imageDownloaded)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cached_ppdt_images_genderTag ON cached_ppdt_images(genderTag)")
+        }
+    }
+
+    val MIGRATION_24_25 = object : Migration(24, 25) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS tat_story_assessments (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    submissionId TEXT NOT NULL,
+                    questionId TEXT NOT NULL,
+                    storyIndex INTEGER NOT NULL,
+                    story TEXT NOT NULL,
+                    imageUrl TEXT NOT NULL,
+                    olqScoresJson TEXT NOT NULL DEFAULT '{}',
+                    overallScore REAL NOT NULL DEFAULT 0.0,
+                    overallRating TEXT NOT NULL DEFAULT '',
+                    aiConfidence INTEGER NOT NULL DEFAULT 0,
+                    analyzedAt INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_tat_story_assessments_submissionId ON tat_story_assessments(submissionId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_tat_story_assessments_questionId ON tat_story_assessments(questionId)")
+            database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                    "index_tat_story_assessments_submissionId_storyIndex " +
+                    "ON tat_story_assessments(submissionId, storyIndex)"
+            )
+        }
+    }
 }
 

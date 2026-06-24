@@ -202,31 +202,20 @@ object TestDataFactory {
      * Mock TAT Questions - 3 sample images with prompts
      */
     fun getTATQuestions(): List<TATQuestion> {
-        return listOf(
+        return (1..11).map { pos ->
             TATQuestion(
-                id = "tat_mock_1",
-                imageUrl = "https://via.placeholder.com/800x600/E74C3C/FFFFFF?text=TAT+Image+1",
-                sequenceNumber = 1,
-                prompt = "Write a story about what is happening in this picture. Include what led to this situation and what will happen next.",
-                viewingTimeSeconds = 30,
-                writingTimeMinutes = 4
-            ),
-            TATQuestion(
-                id = "tat_mock_2",
-                imageUrl = "https://via.placeholder.com/800x600/27AE60/FFFFFF?text=TAT+Image+2",
-                sequenceNumber = 2,
-                prompt = "Write a story about what is happening in this picture. Include what led to this situation and what will happen next.",
-                viewingTimeSeconds = 30,
-                writingTimeMinutes = 4
-            ),
-            TATQuestion(
-                id = "tat_mock_3",
-                imageUrl = "https://via.placeholder.com/800x600/F39C12/FFFFFF?text=TAT+Image+3",
-                sequenceNumber = 3,
-                prompt = "Write a story about what is happening in this picture. Include what led to this situation and what will happen next.",
+                id = "tat_mock_$pos",
+                imageUrl = "https://via.placeholder.com/800x600/E74C3C/FFFFFF?text=TAT+Image+$pos",
+                cardPosition = pos,
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4
             )
+        } + TATQuestion(
+            id = "blank_card",
+            imageUrl = "",
+            cardPosition = 12,
+            viewingTimeSeconds = 30,
+            writingTimeMinutes = 4
         )
     }
     

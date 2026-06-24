@@ -8,8 +8,10 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.R
 
 /**
  * TAT Review Phase
@@ -20,6 +22,7 @@ fun TATReviewPhase(
     story: String,
     charactersCount: Int,
     sequenceNumber: Int,
+    isLastQuestion: Boolean,
     onEdit: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -35,12 +38,12 @@ fun TATReviewPhase(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Review Story $sequenceNumber",
+                        stringResource(R.string.tat_review_story_title, sequenceNumber),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        "$charactersCount characters",
+                        stringResource(R.string.tat_review_character_count, charactersCount),
                         style = MaterialTheme.typography.bodySmall
                     )
                     HorizontalDivider()
@@ -63,7 +66,7 @@ fun TATReviewPhase(
                 ) {
                     Icon(Icons.Default.Edit, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Edit")
+                    Text(stringResource(R.string.edit))
                 }
 
                 Button(
@@ -72,7 +75,11 @@ fun TATReviewPhase(
                 ) {
                     Icon(Icons.Default.Check, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Confirm")
+                    Text(
+                        stringResource(
+                            if (isLastQuestion) R.string.button_submit_test else R.string.dialog_confirm
+                        )
+                    )
                 }
             }
         }

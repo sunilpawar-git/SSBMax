@@ -21,7 +21,9 @@ object MockTestDataProvider {
                 id = "ppdt_mock_1",
                 imageUrl = "https://via.placeholder.com/800x600/4CAF50/FFFFFF?text=PPDT+Sample+Image",
                 imageDescription = "A group of people in a meeting room discussing around a table",
-                context = "A hazy image showing a formal meeting or discussion in progress, typically interpreted as a corporate or academic setting.",
+                imageContext = PPDTImageContext(
+                    sceneDescription = "A hazy image showing a formal meeting or discussion in progress"
+                ),
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4
             )
@@ -32,31 +34,20 @@ object MockTestDataProvider {
      * Mock TAT Questions - 3 sample images
      */
     fun getTATQuestions(): List<TATQuestion> {
-        return listOf(
+        return (1..11).map { pos ->
             TATQuestion(
-                id = "tat_mock_1",
-                imageUrl = "https://via.placeholder.com/800x600/2196F3/FFFFFF?text=TAT+Image+1",
-                sequenceNumber = 1,
-                prompt = "Write a story about what you see in this picture",
-                viewingTimeSeconds = 30,
-                writingTimeMinutes = 4
-            ),
-            TATQuestion(
-                id = "tat_mock_2",
-                imageUrl = "https://via.placeholder.com/800x600/FF9800/FFFFFF?text=TAT+Image+2",
-                sequenceNumber = 2,
-                prompt = "Write a story about what you see in this picture",
-                viewingTimeSeconds = 30,
-                writingTimeMinutes = 4
-            ),
-            TATQuestion(
-                id = "tat_mock_3",
-                imageUrl = "https://via.placeholder.com/800x600/9C27B0/FFFFFF?text=TAT+Image+3",
-                sequenceNumber = 3,
-                prompt = "Write a story about what you see in this picture",
+                id = "tat_mock_$pos",
+                imageUrl = "https://via.placeholder.com/800x600/2196F3/FFFFFF?text=TAT+Image+$pos",
+                cardPosition = pos,
                 viewingTimeSeconds = 30,
                 writingTimeMinutes = 4
             )
+        } + TATQuestion(
+            id = "blank_card",
+            imageUrl = "",
+            cardPosition = 12,
+            viewingTimeSeconds = 30,
+            writingTimeMinutes = 4
         )
     }
     

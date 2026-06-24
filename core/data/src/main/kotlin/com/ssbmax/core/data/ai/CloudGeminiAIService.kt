@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
+import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.core.domain.model.TATImageContext
 import com.ssbmax.core.domain.model.interview.InterviewQuestion
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.QuestionSource
@@ -222,12 +224,59 @@ class CloudGeminiAIService @Inject constructor() : AIService {
     }
 
     /**
-     * Analyze PPDT response (not yet implemented in cloud)
-     * Use GeminiAIService for psychology test analysis with direct API access
+     * Analyze TAT story multimodal (not yet implemented in cloud)
+     * Use GeminiAIService for per-story multimodal TAT analysis with direct API access.
      */
-    override suspend fun analyzePPDTResponse(prompt: String): Result<ResponseAnalysis> {
-        Log.e(TAG, "PPDT analysis not yet supported in CloudGemini implementation")
-        return Result.failure(UnsupportedOperationException("Use GeminiAIService for psychology test analysis"))
+    override suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int,
+        imageGenderTag: String
+    ): Result<ResponseAnalysis> {
+        Log.e(TAG, "Per-story TAT multimodal analysis not yet supported in CloudGemini implementation")
+        return Result.failure(UnsupportedOperationException("Use GeminiAIService for per-story TAT multimodal analysis"))
+    }
+
+    /**
+     * Analyze PPDT via Cloud Function (text-only fallback — image bytes not sent over cloud path).
+     * Constructs a text prompt from story + imageContext and submits as an inline response analysis.
+     * Full multimodal support requires a dedicated Cloud Function (tracked in PPDT_Pipeline.md §17).
+     */
+    override suspend fun analyzePPDTMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: PPDTImageContext,
+        candidateGender: String
+    ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
+        try {
+            auth.currentUser
+                ?: return@withContext Result.failure(IllegalStateException("User not authenticated"))
+
+            withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {
+                val sceneHint = if (imageContext.sceneDescription.isNotBlank())
+                    " Scene: ${imageContext.sceneDescription}." else ""
+                val data = hashMapOf(
+                    "questionText" to "PPDT Story Analysis. Candidate gender: $candidateGender.$sceneHint",
+                    "responseText" to story,
+                    "expectedOLQs" to imageContext.primaryOLQs,
+                    "responseMode" to "text"
+                )
+                val result = functions
+                    .getHttpsCallable(FUNCTION_ANALYZE_RESPONSE_INLINE)
+                    .call(data)
+                    .await()
+                val resultData = result.getData() ?: return@withTimeout Result.failure(
+                    IllegalStateException("Cloud function returned null data")
+                )
+                parseAnalysisResult(resultData)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "CloudGeminiAIService.analyzePPDTMultimodal failed", e)
+            Result.failure(e)
+        }
     }
 
    /**

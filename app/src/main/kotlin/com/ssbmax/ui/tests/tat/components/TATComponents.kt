@@ -2,7 +2,6 @@ package com.ssbmax.ui.tests.tat.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,9 +20,7 @@ import com.ssbmax.core.domain.model.TATPhase
 fun TATBottomBar(
     phase: TATPhase,
     canMoveNext: Boolean,
-    canMovePrevious: Boolean,
     canSubmit: Boolean,
-    onPrevious: () -> Unit,
     onNext: () -> Unit,
     onSubmit: () -> Unit
 ) {
@@ -32,24 +29,13 @@ fun TATBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.End
         ) {
-            if (canMovePrevious) {
-                OutlinedButton(onClick = onPrevious) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.button_previous))
-                }
-            } else {
-                Spacer(Modifier.width(1.dp))
-            }
-
             if (canSubmit) {
                 Button(onClick = onSubmit) {
                     Text(stringResource(R.string.button_submit_test))
                 }
             } else {
-                // Show Next button always, but disabled if criteria not met (e.g. min characters)
                 Button(
                     onClick = onNext,
                     enabled = canMoveNext

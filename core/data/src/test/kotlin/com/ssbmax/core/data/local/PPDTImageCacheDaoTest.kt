@@ -59,7 +59,7 @@ class PPDTImageCacheDaoTest {
         dao.markImageAsDownloaded(imageId = "a", localPath = "/tmp/ppdt")
 
         val loaded = dao.getAllImages().first { it.id == "a" }
-        assertTrue(loaded.imageDownloaded)
+        assertEquals(1, loaded.imageDownloaded)
         assertEquals("/tmp/ppdt", loaded.localFilePath)
     }
 
@@ -81,6 +81,6 @@ class PPDTImageCacheDaoTest {
         cachedAt = 0L,
         lastUsed = null,
         usageCount = usage,
-        imageDownloaded = false
+        imageDownloaded = 0
     )
 }

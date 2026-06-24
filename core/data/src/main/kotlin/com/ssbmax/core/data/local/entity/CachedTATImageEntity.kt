@@ -1,31 +1,38 @@
 package com.ssbmax.core.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Room entity for caching TAT images locally
- * Follows progressive caching strategy similar to OIR, WAT, and SRT
- * 
- * Note: Images are stored in Firebase Storage, this entity caches metadata and URLs
+ * Room entity for caching TAT image metadata.
+ * cardPosition (1–11) is the OLQ-pool slot used for test assembly.
+ * genderTag routes images to the right users (MALE/FEMALE/MIXED).
+ * imageContextJson holds JSON-serialized TATImageContext for AI scoring.
  */
-@Entity(tableName = "cached_tat_images")
+@Entity(
+    tableName = "cached_tat_images",
+    indices = [
+        Index("cardPosition"),
+        Index("genderTag"),
+        Index("usageCount"),
+        Index("batchId")
+    ]
+)
 data class CachedTATImageEntity(
     @PrimaryKey val id: String,
-    val imageUrl: String, // Firebase Storage URL
-    val localFilePath: String? = null, // Local cache path if image is downloaded
-    val sequenceNumber: Int,
-    val prompt: String = "Write a story about what you see in the picture",
+    val imageUrl: String,
+    val cardPosition: Int,
+    val genderTag: String = "MIXED",
+    val imageContextJson: String = "{}",
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 50,
+    val minCharacters: Int = 150,
     val maxCharacters: Int = 1500,
-    val category: String? = null, // Optional: theme category for analytics
-    val difficulty: String? = null, // easy, medium, hard
+    val category: String? = null,
+    val difficulty: String? = null,
     val batchId: String,
     val cachedAt: Long,
-    val lastUsed: Long?,
-    val usageCount: Int = 0,
-    val imageDownloaded: Boolean = false // Track if actual image file is cached
+    val lastUsed: Long? = null,
+    val usageCount: Int = 0
 )
-

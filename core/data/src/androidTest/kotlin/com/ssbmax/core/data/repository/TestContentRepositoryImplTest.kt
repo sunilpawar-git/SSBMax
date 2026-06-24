@@ -167,8 +167,8 @@ class TestContentRepositoryImplTest {
         val questions = result.getOrNull()
         assertNotNull("Questions should not be null", questions)
         assertTrue("Should have questions", questions!!.isNotEmpty())
-        assertTrue("Should have valid sequence numbers", 
-            questions.first().sequenceNumber > 0)
+        assertTrue("Should have valid card positions",
+            questions.first().cardPosition > 0)
     }
     
     @Test
@@ -433,12 +433,11 @@ class TestContentRepositoryImplTest {
         // Then
         val questions = result.getOrNull()!!
         questions.forEach { question ->
-            assertTrue("Should have image URL", question.imageUrl.isNotBlank())
-            assertTrue("Sequence number should be positive", 
-                question.sequenceNumber > 0)
-            assertTrue("Viewing time should be positive", 
+            assertTrue("Card position should be positive",
+                question.cardPosition > 0)
+            assertTrue("Viewing time should be positive",
                 question.viewingTimeSeconds > 0)
-            assertTrue("Writing time should be positive", 
+            assertTrue("Writing time should be positive",
                 question.writingTimeMinutes > 0)
         }
     }

@@ -44,7 +44,7 @@ interface SubmissionRepository {
      * Submit Lecturette test
      */
     suspend fun submitLecturette(submission: com.ssbmax.core.domain.model.gto.GTOSubmission.LecturetteSubmission, batchId: String? = null): Result<String>
-    
+
     /**
      * Submit OIR test
      */
@@ -125,7 +125,7 @@ interface SubmissionRepository {
      * Get latest TAT submission for user
      */
     suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?>
-    
+
     /**
      * Get TAT OLQ Result
      */
@@ -140,9 +140,17 @@ interface SubmissionRepository {
     ): Result<Unit>
 
     /**
-     * Update TAT OLQ result
+     * Atomically finalizes a TAT analysis result.
+     *
+     * Guarantees that the OLQ result is persisted to `psych_results` **before** the
+     * submission is marked COMPLETED. Completion metadata ([resultUpdatedAt], [hasOlqResult],
+     * [resultSource]) is written atomically with the status change so the submission document
+     * remains self-describing even when the full result body is stored elsewhere.
+     *
+     * Returns [Result.failure] if either persistence step fails. Callers must not trigger
+     * side effects (cache invalidation, notifications) until this returns success.
      */
-    suspend fun updateTATOLQResult(
+    suspend fun finalizeTATAnalysisResult(
         submissionId: String,
         olqResult: com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
     ): Result<Unit>
@@ -271,7 +279,7 @@ interface SubmissionRepository {
      * Observe SDT submission in real-time
      */
     fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?>
-    
+
     // ===========================
     // PPDT OLQ Analysis Methods
     // ===========================
@@ -301,23 +309,22 @@ interface SubmissionRepository {
      * Observe PPDT submission in real-time
      */
     fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?>
-    
+
     /**
      * Get PPDT OLQ result from ppdt_results collection (GTO pattern)
      */
     suspend fun getPPDTResult(submissionId: String): Result<com.ssbmax.core.domain.model.scoring.OLQAnalysisResult?>
-    
+
     // ===========================
     // Archival Methods
     // ===========================
-    
+
     /**
      * Archive submissions older than the specified timestamp
      * Moves data to archived_submissions collection and deletes from main collection
-     * 
+     *
      * @param beforeTimestamp Unix timestamp - submissions before this will be archived
      * @return Number of submissions successfully archived
      */
     suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int>
 }
-

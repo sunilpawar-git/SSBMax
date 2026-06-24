@@ -108,16 +108,16 @@
     <string name="action_join_batch">Join Batch</string>
     <string name="action_view_analytics">View Analytics</string>
     <string name="action_study_materials">Study Materials</string>
-    
+
     <!-- Result Card -->
     <string name="result_top_strength">Top Strength</string>
     <string name="result_not_available">N/A</string>
-    
+
     <!-- Date Formatting -->
     <string name="date_today">Today</string>
     <string name="date_yesterday">Yesterday</string>
     <string name="date_days_ago">%1$d days ago</string>
-    
+
     <!-- Phase Progress -->
     <string name="phase_progress_title">SSB Preparation Progress</string>
     <string name="phase_1_title">PHASE 1</string>
@@ -147,7 +147,7 @@
     <string name="cd_refresh_dashboard">Refresh dashboard</string>
     <string name="dashboard_some_unavailable">Some results couldn\'t load. Tap retry.</string>
     <string name="dashboard_retry">Retry</string>
-    
+
     <!-- Dashboard Test Names -->
     <string name="dashboard_test_oir">OIR</string>
     <string name="dashboard_test_ppdt">PPDT</string>
@@ -156,7 +156,7 @@
     <string name="dashboard_test_srt">SRT</string>
     <string name="dashboard_test_self_desc">Self Desc</string>
     <string name="dashboard_test_interview">Interview</string>
-    
+
     <!-- Dashboard Sections -->
     <string name="dashboard_phase_1">PHASE 1</string>
     <string name="dashboard_phase_2">PHASE 2</string>
@@ -164,19 +164,19 @@
     <string name="dashboard_gto">GTO</string>
     <string name="dashboard_interview">Interview</string>
     <string name="dashboard_olq_dashboard">OLQ Dashboard</string>
-    
+
     <!-- Dashboard Labels -->
     <string name="dashboard_overall_average">Overall Average</string>
     <string name="dashboard_your_strengths">🌟 Your Strengths</string>
     <string name="dashboard_focus_areas">📈 Focus Areas</string>
     <string name="dashboard_no_score">—</string>
-    
+
     <!-- Empty Dashboard State -->
     <string name="dashboard_empty_emoji">📊</string>
     <string name="dashboard_empty_title">Start Your SSB Journey</string>
     <string name="dashboard_empty_message">Complete tests to see your OLQ profile and track progress</string>
     <string name="dashboard_empty_button">Start First Test</string>
-    
+
     <!-- Dashboard Errors -->
     <string name="dashboard_error_load_failed">Failed to load dashboard</string>
 
@@ -547,7 +547,7 @@
     <string name="free_badge">Free</string>
     <string name="optional">Optional</string>
     <string name="required">Required</string>
-    
+
     <!-- Character Count Strings (Generic for all tests) -->
     <string name="common_time_spent">Time Spent</string>
     <string name="common_character_count">Character Count</string>
@@ -634,9 +634,20 @@
     <!-- TAT TEST SCREEN - DETAILED STRINGS -->
     <!-- ============================================ -->
     <string name="tat_test">TAT Test</string>
-    <string name="tat_picture_number">Picture %1$d/12</string>
-
+    <string name="tat_picture_number">Picture %1$d/%2$d</string>
     <string name="tat_loading">Loading TAT test images from cloud...</string>
+    <string name="tat_review_story_title">Review Story %1$d</string>
+    <string name="tat_review_character_count">%1$d characters</string>
+    <string name="tat_exit_title">Exit Test?</string>
+    <string name="tat_exit_message">Your progress will be lost. Are you sure you want to exit?</string>
+    <string name="tat_exit_confirm">Exit</string>
+    <string name="tat_submit_title">Submit Test?</string>
+    <string name="tat_submit_progress">You have completed %1$d/%2$d stories.</string>
+    <string name="tat_submit_incomplete_message">You can submit now or complete remaining stories.</string>
+    <string name="tat_viewing_picture">Viewing Picture %1$d</string>
+    <string name="tat_observe_carefully">Observe carefully</string>
+    <string name="tat_picture_content_description">TAT Picture %1$d</string>
+    <string name="tat_blank_slide_instruction">Blank Slide\n(Use your imagination)</string>
 
     <!-- ============================================ -->
     <!-- OIR TEST SCREEN - DETAILED STRINGS -->
@@ -671,6 +682,16 @@
     <!-- ============================================ -->
     <string name="ppdt_test">PPDT Test</string>
     <string name="ppdt_loading">Loading PPDT test from cloud...</string>
+    <string name="ppdt_profile_required_title">Complete Your Profile</string>
+    <string name="ppdt_profile_required_message">Your gender is needed for PPDT assessment. Set it in Settings before continuing.</string>
+    <string name="ppdt_profile_go_to_settings">Go to Settings</string>
+    <string name="ppdt_profile_required_cancel">Cancel</string>
+    <string name="tat_profile_required_title">Complete Your Profile</string>
+    <string name="tat_profile_required_message">Your gender is needed to select the right TAT image pool. Set it in Settings before continuing.</string>
+    <string name="tat_profile_go_to_settings">Go to Settings</string>
+    <string name="tat_profile_required_cancel">Cancel</string>
+    <string name="ppdt_image_observe_instruction">Observe the image carefully. Try to identify characters, their mood, and what\'s happening.</string>
+    <string name="ppdt_image_content_description">PPDT Test Image</string>
 
     <!-- ============================================ -->
     <!-- PIQ TEST SCREEN - DETAILED STRINGS -->
@@ -787,7 +808,7 @@
     <string name="piq_previous">Previous</string>
     <string name="piq_next">Next</string>
     <string name="piq_review">Review</string>
-    
+
     <!-- PIQ Result Screen -->
     <string name="piq_quality_assessment">PIQ Quality Assessment</string>
     <string name="piq_submitted_successfully">PIQ Submitted Successfully</string>
@@ -807,7 +828,7 @@
     <string name="piq_areas_improvement">Areas for Improvement</string>
     <string name="piq_info_message">Your PIQ will be reviewed by assessors during the SSB interview. A well-filled PIQ helps them prepare better questions for you.</string>
     <string name="return_to_home">Return to Home</string>
-    
+
     <!-- PIQ Test Screen Title -->
     <string name="piq_page_title">PIQ - %1$s</string>
 
@@ -1089,35 +1110,35 @@
     <!-- ============================================ -->
     <!-- INSTRUCTOR SCREENS (PLACEHOLDERS) -->
     <!-- ============================================ -->
-    
+
     <!-- Instructor Students Screen -->
     <string name="instructor_students_title">My Students</string>
     <string name="instructor_students_placeholder_title">Student Management</string>
     <string name="instructor_students_placeholder_description">View and manage all your students in one place</string>
     <string name="instructor_students_features_title">Coming Soon</string>
     <string name="instructor_students_features_list">• View all students in your batches\n• Search and filter students\n• Track individual progress\n• View test submissions\n• Add notes and feedback</string>
-    
+
     <!-- Instructor Analytics Screen -->
     <string name="instructor_analytics_title">Batch Analytics</string>
     <string name="instructor_analytics_placeholder_title">Performance Analytics</string>
     <string name="instructor_analytics_placeholder_description">Comprehensive analytics for your batches and students</string>
     <string name="instructor_analytics_features_title">Coming Soon</string>
     <string name="instructor_analytics_features_list">• Batch-wide performance overview\n• Individual student trends\n• Test-wise analytics\n• Progress charts and graphs\n• Compare across batches</string>
-    
+
     <!-- Create Batch Screen -->
     <string name="create_batch_title">Create New Batch</string>
     <string name="create_batch_placeholder_title">Batch Creation</string>
     <string name="create_batch_placeholder_description">Create and manage student batches for organized teaching</string>
     <string name="create_batch_features_title">Coming Soon</string>
     <string name="create_batch_features_list">• Create batch with name and details\n• Add students via invite codes\n• Set batch capacity and duration\n• Assign default tests\n• Track batch progress</string>
-    
+
     <!-- Batch Detail Screen -->
     <string name="batch_detail_title">Batch: %1$s</string>
     <string name="batch_detail_placeholder_title">Batch Details</string>
     <string name="batch_detail_placeholder_description">Viewing details for batch: %1$s</string>
     <string name="batch_detail_features_title">Coming Soon</string>
     <string name="batch_detail_features_list">• View all batch members\n• Batch performance summary\n• Assign tests to batch\n• Edit batch details\n• Add/remove students\n• Archive batch</string>
-    
+
     <!-- Student Detail Screen -->
     <string name="student_detail_title">Student: %1$s</string>
     <string name="student_detail_placeholder_title">Student Performance</string>
@@ -1337,6 +1358,8 @@
     <string name="result_ppdt_story_submitted">Your PPDT story has been submitted for analysis</string>
     <string name="result_sdt_responses_completed">Completed: %1$d / 4 questions</string>
     <string name="result_tat_title">TAT Test Results</string>
+    <string name="result_tat_partial_assessment_title">Partial Assessment</string>
+    <string name="result_tat_partial_assessment_message">This result is based on %1$d of %2$d stories — the rest could not be analyzed. Scores may be less precise than a full assessment.</string>
     <string name="result_wat_title">WAT Test Results</string>
     <string name="result_srt_title">SRT Test Results</string>
     <string name="result_ppdt_title">PPDT Test Results</string>
@@ -1346,6 +1369,12 @@
     <string name="result_ppdt_character_count_label">Character Count:</string>
     <string name="result_ppdt_writing_time_label">Writing Time:</string>
     <string name="result_ppdt_writing_time_value">%d minutes</string>
+    <string name="ppdt_olq_reasoning_title">Score Breakdown</string>
+    <string name="ppdt_olq_reasoning_expand_hint">Tap for reasoning</string>
+    <string name="ppdt_olq_reasoning_unavailable">No reasoning available</string>
+    <string name="olq_result_score_breakdown_title">Score Breakdown</string>
+    <string name="olq_result_expand_hint">Tap for reasoning</string>
+    <string name="olq_result_reasoning_unavailable">No reasoning available</string>
     <string name="result_sdt_title">SDT Test Results</string>
     <string name="result_sdt_characters_label">Characters: %d</string>
     <string name="result_analyzing_title">Analyzing Your Response…</string>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PPDT Image Context Preview — {{ entries|length }} images</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 20px; background: #f5f5f5; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .summary { color: #555; margin-bottom: 24px; font-size: 0.9rem; }
+    .summary .count { font-weight: bold; }
+    .summary .female-c { color: #c0306a; }
+    .summary .male-c { color: #1a5fa8; }
+    .summary .mixed-c { color: #2a7a2a; }
+    .gate-warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 24px; font-weight: bold; }
+    .grid { display: flex; flex-direction: column; gap: 20px; }
+    .entry { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.12); display: grid; grid-template-columns: 300px 1fr; overflow: hidden; }
+    .entry.has-errors { border: 2px solid #dc3545; }
+    .img-panel { padding: 12px; background: #2a2a2a; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: flex-start; }
+    .img-panel img { width: 276px; height: auto; border-radius: 4px; }
+    .img-id { color: #ccc; font-size: 0.8rem; font-family: monospace; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; letter-spacing: 0.05em; }
+    .badge.FEMALE { background: #ffe0f0; color: #c0306a; border: 1px solid #c0306a; }
+    .badge.MALE   { background: #ddeeff; color: #1a5fa8; border: 1px solid #1a5fa8; }
+    .badge.MIXED  { background: #dfffdf; color: #2a7a2a; border: 1px solid #2a7a2a; }
+    .info-panel { padding: 16px; }
+    .errors { background: #fff0f0; border-left: 4px solid #dc3545; padding: 8px 12px; margin-bottom: 12px; border-radius: 0 4px 4px 0; }
+    .errors p { margin: 2px 0; color: #dc3545; font-size: 0.85rem; font-weight: bold; }
+    .field { margin: 6px 0; font-size: 0.88rem; line-height: 1.5; }
+    .label { font-weight: 600; color: #444; min-width: 140px; display: inline-block; }
+    .tag { display: inline-block; background: #eef; color: #335; border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 0.8rem; }
+    .tag.penalized { background: #fee; color: #833; }
+    .tag.olq { background: #efe; color: #363; font-weight: bold; }
+    .tag.theme { background: #eef; color: #336; }
+    .tolerance { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+    .tolerance.LOW    { background: #ffd0d0; color: #800; }
+    .tolerance.MEDIUM { background: #fff3cd; color: #860; }
+    .tolerance.HIGH   { background: #d0f5d0; color: #080; }
+    .hint { font-style: italic; color: #555; }
+    hr.divider { border: none; border-top: 1px solid #eee; margin: 10px 0; }
+    .stats { display: flex; gap: 20px; background: white; border-radius: 8px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .stat { text-align: center; }
+    .stat .num { font-size: 1.8rem; font-weight: bold; }
+    .stat .lbl { font-size: 0.8rem; color: #666; }
+    .filter-bar { margin-bottom: 16px; display: flex; gap: 10px; align-items: center; }
+    .filter-bar button { padding: 4px 14px; border-radius: 20px; border: 1px solid #ccc; cursor: pointer; background: white; }
+    .filter-bar button.active { background: #333; color: white; border-color: #333; }
+  </style>
+  <script>
+    function filterBy(gender) {
+      document.querySelectorAll('[data-gender]').forEach(el => {
+        el.style.display = (gender === 'ALL' || el.dataset.gender === gender) ? '' : 'none';
+      });
+      document.querySelectorAll('.filter-bar button').forEach(b => b.classList.toggle('active', b.dataset.filter === gender));
+    }
+  </script>
+</head>
+<body>
+
+<h1>PPDT Image Context Preview</h1>
+<p class="summary">
+  <span class="count">{{ entries|length }}</span> images loaded —
+  <span class="female-c">{{ entries|selectattr('genderTag','eq','FEMALE')|list|length }} FEMALE</span> ·
+  <span class="male-c">{{ entries|selectattr('genderTag','eq','MALE')|list|length }} MALE</span> ·
+  <span class="mixed-c">{{ entries|selectattr('genderTag','eq','MIXED')|list|length }} MIXED</span>
+</p>
+
+<div class="gate-warning">
+  ⚠ REVIEW REQUIRED: Do not run step3_upload.py until you have inspected every entry.
+  Red-bordered cards have validation errors that must be fixed in ppdt_context_draft.json first.
+</div>
+
+<div class="filter-bar">
+  Show:
+  <button class="active" data-filter="ALL" onclick="filterBy('ALL')">All</button>
+  <button data-filter="FEMALE" onclick="filterBy('FEMALE')">FEMALE</button>
+  <button data-filter="MALE" onclick="filterBy('MALE')">MALE</button>
+  <button data-filter="MIXED" onclick="filterBy('MIXED')">MIXED</button>
+</div>
+
+<div class="grid">
+{% for e in entries %}
+  {% set ctx = e.imageContext %}
+  {% set errors = e.get('_validationErrors', []) %}
+  <div class="entry {{ 'has-errors' if errors else '' }}" data-gender="{{ e.genderTag }}">
+
+    <div class="img-panel">
+      <img src="images/ppdt_image_{{ '%03d' % e.imageNumber }}.jpg"
+           alt="{{ e.id }}"
+           onerror="this.style.background='#444';this.alt='Image not found'">
+      <span class="img-id">{{ e.id }}</span>
+      <span class="badge {{ e.genderTag }}">{{ e.genderTag }}</span>
+    </div>
+
+    <div class="info-panel">
+      {% if errors %}
+        <div class="errors">
+          {% for err in errors %}<p>⚠ {{ err }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="field">
+        <span class="label">Scene:</span>
+        {{ ctx.get('sceneDescription', '—') }}
+      </div>
+
+      <div class="field">
+        <span class="label">Core elements:</span>
+        {% for el in ctx.get('coreElements', []) %}<span class="tag">{{ el }}</span>{% endfor %}
+      </div>
+
+      <div class="field">
+        <span class="label">Ambiguous:</span>
+        {% for el in ctx.get('ambiguousElements', []) %}<span class="tag">{{ el }}</span>{% endfor %}
+      </div>
+
+      <hr class="divider">
+
+      <div class="field">
+        <span class="label">Expected themes:</span>
+        {% for t in ctx.get('expectedThemes', []) %}<span class="tag theme">{{ t }}</span>{% endfor %}
+      </div>
+
+      <div class="field">
+        <span class="label">Penalized themes:</span>
+        {% for t in ctx.get('penalizedThemes', []) %}<span class="tag penalized">{{ t }}</span>{% endfor %}
+      </div>
+
+      <hr class="divider">
+
+      <div class="field">
+        <span class="label">Primary OLQs:</span>
+        {% for olq in ctx.get('primaryOLQs', []) %}
+          {% set is_valid = olq in valid_olqs %}
+          <span class="tag olq {{ '' if is_valid else 'penalized' }}">{{ olq }}{{ ' ⚠' if not is_valid else '' }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="field">
+        <span class="label">Deviation tolerance:</span>
+        <span class="tolerance {{ ctx.get('deviationTolerance', '') }}">{{ ctx.get('deviationTolerance', '—') }}</span>
+      </div>
+
+      <hr class="divider">
+
+      <div class="field">
+        <span class="label">Good story hints:</span>
+        {% for h in ctx.get('exemplarGoodHints', []) %}<span class="hint">"{{ h }}"</span> {% endfor %}
+      </div>
+
+      <div class="field">
+        <span class="label">Bad story hints:</span>
+        {% for h in ctx.get('exemplarBadHints', []) %}<span class="hint penalized">"{{ h }}"</span> {% endfor %}
+      </div>
+    </div>
+
+  </div>
+{% endfor %}
+</div>
+
+</body>
+</html>

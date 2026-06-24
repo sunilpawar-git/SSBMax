@@ -92,7 +92,10 @@ object OLQMapper {
             "weaknesses" to olqResult.weaknesses,
             "recommendations" to olqResult.recommendations,
             "analyzedAt" to olqResult.analyzedAt,
-            "aiConfidence" to olqResult.aiConfidence
+            "aiConfidence" to olqResult.aiConfidence,
+            "validStoriesCount" to olqResult.validStoriesCount,
+            "failedStoriesCount" to olqResult.failedStoriesCount,
+            "usedPartialAssessment" to olqResult.usedPartialAssessment
         )
     }
 }

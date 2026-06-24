@@ -213,13 +213,13 @@ fun LazyListScope.olqCategorySection(olqScores: Map<OLQ, OLQScore>) {
         }
 
         OLQCategory.entries.forEach { category ->
-            val olqsInCategory = olqScores.filter { it.key.category == category }
+            val olqsInCategory = OLQ.entries.filter { it.category == category && it in olqScores }
             if (olqsInCategory.isNotEmpty()) {
                 item {
                     CategorySubHeader(title = category.displayName)
                 }
-                items(olqsInCategory.entries.toList()) { (olq, score) ->
-                    OLQScoreCard(olq = olq, score = score, isStrength = null)
+                items(olqsInCategory) { olq ->
+                    OLQScoreCard(olq = olq, score = olqScores.getValue(olq), isStrength = null)
                 }
             }
         }

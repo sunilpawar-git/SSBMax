@@ -16,7 +16,7 @@
     <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$private fun buildEducationJourney( education10th: Map&lt;String, Any&gt;, education12th: Map&lt;String, Any&gt;, educationGraduation: Map&lt;String, Any&gt;, educationPostGraduation: Map&lt;String, Any&gt; ): String</ID>
     <ID>CyclomaticComplexMethod:PPDTImageCacheManager.kt$PPDTImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
     <ID>CyclomaticComplexMethod:PPDTSubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePPDTSubmission(data: Map&lt;*, *&gt;): PPDTSubmission</ID>
-    <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseOLQResult(data: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
+    <ID>CyclomaticComplexMethod:OLQResultMapper.kt$internal fun parseSharedOLQResult(data: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSDTSubmission(data: Map&lt;*, *&gt;): SDTSubmission</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSRTSubmission(data: Map&lt;*, *&gt;): SRTSubmission</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseTATSubmission(data: Map&lt;*, *&gt;): TATSubmission</ID>

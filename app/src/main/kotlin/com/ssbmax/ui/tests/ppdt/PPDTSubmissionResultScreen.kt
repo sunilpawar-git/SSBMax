@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.ui.components.result.UnifiedOLQResultTemplate
+import com.ssbmax.ui.tests.ppdt.components.PPDTOLQReasoningCard
 
 /**
  * PPDT Submission Result Screen - Shows story submission confirmation and pending review
@@ -49,6 +50,9 @@ fun PPDTSubmissionResultScreen(
         },
         testSpecificContent = { state ->
             PPDTStoryPreview(state)
+            state.olqResult?.let { result ->
+                PPDTOLQReasoningCard(olqResult = result)
+            }
         },
         submissionStatus = uiState.submission?.status,
         onNavigateHome = onNavigateHome,

@@ -17,11 +17,12 @@ import java.util.UUID
 data class TATQuestion(
     val id: String = UUID.randomUUID().toString(),
     val imageUrl: String,
-    val sequenceNumber: Int, // 1-12
-    val prompt: String = "Write a story about what you see in the picture",
+    val cardPosition: Int, // 1–11 (pool slot); 12 = programmatic blank card
+    val imageContextJson: String = "{}", // JSON-serialized TATImageContext for AI scoring
+    val genderTag: String = "MIXED", // MALE/FEMALE/MIXED — controls R4 protagonist gender rule
     val viewingTimeSeconds: Int = 30,
     val writingTimeMinutes: Int = 4,
-    val minCharacters: Int = 50,
+    val minCharacters: Int = 150,
     val maxCharacters: Int = 1500
 )
 
@@ -118,7 +119,7 @@ enum class TATPhase {
     INSTRUCTIONS,
     IMAGE_VIEWING,
     WRITING,
-    REVIEW_CURRENT,
+    REVIEW,
     SUBMITTED;
     
     val displayName: String
@@ -126,7 +127,7 @@ enum class TATPhase {
             INSTRUCTIONS -> "Instructions"
             IMAGE_VIEWING -> "Viewing Image"
             WRITING -> "Writing Story"
-            REVIEW_CURRENT -> "Review"
+            REVIEW -> "Review"
             SUBMITTED -> "Submitted"
         }
 }
@@ -141,7 +142,7 @@ data class TATTestConfig(
     val totalPictures: Int = 12,
     val viewingTimePerPictureSeconds: Int = 30,
     val writingTimePerPictureMinutes: Int = 4,
-    val minCharactersPerStory: Int = 50,
+    val minCharactersPerStory: Int = 150,
     val maxCharactersPerStory: Int = 1500,
     val showAIScore: Boolean = true,
     val requiresInstructorReview: Boolean = true,
