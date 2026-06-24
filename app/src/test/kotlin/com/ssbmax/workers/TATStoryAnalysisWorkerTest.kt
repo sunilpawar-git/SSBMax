@@ -18,6 +18,7 @@ import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.core.domain.service.OLQScoreWithReasoning
 import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.workers.retry.RetryBackoffPolicy
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,9 +27,11 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -242,6 +245,31 @@ class TATStoryAnalysisWorkerTest {
 
         // Should retry, not silently succeed with a placeholder
         assertEquals("Worker must retry on transient submission fetch failure", ListenableWorker.Result.retry(), result)
+    }
+
+    // ───────────── retry backoff ─────────────
+
+    @Test
+    fun `retry sequence matches RetryBackoffPolicy bounds`() = runTest {
+        // WHY: previously a fixed linear delay meant every worker retried at the exact same
+        // offsets — a burst of simultaneous failures all retried in lockstep. Asserting the
+        // virtual elapsed time falls within RetryBackoffPolicy's published bounds proves the
+        // worker now defers to the policy instead of its own inline delay math.
+        every { workerParams.inputData } returns buildInputData()
+        coEvery { submissionRepository.getTATSubmission(testSubmissionId) } returns Result.success(buildSubmission())
+        every { userProfileRepository.getUserProfile(testUserId) } returns flowOf(Result.success(buildUserProfile()))
+        coEvery { aiService.analyzeTATStoryMultimodal(any(), any(), any(), any(), any(), any(), any()) } returns
+            Result.failure(Exception("Gemini API overloaded"))
+
+        createWorker().doWork()
+
+        // Delays occur after attempt 0 and attempt 1 (3 attempts total, no delay after the last).
+        val expectedMin = RetryBackoffPolicy.minDelayMillis(0) + RetryBackoffPolicy.minDelayMillis(1)
+        val expectedMax = RetryBackoffPolicy.maxDelayMillis(0) + RetryBackoffPolicy.maxDelayMillis(1)
+        assertTrue(
+            "elapsed time ${currentTime}ms must be within [$expectedMin, $expectedMax]",
+            currentTime in expectedMin..expectedMax
+        )
     }
 
     // ───────────── gender routing ─────────────

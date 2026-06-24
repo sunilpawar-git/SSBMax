@@ -21,6 +21,7 @@ import com.ssbmax.core.domain.service.OLQScoreWithReasoning
 import com.ssbmax.core.domain.service.ResponseAnalysis
 import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.notifications.NotificationHelper
+import com.ssbmax.workers.retry.RetryBackoffPolicy
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -29,9 +30,11 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -279,6 +282,23 @@ class TATSynthesisWorkerTest {
                 match { it.failedStoriesCount == 3 }
             )
         }
+    }
+
+    @Test
+    fun `retry sequence matches RetryBackoffPolicy bounds`() = runTest {
+        // WHY: same rationale as TATStoryAnalysisWorker — proves synthesis retries also use
+        // the shared exponential-backoff-with-jitter policy, not a fixed linear delay.
+        coEvery { tatStoryAssessmentDao.getBySubmissionId(submissionId) } returns buildAssessments(validCount = 6)
+        coEvery { aiService.analyzeTATResponse(any()) } returns Result.failure(Exception("Gemini overloaded"))
+
+        createWorker().doWork()
+
+        val expectedMin = RetryBackoffPolicy.minDelayMillis(0) + RetryBackoffPolicy.minDelayMillis(1)
+        val expectedMax = RetryBackoffPolicy.maxDelayMillis(0) + RetryBackoffPolicy.maxDelayMillis(1)
+        assertTrue(
+            "elapsed time ${currentTime}ms must be within [$expectedMin, $expectedMax]",
+            currentTime in expectedMin..expectedMax
+        )
     }
 
     @Test

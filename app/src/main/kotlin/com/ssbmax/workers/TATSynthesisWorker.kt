@@ -21,6 +21,7 @@ import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.TATStoryAnalysisWorker.Companion.FAILED_MARKER
+import com.ssbmax.workers.retry.RetryBackoffPolicy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
@@ -49,7 +50,6 @@ class TATSynthesisWorker @AssistedInject constructor(
         const val KEY_SUBMISSION_ID = "submission_id"
         private const val TAG = "TATSynthesisWorker"
         private const val MAX_AI_RETRIES = 3
-        private const val RETRY_DELAY_MS = 2000L
         private const val MIN_STORY_THRESHOLD = 6
     }
 
@@ -180,7 +180,7 @@ class TATSynthesisWorker @AssistedInject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "   ❌ AI call threw exception: ${e.message}")
             }
-            if (attempt < MAX_AI_RETRIES - 1) delay(RETRY_DELAY_MS * (attempt + 1))
+            if (attempt < MAX_AI_RETRIES - 1) delay(RetryBackoffPolicy.nextDelayMillis(attempt))
         }
         return null
     }

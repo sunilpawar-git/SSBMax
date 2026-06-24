@@ -14,6 +14,7 @@ import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
+import com.ssbmax.workers.retry.RetryBackoffPolicy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +55,6 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
         const val FAILED_MARKER = "FAILED"
         private const val TAG = "TATStoryAnalysisWorker"
         private const val MAX_AI_RETRIES = 3
-        private const val RETRY_DELAY_MS = 2000L
     }
 
     override suspend fun doWork(): Result {
@@ -292,7 +292,7 @@ class TATStoryAnalysisWorker @AssistedInject constructor(
             }
 
             if (attempt < MAX_AI_RETRIES - 1) {
-                delay(RETRY_DELAY_MS * (attempt + 1))
+                delay(RetryBackoffPolicy.nextDelayMillis(attempt))
             }
         }
         return null
