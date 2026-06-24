@@ -1,29 +1,25 @@
 package com.ssbmax.ui.tests.tat
 
-import androidx.work.Constraints
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.ssbmax.core.domain.model.TATQuestion
 import com.ssbmax.core.domain.model.TATStoryResponse
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.workers.TATStoryAnalysisWorker
-import com.ssbmax.workers.TATSynthesisWorker
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Orchestrates the TAT analysis pipeline: sets ANALYZING status before enqueuing
- * the per-story + synthesis WorkManager chain, ensuring the status transition
- * happens before any background work begins (Phase 3 fix).
+ * the per-story + synthesis WorkManager chain (Phase 3 fix), and enqueues the
+ * per-story work in bounded batches rather than a single 12-way fan-out so Gemini
+ * isn't hit with every multimodal call at once (Phase 4 fix).
  */
 @Singleton
 class TATAnalysisPipelineOrchestrator @Inject constructor(
     private val submissionRepository: SubmissionRepository,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val workPlanner: TATAnalysisWorkPlanner
 ) {
 
     suspend fun startPipeline(
@@ -48,36 +44,13 @@ class TATAnalysisPipelineOrchestrator @Inject constructor(
         }
 
         return try {
-            val questionById = questions.associateBy { it.id }
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-
-            val storyRequests = stories.mapIndexed { index, story ->
-                val question = questionById[story.questionId]
-                OneTimeWorkRequestBuilder<TATStoryAnalysisWorker>()
-                    .setInputData(
-                        workDataOf(
-                            TATStoryAnalysisWorker.KEY_SUBMISSION_ID to submissionId,
-                            TATStoryAnalysisWorker.KEY_QUESTION_ID to story.questionId,
-                            TATStoryAnalysisWorker.KEY_STORY_INDEX to index,
-                            TATStoryAnalysisWorker.KEY_IMAGE_URL to (question?.imageUrl ?: ""),
-                            TATStoryAnalysisWorker.KEY_IMAGE_CONTEXT_JSON to (question?.imageContextJson ?: "{}"),
-                            TATStoryAnalysisWorker.KEY_IMAGE_GENDER_TAG to (question?.genderTag ?: "MIXED")
-                        )
-                    )
-                    .setConstraints(constraints)
-                    .build()
+            // stories is non-empty (checked above), so the planner always yields at least one batch.
+            val plan = workPlanner.plan(submissionId, stories, questions)
+            var continuation = workManager.beginWith(plan.storyBatches.first())
+            plan.storyBatches.drop(1).forEach { batch ->
+                continuation = continuation.then(batch)
             }
-
-            val synthesisRequest = OneTimeWorkRequestBuilder<TATSynthesisWorker>()
-                .setInputData(workDataOf(TATSynthesisWorker.KEY_SUBMISSION_ID to submissionId))
-                .setConstraints(constraints)
-                .build()
-
-            workManager.beginWith(storyRequests)
-                .then(synthesisRequest)
-                .enqueue()
+            continuation.then(plan.synthesisRequest).enqueue()
 
             Result.success(Unit)
         } catch (e: Exception) {

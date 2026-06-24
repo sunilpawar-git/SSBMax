@@ -26,6 +26,7 @@ class TATAnalysisPipelineOrchestratorTest {
     private lateinit var workManager: WorkManager
     private lateinit var workContinuation: WorkContinuation
     private lateinit var submissionRepository: SubmissionRepository
+    private lateinit var workPlanner: TATAnalysisWorkPlanner
 
     @Before
     fun setup() {
@@ -41,13 +42,16 @@ class TATAnalysisPipelineOrchestratorTest {
         workManager = mockk(relaxed = true)
         workContinuation = mockk(relaxed = true)
         every { workManager.beginWith(any<List<OneTimeWorkRequest>>()) } returns workContinuation
+        every { workContinuation.then(any<List<OneTimeWorkRequest>>()) } returns workContinuation
         every { workContinuation.then(any<OneTimeWorkRequest>()) } returns workContinuation
         every { workContinuation.enqueue() } returns mockk(relaxed = true)
 
         submissionRepository = mockk(relaxed = true)
         coEvery { submissionRepository.updateTATAnalysisStatus(any(), any()) } returns Result.success(Unit)
 
-        orchestrator = TATAnalysisPipelineOrchestrator(submissionRepository, workManager)
+        workPlanner = TATAnalysisWorkPlanner()
+
+        orchestrator = TATAnalysisPipelineOrchestrator(submissionRepository, workManager, workPlanner)
     }
 
     @After
@@ -103,6 +107,44 @@ class TATAnalysisPipelineOrchestratorTest {
 
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { submissionRepository.updateTATAnalysisStatus(any(), any()) }
+    }
+
+    @Test
+    fun `uses work planner instead of direct full fan out`() = runTest {
+        val result = orchestrator.startPipeline("sub-004", buildStories(12), buildQuestions(12))
+
+        assertTrue(result.isSuccess)
+        // 12 stories at BATCH_SIZE 3 means 4 batches: one beginWith + 3 then(batch) calls.
+        verify(exactly = 1) { workManager.beginWith(any<List<OneTimeWorkRequest>>()) }
+        verify(exactly = 3) { workContinuation.then(any<List<OneTimeWorkRequest>>()) }
+    }
+
+    @Test
+    fun `enqueues bounded concurrency graph`() = runTest {
+        val firstBatch = mutableListOf<List<OneTimeWorkRequest>>()
+        every { workManager.beginWith(capture(firstBatch)) } returns workContinuation
+        val laterBatches = mutableListOf<List<OneTimeWorkRequest>>()
+        every { workContinuation.then(capture(laterBatches)) } returns workContinuation
+
+        orchestrator.startPipeline("sub-005", buildStories(12), buildQuestions(12))
+
+        val allBatchSizes = firstBatch + laterBatches
+        assertTrue(
+            "every batch must be bounded to avoid hitting Gemini with all calls at once",
+            allBatchSizes.all { it.size <= TATAnalysisWorkPlanner.BATCH_SIZE }
+        )
+    }
+
+    @Test
+    fun `fails safely when planner input is invalid`() = runTest {
+        val throwingPlanner = mockk<TATAnalysisWorkPlanner>()
+        every { throwingPlanner.plan(any(), any(), any()) } throws RuntimeException("bad plan input")
+        val orchestratorWithThrowingPlanner =
+            TATAnalysisPipelineOrchestrator(submissionRepository, workManager, throwingPlanner)
+
+        val result = orchestratorWithThrowingPlanner.startPipeline("sub-006", buildStories(), buildQuestions())
+
+        assertTrue(result.isFailure)
     }
 
     private fun buildStories(count: Int = 3): List<TATStoryResponse> = (1..count).map { i ->
