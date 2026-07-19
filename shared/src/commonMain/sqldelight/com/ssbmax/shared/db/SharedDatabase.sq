@@ -1,0 +1,19 @@
+-- Minimal SQLDelight schema for the Phase 0 KMP spike.
+-- Validates the SQLDelight Gradle plugin + KMP driver setup (android-driver
+-- + native-driver) compiles and generates typed Kotlin APIs, per the plan's
+-- "Room -> SQLDelight" risk item. Not wired into the vertical slice's data
+-- flow yet (the OIR result repo goes straight to Firestore in this spike) —
+-- a real cache-through-SQLDelight path is Phase 2 scope.
+
+CREATE TABLE CachedOirResult (
+    submissionId TEXT NOT NULL PRIMARY KEY,
+    percentageScore REAL NOT NULL,
+    cachedAtEpochMillis INTEGER NOT NULL
+);
+
+selectBySubmissionId:
+SELECT * FROM CachedOirResult WHERE submissionId = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO CachedOirResult(submissionId, percentageScore, cachedAtEpochMillis)
+VALUES (?, ?, ?);

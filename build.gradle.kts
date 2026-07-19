@@ -8,6 +8,9 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.compose.multiplatform) apply false
+    alias(libs.plugins.sqldelight) apply false
     jacoco
 }
 

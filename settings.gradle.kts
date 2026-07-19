@@ -30,3 +30,7 @@ include(":core:designsystem")
 include(":core:domain")
 include(":core:data")
 include(":lint")
+
+// Phase 0 KMP spike (see docs/architecture/ or CLAUDE plan for context).
+// Additive/parallel to existing modules — does not replace them yet.
+include(":shared")

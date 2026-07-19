@@ -3,6 +3,16 @@ agp = "8.7.3"
 kotlin = "2.1.0"
 detekt = "1.23.7"
 
+# KMP Spike (Phase 0) — shared module only, isolated from existing app/core modules
+composeMultiplatform = "1.8.2"
+koin = "4.1.0"
+koinCompose = "4.1.0"
+sqldelight = "2.1.0"
+gitliveFirebase = "2.1.0"
+ktorClientDarwin = "3.0.2"
+kotlinxDatetime = "0.6.2"
+kotlinxSerialization = "1.7.3"
+
 # AndroidX Core
 coreKtx = "1.15.0"
 lifecycleRuntimeKtx = "2.8.7"
@@ -83,6 +93,22 @@ ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
+ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.ref = "ktorClientDarwin" }
+
+# KMP Spike (Phase 0)
+koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
+koin-compose = { group = "io.insert-koin", name = "koin-compose", version.ref = "koinCompose" }
+koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koinCompose" }
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+sqldelight-runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqldelight" }
+sqldelight-coroutines = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqldelight" }
+sqldelight-android-driver = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
+sqldelight-native-driver = { group = "app.cash.sqldelight", name = "native-driver", version.ref = "sqldelight" }
+gitlive-firebase-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "gitliveFirebase" }
+gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitliveFirebase" }
+gitlive-firebase-common = { group = "dev.gitlive", name = "firebase-common", version.ref = "gitliveFirebase" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -141,3 +167,8 @@ ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.2" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+compose-compiler-kmp = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
