@@ -3,7 +3,7 @@ package com.ssbmax.core.data.ai
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
-import com.ssbmax.core.data.ai.prompts.SSBInterviewPrompts
+import com.ssbmax.shared.ai.prompts.SSBInterviewPrompts
 import com.ssbmax.shared.domain.model.PPDTImageContext
 import com.ssbmax.shared.domain.model.TATImageContext
 import com.ssbmax.shared.domain.model.interview.InterviewQuestion

@@ -1,4 +1,4 @@
-package com.ssbmax.core.data.ai.prompts
+package com.ssbmax.shared.ai.prompts
 
 import com.ssbmax.shared.domain.model.interview.OLQ
 
@@ -473,7 +473,9 @@ IMPORTANT:
                     score <= 7 -> "Average"
                     else -> "Needs Improvement"
                 }
-                "- ${olq.displayName}: ${"%.1f".format(score)}/10 ($assessment)"
+                // String.format is JVM-only; round manually for KMP (commonMain).
+                val rounded = kotlin.math.round(score * 10) / 10.0
+                "- ${olq.displayName}: $rounded/10 ($assessment)"
             }
 
         val strongOLQs = olqScores.entries

@@ -65,10 +65,13 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
 
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.json)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
         // Phase 1 domain move: the 6 MockK-dependent unit tests from core:domain's
         // JVM-only test source set land here (androidUnitTest), not commonTest --
@@ -80,6 +83,11 @@ kotlin {
                 implementation(libs.mockk)
                 implementation(libs.turbine)
                 implementation(libs.kotlinx.coroutines.test)
+                // Phase 2: JVM SQLDelight driver to actually exercise CachedOirResult
+                // reads/writes against a real in-memory SQLite DB in unit tests --
+                // closes the Phase 0 exit report's "SQLDelight unexercised at
+                // runtime" gap without needing an emulator/simulator.
+                implementation(libs.sqldelight.sqlite.driver)
             }
         }
         androidMain.dependencies {

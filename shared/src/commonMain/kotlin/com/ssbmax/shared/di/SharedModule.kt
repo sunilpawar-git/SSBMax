@@ -1,26 +1,79 @@
 package com.ssbmax.shared.di
 
+import com.ssbmax.shared.ai.KtorGeminiClient
+import com.ssbmax.shared.ai.KtorInterviewResponseAnalysisService
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
+import com.ssbmax.shared.data.repository.GitLiveSubscriptionRepository
+import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
+import com.ssbmax.shared.data.repository.OirResultCache
+import com.ssbmax.shared.db.DatabaseDriverFactory
+import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.OirResultRepository
+import com.ssbmax.shared.domain.repository.SubscriptionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.service.InterviewResponseAnalysisService
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
- * Koin module for the Phase 0 KMP spike. Deliberately small — only wires
- * the one vertical slice (auth + OIR result). Full DI-graph parity with the
- * app's 6 Hilt modules / 55 ViewModels is Phase 3 scope, not Phase 0.
+ * Koin module. Phase 0 wired one vertical slice (auth + OIR result); Phase 2
+ * adds UserProfile/Subscription repositories, a real SQLDelight-backed cache,
+ * and the Ktor-based Gemini path (InterviewResponseAnalysisService) — still
+ * not full DI-graph parity with the app's 6 Hilt modules / 55 ViewModels,
+ * which remains Phase 3 scope.
+ *
+ * DomainLogger is bound to a no-op implementation here — a real cross-platform
+ * logger (Android logcat / iOS os_log) is an expect/actual shim deferred to
+ * Phase 4's platform-shims item, same tier as WorkManager/TTS/billing.
+ *
+ * The Gemini API key is read from Koin's property store (`getProperty`, empty
+ * default) rather than hardcoded, per this repo's "never hardcode secrets"
+ * rule — the app's startKoin() call must supply it via `properties()`/
+ * `androidFileProperties()` before this module resolves KtorGeminiClient.
+ * (No such startKoin() call exists anywhere yet — inherited from Phase 0,
+ * which deferred the live run; see this phase's exit report.)
  */
 val sharedModule = module {
+    includes(platformModule)
+
+    single<DomainLogger> { NoOpLogger() }
+
+    single { SharedDatabase(get<DatabaseDriverFactory>().createDriver()) }
+    single { OirResultCache(get()) }
+
+    single<HttpClient> {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+    }
+    single {
+        KtorGeminiClient(
+            httpClient = get(),
+            apiKey = getProperty("GEMINI_API_KEY", "")
+        )
+    }
+
     singleOf(::GitLiveAuthRepository) bind AuthRepository::class
     singleOf(::GitLiveOirResultRepository) bind OirResultRepository::class
+    singleOf(::GitLiveUserProfileRepository) bind UserProfileRepository::class
+    singleOf(::GitLiveSubscriptionRepository) bind SubscriptionRepository::class
+    factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
 
     factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::GetOirResultUseCase)

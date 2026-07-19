@@ -1,13 +1,11 @@
--- Minimal SQLDelight schema for the Phase 0 KMP spike.
--- Validates the SQLDelight Gradle plugin + KMP driver setup (android-driver
--- + native-driver) compiles and generates typed Kotlin APIs, per the plan's
--- "Room -> SQLDelight" risk item. Not wired into the vertical slice's data
--- flow yet (the OIR result repo goes straight to Firestore in this spike) —
--- a real cache-through-SQLDelight path is Phase 2 scope.
+-- Phase 2: real read-through/write-through cache for OIR results, replacing
+-- the Phase 0 spike's percentage-only row with the full serialized result
+-- (resultJson holds a JSON-encoded OirTestResultDto, see OirResultDto.kt),
+-- so a cache hit returns the same fidelity as a fresh Firestore read.
 
 CREATE TABLE CachedOirResult (
     submissionId TEXT NOT NULL PRIMARY KEY,
-    percentageScore REAL NOT NULL,
+    resultJson TEXT NOT NULL,
     cachedAtEpochMillis INTEGER NOT NULL
 );
 
@@ -15,5 +13,5 @@ selectBySubmissionId:
 SELECT * FROM CachedOirResult WHERE submissionId = ?;
 
 insertOrReplace:
-INSERT OR REPLACE INTO CachedOirResult(submissionId, percentageScore, cachedAtEpochMillis)
+INSERT OR REPLACE INTO CachedOirResult(submissionId, resultJson, cachedAtEpochMillis)
 VALUES (?, ?, ?);
