@@ -3,6 +3,7 @@ package com.ssbmax.shared.data.repository
 import com.ssbmax.shared.domain.model.GoogleSignInData
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.StudentProfile
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
 import dev.gitlive.firebase.Firebase
@@ -12,24 +13,29 @@ import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Clock
 
 /**
- * GitLive-Firebase-backed implementation for the Phase 0 KMP spike.
+ * GitLive-Firebase-backed implementation, ported from the Android
+ * AuthRepositoryImpl + FirestoreUserRepository pair (Phase 2).
  *
- * Deliberately simplified vs. the Android AuthRepositoryImpl: no
- * FirestoreUserRepository-backed "load or create profile" merge (that's real
- * business logic worth porting in Phase 2, not needed to validate the
- * dependency stack in Phase 0) — this always constructs a fresh profile.
- * currentUser is a plain in-memory StateFlow rather than the original's
- * callbackFlow-over-Firebase-authState + FirestoreUserRepository join,
- * again to keep the spike's surface area to "does GitLive auth work at all."
+ * handleGoogleSignInResult now does the real load-or-create-profile merge via
+ * GitLiveUserRepository (users/{userId}) — closing the gap the Phase 0 report
+ * flagged ("that's real business logic worth porting in Phase 2"). currentUser
+ * is still a plain in-memory StateFlow rather than the Android original's
+ * callbackFlow-over-Firebase-authState + Firestore join; that reactive-auth-state
+ * wiring (observing role/profile changes pushed from another device) remains
+ * out of scope for this slice and is not silently dropped — same "trimmed but
+ * real" pattern Phase 0/2 used elsewhere.
  *
  * A real Google ID token exchange (Android Credential Manager / iOS
  * GoogleSignIn SDK) is NOT wired here — GoogleSignInData carries an
  * (idToken, accessToken) pair by convention for this spike; obtaining that
  * pair from a native picker is platform UI work out of Phase 0 scope.
  */
-class GitLiveAuthRepository : AuthRepository {
+class GitLiveAuthRepository(
+    private val userRepository: GitLiveUserRepository = GitLiveUserRepository()
+) : AuthRepository {
 
     private val _currentUser = MutableStateFlow<SSBMaxUser?>(null)
     override val currentUser: StateFlow<SSBMaxUser?> = _currentUser.asStateFlow()
@@ -56,8 +62,12 @@ class GitLiveAuthRepository : AuthRepository {
     override suspend fun updateUserRole(role: UserRole): Result<Unit> {
         val current = _currentUser.value
             ?: return Result.failure(IllegalStateException("No authenticated user"))
-        _currentUser.value = current.copy(role = role)
-        return Result.success(Unit)
+        val userId = current.id
+        val result = userRepository.updateUserRole(userId, role)
+        if (result.isSuccess) {
+            _currentUser.value = current.copy(role = role)
+        }
+        return result
     }
 
     override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result<SSBMaxUser> {
@@ -74,12 +84,37 @@ class GitLiveAuthRepository : AuthRepository {
             val firebaseUser = authResult.user
                 ?: return Result.failure(Exception("Firebase user is null after sign-in"))
 
-            val user = firebaseUser.toDomainUser()
-            _currentUser.value = user
-            Result.success(user)
+            val userResult = loadOrCreateUserProfile(firebaseUser)
+            userResult.onSuccess { _currentUser.value = it }
+            userResult
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Ported from AuthRepositoryImpl.loadOrCreateUserProfile: an existing Firestore
+     * user wins (with lastLoginAt refreshed), otherwise a fresh FREE-tier student
+     * profile is created and saved — same fields, same defaults as the Android impl.
+     */
+    private suspend fun loadOrCreateUserProfile(firebaseUser: FirebaseUser): Result<SSBMaxUser> {
+        val existingResult = userRepository.getUser(firebaseUser.uid)
+        if (existingResult.isFailure) {
+            return Result.failure(existingResult.exceptionOrNull() ?: Exception("Failed to load user"))
+        }
+
+        val existingUser = existingResult.getOrNull()
+        if (existingUser != null) {
+            userRepository.updateLastLogin(firebaseUser.uid)
+            return Result.success(existingUser)
+        }
+
+        val newUser = firebaseUser.toDomainUser()
+        val saveResult = userRepository.saveUser(newUser)
+        if (saveResult.isFailure) {
+            return Result.failure(saveResult.exceptionOrNull() ?: Exception("Failed to save new user"))
+        }
+        return Result.success(newUser)
     }
 
     override suspend fun signOut(): Result<Unit> {
@@ -102,6 +137,9 @@ class GitLiveAuthRepository : AuthRepository {
         displayName = displayName ?: "User",
         photoUrl = photoURL,
         role = UserRole.STUDENT,
-        studentProfile = StudentProfile(userId = uid)
+        subscriptionTier = SubscriptionTier.FREE,
+        studentProfile = StudentProfile(userId = uid),
+        createdAt = Clock.System.now().toEpochMilliseconds(),
+        lastLoginAt = Clock.System.now().toEpochMilliseconds()
     )
 }
