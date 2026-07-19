@@ -162,7 +162,14 @@ extensions.getByType<ApplicationExtension>().apply {
             "ModifierDeclaration",
             "ModifierFactoryExtensionFunction",
             "ModifierFactoryReturnType",
-            "ModifierFactoryUnreferencedReceiver"
+            "ModifierFactoryUnreferencedReceiver",
+            // NonNullableMutableLiveDataDetector (bundled in AGP's androidx-lifecycle
+            // lint checks) crashes with IncompatibleClassChangeError once :shared's
+            // Compose Multiplatform artifacts are on this module's classpath (Phase 0
+            // KMP spike, debugImplementation(project(":shared"))) -- a lint/UAST
+            // tooling version mismatch, not a real violation. Same workaround already
+            // applied in shared/build.gradle.kts.
+            "NullSafeMutableLiveData"
         )
     }
     
@@ -202,6 +209,11 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+
+    // Phase 0 KMP spike validation harness only (debug builds) -- lets the
+    // shared module's ported Compose Multiplatform screen actually run on
+    // an Android device/emulator. See app/src/debug/.../KmpSpikeActivity.kt.
+    debugImplementation(project(":shared"))
 
     // Custom lint rules
     lintChecks(project(":lint"))

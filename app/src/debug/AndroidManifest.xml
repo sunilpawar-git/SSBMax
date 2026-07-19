@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Phase 0 KMP spike validation harness (debug builds only). -->
+    <application>
+        <activity
+            android:name="com.ssbmax.spike.KmpSpikeActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SSBMax" />
+    </application>
+
+</manifest>
