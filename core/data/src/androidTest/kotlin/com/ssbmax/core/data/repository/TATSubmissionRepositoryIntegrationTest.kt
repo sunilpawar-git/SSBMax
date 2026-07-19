@@ -2,11 +2,11 @@ package com.ssbmax.core.data.repository
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ssbmax.core.data.remote.TATSubmissionRepository
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

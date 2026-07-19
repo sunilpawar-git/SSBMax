@@ -1,7 +1,7 @@
 package com.ssbmax.ui.tests.tat
 
-import com.ssbmax.core.domain.model.TATQuestion
-import com.ssbmax.core.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.TATStoryResponse
 import com.ssbmax.workers.TATStoryAnalysisWorker
 import com.ssbmax.workers.TATSynthesisWorker
 import org.junit.Assert.assertEquals

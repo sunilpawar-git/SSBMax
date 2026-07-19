@@ -3,11 +3,11 @@ package com.ssbmax.ui.profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.EntryType
-import com.ssbmax.core.domain.model.Gender
-import com.ssbmax.core.domain.model.UserProfile
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

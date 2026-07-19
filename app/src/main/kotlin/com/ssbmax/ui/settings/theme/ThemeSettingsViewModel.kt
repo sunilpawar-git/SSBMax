@@ -3,7 +3,7 @@ package com.ssbmax.ui.settings.theme
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.shared.domain.model.AppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

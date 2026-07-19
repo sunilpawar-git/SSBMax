@@ -1,6 +1,6 @@
 package com.ssbmax.ui.tests.sdt
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseViewModelTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

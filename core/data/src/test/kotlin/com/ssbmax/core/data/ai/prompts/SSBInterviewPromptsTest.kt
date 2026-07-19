@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQ
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

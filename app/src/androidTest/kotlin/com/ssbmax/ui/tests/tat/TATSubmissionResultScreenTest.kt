@@ -4,10 +4,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import org.junit.Rule
 import org.junit.Test
 

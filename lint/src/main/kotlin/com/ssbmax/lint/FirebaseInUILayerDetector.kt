@@ -19,7 +19,7 @@ import org.jetbrains.uast.UImportStatement
  *   class MyViewModel @Inject constructor(private val auth: FirebaseAuth)
  *
  * ✅ CORRECT:
- *   import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+ *   import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
  *   class MyViewModel @Inject constructor(private val observeUser: ObserveCurrentUserUseCase)
  */
 class FirebaseInUILayerDetector : Detector(), SourceCodeScanner {
@@ -42,7 +42,7 @@ class FirebaseInUILayerDetector : Detector(), SourceCodeScanner {
             - Use `AuthRepository` for auth operations
 
             For data access:
-            - Use repository interfaces from core/domain
+            - Use repository interfaces from shared/commonMain/domain
             - Implement repositories in core/data (where Firebase is allowed)
 
             **Example:**

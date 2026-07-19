@@ -3,8 +3,8 @@ package com.ssbmax
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.ui.theme.ThemeState
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel

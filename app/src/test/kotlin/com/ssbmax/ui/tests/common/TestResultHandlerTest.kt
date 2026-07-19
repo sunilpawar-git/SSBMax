@@ -2,8 +2,8 @@ package com.ssbmax.ui.tests.common
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptionsBuilder
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.navigation.SSBMaxDestinations
 import io.mockk.every
 import io.mockk.mockk

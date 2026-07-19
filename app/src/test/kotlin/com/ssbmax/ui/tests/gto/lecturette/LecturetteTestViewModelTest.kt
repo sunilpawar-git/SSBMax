@@ -1,11 +1,11 @@
 package com.ssbmax.ui.tests.gto.lecturette
 
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.GTORepository
-import com.ssbmax.core.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper

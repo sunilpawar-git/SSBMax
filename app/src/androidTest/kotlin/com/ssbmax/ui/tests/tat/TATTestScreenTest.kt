@@ -1,9 +1,9 @@
 package com.ssbmax.ui.tests.tat
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.TATPhase
-import com.ssbmax.core.domain.model.TATQuestion
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TATPhase
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -365,7 +365,7 @@ class TATTestScreenTest : BaseComposeTest() {
             currentQuestionIndex = testQuestions.lastIndex,
             currentStory = testStory,
             responses = testQuestions.dropLast(1).mapIndexed { index, question ->
-                com.ssbmax.core.domain.model.TATStoryResponse(
+                com.ssbmax.shared.domain.model.TATStoryResponse(
                     questionId = question.id,
                     story = "Story $index",
                     charactersCount = 200,

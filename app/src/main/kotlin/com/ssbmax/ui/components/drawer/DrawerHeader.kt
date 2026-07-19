@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.ui.components.ProfileAvatarWithBadge
 
 /**

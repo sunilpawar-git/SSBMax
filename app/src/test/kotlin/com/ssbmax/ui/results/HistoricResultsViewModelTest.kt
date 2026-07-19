@@ -1,12 +1,12 @@
 package com.ssbmax.ui.results
 
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.model.results.HistoricResult
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.usecase.results.GetHistoricResultsUseCase
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.model.results.HistoricResult
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.usecase.results.GetHistoricResultsUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify

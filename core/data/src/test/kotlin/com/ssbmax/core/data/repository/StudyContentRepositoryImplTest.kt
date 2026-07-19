@@ -1,10 +1,10 @@
 package com.ssbmax.core.data.repository
 
 import com.ssbmax.core.data.source.FirestoreContentSource
-import com.ssbmax.core.domain.model.AttachmentType
-import com.ssbmax.core.domain.model.CloudAttachment
-import com.ssbmax.core.domain.model.CloudStudyMaterial
-import com.ssbmax.core.domain.model.TopicContent
+import com.ssbmax.shared.domain.model.AttachmentType
+import com.ssbmax.shared.domain.model.CloudAttachment
+import com.ssbmax.shared.domain.model.CloudStudyMaterial
+import com.ssbmax.shared.domain.model.TopicContent
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*

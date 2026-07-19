@@ -2,9 +2,9 @@ package com.ssbmax.ui.home.student
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +27,11 @@ import javax.inject.Inject
 class StudentHomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val testProgressRepository: com.ssbmax.core.domain.repository.TestProgressRepository,
-    private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository,
-    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
+    private val testProgressRepository: com.ssbmax.shared.domain.repository.TestProgressRepository,
+    private val unifiedResultRepository: com.ssbmax.shared.domain.repository.UnifiedResultRepository,
+    private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val analyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager,
-    private val notificationRepository: com.ssbmax.core.domain.repository.NotificationRepository
+    private val notificationRepository: com.ssbmax.shared.domain.repository.NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -292,8 +292,8 @@ data class StudentHomeUiState(
     val currentStreak: Int = 0,
     val testsCompleted: Int = 0,
     val notificationCount: Int = 0,
-    val phase1Progress: com.ssbmax.core.domain.model.Phase1Progress? = null,
-    val phase2Progress: com.ssbmax.core.domain.model.Phase2Progress? = null,
+    val phase1Progress: com.ssbmax.shared.domain.model.Phase1Progress? = null,
+    val phase2Progress: com.ssbmax.shared.domain.model.Phase2Progress? = null,
     val error: String? = null,
     // true only during the very first fetch (dashboard == null).
     // OLQDashboardCard uses this to render a LinearProgressIndicator placeholder
@@ -302,7 +302,7 @@ data class StudentHomeUiState(
     // true while a manual pull-to-refresh is in flight; drives the rotate animation
     // on the refresh icon. Independent of isDashboardLoading.
     val isRefreshingDashboard: Boolean = false,
-    val dashboard: com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData? = null,
+    val dashboard: com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData? = null,
     val dashboardError: String? = null,
     val lastRefreshTime: Long? = null
 )

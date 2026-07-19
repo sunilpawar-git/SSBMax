@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

@@ -1,16 +1,17 @@
 package com.ssbmax.core.data.repository.interview
 
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.InterviewResponse
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import java.time.Instant
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.InterviewResponse
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Firestore mapping utilities for interview entities
@@ -30,8 +31,8 @@ object InterviewFirestoreMappers {
             "userId" to session.userId,
             "mode" to session.mode.name,
             "status" to session.status.name,
-            "startedAt" to session.startedAt.toEpochMilli(),
-            "completedAt" to session.completedAt?.toEpochMilli(),
+            "startedAt" to session.startedAt.toEpochMilliseconds(),
+            "completedAt" to session.completedAt?.toEpochMilliseconds(),
             "piqSnapshotId" to session.piqSnapshotId,
             "consentGiven" to session.consentGiven,
             "questionIds" to session.questionIds,
@@ -47,8 +48,8 @@ object InterviewFirestoreMappers {
             userId = data["userId"] as String,
             mode = InterviewMode.valueOf(data["mode"] as String),
             status = InterviewStatus.valueOf(data["status"] as String),
-            startedAt = Instant.ofEpochMilli(data["startedAt"] as Long),
-            completedAt = (data["completedAt"] as? Long)?.let { Instant.ofEpochMilli(it) },
+            startedAt = Instant.fromEpochMilliseconds(data["startedAt"] as Long),
+            completedAt = (data["completedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) },
             piqSnapshotId = data["piqSnapshotId"] as String,
             consentGiven = data["consentGiven"] as Boolean,
             questionIds = data["questionIds"] as List<String>,
@@ -98,7 +99,7 @@ object InterviewFirestoreMappers {
             "questionId" to response.questionId,
             "responseText" to response.responseText,
             "responseMode" to response.responseMode.name,
-            "respondedAt" to response.respondedAt.toEpochMilli(),
+            "respondedAt" to response.respondedAt.toEpochMilliseconds(),
             "thinkingTimeSec" to response.thinkingTimeSec,
             "audioUrl" to response.audioUrl,
             "olqScores" to response.olqScores.mapKeys { it.key.name }.mapValues { olqScoreToMap(it.value) },
@@ -120,7 +121,7 @@ object InterviewFirestoreMappers {
             questionId = data["questionId"] as String,
             responseText = data["responseText"] as String,
             responseMode = InterviewMode.valueOf(data["responseMode"] as String),
-            respondedAt = Instant.ofEpochMilli(data["respondedAt"] as Long),
+            respondedAt = Instant.fromEpochMilliseconds(data["respondedAt"] as Long),
             thinkingTimeSec = (data["thinkingTimeSec"] as Long).toInt(),
             audioUrl = data["audioUrl"] as? String,
             olqScores = olqScores,
@@ -138,7 +139,7 @@ object InterviewFirestoreMappers {
             "sessionId" to result.sessionId,
             "userId" to result.userId,
             "mode" to result.mode.name,
-            "completedAt" to result.completedAt.toEpochMilli(),
+            "completedAt" to result.completedAt.toEpochMilliseconds(),
             "durationSec" to result.durationSec,
             "totalQuestions" to result.totalQuestions,
             "totalResponses" to result.totalResponses,
@@ -177,7 +178,7 @@ object InterviewFirestoreMappers {
             sessionId = data["sessionId"] as String,
             userId = data["userId"] as String,
             mode = InterviewMode.valueOf(data["mode"] as String),
-            completedAt = Instant.ofEpochMilli(data["completedAt"] as Long),
+            completedAt = Instant.fromEpochMilliseconds(data["completedAt"] as Long),
             durationSec = data["durationSec"] as Long,
             totalQuestions = (data["totalQuestions"] as Long).toInt(),
             totalResponses = (data["totalResponses"] as Long).toInt(),

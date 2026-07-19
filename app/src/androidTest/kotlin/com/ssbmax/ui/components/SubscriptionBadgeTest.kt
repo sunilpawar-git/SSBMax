@@ -1,7 +1,7 @@
 package com.ssbmax.ui.components
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Test

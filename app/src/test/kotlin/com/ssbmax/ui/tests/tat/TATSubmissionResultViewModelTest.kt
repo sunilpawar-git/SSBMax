@@ -1,13 +1,13 @@
 package com.ssbmax.ui.tests.tat
 
-import com.ssbmax.core.domain.model.TATSubmission
-import com.ssbmax.core.domain.model.TATStoryResponse
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.model.TATSubmission
+import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify

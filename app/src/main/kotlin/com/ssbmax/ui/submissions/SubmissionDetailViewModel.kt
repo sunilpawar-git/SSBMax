@@ -3,8 +3,8 @@ package com.ssbmax.ui.submissions
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.usecase.submission.ObserveSubmissionUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.usecase.submission.ObserveSubmissionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.ppdt
 
-import com.ssbmax.core.domain.model.PPDTPhase
-import com.ssbmax.core.domain.model.PPDTSubmission
-import com.ssbmax.core.domain.model.PPDTTestSession
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.PPDTSubmission
+import com.ssbmax.shared.domain.model.PPDTTestSession
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.SubscriptionType
 
 data class PPDTTestUiState(
     val isLoading: Boolean = true,

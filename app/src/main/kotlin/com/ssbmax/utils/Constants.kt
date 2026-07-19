@@ -1,6 +1,6 @@
 package com.ssbmax.utils
 
-import com.ssbmax.core.domain.constants.InterviewConstants
+import com.ssbmax.shared.domain.constants.InterviewConstants
 
 /**
  * Application-wide constants

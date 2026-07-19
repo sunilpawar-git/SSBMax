@@ -1,6 +1,6 @@
 package com.ssbmax.testing
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 
 /**
  * Factory for creating test data objects for UI tests

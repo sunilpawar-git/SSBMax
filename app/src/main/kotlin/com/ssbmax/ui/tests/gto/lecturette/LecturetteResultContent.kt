@@ -8,9 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.gto.GTOResult
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.model.gto.GTOResult
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.components.result.AnalyzingCard
 import com.ssbmax.ui.components.result.AnalysisFailedCard

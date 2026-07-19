@@ -1,9 +1,9 @@
 package com.ssbmax.ui.topic
 
 import androidx.lifecycle.SavedStateHandle
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.*
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.*
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi

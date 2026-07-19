@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.BillingCycle
-import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.BillingCycle
+import com.ssbmax.shared.domain.model.SubscriptionTier
 
 /**
  * Upgrade Screen - Beautiful subscription tier comparison

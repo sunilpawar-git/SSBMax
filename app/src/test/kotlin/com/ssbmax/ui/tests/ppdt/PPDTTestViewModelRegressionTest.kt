@@ -1,8 +1,8 @@
 package com.ssbmax.ui.tests.ppdt
 
-import com.ssbmax.core.domain.model.PPDTPhase
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,7 +78,7 @@ class PPDTTestViewModelRegressionTest : PPDTTestViewModelTestBase() {
     fun `loadTest shows limit reached when FREE tier exhausted`() = runTest {
         coEvery { mockSubscriptionManager.canTakeTest(any(), any()) } returns
             com.ssbmax.core.data.repository.TestEligibility.LimitReached(
-                tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+                tier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
                 limit = 1,
                 usedCount = 1,
                 resetsAt = "01 Dec 2025"

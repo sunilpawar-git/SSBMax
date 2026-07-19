@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.WATPhase
+import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.wat.components.WATInProgressView
@@ -35,7 +35,7 @@ import com.ssbmax.ui.tests.wat.components.WATInstructionsView
 @Composable
 fun WATTestScreen(
     testId: String,
-    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: WATTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier

@@ -2,9 +2,9 @@ package com.ssbmax.core.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.ssbmax.core.domain.model.NotificationPriority
-import com.ssbmax.core.domain.model.NotificationType
-import com.ssbmax.core.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.model.NotificationPriority
+import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.SSBMaxNotification
 
 /**
  * Room entity for local notification storage

@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserProfile
 
 /**
  * Main drawer component that combines header and content.

@@ -1,9 +1,9 @@
 package com.ssbmax.ui.tests.wat
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.WATPhase
-import com.ssbmax.core.domain.model.WATWord
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.WATPhase
+import com.ssbmax.shared.domain.model.WATWord
+import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import dagger.hilt.android.testing.HiltAndroidTest

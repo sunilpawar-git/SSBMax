@@ -2,14 +2,14 @@ package com.ssbmax.ui.auth
 
 import android.content.Intent
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.GoogleSignInData
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.usecase.auth.GetGoogleSignInIntentUseCase
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.auth.SignInWithGoogleUseCase
-import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
-import com.ssbmax.core.domain.usecase.auth.UpdateUserRoleUseCase
+import com.ssbmax.shared.domain.model.GoogleSignInData
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.usecase.auth.GetGoogleSignInIntentUseCase
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every

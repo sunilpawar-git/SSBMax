@@ -2,12 +2,12 @@ package com.ssbmax.ui.interview.result
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every

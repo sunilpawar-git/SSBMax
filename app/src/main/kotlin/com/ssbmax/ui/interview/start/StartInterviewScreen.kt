@@ -46,7 +46,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewMode
 
 /** Start Interview Screen - Mode selection, prerequisites check, and session creation */
 @OptIn(ExperimentalMaterial3Api::class)

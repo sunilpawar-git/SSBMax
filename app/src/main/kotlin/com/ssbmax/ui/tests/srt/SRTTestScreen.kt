@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.SRTPhase
+import com.ssbmax.shared.domain.model.SRTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.srt.components.SRTInProgressView
@@ -24,7 +24,7 @@ import com.ssbmax.ui.tests.srt.components.SRTReviewView
 @Composable
 fun SRTTestScreen(
     testId: String,
-    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: SRTTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier

@@ -2,7 +2,7 @@ package com.ssbmax.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -32,8 +32,8 @@ sealed class SplashNavigationEvent {
  */
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val authRepository: com.ssbmax.core.domain.repository.AuthRepository,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository
+    private val authRepository: com.ssbmax.shared.domain.repository.AuthRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository
 ) : ViewModel() {
     
     private val _navigationEvent = MutableStateFlow<SplashNavigationEvent?>(null)

@@ -16,9 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.core.domain.model.GradingPriority
-import com.ssbmax.core.domain.model.GradingQueueItem
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.GradingPriority
+import com.ssbmax.shared.domain.model.GradingQueueItem
+import com.ssbmax.shared.domain.model.TestType
 
 /**
  * Grading Queue Screen for Instructors

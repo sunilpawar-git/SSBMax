@@ -1,10 +1,10 @@
 package com.ssbmax.ui.splash
 
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every

@@ -1,6 +1,6 @@
 package com.ssbmax.ui.tests.common
 
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * Navigation events for test screens

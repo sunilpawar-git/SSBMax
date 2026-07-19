@@ -1,6 +1,6 @@
 package com.ssbmax.ui.tests.gto.gd
 
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * GD Test UI State

@@ -1,7 +1,7 @@
 package com.ssbmax.ui.ssboverview
 
-import com.ssbmax.core.domain.model.SSBInfoCard
-import com.ssbmax.core.domain.model.SSBInfoIcon
+import com.ssbmax.shared.domain.model.SSBInfoCard
+import com.ssbmax.shared.domain.model.SSBInfoIcon
 
 /**
  * Mock data provider for SSB overview content

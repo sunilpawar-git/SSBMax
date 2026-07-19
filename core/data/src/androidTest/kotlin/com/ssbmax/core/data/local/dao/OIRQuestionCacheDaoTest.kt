@@ -7,8 +7,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ssbmax.core.data.local.SSBDatabase
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
-import com.ssbmax.core.domain.model.OIRQuestionType
-import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.QuestionDifficulty
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*

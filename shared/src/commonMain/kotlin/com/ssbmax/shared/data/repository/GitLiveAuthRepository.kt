@@ -34,6 +34,32 @@ class GitLiveAuthRepository : AuthRepository {
     private val _currentUser = MutableStateFlow<SSBMaxUser?>(null)
     override val currentUser: StateFlow<SSBMaxUser?> = _currentUser.asStateFlow()
 
+    // Email/password auth is not implemented in the Android app either (always
+    // Result.failure there) — Google Sign-In is the only real flow. Matched here
+    // rather than left unimplemented, since GitLiveAuthRepository must satisfy the
+    // full real AuthRepository interface after the Phase 1 domain move.
+    override suspend fun signIn(email: String, password: String): Result<SSBMaxUser> {
+        return Result.failure(UnsupportedOperationException("Email/password sign-in is not supported"))
+    }
+
+    override suspend fun signUp(email: String, password: String, displayName: String): Result<SSBMaxUser> {
+        return Result.failure(UnsupportedOperationException("Email/password sign-up is not supported"))
+    }
+
+    // Real Google ID token exchange (Android Credential Manager / iOS GoogleSignIn SDK)
+    // is out of Phase 0/1 scope (see class doc comment) — this placeholder LaunchData
+    // is not wired to a real platform picker yet.
+    override fun getGoogleSignInIntent(): GoogleSignInData.LaunchData {
+        return GoogleSignInData.LaunchData(Unit)
+    }
+
+    override suspend fun updateUserRole(role: UserRole): Result<Unit> {
+        val current = _currentUser.value
+            ?: return Result.failure(IllegalStateException("No authenticated user"))
+        _currentUser.value = current.copy(role = role)
+        return Result.success(Unit)
+    }
+
     override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result<SSBMaxUser> {
         return try {
             val tokens = data as? GoogleSignInData.ResultData

@@ -1,8 +1,8 @@
 package com.ssbmax.ui.marketplace
 
-import com.ssbmax.core.domain.model.CoachingInstitute
-import com.ssbmax.core.domain.model.InstituteType
-import com.ssbmax.core.domain.model.PriceRange
+import com.ssbmax.shared.domain.model.CoachingInstitute
+import com.ssbmax.shared.domain.model.InstituteType
+import com.ssbmax.shared.domain.model.PriceRange
 
 /**
  * Mock data provider for SSB coaching institutes

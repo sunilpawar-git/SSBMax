@@ -5,7 +5,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
-import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

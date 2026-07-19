@@ -2,8 +2,8 @@ package com.ssbmax.ui.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AnalyticsRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

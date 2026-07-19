@@ -2,8 +2,8 @@ package com.ssbmax.core.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.repository.UsageInfo
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.repository.UsageInfo
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*

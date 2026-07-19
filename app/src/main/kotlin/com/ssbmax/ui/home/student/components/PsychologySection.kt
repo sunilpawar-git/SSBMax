@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.dashboard.OLQDashboardData
 
 /**
  * Psychology Tests Section

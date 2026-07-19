@@ -1,9 +1,9 @@
 package com.ssbmax.ui.notifications
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.SSBMaxNotification
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,9 +56,9 @@ class NotificationCenterViewModel @Inject constructor(
                     when (filter) {
                         NotificationFilter.ALL -> true
                         NotificationFilter.UNREAD -> !notification.isRead
-                        NotificationFilter.GRADING -> notification.type == com.ssbmax.core.domain.model.NotificationType.GRADING_COMPLETE
-                        NotificationFilter.FEEDBACK -> notification.type == com.ssbmax.core.domain.model.NotificationType.FEEDBACK_AVAILABLE
-                        NotificationFilter.ANNOUNCEMENTS -> notification.type == com.ssbmax.core.domain.model.NotificationType.GENERAL_ANNOUNCEMENT
+                        NotificationFilter.GRADING -> notification.type == com.ssbmax.shared.domain.model.NotificationType.GRADING_COMPLETE
+                        NotificationFilter.FEEDBACK -> notification.type == com.ssbmax.shared.domain.model.NotificationType.FEEDBACK_AVAILABLE
+                        NotificationFilter.ANNOUNCEMENTS -> notification.type == com.ssbmax.shared.domain.model.NotificationType.GENERAL_ANNOUNCEMENT
                     }
                 }
             }

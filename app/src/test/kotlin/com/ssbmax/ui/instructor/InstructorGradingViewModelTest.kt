@@ -1,8 +1,8 @@
 package com.ssbmax.ui.instructor
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.GradingQueueRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.GradingQueueRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi

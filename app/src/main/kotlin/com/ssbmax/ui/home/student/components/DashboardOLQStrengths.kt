@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQ
 
 /**
  * Section displaying OLQ strengths or improvement areas

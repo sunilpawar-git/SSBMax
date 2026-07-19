@@ -1,12 +1,13 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.QuestionCacheEntry
-import com.ssbmax.core.domain.model.interview.QuestionCacheType
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import java.time.Instant
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.QuestionCacheEntry
+import com.ssbmax.shared.domain.model.interview.QuestionCacheType
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * Mappers for converting between domain models and Firestore data structures
@@ -33,10 +34,10 @@ internal object QuestionCacheMappers {
         FIELD_QUESTION to questionToMap(entry.question),
         FIELD_CACHE_KEY to entry.cacheKey,
         FIELD_CACHE_TYPE to entry.cacheType.name,
-        FIELD_CREATED_AT to entry.createdAt.toEpochMilli(),
+        FIELD_CREATED_AT to entry.createdAt.toEpochMilliseconds(),
         FIELD_USAGE_COUNT to entry.usageCount,
-        FIELD_LAST_USED_AT to entry.lastUsedAt?.toEpochMilli(),
-        FIELD_EXPIRES_AT to entry.expiresAt?.toEpochMilli()
+        FIELD_LAST_USED_AT to entry.lastUsedAt?.toEpochMilliseconds(),
+        FIELD_EXPIRES_AT to entry.expiresAt?.toEpochMilliseconds()
     )
 
     /** Convert question to Firestore map */
@@ -60,10 +61,10 @@ internal object QuestionCacheMappers {
                 question = question,
                 cacheKey = data[FIELD_CACHE_KEY] as? String ?: return null,
                 cacheType = QuestionCacheType.valueOf(data[FIELD_CACHE_TYPE] as? String ?: return null),
-                createdAt = Instant.ofEpochMilli(data[FIELD_CREATED_AT] as? Long ?: return null),
+                createdAt = Instant.fromEpochMilliseconds(data[FIELD_CREATED_AT] as? Long ?: return null),
                 usageCount = (data[FIELD_USAGE_COUNT] as? Long)?.toInt() ?: 0,
-                lastUsedAt = (data[FIELD_LAST_USED_AT] as? Long)?.let { Instant.ofEpochMilli(it) },
-                expiresAt = (data[FIELD_EXPIRES_AT] as? Long)?.let { Instant.ofEpochMilli(it) }
+                lastUsedAt = (data[FIELD_LAST_USED_AT] as? Long)?.let { Instant.fromEpochMilliseconds(it) },
+                expiresAt = (data[FIELD_EXPIRES_AT] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to map cache entry", e)

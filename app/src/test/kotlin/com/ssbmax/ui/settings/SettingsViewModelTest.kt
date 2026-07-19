@@ -1,9 +1,9 @@
 package com.ssbmax.ui.settings
 
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.every
 import io.mockk.mockk

@@ -2,7 +2,7 @@ package com.ssbmax.ui.home.student.components
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
-import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
+import com.ssbmax.shared.domain.model.dashboard.OLQDashboardData
 import com.ssbmax.testing.BaseComposeTest
 import org.junit.Test
 

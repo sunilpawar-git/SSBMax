@@ -1,11 +1,11 @@
 package com.ssbmax.ui.tests.gpe
 
-import com.ssbmax.core.domain.model.gto.GTOResult
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.shared.domain.model.gto.GTOResult
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,7 +42,7 @@ class GPESubmissionResultViewModelTest : BaseViewModelTest() {
     private val mockResult = GTOResult(
         submissionId = "gpe-sub-123",
         userId = "user-123",
-        testType = com.ssbmax.core.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE,
+        testType = com.ssbmax.shared.domain.model.gto.GTOTestType.GROUP_PLANNING_EXERCISE,
         olqScores = mapOf(
             OLQ.EFFECTIVE_INTELLIGENCE to OLQScore(7, 7, "Good intelligence"),
             OLQ.ORGANIZING_ABILITY to OLQScore(8, 8, "Strong organization"),

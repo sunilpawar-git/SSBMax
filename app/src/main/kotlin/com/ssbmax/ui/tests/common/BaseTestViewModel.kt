@@ -6,7 +6,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 

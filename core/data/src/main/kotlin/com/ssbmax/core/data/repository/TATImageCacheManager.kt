@@ -5,8 +5,8 @@ import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedTATImageEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
-import com.ssbmax.core.domain.model.GenderTag
-import com.ssbmax.core.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.TATQuestion
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

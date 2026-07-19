@@ -1,7 +1,7 @@
 package com.ssbmax.ui.tests.ppdt
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.usecase.ppdt.LoadPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import io.mockk.coEvery
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle

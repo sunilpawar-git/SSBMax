@@ -2,7 +2,7 @@ package com.ssbmax.shared.presentation.auth
 
 import com.ssbmax.shared.domain.model.GoogleSignInData
 import com.ssbmax.shared.domain.model.SSBMaxUser
-import com.ssbmax.shared.domain.usecase.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

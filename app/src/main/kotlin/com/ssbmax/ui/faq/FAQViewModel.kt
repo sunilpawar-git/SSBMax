@@ -1,8 +1,8 @@
 package com.ssbmax.ui.faq
 
 import androidx.lifecycle.ViewModel
-import com.ssbmax.core.domain.model.FAQCategory
-import com.ssbmax.core.domain.model.FAQItem
+import com.ssbmax.shared.domain.model.FAQCategory
+import com.ssbmax.shared.domain.model.FAQItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

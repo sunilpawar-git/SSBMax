@@ -27,10 +27,11 @@ rootProject.name = "SSBMax"
 include(":app")
 include(":core:common")
 include(":core:designsystem")
-include(":core:domain")
 include(":core:data")
 include(":lint")
 
-// Phase 0 KMP spike (see docs/architecture/ or CLAUDE plan for context).
-// Additive/parallel to existing modules — does not replace them yet.
+// Phase 1 KMP migration (see docs/architecture/ or CLAUDE plan for context):
+// core:domain was fully moved into shared/commonMain/domain and the old
+// module deleted. `shared` is now a required dependency (app, core:data),
+// not an additive/parallel one.
 include(":shared")

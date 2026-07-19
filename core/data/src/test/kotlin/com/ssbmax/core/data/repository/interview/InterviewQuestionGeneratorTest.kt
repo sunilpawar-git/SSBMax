@@ -7,11 +7,11 @@ import com.ssbmax.core.data.repository.interview.InterviewQuestionGeneratorTestH
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGeneratorTestHelper.createMockedContext
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGeneratorTestHelper.setupLogMocking
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGeneratorTestHelper.tearDownLogMocking
-import com.ssbmax.core.domain.constants.InterviewConstants
-import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.shared.domain.constants.InterviewConstants
+import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.service.AIService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

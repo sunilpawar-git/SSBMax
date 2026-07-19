@@ -10,9 +10,9 @@ import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirebaseInitializer
 import com.ssbmax.core.data.remote.FirestoreSubmissionRepository
 import com.ssbmax.core.data.remote.FirestoreUserRepository
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.testing.BaseRepositoryTest
 import com.ssbmax.testing.FirebaseTestHelper
 import dagger.hilt.android.testing.HiltAndroidTest

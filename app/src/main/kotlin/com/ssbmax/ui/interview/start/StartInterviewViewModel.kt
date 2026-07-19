@@ -7,11 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.BuildConfig
 import com.ssbmax.R
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.usecase.CheckInterviewPrerequisitesUseCase
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,7 +37,7 @@ class StartInterviewViewModel @Inject constructor(
     private val interviewRepository: InterviewRepository,
     private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val questionCacheRepository: com.ssbmax.core.domain.model.interview.QuestionCacheRepository,
+    private val questionCacheRepository: com.ssbmax.shared.domain.model.interview.QuestionCacheRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 

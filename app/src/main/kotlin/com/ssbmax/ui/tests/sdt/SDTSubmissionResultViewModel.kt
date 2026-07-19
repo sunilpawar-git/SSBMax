@@ -2,15 +2,15 @@ package com.ssbmax.ui.tests.sdt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.scoring.EntryType
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
-import com.ssbmax.core.domain.validation.ValidationIntegration
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.scoring.EntryType
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

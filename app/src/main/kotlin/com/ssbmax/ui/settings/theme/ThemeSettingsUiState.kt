@@ -1,6 +1,6 @@
 package com.ssbmax.ui.settings.theme
 
-import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.shared.domain.model.AppTheme
 
 /**
  * UI state for Theme Settings

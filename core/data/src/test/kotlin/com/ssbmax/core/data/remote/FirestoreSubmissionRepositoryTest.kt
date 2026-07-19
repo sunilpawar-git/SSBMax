@@ -4,7 +4,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After

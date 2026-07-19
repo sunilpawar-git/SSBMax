@@ -3,10 +3,10 @@ package com.ssbmax.core.data.repository
 import app.cash.turbine.test
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.FirebaseTestHelper
-import com.ssbmax.core.domain.model.EntryType
-import com.ssbmax.core.domain.model.Gender
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.UserProfile
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After

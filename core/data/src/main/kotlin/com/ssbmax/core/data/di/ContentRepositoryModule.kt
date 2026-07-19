@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.repository.StudyContentRepositoryImpl
-import com.ssbmax.core.domain.repository.StudyContentRepository
+import com.ssbmax.shared.domain.repository.StudyContentRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

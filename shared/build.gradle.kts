@@ -70,6 +70,18 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
         }
+        // Phase 1 domain move: the 6 MockK-dependent unit tests from core:domain's
+        // JVM-only test source set land here (androidUnitTest), not commonTest --
+        // MockK has no KMP/native equivalent, so they stay JUnit4 + MockK on the
+        // Android target only.
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.mockk)
+                implementation(libs.turbine)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
         androidMain.dependencies {
             implementation(libs.koin.android)
             implementation(libs.sqldelight.android.driver)

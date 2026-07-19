@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.DifficultyStats
-import com.ssbmax.core.domain.model.PerformanceOverview
-import com.ssbmax.core.domain.model.TestTypeStats
+import com.ssbmax.shared.domain.model.DifficultyStats
+import com.ssbmax.shared.domain.model.PerformanceOverview
+import com.ssbmax.shared.domain.model.TestTypeStats
 
 /**
  * Analytics Dashboard Screen
@@ -285,7 +285,7 @@ private fun DifficultyRow(label: String, attempts: Int, accuracy: Float) {
 }
 
 @Composable
-private fun ProgressionIndicator(status: com.ssbmax.core.domain.model.ProgressionStatus) {
+private fun ProgressionIndicator(status: com.ssbmax.shared.domain.model.ProgressionStatus) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),

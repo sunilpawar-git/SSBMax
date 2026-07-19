@@ -1,10 +1,10 @@
 package com.ssbmax.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.subscription.GetMonthlyUsageUseCase
-import com.ssbmax.core.domain.usecase.subscription.GetSubscriptionTierUseCase
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -204,7 +204,7 @@ data class UsageInfo(
     val limit: Int
 ) {
     companion object {
-        fun from(domain: com.ssbmax.core.domain.repository.UsageInfo): UsageInfo {
+        fun from(domain: com.ssbmax.shared.domain.repository.UsageInfo): UsageInfo {
             return UsageInfo(
                 used = domain.used,
                 limit = domain.limit

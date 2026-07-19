@@ -1,12 +1,12 @@
 package com.ssbmax.ui.interview.session
 
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import com.ssbmax.shared.domain.repository.InterviewRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

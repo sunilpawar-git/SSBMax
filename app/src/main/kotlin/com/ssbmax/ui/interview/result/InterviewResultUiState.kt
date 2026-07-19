@@ -1,12 +1,12 @@
 package com.ssbmax.ui.interview.result
 
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.interview.PerformanceLevel
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.interview.PerformanceLevel
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 
 /**
  * UI state for Interview Result screen

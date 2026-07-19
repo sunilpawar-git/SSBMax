@@ -3,9 +3,9 @@ package com.ssbmax.core.data.remote
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

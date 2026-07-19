@@ -3,17 +3,18 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.QuestionCacheEntry
-import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
-import com.ssbmax.core.domain.model.interview.QuestionCacheStats
-import com.ssbmax.core.domain.model.interview.QuestionCacheType
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.QuestionCacheEntry
+import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.model.interview.QuestionCacheStats
+import com.ssbmax.shared.domain.model.interview.QuestionCacheType
 import kotlinx.coroutines.tasks.await
-import java.time.Instant
+import kotlinx.datetime.Clock
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Firestore implementation of question cache repository
@@ -43,7 +44,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
         expirationDays: Int
     ): Result<Unit> = try {
         val secondsPerDay = 86400L
-        val expiresAt = Instant.now().plusSeconds(expirationDays * secondsPerDay)
+        val expiresAt = Clock.System.now() + (expirationDays * secondsPerDay).seconds
         val batch = firestore.batch()
 
         questions.forEach { question ->
@@ -52,7 +53,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
                 question = question,
                 cacheKey = piqSnapshotId,
                 cacheType = QuestionCacheType.PIQ_BASED,
-                createdAt = Instant.now(),
+                createdAt = Clock.System.now(),
                 usageCount = 0,
                 lastUsedAt = null,
                 expiresAt = expiresAt
@@ -76,7 +77,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
         var query = cacheCollection
             .whereEqualTo(QuestionCacheMappers.FIELD_CACHE_KEY, piqSnapshotId)
             .whereEqualTo(QuestionCacheMappers.FIELD_CACHE_TYPE, QuestionCacheType.PIQ_BASED.name)
-            .whereGreaterThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Instant.now().toEpochMilli())
+            .whereGreaterThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds())
             .orderBy(QuestionCacheMappers.FIELD_EXPIRES_AT, Query.Direction.DESCENDING)
 
         if (excludeUsed) {
@@ -134,7 +135,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
             cacheQuery.documents[0].reference.update(
                 mapOf(
                     QuestionCacheMappers.FIELD_USAGE_COUNT to com.google.firebase.firestore.FieldValue.increment(1),
-                    QuestionCacheMappers.FIELD_LAST_USED_AT to Instant.now().toEpochMilli()
+                    QuestionCacheMappers.FIELD_LAST_USED_AT to Clock.System.now().toEpochMilliseconds()
                 )
             ).await()
         }
@@ -145,14 +146,14 @@ class FirestoreQuestionCacheRepository @Inject constructor(
             genericQuery.documents[0].reference.update(
                 mapOf(
                     QuestionCacheMappers.FIELD_USAGE_COUNT to com.google.firebase.firestore.FieldValue.increment(1),
-                    QuestionCacheMappers.FIELD_LAST_USED_AT to Instant.now().toEpochMilli()
+                    QuestionCacheMappers.FIELD_LAST_USED_AT to Clock.System.now().toEpochMilliseconds()
                 )
             ).await()
         }
 
         // Track usage for analytics
         usageCollection.add(
-            mapOf("questionId" to questionId, "sessionId" to sessionId, "usedAt" to Instant.now().toEpochMilli())
+            mapOf("questionId" to questionId, "sessionId" to sessionId, "usedAt" to Clock.System.now().toEpochMilliseconds())
         ).await()
 
         Result.success(Unit)
@@ -162,7 +163,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
     }
 
     override suspend fun cleanupExpired(): Result<Int> = try {
-        val expiredQuery = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Instant.now().toEpochMilli()).get().await()
+        val expiredQuery = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await()
         val batch = firestore.batch()
         expiredQuery.documents.forEach { batch.delete(it.reference) }
         batch.commit().await()
@@ -177,7 +178,7 @@ class FirestoreQuestionCacheRepository @Inject constructor(
     override suspend fun getCacheStats(userId: String?): Result<QuestionCacheStats> = try {
         val totalCached = cacheCollection.get().await().size()
         val piqBased = cacheCollection.whereEqualTo(QuestionCacheMappers.FIELD_CACHE_TYPE, QuestionCacheType.PIQ_BASED.name).get().await().size()
-        val expired = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Instant.now().toEpochMilli()).get().await().size()
+        val expired = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await().size()
         val genericCount = genericCollection.get().await().size()
 
         val mostUsedSnapshot = cacheCollection.orderBy(QuestionCacheMappers.FIELD_USAGE_COUNT, Query.Direction.DESCENDING).limit(5).get().await()

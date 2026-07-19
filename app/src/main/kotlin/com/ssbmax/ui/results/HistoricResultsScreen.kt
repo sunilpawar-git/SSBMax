@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.results.HistoricResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.results.HistoricResult
 
 /**
  * Historic Results Screen

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.PIQPage
+import com.ssbmax.shared.domain.model.PIQPage
 import com.ssbmax.ui.tests.piq.SELECTION_BOARD_OPTIONS
 import com.ssbmax.ui.tests.piq.components.*
 

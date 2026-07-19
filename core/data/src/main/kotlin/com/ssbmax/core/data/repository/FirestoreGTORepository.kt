@@ -3,10 +3,10 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.gto.*
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.shared.domain.model.gto.*
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.repository.GTORepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -33,7 +33,7 @@ import javax.inject.Singleton
 class FirestoreGTORepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val taskCacheManager: GTOTaskCacheManager,
-    private val testContentRepository: com.ssbmax.core.domain.repository.TestContentRepository
+    private val testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository
 ) : GTORepository {
     
     companion object {

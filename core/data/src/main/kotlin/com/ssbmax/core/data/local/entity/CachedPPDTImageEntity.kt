@@ -3,7 +3,7 @@ package com.ssbmax.core.data.local.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.ssbmax.core.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.GenderTag
 
 /**
  * Room entity for caching PPDT image metadata and Firestore-derived context.

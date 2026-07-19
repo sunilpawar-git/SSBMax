@@ -1,7 +1,7 @@
 package com.ssbmax.ui.components
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import com.ssbmax.ui.home.student.PhaseProgressRibbon

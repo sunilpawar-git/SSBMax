@@ -1,6 +1,6 @@
 package com.ssbmax.ui.components.drawer
 
-import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserProfile
 
 /**
  * UI state for the navigation drawer.

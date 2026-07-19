@@ -1,10 +1,10 @@
 package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.SubmissionStatus
-import com.ssbmax.core.domain.model.TestSubmission
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.TestSubmissionRepository
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestSubmission
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -53,7 +53,7 @@ class TestSubmissionRepositoryImpl @Inject constructor(
     override fun getPendingSubmissions(assessorId: String): Flow<List<TestSubmission>> {
         return callbackFlow {
             val listener = submissionsCollection
-                .whereEqualTo("gradingStatus", com.ssbmax.core.domain.model.GradingStatus.PENDING.name)
+                .whereEqualTo("gradingStatus", com.ssbmax.shared.domain.model.GradingStatus.PENDING.name)
                 .orderBy("submittedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
@@ -122,7 +122,7 @@ class TestSubmissionRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun com.ssbmax.core.domain.model.TestResponse.toMap(): Map<String, Any?> {
+    private fun com.ssbmax.shared.domain.model.TestResponse.toMap(): Map<String, Any?> {
         // Simplified mapping - just store questionId and timestamp
         // Actual response data will vary by test type
         return mapOf(
@@ -140,13 +140,13 @@ class TestSubmissionRepositoryImpl @Inject constructor(
                 testId = getString("testId") ?: return null,
                 userId = getString("userId") ?: return null,
                 testType = TestType.valueOf(getString("testType") ?: return null),
-                phase = com.ssbmax.core.domain.model.TestPhase.valueOf(getString("phase") ?: return null),
+                phase = com.ssbmax.shared.domain.model.TestPhase.valueOf(getString("phase") ?: return null),
                 submittedAt = getLong("submittedAt") ?: return null,
                 responses = (get("responses") as? List<Map<String, Any?>>)?.mapNotNull { it.toTestResponse() } ?: emptyList(),
                 aiPreliminaryScore = getDouble("aiPreliminaryScore")?.toFloat(),
                 instructorScore = getDouble("instructorScore")?.toFloat(),
                 finalScore = getDouble("finalScore")?.toFloat(),
-                gradingStatus = com.ssbmax.core.domain.model.GradingStatus.valueOf(getString("gradingStatus") ?: "PENDING"),
+                gradingStatus = com.ssbmax.shared.domain.model.GradingStatus.valueOf(getString("gradingStatus") ?: "PENDING"),
                 instructorId = getString("instructorId"),
                 instructorFeedback = getString("instructorFeedback"),
                 gradedAt = getLong("gradedAt"),
@@ -159,14 +159,14 @@ class TestSubmissionRepositoryImpl @Inject constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any?>.toTestResponse(): com.ssbmax.core.domain.model.TestResponse? {
+    private fun Map<String, Any?>.toTestResponse(): com.ssbmax.shared.domain.model.TestResponse? {
         return try {
             val questionId = this["questionId"] as? String ?: return null
             val timestamp = (this["timestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
             
             // For now, return a simple MultipleChoice response
             // TODO: Implement proper deserialization based on "type" field
-            com.ssbmax.core.domain.model.TestResponse.MultipleChoice(
+            com.ssbmax.shared.domain.model.TestResponse.MultipleChoice(
                 questionId = questionId,
                 timestamp = timestamp,
                 selectedOption = 0,

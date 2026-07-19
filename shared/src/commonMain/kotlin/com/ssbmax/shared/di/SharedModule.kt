@@ -5,7 +5,7 @@ import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.OirResultRepository
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
-import com.ssbmax.shared.domain.usecase.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import org.koin.core.module.dsl.factoryOf

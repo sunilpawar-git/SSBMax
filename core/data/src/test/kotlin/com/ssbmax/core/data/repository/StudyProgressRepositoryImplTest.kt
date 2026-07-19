@@ -1,8 +1,8 @@
 package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.StudyProgress
-import com.ssbmax.core.domain.model.StudySession
+import com.ssbmax.shared.domain.model.StudyProgress
+import com.ssbmax.shared.domain.model.StudySession
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*

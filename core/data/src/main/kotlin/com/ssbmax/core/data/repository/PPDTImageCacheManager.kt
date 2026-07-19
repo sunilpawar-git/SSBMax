@@ -7,9 +7,9 @@ import com.google.gson.JsonSyntaxException
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
-import com.ssbmax.core.domain.model.GenderTag
-import com.ssbmax.core.domain.model.PPDTImageContext
-import com.ssbmax.core.domain.model.PPDTQuestion
+import com.ssbmax.shared.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.PPDTQuestion
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

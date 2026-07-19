@@ -2,14 +2,14 @@ package com.ssbmax.ui.grading
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.NotificationPriority
-import com.ssbmax.core.domain.model.NotificationType
-import com.ssbmax.core.domain.model.SSBMaxNotification
-import com.ssbmax.core.domain.model.TestSubmission
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.repository.TestSubmissionRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.NotificationPriority
+import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.model.TestSubmission
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.repository.TestSubmissionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -122,7 +122,7 @@ class TestDetailGradingViewModel @Inject constructor(
                 finalScore = _uiState.value.grade,
                 instructorFeedback = _uiState.value.remarks,
                 gradedAt = System.currentTimeMillis(),
-                gradingStatus = com.ssbmax.core.domain.model.GradingStatus.GRADED,
+                gradingStatus = com.ssbmax.shared.domain.model.GradingStatus.GRADED,
                 instructorId = instructorId
             )
 

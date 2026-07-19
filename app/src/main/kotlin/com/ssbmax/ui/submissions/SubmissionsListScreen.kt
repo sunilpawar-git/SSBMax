@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.SubmissionStatus
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
 
 /**
  * Submissions List Screen - Shows all user submissions

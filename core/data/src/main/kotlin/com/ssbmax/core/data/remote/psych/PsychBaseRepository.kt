@@ -7,7 +7,7 @@ import com.google.firebase.firestore.SetOptions
 import com.ssbmax.core.data.remote.OLQMapper
 import com.ssbmax.core.data.remote.SubmissionConstants
 import com.ssbmax.core.data.remote.mapper.PsychTestMapper
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -13,10 +13,10 @@ import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.AppConstants
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.InterviewQuestionGenerationWorker
@@ -69,7 +69,7 @@ class PIQTestViewModel @Inject constructor(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val subscriptionManager: SubscriptionManager,
-    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
+    private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase,
     private val difficultyManager: DifficultyProgressionManager,
     private val securityLogger: SecurityEventLogger,
     private val workManager: WorkManager,

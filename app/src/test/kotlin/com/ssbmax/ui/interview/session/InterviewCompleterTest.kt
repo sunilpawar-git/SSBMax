@@ -1,10 +1,10 @@
 package com.ssbmax.ui.interview.session
 
 import androidx.work.WorkManager
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.repository.InterviewRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

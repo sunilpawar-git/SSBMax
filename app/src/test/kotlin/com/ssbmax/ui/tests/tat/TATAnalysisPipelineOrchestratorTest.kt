@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkContinuation
 import androidx.work.WorkManager
-import com.ssbmax.core.domain.model.TATQuestion
-import com.ssbmax.core.domain.model.TATStoryResponse
-import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.repository.SubmissionRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

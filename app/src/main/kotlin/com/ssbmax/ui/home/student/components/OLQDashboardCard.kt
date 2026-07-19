@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 
 
 /**

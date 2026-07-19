@@ -2,8 +2,8 @@ package com.ssbmax.core.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

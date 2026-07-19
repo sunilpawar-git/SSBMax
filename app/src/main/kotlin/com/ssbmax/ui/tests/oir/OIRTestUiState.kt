@@ -1,10 +1,10 @@
 package com.ssbmax.ui.tests.oir
 
 import androidx.annotation.StringRes
-import com.ssbmax.core.domain.model.OIRQuestion
-import com.ssbmax.core.domain.model.OIRTestResult
-import com.ssbmax.core.domain.model.OIRTestSession
-import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRTestResult
+import com.ssbmax.shared.domain.model.OIRTestSession
+import com.ssbmax.shared.domain.model.SubscriptionTier
 
 /**
  * Immutable UI state for [OIRTestViewModel].
@@ -26,7 +26,7 @@ data class OIRTestUiState(
     val currentQuestionAnswered: Boolean = false,
     val isCompleted: Boolean = false,
     val sessionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
+    val subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType? = null,
     /** Result calculated locally after submission — no extra Firestore read needed. */
     val testResult: OIRTestResult? = null,
     // Subscription limit fields

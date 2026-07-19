@@ -1,8 +1,8 @@
 package com.ssbmax.ui.submissions
 
 import androidx.lifecycle.SavedStateHandle
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.usecase.submission.ObserveSubmissionUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.usecase.submission.ObserveSubmissionUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk

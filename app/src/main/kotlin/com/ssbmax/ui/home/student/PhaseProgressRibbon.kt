@@ -16,11 +16,11 @@ import androidx.compose.ui.unit.dp
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
 import com.ssbmax.core.designsystem.theme.Spacing
-import com.ssbmax.core.domain.model.Phase1Progress
-import com.ssbmax.core.domain.model.Phase2Progress
-import com.ssbmax.core.domain.model.TestPhase
-import com.ssbmax.core.domain.model.TestProgress
-import com.ssbmax.core.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.Phase1Progress
+import com.ssbmax.shared.domain.model.Phase2Progress
+import com.ssbmax.shared.domain.model.TestPhase
+import com.ssbmax.shared.domain.model.TestProgress
+import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.utils.DateFormatter
 
 /**

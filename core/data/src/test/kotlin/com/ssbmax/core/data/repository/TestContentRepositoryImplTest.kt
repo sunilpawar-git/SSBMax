@@ -2,8 +2,8 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.OIRQuestion
-import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -67,7 +67,7 @@ class TestContentRepositoryImplTest {
         
         coEvery { mockCacheManager.initialSync() } returns Result.success(Unit)
         coEvery { mockCacheManager.getTestQuestions(any()) } returns Result.success(emptyList())
-        coEvery { mockCacheManager.getCacheStatus() } returns com.ssbmax.core.domain.model.CacheStatus(0, 0, null, 0, 0, 0, 0)
+        coEvery { mockCacheManager.getCacheStatus() } returns com.ssbmax.shared.domain.model.CacheStatus(0, 0, null, 0, 0, 0, 0)
     }
 
     @After
@@ -80,7 +80,7 @@ class TestContentRepositoryImplTest {
     fun `getOIRTestQuestions initializes cache when empty`() = runTest {
         // Given - cache is empty, then returns questions after sync
         val mockQuestions = createMockOIRQuestions(50)
-        val emptyCacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val emptyCacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 0,
             batchesDownloaded = 0,
             lastSyncTime = null,
@@ -89,7 +89,7 @@ class TestContentRepositoryImplTest {
             numericalCount = 0,
             spatialCount = 0
         )
-        val filledCacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val filledCacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 100,
             batchesDownloaded = 1,
             lastSyncTime = System.currentTimeMillis(),
@@ -118,7 +118,7 @@ class TestContentRepositoryImplTest {
     fun `getOIRTestQuestions uses cache when available`() = runTest {
         // Given - cache has questions
         val mockQuestions = createMockOIRQuestions(50)
-        val cacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val cacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 100,
             batchesDownloaded = 1,
             lastSyncTime = System.currentTimeMillis(),
@@ -145,7 +145,7 @@ class TestContentRepositoryImplTest {
     @Test
     fun `getOIRTestQuestions whenCacheErrors returnsFailure`() = runTest {
         // Given - cache throws error
-        val cacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val cacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 0,
             batchesDownloaded = 0,
             lastSyncTime = null,
@@ -181,7 +181,7 @@ class TestContentRepositoryImplTest {
     @Test
     fun `getOIRCacheStatus returns status from cache manager`() = runTest {
         // Given
-        val expectedStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val expectedStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 100,
             batchesDownloaded = 1,
             lastSyncTime = System.currentTimeMillis(),
@@ -207,7 +207,7 @@ class TestContentRepositoryImplTest {
     fun `deprecated getOIRQuestions calls new getOIRTestQuestions`() = runTest {
         // Given
         val mockQuestions = createMockOIRQuestions(50)
-        val cacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val cacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 100,
             batchesDownloaded = 1,
             lastSyncTime = System.currentTimeMillis(),
@@ -235,7 +235,7 @@ class TestContentRepositoryImplTest {
     fun `complete test flow from cache to UI`() = runTest {
         // Given - simulate complete flow
         val mockQuestions = createMockOIRQuestions(50)
-        val cacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val cacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 100,
             batchesDownloaded = 1,
             lastSyncTime = System.currentTimeMillis(),
@@ -280,7 +280,7 @@ class TestContentRepositoryImplTest {
     @Test
     fun `getOIRTestQuestions whenCacheFails returnsFailure not mock data`() = runTest {
         // Given — cache fails completely
-        val emptyCacheStatus = com.ssbmax.core.domain.model.CacheStatus(
+        val emptyCacheStatus = com.ssbmax.shared.domain.model.CacheStatus(
             cachedQuestions = 0, batchesDownloaded = 0, lastSyncTime = null,
             verbalCount = 0, nonVerbalCount = 0, numericalCount = 0, spatialCount = 0
         )
@@ -308,11 +308,11 @@ class TestContentRepositoryImplTest {
                 id = "q$i",
                 questionNumber = i,
                 type = type,
-                difficulty = com.ssbmax.core.domain.model.QuestionDifficulty.MEDIUM,
+                difficulty = com.ssbmax.shared.domain.model.QuestionDifficulty.MEDIUM,
                 questionText = "Question $i",
                 options = listOf(
-                    com.ssbmax.core.domain.model.OIROption("A", "Option A"),
-                    com.ssbmax.core.domain.model.OIROption("B", "Option B")
+                    com.ssbmax.shared.domain.model.OIROption("A", "Option A"),
+                    com.ssbmax.shared.domain.model.OIROption("B", "Option B")
                 ),
                 correctAnswerId = "A",
                 explanation = "Explanation $i"

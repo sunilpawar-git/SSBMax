@@ -2,9 +2,9 @@ package com.ssbmax.ui.settings.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.NotificationPreferences
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.NotificationPreferences
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

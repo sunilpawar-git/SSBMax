@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.util
 
 import android.util.Log
-import com.ssbmax.core.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.DomainLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 

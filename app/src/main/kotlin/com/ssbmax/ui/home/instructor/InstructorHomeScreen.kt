@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.StudentPerformance
+import com.ssbmax.shared.domain.model.StudentPerformance
 
 /**
  * Instructor Home Screen

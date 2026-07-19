@@ -1,8 +1,8 @@
 package com.ssbmax.ui.interview.session
 
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.InterviewSession
 
 /**
  * Pending response stored locally during interview (before AI analysis)

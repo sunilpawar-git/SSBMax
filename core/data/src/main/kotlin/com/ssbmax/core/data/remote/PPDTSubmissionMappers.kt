@@ -1,9 +1,9 @@
 package com.ssbmax.core.data.remote
 
 import android.util.Log
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 
 private const val PPDT_MAPPER_TAG = "PPDTMapper"
 
@@ -67,11 +67,11 @@ internal fun parsePPDTOLQAnalysisResult(data: Map<String, Any?>, submissionId: S
 
         val olqScores = scoresMap.mapNotNull { (key, value) ->
             try {
-                val olq = com.ssbmax.core.domain.model.interview.OLQ.valueOf(key)
+                val olq = com.ssbmax.shared.domain.model.interview.OLQ.valueOf(key)
                 val score = (value["score"] as? Number)?.toInt() ?: 0
                 val confidence = (value["confidence"] as? Number)?.toInt() ?: 0
                 val reasoning = value["reasoning"] as? String ?: ""
-                olq to com.ssbmax.core.domain.model.interview.OLQScore(score, confidence, reasoning)
+                olq to com.ssbmax.shared.domain.model.interview.OLQScore(score, confidence, reasoning)
             } catch (e: Exception) {
                 Log.w(PPDT_MAPPER_TAG, "Error parsing OLQ score: $key", e)
                 null

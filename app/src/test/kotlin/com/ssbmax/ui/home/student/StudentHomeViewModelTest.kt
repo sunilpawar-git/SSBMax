@@ -1,12 +1,12 @@
 package com.ssbmax.ui.home.student
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.repository.UnifiedResultRepository
-import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.repository.UnifiedResultRepository
+import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every
@@ -37,7 +37,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     private lateinit var mockUnifiedResultRepository: UnifiedResultRepository
     private lateinit var mockGetOLQDashboard: GetOLQDashboardUseCase
     private lateinit var mockAnalyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager
-    private lateinit var mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository
+    private lateinit var mockNotificationRepository: com.ssbmax.shared.domain.repository.NotificationRepository
 
     private lateinit var mockCurrentUserFlow: MutableStateFlow<SSBMaxUser?>
     
@@ -692,7 +692,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     @Test
     fun `notification count updates from repository flow`() = runTest {
         // Given
-        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        val mockNotificationRepository: com.ssbmax.shared.domain.repository.NotificationRepository = mockk()
         val notificationFlow = MutableStateFlow(5)
         coEvery { mockNotificationRepository.getUnreadCount(testUser.id) } returns notificationFlow
 
@@ -729,7 +729,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     @Test
     fun `notification count is zero when user not logged in`() = runTest {
         // Given
-        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        val mockNotificationRepository: com.ssbmax.shared.domain.repository.NotificationRepository = mockk()
         mockCurrentUserFlow.value = null // No logged-in user
 
         coEvery { mockTestProgressRepository.getPhase1Progress(any()) } returns
@@ -757,7 +757,7 @@ class StudentHomeViewModelTest : BaseViewModelTest() {
     @Test
     fun `notification repository failure defaults to zero count gracefully`() = runTest {
         // Given
-        val mockNotificationRepository: com.ssbmax.core.domain.repository.NotificationRepository = mockk()
+        val mockNotificationRepository: com.ssbmax.shared.domain.repository.NotificationRepository = mockk()
         coEvery { mockNotificationRepository.getUnreadCount(any()) } returns kotlinx.coroutines.flow.flow {
             throw Exception("Network error")
         }

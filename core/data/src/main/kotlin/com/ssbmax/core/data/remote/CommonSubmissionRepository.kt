@@ -3,8 +3,8 @@ package com.ssbmax.core.data.remote
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.SubmissionStatus
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

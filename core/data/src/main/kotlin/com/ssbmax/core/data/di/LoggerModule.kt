@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.util.AndroidDomainLogger
-import com.ssbmax.core.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.DomainLogger
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

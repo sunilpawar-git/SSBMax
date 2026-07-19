@@ -4,12 +4,12 @@ import android.util.Log
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
-import com.ssbmax.core.domain.model.OIROption
-import com.ssbmax.core.domain.model.OIRQuestion
-import com.ssbmax.core.domain.model.OIRQuestionDistribution
-import com.ssbmax.core.domain.model.OIRQuestionType
-import com.ssbmax.core.domain.model.QuestionDifficulty
-import com.ssbmax.core.domain.validation.OIRQuestionValidator
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionDistribution
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.validation.OIRQuestionValidator
 import javax.inject.Inject
 import javax.inject.Singleton
 

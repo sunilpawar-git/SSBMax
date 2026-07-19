@@ -14,8 +14,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
 import com.ssbmax.ui.components.SSBRecommendationBanner
 import com.ssbmax.ui.components.result.AnalyzingCard
 import com.ssbmax.ui.components.result.AnalysisFailedCard
@@ -245,7 +245,7 @@ private fun GPESubmissionConfirmationCard(
     plan: String,
     characterCount: Int,
     timeSpent: String,
-    status: com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
+    status: com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

@@ -1,13 +1,13 @@
 package com.ssbmax.ui.profile
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.EntryType
-import com.ssbmax.core.domain.model.Gender
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserProfile
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -671,7 +671,7 @@ class UserProfileViewModelTest {
             age = 25,
             gender = Gender.MALE,
             entryType = EntryType.ENTRY_10_PLUS_2,
-            subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.PREMIUM
+            subscriptionType = com.ssbmax.shared.domain.model.SubscriptionType.PREMIUM
         )
 
         mockCurrentUserFlow.value = testUser
@@ -689,7 +689,7 @@ class UserProfileViewModelTest {
         assertEquals(25, state.profile?.age)
         assertEquals(Gender.MALE, state.profile?.gender)
         assertEquals(EntryType.ENTRY_10_PLUS_2, state.profile?.entryType)
-        assertEquals(com.ssbmax.core.domain.model.SubscriptionType.PREMIUM, state.profile?.subscriptionType)
+        assertEquals(com.ssbmax.shared.domain.model.SubscriptionType.PREMIUM, state.profile?.subscriptionType)
     }
 
     @Test

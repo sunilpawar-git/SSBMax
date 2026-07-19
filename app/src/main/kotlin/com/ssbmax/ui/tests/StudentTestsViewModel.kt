@@ -15,10 +15,10 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

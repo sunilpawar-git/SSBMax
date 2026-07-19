@@ -4,12 +4,12 @@ import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
 import com.ssbmax.core.data.ai.prompts.SSBInterviewPrompts
-import com.ssbmax.core.domain.model.PPDTImageContext
-import com.ssbmax.core.domain.model.TATImageContext
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.service.AIService
-import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.TATImageContext
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.service.AIService
+import com.ssbmax.shared.domain.service.ResponseAnalysis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -200,7 +200,7 @@ class GeminiAIService @Inject constructor(
 
     override suspend fun analyzeGTOResponse(
         prompt: String,
-        testType: com.ssbmax.core.domain.model.gto.GTOTestType
+        testType: com.ssbmax.shared.domain.model.gto.GTOTestType
     ): Result<ResponseAnalysis> = withContext(Dispatchers.IO) {
         try {
             withTimeout(RESPONSE_ANALYSIS_TIMEOUT) {

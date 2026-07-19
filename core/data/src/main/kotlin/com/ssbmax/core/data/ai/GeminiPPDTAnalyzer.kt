@@ -4,8 +4,8 @@ import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.ssbmax.core.data.ai.prompts.PPDTPrompts
-import com.ssbmax.core.domain.model.PPDTImageContext
-import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.service.ResponseAnalysis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout

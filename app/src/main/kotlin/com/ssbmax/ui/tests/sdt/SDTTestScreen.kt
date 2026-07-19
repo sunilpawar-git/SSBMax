@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.SDTPhase
+import com.ssbmax.shared.domain.model.SDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 
@@ -33,7 +33,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 @Composable
 fun SDTTestScreen(
     testId: String,
-    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: SDTTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
@@ -312,8 +312,8 @@ private fun TimerDisplay(timeRemaining: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReviewScreen(
-    questions: List<com.ssbmax.core.domain.model.SDTQuestion>,
-    responses: List<com.ssbmax.core.domain.model.SDTQuestionResponse>,
+    questions: List<com.ssbmax.shared.domain.model.SDTQuestion>,
+    responses: List<com.ssbmax.shared.domain.model.SDTQuestionResponse>,
     onEdit: (Int) -> Unit,
     onSubmit: () -> Unit
 ) {

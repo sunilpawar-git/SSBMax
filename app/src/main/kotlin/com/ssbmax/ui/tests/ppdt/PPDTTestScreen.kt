@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.ppdt.components.*
@@ -25,7 +25,7 @@ import com.ssbmax.ui.tests.ppdt.components.phases.*
 @Composable
 fun PPDTTestScreen(
     testId: String,
-    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: PPDTTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier

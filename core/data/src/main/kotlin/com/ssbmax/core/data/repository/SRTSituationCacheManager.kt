@@ -5,8 +5,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.entity.CachedSRTSituationEntity
 import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
-import com.ssbmax.core.domain.model.SRTCategory
-import com.ssbmax.core.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTSituation
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

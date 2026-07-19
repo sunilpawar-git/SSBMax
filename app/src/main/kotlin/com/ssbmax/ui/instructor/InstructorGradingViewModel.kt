@@ -2,11 +2,11 @@ package com.ssbmax.ui.instructor
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.GradingQueueItem
-import com.ssbmax.core.domain.model.SubmissionStatus
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.GradingQueueRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.GradingQueueItem
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.GradingQueueRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.PIQPage
+import com.ssbmax.shared.domain.model.PIQPage
 
 /**
  * Navigation bar for PIQ Test Screen

@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.TATImageContext
+import com.ssbmax.shared.domain.model.TATImageContext
 
 /**
  * TAT per-story prompt builders for Gemini AI multimodal analysis.

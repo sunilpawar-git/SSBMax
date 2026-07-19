@@ -2,9 +2,9 @@ package com.ssbmax.di
 
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.repository.GTORepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
@@ -46,7 +46,7 @@ object GTOTestModule {
     @Singleton
     fun provideGTOTestSubmissionHelper(
         gtoRepository: GTORepository,
-        submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
+        submissionRepository: com.ssbmax.shared.domain.repository.SubmissionRepository,
         workManager: WorkManager
     ): GTOTestSubmissionHelper {
         return GTOTestSubmissionHelper(

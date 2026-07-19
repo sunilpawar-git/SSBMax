@@ -2,11 +2,11 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.EntryType
-import com.ssbmax.core.domain.model.Gender
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.UserProfile
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

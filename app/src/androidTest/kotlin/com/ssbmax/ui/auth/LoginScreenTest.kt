@@ -1,8 +1,8 @@
 package com.ssbmax.ui.auth
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.testing.BaseComposeTest
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*

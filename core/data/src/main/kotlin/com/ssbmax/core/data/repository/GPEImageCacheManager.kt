@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.GPEImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedGPEImageEntity
 import com.ssbmax.core.data.local.entity.GPEBatchMetadataEntity
-import com.ssbmax.core.domain.model.GPEQuestion
+import com.ssbmax.shared.domain.model.GPEQuestion
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

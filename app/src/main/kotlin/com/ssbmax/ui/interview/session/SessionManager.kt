@@ -1,9 +1,9 @@
 package com.ssbmax.ui.interview.session
 
 import android.util.Log
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.repository.InterviewRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

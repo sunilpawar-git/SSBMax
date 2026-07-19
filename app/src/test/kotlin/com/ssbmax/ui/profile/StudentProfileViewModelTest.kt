@@ -1,9 +1,9 @@
 package com.ssbmax.ui.profile
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every

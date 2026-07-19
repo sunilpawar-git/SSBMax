@@ -5,8 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
-import com.ssbmax.core.domain.model.UserProfile
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -55,9 +55,9 @@ class AnalyticsRepositoryImplTest {
             userId = testUserId,
             fullName = "Test User",
             age = 25,
-            gender = com.ssbmax.core.domain.model.Gender.MALE,
-            entryType = com.ssbmax.core.domain.model.EntryType.GRADUATE,
-            subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.FREE,
+            gender = com.ssbmax.shared.domain.model.Gender.MALE,
+            entryType = com.ssbmax.shared.domain.model.EntryType.GRADUATE,
+            subscriptionType = com.ssbmax.shared.domain.model.SubscriptionType.FREE,
             currentStreak = 0
         )
     }

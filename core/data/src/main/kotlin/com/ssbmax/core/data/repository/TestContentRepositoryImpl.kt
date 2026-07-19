@@ -2,9 +2,9 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.model.CacheStatus
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.model.CacheStatus
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

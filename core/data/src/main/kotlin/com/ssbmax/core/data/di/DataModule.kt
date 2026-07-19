@@ -21,9 +21,9 @@ import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.repository.FirestoreGTORepository
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
-import com.ssbmax.core.domain.repository.GTORepository
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.repository.TestRepository
+import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.repository.TestRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -163,13 +163,13 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindAuthRepository(
         impl: com.ssbmax.core.data.repository.AuthRepositoryImpl
-    ): com.ssbmax.core.domain.repository.AuthRepository
+    ): com.ssbmax.shared.domain.repository.AuthRepository
     
     @Binds
     @Singleton
     abstract fun bindSubmissionRepository(
         impl: com.ssbmax.core.data.remote.FirestoreSubmissionRepository
-    ): com.ssbmax.core.domain.repository.SubmissionRepository
+    ): com.ssbmax.shared.domain.repository.SubmissionRepository
     
 
     @Binds
@@ -182,61 +182,61 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindTestSubmissionRepository(
         impl: com.ssbmax.core.data.repository.TestSubmissionRepositoryImpl
-    ): com.ssbmax.core.domain.repository.TestSubmissionRepository
+    ): com.ssbmax.shared.domain.repository.TestSubmissionRepository
     
     @Binds
     @Singleton
     abstract fun bindTestContentRepository(
         impl: com.ssbmax.core.data.repository.TestContentRepositoryImpl
-    ): com.ssbmax.core.domain.repository.TestContentRepository
+    ): com.ssbmax.shared.domain.repository.TestContentRepository
     
     @Binds
     @Singleton
     abstract fun bindUserProfileRepository(
         impl: com.ssbmax.core.data.repository.UserProfileRepositoryImpl
-    ): com.ssbmax.core.domain.repository.UserProfileRepository
+    ): com.ssbmax.shared.domain.repository.UserProfileRepository
     
     @Binds
     @Singleton
     abstract fun bindTestProgressRepository(
         impl: com.ssbmax.core.data.repository.TestProgressRepositoryImpl
-    ): com.ssbmax.core.domain.repository.TestProgressRepository
+    ): com.ssbmax.shared.domain.repository.TestProgressRepository
     
     @Binds
     @Singleton
     abstract fun bindGradingQueueRepository(
         impl: com.ssbmax.core.data.repository.GradingQueueRepositoryImpl
-    ): com.ssbmax.core.domain.repository.GradingQueueRepository
+    ): com.ssbmax.shared.domain.repository.GradingQueueRepository
     
     @Binds
     @Singleton
     abstract fun bindAnalyticsRepository(
         impl: com.ssbmax.core.data.repository.AnalyticsRepositoryImpl
-    ): com.ssbmax.core.domain.repository.AnalyticsRepository
+    ): com.ssbmax.shared.domain.repository.AnalyticsRepository
 
     @Binds
     @Singleton
     abstract fun bindSubscriptionRepository(
         impl: com.ssbmax.core.data.repository.SubscriptionRepositoryImpl
-    ): com.ssbmax.core.domain.repository.SubscriptionRepository
+    ): com.ssbmax.shared.domain.repository.SubscriptionRepository
 
     @Binds
     @Singleton
     abstract fun bindStudyProgressRepository(
         impl: com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
-    ): com.ssbmax.core.domain.repository.StudyProgressRepository
+    ): com.ssbmax.shared.domain.repository.StudyProgressRepository
 
     @Binds
     @Singleton
     abstract fun bindQuestionCacheRepository(
         impl: com.ssbmax.core.data.repository.FirestoreQuestionCacheRepository
-    ): com.ssbmax.core.domain.model.interview.QuestionCacheRepository
+    ): com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 
     @Binds
     @Singleton
     abstract fun bindInterviewRepository(
         impl: com.ssbmax.core.data.repository.FirestoreInterviewRepository
-    ): com.ssbmax.core.domain.repository.InterviewRepository
+    ): com.ssbmax.shared.domain.repository.InterviewRepository
     
     @Binds
     @Singleton
@@ -248,17 +248,17 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindUnifiedResultRepository(
         impl: com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
-    ): com.ssbmax.core.domain.repository.UnifiedResultRepository
+    ): com.ssbmax.shared.domain.repository.UnifiedResultRepository
 
     @Binds
     @Singleton
     abstract fun bindTestUsageRecorder(
         impl: com.ssbmax.core.data.repository.SubscriptionManager
-    ): com.ssbmax.core.domain.repository.TestUsageRecorder
+    ): com.ssbmax.shared.domain.repository.TestUsageRecorder
 
     @Binds
     @Singleton
     abstract fun bindTestSessionRepository(
         impl: com.ssbmax.core.data.repository.TestSessionManagerImpl
-    ): com.ssbmax.core.domain.repository.TestSessionRepository
+    ): com.ssbmax.shared.domain.repository.TestSessionRepository
 }

@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.TATImageContext
+import com.ssbmax.shared.domain.model.TATImageContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

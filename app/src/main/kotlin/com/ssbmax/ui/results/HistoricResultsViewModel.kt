@@ -2,10 +2,10 @@ package com.ssbmax.ui.results
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.results.HistoricResult
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.usecase.results.GetHistoricResultsUseCase
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.results.HistoricResult
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.usecase.results.GetHistoricResultsUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

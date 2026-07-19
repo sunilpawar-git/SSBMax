@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.ai
 
 import android.util.Log
-import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQ
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.Assert.assertEquals

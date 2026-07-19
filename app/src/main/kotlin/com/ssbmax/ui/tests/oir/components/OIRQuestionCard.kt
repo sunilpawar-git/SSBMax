@@ -27,8 +27,8 @@ import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.OIROption
-import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.ui.tests.common.AnswerFeedbackEffect
 
 @Composable

@@ -2,10 +2,10 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.ssbmax.core.data.source.FirestoreContentSource
-import com.ssbmax.core.domain.config.ContentFeatureFlags
-import com.ssbmax.core.domain.model.CloudStudyMaterial
-import com.ssbmax.core.domain.model.TopicContent
-import com.ssbmax.core.domain.repository.StudyContentRepository
+import com.ssbmax.shared.domain.config.ContentFeatureFlags
+import com.ssbmax.shared.domain.model.CloudStudyMaterial
+import com.ssbmax.shared.domain.model.TopicContent
+import com.ssbmax.shared.domain.repository.StudyContentRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

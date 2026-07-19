@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.navigation.SSBMaxDestinations
 
 /**

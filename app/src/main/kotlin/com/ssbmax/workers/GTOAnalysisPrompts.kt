@@ -1,6 +1,6 @@
 package com.ssbmax.workers
 
-import com.ssbmax.core.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
 
 /**
  * Prompt generation for GTO test analysis

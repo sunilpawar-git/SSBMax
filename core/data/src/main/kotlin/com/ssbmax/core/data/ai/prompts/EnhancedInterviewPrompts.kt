@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.prompts.SSBPromptCore
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.prompts.SSBPromptCore
 
 /**
  * Enhanced Interview Prompts using SSBPromptCore as SSOT.

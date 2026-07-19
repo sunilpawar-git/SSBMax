@@ -34,7 +34,7 @@ import com.ssbmax.ui.tests.oir.components.OIRTestTopBar
  */
 @Composable
 fun OIRTestScreen(
-    onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: OIRTestViewModel = hiltViewModel(),
     modifier: Modifier = Modifier

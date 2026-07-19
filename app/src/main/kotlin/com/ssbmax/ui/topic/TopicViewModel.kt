@@ -6,14 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.repository.ContentSource
 import com.ssbmax.core.data.repository.TopicContentData
-import com.ssbmax.core.domain.config.ContentFeatureFlags
-import com.ssbmax.core.domain.model.StudyMaterial
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.StudyContentRepository
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.config.ContentFeatureFlags
+import com.ssbmax.shared.domain.model.StudyMaterial
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.StudyContentRepository
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -257,7 +257,7 @@ class TopicViewModel @Inject constructor(
     /**
      * Load test progress for user
      */
-    private suspend fun loadTestProgress(userId: String?): com.ssbmax.core.domain.model.TestProgress? {
+    private suspend fun loadTestProgress(userId: String?): com.ssbmax.shared.domain.model.TestProgress? {
         return if (userId != null) {
             try {
                 when (testType) {
@@ -325,7 +325,7 @@ data class TopicUiState(
     val introduction: String = "",
     val studyMaterials: List<StudyMaterialItem> = emptyList(),
     val availableTests: List<TestType> = emptyList(),
-    val testCompletionStatus: com.ssbmax.core.domain.model.TestStatus? = null,
+    val testCompletionStatus: com.ssbmax.shared.domain.model.TestStatus? = null,
     val testLatestScore: Float? = null,
     val isLoading: Boolean = false,
     val error: String? = null,

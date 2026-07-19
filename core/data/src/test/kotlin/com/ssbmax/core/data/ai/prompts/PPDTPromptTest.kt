@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.DeviationTolerance
-import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.DeviationTolerance
+import com.ssbmax.shared.domain.model.PPDTImageContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

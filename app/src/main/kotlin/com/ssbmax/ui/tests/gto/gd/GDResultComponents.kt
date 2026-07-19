@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.ui.components.result.InfoItem
 
 @Composable

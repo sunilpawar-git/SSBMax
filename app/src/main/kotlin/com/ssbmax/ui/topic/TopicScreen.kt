@@ -22,12 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.ui.components.TabSwipeableContent
 import com.ssbmax.ui.components.MarkdownText
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.datetime.toJavaInstant
 
 /**
  * Topic Screen with 3 tabs: Introduction, Study Material, Tests
@@ -535,7 +536,7 @@ private fun InterviewResultCard(
             // Date and score info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = dateFormatter.format(result.completedAt),
+                    text = dateFormatter.format(result.completedAt.toJavaInstant()),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(

@@ -1,0 +1,122 @@
+package com.ssbmax.shared.domain.usecase.auth
+
+import app.cash.turbine.test
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.AuthRepository
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * Unit tests for ObserveCurrentUserUseCase
+ * Tests real-time user observation logic
+ */
+class ObserveCurrentUserUseCaseTest {
+    
+    private lateinit var authRepository: AuthRepository
+    private lateinit var useCase: ObserveCurrentUserUseCase
+    
+    @Before
+    fun setUp() {
+        authRepository = mockk()
+        useCase = ObserveCurrentUserUseCase(authRepository)
+    }
+    
+    @Test
+    fun `invoke returns flow from repository`() = runTest {
+        // Given
+        val mockUser = SSBMaxUser(
+            id = "user123",
+            email = "test@ssbmax.com",
+            displayName = "Test User",
+            role = UserRole.STUDENT,
+            subscriptionTier = SubscriptionTier.FREE,
+            subscription = null
+        )
+        every { authRepository.currentUser } returns MutableStateFlow(mockUser)
+        
+        // When
+        useCase().test {
+            // Then
+            val emittedUser = awaitItem()
+            assertEquals(mockUser, emittedUser)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+    
+    @Test
+    fun `invoke emits null when no user is signed in`() = runTest {
+        // Given
+        every { authRepository.currentUser } returns MutableStateFlow(null)
+        
+        // When
+        useCase().test {
+            // Then
+            val emittedUser = awaitItem()
+            assertNull(emittedUser)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+    
+    @Test
+    fun `invoke emits multiple user states`() = runTest {
+        // Given
+        val user1 = SSBMaxUser(
+            id = "user1",
+            email = "user1@ssbmax.com",
+            displayName = "User One",
+            role = UserRole.STUDENT,
+            subscriptionTier = SubscriptionTier.FREE,
+            subscription = null
+        )
+        val userFlow = MutableStateFlow<SSBMaxUser?>(user1)
+        every { authRepository.currentUser } returns userFlow
+        
+        // When
+        useCase().test {
+            // Then - Initial value
+            assertEquals(user1, awaitItem())
+            
+            // Update to null
+            userFlow.value = null
+            assertNull(awaitItem())
+            
+            // Don't call awaitComplete() as StateFlow never completes
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+    
+    @Test
+    fun `invoke preserves user properties correctly`() = runTest {
+        // Given
+        val mockUser = SSBMaxUser(
+            id = "user-premium",
+            email = "premium@ssbmax.com",
+            displayName = "Premium User",
+            role = UserRole.STUDENT,
+            subscriptionTier = SubscriptionTier.PRO,
+            subscription = null
+        )
+        every { authRepository.currentUser } returns MutableStateFlow(mockUser)
+        
+        // When
+        useCase().test {
+            // Then
+            val emittedUser = awaitItem()
+            assertNotNull(emittedUser)
+            assertEquals("user-premium", emittedUser?.id)
+            assertEquals("premium@ssbmax.com", emittedUser?.email)
+            assertEquals("Premium User", emittedUser?.displayName)
+            assertEquals(UserRole.STUDENT, emittedUser?.role)
+            assertEquals(SubscriptionTier.PRO, emittedUser?.subscriptionTier)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+}
+

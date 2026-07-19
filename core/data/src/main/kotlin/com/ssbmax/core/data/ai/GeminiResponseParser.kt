@@ -2,11 +2,11 @@ package com.ssbmax.core.data.ai
 
 import android.util.Log
 import com.google.ai.client.generativeai.type.GenerateContentResponse
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import com.ssbmax.core.domain.service.OLQScoreWithReasoning
-import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import com.ssbmax.shared.domain.service.OLQScoreWithReasoning
+import com.ssbmax.shared.domain.service.ResponseAnalysis
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID

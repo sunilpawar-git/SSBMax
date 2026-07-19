@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.CoachingInstitute
-import com.ssbmax.core.domain.model.InstituteType
-import com.ssbmax.core.domain.model.PriceRange
+import com.ssbmax.shared.domain.model.CoachingInstitute
+import com.ssbmax.shared.domain.model.InstituteType
+import com.ssbmax.shared.domain.model.PriceRange
 
 /**
  * Marketplace Screen for SSB Coaching Institutes

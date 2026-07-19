@@ -7,10 +7,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.ssbmax.core.data.local.dao.NotificationDao
 import com.ssbmax.core.data.local.entity.toDomain
 import com.ssbmax.core.data.local.entity.toEntity
-import com.ssbmax.core.domain.model.FCMToken
-import com.ssbmax.core.domain.model.NotificationPreferences
-import com.ssbmax.core.domain.model.SSBMaxNotification
-import com.ssbmax.core.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.model.FCMToken
+import com.ssbmax.shared.domain.model.NotificationPreferences
+import com.ssbmax.shared.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.repository.NotificationRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

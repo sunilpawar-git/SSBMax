@@ -1,11 +1,11 @@
 package com.ssbmax.ui.home.instructor
 
-import com.ssbmax.core.domain.model.InstructorGradingStats
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.GradingQueueRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.InstructorGradingStats
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.GradingQueueRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -40,7 +40,7 @@ class InstructorHomeViewModelTest {
         displayName = "Test Instructor",
         photoUrl = null,
         role = UserRole.INSTRUCTOR,
-        subscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+        subscriptionTier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
         subscription = null,
         studentProfile = null,
         instructorProfile = null,

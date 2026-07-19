@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.TestPhase
-import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.TestPhase
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
 
 /**
  * Student Tests Screen - Overview of all tests

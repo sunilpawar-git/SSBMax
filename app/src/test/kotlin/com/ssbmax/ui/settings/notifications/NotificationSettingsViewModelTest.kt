@@ -1,10 +1,10 @@
 package com.ssbmax.ui.settings.notifications
 
-import com.ssbmax.core.domain.model.NotificationPreferences
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.NotificationPreferences
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

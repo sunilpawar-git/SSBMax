@@ -3,10 +3,10 @@ package com.ssbmax.ui.tests.oir.components
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.ssbmax.core.domain.model.OIROption
-import com.ssbmax.core.domain.model.OIRQuestion
-import com.ssbmax.core.domain.model.OIRQuestionType
-import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.QuestionDifficulty
 
 @Preview(showBackground = true, name = "Multi-Select — 1 of 2 selected")
 @Composable

@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.repository
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 
 /**
  * Provides mock test data for testing purposes only.

@@ -70,7 +70,16 @@ extensions.getByType<LibraryExtension>().apply {
     kotlin {
         jvmToolchain(21)
     }
-    
+
+    lint {
+        // NonNullableMutableLiveDataDetector (bundled in AGP's androidx-lifecycle
+        // lint checks) crashes with IncompatibleClassChangeError when analyzing
+        // this module's dependency on :shared (a Compose Multiplatform module) --
+        // a lint tooling/UAST version mismatch, not a real violation. Same crash
+        // and same workaround as shared/build.gradle.kts.
+        disable += "NullSafeMutableLiveData"
+    }
+
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -86,7 +95,7 @@ tasks.withType<Test> {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(project(":core:domain"))
+    implementation(project(":shared"))
     
     // Room
     implementation(libs.room.runtime)
@@ -96,7 +105,14 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    
+
+    // kotlinx-datetime: moved domain models (InterviewSession, QuestionCacheEntry, etc.)
+    // now use kotlinx.datetime.Instant instead of java.time.Instant (Phase 1 KMP move --
+    // java.time isn't available in shared's commonMain for the iOS target). :shared only
+    // exposes it as `implementation`, not `api`, so core:data needs its own copy to
+    // construct/read those fields.
+    implementation(libs.kotlinx.datetime)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

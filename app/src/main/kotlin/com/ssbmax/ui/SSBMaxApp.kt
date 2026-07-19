@@ -6,9 +6,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.UserRole
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.navigation.SSBMaxNavGraph
 import com.ssbmax.ui.components.SSBMaxScaffold
 import com.ssbmax.utils.ErrorLogger

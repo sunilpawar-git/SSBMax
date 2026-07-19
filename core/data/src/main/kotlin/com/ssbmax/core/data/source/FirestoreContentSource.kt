@@ -6,10 +6,10 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
 import com.google.firebase.storage.FirebaseStorage
 import com.ssbmax.core.data.metrics.ContentMetrics
-import com.ssbmax.core.domain.config.ContentFeatureFlags
-import com.ssbmax.core.domain.model.CloudStudyMaterial
-import com.ssbmax.core.domain.model.ContentVersion
-import com.ssbmax.core.domain.model.TopicContent
+import com.ssbmax.shared.domain.config.ContentFeatureFlags
+import com.ssbmax.shared.domain.model.CloudStudyMaterial
+import com.ssbmax.shared.domain.model.ContentVersion
+import com.ssbmax.shared.domain.model.TopicContent
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

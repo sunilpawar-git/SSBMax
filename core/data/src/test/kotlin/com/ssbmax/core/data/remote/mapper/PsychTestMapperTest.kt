@@ -1,8 +1,8 @@
 package com.ssbmax.core.data.remote.mapper
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
 import org.junit.Assert.*
 import org.junit.Test
 

@@ -1,8 +1,8 @@
 package com.ssbmax.ui.submissions
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.submission.GetUserSubmissionsUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.submission.GetUserSubmissionsUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every

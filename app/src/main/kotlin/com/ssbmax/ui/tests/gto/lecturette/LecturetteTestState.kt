@@ -1,6 +1,6 @@
 package com.ssbmax.ui.tests.gto.lecturette
 
-import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * Lecturette Test UI State

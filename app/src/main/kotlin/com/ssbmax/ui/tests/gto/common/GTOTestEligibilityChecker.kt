@@ -2,11 +2,11 @@ package com.ssbmax.ui.tests.gto.common
 
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull

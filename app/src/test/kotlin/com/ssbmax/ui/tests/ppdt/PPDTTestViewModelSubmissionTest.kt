@@ -1,7 +1,7 @@
 package com.ssbmax.ui.tests.ppdt
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.PPDTPhase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle

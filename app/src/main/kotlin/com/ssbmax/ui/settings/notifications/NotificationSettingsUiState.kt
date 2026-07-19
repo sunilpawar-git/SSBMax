@@ -1,6 +1,6 @@
 package com.ssbmax.ui.settings.notifications
 
-import com.ssbmax.core.domain.model.NotificationPreferences
+import com.ssbmax.shared.domain.model.NotificationPreferences
 
 /**
  * UI State for Notification Settings

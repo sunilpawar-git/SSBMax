@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.SubmissionStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.ui.components.SSBRecommendationBanner
 
 /**

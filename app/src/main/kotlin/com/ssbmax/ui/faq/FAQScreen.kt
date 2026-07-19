@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.FAQCategory
-import com.ssbmax.core.domain.model.FAQItem
+import com.ssbmax.shared.domain.model.FAQCategory
+import com.ssbmax.shared.domain.model.FAQItem
 
 /**
  * FAQ Screen - Searchable frequently asked questions

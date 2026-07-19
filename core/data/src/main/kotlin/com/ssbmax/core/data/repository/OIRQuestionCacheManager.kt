@@ -6,9 +6,9 @@ import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
-import com.ssbmax.core.domain.model.CacheStatus
-import com.ssbmax.core.domain.model.OIRQuestion
-import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.CacheStatus
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.core.data.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

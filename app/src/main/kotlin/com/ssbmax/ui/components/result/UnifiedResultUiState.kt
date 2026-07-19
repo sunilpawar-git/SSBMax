@@ -1,8 +1,8 @@
 package com.ssbmax.ui.components.result
 
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 
 /**
  * Unified interface for OLQ-based test result UI states.

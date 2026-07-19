@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.PPDTPhase
 
 /**
  * PPDT Shared UI Components

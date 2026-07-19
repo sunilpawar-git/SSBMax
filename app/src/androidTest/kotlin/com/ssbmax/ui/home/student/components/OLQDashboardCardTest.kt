@@ -1,9 +1,9 @@
 package com.ssbmax.ui.home.student.components
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
-import com.ssbmax.core.domain.usecase.dashboard.CacheMetadata
-import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.domain.model.dashboard.OLQDashboardData
+import com.ssbmax.shared.domain.usecase.dashboard.CacheMetadata
+import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseComposeTest
 import org.junit.Test
 

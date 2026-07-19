@@ -3,8 +3,8 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.GradingQueueRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

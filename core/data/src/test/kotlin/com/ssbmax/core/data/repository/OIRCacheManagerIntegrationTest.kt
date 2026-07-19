@@ -10,8 +10,8 @@ import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
-import com.ssbmax.core.domain.model.OIRQuestionType
-import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.QuestionDifficulty
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope

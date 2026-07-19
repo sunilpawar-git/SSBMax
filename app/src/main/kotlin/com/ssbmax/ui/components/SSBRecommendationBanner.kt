@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.validation.RecommendationOutcome
-import com.ssbmax.core.domain.validation.SSBRecommendationUIModel
+import com.ssbmax.shared.domain.validation.RecommendationOutcome
+import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 
 /**
  * SSB Recommendation Banner

@@ -5,7 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.local.entity.CachedWATWordEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
-import com.ssbmax.core.domain.model.WATWord
+import com.ssbmax.shared.domain.model.WATWord
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

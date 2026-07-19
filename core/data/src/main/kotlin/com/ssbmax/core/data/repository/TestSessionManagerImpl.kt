@@ -2,8 +2,8 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.TestSessionRepository
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

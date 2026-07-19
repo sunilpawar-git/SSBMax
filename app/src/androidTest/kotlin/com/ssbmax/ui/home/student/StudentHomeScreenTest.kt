@@ -1,8 +1,8 @@
 package com.ssbmax.ui.home.student
 
 import androidx.compose.ui.test.*
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import dagger.hilt.android.testing.HiltAndroidTest

@@ -150,6 +150,13 @@ extensions.getByType<ApplicationExtension>().apply {
         error += "HardcodedText"
         lintConfig = file("lint.xml")
 
+        // NonNullableMutableLiveDataDetector (bundled in AGP's androidx-lifecycle
+        // lint checks) crashes with IncompatibleClassChangeError when analyzing
+        // this module's dependency on :shared (a Compose Multiplatform module) --
+        // a lint tooling/UAST version mismatch, not a real violation. Same crash
+        // and same workaround as shared/build.gradle.kts and core/data/build.gradle.kts.
+        disable += "NullSafeMutableLiveData"
+
         // Lint baseline for systematic cleanup of warnings (Phase 1.5)
         baseline = file("lint-baseline.xml")
 
@@ -207,13 +214,8 @@ extensions.getByType<ApplicationExtension>().apply {
 dependencies {
     // Core modules
     implementation(project(":core:designsystem"))
-    implementation(project(":core:domain"))
+    implementation(project(":shared"))
     implementation(project(":core:data"))
-
-    // Phase 0 KMP spike validation harness only (debug builds) -- lets the
-    // shared module's ported Compose Multiplatform screen actually run on
-    // an Android device/emulator. See app/src/debug/.../KmpSpikeActivity.kt.
-    debugImplementation(project(":shared"))
 
     // Custom lint rules
     lintChecks(project(":lint"))
@@ -241,7 +243,12 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
-    
+
+    // kotlinx-datetime: moved domain models (InterviewSession, InterviewResult, etc.)
+    // now use kotlinx.datetime.Instant instead of java.time.Instant (Phase 1 KMP move).
+    // :shared only exposes it as `implementation`, not `api`, so app needs its own copy.
+    implementation(libs.kotlinx.datetime)
+
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.prompts.SSBPromptCore
+import com.ssbmax.shared.domain.prompts.SSBPromptCore
 
 /**
  * Enhanced GTO (Group Testing Officer) Prompts using SSBPromptCore as SSOT.

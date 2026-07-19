@@ -38,10 +38,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
 import com.ssbmax.core.designsystem.theme.Spacing
-import com.ssbmax.core.domain.model.TestPhase
-import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.domain.model.TestPhase
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.ui.home.student.components.OLQDashboardCard
 import com.ssbmax.ui.home.student.components.StatsCard
 import com.ssbmax.ui.home.student.components.QuickActionCard

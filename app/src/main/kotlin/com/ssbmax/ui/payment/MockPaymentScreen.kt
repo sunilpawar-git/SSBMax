@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.SubscriptionPlan
+import com.ssbmax.shared.domain.model.SubscriptionPlan
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

@@ -39,6 +39,12 @@ class GitLiveOirResultRepository : OirResultRepository {
         }
     }
 
+    // The Phase 1 domain move replaced the spike's trimmed OIRTestResult with the real
+    // core:domain one, which additionally requires totalTimeSeconds, difficultyBreakdown,
+    // and answeredQuestions (per-question review data). This DTO's Firestore read only ever
+    // fetched the summary fields needed for this spike's "OIR score: X%" demo, so the
+    // per-question/difficulty data defaults to empty here — real values require a fuller
+    // Firestore read, which is Phase 2 (data layer) scope, not this reconciliation.
     private fun OirTestResultDto.toDomain(): OIRTestResult {
         val categoryScores = categoryScores.mapNotNull { (key, dto) ->
             val category = runCatching { OIRQuestionType.valueOf(key) }.getOrNull()
@@ -47,7 +53,8 @@ class GitLiveOirResultRepository : OirResultRepository {
                 category = category,
                 totalQuestions = dto.totalQuestions,
                 correctAnswers = dto.correctAnswers,
-                percentage = dto.percentage
+                percentage = dto.percentage,
+                averageTimeSeconds = 0
             )
         }.toMap()
 
@@ -59,10 +66,13 @@ class GitLiveOirResultRepository : OirResultRepository {
             correctAnswers = correctAnswers,
             incorrectAnswers = incorrectAnswers,
             skippedQuestions = skippedQuestions,
+            totalTimeSeconds = timeTakenSeconds,
             timeTakenSeconds = timeTakenSeconds,
             rawScore = rawScore,
             percentageScore = percentageScore,
             categoryScores = categoryScores,
+            difficultyBreakdown = emptyMap(),
+            answeredQuestions = emptyList(),
             completedAt = completedAt
         )
     }

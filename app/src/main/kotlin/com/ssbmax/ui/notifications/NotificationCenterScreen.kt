@@ -62,9 +62,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ssbmax.core.domain.model.NotificationPriority
-import com.ssbmax.core.domain.model.NotificationType
-import com.ssbmax.core.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.model.NotificationPriority
+import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.SSBMaxNotification
 
 /**
  * Notification Center Screen

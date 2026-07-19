@@ -1,13 +1,13 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
-import com.ssbmax.core.domain.repository.GTORepository
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.UnifiedResultRepository
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.UnifiedResultRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -160,7 +160,7 @@ class UnifiedResultRepositoryImpl @Inject constructor(
                     strengths = interviewResult.strengths.map { it.displayName },
                     weaknesses = interviewResult.weaknesses.map { it.displayName },
                     recommendations = listOf(interviewResult.feedback),
-                    analyzedAt = interviewResult.completedAt.toEpochMilli(),
+                    analyzedAt = interviewResult.completedAt.toEpochMilliseconds(),
                     aiConfidence = interviewResult.overallConfidence
                 )
             }

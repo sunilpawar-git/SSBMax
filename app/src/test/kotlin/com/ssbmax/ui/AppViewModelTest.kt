@@ -1,11 +1,11 @@
 package com.ssbmax.ui
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify

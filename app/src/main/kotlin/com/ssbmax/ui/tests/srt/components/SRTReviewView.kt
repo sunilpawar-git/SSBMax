@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.SRTSituationResponse
+import com.ssbmax.shared.domain.model.SRTSituationResponse
 
 /**
  * SRT Test Review Screen

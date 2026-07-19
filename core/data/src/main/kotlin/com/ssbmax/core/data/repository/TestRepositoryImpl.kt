@@ -2,11 +2,11 @@ package com.ssbmax.core.data.repository
 
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.entity.TestResultEntity
-import com.ssbmax.core.domain.model.SSBCategory
-import com.ssbmax.core.domain.model.SSBTest
-import com.ssbmax.core.domain.model.TestResult
-import com.ssbmax.core.domain.model.TestSession
-import com.ssbmax.core.domain.repository.TestRepository
+import com.ssbmax.shared.domain.model.SSBCategory
+import com.ssbmax.shared.domain.model.SSBTest
+import com.ssbmax.shared.domain.model.TestResult
+import com.ssbmax.shared.domain.model.TestSession
+import com.ssbmax.shared.domain.repository.TestRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -88,7 +88,7 @@ class TestRepositoryImpl @Inject constructor(
             SSBCategory.PSYCHOLOGY -> listOf(
                 SSBTest(
                     id = "tat_001",
-                    type = com.ssbmax.core.domain.model.TestType.TAT,
+                    type = com.ssbmax.shared.domain.model.TestType.TAT,
                     category = category,
                     title = "TAT Test",
                     description = "Thematic Apperception Test - View images and write stories",
@@ -99,7 +99,7 @@ class TestRepositoryImpl @Inject constructor(
                 ),
                 SSBTest(
                     id = "wat_001",
-                    type = com.ssbmax.core.domain.model.TestType.WAT,
+                    type = com.ssbmax.shared.domain.model.TestType.WAT,
                     category = category,
                     title = "WAT Test",
                     description = "Word Association Test - Quick word responses",

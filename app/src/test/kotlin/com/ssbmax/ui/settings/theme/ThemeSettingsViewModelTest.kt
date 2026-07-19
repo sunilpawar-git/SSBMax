@@ -1,7 +1,7 @@
 package com.ssbmax.ui.settings.theme
 
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.shared.domain.model.AppTheme
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify

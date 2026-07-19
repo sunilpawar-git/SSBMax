@@ -1,11 +1,11 @@
 package com.ssbmax
 
 import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.testing.BaseViewModelTest
-import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.shared.domain.model.AppTheme
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

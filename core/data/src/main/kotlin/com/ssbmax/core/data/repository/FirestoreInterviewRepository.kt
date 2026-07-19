@@ -5,26 +5,27 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.ssbmax.core.data.repository.interview.InterviewFirestoreMappers
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGenerator
-import com.ssbmax.core.domain.constants.InterviewConstants
-import com.ssbmax.core.domain.model.interview.InterviewLimits
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.InterviewResponse
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.interview.PrerequisiteCheckResult
-import com.ssbmax.core.domain.model.interview.QuestionCacheRepository
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.SubscriptionRepository
+import com.ssbmax.shared.domain.constants.InterviewConstants
+import com.ssbmax.shared.domain.model.interview.InterviewLimits
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.InterviewResponse
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.interview.PrerequisiteCheckResult
+import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import java.time.Instant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -114,7 +115,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 userId = userId,
                 mode = mode,
                 status = InterviewStatus.IN_PROGRESS,
-                startedAt = Instant.now(),
+                startedAt = Clock.System.now(),
                 completedAt = null,
                 piqSnapshotId = piqSnapshotId,
                 consentGiven = consentGiven,
@@ -208,7 +209,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 IllegalStateException("Session is null despite successful result")
             )
 
-            updateSession(session.copy(status = InterviewStatus.ABANDONED, completedAt = Instant.now()))
+            updateSession(session.copy(status = InterviewStatus.ABANDONED, completedAt = Clock.System.now()))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to abandon session: $sessionId", e)
             Result.failure(e)
@@ -402,7 +403,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 sessionId = sessionId,
                 userId = session.userId,
                 mode = session.mode,
-                completedAt = Instant.now(),
+                completedAt = Clock.System.now(),
                 durationSec = session.getDurationSeconds(),
                 totalQuestions = session.questionIds.size,
                 totalResponses = responses.size,
@@ -422,7 +423,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 .await()
 
             // Update session status
-            updateSession(session.copy(status = InterviewStatus.COMPLETED, completedAt = Instant.now()))
+            updateSession(session.copy(status = InterviewStatus.COMPLETED, completedAt = Clock.System.now()))
 
             // Create submission record for progress tracking
             // This ensures the interview shows up in "Your Progress" section
@@ -433,7 +434,7 @@ class FirestoreInterviewRepository @Inject constructor(
                 FIELD_TEST_ID to sessionId,
                 FIELD_TEST_TYPE to "IO",
                 FIELD_STATUS to "COMPLETED",
-                FIELD_SUBMITTED_AT to result.completedAt.toEpochMilli(),
+                FIELD_SUBMITTED_AT to result.completedAt.toEpochMilliseconds(),
                 FIELD_SCORE to (10 - result.overallRating).toFloat() * 10, // Convert 1-10 scale (lower=better) to 0-100 (higher=better)
                 "resultId" to result.id,
                 "mode" to result.mode.name
@@ -578,7 +579,7 @@ class FirestoreInterviewRepository @Inject constructor(
             val tier = tierResult.getOrNull() ?: return Result.success(0)
 
             // Convert SubscriptionTier to SubscriptionType
-            val subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.valueOf(tier.name)
+            val subscriptionType = com.ssbmax.shared.domain.model.SubscriptionType.valueOf(tier.name)
 
             // Get total used interviews (unified system sums all modes)
             val stats = getInterviewStats(userId).getOrDefault(emptyMap())

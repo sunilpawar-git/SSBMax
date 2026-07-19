@@ -8,10 +8,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.ssbmax.core.data.util.failureTask
 import com.ssbmax.core.data.util.successTask
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk

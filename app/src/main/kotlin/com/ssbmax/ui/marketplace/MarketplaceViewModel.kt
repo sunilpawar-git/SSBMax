@@ -2,9 +2,9 @@ package com.ssbmax.ui.marketplace
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.CoachingInstitute
-import com.ssbmax.core.domain.model.InstituteType
-import com.ssbmax.core.domain.model.PriceRange
+import com.ssbmax.shared.domain.model.CoachingInstitute
+import com.ssbmax.shared.domain.model.InstituteType
+import com.ssbmax.shared.domain.model.PriceRange
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

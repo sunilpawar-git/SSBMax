@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -47,9 +47,9 @@ import com.ssbmax.ui.tests.common.TestNavigationEvent
 class GPETestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
-    private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository,
+    private val submissionRepository: com.ssbmax.shared.domain.repository.SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val securityLogger: com.ssbmax.core.data.security.SecurityEventLogger,
@@ -304,7 +304,7 @@ class GPETestViewModel @Inject constructor(
                 // Get user profile for subscription type
                 val userProfileResult = userProfileRepository.getUserProfile(session.userId).first()
                 val userProfile = userProfileResult.getOrNull()
-                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.shared.domain.model.SubscriptionType.FREE
 
                 // Generate submission ID
                 val submissionId = UUID.randomUUID().toString()
@@ -500,7 +500,7 @@ data class GPETestUiState(
     val canProceedToNextPhase: Boolean = false,
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
+    val subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType? = null,
     val submission: GTOSubmission.GPESubmission? = null,
     // Subscription limit fields
     val isLimitReached: Boolean = false,

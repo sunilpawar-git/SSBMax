@@ -28,9 +28,9 @@ fun NavGraphBuilder.studentNavGraph(
             },
             onNavigateToPhaseDetail = { phase ->
                 when (phase) {
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_1 -> 
+                    com.ssbmax.shared.domain.model.TestPhase.PHASE_1 -> 
                         navController.navigate(SSBMaxDestinations.Phase1Detail.route)
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_2 -> 
+                    com.ssbmax.shared.domain.model.TestPhase.PHASE_2 -> 
                         navController.navigate(SSBMaxDestinations.Phase2Detail.route)
                 }
             },
@@ -52,23 +52,23 @@ fun NavGraphBuilder.studentNavGraph(
             onNavigateToResult = { testType, submissionId ->
                 val route = when (testType) {
                     // Phase 1
-                    com.ssbmax.core.domain.model.TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId) // OIR uses sessionId as submissionId
-                    com.ssbmax.core.domain.model.TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId) // OIR uses sessionId as submissionId
+                    com.ssbmax.shared.domain.model.TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
                     
                     // Phase 2 - Psychology
-                    com.ssbmax.core.domain.model.TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
                     
                     // GTO
-                    com.ssbmax.core.domain.model.TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
                     
                     // Interview
-                    com.ssbmax.core.domain.model.TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(submissionId)
+                    com.ssbmax.shared.domain.model.TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(submissionId)
                     
                     else -> null
                 }
@@ -86,9 +86,9 @@ fun NavGraphBuilder.studentNavGraph(
         com.ssbmax.ui.tests.StudentTestsScreen(
             onNavigateToPhase = { phase ->
                 when (phase) {
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_1 ->
+                    com.ssbmax.shared.domain.model.TestPhase.PHASE_1 ->
                         navController.navigate(SSBMaxDestinations.Phase1Detail.route)
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_2 ->
+                    com.ssbmax.shared.domain.model.TestPhase.PHASE_2 ->
                         navController.navigate(SSBMaxDestinations.Phase2Detail.route)
                 }
             },

@@ -2,9 +2,9 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.StudyProgress
-import com.ssbmax.core.domain.model.StudySession
-import com.ssbmax.core.domain.repository.StudyProgressRepository
+import com.ssbmax.shared.domain.model.StudyProgress
+import com.ssbmax.shared.domain.model.StudySession
+import com.ssbmax.shared.domain.repository.StudyProgressRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

@@ -3,8 +3,8 @@ package com.ssbmax.ui.home.student.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.dashboard.OLQDashboardData
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.dashboard.OLQDashboardData
 
 /**
  * Interview Section

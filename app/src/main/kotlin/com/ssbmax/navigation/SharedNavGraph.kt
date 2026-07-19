@@ -12,7 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.ssbmax.core.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewMode
 
 /**
  * Shared navigation graph
@@ -73,7 +73,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.OIR,
+                    testType = com.ssbmax.shared.domain.model.TestType.OIR,
                     navController = navController
                 )
             },
@@ -118,7 +118,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.PPDT,
+                    testType = com.ssbmax.shared.domain.model.TestType.PPDT,
                     navController = navController
                 )
             },
@@ -157,7 +157,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.TAT,
+                    testType = com.ssbmax.shared.domain.model.TestType.TAT,
                     navController = navController
                 )
             },
@@ -196,7 +196,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.WAT,
+                    testType = com.ssbmax.shared.domain.model.TestType.WAT,
                     navController = navController
                 )
             },
@@ -235,7 +235,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.SRT,
+                    testType = com.ssbmax.shared.domain.model.TestType.SRT,
                     navController = navController
                 )
             },
@@ -274,7 +274,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.SD,
+                    testType = com.ssbmax.shared.domain.model.TestType.SD,
                     navController = navController
                 )
             },
@@ -454,7 +454,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.GTO_GD,
+                    testType = com.ssbmax.shared.domain.model.TestType.GTO_GD,
                     navController = navController
                 )
             },
@@ -493,7 +493,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE,
+                    testType = com.ssbmax.shared.domain.model.TestType.GTO_LECTURETTE,
                     navController = navController
                 )
             },
@@ -532,7 +532,7 @@ fun NavGraphBuilder.sharedNavGraph(
                 com.ssbmax.ui.tests.common.TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
                     subscriptionType = subscriptionType,
-                    testType = com.ssbmax.core.domain.model.TestType.GTO_GPE,
+                    testType = com.ssbmax.shared.domain.model.TestType.GTO_GPE,
                     navController = navController
                 )
             },

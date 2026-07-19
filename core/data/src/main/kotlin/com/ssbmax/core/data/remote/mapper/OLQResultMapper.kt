@@ -1,9 +1,9 @@
 package com.ssbmax.core.data.remote.mapper
 
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 
 /**
  * Parses a Firestore OLQ result map shared by all OLQ-based tests (TAT, WAT, SRT, SDT, PPDT).

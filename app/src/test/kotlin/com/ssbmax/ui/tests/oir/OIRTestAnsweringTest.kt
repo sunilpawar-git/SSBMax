@@ -211,18 +211,18 @@ class OIRTestAnsweringTest : OIRViewModelTestBase() {
 
     // ==================== Multi-Select Toggle Tests (Phase 6) ====================
 
-    private fun multiSelectQuestion() = com.ssbmax.core.domain.model.OIRQuestion(
+    private fun multiSelectQuestion() = com.ssbmax.shared.domain.model.OIRQuestion(
         id = "oir_multi_1",
         questionNumber = 99,
-        type = com.ssbmax.core.domain.model.OIRQuestionType.NON_VERBAL_REASONING,
-        difficulty = com.ssbmax.core.domain.model.QuestionDifficulty.MEDIUM,
+        type = com.ssbmax.shared.domain.model.OIRQuestionType.NON_VERBAL_REASONING,
+        difficulty = com.ssbmax.shared.domain.model.QuestionDifficulty.MEDIUM,
         questionText = "Which two figures belong to Class A?",
         options = listOf(
-            com.ssbmax.core.domain.model.OIROption("opt_a", "Figure 1"),
-            com.ssbmax.core.domain.model.OIROption("opt_b", "Figure 2"),
-            com.ssbmax.core.domain.model.OIROption("opt_c", "Figure 3"),
-            com.ssbmax.core.domain.model.OIROption("opt_d", "Figure 4"),
-            com.ssbmax.core.domain.model.OIROption("opt_e", "Figure 5"),
+            com.ssbmax.shared.domain.model.OIROption("opt_a", "Figure 1"),
+            com.ssbmax.shared.domain.model.OIROption("opt_b", "Figure 2"),
+            com.ssbmax.shared.domain.model.OIROption("opt_c", "Figure 3"),
+            com.ssbmax.shared.domain.model.OIROption("opt_d", "Figure 4"),
+            com.ssbmax.shared.domain.model.OIROption("opt_e", "Figure 5"),
         ),
         correctAnswerId = "",
         correctAnswerIds = listOf("opt_b", "opt_d"),

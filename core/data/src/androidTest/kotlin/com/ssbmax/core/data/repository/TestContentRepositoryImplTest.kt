@@ -2,7 +2,7 @@ package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.FirebaseTestHelper
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After

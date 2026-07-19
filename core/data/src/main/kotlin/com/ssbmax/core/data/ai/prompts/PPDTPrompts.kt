@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.ai.prompts
 
-import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.PPDTImageContext
 
 /**
  * PPDT-specific prompt builders for Gemini AI multimodal analysis.

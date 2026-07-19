@@ -2,9 +2,9 @@ package com.ssbmax.ui.tests
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk

@@ -6,7 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.entity.CachedTATImageEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
-import com.ssbmax.core.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.GenderTag
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*

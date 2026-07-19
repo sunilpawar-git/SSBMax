@@ -3,9 +3,9 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.repository.SubscriptionRepository
-import com.ssbmax.core.domain.repository.UsageInfo
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.repository.SubscriptionRepository
+import com.ssbmax.shared.domain.repository.UsageInfo
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date

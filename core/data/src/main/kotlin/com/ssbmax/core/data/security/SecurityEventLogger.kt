@@ -3,7 +3,7 @@ package com.ssbmax.core.data.security
 import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.TestType
 import javax.inject.Inject
 import javax.inject.Singleton
 

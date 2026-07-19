@@ -1,6 +1,6 @@
 package com.ssbmax.ui.topic
 
-import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.shared.domain.model.TestType
 
 /**
  * Helper class to load topic-specific content.

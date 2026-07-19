@@ -4,10 +4,10 @@ import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.GenerateContentResponse
-import com.ssbmax.core.domain.model.PPDTImageContext
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.service.OLQScoreWithReasoning
-import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.service.OLQScoreWithReasoning
+import com.ssbmax.shared.domain.service.ResponseAnalysis
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

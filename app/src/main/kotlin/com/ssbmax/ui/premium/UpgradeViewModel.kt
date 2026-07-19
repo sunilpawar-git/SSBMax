@@ -3,11 +3,11 @@ package com.ssbmax.ui.premium
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.BillingCycle
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.BillingCycle
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -86,9 +86,9 @@ class UpgradeViewModel @Inject constructor(
                         
                         // Map SubscriptionType to SubscriptionTier
                         val tier = when (profile?.subscriptionType) {
-                            com.ssbmax.core.domain.model.SubscriptionType.FREE -> SubscriptionTier.FREE
-                            com.ssbmax.core.domain.model.SubscriptionType.PRO -> SubscriptionTier.PRO
-                            com.ssbmax.core.domain.model.SubscriptionType.PREMIUM -> SubscriptionTier.PREMIUM
+                            com.ssbmax.shared.domain.model.SubscriptionType.FREE -> SubscriptionTier.FREE
+                            com.ssbmax.shared.domain.model.SubscriptionType.PRO -> SubscriptionTier.PRO
+                            com.ssbmax.shared.domain.model.SubscriptionType.PREMIUM -> SubscriptionTier.PREMIUM
                             null -> SubscriptionTier.FREE
                         }
                         

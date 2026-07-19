@@ -1,7 +1,7 @@
 package com.ssbmax.ui.analytics
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AnalyticsRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every

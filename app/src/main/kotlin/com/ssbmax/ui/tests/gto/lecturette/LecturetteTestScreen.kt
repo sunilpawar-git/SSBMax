@@ -40,7 +40,7 @@ import com.ssbmax.ui.tests.gto.lecturette.*
 @Composable
 fun LecturetteTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -> Unit,
+    onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToUpgrade: () -> Unit = {},
     viewModel: LecturetteTestViewModel = hiltViewModel(),

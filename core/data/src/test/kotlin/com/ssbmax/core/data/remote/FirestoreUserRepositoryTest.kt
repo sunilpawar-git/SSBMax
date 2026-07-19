@@ -1,13 +1,13 @@
 package com.ssbmax.core.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.BillingCycle
-import com.ssbmax.core.domain.model.InstructorProfile
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.StudentProfile
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.model.UserSubscription
+import com.ssbmax.shared.domain.model.BillingCycle
+import com.ssbmax.shared.domain.model.InstructorProfile
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.StudentProfile
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.model.UserSubscription
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

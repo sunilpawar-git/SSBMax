@@ -2,7 +2,7 @@ package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.ai.CloudGeminiAIService
 import com.ssbmax.core.data.ai.GeminiAIService
-import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.shared.domain.service.AIService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

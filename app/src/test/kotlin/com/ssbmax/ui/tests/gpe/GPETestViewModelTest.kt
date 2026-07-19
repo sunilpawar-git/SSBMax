@@ -5,16 +5,16 @@ import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.repository.TestEligibility
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
 import io.mockk.*
@@ -49,12 +49,12 @@ class GPETestViewModelTest : BaseViewModelTest() {
         role = UserRole.STUDENT
     )
 
-    private val mockUserProfile = com.ssbmax.core.domain.model.UserProfile(
+    private val mockUserProfile = com.ssbmax.shared.domain.model.UserProfile(
         userId = "user-gpe-123",
         fullName = "Test User",
         age = 25,
-        gender = com.ssbmax.core.domain.model.Gender.MALE,
-        entryType = com.ssbmax.core.domain.model.EntryType.GRADUATE,
+        gender = com.ssbmax.shared.domain.model.Gender.MALE,
+        entryType = com.ssbmax.shared.domain.model.EntryType.GRADUATE,
         subscriptionType = SubscriptionType.PREMIUM
     )
 

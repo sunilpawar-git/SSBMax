@@ -8,12 +8,12 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.submission.SubmitSDTTestUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
@@ -37,10 +37,10 @@ class SDTTestViewModel @Inject constructor(
     private val testSessionRepository: TestSessionRepository,
     private val submitSDTTest: SubmitSDTTestUseCase,
     observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     subscriptionManager: SubscriptionManager,
-    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
+    private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase,
     securityLogger: SecurityEventLogger,
     workManager: WorkManager
 ) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {

@@ -1,6 +1,6 @@
 package com.ssbmax.ui.tests.oir
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -203,7 +203,7 @@ class OIRTestViewModelTest : OIRViewModelTestBase() {
         coEvery {
             mockSubscriptionManager.canTakeTest(TestType.OIR, any())
         } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
-            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            tier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
             limit = 1,
             usedCount = 1,
             resetsAt = "Dec 1, 2025"
@@ -214,7 +214,7 @@ class OIRTestViewModelTest : OIRViewModelTestBase() {
 
         val state = viewModel.uiState.value
         assertTrue("Should show limit reached", state.isLimitReached)
-        assertEquals("Should show FREE tier", com.ssbmax.core.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show FREE tier", com.ssbmax.shared.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
         assertEquals("Should show 1 test limit", 1, state.testsLimit)
         assertEquals("Should show 1 test used", 1, state.testsUsed)
         assertEquals("Should show reset date", "Dec 1, 2025", state.resetsAt)

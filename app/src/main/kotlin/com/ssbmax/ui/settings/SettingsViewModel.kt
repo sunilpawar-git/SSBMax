@@ -2,8 +2,8 @@ package com.ssbmax.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -62,6 +62,6 @@ class SettingsViewModel @Inject constructor(
  * Simplified after removing migration state properties
  */
 data class SettingsUiState(
-    val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+    val subscriptionTier: com.ssbmax.shared.domain.model.SubscriptionTier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
     val error: String? = null
 )

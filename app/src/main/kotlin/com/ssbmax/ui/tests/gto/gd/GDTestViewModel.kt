@@ -3,10 +3,10 @@ package com.ssbmax.ui.tests.gto.gd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
 import com.ssbmax.ui.tests.gto.common.GTOTestUtils
@@ -41,7 +41,7 @@ import javax.inject.Inject
 @HiltViewModel
 class GDTestViewModel @Inject constructor(
     private val gtoRepository: GTORepository,
-    private val testContentRepository: com.ssbmax.core.domain.repository.TestContentRepository,
+    private val testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository,
     private val eligibilityChecker: GTOTestEligibilityChecker,
     private val submissionHelper: GTOTestSubmissionHelper
 ) : ViewModel() {

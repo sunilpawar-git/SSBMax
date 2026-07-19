@@ -1,7 +1,7 @@
 package com.ssbmax.ui.tests.oir
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.shared.domain.model.*
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy

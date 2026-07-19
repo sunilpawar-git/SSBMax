@@ -1,11 +1,11 @@
 package com.ssbmax.ui.tests.gto.gd
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.gto.GTOResult
-import com.ssbmax.core.domain.model.gto.GTOSubmission
-import com.ssbmax.core.domain.model.gto.GTOSubmissionStatus
-import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.GTORepository
+import com.ssbmax.shared.domain.model.gto.GTOResult
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk

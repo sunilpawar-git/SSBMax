@@ -1,25 +1,25 @@
 package com.ssbmax.ui.interview.start
 
 import android.content.Context
-import com.ssbmax.core.domain.model.PIQSubmission
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewResult
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.model.interview.OIRStatus
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.OLQCategory
-import com.ssbmax.core.domain.model.interview.OLQScore
-import com.ssbmax.core.domain.model.interview.PIQStatus
-import com.ssbmax.core.domain.model.interview.PPDTStatus
-import com.ssbmax.core.domain.model.interview.PrerequisiteCheckResult
-import com.ssbmax.core.domain.model.interview.SubscriptionStatus
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.usecase.CheckInterviewPrerequisitesUseCase
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.PIQSubmission
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewResult
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.model.interview.OIRStatus
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.OLQCategory
+import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.interview.PIQStatus
+import com.ssbmax.shared.domain.model.interview.PPDTStatus
+import com.ssbmax.shared.domain.model.interview.PrerequisiteCheckResult
+import com.ssbmax.shared.domain.model.interview.SubscriptionStatus
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.every
@@ -54,7 +54,7 @@ class StartInterviewViewModelTest : BaseViewModelTest() {
     private lateinit var interviewRepository: InterviewRepository
     private lateinit var submissionRepository: SubmissionRepository
     private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
-    private lateinit var questionCacheRepository: com.ssbmax.core.domain.model.interview.QuestionCacheRepository
+    private lateinit var questionCacheRepository: com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
     private lateinit var context: Context
 
     private val testUserId = "user-123"

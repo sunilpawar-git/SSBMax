@@ -7,9 +7,9 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.TestUsageRecorder
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
@@ -36,7 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class SubscriptionManager @Inject constructor(
     private val testUsageDao: TestUsageDao,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val firestore: FirebaseFirestore,
     private val securityLogger: SecurityEventLogger,
     private val debugConfig: com.ssbmax.core.data.debug.DebugConfig
@@ -74,8 +74,8 @@ class SubscriptionManager @Inject constructor(
             val userProfile = userProfileRepository.getUserProfile(userId).first().getOrNull()
             // Convert SubscriptionType to SubscriptionTier
             val tier = when (userProfile?.subscriptionType) {
-                com.ssbmax.core.domain.model.SubscriptionType.PRO -> SubscriptionTier.PRO
-                com.ssbmax.core.domain.model.SubscriptionType.PREMIUM -> SubscriptionTier.PREMIUM
+                com.ssbmax.shared.domain.model.SubscriptionType.PRO -> SubscriptionTier.PRO
+                com.ssbmax.shared.domain.model.SubscriptionType.PREMIUM -> SubscriptionTier.PREMIUM
                 else -> SubscriptionTier.FREE
             }
             

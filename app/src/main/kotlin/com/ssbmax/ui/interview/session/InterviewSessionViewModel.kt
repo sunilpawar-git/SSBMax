@@ -10,9 +10,9 @@ import com.ssbmax.BuildConfig
 import com.ssbmax.R
 import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.repository.AuthRepository
-import com.ssbmax.core.domain.repository.InterviewRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.TTSService

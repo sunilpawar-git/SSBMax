@@ -7,13 +7,13 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.ssbmax.R
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.oir.OIRTestScoreCalculator
-import com.ssbmax.core.domain.usecase.oir.SubmitOIRTestUseCase
-import com.ssbmax.core.domain.validation.OIRQuestionValidator
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
+import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
+import com.ssbmax.shared.domain.validation.OIRQuestionValidator
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.utils.ErrorLogger
@@ -39,7 +39,7 @@ class OIRTestViewModel @Inject constructor(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager,
     private val securityLogger: SecurityEventLogger,
     private val scoreCalculator: OIRTestScoreCalculator,
@@ -199,7 +199,7 @@ class OIRTestViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val subscriptionType = userProfileRepository.getUserProfile(session.userId).first()
-                    .getOrNull()?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                    .getOrNull()?.subscriptionType ?: com.ssbmax.shared.domain.model.SubscriptionType.FREE
                 val submissionId = submitOIRTestUseCase(session).getOrThrow()
                 // Note: served questions are marked used inside SubmitOIRTestUseCase (step 6) —
                 // the single source of truth for submission orchestration. Do NOT mark them again

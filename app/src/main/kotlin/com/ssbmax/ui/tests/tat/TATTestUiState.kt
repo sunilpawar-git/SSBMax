@@ -1,12 +1,12 @@
 package com.ssbmax.ui.tests.tat
 
-import com.ssbmax.core.domain.model.SubscriptionTier
-import com.ssbmax.core.domain.model.SubscriptionType
-import com.ssbmax.core.domain.model.TATPhase
-import com.ssbmax.core.domain.model.TATQuestion
-import com.ssbmax.core.domain.model.TATStoryResponse
-import com.ssbmax.core.domain.model.TATSubmission
-import com.ssbmax.core.domain.model.TATTestConfig
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TATPhase
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.model.TATSubmission
+import com.ssbmax.shared.domain.model.TATTestConfig
 
 data class TATTestUiState(
     val isLoading: Boolean = true,

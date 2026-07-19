@@ -1,8 +1,8 @@
 package com.ssbmax.ui.tests.piq
 
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk

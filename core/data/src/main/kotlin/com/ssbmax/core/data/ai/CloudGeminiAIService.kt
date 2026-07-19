@@ -5,14 +5,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
-import com.ssbmax.core.domain.model.PPDTImageContext
-import com.ssbmax.core.domain.model.TATImageContext
-import com.ssbmax.core.domain.model.interview.InterviewQuestion
-import com.ssbmax.core.domain.model.interview.OLQ
-import com.ssbmax.core.domain.model.interview.QuestionSource
-import com.ssbmax.core.domain.service.AIService
-import com.ssbmax.core.domain.service.OLQScoreWithReasoning
-import com.ssbmax.core.domain.service.ResponseAnalysis
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.TATImageContext
+import com.ssbmax.shared.domain.model.interview.InterviewQuestion
+import com.ssbmax.shared.domain.model.interview.OLQ
+import com.ssbmax.shared.domain.model.interview.QuestionSource
+import com.ssbmax.shared.domain.service.AIService
+import com.ssbmax.shared.domain.service.OLQScoreWithReasoning
+import com.ssbmax.shared.domain.service.ResponseAnalysis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -181,8 +181,8 @@ class CloudGeminiAIService @Inject constructor() : AIService {
      */
     override suspend fun analyzeGTOResponse(
         prompt: String,
-        testType: com.ssbmax.core.domain.model.gto.GTOTestType
-    ): Result<com.ssbmax.core.domain.service.ResponseAnalysis> {
+        testType: com.ssbmax.shared.domain.model.gto.GTOTestType
+    ): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
         Log.e(TAG, "GTO analysis not yet supported in CloudGemini implementation")
         return Result.failure(UnsupportedOperationException("Use GeminiAIService for GTO analysis"))
     }

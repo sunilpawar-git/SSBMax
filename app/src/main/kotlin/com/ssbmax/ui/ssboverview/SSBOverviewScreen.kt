@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.core.domain.model.SSBInfoCard
-import com.ssbmax.core.domain.model.SSBInfoIcon
+import com.ssbmax.shared.domain.model.SSBInfoCard
+import com.ssbmax.shared.domain.model.SSBInfoIcon
 import com.ssbmax.ui.components.MarkdownText
 
 /**

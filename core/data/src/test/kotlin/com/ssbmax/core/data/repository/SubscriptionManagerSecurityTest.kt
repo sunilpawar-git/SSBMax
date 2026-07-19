@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
-import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import io.mockk.*
 import org.junit.After
 import org.junit.Assert.*

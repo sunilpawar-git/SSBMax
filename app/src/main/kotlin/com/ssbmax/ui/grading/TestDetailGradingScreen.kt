@@ -233,7 +233,7 @@ private fun SubmissionInfoCard(
 
 @Composable
 private fun SubmissionContentCard(
-    submission: com.ssbmax.core.domain.model.TestSubmission,
+    submission: com.ssbmax.shared.domain.model.TestSubmission,
     modifier: Modifier = Modifier
 ) {
     Card(

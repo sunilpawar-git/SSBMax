@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.SubscriptionTier
 
 /**
  * Dialog shown when user reaches their monthly test limit

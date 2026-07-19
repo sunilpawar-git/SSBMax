@@ -1,8 +1,8 @@
 package com.ssbmax.core.data.remote.mapper
 
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 
 /**
  * Mapper for parsing Psychology Test Submissions from Firestore data.

@@ -7,13 +7,13 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.ssbmax.core.domain.model.interview.InterviewMode
-import com.ssbmax.core.domain.model.interview.InterviewResponse
-import com.ssbmax.core.domain.model.interview.InterviewSession
-import com.ssbmax.core.domain.model.interview.InterviewStatus
-import com.ssbmax.core.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.model.interview.InterviewMode
+import com.ssbmax.shared.domain.model.interview.InterviewResponse
+import com.ssbmax.shared.domain.model.interview.InterviewSession
+import com.ssbmax.shared.domain.model.interview.InterviewStatus
+import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.workers.InterviewAnalysisWorker
-import java.time.Instant
+import kotlinx.datetime.Instant
 import java.util.UUID
 
 /**
@@ -88,7 +88,7 @@ class InterviewCompleter(
                 questionId = pending.questionId,
                 responseText = pending.responseText,
                 responseMode = mode,
-                respondedAt = Instant.ofEpochMilli(pending.respondedAt),
+                respondedAt = Instant.fromEpochMilliseconds(pending.respondedAt),
                 thinkingTimeSec = pending.thinkingTimeSec,
                 audioUrl = null,
                 olqScores = emptyMap(),

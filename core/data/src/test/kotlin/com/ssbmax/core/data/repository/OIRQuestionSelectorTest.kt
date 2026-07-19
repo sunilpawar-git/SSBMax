@@ -4,8 +4,8 @@ import android.util.Log
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
-import com.ssbmax.core.domain.model.OIRQuestionDistribution
-import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.OIRQuestionDistribution
+import com.ssbmax.shared.domain.model.OIRQuestionType
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.After

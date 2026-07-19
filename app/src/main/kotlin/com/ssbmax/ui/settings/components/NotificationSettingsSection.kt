@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.NotificationPreferences
+import com.ssbmax.shared.domain.model.NotificationPreferences
 import com.ssbmax.ui.settings.notifications.NotificationSettingsViewModel
 
 /**

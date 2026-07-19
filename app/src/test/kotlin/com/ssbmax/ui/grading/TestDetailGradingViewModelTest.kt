@@ -1,16 +1,16 @@
 package com.ssbmax.ui.grading
 
-import com.ssbmax.core.domain.model.GradingStatus
-import com.ssbmax.core.domain.model.NotificationPriority
-import com.ssbmax.core.domain.model.NotificationType
-import com.ssbmax.core.domain.model.SSBMaxNotification
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.TestSubmission
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.NotificationRepository
-import com.ssbmax.core.domain.repository.TestSubmissionRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.GradingStatus
+import com.ssbmax.shared.domain.model.NotificationPriority
+import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.TestSubmission
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.NotificationRepository
+import com.ssbmax.shared.domain.repository.TestSubmissionRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,7 +39,7 @@ class TestDetailGradingViewModelTest {
     private lateinit var viewModel: TestDetailGradingViewModel
     private val mockTestSubmissionRepository = mockk<TestSubmissionRepository>()
     private val mockNotificationRepository = mockk<NotificationRepository>()
-    private val mockUserProfileRepository = mockk<com.ssbmax.core.domain.repository.UserProfileRepository>()
+    private val mockUserProfileRepository = mockk<com.ssbmax.shared.domain.repository.UserProfileRepository>()
     private val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>()
     private val mockCurrentUserFlow = MutableStateFlow<SSBMaxUser?>(null)
 
@@ -49,7 +49,7 @@ class TestDetailGradingViewModelTest {
         displayName = "Test Instructor",
         photoUrl = null,
         role = UserRole.INSTRUCTOR,
-        subscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+        subscriptionTier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
         subscription = null,
         studentProfile = null,
         instructorProfile = null,
@@ -62,7 +62,7 @@ class TestDetailGradingViewModelTest {
         testId = "test-789",
         userId = "student-456",
         testType = TestType.TAT,
-        phase = com.ssbmax.core.domain.model.TestPhase.PHASE_1,
+        phase = com.ssbmax.shared.domain.model.TestPhase.PHASE_1,
         submittedAt = System.currentTimeMillis(),
         responses = emptyList(),
         aiPreliminaryScore = 75f,
@@ -88,14 +88,14 @@ class TestDetailGradingViewModelTest {
         // Mock user profile repository to return a test user profile
         every { mockUserProfileRepository.getUserProfile(any()) } returns kotlinx.coroutines.flow.flowOf(
             Result.success(
-                com.ssbmax.core.domain.model.UserProfile(
+                com.ssbmax.shared.domain.model.UserProfile(
                     userId = "student-456",
                     fullName = "Test Student",
                     age = 22,
-                    gender = com.ssbmax.core.domain.model.Gender.MALE,
-                    entryType = com.ssbmax.core.domain.model.EntryType.GRADUATE,
+                    gender = com.ssbmax.shared.domain.model.Gender.MALE,
+                    entryType = com.ssbmax.shared.domain.model.EntryType.GRADUATE,
                     profilePictureUrl = null,
-                    subscriptionType = com.ssbmax.core.domain.model.SubscriptionType.FREE,
+                    subscriptionType = com.ssbmax.shared.domain.model.SubscriptionType.FREE,
                     currentStreak = 0,
                     lastLoginDate = null,
                     longestStreak = 0

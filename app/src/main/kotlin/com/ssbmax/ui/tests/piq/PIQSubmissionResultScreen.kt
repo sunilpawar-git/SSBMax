@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.core.domain.model.PIQAIScore
+import com.ssbmax.shared.domain.model.PIQAIScore
 
 /**
  * PIQ Submission Result Screen - Shows AI quality score

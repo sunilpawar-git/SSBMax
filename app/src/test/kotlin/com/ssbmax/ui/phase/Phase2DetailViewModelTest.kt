@@ -1,13 +1,13 @@
 package com.ssbmax.ui.phase
 
-import com.ssbmax.core.domain.model.Phase2Progress
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.TestProgress
-import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.Phase2Progress
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.TestProgress
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.mockk

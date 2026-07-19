@@ -2,9 +2,9 @@ package com.ssbmax.core.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.AnalyticsRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.AnalyticsRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

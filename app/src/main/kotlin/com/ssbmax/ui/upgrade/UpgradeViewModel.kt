@@ -1,9 +1,9 @@
 package com.ssbmax.ui.upgrade
 
 import androidx.lifecycle.ViewModel
-import com.ssbmax.core.domain.model.BillingPeriod
-import com.ssbmax.core.domain.model.SubscriptionPlan
-import com.ssbmax.core.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.BillingPeriod
+import com.ssbmax.shared.domain.model.SubscriptionPlan
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

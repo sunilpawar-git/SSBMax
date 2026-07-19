@@ -10,12 +10,12 @@ import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.model.scoring.AnalysisStatus
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.submission.SubmitWATTestUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
@@ -39,10 +39,10 @@ class WATTestViewModel @Inject constructor(
     private val testSessionRepository: TestSessionRepository,
     private val submitWATTest: SubmitWATTestUseCase,
     observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository,
+    private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager,
     subscriptionManager: SubscriptionManager,
-    private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase,
+    private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase,
     securityLogger: SecurityEventLogger,
     workManager: WorkManager
 ) : BaseTestViewModel(observeCurrentUser, subscriptionManager, securityLogger, workManager) {
@@ -298,7 +298,7 @@ class WATTestViewModel @Inject constructor(
                 // Get user profile for subscription type
                 val userProfileResult = userProfileRepository.getUserProfile(currentUserId).first()
                 val userProfile = userProfileResult.getOrNull()
-                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.core.domain.model.SubscriptionType.FREE
+                val subscriptionType = userProfile?.subscriptionType ?: com.ssbmax.shared.domain.model.SubscriptionType.FREE
                 
                 val state = _uiState.value
                 
@@ -473,12 +473,12 @@ data class WATTestUiState(
     val startTime: Long = System.currentTimeMillis(),
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: com.ssbmax.core.domain.model.SubscriptionType? = null,
+    val subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType? = null,
     val submission: WATSubmission? = null,  // Submission stored locally to bypass Firestore permission issues
     val error: String? = null,
     // Subscription limit fields
     val isLimitReached: Boolean = false,
-    val subscriptionTier: com.ssbmax.core.domain.model.SubscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+    val subscriptionTier: com.ssbmax.shared.domain.model.SubscriptionTier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
     val testsLimit: Int = 1,
     val testsUsed: Int = 0,
     val resetsAt: String = "",

@@ -1,12 +1,12 @@
 package com.ssbmax.ui.phase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.Phase2Progress
-import com.ssbmax.core.domain.model.TestProgress
-import com.ssbmax.core.domain.model.TestStatus
-import com.ssbmax.core.domain.model.TestType
-import com.ssbmax.core.domain.repository.TestProgressRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.Phase2Progress
+import com.ssbmax.shared.domain.model.TestProgress
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -187,7 +187,7 @@ class Phase2DetailViewModel @Inject constructor(
         description: String,
         durationMinutes: Int,
         questionCount: Int,
-        baseProgress: com.ssbmax.core.domain.model.TestProgress
+        baseProgress: com.ssbmax.shared.domain.model.TestProgress
     ): Phase2Test {
         return Phase2Test(
             type = type,

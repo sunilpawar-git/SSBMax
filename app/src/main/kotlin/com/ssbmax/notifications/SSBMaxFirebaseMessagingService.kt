@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.ssbmax.MainActivity
-import com.ssbmax.core.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.NotificationType
 import kotlin.random.Random
 
 /**

@@ -7,10 +7,10 @@ import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.repository.TestEligibility
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.SubmissionRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.SubmissionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +30,7 @@ class PIQTestViewModelTest : BaseViewModelTest() {
     private lateinit var observeCurrentUser: ObserveCurrentUserUseCase
     private lateinit var userProfileRepository: UserProfileRepository
     private lateinit var subscriptionManager: SubscriptionManager
-    private lateinit var getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+    private lateinit var getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
     private lateinit var difficultyManager: DifficultyProgressionManager
     private lateinit var securityLogger: SecurityEventLogger
     private lateinit var workManager: WorkManager

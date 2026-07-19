@@ -2,9 +2,9 @@ package com.ssbmax.core.data.local
 
 import com.google.gson.Gson
 import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
-import com.ssbmax.core.domain.model.DeviationTolerance
-import com.ssbmax.core.domain.model.GenderTag
-import com.ssbmax.core.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.DeviationTolerance
+import com.ssbmax.shared.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.PPDTImageContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

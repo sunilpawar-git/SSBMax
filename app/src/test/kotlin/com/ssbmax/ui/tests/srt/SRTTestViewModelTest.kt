@@ -2,12 +2,12 @@ package com.ssbmax.ui.tests.srt
 
 import androidx.work.WorkManager
 import app.cash.turbine.test
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.TestSessionRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.submission.SubmitSRTTestUseCase
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -57,7 +57,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
     private val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     private val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     private val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
-    private val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
+    private val mockGetOLQDashboard = mockk<com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     private val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     private val mockWorkManager = mockk<WorkManager>(relaxed = true)
     
@@ -820,7 +820,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         coEvery {
             mockSubscriptionManager.canTakeTest(TestType.SRT, any())
         } returns com.ssbmax.core.data.repository.TestEligibility.LimitReached(
-            tier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+            tier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
             limit = 1,
             usedCount = 1,
             resetsAt = "Dec 1, 2025"
@@ -845,7 +845,7 @@ class SRTTestViewModelTest : BaseViewModelTest() {
         // Then
         val state = viewModel.uiState.value
         assertTrue("Should show limit reached", state.isLimitReached)
-        assertEquals("Should show FREE tier", com.ssbmax.core.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
+        assertEquals("Should show FREE tier", com.ssbmax.shared.domain.model.SubscriptionTier.FREE, state.subscriptionTier)
         assertEquals("Should show 1 test limit", 1, state.testsLimit)
         assertEquals("Should show 1 test used", 1, state.testsUsed)
         assertEquals("Should show reset date", "Dec 1, 2025", state.resetsAt)

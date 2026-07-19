@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.navigation.SSBMaxDestinations
 import com.ssbmax.ui.components.drawer.SSBMaxDrawer
 import com.ssbmax.ui.profile.UserProfileViewModel

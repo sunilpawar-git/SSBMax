@@ -2,8 +2,8 @@ package com.ssbmax.core.data.repository
 
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.entity.TestResultEntity
-import com.ssbmax.core.domain.model.SSBCategory
-import com.ssbmax.core.domain.model.TestResult
+import com.ssbmax.shared.domain.model.SSBCategory
+import com.ssbmax.shared.domain.model.TestResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

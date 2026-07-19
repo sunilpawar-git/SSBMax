@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.preferences
 
 import android.content.Context
-import com.ssbmax.core.domain.model.AppTheme
+import com.ssbmax.shared.domain.model.AppTheme
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

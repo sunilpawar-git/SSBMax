@@ -1,13 +1,13 @@
 package com.ssbmax.ui.tests.oir
 
 import android.util.Log
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
-import com.ssbmax.core.domain.repository.UserProfileRepository
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.oir.OIRTestScoreCalculator
-import com.ssbmax.core.domain.usecase.oir.SubmitOIRTestUseCase
-import com.ssbmax.core.domain.util.NoOpLogger
+import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.repository.TestContentRepository
+import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
+import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
+import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.time.FakeClock
 import io.mockk.*
@@ -39,13 +39,13 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
 
     protected lateinit var viewModel: OIRTestViewModel
     protected val mockTestContentRepo = mockk<TestContentRepository>(relaxed = true)
-    protected val mockTestSessionRepo = mockk<com.ssbmax.core.domain.repository.TestSessionRepository>(relaxed = true)
-    protected val mockSubmissionRepo = mockk<com.ssbmax.core.domain.repository.SubmissionRepository>(relaxed = true)
+    protected val mockTestSessionRepo = mockk<com.ssbmax.shared.domain.repository.TestSessionRepository>(relaxed = true)
+    protected val mockSubmissionRepo = mockk<com.ssbmax.shared.domain.repository.SubmissionRepository>(relaxed = true)
     protected val mockObserveCurrentUser = mockk<ObserveCurrentUserUseCase>(relaxed = true)
     protected val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
     protected val mockDifficultyManager = mockk<com.ssbmax.core.data.repository.DifficultyProgressionManager>(relaxed = true)
     protected val mockSubscriptionManager = mockk<com.ssbmax.core.data.repository.SubscriptionManager>(relaxed = true)
-    protected val mockGetOLQDashboard = mockk<com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
+    protected val mockGetOLQDashboard = mockk<com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase>(relaxed = true)
     protected val mockSecurityLogger = mockk<com.ssbmax.core.data.security.SecurityEventLogger>(relaxed = true)
     protected val mockImageLoader = mockk<coil.ImageLoader>(relaxed = true)
     protected val realScoreCalculator = OIRTestScoreCalculator(NoOpLogger())
@@ -101,7 +101,7 @@ abstract class OIRViewModelTestBase : BaseViewModelTest() {
         } returns Unit
 
         coEvery { mockSubmitUseCase(any()) } answers {
-            val session = firstArg<com.ssbmax.core.domain.model.OIRTestSession>()
+            val session = firstArg<com.ssbmax.shared.domain.model.OIRTestSession>()
             Result.success(session.sessionId)
         }
     }

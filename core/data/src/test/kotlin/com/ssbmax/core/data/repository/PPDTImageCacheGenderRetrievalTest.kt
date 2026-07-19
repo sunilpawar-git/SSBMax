@@ -1,6 +1,6 @@
 package com.ssbmax.core.data.repository
 
-import com.ssbmax.core.domain.model.GenderTag
+import com.ssbmax.shared.domain.model.GenderTag
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.test.runTest

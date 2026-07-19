@@ -2,16 +2,16 @@ package com.ssbmax.ui.study
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
-import com.ssbmax.core.domain.model.CloudStudyMaterial
-import com.ssbmax.core.domain.model.SSBMaxUser
-import com.ssbmax.core.domain.model.StudyProgress
-import com.ssbmax.core.domain.model.StudySession
-import com.ssbmax.core.domain.model.UserRole
-import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
-import com.ssbmax.core.domain.usecase.study.GetStudyMaterialDetailUseCase
-import com.ssbmax.core.domain.usecase.study.GetStudyProgressUseCase
-import com.ssbmax.core.domain.usecase.study.SaveStudyProgressUseCase
-import com.ssbmax.core.domain.usecase.study.TrackStudySessionUseCase
+import com.ssbmax.shared.domain.model.CloudStudyMaterial
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.StudyProgress
+import com.ssbmax.shared.domain.model.StudySession
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
+import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
+import com.ssbmax.shared.domain.usecase.study.SaveStudyProgressUseCase
+import com.ssbmax.shared.domain.usecase.study.TrackStudySessionUseCase
 import com.ssbmax.testing.TestDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -52,7 +52,7 @@ class StudyMaterialDetailViewModelTest {
         displayName = "Test Student",
         photoUrl = null,
         role = UserRole.STUDENT,
-        subscriptionTier = com.ssbmax.core.domain.model.SubscriptionTier.FREE,
+        subscriptionTier = com.ssbmax.shared.domain.model.SubscriptionTier.FREE,
         subscription = null,
         studentProfile = null,
         instructorProfile = null,
