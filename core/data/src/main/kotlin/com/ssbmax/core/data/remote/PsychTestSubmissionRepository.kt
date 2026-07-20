@@ -4,8 +4,6 @@ import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Facade repository for psychology test submissions (TAT, WAT, SRT, SDT).
@@ -19,8 +17,7 @@ import javax.inject.Singleton
  *
  * This class now serves as a unified API for psychology tests.
  */
-@Singleton
-class PsychTestSubmissionRepository @Inject constructor(
+class PsychTestSubmissionRepository(
     private val tatRepo: TATSubmissionRepository,
     private val watRepo: WATSubmissionRepository,
     private val srtRepo: SRTSubmissionRepository,

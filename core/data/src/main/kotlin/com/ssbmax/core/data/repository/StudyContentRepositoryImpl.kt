@@ -8,8 +8,6 @@ import com.ssbmax.shared.domain.model.TopicContent
 import com.ssbmax.shared.domain.repository.StudyContentRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository for study content with cloud + local fallback
@@ -25,8 +23,7 @@ import javax.inject.Singleton
  * - Cost optimization: Cache-first strategy
  * - Instant rollback: Disable cloud instantly
  */
-@Singleton
-class StudyContentRepositoryImpl @Inject constructor(
+class StudyContentRepositoryImpl(
     private val firestoreSource: FirestoreContentSource
 ) : StudyContentRepository {
     

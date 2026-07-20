@@ -3,8 +3,6 @@ package com.ssbmax.ui.tests.gto.common
 import com.ssbmax.shared.domain.model.gto.GTOTestType
 import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.utils.ErrorLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for enforcing sequential access to GTO tests
@@ -21,8 +19,7 @@ import javax.inject.Singleton
  * 
  * Users must complete each test before accessing the next one.
  */
-@Singleton
-class GTOSequentialAccessManager @Inject constructor(
+class GTOSequentialAccessManager(
     private val gtoRepository: GTORepository
 ) {
     

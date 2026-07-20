@@ -12,16 +12,13 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository for SRT (Situation Reaction Test) submissions.
  * Extracted from PsychTestSubmissionRepository during Phase 2 refactoring.
  * Adheres to 300-line limit and single responsibility principle.
  */
-@Singleton
-class SRTSubmissionRepository @Inject constructor() {
+class SRTSubmissionRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")

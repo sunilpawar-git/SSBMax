@@ -4,8 +4,6 @@ import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Facade repository for personal test submissions (PIQ, OIR, PPDT).
@@ -14,8 +12,7 @@ import javax.inject.Singleton
  *   - [OIRPersonalSubmissionDataSource]
  *   - [PIQPersonalSubmissionDataSource]
  */
-@Singleton
-class PersonalTestSubmissionRepository @Inject constructor(
+class PersonalTestSubmissionRepository(
     private val ppdtDataSource: PPDTPersonalSubmissionDataSource,
     private val oirDataSource: OIRPersonalSubmissionDataSource,
     private val piqDataSource: PIQPersonalSubmissionDataSource,

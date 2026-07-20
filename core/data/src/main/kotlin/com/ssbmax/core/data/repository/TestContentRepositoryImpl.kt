@@ -8,16 +8,13 @@ import com.ssbmax.shared.domain.model.CacheStatus
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Implementation of TestContentRepository
  * Fetches test content from Firestore with in-memory caching
  * Never persists content to local storage to prevent APK sideloading
  */
-@Singleton
-class TestContentRepositoryImpl @Inject constructor(
+class TestContentRepositoryImpl(
     private val firestore: FirebaseFirestore,
     private val oirCacheManager: OIRQuestionCacheManager,
     private val watWordCacheManager: WATWordCacheManager,

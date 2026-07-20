@@ -10,15 +10,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firebase implementation of StudyProgressRepository
  * Stores user study progress and session tracking in Firestore
  */
-@Singleton
-class StudyProgressRepositoryImpl @Inject constructor(
+class StudyProgressRepositoryImpl(
     private val firestore: FirebaseFirestore
 ) : StudyProgressRepository {
 

@@ -6,8 +6,6 @@ import com.ssbmax.shared.domain.model.TATStoryResponse
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Orchestrates the TAT analysis pipeline: sets ANALYZING status before enqueuing
@@ -15,8 +13,7 @@ import javax.inject.Singleton
  * per-story work in bounded batches rather than a single 12-way fan-out so Gemini
  * isn't hit with every multimodal call at once (Phase 4 fix).
  */
-@Singleton
-class TATAnalysisPipelineOrchestrator @Inject constructor(
+class TATAnalysisPipelineOrchestrator(
     private val submissionRepository: SubmissionRepository,
     private val workManager: WorkManager,
     private val workPlanner: TATAnalysisWorkPlanner

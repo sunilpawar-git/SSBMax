@@ -9,8 +9,6 @@ import com.ssbmax.core.data.remote.SubmissionConstants
 import com.ssbmax.core.data.remote.mapper.PsychTestMapper
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Base Repository for Psychology Tests.
@@ -18,8 +16,7 @@ import javax.inject.Singleton
  * 
  * Part of the Refactoring Phase 2 (Split PsychTestSubmissionRepository).
  */
-@Singleton
-open class PsychBaseRepository @Inject constructor() {
+open class PsychBaseRepository {
     
     protected val firestore = FirebaseFirestore.getInstance()
     protected val submissionsCollection = firestore.collection("submissions")

@@ -13,11 +13,8 @@ import com.ssbmax.shared.domain.service.ResponseAnalysis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class GeminiAIService @Inject constructor(
+class GeminiAIService(
     private val apiKey: String
 ) : AIService {
 

@@ -12,8 +12,6 @@ import com.ssbmax.shared.domain.model.interview.QuestionCacheType
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Clock
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -22,8 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  * Collections: question_cache, generic_questions, question_usage
  * @see QuestionCacheMappers for data conversion
  */
-@Singleton
-class FirestoreQuestionCacheRepository @Inject constructor(
+class FirestoreQuestionCacheRepository(
     private val firestore: FirebaseFirestore
 ) : QuestionCacheRepository {
 

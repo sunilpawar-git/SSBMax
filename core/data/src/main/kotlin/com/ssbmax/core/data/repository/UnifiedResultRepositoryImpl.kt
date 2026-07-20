@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Implementation of UnifiedResultRepository
@@ -23,8 +21,7 @@ import javax.inject.Singleton
  * - GTO tests (GD, GPE, Lecturette)
  * - Psychology tests (future)
  */
-@Singleton
-class UnifiedResultRepositoryImpl @Inject constructor(
+class UnifiedResultRepositoryImpl(
     private val interviewRepository: InterviewRepository,
     private val gtoRepository: GTORepository
 ) : UnifiedResultRepository {

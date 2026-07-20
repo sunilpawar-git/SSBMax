@@ -5,8 +5,6 @@ import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manages adaptive difficulty progression based on user performance
@@ -17,8 +15,7 @@ import javax.inject.Singleton
  * - If accuracy >= 80% on MEDIUM after 10 attempts → Progress to HARD
  * - Always serve questions at current difficulty level
  */
-@Singleton
-class DifficultyProgressionManager @Inject constructor(
+class DifficultyProgressionManager(
     private val performanceDao: UserPerformanceDao
 ) {
     companion object {

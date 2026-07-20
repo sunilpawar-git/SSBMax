@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -22,7 +21,7 @@ import kotlin.time.Duration.Companion.minutes
  * 2. Sync with remote in background
  * 3. Update cache with remote data
  */
-class TestRepositoryImpl @Inject constructor(
+class TestRepositoryImpl(
     private val localDataSource: TestResultDao
 ) : TestRepository {
     

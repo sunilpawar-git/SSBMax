@@ -8,8 +8,6 @@ import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
 import com.ssbmax.shared.domain.model.GenderTag
 import com.ssbmax.shared.domain.model.TATQuestion
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manages the 167-image TAT pool in Room.
@@ -19,8 +17,7 @@ import javax.inject.Singleton
  * - Card 12 is the programmatic blank card — never stored in Room.
  * - 24h TTL gate mirrors PPDT: at most one Firestore version check per user per day.
  */
-@Singleton
-class TATImageCacheManager @Inject constructor(
+class TATImageCacheManager(
     private val dao: TATImageCacheDao,
     private val firestore: FirebaseFirestore
 ) {

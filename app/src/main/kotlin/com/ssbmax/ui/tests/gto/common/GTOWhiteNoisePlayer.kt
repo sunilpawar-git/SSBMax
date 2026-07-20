@@ -13,10 +13,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import com.ssbmax.R
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.random.Random
 
 /**
@@ -29,9 +26,8 @@ import kotlin.random.Random
  * Purpose: Creates realistic test conditions to help candidates
  * practice focusing and communicating under distracting conditions.
  */
-@Singleton
-class GTOWhiteNoisePlayer @Inject constructor(
-    @ApplicationContext private val context: Context
+class GTOWhiteNoisePlayer(
+    private val context: Context
 ) {
     private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false

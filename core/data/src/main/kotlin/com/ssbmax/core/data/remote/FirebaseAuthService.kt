@@ -13,22 +13,18 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.UserRole
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firebase Authentication Service
  * Handles Google Sign-In and Firebase Auth operations
  */
-@Singleton
 @Suppress("DEPRECATION")
-class FirebaseAuthService @Inject constructor(
-    @ApplicationContext private val context: Context
+class FirebaseAuthService(
+    private val context: Context
 ) {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()

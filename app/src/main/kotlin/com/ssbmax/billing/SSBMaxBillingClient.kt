@@ -1,7 +1,5 @@
 package com.ssbmax.billing
 
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * SSBMax Billing Client
@@ -18,8 +16,7 @@ import javax.inject.Singleton
  *
  * @see com.ssbmax.subscription.SubscriptionManager for current subscription logic
  */
-@Singleton
-class SSBMaxBillingClient @Inject constructor() {
+class SSBMaxBillingClient {
 
     /**
      * Initializes the billing client connection.

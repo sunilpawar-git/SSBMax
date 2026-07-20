@@ -13,15 +13,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore User Repository
  * Manages user profiles in Firestore
  */
-@Singleton
-class FirestoreUserRepository @Inject constructor() {
+class FirestoreUserRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val usersCollection = firestore.collection("users")

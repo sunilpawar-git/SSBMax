@@ -2,15 +2,12 @@ package com.ssbmax.core.data.remote
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firebase Initializer
  * Configures Firebase services for optimal performance
  */
-@Singleton
-class FirebaseInitializer @Inject constructor() {
+class FirebaseInitializer {
 
     init {
         initializeFirestore()

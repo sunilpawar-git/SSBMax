@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.ssbmax.shared.domain.model.TestType
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Centralized security event logger for detecting and tracking suspicious activity
@@ -41,8 +39,7 @@ import javax.inject.Singleton
  * REQUIRED IMPLEMENTATION PATTERN:
  * ────────────────────────────────────────────────────────────────────────────
  * 
- * @HiltViewModel
- * class [TestType]ViewModel @Inject constructor(
+ * class [TestType]ViewModel(
  *     private val observeCurrentUser: ObserveCurrentUserUseCase,
  *     private val subscriptionManager: SubscriptionManager,
  *     private val difficultyManager: DifficultyProgressionManager,
@@ -133,8 +130,7 @@ import javax.inject.Singleton
  * See: app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt
  * ═══════════════════════════════════════════════════════════════════════════
  */
-@Singleton
-class SecurityEventLogger @Inject constructor(
+class SecurityEventLogger(
     private val firebaseAnalytics: FirebaseAnalytics
 ) {
     

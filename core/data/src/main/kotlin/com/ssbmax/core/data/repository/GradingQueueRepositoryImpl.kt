@@ -12,15 +12,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore implementation of GradingQueueRepository.
  * Provides real-time updates of grading queue and statistics.
  */
-@Singleton
-class GradingQueueRepositoryImpl @Inject constructor(
+class GradingQueueRepositoryImpl(
     private val firestore: FirebaseFirestore
 ) : GradingQueueRepository {
 

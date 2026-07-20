@@ -27,8 +27,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore implementation of InterviewRepository
@@ -43,8 +41,7 @@ import javax.inject.Singleton
  * - `interview_results`: Final assessment results
  * - `interview_questions`: Temporary question storage during session
  */
-@Singleton
-class FirestoreInterviewRepository @Inject constructor(
+class FirestoreInterviewRepository(
     private val firestore: FirebaseFirestore,
     private val questionCacheRepository: QuestionCacheRepository,
     private val questionGenerator: InterviewQuestionGenerator,

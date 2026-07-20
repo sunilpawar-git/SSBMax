@@ -1,8 +1,6 @@
 package com.ssbmax.core.data.repository.interview
 
 import android.util.Log
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Mapper for converting PIQ data to AI-friendly formats
@@ -16,8 +14,7 @@ import javax.inject.Singleton
  * - Derives insights from data (e.g., urban/rural, family context)
  * - Identifies rich areas for personalized questioning
  */
-@Singleton
-class PIQDataMapper @Inject constructor() {
+class PIQDataMapper {
 
     companion object {
         private const val TAG = "PIQDataMapper"

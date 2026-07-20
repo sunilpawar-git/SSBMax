@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.Locale
 import java.util.UUID
-import javax.inject.Inject
 
 /**
  * Android's built-in Text-to-Speech implementation
@@ -25,7 +24,7 @@ import javax.inject.Inject
  *
  * @param context Application context for TTS initialization
  */
-class AndroidTTSService @Inject constructor(
+class AndroidTTSService(
     private val context: Context
 ) : TTSService {
 

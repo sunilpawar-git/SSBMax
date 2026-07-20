@@ -6,15 +6,12 @@ import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.entity.CachedGTOTaskEntity
 import com.ssbmax.core.data.local.entity.GTOBatchMetadataEntity
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for GTO task progressive caching
  * Follows the same architecture as other test types
  */
-@Singleton
-class GTOTaskCacheManager @Inject constructor(
+class GTOTaskCacheManager(
     private val dao: GTOTaskCacheDao,
     private val firestore: FirebaseFirestore
 ) {

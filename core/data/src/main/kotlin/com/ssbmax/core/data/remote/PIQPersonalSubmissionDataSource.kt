@@ -6,15 +6,12 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.ssbmax.shared.domain.model.*
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Data source for PIQ personal test submissions.
  * Handles Firestore CRUD for PIQSubmission documents.
  */
-@Singleton
-class PIQPersonalSubmissionDataSource @Inject constructor() {
+class PIQPersonalSubmissionDataSource {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")

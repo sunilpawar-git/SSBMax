@@ -8,15 +8,12 @@ import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.shared.domain.model.SRTCategory
 import com.ssbmax.shared.domain.model.SRTSituation
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for SRT situation progressive caching
  * Follows the same architecture as OIR and WAT
  */
-@Singleton
-class SRTSituationCacheManager @Inject constructor(
+class SRTSituationCacheManager(
     private val dao: SRTSituationCacheDao,
     private val firestore: FirebaseFirestore
 ) {

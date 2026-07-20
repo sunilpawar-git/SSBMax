@@ -6,8 +6,6 @@ import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore Submission Repository Facade
@@ -21,8 +19,7 @@ import javax.inject.Singleton
  *
  * Refactored from monolithic 1,900+ lines to pure facade.
  */
-@Singleton
-class FirestoreSubmissionRepository @Inject constructor(
+class FirestoreSubmissionRepository(
     private val commonRepo: CommonSubmissionRepository,
     private val archiveRepo: SubmissionArchiveRepository,
     private val gtoRepo: GTOSubmissionRepository,

@@ -8,8 +8,6 @@ import com.ssbmax.core.data.local.entity.CachedGPEImageEntity
 import com.ssbmax.core.data.local.entity.GPEBatchMetadataEntity
 import com.ssbmax.shared.domain.model.GPEQuestion
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for GPE (Group Planning Exercise) image progressive caching
@@ -18,8 +16,7 @@ import javax.inject.Singleton
  * Note: This caches image metadata and URLs. Actual image files can be
  * downloaded on-demand using Firebase Storage or Coil's caching.
  */
-@Singleton
-class GPEImageCacheManager @Inject constructor(
+class GPEImageCacheManager(
     private val dao: GPEImageCacheDao,
     private val firestore: FirebaseFirestore,
     private val gson: Gson

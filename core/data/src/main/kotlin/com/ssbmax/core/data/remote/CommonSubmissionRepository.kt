@@ -9,8 +9,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository for common submission operations.
@@ -18,8 +16,7 @@ import javax.inject.Singleton
  * 
  * Extracted from FirestoreSubmissionRepository during Phase 5 refactoring.
  */
-@Singleton
-class CommonSubmissionRepository @Inject constructor() {
+class CommonSubmissionRepository {
     
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")

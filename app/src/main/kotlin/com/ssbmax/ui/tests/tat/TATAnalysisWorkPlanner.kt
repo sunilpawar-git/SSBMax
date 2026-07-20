@@ -9,8 +9,6 @@ import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
 import com.ssbmax.workers.TATStoryAnalysisWorker
 import com.ssbmax.workers.TATSynthesisWorker
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Bounded-concurrency work plan for the TAT analysis pipeline: story-analysis
@@ -22,8 +20,7 @@ data class TATAnalysisWorkPlan(
     val synthesisRequest: OneTimeWorkRequest
 )
 
-@Singleton
-class TATAnalysisWorkPlanner @Inject constructor() {
+class TATAnalysisWorkPlanner {
 
     companion object {
         const val BATCH_SIZE = 3

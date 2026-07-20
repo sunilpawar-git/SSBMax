@@ -9,12 +9,9 @@ import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 import com.ssbmax.shared.domain.model.CacheStatus
 import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.shared.domain.model.OIRQuestionType
-import com.ssbmax.core.data.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manages local caching of OIR questions from Firestore.
@@ -31,13 +28,12 @@ import javax.inject.Singleton
  *   Phase 1 (blocking): batches 1-4 — enough for the first test.
  *   Phase 2 (background): batches 5..batchCount — downloaded while the user takes the test.
  */
-@Singleton
-class OIRQuestionCacheManager @Inject constructor(
+class OIRQuestionCacheManager(
     private val firestore: FirebaseFirestore,
     private val cacheDao: OIRQuestionCacheDao,
     private val gson: Gson,
     private val selector: OIRQuestionSelector,
-    @ApplicationScope private val backgroundScope: CoroutineScope
+    private val backgroundScope: CoroutineScope
 ) {
     companion object {
         private const val TAG                  = "OIRCacheManager"

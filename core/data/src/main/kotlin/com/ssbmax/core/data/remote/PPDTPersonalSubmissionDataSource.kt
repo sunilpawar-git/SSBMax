@@ -10,15 +10,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Data source for PPDT personal test submissions.
  * Handles Firestore CRUD for PPDTSubmission documents.
  */
-@Singleton
-class PPDTPersonalSubmissionDataSource @Inject constructor() {
+class PPDTPersonalSubmissionDataSource {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")

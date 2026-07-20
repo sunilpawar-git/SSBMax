@@ -12,18 +12,14 @@ import com.ssbmax.MainActivity
 import com.ssbmax.R
 import com.ssbmax.utils.DeepLinkParser
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Helper class for sending local notifications
  *
  * Used by background workers to notify users when async operations complete.
  */
-@Singleton
-class NotificationHelper @Inject constructor(
-    @ApplicationContext private val context: Context
+class NotificationHelper(
+    private val context: Context
 ) {
 
     companion object {

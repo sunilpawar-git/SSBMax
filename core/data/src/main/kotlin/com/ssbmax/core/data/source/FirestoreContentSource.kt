@@ -11,8 +11,6 @@ import com.ssbmax.shared.domain.model.CloudStudyMaterial
 import com.ssbmax.shared.domain.model.ContentVersion
 import com.ssbmax.shared.domain.model.TopicContent
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore content source with aggressive caching
@@ -28,8 +26,7 @@ import javax.inject.Singleton
  * - Subsequent reads: FREE (from cache)
  * - Cache persists for 7 days
  */
-@Singleton
-class FirestoreContentSource @Inject constructor(
+class FirestoreContentSource(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
     private val metrics: ContentMetrics

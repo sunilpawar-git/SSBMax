@@ -7,13 +7,12 @@ import com.ssbmax.shared.domain.repository.TestProgressRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import javax.inject.Inject
 
 /**
  * Implementation of TestProgressRepository
  * Aggregates test submissions to calculate progress
  */
-class TestProgressRepositoryImpl @Inject constructor(
+class TestProgressRepositoryImpl(
     private val firestore: FirebaseFirestore
 ) : TestProgressRepository {
     

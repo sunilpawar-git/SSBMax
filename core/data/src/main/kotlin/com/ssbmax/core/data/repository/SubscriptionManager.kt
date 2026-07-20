@@ -16,8 +16,6 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manages subscription limits and test usage tracking
@@ -33,8 +31,7 @@ import javax.inject.Singleton
  * See: docs/SECURITY_CHECKLIST.md for complete implementation guide
  * Reference: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt
  */
-@Singleton
-class SubscriptionManager @Inject constructor(
+class SubscriptionManager(
     private val testUsageDao: TestUsageDao,
     private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository,
     private val firestore: FirebaseFirestore,

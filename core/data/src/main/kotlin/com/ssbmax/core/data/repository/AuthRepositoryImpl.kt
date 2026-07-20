@@ -3,7 +3,6 @@ package com.ssbmax.core.data.repository
 import android.content.Intent
 import android.util.Log
 import com.google.firebase.auth.FirebaseUser
-import com.ssbmax.core.data.di.ApplicationScope
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirestoreUserRepository
 import com.ssbmax.core.data.util.MemoryLeakTracker
@@ -17,8 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withTimeout
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firebase implementation of AuthRepository
@@ -32,11 +29,10 @@ import javax.inject.Singleton
  * - Stops collecting 5 seconds after last subscriber detaches
  * - Eliminates memory leak from unbound CoroutineScope
  */
-@Singleton
-class AuthRepositoryImpl @Inject constructor(
+class AuthRepositoryImpl(
     private val firebaseAuthService: FirebaseAuthService,
     private val firestoreUserRepository: FirestoreUserRepository,
-    @ApplicationScope private val applicationScope: CoroutineScope
+    private val applicationScope: CoroutineScope
 ) : AuthRepository {
 
     init {

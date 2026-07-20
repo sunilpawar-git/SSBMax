@@ -3,15 +3,12 @@ package com.ssbmax.admin
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Admin tool for managing Firestore content
  * Use this for bulk updates, content edits, and content management
  */
-@Singleton
-class AdminContentManager @Inject constructor(
+class AdminContentManager(
     private val firestore: FirebaseFirestore
 ) {
     

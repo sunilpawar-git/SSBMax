@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Firestore implementation of GTORepository
@@ -29,8 +27,7 @@ import javax.inject.Singleton
  * - `gto_submissions/{submissionId}`: User submissions
  * - `user_gto_progress/{userId}`: User progress tracking
  */
-@Singleton
-class FirestoreGTORepository @Inject constructor(
+class FirestoreGTORepository(
     private val firestore: FirebaseFirestore,
     private val taskCacheManager: GTOTaskCacheManager,
     private val testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository

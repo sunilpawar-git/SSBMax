@@ -10,8 +10,6 @@ import com.ssbmax.shared.domain.model.OIRQuestionDistribution
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.QuestionDifficulty
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
-import javax.inject.Inject
-import javax.inject.Singleton
 
 private const val TAG = "OIRQuestionSelector"
 
@@ -22,8 +20,7 @@ private const val TAG = "OIRQuestionSelector"
  * Extracted from [OIRQuestionCacheManager] to respect the 300-line file limit
  * and give this concern a clear single responsibility.
  */
-@Singleton
-class OIRQuestionSelector @Inject constructor(
+class OIRQuestionSelector(
     private val cacheDao: OIRQuestionCacheDao,
     private val gson: Gson
 ) {

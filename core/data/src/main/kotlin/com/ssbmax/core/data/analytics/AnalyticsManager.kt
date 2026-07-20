@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Analytics Manager for tracking user events and conversions
@@ -17,8 +15,7 @@ import javax.inject.Singleton
  * - Feature usage patterns
  * - User engagement metrics
  */
-@Singleton
-class AnalyticsManager @Inject constructor(
+class AnalyticsManager(
     private val firebaseAnalytics: FirebaseAnalytics,
     private val firebaseAuth: FirebaseAuth
 ) {

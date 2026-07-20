@@ -10,14 +10,11 @@ import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Implementation of SubscriptionRepository using Firebase Firestore
  */
-@Singleton
-class SubscriptionRepositoryImpl @Inject constructor(
+class SubscriptionRepositoryImpl(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : SubscriptionRepository {

@@ -1,8 +1,6 @@
 package com.ssbmax.core.data.metrics
 
 import java.util.concurrent.atomic.AtomicInteger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Tracks content fetches to estimate Firestore costs
@@ -13,8 +11,7 @@ import javax.inject.Singleton
  * - Call recordCacheHit() when serving from cache
  * - Call getSnapshot() to see cost projections
  */
-@Singleton
-class ContentMetrics @Inject constructor() {
+class ContentMetrics {
     
     private val _firestoreReads = AtomicInteger(0)
     private val _storageDownloads = AtomicInteger(0)

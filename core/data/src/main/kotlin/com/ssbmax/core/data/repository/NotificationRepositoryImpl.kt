@@ -11,20 +11,16 @@ import com.ssbmax.shared.domain.model.FCMToken
 import com.ssbmax.shared.domain.model.NotificationPreferences
 import com.ssbmax.shared.domain.model.SSBMaxNotification
 import com.ssbmax.shared.domain.repository.NotificationRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Implementation of NotificationRepository
  * Manages FCM tokens and notifications using Firestore and Room
  */
-@Singleton
-class NotificationRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+class NotificationRepositoryImpl(
+    private val context: Context,
     private val firestore: FirebaseFirestore,
     private val firebaseMessaging: FirebaseMessaging,
     private val notificationDao: NotificationDao

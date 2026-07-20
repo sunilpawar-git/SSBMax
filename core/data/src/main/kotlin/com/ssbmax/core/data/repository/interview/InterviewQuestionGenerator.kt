@@ -11,10 +11,7 @@ import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.model.interview.QuestionSource
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.service.AIService
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Generates interview questions using hybrid caching strategy
@@ -28,9 +25,8 @@ import javax.inject.Singleton
  * 3. Cache the AI-generated questions for future use (30-day expiration)
  * 4. Fall back to mock questions only if AI fails (development only)
  */
-@Singleton
-class InterviewQuestionGenerator @Inject constructor(
-    @ApplicationContext private val context: Context,
+class InterviewQuestionGenerator(
+    private val context: Context,
     private val questionCacheRepository: QuestionCacheRepository,
     private val aiService: AIService,
     private val submissionRepository: SubmissionRepository,

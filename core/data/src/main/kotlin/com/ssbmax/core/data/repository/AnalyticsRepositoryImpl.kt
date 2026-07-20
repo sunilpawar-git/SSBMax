@@ -10,16 +10,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Implementation of AnalyticsRepository
  * Aggregates performance data from UserPerformanceDao
  * Combines with UserProfile for streak information
  */
-@Singleton
-class AnalyticsRepositoryImpl @Inject constructor(
+class AnalyticsRepositoryImpl(
     private val performanceDao: UserPerformanceDao,
     private val userProfileRepository: UserProfileRepository,
     private val firebaseAuth: FirebaseAuth

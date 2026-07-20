@@ -1,7 +1,6 @@
 package com.ssbmax.utils.tts
 
 import kotlinx.coroutines.flow.SharedFlow
-import javax.inject.Qualifier
 
 /**
  * Interface for Text-to-Speech services
@@ -65,10 +64,3 @@ interface TTSService {
      */
     val events: SharedFlow<TTSEvent>
 }
-
-/**
- * Qualifier for Android TTS implementation
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class AndroidTTS

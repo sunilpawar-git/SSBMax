@@ -5,8 +5,6 @@ import com.google.firebase.firestore.SetOptions
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository for GTO test submissions.
@@ -14,8 +12,7 @@ import javax.inject.Singleton
  * 
  * Extracted from FirestoreSubmissionRepository during Phase 7 refactoring.
  */
-@Singleton
-class GTOSubmissionRepository @Inject constructor() {
+class GTOSubmissionRepository {
     
     private val firestore = FirebaseFirestore.getInstance()
     private val submissionsCollection = firestore.collection("submissions")

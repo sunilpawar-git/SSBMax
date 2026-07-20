@@ -7,11 +7,8 @@ import com.ssbmax.shared.domain.repository.TestSessionRepository
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class TestSessionManagerImpl @Inject constructor(
+class TestSessionManagerImpl(
     private val firestore: FirebaseFirestore
 ) : TestSessionRepository {
 

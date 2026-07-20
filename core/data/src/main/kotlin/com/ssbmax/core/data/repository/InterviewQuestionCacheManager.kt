@@ -6,15 +6,12 @@ import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedInterviewQuestionEntity
 import com.ssbmax.core.data.local.entity.InterviewBatchMetadataEntity
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for Interview question progressive caching
  * Follows the same architecture as other test types
  */
-@Singleton
-class InterviewQuestionCacheManager @Inject constructor(
+class InterviewQuestionCacheManager(
     private val dao: InterviewQuestionCacheDao,
     private val firestore: FirebaseFirestore
 ) {

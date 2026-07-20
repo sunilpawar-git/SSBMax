@@ -3,8 +3,6 @@ package com.ssbmax.core.data.remote
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Repository for submission archival operations.
@@ -12,8 +10,7 @@ import javax.inject.Singleton
  * 
  * Extracted from FirestoreSubmissionRepository during Phase 6 refactoring.
  */
-@Singleton
-class SubmissionArchiveRepository @Inject constructor() {
+class SubmissionArchiveRepository {
     
     private val firestore = FirebaseFirestore.getInstance()
     

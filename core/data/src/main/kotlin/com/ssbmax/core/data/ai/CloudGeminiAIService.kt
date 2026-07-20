@@ -18,8 +18,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Cloud-based Gemini AI service implementation
@@ -37,8 +35,7 @@ import javax.inject.Singleton
  * - analyzeInterviewResponse: Analyze user's interview response
  * - generateInterviewQuestions: Generate PIQ-based questions
  */
-@Singleton
-class CloudGeminiAIService @Inject constructor() : AIService {
+class CloudGeminiAIService : AIService {
 
     companion object {
         private const val TAG = "CloudGeminiAI"

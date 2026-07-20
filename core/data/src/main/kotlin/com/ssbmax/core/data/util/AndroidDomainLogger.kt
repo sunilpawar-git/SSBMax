@@ -2,8 +2,6 @@ package com.ssbmax.core.data.util
 
 import android.util.Log
 import com.ssbmax.shared.domain.util.DomainLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Android implementation of DomainLogger using android.util.Log
@@ -13,8 +11,7 @@ import javax.inject.Singleton
  * 
  * Injected into domain layer use cases via Hilt dependency injection.
  */
-@Singleton
-class AndroidDomainLogger @Inject constructor() : DomainLogger {
+class AndroidDomainLogger : DomainLogger {
     override fun d(tag: String, message: String) {
         Log.d(tag, message)
     }

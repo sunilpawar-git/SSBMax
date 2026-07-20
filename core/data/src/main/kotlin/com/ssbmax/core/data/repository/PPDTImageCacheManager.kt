@@ -11,15 +11,12 @@ import com.ssbmax.shared.domain.model.GenderTag
 import com.ssbmax.shared.domain.model.PPDTImageContext
 import com.ssbmax.shared.domain.model.PPDTQuestion
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for PPDT image progressive caching.
  * Phase 6: imageContextJson + genderTag now stored per-entity; gender filter is live.
  */
-@Singleton
-class PPDTImageCacheManager @Inject constructor(
+class PPDTImageCacheManager(
     private val dao: PPDTImageCacheDao,
     private val firestore: FirebaseFirestore
 ) {

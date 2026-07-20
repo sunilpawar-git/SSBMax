@@ -7,15 +7,12 @@ import com.ssbmax.core.data.local.entity.CachedWATWordEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 import com.ssbmax.shared.domain.model.WATWord
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manager for WAT word progressive caching
  * Follows the same architecture as OIRQuestionCacheManager
  */
-@Singleton
-class WATWordCacheManager @Inject constructor(
+class WATWordCacheManager(
     private val dao: WATWordCacheDao,
     private val firestore: FirebaseFirestore
 ) {
