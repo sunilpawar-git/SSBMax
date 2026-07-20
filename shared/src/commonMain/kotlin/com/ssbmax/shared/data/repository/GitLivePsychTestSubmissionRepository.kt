@@ -1,25 +1,16 @@
 package com.ssbmax.shared.data.repository
 
-import com.ssbmax.shared.domain.model.SDTInstructorScore
-import com.ssbmax.shared.domain.model.SDTQuestionResponse
-import com.ssbmax.shared.domain.model.SDTSubmission
-import com.ssbmax.shared.domain.model.SRTCategory
-import com.ssbmax.shared.domain.model.SRTInstructorScore
-import com.ssbmax.shared.domain.model.SRTSituationResponse
-import com.ssbmax.shared.domain.model.SRTSubmission
 import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TATInstructorScore
 import com.ssbmax.shared.domain.model.TATStoryResponse
 import com.ssbmax.shared.domain.model.TATSubmission
 import com.ssbmax.shared.domain.model.TestType
-import com.ssbmax.shared.domain.model.WATInstructorScore
-import com.ssbmax.shared.domain.model.WATWordResponse
+import com.ssbmax.shared.domain.model.SDTSubmission
+import com.ssbmax.shared.domain.model.SRTSubmission
 import com.ssbmax.shared.domain.model.WATSubmission
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
-import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Direction
-import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -33,6 +24,11 @@ import kotlinx.serialization.Serializable
  * `PsychTestMapper`/`OLQMapper`). Merged into one class here — Koin doesn't need the Hilt
  * DI-boundary reason the Android originals were split for (300-line-file limit per class), same
  * merge rationale as the 6th slice's `StudyContentRepositoryImpl`+`FirestoreContentSource` merge.
+ *
+ * TAT stays directly on this facade; WAT/SRT/SDT are delegated to [GitLiveWATSubmissionDelegate]/
+ * [GitLiveSRTSubmissionDelegate]/[GitLiveSDTSubmissionDelegate] (all sharing the same
+ * [GitLiveOlqResultStore]) — a later structural split of this originally-single class, done purely
+ * to keep every file under the repo's 300-line-per-file limit. No behavior changed by that split.
  *
  * Same "submissions"/"psych_results" collections as the Android original. One real, faithfully
  * preserved quirk: the Android `toFirestoreMap()` functions duplicate `id`/`userId`/`testId`/
@@ -49,10 +45,15 @@ import kotlinx.serialization.Serializable
  * originals (see the domain `SubmissionRepository` interface, which only declares
  * `finalizeTATAnalysisResult` for TAT).
  */
-class GitLivePsychTestSubmissionRepository {
+class GitLivePsychTestSubmissionRepository internal constructor(
+    private val store: GitLiveOlqResultStore = GitLiveOlqResultStore(),
+    private val watDelegate: GitLiveWATSubmissionDelegate = GitLiveWATSubmissionDelegate(store),
+    private val srtDelegate: GitLiveSRTSubmissionDelegate = GitLiveSRTSubmissionDelegate(store),
+    private val sdtDelegate: GitLiveSDTSubmissionDelegate = GitLiveSDTSubmissionDelegate(store)
+) {
 
-    private val submissionsCollection = Firebase.firestore.collection(SUBMISSIONS_COLLECTION)
-    private val psychResultsCollection = Firebase.firestore.collection(PSYCH_RESULTS_COLLECTION)
+    private val submissionsCollection get() = store.submissionsCollection
+    private val psychResultsCollection get() = store.psychResultsCollection
 
     // ===========================
     // TAT
@@ -98,9 +99,9 @@ class GitLivePsychTestSubmissionRepository {
 
     suspend fun getLatestTATSubmission(userId: String): Result<TATSubmission?> = try {
         val snapshot = submissionsCollection
-            .where { FIELD_USER_ID equalTo userId }
-            .where { FIELD_TEST_TYPE equalTo TestType.TAT.name }
-            .orderBy(FIELD_SUBMITTED_AT, Direction.DESCENDING)
+            .where { PSYCH_FIELD_USER_ID equalTo userId }
+            .where { PSYCH_FIELD_TEST_TYPE equalTo TestType.TAT.name }
+            .orderBy(PSYCH_FIELD_SUBMITTED_AT, Direction.DESCENDING)
             .limit(1)
             .get()
         val doc = snapshot.documents.firstOrNull()
@@ -114,7 +115,7 @@ class GitLivePsychTestSubmissionRepository {
     }
 
     suspend fun updateTATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = try {
-        submissionsCollection.document(submissionId).update("$FIELD_DATA.analysisStatus" to status.name)
+        submissionsCollection.document(submissionId).update("$PSYCH_FIELD_DATA.analysisStatus" to status.name)
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(Exception("Failed to update TAT analysis status: ${e.message}", e))
@@ -134,10 +135,10 @@ class GitLivePsychTestSubmissionRepository {
             psychResultsCollection.document(submissionId).set(olqResult.toDto(userId = userId), merge = true)
 
             submissionsCollection.document(submissionId).update(
-                "$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED,
-                "$FIELD_DATA.resultUpdatedAt" to Clock.System.now().toEpochMilliseconds(),
-                "$FIELD_DATA.hasOlqResult" to true,
-                "$FIELD_DATA.resultSource" to "psych_results"
+                "$PSYCH_FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED,
+                "$PSYCH_FIELD_DATA.resultUpdatedAt" to Clock.System.now().toEpochMilliseconds(),
+                "$PSYCH_FIELD_DATA.hasOlqResult" to true,
+                "$PSYCH_FIELD_DATA.resultSource" to "psych_results"
             )
             Result.success(Unit)
         }
@@ -145,7 +146,9 @@ class GitLivePsychTestSubmissionRepository {
         Result.failure(Exception("Failed to finalize TAT analysis result: ${e.message}", e))
     }
 
-    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> = getOlqResult(submissionId)
+    suspend fun getTATResult(submissionId: String): Result<OLQAnalysisResult?> = store.getOlqResult(submissionId)
+
+    private val tatRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
 
     fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> =
         submissionsCollection.document(submissionId).snapshots
@@ -161,302 +164,40 @@ class GitLivePsychTestSubmissionRepository {
             .catch { emit(null) }
 
     // ===========================
-    // WAT
+    // WAT (delegated)
     // ===========================
 
-    suspend fun submitWAT(submission: WATSubmission, batchId: String?): Result<String> = try {
-        val doc = SubmissionDocDto(
-            id = submission.id,
-            userId = submission.userId,
-            testId = submission.testId,
-            testType = TestType.WAT.name,
-            status = submission.status.name,
-            submittedAt = submission.submittedAt,
-            gradedByInstructorId = submission.gradedByInstructorId,
-            gradingTimestamp = submission.gradingTimestamp,
-            batchId = batchId,
-            data = WATDataDto(
-                id = submission.id,
-                userId = submission.userId,
-                testId = submission.testId,
-                responses = submission.responses.map { it.toDto() },
-                totalTimeTakenMinutes = submission.totalTimeTakenMinutes,
-                submittedAt = submission.submittedAt,
-                status = submission.status.name,
-                instructorScore = submission.instructorScore?.toDto(),
-                gradedByInstructorId = submission.gradedByInstructorId,
-                gradingTimestamp = submission.gradingTimestamp
-            )
-        )
-        submissionsCollection.document(submission.id).set(doc, merge = true)
-        Result.success(submission.id)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to submit WAT: ${e.message}", e))
-    }
-
-    suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> = try {
-        val snapshot = submissionsCollection.document(submissionId).get()
-        if (!snapshot.exists) Result.success(null)
-        else Result.success(snapshot.data(SubmissionDocDto.serializer(WATDataDto.serializer())).data.toDomain())
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch WAT submission: ${e.message}", e))
-    }
-
-    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> = try {
-        val snapshot = submissionsCollection
-            .where { FIELD_USER_ID equalTo userId }
-            .where { FIELD_TEST_TYPE equalTo TestType.WAT.name }
-            .orderBy(FIELD_SUBMITTED_AT, Direction.DESCENDING)
-            .limit(1)
-            .get()
-        val doc = snapshot.documents.firstOrNull()
-        if (doc == null) {
-            Result.success(null)
-        } else {
-            Result.success(doc.data(SubmissionDocDto.serializer(WATDataDto.serializer())).data.toDomain())
-        }
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch latest WAT submission: ${e.message}", e))
-    }
-
-    suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = try {
-        submissionsCollection.document(submissionId).update("$FIELD_DATA.analysisStatus" to status.name)
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to update WAT status: ${e.message}", e))
-    }
-
-    suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        updateOlqResultTwoStep(submissionId, olqResult)
-
-    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> = getOlqResult(submissionId)
-
-    fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> =
-        submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
-                val dto = snapshot.data(SubmissionDocDto.serializer(WATDataDto.serializer()))
-                val filter = watRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@map null
-                dto.data.toDomain()
-            }
-            .catch { emit(null) }
+    suspend fun submitWAT(submission: WATSubmission, batchId: String?): Result<String> = watDelegate.submitWAT(submission, batchId)
+    suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> = watDelegate.getWATSubmission(submissionId)
+    suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> = watDelegate.getLatestWATSubmission(userId)
+    suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = watDelegate.updateWATAnalysisStatus(submissionId, status)
+    suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> = watDelegate.updateWATOLQResult(submissionId, olqResult)
+    suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> = watDelegate.getWATResult(submissionId)
+    fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> = watDelegate.observeWATSubmission(submissionId)
 
     // ===========================
-    // SRT
+    // SRT (delegated)
     // ===========================
 
-    suspend fun submitSRT(submission: SRTSubmission, batchId: String?): Result<String> = try {
-        val doc = SubmissionDocDto(
-            id = submission.id,
-            userId = submission.userId,
-            testId = submission.testId,
-            testType = TestType.SRT.name,
-            status = submission.status.name,
-            submittedAt = submission.submittedAt,
-            gradedByInstructorId = submission.gradedByInstructorId,
-            gradingTimestamp = submission.gradingTimestamp,
-            batchId = batchId,
-            data = SRTDataDto(
-                id = submission.id,
-                userId = submission.userId,
-                testId = submission.testId,
-                responses = submission.responses.map { it.toDto() },
-                totalTimeTakenMinutes = submission.totalTimeTakenMinutes,
-                submittedAt = submission.submittedAt,
-                status = submission.status.name,
-                instructorScore = submission.instructorScore?.toDto(),
-                gradedByInstructorId = submission.gradedByInstructorId,
-                gradingTimestamp = submission.gradingTimestamp
-            )
-        )
-        submissionsCollection.document(submission.id).set(doc, merge = true)
-        Result.success(submission.id)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to submit SRT: ${e.message}", e))
-    }
-
-    suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> = try {
-        val snapshot = submissionsCollection.document(submissionId).get()
-        if (!snapshot.exists) Result.success(null)
-        else Result.success(snapshot.data(SubmissionDocDto.serializer(SRTDataDto.serializer())).data.toDomain())
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch SRT submission: ${e.message}", e))
-    }
-
-    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> = try {
-        val snapshot = submissionsCollection
-            .where { FIELD_USER_ID equalTo userId }
-            .where { FIELD_TEST_TYPE equalTo TestType.SRT.name }
-            .orderBy(FIELD_SUBMITTED_AT, Direction.DESCENDING)
-            .limit(1)
-            .get()
-        val doc = snapshot.documents.firstOrNull()
-        if (doc == null) {
-            Result.success(null)
-        } else {
-            Result.success(doc.data(SubmissionDocDto.serializer(SRTDataDto.serializer())).data.toDomain())
-        }
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch latest SRT submission: ${e.message}", e))
-    }
-
-    suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = try {
-        submissionsCollection.document(submissionId).update("$FIELD_DATA.analysisStatus" to status.name)
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to update SRT status: ${e.message}", e))
-    }
-
-    suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        updateOlqResultTwoStep(submissionId, olqResult)
-
-    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> = getOlqResult(submissionId)
-
-    fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> =
-        submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
-                val dto = snapshot.data(SubmissionDocDto.serializer(SRTDataDto.serializer()))
-                val filter = srtRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@map null
-                dto.data.toDomain()
-            }
-            .catch { emit(null) }
+    suspend fun submitSRT(submission: SRTSubmission, batchId: String?): Result<String> = srtDelegate.submitSRT(submission, batchId)
+    suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> = srtDelegate.getSRTSubmission(submissionId)
+    suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> = srtDelegate.getLatestSRTSubmission(userId)
+    suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = srtDelegate.updateSRTAnalysisStatus(submissionId, status)
+    suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> = srtDelegate.updateSRTOLQResult(submissionId, olqResult)
+    suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> = srtDelegate.getSRTResult(submissionId)
+    fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> = srtDelegate.observeSRTSubmission(submissionId)
 
     // ===========================
-    // SDT
+    // SDT (delegated)
     // ===========================
 
-    suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> = try {
-        val doc = SubmissionDocDto(
-            id = submission.id,
-            userId = submission.userId,
-            testId = submission.testId,
-            testType = TestType.SD.name,
-            status = submission.status.name,
-            submittedAt = submission.submittedAt,
-            gradedByInstructorId = submission.gradedByInstructorId,
-            gradingTimestamp = submission.gradingTimestamp,
-            batchId = batchId,
-            data = SDTDataDto(
-                id = submission.id,
-                userId = submission.userId,
-                testId = submission.testId,
-                responses = submission.responses.map { it.toDto() },
-                totalTimeTakenMinutes = submission.totalTimeTakenMinutes,
-                submittedAt = submission.submittedAt,
-                status = submission.status.name,
-                instructorScore = submission.instructorScore?.toDto(),
-                gradedByInstructorId = submission.gradedByInstructorId,
-                gradingTimestamp = submission.gradingTimestamp
-            )
-        )
-        submissionsCollection.document(submission.id).set(doc, merge = true)
-        Result.success(submission.id)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to submit SDT: ${e.message}", e))
-    }
-
-    suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> = try {
-        val snapshot = submissionsCollection.document(submissionId).get()
-        if (!snapshot.exists) Result.success(null)
-        else Result.success(snapshot.data(SubmissionDocDto.serializer(SDTDataDto.serializer())).data.toDomain())
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch SDT submission: ${e.message}", e))
-    }
-
-    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> = try {
-        val snapshot = submissionsCollection
-            .where { FIELD_USER_ID equalTo userId }
-            .where { FIELD_TEST_TYPE equalTo TestType.SD.name }
-            .orderBy(FIELD_SUBMITTED_AT, Direction.DESCENDING)
-            .limit(1)
-            .get()
-        val doc = snapshot.documents.firstOrNull()
-        if (doc == null) {
-            Result.success(null)
-        } else {
-            Result.success(doc.data(SubmissionDocDto.serializer(SDTDataDto.serializer())).data.toDomain())
-        }
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to fetch latest SDT submission: ${e.message}", e))
-    }
-
-    suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = try {
-        submissionsCollection.document(submissionId).update("$FIELD_DATA.analysisStatus" to status.name)
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to update SDT status: ${e.message}", e))
-    }
-
-    suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> =
-        updateOlqResultTwoStep(submissionId, olqResult)
-
-    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> = getOlqResult(submissionId)
-
-    fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> =
-        submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
-                val dto = snapshot.data(SubmissionDocDto.serializer(SDTDataDto.serializer()))
-                val filter = sdtRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@map null
-                dto.data.toDomain()
-            }
-            .catch { emit(null) }
-
-    // ===========================
-    // Shared helpers
-    // ===========================
-
-    /** WAT/SRT/SDT's older two-step OLQ write (unlike TAT's atomic `finalizeTATAnalysisResult`). */
-    private suspend fun updateOlqResultTwoStep(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> = try {
-        val submissionDoc = submissionsCollection.document(submissionId).get()
-        // userId is read generically from the top-level envelope, common to every test type's data shape.
-        val userId = submissionDoc.get<String?>(FIELD_USER_ID)
-        if (userId == null) {
-            Result.failure(Exception("Cannot find userId for submission: $submissionId"))
-        } else {
-            psychResultsCollection.document(submissionId).set(olqResult.toDto(userId = userId), merge = true)
-            submissionsCollection.document(submissionId).update("$FIELD_DATA.analysisStatus" to SubmissionConstants.ANALYSIS_STATUS_COMPLETED)
-            Result.success(Unit)
-        }
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to update OLQ result: ${e.message}", e))
-    }
-
-    private suspend fun getOlqResult(submissionId: String): Result<OLQAnalysisResult?> = try {
-        val resultDoc = psychResultsCollection.document(submissionId).get()
-        if (resultDoc.exists) {
-            Result.success(resultDoc.data(OLQAnalysisResultDto.serializer()).toDomain())
-        } else {
-            // Fallback: legacy/transitional documents that only ever wrote to submissions.data.olqResult.
-            // Best-effort — dotted nested-field decode isn't proven against GitLive, so failures here
-            // fall through to "no result" rather than failing the whole call.
-            val olqDto = runCatching {
-                submissionsCollection.document(submissionId).get()
-                    .get<OLQAnalysisResultDto?>("$FIELD_DATA.olqResult")
-            }.getOrNull()
-            Result.success(olqDto?.toDomain())
-        }
-    } catch (e: Exception) {
-        Result.failure(Exception("Failed to get OLQ result: ${e.message}", e))
-    }
-
-    private val tatRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
-    private val watRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
-    private val srtRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
-    private val sdtRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
-
-    private companion object {
-        const val SUBMISSIONS_COLLECTION = "submissions"
-        const val PSYCH_RESULTS_COLLECTION = "psych_results"
-        const val FIELD_USER_ID = "userId"
-        const val FIELD_TEST_TYPE = "testType"
-        const val FIELD_SUBMITTED_AT = "submittedAt"
-        const val FIELD_DATA = "data"
-    }
+    suspend fun submitSDT(submission: SDTSubmission, batchId: String?): Result<String> = sdtDelegate.submitSDT(submission, batchId)
+    suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> = sdtDelegate.getSDTSubmission(submissionId)
+    suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> = sdtDelegate.getLatestSDTSubmission(userId)
+    suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result<Unit> = sdtDelegate.updateSDTAnalysisStatus(submissionId, status)
+    suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result<Unit> = sdtDelegate.updateSDTOLQResult(submissionId, olqResult)
+    suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> = sdtDelegate.getSDTResult(submissionId)
+    fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> = sdtDelegate.observeSDTSubmission(submissionId)
 }
 
 // ===========================
@@ -525,237 +266,6 @@ internal fun TATDataDto.toDomain(): TATSubmission = TATSubmission(
     userId = userId,
     testId = testId,
     stories = stories.map { it.toDomain() },
-    totalTimeTakenMinutes = totalTimeTakenMinutes,
-    submittedAt = submittedAt,
-    status = runCatching { SubmissionStatus.valueOf(status) }.getOrDefault(SubmissionStatus.SUBMITTED_PENDING_REVIEW),
-    instructorScore = instructorScore?.toDomain(),
-    gradedByInstructorId = gradedByInstructorId,
-    gradingTimestamp = gradingTimestamp,
-    analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS,
-    olqResult = olqResult?.toDomain()
-)
-
-// ===========================
-// WAT DTOs
-// ===========================
-
-@Serializable
-internal data class WATDataDto(
-    val id: String = "",
-    val userId: String = "",
-    val testId: String = "",
-    val responses: List<WATResponseDto> = emptyList(),
-    val totalTimeTakenMinutes: Int = 0,
-    val submittedAt: Long = 0L,
-    val status: String = "",
-    val instructorScore: WATInstructorScoreDto? = null,
-    val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null,
-    val analysisStatus: String? = null,
-    val olqResult: OLQAnalysisResultDto? = null
-)
-
-@Serializable
-internal data class WATResponseDto(
-    val wordId: String = "",
-    val word: String = "",
-    val response: String = "",
-    val timeTakenSeconds: Int = 0,
-    val submittedAt: Long = 0L,
-    val isSkipped: Boolean = false
-)
-
-@Serializable
-internal data class WATInstructorScoreDto(
-    val overallScore: Float = 0f,
-    val positivityScore: Float = 0f,
-    val creativityScore: Float = 0f,
-    val speedScore: Float = 0f,
-    val relevanceScore: Float = 0f,
-    val emotionalMaturityScore: Float = 0f,
-    val feedback: String = "",
-    val flaggedResponses: List<String> = emptyList(),
-    val notableResponses: List<String> = emptyList(),
-    val gradedByInstructorId: String = "",
-    val gradedByInstructorName: String = "",
-    val gradedAt: Long = 0L,
-    val agreedWithAI: Boolean = false
-)
-
-internal fun WATWordResponse.toDto() = WATResponseDto(wordId, word, response, timeTakenSeconds, submittedAt, isSkipped)
-internal fun WATResponseDto.toDomain() = WATWordResponse(wordId, word, response, timeTakenSeconds, submittedAt, isSkipped)
-
-internal fun WATInstructorScore.toDto() = WATInstructorScoreDto(
-    overallScore, positivityScore, creativityScore, speedScore, relevanceScore, emotionalMaturityScore,
-    feedback, flaggedResponses, notableResponses, gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-internal fun WATInstructorScoreDto.toDomain() = WATInstructorScore(
-    overallScore, positivityScore, creativityScore, speedScore, relevanceScore, emotionalMaturityScore,
-    feedback, flaggedResponses, notableResponses, gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-internal fun WATDataDto.toDomain(): WATSubmission = WATSubmission(
-    id = id,
-    userId = userId,
-    testId = testId,
-    responses = responses.map { it.toDomain() },
-    totalTimeTakenMinutes = totalTimeTakenMinutes,
-    submittedAt = submittedAt,
-    status = runCatching { SubmissionStatus.valueOf(status) }.getOrDefault(SubmissionStatus.SUBMITTED_PENDING_REVIEW),
-    instructorScore = instructorScore?.toDomain(),
-    gradedByInstructorId = gradedByInstructorId,
-    gradingTimestamp = gradingTimestamp,
-    analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS,
-    olqResult = olqResult?.toDomain()
-)
-
-// ===========================
-// SRT DTOs
-// ===========================
-
-@Serializable
-internal data class SRTDataDto(
-    val id: String = "",
-    val userId: String = "",
-    val testId: String = "",
-    val responses: List<SRTResponseDto> = emptyList(),
-    val totalTimeTakenMinutes: Int = 0,
-    val submittedAt: Long = 0L,
-    val status: String = "",
-    val instructorScore: SRTInstructorScoreDto? = null,
-    val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null,
-    val analysisStatus: String? = null,
-    val olqResult: OLQAnalysisResultDto? = null
-)
-
-@Serializable
-internal data class SRTResponseDto(
-    val situationId: String = "",
-    val situation: String = "",
-    val response: String = "",
-    val charactersCount: Int = 0,
-    val timeTakenSeconds: Int = 0,
-    val submittedAt: Long = 0L,
-    val isSkipped: Boolean = false
-)
-
-@Serializable
-internal data class SRTInstructorScoreDto(
-    val overallScore: Float = 0f,
-    val leadershipScore: Float = 0f,
-    val decisionMakingScore: Float = 0f,
-    val practicalityScore: Float = 0f,
-    val initiativeScore: Float = 0f,
-    val socialResponsibilityScore: Float = 0f,
-    val feedback: String = "",
-    val categoryWiseComments: Map<String, String> = emptyMap(),
-    val flaggedResponses: List<String> = emptyList(),
-    val exemplaryResponses: List<String> = emptyList(),
-    val gradedByInstructorId: String = "",
-    val gradedByInstructorName: String = "",
-    val gradedAt: Long = 0L,
-    val agreedWithAI: Boolean = false
-)
-
-internal fun SRTSituationResponse.toDto() = SRTResponseDto(situationId, situation, response, charactersCount, timeTakenSeconds, submittedAt, isSkipped)
-internal fun SRTResponseDto.toDomain() = SRTSituationResponse(situationId, situation, response, charactersCount, timeTakenSeconds, submittedAt, isSkipped)
-
-internal fun SRTInstructorScore.toDto() = SRTInstructorScoreDto(
-    overallScore, leadershipScore, decisionMakingScore, practicalityScore, initiativeScore, socialResponsibilityScore,
-    feedback, categoryWiseComments.entries.associate { (k, v) -> k.name to v }, flaggedResponses, exemplaryResponses,
-    gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-/** Unparseable category keys are dropped, same defensive behavior as the Android original. */
-internal fun SRTInstructorScoreDto.toDomain() = SRTInstructorScore(
-    overallScore, leadershipScore, decisionMakingScore, practicalityScore, initiativeScore, socialResponsibilityScore,
-    feedback,
-    categoryWiseComments.mapNotNull { (k, v) -> runCatching { SRTCategory.valueOf(k) }.getOrNull()?.let { it to v } }.toMap(),
-    flaggedResponses, exemplaryResponses, gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-internal fun SRTDataDto.toDomain(): SRTSubmission = SRTSubmission(
-    id = id,
-    userId = userId,
-    testId = testId,
-    responses = responses.map { it.toDomain() },
-    totalTimeTakenMinutes = totalTimeTakenMinutes,
-    submittedAt = submittedAt,
-    status = runCatching { SubmissionStatus.valueOf(status) }.getOrDefault(SubmissionStatus.SUBMITTED_PENDING_REVIEW),
-    instructorScore = instructorScore?.toDomain(),
-    gradedByInstructorId = gradedByInstructorId,
-    gradingTimestamp = gradingTimestamp,
-    analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS,
-    olqResult = olqResult?.toDomain()
-)
-
-// ===========================
-// SDT DTOs
-// ===========================
-
-@Serializable
-internal data class SDTDataDto(
-    val id: String = "",
-    val userId: String = "",
-    val testId: String = "",
-    val responses: List<SDTResponseDto> = emptyList(),
-    val totalTimeTakenMinutes: Int = 0,
-    val submittedAt: Long = 0L,
-    val status: String = "",
-    val instructorScore: SDTInstructorScoreDto? = null,
-    val gradedByInstructorId: String? = null,
-    val gradingTimestamp: Long? = null,
-    val analysisStatus: String? = null,
-    val olqResult: OLQAnalysisResultDto? = null
-)
-
-@Serializable
-internal data class SDTResponseDto(
-    val questionId: String = "",
-    val question: String = "",
-    val answer: String = "",
-    val charCount: Int = 0,
-    val timeTakenSeconds: Int = 0,
-    val submittedAt: Long = 0L,
-    val isSkipped: Boolean = false
-)
-
-@Serializable
-internal data class SDTInstructorScoreDto(
-    val overallScore: Float = 0f,
-    val selfAwarenessScore: Float = 0f,
-    val emotionalMaturityScore: Float = 0f,
-    val socialPerceptionScore: Float = 0f,
-    val introspectionScore: Float = 0f,
-    val feedback: String = "",
-    val flaggedResponses: List<String> = emptyList(),
-    val exemplaryResponses: List<String> = emptyList(),
-    val gradedByInstructorId: String = "",
-    val gradedByInstructorName: String = "",
-    val gradedAt: Long = 0L,
-    val agreedWithAI: Boolean = false
-)
-
-internal fun SDTQuestionResponse.toDto() = SDTResponseDto(questionId, question, answer, charCount, timeTakenSeconds, submittedAt, isSkipped)
-internal fun SDTResponseDto.toDomain() = SDTQuestionResponse(questionId, question, answer, charCount, timeTakenSeconds, submittedAt, isSkipped)
-
-internal fun SDTInstructorScore.toDto() = SDTInstructorScoreDto(
-    overallScore, selfAwarenessScore, emotionalMaturityScore, socialPerceptionScore, introspectionScore,
-    feedback, flaggedResponses, exemplaryResponses, gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-internal fun SDTInstructorScoreDto.toDomain() = SDTInstructorScore(
-    overallScore, selfAwarenessScore, emotionalMaturityScore, socialPerceptionScore, introspectionScore,
-    feedback, flaggedResponses, exemplaryResponses, gradedByInstructorId, gradedByInstructorName, gradedAt, agreedWithAI
-)
-
-internal fun SDTDataDto.toDomain(): SDTSubmission = SDTSubmission(
-    id = id,
-    userId = userId,
-    testId = testId,
-    responses = responses.map { it.toDomain() },
     totalTimeTakenMinutes = totalTimeTakenMinutes,
     submittedAt = submittedAt,
     status = runCatching { SubmissionStatus.valueOf(status) }.getOrDefault(SubmissionStatus.SUBMITTED_PENDING_REVIEW),

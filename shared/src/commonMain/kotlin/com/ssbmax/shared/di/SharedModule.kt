@@ -9,7 +9,11 @@ import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
 import com.ssbmax.shared.data.repository.GitLiveGPEImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveGradingQueueRepository
+import com.ssbmax.shared.data.repository.GitLiveGTOCollections
+import com.ssbmax.shared.data.repository.GitLiveGTOProgressDelegate
 import com.ssbmax.shared.data.repository.GitLiveGTORepository
+import com.ssbmax.shared.data.repository.GitLiveGTOResultsDelegate
+import com.ssbmax.shared.data.repository.GitLiveGTOSubmissionDelegate
 import com.ssbmax.shared.data.repository.GitLiveGTOTaskCacheManager
 import com.ssbmax.shared.data.repository.GitLiveInterviewRepository
 import com.ssbmax.shared.data.repository.GitLiveNotificationCacheManager
@@ -131,6 +135,10 @@ val sharedModule = module {
     single { GitLiveOIRQuestionCacheManager(get(), get()) }
     single { GitLiveNotificationCacheManager(get()) }
     singleOf(::GitLiveTestContentRepository) bind TestContentRepository::class
+    single { GitLiveGTOCollections() }
+    single { GitLiveGTOSubmissionDelegate(get()) }
+    single { GitLiveGTOProgressDelegate(get()) }
+    single { GitLiveGTOResultsDelegate(get(), get()) }
     singleOf(::GitLiveGTORepository) bind GTORepository::class
     singleOf(::GitLiveNotificationRepository) bind NotificationRepository::class
     factoryOf(::KtorAIService) bind AIService::class
