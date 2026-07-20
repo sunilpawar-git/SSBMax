@@ -24,21 +24,9 @@ import kotlinx.serialization.Serializable
  * Android original; uses `Query.snapshots`/`DocumentReference.snapshots` (native Flows) in place
  * of the Android SDK's `addSnapshotListener`/`callbackFlow`.
  *
- * Two real, documented deviations from the Android original (not silently dropped):
+ * One real, documented deviation from the Android original (not silently dropped):
  *
- * 1. **Cache management (`cacheTestContent`/`clearCache`/`isContentCached`) for GD/LECTURETTE is
- *    a no-op / always-uncached here.** The Android original delegates those to the Room-backed
- *    `GTOTaskCacheManager` (`core/data/repository/GTOTaskCacheManager.kt` -> `GTOTaskCacheDao`) —
- *    a real constructor dependency the migration plan's prior exit report did not catch (it
- *    described this repo as having "no Room coupling," which investigation this slice found to be
- *    incomplete: the Room coupling is one constructor parameter deep, not in this file's own
- *    imports). Porting `GTOTaskCacheManager`/`GTOTaskCacheDao` is out of scope for this slice (the
- *    plan explicitly reserves "Room DAO+manager pairs" for their own dedicated slice), so these
- *    three methods return safe, honest defaults (no-op / not-cached) rather than a fake cache, and
- *    every read simply always goes live to Firestore via [testContentRepository] instead. GPE and
- *    the animation-obstacle test types were already no-op placeholders in the Android original too
- *    (see its own comments), so this narrows the gap rather than widening it.
- * 2. **`updateProgress`/`recordTestUsage` are read-then-write instead of the Android original's
+ * 1. **`updateProgress`/`recordTestUsage` are read-then-write instead of the Android original's
  *    `firestore.runTransaction`.** No other `GitLive*Repository` port in this codebase has
  *    exercised GitLive's `Transaction` API yet, and its `set(documentRef, data: Any, merge)`
  *    overload (unlike `WriteBatch.set`, which is `<reified T : Any>`) takes a plain `Any` — i.e.
@@ -49,15 +37,23 @@ import kotlinx.serialization.Serializable
  *    the same user's progress doc (same category of documented simplification as
  *    `GitLiveUserProfileRepository`'s UTC-vs-local-timezone gap).
  *
- * A third finding, not a deviation but a correction: the Android original's private
+ * A second finding, not a deviation but a correction: the Android original's private
  * `mapToSubmission` only recognizes GD/LECTURETTE/GPE test-type strings — it throws
  * `IllegalArgumentException` for any other value *before* reaching the `when (testType)` branches
  * for PGT/HGT/GOR/IO/CT, making those five branches dead code (unreachable in the original, since
  * `testType` can never resolve to them at that point). This port only implements the three
  * reachable branches ([parseGtoSubmissionTestType]) rather than porting unreachable code forward.
+ *
+ * **Gap closed (8th slice):** `cacheTestContent`/`clearCache`/`isContentCached` for GD/LECTURETTE
+ * now delegate to [GitLiveGTOTaskCacheManager] (the SQLDelight-backed port of the Android
+ * `GTOTaskCacheManager`/`GTOTaskCacheDao`), instead of the always-"not cached" defaults the 5th
+ * slice left here. Same behavior as the Android original: GPE and the animation-obstacle test
+ * types remain no-op placeholders (that was true in the Android original too, not a gap this port
+ * introduced).
  */
 class GitLiveGTORepository(
-    private val testContentRepository: TestContentRepository
+    private val testContentRepository: TestContentRepository,
+    private val taskCacheManager: GitLiveGTOTaskCacheManager
 ) : GTORepository {
 
     private val submissionsCollection = Firebase.firestore.collection(COLLECTION_GTO_SUBMISSIONS)
@@ -483,14 +479,40 @@ class GitLiveGTORepository(
     }
 
     // ==================== Cache Management ====================
-    // See the class doc: GTOTaskCacheManager (Room-backed) is out of scope for this slice, so
-    // GD/LECTURETTE caching is honestly reported as always-uncached rather than faked.
+    // See the class doc: GD/LECTURETTE now delegate to GitLiveGTOTaskCacheManager. GPE and the
+    // animation-obstacle test types remain no-op / not-yet-implemented, same as the Android
+    // original (its own GPEImageCacheManager and Phase-4-deferred obstacle-asset caching).
 
-    override suspend fun cacheTestContent(testType: GTOTestType): Result<Unit> = Result.success(Unit)
+    override suspend fun cacheTestContent(testType: GTOTestType): Result<Unit> = try {
+        when (testType) {
+            GTOTestType.GROUP_DISCUSSION, GTOTestType.LECTURETTE -> taskCacheManager.initialSync()
+            GTOTestType.GROUP_PLANNING_EXERCISE -> Result.success(Unit)
+            else -> Result.success(Unit)
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
-    override suspend fun clearCache(testType: GTOTestType?): Result<Unit> = Result.success(Unit)
+    override suspend fun clearCache(testType: GTOTestType?): Result<Unit> = try {
+        if (testType == null || testType == GTOTestType.GROUP_DISCUSSION || testType == GTOTestType.LECTURETTE) {
+            taskCacheManager.clearCache()
+        }
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
-    override suspend fun isContentCached(testType: GTOTestType): Result<Boolean> = Result.success(false)
+    override suspend fun isContentCached(testType: GTOTestType): Result<Boolean> = try {
+        val isCached = when (testType) {
+            GTOTestType.GROUP_DISCUSSION, GTOTestType.LECTURETTE ->
+                taskCacheManager.getCacheStatus().cachedTasks >= MIN_CACHED_TASKS_THRESHOLD
+            GTOTestType.GROUP_PLANNING_EXERCISE -> true
+            else -> false
+        }
+        Result.success(isCached)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 
     private companion object {
         const val COLLECTION_TEST_CONTENT = "test_content"
@@ -509,6 +531,9 @@ class GitLiveGTORepository(
         const val FIELD_SUBMITTED_AT = "submittedAt"
 
         const val DEFAULT_BATCH_ID = "batch_001"
+
+        /** Same threshold as the Android original's isContentCached (>= 5 cached tasks). */
+        const val MIN_CACHED_TASKS_THRESHOLD = 5
     }
 }
 

@@ -89,3 +89,79 @@ DELETE FROM UserPerformance WHERE testType = ?;
 
 deleteAllPerformance:
 DELETE FROM UserPerformance;
+
+-- Phase 2 continuation (8th slice): local store backing GitLiveGTOTaskCacheManager
+-- (GTOTaskCacheDao -> CachedGTOTaskEntity/GTOBatchMetadataEntity), closing the
+-- named gap flagged in the 5th slice's GitLiveGTORepository port: cacheTestContent
+-- /clearCache/isContentCached for GD/LECTURETTE previously returned honest
+-- "not cached" defaults because this table didn't exist yet.
+-- Only the DAO surface GTOTaskCacheManager actually calls is ported here --
+-- getAllTasks, getTasksByBatch, the plain (non-least-used) getTasksByType/
+-- getRandomTasks, getTasksByCategory/getTaskCountByCategory,
+-- getTasksByDifficulty/getTaskCountByDifficulty, getAllTaskTypes/
+-- getAllCategories, deleteTasksByBatch, single insertTask, single
+-- getBatchMetadata, and deleteBatchMetadata were all confirmed (grep across
+-- core/data + app) to have zero callers outside GTOTaskCacheDao's own test --
+-- same "dead scaffolding in the Android original" category as TestResult's
+-- dropped syncStatus columns above.
+
+CREATE TABLE CachedGTOTask (
+    id TEXT NOT NULL PRIMARY KEY,
+    taskType TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    timeAllowedMinutes INTEGER NOT NULL,
+    difficultyLevel TEXT,
+    category TEXT,
+    scenario TEXT,
+    resources TEXT,
+    objectives TEXT,
+    evaluationCriteria TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL
+);
+
+CREATE TABLE GTOBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    taskCount INTEGER NOT NULL,
+    version TEXT NOT NULL
+);
+
+selectTotalGTOTaskCount:
+SELECT COUNT(*) FROM CachedGTOTask;
+
+selectGTOTaskCountByType:
+SELECT COUNT(*) FROM CachedGTOTask WHERE taskType = ?;
+
+selectLeastUsedGTOTasks:
+SELECT * FROM CachedGTOTask ORDER BY usageCount ASC, lastUsed ASC LIMIT ?;
+
+selectLeastUsedGTOTasksByType:
+SELECT * FROM CachedGTOTask WHERE taskType = ? ORDER BY usageCount ASC, lastUsed ASC LIMIT ?;
+
+insertOrReplaceGTOTask:
+INSERT OR REPLACE INTO CachedGTOTask(
+    id, taskType, title, description, instructions, timeAllowedMinutes,
+    difficultyLevel, category, scenario, resources, objectives,
+    evaluationCriteria, batchId, cachedAt, lastUsed, usageCount
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markGTOTasksUsed:
+UPDATE CachedGTOTask SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :taskIds;
+
+clearAllGTOTasks:
+DELETE FROM CachedGTOTask;
+
+insertOrReplaceGTOBatchMetadata:
+INSERT OR REPLACE INTO GTOBatchMetadata(batchId, downloadedAt, taskCount, version)
+VALUES (?, ?, ?, ?);
+
+selectAllGTOBatchMetadata:
+SELECT * FROM GTOBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalGTOBatchCount:
+SELECT COUNT(*) FROM GTOBatchMetadata;

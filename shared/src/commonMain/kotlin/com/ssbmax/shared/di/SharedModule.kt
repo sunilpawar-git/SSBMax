@@ -6,6 +6,7 @@ import com.ssbmax.shared.data.repository.GitLiveAnalyticsRepository
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
 import com.ssbmax.shared.data.repository.GitLiveGradingQueueRepository
+import com.ssbmax.shared.data.repository.GitLiveGTOTaskCacheManager
 import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
 import com.ssbmax.shared.data.repository.GitLiveQuestionCacheRepository
 import com.ssbmax.shared.data.repository.GitLiveStudyContentRepository
@@ -96,6 +97,7 @@ val sharedModule = module {
     singleOf(::GitLiveAnalyticsRepository) bind AnalyticsRepository::class
     singleOf(::GitLiveStudyContentRepository) bind StudyContentRepository::class
     single { GitLiveDifficultyProgressionManager(get()) }
+    single { GitLiveGTOTaskCacheManager(get()) }
     factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
 
     factoryOf(::SignInWithGoogleUseCase)
