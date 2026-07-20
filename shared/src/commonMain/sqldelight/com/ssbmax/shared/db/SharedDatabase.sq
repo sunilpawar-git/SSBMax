@@ -15,3 +15,77 @@ SELECT * FROM CachedOirResult WHERE submissionId = ?;
 insertOrReplace:
 INSERT OR REPLACE INTO CachedOirResult(submissionId, resultJson, cachedAtEpochMillis)
 VALUES (?, ?, ?);
+
+-- Phase 2 continuation (6th slice): local store for TestRepositoryImpl's
+-- offline-first test-result persistence (TestResultDao -> TestResultEntity).
+-- syncStatus/getPendingSync/updateSyncStatus were dropped, not carried
+-- forward: grep confirmed no production caller (only Android instrumentation
+-- tests) ever exercises the sync-tracking path, so it was dead scaffolding
+-- in the Android original, same category as the GTORepository port's
+-- PGT/HGT/GOR/IO/CT dead-code finding.
+
+CREATE TABLE TestResult (
+    id TEXT NOT NULL PRIMARY KEY,
+    testId TEXT NOT NULL,
+    userId TEXT NOT NULL,
+    score REAL NOT NULL,
+    maxScore REAL NOT NULL,
+    completedAt INTEGER NOT NULL,
+    timeSpentMinutes INTEGER NOT NULL
+);
+
+selectTestResultsByUser:
+SELECT * FROM TestResult WHERE userId = ? ORDER BY completedAt DESC;
+
+selectTestResultsByUserAndTest:
+SELECT * FROM TestResult WHERE userId = ? AND testId = ? ORDER BY completedAt DESC;
+
+insertOrReplaceTestResult:
+INSERT OR REPLACE INTO TestResult(id, testId, userId, score, maxScore, completedAt, timeSpentMinutes)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Phase 2 continuation (6th slice): local store backing AnalyticsRepositoryImpl
+-- (UserPerformanceDao -> UserPerformanceEntity) and its writer,
+-- DifficultyProgressionManager. autoGenerate id is emulated via testType||'|'||
+-- difficulty as a natural composite key (the Android entity's autoGenerate
+-- Long id is never queried by value anywhere -- only testType+difficulty
+-- lookups are used -- so a natural key avoids needing a SQLDelight
+-- auto-increment id read-back, which the read-only queries never needed).
+
+CREATE TABLE UserPerformance (
+    testType TEXT NOT NULL,
+    difficulty TEXT NOT NULL,
+    totalAttempts INTEGER NOT NULL,
+    correctAnswers INTEGER NOT NULL,
+    incorrectAnswers INTEGER NOT NULL,
+    averageScore REAL NOT NULL,
+    averageTimeSeconds REAL NOT NULL,
+    currentLevel TEXT NOT NULL,
+    readyForNextLevel INTEGER NOT NULL,
+    lastAttemptAt INTEGER NOT NULL,
+    firstAttemptAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    PRIMARY KEY (testType, difficulty)
+);
+
+selectPerformance:
+SELECT * FROM UserPerformance WHERE testType = ? AND difficulty = ?;
+
+selectPerformanceByTestType:
+SELECT * FROM UserPerformance WHERE testType = ? ORDER BY difficulty ASC;
+
+selectAllPerformance:
+SELECT * FROM UserPerformance ORDER BY testType, difficulty;
+
+insertOrReplacePerformance:
+INSERT OR REPLACE INTO UserPerformance(
+    testType, difficulty, totalAttempts, correctAnswers, incorrectAnswers,
+    averageScore, averageTimeSeconds, currentLevel, readyForNextLevel,
+    lastAttemptAt, firstAttemptAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deletePerformanceByTestType:
+DELETE FROM UserPerformance WHERE testType = ?;
+
+deleteAllPerformance:
+DELETE FROM UserPerformance;

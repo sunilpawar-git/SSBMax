@@ -60,6 +60,7 @@ kotlin {
             implementation(libs.gitlive.firebase.auth)
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.firebase.common)
+            implementation(libs.gitlive.firebase.storage)
 
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)

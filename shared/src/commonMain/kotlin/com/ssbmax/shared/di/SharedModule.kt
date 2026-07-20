@@ -2,24 +2,31 @@ package com.ssbmax.shared.di
 
 import com.ssbmax.shared.ai.KtorGeminiClient
 import com.ssbmax.shared.ai.KtorInterviewResponseAnalysisService
+import com.ssbmax.shared.data.repository.GitLiveAnalyticsRepository
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
+import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
 import com.ssbmax.shared.data.repository.GitLiveGradingQueueRepository
 import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
 import com.ssbmax.shared.data.repository.GitLiveQuestionCacheRepository
+import com.ssbmax.shared.data.repository.GitLiveStudyContentRepository
 import com.ssbmax.shared.data.repository.GitLiveStudyProgressRepository
 import com.ssbmax.shared.data.repository.GitLiveSubscriptionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestProgressRepository
+import com.ssbmax.shared.data.repository.GitLiveTestRepository
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
 import com.ssbmax.shared.data.repository.OirResultCache
 import com.ssbmax.shared.db.DatabaseDriverFactory
 import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
+import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.repository.OirResultRepository
+import com.ssbmax.shared.domain.repository.StudyContentRepository
 import com.ssbmax.shared.domain.repository.StudyProgressRepository
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
+import com.ssbmax.shared.domain.repository.TestRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.InterviewResponseAnalysisService
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
@@ -85,6 +92,10 @@ val sharedModule = module {
     singleOf(::GitLiveStudyProgressRepository) bind StudyProgressRepository::class
     singleOf(::GitLiveGradingQueueRepository) bind GradingQueueRepository::class
     singleOf(::GitLiveQuestionCacheRepository) bind QuestionCacheRepository::class
+    singleOf(::GitLiveTestRepository) bind TestRepository::class
+    singleOf(::GitLiveAnalyticsRepository) bind AnalyticsRepository::class
+    singleOf(::GitLiveStudyContentRepository) bind StudyContentRepository::class
+    single { GitLiveDifficultyProgressionManager(get()) }
     factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
 
     factoryOf(::SignInWithGoogleUseCase)
