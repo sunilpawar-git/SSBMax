@@ -22,7 +22,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Unit tests for InterviewResultViewModel
@@ -47,7 +47,7 @@ class InterviewResultViewModelTest : BaseViewModelTest() {
         sessionId = testSessionId,
         userId = testUserId,
         mode = InterviewMode.TEXT_BASED,
-        completedAt = Instant.now(),
+        completedAt = Clock.System.now(),
         durationSec = 1800,
         totalQuestions = 16,
         totalResponses = 16,

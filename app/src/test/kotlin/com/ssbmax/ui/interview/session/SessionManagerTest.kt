@@ -25,7 +25,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
+import kotlinx.datetime.Clock
 
 /**
  * Unit tests for SessionManager
@@ -46,7 +46,7 @@ class SessionManagerTest {
         userId = testUserId,
         mode = InterviewMode.VOICE_BASED,
         status = InterviewStatus.IN_PROGRESS,
-        startedAt = Instant.now(),
+        startedAt = Clock.System.now(),
         completedAt = null,
         piqSnapshotId = "piq-123",
         consentGiven = true,
