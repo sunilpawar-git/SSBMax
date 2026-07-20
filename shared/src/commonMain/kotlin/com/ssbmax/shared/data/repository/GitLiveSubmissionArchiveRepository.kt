@@ -1,26 +1,46 @@
 package com.ssbmax.shared.data.repository
 
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.firestore
+
 /**
  * GitLive-Firebase-backed port of the Android `SubmissionArchiveRepository`.
  *
- * **Not ported, explicitly deferred:** `archiveOldSubmissions`/`deleteOldArchivedSubmissions` both
- * need to read an arbitrary submission document as a raw `Map<String, Any?>` (to copy it verbatim
- * into `archived_submissions` before deleting the original) and to run a `collectionGroup("submissions")`
- * query. The `collectionGroup` query itself is fine (GitLive's `FirebaseFirestore.collectionGroup`
- * exists and returns a `Query`, verified in `firestore.kt`) — the blocker is the same one documented
- * in [GitLiveCommonSubmissionRepository]'s class doc: GitLive's `DocumentSnapshot` has no public
- * raw-`Map<String, Any>` decode path, only typed `data<reified T>()`. Copying a document byte-for-byte
- * without knowing its shape isn't achievable through the typed decode API. Revisit alongside
- * `GitLiveCommonSubmissionRepository`'s deferred read methods — the same fix (a hand-written
- * contextual `Any` serializer, or reworking these two Android-original methods to go through the
- * per-test-type typed repos instead of a raw collection-group copy) unblocks both at once.
+ * Reads each stale submission document as a raw `Map<String, Any>` via [FirestoreRawMapSerializer]
+ * (see that file's class doc for why this is possible on GitLive Firestore 2.1.0's public API),
+ * writes it verbatim into `archived_submissions`, then deletes the original — same
+ * copy-then-delete shape as the Android original, minus the per-item `Log.d`/`Log.e` calls (no
+ * other ported `GitLive*SubmissionRepository` in this cluster logs either; errors surface through
+ * the returned [Result] instead).
  */
 class GitLiveSubmissionArchiveRepository {
 
-    suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int> = Result.failure(
-        UnsupportedOperationException(
-            "Not yet portable: needs a raw Map<String, Any> Firestore document read; " +
-                "see GitLiveSubmissionArchiveRepository's class doc."
-        )
-    )
+    private val archivedCollection = Firebase.firestore.collection(ARCHIVED_SUBMISSIONS_COLLECTION)
+
+    suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int> = try {
+        val snapshot = Firebase.firestore.collectionGroup(SUBMISSIONS_COLLECTION_GROUP)
+            .where { FIELD_SUBMITTED_AT lessThan beforeTimestamp }
+            .get()
+
+        var archivedCount = 0
+        snapshot.documents.forEach { doc ->
+            runCatching {
+                val raw = doc.data(FirestoreRawMapSerializer)
+                val submissionId = raw[FIELD_ID] as? String ?: doc.id
+                archivedCollection.document(submissionId).set(FirestoreRawMapSerializer, raw)
+                doc.reference.delete()
+                archivedCount++
+            }
+        }
+        Result.success(archivedCount)
+    } catch (e: Exception) {
+        Result.failure(Exception("Failed to archive submissions: ${e.message}", e))
+    }
+
+    private companion object {
+        const val ARCHIVED_SUBMISSIONS_COLLECTION = "archived_submissions"
+        const val SUBMISSIONS_COLLECTION_GROUP = "submissions"
+        const val FIELD_SUBMITTED_AT = "submittedAt"
+        const val FIELD_ID = "id"
+    }
 }

@@ -60,6 +60,11 @@ kotlin {
             implementation(libs.gitlive.firebase.auth)
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.firebase.common)
+            // Not re-exported as `api` by firebase-common/-firestore (implementation-only
+            // upstream), so it must be depended on directly to reach the public
+            // FirebaseDecoder/FirebaseEncoder classes used by FirestoreRawMapSerializer for the
+            // raw Map<String, Any> Firestore decode/encode path. See that file's class doc.
+            implementation(libs.gitlive.firebase.common.internal)
             implementation(libs.gitlive.firebase.storage)
 
             implementation(libs.sqldelight.runtime)

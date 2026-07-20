@@ -14,7 +14,6 @@ import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 /**
  * GitLive-Firebase-backed port of the Android `FirestoreSubmissionRepository` facade. Delegates
@@ -24,14 +23,11 @@ import kotlinx.coroutines.flow.flow
  * slice's `GitLive*` classes instead of Hilt-injected as five separate constructor params (Koin
  * doesn't need the DI-boundary split reason).
  *
- * **Two named, deliberate gaps, not silent partials** (see each delegate's own class doc for the
- * verified root cause):
- * - `getSubmission`/`getUserSubmissions`/`getUserSubmissionsByTestType`/`observeSubmission`/
- *   `observeUserSubmissions`/`getPendingSubmissionsForInstructor`/`archiveOldSubmissions` all need
- *   a raw `Map<String, Any>` Firestore document decode, which GitLive's typed-only decode API
- *   doesn't expose publicly. They return `Result.failure`/a throwing `Flow` with a clear message.
- * - `submitPIQ`/`getLatestPIQSubmission` are deferred — `PIQSubmission` is a ~90-field form model;
- *   see `GitLivePersonalTestSubmissionRepository`'s class doc for the full reasoning.
+ * The raw `Map<String, Any>` methods (`getSubmission`/`getUserSubmissions`/
+ * `getUserSubmissionsByTestType`/`observeSubmission`/`observeUserSubmissions`/
+ * `getPendingSubmissionsForInstructor`/`archiveOldSubmissions`) and `submitPIQ`/
+ * `getLatestPIQSubmission` are fully ported — see [FirestoreRawMapSerializer]'s class doc for the
+ * raw-Map decode/encode fix and [GitLivePersonalTestSubmissionRepository]'s class doc for the PIQ port.
  */
 class GitLiveSubmissionRepository(
     private val commonRepo: GitLiveCommonSubmissionRepository = GitLiveCommonSubmissionRepository(),
@@ -51,7 +47,7 @@ class GitLiveSubmissionRepository(
     override suspend fun submitGPE(submission: GTOSubmission.GPESubmission, batchId: String?): Result<String> =
         gtoRepo.submitGPE(submission, batchId)
 
-    // Common (generic-Map methods: blocked, see class doc)
+    // Common
     override suspend fun getSubmission(submissionId: String): Result<Map<String, Any>?> = commonRepo.getSubmission(submissionId)
 
     override suspend fun getUserSubmissions(userId: String, limit: Int): Result<List<Map<String, Any>>> =
@@ -60,17 +56,11 @@ class GitLiveSubmissionRepository(
     override suspend fun getUserSubmissionsByTestType(userId: String, testType: TestType, limit: Int): Result<List<Map<String, Any>>> =
         commonRepo.getUserSubmissionsByTestType(userId, testType, limit)
 
-    override fun observeSubmission(submissionId: String): Flow<Map<String, Any>?> = flow {
-        throw UnsupportedOperationException(
-            "Not yet portable: see GitLiveCommonSubmissionRepository's class doc for the verified reason."
-        )
-    }
+    override fun observeSubmission(submissionId: String): Flow<Map<String, Any>?> =
+        commonRepo.observeSubmission(submissionId)
 
-    override fun observeUserSubmissions(userId: String, limit: Int): Flow<List<Map<String, Any>>> = flow {
-        throw UnsupportedOperationException(
-            "Not yet portable: see GitLiveCommonSubmissionRepository's class doc for the verified reason."
-        )
-    }
+    override fun observeUserSubmissions(userId: String, limit: Int): Flow<List<Map<String, Any>>> =
+        commonRepo.observeUserSubmissions(userId, limit)
 
     override suspend fun updateSubmissionStatus(submissionId: String, status: SubmissionStatus): Result<Unit> =
         commonRepo.updateSubmissionStatus(submissionId, status)
@@ -82,13 +72,11 @@ class GitLiveSubmissionRepository(
     override suspend fun submitOIR(submission: OIRSubmission, batchId: String?): Result<String> =
         personalRepo.submitOIR(submission, batchId)
 
-    override suspend fun submitPIQ(submission: PIQSubmission, batchId: String?): Result<String> = Result.failure(
-        UnsupportedOperationException(PIQ_NOT_PORTED_MESSAGE)
-    )
+    override suspend fun submitPIQ(submission: PIQSubmission, batchId: String?): Result<String> =
+        personalRepo.submitPIQ(submission, batchId)
 
-    override suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?> = Result.failure(
-        UnsupportedOperationException(PIQ_NOT_PORTED_MESSAGE)
-    )
+    override suspend fun getLatestPIQSubmission(userId: String): Result<PIQSubmission?> =
+        personalRepo.getLatestPIQSubmission(userId)
 
     override suspend fun getLatestOIRSubmission(userId: String): Result<OIRSubmission?> =
         personalRepo.getLatestOIRSubmission(userId)
@@ -199,13 +187,7 @@ class GitLiveSubmissionRepository(
     override fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> =
         psychRepo.observeSDTSubmission(submissionId)
 
-    // Archive (blocked, see GitLiveSubmissionArchiveRepository's class doc)
+    // Archive
     override suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result<Int> =
         archiveRepo.archiveOldSubmissions(beforeTimestamp)
-
-    private companion object {
-        const val PIQ_NOT_PORTED_MESSAGE =
-            "PIQ submission port deferred to its own slice (~90-field form model); " +
-                "see GitLivePersonalTestSubmissionRepository's class doc."
-    }
 }

@@ -107,6 +107,68 @@ class SubmissionClusterDtoTest {
     }
 
     @Test
+    fun `PIQDataDto round-trips every top-level and nested section field`() {
+        val domain = com.ssbmax.shared.domain.model.PIQSubmission(
+            id = "piq-1",
+            userId = "u1",
+            fullName = "Cadet Test",
+            dateOfBirth = "2000-01-01",
+            siblings = listOf(com.ssbmax.shared.domain.model.Sibling(id = "sib-1", name = "Sibling One")),
+            education10th = com.ssbmax.shared.domain.model.Education(level = "10th", institution = "School A", percentage = "92"),
+            workExperience = listOf(com.ssbmax.shared.domain.model.WorkExperience(id = "we-1", company = "Acme")),
+            nccTraining = com.ssbmax.shared.domain.model.NCCTraining(hasTraining = true, wing = "Army"),
+            previousInterviews = listOf(com.ssbmax.shared.domain.model.PreviousInterview(id = "pi-1", ssbNumber = "SSB-1")),
+            status = SubmissionStatus.SUBMITTED_PENDING_REVIEW
+        )
+
+        val dto = domain.toDataDto()
+        val roundTripped = dto.toDomain()
+
+        assertEquals(domain.id, roundTripped.id)
+        assertEquals(domain.fullName, roundTripped.fullName)
+        assertEquals(1, roundTripped.siblings.size)
+        assertEquals("Sibling One", roundTripped.siblings.first().name)
+        assertEquals("School A", roundTripped.education10th.institution)
+        assertEquals("Acme", roundTripped.workExperience.first().company)
+        assertTrue(roundTripped.nccTraining.hasTraining)
+        assertEquals("SSB-1", roundTripped.previousInterviews.first().ssbNumber)
+        assertEquals(SubmissionStatus.SUBMITTED_PENDING_REVIEW, roundTripped.status)
+    }
+
+    @Test
+    fun `PIQDataDto with unparseable status falls back to SUBMITTED_PENDING_REVIEW`() {
+        val dto = PIQDataDto(id = "p1", userId = "u1", status = "GARBAGE")
+        assertEquals(SubmissionStatus.SUBMITTED_PENDING_REVIEW, dto.toDomain().status)
+    }
+
+    @Test
+    fun `PIQ aiPreliminaryScore is written but never round-tripped, same real limitation as the Android original`() {
+        val domain = com.ssbmax.shared.domain.model.PIQSubmission(
+            id = "piq-2",
+            userId = "u1",
+            aiPreliminaryScore = com.ssbmax.shared.domain.model.PIQAIScore(
+                overallScore = 80f,
+                personalInfoScore = 20f,
+                familyInfoScore = 20f,
+                motivationScore = 20f,
+                selfAssessmentScore = 20f,
+                feedback = "Good",
+                strengths = listOf("Clarity"),
+                areasForImprovement = emptyList(),
+                completenessPercentage = 100,
+                clarityScore = 9f,
+                consistencyScore = 9f
+            )
+        )
+
+        val dto = domain.toDataDto()
+        assertEquals(80f, dto.aiPreliminaryScore?.overallScore)
+
+        val roundTripped = dto.toDomain()
+        assertNull(roundTripped.aiPreliminaryScore)
+    }
+
+    @Test
     fun `GTO submission envelope keeps GTOSubmissionStatus in the shared status field, same quirk as Android`() {
         val doc = SubmissionDocDto(
             id = "gd-1",
