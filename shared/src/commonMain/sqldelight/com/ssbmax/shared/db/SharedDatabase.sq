@@ -165,3 +165,72 @@ SELECT * FROM GTOBatchMetadata ORDER BY downloadedAt DESC;
 
 selectTotalGTOBatchCount:
 SELECT COUNT(*) FROM GTOBatchMetadata;
+
+-- Phase 2 continuation (9th slice): local store backing GitLiveWATWordCacheManager
+-- (WATWordCacheDao -> CachedWATWordEntity/WATBatchMetadataEntity), the smallest
+-- remaining Room DAO+manager pair (single word table + batch-metadata table, no
+-- cross-table joins), chosen over GPEImageCacheDao/PPDTImageCacheDao/
+-- SRTSituationCacheDao/TATImageCacheDao/InterviewQuestionCacheDao for this
+-- reason -- all six are equally blocked as a group by TestContentRepositoryImpl
+-- (which needs all six cache managers before it can be ported), so file/method
+-- count was the deciding factor, same rationale used to pick GTOTaskCacheDao
+-- over OIRQuestionCacheDao in the 8th slice.
+-- Only the DAO surface WATWordCacheManager actually calls is ported here --
+-- getAllWords, getWordsByBatch, getRandomWords, getWordsByCategory,
+-- getWordsByDifficulty, single insertWord, deleteWordsByBatch,
+-- getWordCountByDifficulty, getBatchMetadata (single), and deleteBatchMetadata
+-- were all confirmed (grep across core/data + app, excluding Room's own DAO
+-- test) to have zero callers outside WATWordCacheDaoTest -- same "dead
+-- scaffolding in the Android original" category as the 8th slice's
+-- GTOTaskCacheDao finding.
+
+CREATE TABLE CachedWATWord (
+    id TEXT NOT NULL PRIMARY KEY,
+    word TEXT NOT NULL,
+    sequenceNumber INTEGER NOT NULL,
+    timeAllowedSeconds INTEGER NOT NULL,
+    category TEXT,
+    difficulty TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL
+);
+
+CREATE TABLE WATBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    wordCount INTEGER NOT NULL,
+    version TEXT NOT NULL
+);
+
+selectTotalWATWordCount:
+SELECT COUNT(*) FROM CachedWATWord;
+
+selectWATWordCountByCategory:
+SELECT COUNT(*) FROM CachedWATWord WHERE category = ?;
+
+selectLeastUsedWATWords:
+SELECT * FROM CachedWATWord ORDER BY usageCount ASC, lastUsed ASC LIMIT ?;
+
+insertOrReplaceWATWord:
+INSERT OR REPLACE INTO CachedWATWord(
+    id, word, sequenceNumber, timeAllowedSeconds, category, difficulty,
+    batchId, cachedAt, lastUsed, usageCount
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markWATWordsUsed:
+UPDATE CachedWATWord SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :wordIds;
+
+clearAllWATWords:
+DELETE FROM CachedWATWord;
+
+insertOrReplaceWATBatchMetadata:
+INSERT OR REPLACE INTO WATBatchMetadata(batchId, downloadedAt, wordCount, version)
+VALUES (?, ?, ?, ?);
+
+selectAllWATBatchMetadata:
+SELECT * FROM WATBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalWATBatchCount:
+SELECT COUNT(*) FROM WATBatchMetadata;
