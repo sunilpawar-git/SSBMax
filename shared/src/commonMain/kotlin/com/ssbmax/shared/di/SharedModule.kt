@@ -5,13 +5,19 @@ import com.ssbmax.shared.ai.KtorInterviewResponseAnalysisService
 import com.ssbmax.shared.data.repository.GitLiveAnalyticsRepository
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
+import com.ssbmax.shared.data.repository.GitLiveGPEImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveGradingQueueRepository
 import com.ssbmax.shared.data.repository.GitLiveGTOTaskCacheManager
 import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
+import com.ssbmax.shared.data.repository.GitLiveOIRQuestionCacheManager
+import com.ssbmax.shared.data.repository.GitLiveOIRQuestionSelector
+import com.ssbmax.shared.data.repository.GitLivePPDTImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveQuestionCacheRepository
+import com.ssbmax.shared.data.repository.GitLiveSRTSituationCacheManager
 import com.ssbmax.shared.data.repository.GitLiveStudyContentRepository
 import com.ssbmax.shared.data.repository.GitLiveStudyProgressRepository
 import com.ssbmax.shared.data.repository.GitLiveSubscriptionRepository
+import com.ssbmax.shared.data.repository.GitLiveTATImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveTestProgressRepository
 import com.ssbmax.shared.data.repository.GitLiveTestRepository
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
@@ -100,6 +106,12 @@ val sharedModule = module {
     single { GitLiveDifficultyProgressionManager(get()) }
     single { GitLiveGTOTaskCacheManager(get()) }
     single { GitLiveWATWordCacheManager(get()) }
+    single { GitLiveGPEImageCacheManager(get()) }
+    single { GitLivePPDTImageCacheManager(get()) }
+    single { GitLiveSRTSituationCacheManager(get()) }
+    single { GitLiveTATImageCacheManager(get()) }
+    single { GitLiveOIRQuestionSelector(get()) }
+    single { GitLiveOIRQuestionCacheManager(get(), get()) }
     factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
 
     factoryOf(::SignInWithGoogleUseCase)

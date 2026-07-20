@@ -234,3 +234,390 @@ SELECT * FROM WATBatchMetadata ORDER BY downloadedAt DESC;
 
 selectTotalWATBatchCount:
 SELECT COUNT(*) FROM WATBatchMetadata;
+
+-- Phase 2 continuation (10th slice): local store backing GitLiveGPEImageCacheManager
+-- (GPEImageCacheDao -> CachedGPEImageEntity/GPEBatchMetadataEntity).
+-- Only the DAO surface GPEImageCacheManager actually calls is ported here --
+-- getAllImages, getImagesByBatch, getRandomImages, getImagesByCategory,
+-- getImagesByDifficulty, getDownloadedImages, getImagesNeedingDownload,
+-- markImageAsDownloaded, single insertImage, deleteImagesByBatch,
+-- getImageCountByCategory, getImageCountByDifficulty, getAllCategories,
+-- and single getBatchMetadata were all confirmed (grep across core/data + app,
+-- excluding Room's own DAO test) to have zero callers outside GPEImageCacheDao's
+-- own test -- same "dead scaffolding" category as the 8th/9th slices' findings.
+-- localFilePath/imageDownloaded columns are dropped entirely: markImageAsDownloaded
+-- (the only writer of either) has zero production callers even on Android, so
+-- imageDownloaded is always 0 there already -- getDownloadedImageCount is ported
+-- as a literal 0L in the manager rather than a query, documented at the call site.
+
+CREATE TABLE CachedGPEImage (
+    id TEXT NOT NULL PRIMARY KEY,
+    imageUrl TEXT NOT NULL,
+    scenario TEXT NOT NULL,
+    solution TEXT,
+    imageDescription TEXT NOT NULL,
+    resources TEXT,
+    viewingTimeSeconds INTEGER NOT NULL,
+    planningTimeSeconds INTEGER NOT NULL,
+    minCharacters INTEGER NOT NULL,
+    maxCharacters INTEGER NOT NULL,
+    category TEXT,
+    difficulty TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL
+);
+
+CREATE TABLE GPEBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    imageCount INTEGER NOT NULL,
+    version TEXT NOT NULL
+);
+
+selectTotalGPEImageCount:
+SELECT COUNT(*) FROM CachedGPEImage;
+
+selectLeastUsedGPEImages:
+SELECT * FROM CachedGPEImage ORDER BY usageCount ASC, RANDOM() LIMIT ?;
+
+insertOrReplaceGPEImage:
+INSERT OR REPLACE INTO CachedGPEImage(
+    id, imageUrl, scenario, solution, imageDescription, resources,
+    viewingTimeSeconds, planningTimeSeconds, minCharacters, maxCharacters,
+    category, difficulty, batchId, cachedAt, lastUsed, usageCount
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markGPEImagesUsed:
+UPDATE CachedGPEImage SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :imageIds;
+
+clearAllGPEImages:
+DELETE FROM CachedGPEImage;
+
+insertOrReplaceGPEBatchMetadata:
+INSERT OR REPLACE INTO GPEBatchMetadata(batchId, downloadedAt, imageCount, version)
+VALUES (?, ?, ?, ?);
+
+deleteGPEBatchMetadata:
+DELETE FROM GPEBatchMetadata WHERE batchId = ?;
+
+selectAllGPEBatchMetadata:
+SELECT * FROM GPEBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalGPEBatchCount:
+SELECT COUNT(*) FROM GPEBatchMetadata;
+
+-- Phase 2 continuation (11th slice): local store backing GitLivePPDTImageCacheManager
+-- (PPDTImageCacheDao -> CachedPPDTImageEntity/PPDTBatchMetadataEntity).
+-- Only the DAO surface PPDTImageCacheManager actually calls is ported here --
+-- getAllImages, getImagesByBatch, getRandomImages, getImagesByCategory,
+-- getImagesByDifficulty, getDownloadedImages, getImagesNeedingDownload,
+-- markImageAsDownloaded, single insertImage, deleteImagesByBatch,
+-- getImageCountByCategory, getImageCountByDifficulty, and getAllCategories
+-- were all confirmed (grep across core/data + app, excluding Room's own DAO
+-- tests) to have zero callers outside PPDTImageCacheDao's own tests -- same
+-- category as the 10th slice's GPE finding. localFilePath/imageDownloaded
+-- dropped for the same reason as GPE (markImageAsDownloaded is dead on
+-- Android too, so imageDownloaded is always 0 there already).
+
+CREATE TABLE CachedPPDTImage (
+    id TEXT NOT NULL PRIMARY KEY,
+    imageUrl TEXT NOT NULL,
+    imageDescription TEXT NOT NULL,
+    imageContextJson TEXT NOT NULL,
+    viewingTimeSeconds INTEGER NOT NULL,
+    writingTimeMinutes INTEGER NOT NULL,
+    minCharacters INTEGER NOT NULL,
+    maxCharacters INTEGER NOT NULL,
+    category TEXT,
+    difficulty TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL,
+    genderTag TEXT NOT NULL
+);
+
+CREATE TABLE PPDTBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    imageCount INTEGER NOT NULL,
+    version TEXT NOT NULL,
+    lastStalenessCheckAt INTEGER NOT NULL
+);
+
+selectTotalPPDTImageCount:
+SELECT COUNT(*) FROM CachedPPDTImage;
+
+selectLeastUsedPPDTImages:
+SELECT * FROM CachedPPDTImage ORDER BY usageCount ASC, RANDOM() LIMIT ?;
+
+selectLeastUsedPPDTImagesByGender:
+SELECT * FROM CachedPPDTImage
+WHERE genderTag = :tag OR genderTag = 'MIXED'
+ORDER BY usageCount ASC, RANDOM()
+LIMIT :count;
+
+selectPPDTImageById:
+SELECT * FROM CachedPPDTImage WHERE id = ?;
+
+insertOrReplacePPDTImage:
+INSERT OR REPLACE INTO CachedPPDTImage(
+    id, imageUrl, imageDescription, imageContextJson, viewingTimeSeconds,
+    writingTimeMinutes, minCharacters, maxCharacters, category, difficulty,
+    batchId, cachedAt, lastUsed, usageCount, genderTag
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markPPDTImagesUsed:
+UPDATE CachedPPDTImage SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :imageIds;
+
+clearAllPPDTImages:
+DELETE FROM CachedPPDTImage;
+
+insertOrReplacePPDTBatchMetadata:
+INSERT OR REPLACE INTO PPDTBatchMetadata(batchId, downloadedAt, imageCount, version, lastStalenessCheckAt)
+VALUES (?, ?, ?, ?, ?);
+
+selectPPDTBatchMetadata:
+SELECT * FROM PPDTBatchMetadata WHERE batchId = ?;
+
+selectAllPPDTBatchMetadata:
+SELECT * FROM PPDTBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalPPDTBatchCount:
+SELECT COUNT(*) FROM PPDTBatchMetadata;
+
+-- Phase 2 continuation (12th slice): local store backing GitLiveSRTSituationCacheManager
+-- (SRTSituationCacheDao -> CachedSRTSituationEntity/SRTBatchMetadataEntity).
+-- Only the DAO surface SRTSituationCacheManager actually calls is ported here --
+-- getAllSituations, getSituationsByBatch, getRandomSituations,
+-- getSituationsByCategory (plain), getSituationsByDifficulty, single
+-- insertSituation, deleteSituationsByBatch, getAllCategories, single
+-- getBatchMetadata, and deleteBatchMetadata were all confirmed (grep across
+-- core/data + app, excluding Room's own DAO test) to have zero callers outside
+-- SRTSituationCacheDaoTest -- same category as prior slices' findings.
+
+CREATE TABLE CachedSRTSituation (
+    id TEXT NOT NULL PRIMARY KEY,
+    situation TEXT NOT NULL,
+    sequenceNumber INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    timeAllowedSeconds INTEGER NOT NULL,
+    difficulty TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL
+);
+
+CREATE TABLE SRTBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    situationCount INTEGER NOT NULL,
+    version TEXT NOT NULL
+);
+
+selectTotalSRTSituationCount:
+SELECT COUNT(*) FROM CachedSRTSituation;
+
+selectLeastUsedSRTSituations:
+SELECT * FROM CachedSRTSituation ORDER BY usageCount ASC, lastUsed ASC LIMIT ?;
+
+selectBalancedSRTByCategory:
+SELECT * FROM CachedSRTSituation
+WHERE category = :category
+ORDER BY usageCount ASC, RANDOM()
+LIMIT :count;
+
+markSRTSituationsUsed:
+UPDATE CachedSRTSituation SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :situationIds;
+
+insertOrReplaceSRTSituation:
+INSERT OR REPLACE INTO CachedSRTSituation(
+    id, situation, sequenceNumber, category, timeAllowedSeconds, difficulty,
+    batchId, cachedAt, lastUsed, usageCount
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clearAllSRTSituations:
+DELETE FROM CachedSRTSituation;
+
+insertOrReplaceSRTBatchMetadata:
+INSERT OR REPLACE INTO SRTBatchMetadata(batchId, downloadedAt, situationCount, version)
+VALUES (?, ?, ?, ?);
+
+selectAllSRTBatchMetadata:
+SELECT * FROM SRTBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalSRTBatchCount:
+SELECT COUNT(*) FROM SRTBatchMetadata;
+
+selectSRTSituationCountByCategory:
+SELECT COUNT(*) FROM CachedSRTSituation WHERE category = ?;
+
+-- Phase 2 continuation (13th slice): local store backing GitLiveTATImageCacheManager
+-- (TATImageCacheDao -> CachedTATImageEntity/TATBatchMetadataEntity). Only the
+-- DAO surface TATImageCacheManager actually calls is ported here -- getAllImages,
+-- getImagesByBatch, getImagesByCategory, getImagesByDifficulty, single
+-- insertImage, deleteImagesByBatch, getImageCountByCategory, getAllCategories,
+-- and deleteBatchMetadata were all confirmed (grep across core/data + app,
+-- excluding Room's own DAO test) to have zero callers outside
+-- TATImageCacheDao's own test -- same category as prior slices' findings.
+
+CREATE TABLE CachedTATImage (
+    id TEXT NOT NULL PRIMARY KEY,
+    imageUrl TEXT NOT NULL,
+    cardPosition INTEGER NOT NULL,
+    genderTag TEXT NOT NULL,
+    imageContextJson TEXT NOT NULL,
+    viewingTimeSeconds INTEGER NOT NULL,
+    writingTimeMinutes INTEGER NOT NULL,
+    minCharacters INTEGER NOT NULL,
+    maxCharacters INTEGER NOT NULL,
+    category TEXT,
+    difficulty TEXT,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL
+);
+
+CREATE TABLE TATBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    imageCount INTEGER NOT NULL,
+    version TEXT NOT NULL,
+    lastStalenessCheckAt INTEGER NOT NULL
+);
+
+selectTotalTATImageCount:
+SELECT COUNT(*) FROM CachedTATImage;
+
+selectLeastUsedTATImageByPosition:
+SELECT * FROM CachedTATImage
+WHERE cardPosition = :cardPosition
+  AND (genderTag = :genderTag OR genderTag = 'MIXED')
+ORDER BY usageCount ASC, RANDOM()
+LIMIT 1;
+
+markTATImagesUsed:
+UPDATE CachedTATImage SET usageCount = usageCount + 1, lastUsed = :timestamp WHERE id IN :imageIds;
+
+insertOrReplaceTATImage:
+INSERT OR REPLACE INTO CachedTATImage(
+    id, imageUrl, cardPosition, genderTag, imageContextJson, viewingTimeSeconds,
+    writingTimeMinutes, minCharacters, maxCharacters, category, difficulty,
+    batchId, cachedAt, lastUsed, usageCount
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clearAllTATImages:
+DELETE FROM CachedTATImage;
+
+insertOrReplaceTATBatchMetadata:
+INSERT OR REPLACE INTO TATBatchMetadata(batchId, downloadedAt, imageCount, version, lastStalenessCheckAt)
+VALUES (?, ?, ?, ?, ?);
+
+selectTATBatchMetadata:
+SELECT * FROM TATBatchMetadata WHERE batchId = ?;
+
+selectAllTATBatchMetadata:
+SELECT * FROM TATBatchMetadata ORDER BY downloadedAt DESC;
+
+selectTotalTATBatchCount:
+SELECT COUNT(*) FROM TATBatchMetadata;
+
+-- Phase 2 continuation (14th slice): local store backing GitLiveOIRQuestionCacheManager
+-- + GitLiveOIRQuestionSelector (OIRQuestionCacheDao -> CachedOIRQuestionEntity/
+-- OIRBatchMetadataEntity/OIRSyncMetadataEntity). Largest remaining Room DAO --
+-- kept as two Kotlin classes (manager + selector), mirroring the Android
+-- original's own split, to respect this repo's 300-line-per-file limit; a
+-- merged single class would run well past 300 lines once Firestore parsing +
+-- selection logic + status/status-mapping are combined.
+-- Only the DAO surface the manager+selector actually call is ported here --
+-- getQuestionsByBatches, single getQuestionById, getAllQuestions, single
+-- insertQuestion, deleteBatch, deleteOldestQuestions, single getBatchMetadata,
+-- getBatchCount, deleteBatchMetadata, getUsageStatistics, getMostUsedQuestions,
+-- and getLeastUsedQuestions were all confirmed (grep across core/data + app,
+-- excluding Room's own DAO test) to have zero callers outside
+-- OIRQuestionCacheDao's own test -- same category as prior slices' findings.
+
+CREATE TABLE CachedOIRQuestion (
+    id TEXT NOT NULL PRIMARY KEY,
+    questionNumber INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    subtype TEXT,
+    questionText TEXT NOT NULL,
+    optionsJson TEXT NOT NULL,
+    correctAnswerId TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    questionImageUrl TEXT,
+    difficulty TEXT NOT NULL,
+    tags TEXT NOT NULL,
+    batchId TEXT NOT NULL,
+    cachedAt INTEGER NOT NULL,
+    lastUsed INTEGER,
+    usageCount INTEGER NOT NULL,
+    correctAnswerIds TEXT
+);
+
+CREATE TABLE OIRBatchMetadata (
+    batchId TEXT NOT NULL PRIMARY KEY,
+    downloadedAt INTEGER NOT NULL,
+    questionCount INTEGER NOT NULL,
+    version TEXT NOT NULL
+);
+
+CREATE TABLE OIRSyncMetadata (
+    id INTEGER NOT NULL PRIMARY KEY,
+    contentVersion INTEGER NOT NULL,
+    lastSyncAt INTEGER NOT NULL
+);
+
+selectUnusedOIRQuestionsByType:
+SELECT * FROM CachedOIRQuestion
+WHERE type = :type
+AND (lastUsed IS NULL OR lastUsed < :olderThan)
+ORDER BY RANDOM()
+LIMIT :count;
+
+selectOIRQuestionsByType:
+SELECT * FROM CachedOIRQuestion WHERE type = :type ORDER BY RANDOM() LIMIT :count;
+
+selectTotalOIRQuestionCount:
+SELECT COUNT(*) FROM CachedOIRQuestion;
+
+selectOIRQuestionCountByType:
+SELECT COUNT(*) FROM CachedOIRQuestion WHERE type = ?;
+
+insertOrReplaceOIRQuestion:
+INSERT OR REPLACE INTO CachedOIRQuestion(
+    id, questionNumber, type, subtype, questionText, optionsJson, correctAnswerId,
+    explanation, questionImageUrl, difficulty, tags, batchId, cachedAt, lastUsed,
+    usageCount, correctAnswerIds
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markOIRQuestionsUsed:
+UPDATE CachedOIRQuestion SET lastUsed = :timestamp, usageCount = usageCount + 1 WHERE id IN :questionIds;
+
+deleteAllOIRQuestions:
+DELETE FROM CachedOIRQuestion;
+
+selectAllOIRBatchMetadata:
+SELECT * FROM OIRBatchMetadata ORDER BY downloadedAt DESC;
+
+countOIRBatchMetadataById:
+SELECT COUNT(*) FROM OIRBatchMetadata WHERE batchId = ?;
+
+insertOrReplaceOIRBatchMetadata:
+INSERT OR REPLACE INTO OIRBatchMetadata(batchId, downloadedAt, questionCount, version)
+VALUES (?, ?, ?, ?);
+
+deleteAllOIRBatchMetadata:
+DELETE FROM OIRBatchMetadata;
+
+selectOIRSyncMetadata:
+SELECT * FROM OIRSyncMetadata WHERE id = 0;
+
+upsertOIRSyncMetadata:
+INSERT OR REPLACE INTO OIRSyncMetadata(id, contentVersion, lastSyncAt)
+VALUES (0, ?, ?);

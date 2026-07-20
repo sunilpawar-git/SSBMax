@@ -1,5 +1,7 @@
 package com.ssbmax.shared.domain.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * PPDT (Picture Perception & Description Test) Models
  */
@@ -38,7 +40,13 @@ enum class PPDTRating(val displayKey: String) {
  * Structured context for a PPDT image, produced by the offline enrichment pipeline (Phase 5).
  * Used by Phase 8 multimodal prompt builder to inject per-picture rubric into Gemini.
  * All fields default to empty so pre-Phase-6 cached images degrade gracefully.
+ *
+ * `@Serializable` (added in Phase 2's 11th KMP-migration slice): `GitLivePPDTImageCacheManager`
+ * decodes this directly from the Firestore batch document via kotlinx.serialization (GitLive
+ * Firestore has no raw-map decode path), and also uses it to (de)serialize the JSON string
+ * stored in `CachedPPDTImage.imageContextJson`.
  */
+@Serializable
 data class PPDTImageContext(
     val sceneDescription: String = "",
     val coreElements: List<String> = emptyList(),
