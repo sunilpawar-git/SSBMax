@@ -9,21 +9,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Study Materials Screen
  * Note: Study materials are currently stored as code-based content
  * TODO: Migrate to Firestore-based StudyMaterialRepository for dynamic content
  */
-@HiltViewModel
-class StudyMaterialsViewModel @Inject constructor() : ViewModel() {
+class StudyMaterialsViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(StudyMaterialsUiState())
     val uiState: StateFlow<StudyMaterialsUiState> = _uiState.asStateFlow()

@@ -7,20 +7,17 @@ import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.GetUserSubmissionsUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Submissions List Screen
  */
-@HiltViewModel
-class SubmissionsListViewModel @Inject constructor(
+class SubmissionsListViewModel(
     private val getUserSubmissions: GetUserSubmissionsUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

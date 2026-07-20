@@ -5,17 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Settings Screen
  * Observes user subscription tier and manages shared error state
  */
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
 

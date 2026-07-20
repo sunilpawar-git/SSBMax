@@ -11,13 +11,11 @@ import com.ssbmax.shared.domain.scoring.EntryType
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Group Discussion Result Screen
@@ -29,8 +27,7 @@ import javax.inject.Inject
  * - Overall rating and performance summary
  * - Strengths and areas for improvement
  */
-@HiltViewModel
-class GDResultViewModel @Inject constructor(
+class GDResultViewModel(
     private val gtoRepository: GTORepository
 ) : ViewModel() {
     

@@ -20,13 +20,11 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.AppConstants
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.InterviewQuestionGenerationWorker
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 private const val TAG = "PIQTestViewModel"
 
@@ -63,8 +61,7 @@ val SELECTION_BOARD_OPTIONS = listOf(
  * - OIR number auto-fill from OIR test result
  */
 @OptIn(FlowPreview::class)
-@HiltViewModel
-class PIQTestViewModel @Inject constructor(
+class PIQTestViewModel(
     private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository,

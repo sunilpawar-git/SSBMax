@@ -4,19 +4,16 @@ import androidx.lifecycle.ViewModel
 import com.ssbmax.shared.domain.model.BillingPeriod
 import com.ssbmax.shared.domain.model.SubscriptionPlan
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import javax.inject.Inject
 
 /**
  * ViewModel for Upgrade Screen
  * Manages subscription plans and selection
  */
-@HiltViewModel
-class UpgradeViewModel @Inject constructor() : ViewModel() {
+class UpgradeViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(UpgradeUiState())
     val uiState: StateFlow<UpgradeUiState> = _uiState.asStateFlow()

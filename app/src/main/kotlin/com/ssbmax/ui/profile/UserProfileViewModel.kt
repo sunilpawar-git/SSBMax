@@ -9,21 +9,18 @@ import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for UserProfileScreen.
  * Manages user profile data, validation, and persistence.
  */
-@HiltViewModel
-class UserProfileViewModel @Inject constructor(
+class UserProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {

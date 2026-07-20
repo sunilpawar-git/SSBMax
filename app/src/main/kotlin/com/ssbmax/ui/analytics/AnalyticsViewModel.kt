@@ -5,19 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Analytics Dashboard
  */
-@HiltViewModel
-class AnalyticsViewModel @Inject constructor(
+class AnalyticsViewModel(
     private val analyticsRepository: AnalyticsRepository
 ) : ViewModel() {
     

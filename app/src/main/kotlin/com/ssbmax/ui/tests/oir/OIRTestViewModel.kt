@@ -18,8 +18,6 @@ import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.time.Clock
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -32,10 +30,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
-import javax.inject.Inject
 
-@HiltViewModel
-class OIRTestViewModel @Inject constructor(
+class OIRTestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
@@ -45,7 +41,7 @@ class OIRTestViewModel @Inject constructor(
     private val scoreCalculator: OIRTestScoreCalculator,
     private val submitOIRTestUseCase: SubmitOIRTestUseCase,
     private val clock: Clock,
-    @ApplicationContext private val appContext: Context,
+    private val appContext: Context,
     private val imageLoader: ImageLoader
 ) : ViewModel() {
     

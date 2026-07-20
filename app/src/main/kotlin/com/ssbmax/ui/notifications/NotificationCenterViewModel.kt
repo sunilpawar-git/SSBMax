@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.SSBMaxNotification
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,13 +14,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 /**
  * ViewModel for the Notification Center screen.
  * Manages notification list, filtering, and actions.
  */
-@HiltViewModel
-class NotificationCenterViewModel @Inject constructor(
+class NotificationCenterViewModel(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

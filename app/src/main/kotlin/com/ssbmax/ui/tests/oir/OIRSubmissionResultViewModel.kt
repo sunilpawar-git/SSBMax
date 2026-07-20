@@ -5,13 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for OIR Submission Result Screen
@@ -20,8 +18,7 @@ import javax.inject.Inject
  * This replaces the OIRTestResultHolder anti-pattern by properly fetching
  * the result from Firestore using the submissionId
  */
-@HiltViewModel
-class OIRSubmissionResultViewModel @Inject constructor(
+class OIRSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository
 ) : ViewModel() {
 

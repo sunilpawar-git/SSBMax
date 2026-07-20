@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,13 +12,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 /**
  * ViewModel for Student Profile Screen
  * Fetches profile data from UserProfileRepository and progress from TestProgressRepository
  */
-@HiltViewModel
-class StudentProfileViewModel @Inject constructor(
+class StudentProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase

@@ -14,16 +14,12 @@ import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.TTSService
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Interview Session screen
@@ -35,15 +31,14 @@ import javax.inject.Inject
  *
  * OPTIMIZATION: Uses BACKGROUND AI analysis via WorkManager.
  */
-    @HiltViewModel
-class InterviewSessionViewModel @Inject constructor(
+class InterviewSessionViewModel(
     interviewRepository: InterviewRepository,
     authRepository: AuthRepository,
     userProfileRepository: UserProfileRepository,
     workManager: WorkManager,
     analyticsManager: AnalyticsManager,
-    @AndroidTTS androidTTSService: TTSService,
-    @ApplicationContext private val context: Context,
+    androidTTSService: TTSService,
+    private val context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +12,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import javax.inject.Inject
 
 /**
  * Navigation events from splash screen
@@ -30,8 +28,7 @@ sealed class SplashNavigationEvent {
  * Splash screen ViewModel
  * Checks authentication state and navigates accordingly
  */
-@HiltViewModel
-class SplashViewModel @Inject constructor(
+class SplashViewModel(
     private val authRepository: com.ssbmax.shared.domain.repository.AuthRepository,
     private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository
 ) : ViewModel() {

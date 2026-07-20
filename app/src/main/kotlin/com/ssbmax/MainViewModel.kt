@@ -7,13 +7,10 @@ import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.ui.theme.ThemeState
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class MainViewModel @Inject constructor(
+class MainViewModel(
     private val themePreferenceManager: ThemePreferenceManager,
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository

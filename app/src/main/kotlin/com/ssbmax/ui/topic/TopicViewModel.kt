@@ -15,7 +15,6 @@ import com.ssbmax.shared.domain.repository.StudyContentRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +24,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Topic Screen
@@ -36,8 +34,7 @@ import javax.inject.Inject
  * - Automatically falls back to local on error
  * - Gradual per-topic rollout
  */
-@HiltViewModel
-class TopicViewModel @Inject constructor(
+class TopicViewModel(
     savedStateHandle: SavedStateHandle,
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,

@@ -8,7 +8,6 @@ import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,13 +17,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 /**
  * ViewModel for Phase 1 Detail Screen
  * Fetches Phase 1 progress from TestProgressRepository
  */
-@HiltViewModel
-class Phase1DetailViewModel @Inject constructor(
+class Phase1DetailViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

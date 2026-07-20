@@ -8,7 +8,6 @@ import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Upgrade Screen
@@ -29,8 +27,7 @@ import javax.inject.Inject
  * TODO: Create SubscriptionRepository for subscription management
  * TODO: Add subscription renewal and cancellation flows
  */
-@HiltViewModel
-class UpgradeViewModel @Inject constructor(
+class UpgradeViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository
     // Payment gateway not yet integrated

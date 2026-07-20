@@ -7,20 +7,17 @@ import com.ssbmax.shared.domain.model.results.HistoricResult
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.usecase.results.GetHistoricResultsUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Historic Results Screen
  * Displays past test submissions from last 6 months
  */
-@HiltViewModel
-class HistoricResultsViewModel @Inject constructor(
+class HistoricResultsViewModel(
     private val authRepository: AuthRepository,
     private val getHistoricResults: GetHistoricResultsUseCase
 ) : ViewModel() {

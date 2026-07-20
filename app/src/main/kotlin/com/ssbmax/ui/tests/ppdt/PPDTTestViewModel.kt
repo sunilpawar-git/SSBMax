@@ -20,7 +20,6 @@ import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.PPDTAnalysisWorker
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,10 +29,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class PPDTTestViewModel @Inject constructor(
+class PPDTTestViewModel(
     observeCurrentUser: ObserveCurrentUserUseCase,
     private val loadPPDTTest: LoadPPDTTestUseCase,
     private val submitPPDTTest: SubmitPPDTTestUseCase,

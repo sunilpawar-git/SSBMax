@@ -6,7 +6,6 @@ import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,14 +16,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Student Home Screen
  * Manages user progress and displays user info
  */
-@HiltViewModel
-class StudentHomeViewModel @Inject constructor(
+class StudentHomeViewModel(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: com.ssbmax.shared.domain.repository.TestProgressRepository,

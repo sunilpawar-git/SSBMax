@@ -10,31 +10,27 @@ import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
 import com.ssbmax.shared.domain.usecase.study.SaveStudyProgressUseCase
 import com.ssbmax.shared.domain.usecase.study.TrackStudySessionUseCase
 import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 /**
  * ViewModel for Study Material Detail Screen
  * Handles material content loading and progress tracking
  * REFACTORED: Now uses use cases for business logic separation
  */
-@HiltViewModel
-class StudyMaterialDetailViewModel @Inject constructor(
+class StudyMaterialDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val getStudyMaterialDetail: GetStudyMaterialDetailUseCase,
     private val saveStudyProgress: SaveStudyProgressUseCase,
     private val trackStudySession: TrackStudySessionUseCase,
     private val getStudyProgress: GetStudyProgressUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    @ApplicationContext private val context: Context
+    private val context: Context
 ) : ViewModel() {
 
     private val materialId: String = savedStateHandle.get<String>("categoryId") ?: ""

@@ -3,19 +3,16 @@ package com.ssbmax.ui.faq
 import androidx.lifecycle.ViewModel
 import com.ssbmax.shared.domain.model.FAQCategory
 import com.ssbmax.shared.domain.model.FAQItem
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import javax.inject.Inject
 
 /**
  * ViewModel for FAQ Screen
  * Manages FAQ content, search, and filtering
  */
-@HiltViewModel
-class FAQViewModel @Inject constructor() : ViewModel() {
+class FAQViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(FAQUiState())
     val uiState: StateFlow<FAQUiState> = _uiState.asStateFlow()

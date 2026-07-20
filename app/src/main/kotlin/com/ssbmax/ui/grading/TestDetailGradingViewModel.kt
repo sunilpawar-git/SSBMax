@@ -10,7 +10,6 @@ import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,15 +17,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-import javax.inject.Inject
 
 /**
  * ViewModel for Test Detail Grading Screen (Assessor)
  * Handles grading submission and sending notifications to students
  * UPDATED: Now loads student name from UserProfileRepository
  */
-@HiltViewModel
-class TestDetailGradingViewModel @Inject constructor(
+class TestDetailGradingViewModel(
     private val testSubmissionRepository: TestSubmissionRepository,
     private val notificationRepository: NotificationRepository,
     private val userProfileRepository: UserProfileRepository,

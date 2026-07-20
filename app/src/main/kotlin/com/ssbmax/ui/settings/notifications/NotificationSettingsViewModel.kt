@@ -5,21 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.NotificationPreferences
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Notification Settings
  * Handles notification preference management independently from main SettingsViewModel
  */
-@HiltViewModel
-class NotificationSettingsViewModel @Inject constructor(
+class NotificationSettingsViewModel(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

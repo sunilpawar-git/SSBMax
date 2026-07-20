@@ -20,7 +20,6 @@ import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.WATAnalysisWorker
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,10 +30,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class WATTestViewModel @Inject constructor(
+class WATTestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submitWATTest: SubmitWATTestUseCase,

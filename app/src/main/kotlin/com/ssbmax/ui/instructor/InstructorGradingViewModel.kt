@@ -7,7 +7,6 @@ import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,14 +16,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Instructor Grading Dashboard
  * Shows pending submissions for review using GradingQueueRepository
  */
-@HiltViewModel
-class InstructorGradingViewModel @Inject constructor(
+class InstructorGradingViewModel(
     private val gradingQueueRepository: GradingQueueRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

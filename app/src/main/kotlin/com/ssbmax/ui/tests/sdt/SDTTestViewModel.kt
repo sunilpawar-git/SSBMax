@@ -18,7 +18,6 @@ import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.SDTAnalysisWorker
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,10 +28,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class SDTTestViewModel @Inject constructor(
+class SDTTestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submitSDTTest: SubmitSDTTestUseCase,

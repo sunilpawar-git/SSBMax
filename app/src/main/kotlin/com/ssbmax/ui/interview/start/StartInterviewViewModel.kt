@@ -13,8 +13,6 @@ import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +20,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Start Interview screen
@@ -31,14 +28,13 @@ import javax.inject.Inject
  * and showing progress during on-demand generation (30-60s).
  * Also loads past interview results for history display.
  */
-@HiltViewModel
-class StartInterviewViewModel @Inject constructor(
+class StartInterviewViewModel(
     private val checkPrerequisites: CheckInterviewPrerequisitesUseCase,
     private val interviewRepository: InterviewRepository,
     private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val questionCacheRepository: com.ssbmax.shared.domain.model.interview.QuestionCacheRepository,
-    @ApplicationContext private val context: Context
+    private val context: Context
 ) : ViewModel() {
 
     companion object {

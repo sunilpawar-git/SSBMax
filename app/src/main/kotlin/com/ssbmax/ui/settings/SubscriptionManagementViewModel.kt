@@ -6,7 +6,6 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,13 +14,11 @@ import com.ssbmax.utils.DateFormatter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.*
-import javax.inject.Inject
 /**
  * ViewModel for Subscription Management Screen
  * REFACTORED: Now uses use cases instead of direct Firebase dependencies
  */
-@HiltViewModel
-class SubscriptionManagementViewModel @Inject constructor(
+class SubscriptionManagementViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val getMonthlyUsage: GetMonthlyUsageUseCase

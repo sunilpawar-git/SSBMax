@@ -19,7 +19,6 @@ import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase.ProfileIncomplete
 import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,10 +29,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import javax.inject.Inject
 
-@HiltViewModel
-class TATTestViewModel @Inject constructor(
+class TATTestViewModel(
     private val loadTATTest: LoadTATTestUseCase,
     private val submitTATTest: SubmitTATTestUseCase,
     observeCurrentUser: ObserveCurrentUserUseCase,

@@ -12,7 +12,6 @@ import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import java.util.UUID
-import javax.inject.Inject
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 
 /**
@@ -43,8 +41,7 @@ import com.ssbmax.ui.tests.common.TestNavigationEvent
  * - Uses viewModelScope with isActive checks for cooperative cancellation
  * - No static references or context leaks
  */
-@HiltViewModel
-class GPETestViewModel @Inject constructor(
+class GPETestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val submissionRepository: com.ssbmax.shared.domain.repository.SubmissionRepository,

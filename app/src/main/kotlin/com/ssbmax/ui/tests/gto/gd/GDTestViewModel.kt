@@ -11,7 +11,6 @@ import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
 import com.ssbmax.ui.tests.gto.common.GTOTestUtils
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-import javax.inject.Inject
 
 /**
  * ViewModel for Group Discussion (GD) Test
@@ -38,8 +36,7 @@ import javax.inject.Inject
  * - Sequential access enforcement (must be first GTO test)
  * - Subscription limit checking
  */
-@HiltViewModel
-class GDTestViewModel @Inject constructor(
+class GDTestViewModel(
     private val gtoRepository: GTORepository,
     private val testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository,
     private val eligibilityChecker: GTOTestEligibilityChecker,

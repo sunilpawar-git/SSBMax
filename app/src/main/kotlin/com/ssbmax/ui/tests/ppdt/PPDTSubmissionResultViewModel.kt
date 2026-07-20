@@ -12,7 +12,6 @@ import com.ssbmax.shared.domain.scoring.EntryType
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
@@ -21,14 +20,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for PPDT Submission Result Screen
  * Fetches submission data from SubmissionRepository
  */
-@HiltViewModel
-class PPDTSubmissionResultViewModel @Inject constructor(
+class PPDTSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository
 ) : ViewModel() {
     

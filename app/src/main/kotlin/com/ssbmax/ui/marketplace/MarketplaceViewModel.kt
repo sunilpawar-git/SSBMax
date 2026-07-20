@@ -6,13 +6,11 @@ import com.ssbmax.shared.domain.model.CoachingInstitute
 import com.ssbmax.shared.domain.model.InstituteType
 import com.ssbmax.shared.domain.model.PriceRange
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Marketplace Screen
@@ -22,12 +20,10 @@ import javax.inject.Inject
  * TODO: Create MarketplaceRepository when backend API is ready
  * TODO: Integrate with payment gateway for bookings
  * TODO: Add user reviews and ratings system
+ *
+ * Marketplace backend not yet implemented — using MarketplaceMockData for UI development.
  */
-@HiltViewModel
-class MarketplaceViewModel @Inject constructor(
-    // Marketplace backend not yet implemented
-    // Using MarketplaceMockData for UI development
-) : ViewModel() {
+class MarketplaceViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MarketplaceUiState())
     val uiState: StateFlow<MarketplaceUiState> = _uiState.asStateFlow()

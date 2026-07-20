@@ -13,13 +13,11 @@ import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.utils.ErrorLogger
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for authentication screens with Firebase integration
@@ -29,8 +27,7 @@ import javax.inject.Inject
  * 
  * REFACTORED: Now uses use cases instead of direct repository implementation injection
  */
-@HiltViewModel
-class AuthViewModel @Inject constructor(
+class AuthViewModel(
     private val getGoogleSignInIntent: GetGoogleSignInIntentUseCase,
     private val signInWithGoogle: SignInWithGoogleUseCase,
     private val updateUserRole: UpdateUserRoleUseCase,

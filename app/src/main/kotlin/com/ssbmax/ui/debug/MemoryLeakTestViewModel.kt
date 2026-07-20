@@ -5,13 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.util.LeakVerificationHelper
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for Memory Leak Test Screen
@@ -19,8 +17,7 @@ import javax.inject.Inject
  * Provides controlled test scenarios for verifying memory leak prevention
  * with Android Profiler.
  */
-@HiltViewModel
-class MemoryLeakTestViewModel @Inject constructor() : ViewModel() {
+class MemoryLeakTestViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MemoryLeakTestUiState())
     val uiState: StateFlow<MemoryLeakTestUiState> = _uiState.asStateFlow()

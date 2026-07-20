@@ -5,18 +5,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Debug screen to diagnose OIR question cache issues
@@ -28,8 +26,7 @@ import javax.inject.Inject
  * - Last error from cache manager
  */
 
-@HiltViewModel
-class OIRDebugViewModel @Inject constructor(
+class OIRDebugViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val testContentRepository: TestContentRepository
 ) : ViewModel() {
@@ -104,7 +101,7 @@ data class DebugInfo(
 
 @Composable
 fun OIRDebugInfoScreen(
-    viewModel: OIRDebugViewModel = hiltViewModel(),
+    viewModel: OIRDebugViewModel = koinViewModel(),
     onClose: () -> Unit
 ) {
     val debugInfo by viewModel.debugInfo.collectAsState()

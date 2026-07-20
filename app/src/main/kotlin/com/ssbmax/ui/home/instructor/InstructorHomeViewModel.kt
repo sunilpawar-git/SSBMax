@@ -4,20 +4,17 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.StudentPerformance
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 /**
  * ViewModel for Instructor Home Screen
  * Manages student list, batches, and grading queue
  */
-@HiltViewModel
-class InstructorHomeViewModel @Inject constructor(
+class InstructorHomeViewModel(
     private val gradingQueueRepository: GradingQueueRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {

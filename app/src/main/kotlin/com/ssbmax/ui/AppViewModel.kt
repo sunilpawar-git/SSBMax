@@ -5,19 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Global app-level ViewModel
  * Manages current authenticated user state and sign out
  */
-@HiltViewModel
-class AppViewModel @Inject constructor(
+class AppViewModel(
     observeCurrentUser: ObserveCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
