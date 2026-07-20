@@ -6,6 +6,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * Raw Gemini REST client, replacing the Android-only
@@ -20,19 +22,34 @@ class KtorGeminiClient(
     private val apiKey: String,
     private val modelName: String = "gemini-2.5-flash"
 ) {
+    /**
+     * @param imageBytes Raw image bytes to attach as multimodal input (empty = text-only,
+     *   matching the Android SDK's `content { blob(...); text(...) }` fallback behavior).
+     */
+    @OptIn(ExperimentalEncodingApi::class)
     suspend fun generateContent(
         prompt: String,
+        imageBytes: ByteArray = ByteArray(0),
+        imageMimeType: String = "image/jpeg",
         temperature: Float = 0.0f,
         maxOutputTokens: Int = 8192
     ): Result<String> {
         return try {
+            val parts = buildList {
+                // Image part precedes the text part, mirroring the Android analyzers'
+                // `content { blob(...); text(...) }` ordering.
+                if (imageBytes.isNotEmpty()) {
+                    add(GeminiPart(inlineData = GeminiInlineData(imageMimeType, Base64.encode(imageBytes))))
+                }
+                add(GeminiPart(text = prompt))
+            }
             val response = httpClient.post(
                 "$BASE_URL/$modelName:generateContent?key=$apiKey"
             ) {
                 contentType(ContentType.Application.Json)
                 setBody(
                     GeminiGenerateContentRequest(
-                        contents = listOf(GeminiContent(parts = listOf(GeminiPart(prompt)))),
+                        contents = listOf(GeminiContent(parts = parts)),
                         generationConfig = GeminiGenerationConfig(temperature, maxOutputTokens)
                     )
                 )

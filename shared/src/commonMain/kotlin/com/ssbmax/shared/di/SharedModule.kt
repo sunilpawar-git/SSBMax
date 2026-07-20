@@ -1,7 +1,9 @@
 package com.ssbmax.shared.di
 
+import com.ssbmax.shared.ai.KtorAIService
 import com.ssbmax.shared.ai.KtorGeminiClient
-import com.ssbmax.shared.ai.KtorInterviewResponseAnalysisService
+import com.ssbmax.shared.ai.KtorPPDTAnalyzer
+import com.ssbmax.shared.ai.KtorTATStoryAnalyzer
 import com.ssbmax.shared.data.repository.GitLiveAnalyticsRepository
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
@@ -43,7 +45,7 @@ import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.TestRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
-import com.ssbmax.shared.domain.service.InterviewResponseAnalysisService
+import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
@@ -62,9 +64,10 @@ import org.koin.dsl.module
 /**
  * Koin module. Phase 0 wired one vertical slice (auth + OIR result); Phase 2
  * adds UserProfile/Subscription repositories, a real SQLDelight-backed cache,
- * and the Ktor-based Gemini path (InterviewResponseAnalysisService) — still
- * not full DI-graph parity with the app's 6 Hilt modules / 55 ViewModels,
- * which remains Phase 3 scope.
+ * and the Ktor-based Gemini path (full `AIService` via `KtorAIService`,
+ * replacing the earlier narrower `InterviewResponseAnalysisService` slice
+ * once every AIService method was ported) — still not full DI-graph parity
+ * with the app's 6 Hilt modules / 55 ViewModels, which remains Phase 3 scope.
  *
  * DomainLogger is bound to a no-op implementation here — a real cross-platform
  * logger (Android logcat / iOS os_log) is an expect/actual shim deferred to
@@ -98,6 +101,8 @@ val sharedModule = module {
             apiKey = getProperty("GEMINI_API_KEY", "")
         )
     }
+    single { KtorPPDTAnalyzer(client = get(), logger = get()) }
+    single { KtorTATStoryAnalyzer(client = get(), logger = get()) }
 
     singleOf(::GitLiveAuthRepository) bind AuthRepository::class
     singleOf(::GitLiveOirResultRepository) bind OirResultRepository::class
@@ -123,7 +128,7 @@ val sharedModule = module {
     singleOf(::GitLiveTestContentRepository) bind TestContentRepository::class
     singleOf(::GitLiveGTORepository) bind GTORepository::class
     singleOf(::GitLiveNotificationRepository) bind NotificationRepository::class
-    factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
+    factoryOf(::KtorAIService) bind AIService::class
 
     factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::GetOirResultUseCase)
