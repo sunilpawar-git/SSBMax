@@ -44,7 +44,7 @@ class GTODtoTest {
     }
 
     @Test
-    fun `status is left alone when there are no scores yet, or already terminal`() {
+    fun `status is left alone when there are no scores yet or already terminal`() {
         assertEquals(
             GTOSubmissionStatus.PENDING_ANALYSIS,
             inferCompletedGtoStatus(GTOSubmissionStatus.PENDING_ANALYSIS, hasScores = false)
@@ -56,7 +56,7 @@ class GTODtoTest {
     }
 
     @Test
-    fun `parseGtoSubmissionTestType only recognizes GD, GPE and Lecturette wire names`() {
+    fun `parseGtoSubmissionTestType only recognizes GD GPE and Lecturette wire names`() {
         assertEquals(GTOTestType.GROUP_DISCUSSION, parseGtoSubmissionTestType("GTO_GD"))
         assertEquals(GTOTestType.GROUP_DISCUSSION, parseGtoSubmissionTestType("GROUP_DISCUSSION"))
         assertEquals(GTOTestType.GROUP_PLANNING_EXERCISE, parseGtoSubmissionTestType("GTO_GPE"))

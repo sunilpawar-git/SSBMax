@@ -40,7 +40,7 @@ class SubscriptionLimitsTest {
     }
 
     @Test
-    fun `unknown test type key defaults to zero, not unlimited`() {
+    fun `unknown test type key defaults to zero not unlimited`() {
         assertEquals(0, SubscriptionLimits.limitFor("Nonexistent Test", SubscriptionTier.PREMIUM))
     }
 }

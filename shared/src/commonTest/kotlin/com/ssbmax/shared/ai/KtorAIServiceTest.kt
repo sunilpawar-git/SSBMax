@@ -92,7 +92,7 @@ class KtorAIServiceTest {
     // ---- Token-tier request bodies ----
 
     @Test
-    fun `analyzeResponse uses tier-1 maxOutputTokens (8192)`() = runTest(testDispatcher) {
+    fun `analyzeResponse uses tier-1 maxOutputTokens of 8192`() = runTest(testDispatcher) {
         var capturedBody = ""
         val service = serviceWith { request ->
             capturedBody = bodyTextOf(request)
@@ -105,7 +105,7 @@ class KtorAIServiceTest {
     }
 
     @Test
-    fun `generatePIQBasedQuestions uses tier-2 maxOutputTokens (12288)`() = runTest(testDispatcher) {
+    fun `generatePIQBasedQuestions uses tier-2 maxOutputTokens of 12288`() = runTest(testDispatcher) {
         var capturedBody = ""
         val service = serviceWith { request ->
             capturedBody = bodyTextOf(request)
@@ -116,7 +116,7 @@ class KtorAIServiceTest {
     }
 
     @Test
-    fun `generateFeedback uses tier-3 maxOutputTokens (16384)`() = runTest(testDispatcher) {
+    fun `generateFeedback uses tier-3 maxOutputTokens of 16384`() = runTest(testDispatcher) {
         var capturedBody = ""
         val service = serviceWith { request ->
             capturedBody = bodyTextOf(request)
@@ -211,7 +211,7 @@ class KtorAIServiceTest {
     }
 
     @Test
-    fun `isAvailable returns false, not an exception, when the call fails`() = runTest(testDispatcher) {
+    fun `isAvailable returns false not an exception when the call fails`() = runTest(testDispatcher) {
         val service = serviceWith { respond("boom", HttpStatusCode.InternalServerError) }
         assertEquals(false, service.isAvailable())
     }

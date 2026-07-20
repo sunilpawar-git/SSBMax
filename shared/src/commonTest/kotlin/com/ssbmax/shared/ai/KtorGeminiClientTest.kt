@@ -48,7 +48,7 @@ class KtorGeminiClientTest {
     }
 
     @Test
-    fun `no candidates in the response is a failure, not an empty success`() = runTest {
+    fun `no candidates in the response is a failure not an empty success`() = runTest {
         val engine = MockEngine {
             respond(
                 content = """{"candidates":[]}""",
@@ -62,7 +62,7 @@ class KtorGeminiClientTest {
     }
 
     @Test
-    fun `network error surfaces as Result failure, not an unhandled exception`() = runTest {
+    fun `network error surfaces as Result failure not an unhandled exception`() = runTest {
         val engine = MockEngine {
             respond(content = "Internal error", status = HttpStatusCode.InternalServerError)
         }

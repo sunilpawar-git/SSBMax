@@ -28,7 +28,7 @@ class StudyContentDtoTest {
     }
 
     @Test
-    fun `CloudAttachmentDto falls back to IMAGE for an unrecognized type, same as unrecognized-enum handling elsewhere`() {
+    fun `CloudAttachmentDto falls back to IMAGE for an unrecognized type same as unrecognized-enum handling elsewhere`() {
         val dto = CloudAttachmentDto(id = "a1", type = "SOME_FUTURE_TYPE", storagePath = "path/x")
 
         assertEquals(AttachmentType.IMAGE, dto.toDomain().type)

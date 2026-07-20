@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class PIQContextBuilderTest {
 
     @Test
-    fun `buildComprehensivePIQContext reflects personal, career, and self-assessment fields`() {
+    fun `buildComprehensivePIQContext reflects personal career and self-assessment fields`() {
         val piqMap: Map<String, Any> = mapOf(
             "data" to mapOf(
                 "fullName" to "Cadet Sharma",

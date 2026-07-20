@@ -46,7 +46,7 @@ class FirestoreRawMapSerializerTest {
     }
 
     @Test
-    fun `deserialize of a missing document (null value) returns an empty map, not a crash`() {
+    fun `deserialize of a missing document with a null value returns an empty map not a crash`() {
         val decoder = FirebaseDecoder(null)
         assertEquals(emptyMap(), FirestoreRawMapSerializer.deserialize(decoder))
     }

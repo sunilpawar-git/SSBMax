@@ -70,7 +70,7 @@ class SubmissionClusterDtoTest {
     }
 
     @Test
-    fun `SRTInstructorScoreDto drops unparseable category keys, same defensive behavior as Android`() {
+    fun `SRTInstructorScoreDto drops unparseable category keys same defensive behavior as Android`() {
         val dto = SRTInstructorScoreDto(
             gradedByInstructorId = "i1",
             gradedByInstructorName = "Instructor",
@@ -86,7 +86,7 @@ class SubmissionClusterDtoTest {
     }
 
     @Test
-    fun `OIR answeredQuestions are never round-tripped, same real limitation as the Android original`() {
+    fun `OIR answeredQuestions are never round-tripped same real limitation as the Android original`() {
         val dto = OIRDataDto(
             id = "oir-1",
             userId = "u1",
@@ -142,7 +142,7 @@ class SubmissionClusterDtoTest {
     }
 
     @Test
-    fun `PIQ aiPreliminaryScore is written but never round-tripped, same real limitation as the Android original`() {
+    fun `PIQ aiPreliminaryScore is written but never round-tripped same real limitation as the Android original`() {
         val domain = com.ssbmax.shared.domain.model.PIQSubmission(
             id = "piq-2",
             userId = "u1",
@@ -169,7 +169,7 @@ class SubmissionClusterDtoTest {
     }
 
     @Test
-    fun `GTO submission envelope keeps GTOSubmissionStatus in the shared status field, same quirk as Android`() {
+    fun `GTO submission envelope keeps GTOSubmissionStatus in the shared status field same quirk as Android`() {
         val doc = SubmissionDocDto(
             id = "gd-1",
             userId = "u1",

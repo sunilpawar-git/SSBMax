@@ -47,7 +47,7 @@ class KtorGeminiResponseParserTest {
     }
 
     @Test
-    fun `unrecognized OLQ names are dropped, not fatal`() {
+    fun `unrecognized OLQ names are dropped not fatal`() {
         val text = """
             {"olqScores": [
                 {"olq": "NOT_A_REAL_OLQ", "score": 5.0, "reasoning": "n/a"},

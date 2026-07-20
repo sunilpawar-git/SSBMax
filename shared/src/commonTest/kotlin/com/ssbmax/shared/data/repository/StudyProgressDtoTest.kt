@@ -37,7 +37,7 @@ class StudyProgressDtoTest {
     }
 
     @Test
-    fun `study session round-trips including active (no end time) sessions`() {
+    fun `study session round-trips including active sessions with no end time`() {
         val session = StudySession(
             id = "session-1",
             userId = "user-1",
