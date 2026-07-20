@@ -26,10 +26,15 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.time.Instant
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Unit tests for InterviewAnalysisWorker
@@ -53,7 +58,7 @@ class InterviewAnalysisWorkerTest {
         userId = testUserId,
         mode = InterviewMode.TEXT_BASED,
         status = InterviewStatus.PENDING_ANALYSIS,
-        startedAt = Instant.now().minusSeconds(1800),
+        startedAt = Clock.System.now() - 1800.seconds,
         completedAt = null,
         piqSnapshotId = "piq-123",
         consentGiven = true,
@@ -69,7 +74,7 @@ class InterviewAnalysisWorkerTest {
             questionId = "q1",
             responseText = "My answer 1",
             responseMode = InterviewMode.TEXT_BASED,
-            respondedAt = Instant.now().minusSeconds(1200),
+            respondedAt = Clock.System.now() - 1200.seconds,
             thinkingTimeSec = 30,
             audioUrl = null,
             olqScores = emptyMap(),
@@ -84,7 +89,7 @@ class InterviewAnalysisWorkerTest {
         sessionId = testSessionId,
         userId = testUserId,
         mode = InterviewMode.TEXT_BASED,
-        completedAt = Instant.now(),
+        completedAt = Clock.System.now(),
         durationSec = 1800,
         totalQuestions = 2,
         totalResponses = 2,
@@ -123,17 +128,27 @@ class InterviewAnalysisWorkerTest {
             InterviewAnalysisWorker.KEY_SESSION_ID to testSessionId
         )
         every { workerParams.runAttemptCount } returns 0
+
+        // InterviewAnalysisWorker resolves its dependencies via KoinComponent/inject()
+        // (converted from Hilt's @HiltWorker/@AssistedInject) — start a Koin instance
+        // with the mocks above bound so `by inject()` resolves them in the worker.
+        startKoin {
+            modules(module {
+                single { interviewRepository }
+                single { aiService }
+                single { notificationHelper }
+                single { getOLQDashboard }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     private fun createWorker(): InterviewAnalysisWorker {
-        return InterviewAnalysisWorker(
-            context = context,
-            params = workerParams,
-            interviewRepository = interviewRepository,
-            aiService = aiService,
-            notificationHelper = notificationHelper,
-            getOLQDashboard = getOLQDashboard
-        )
+        return InterviewAnalysisWorker(context, workerParams)
     }
 
     @Test

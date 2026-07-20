@@ -2,9 +2,10 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.core.data.ai.prompts.TATSynthesisPrompts
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.shared.domain.model.TestType
@@ -22,8 +23,6 @@ import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.TATStoryAnalysisWorker.Companion.FAILED_MARKER
 import com.ssbmax.workers.retry.RetryBackoffPolicy
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
@@ -34,17 +33,15 @@ import kotlinx.coroutines.flow.first
  * Reads their Room assessments, sends a cross-story prompt to Gemini, and writes the
  * final OLQAnalysisResult to Firestore.
  */
-@HiltWorker
-class TATSynthesisWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val tatStoryAssessmentDao: TATStoryAssessmentDao,
-    private val submissionRepository: SubmissionRepository,
-    private val userProfileRepository: UserProfileRepository,
-    private val aiService: AIService,
-    private val notificationHelper: NotificationHelper,
-    private val getOLQDashboard: GetOLQDashboardUseCase
-) : CoroutineWorker(context, params) {
+class TATSynthesisWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val tatStoryAssessmentDao: TATStoryAssessmentDao by inject()
+    private val submissionRepository: SubmissionRepository by inject()
+    private val userProfileRepository: UserProfileRepository by inject()
+    private val aiService: AIService by inject()
+    private val notificationHelper: NotificationHelper by inject()
+    private val getOLQDashboard: GetOLQDashboardUseCase by inject()
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"

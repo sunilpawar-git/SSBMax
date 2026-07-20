@@ -2,7 +2,6 @@ package com.ssbmax.workers
 
 import android.content.Context
 import androidx.work.ListenableWorker
-import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.ssbmax.shared.domain.model.interview.InterviewQuestion
@@ -15,11 +14,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -55,6 +58,22 @@ class InterviewQuestionGenerationWorkerTest {
         submissionRepository = mockk()
         questionCacheRepository = mockk()
         piqDataMapper = mockk()
+
+        // InterviewQuestionGenerationWorker resolves its dependencies via
+        // KoinComponent/inject() (converted from Hilt's @HiltWorker/@AssistedInject).
+        startKoin {
+            modules(module {
+                single { aiService }
+                single { submissionRepository }
+                single { questionCacheRepository }
+                single { piqDataMapper }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test
@@ -337,31 +356,21 @@ class InterviewQuestionGenerationWorkerTest {
     }
 
     /**
-     * Helper to create worker instance with mocked dependencies
+     * Helper to create worker instance with mocked dependencies.
+     *
+     * InterviewQuestionGenerationWorker resolves its dependencies via
+     * KoinComponent/inject() now (converted from Hilt's
+     * @HiltWorker/@AssistedInject) — the mocks are bound in [setup] via
+     * startKoin, so a plain [TestListenableWorkerBuilder] (default
+     * reflection-based factory, matching the worker's now-plain
+     * (Context, WorkerParameters) constructor) is enough; no custom
+     * WorkerFactory override is needed anymore.
      */
     private fun createWorker(
         piqSubmissionId: String,
         runAttemptCount: Int = 0
     ): InterviewQuestionGenerationWorker {
-        val workerFactory = object : WorkerFactory() {
-            override fun createWorker(
-                appContext: Context,
-                workerClassName: String,
-                workerParameters: WorkerParameters
-            ): ListenableWorker {
-                return InterviewQuestionGenerationWorker(
-                    context = appContext,
-                    params = workerParameters,
-                    aiService = aiService,
-                    submissionRepository = submissionRepository,
-                    questionCacheRepository = questionCacheRepository,
-                    piqDataMapper = piqDataMapper
-                )
-            }
-        }
-
         return TestListenableWorkerBuilder<InterviewQuestionGenerationWorker>(context)
-            .setWorkerFactory(workerFactory)
             .setInputData(
                 androidx.work.workDataOf(
                     InterviewQuestionGenerationWorker.KEY_PIQ_SUBMISSION_ID to piqSubmissionId,

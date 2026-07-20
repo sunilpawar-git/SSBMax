@@ -2,14 +2,13 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.ssbmax.shared.domain.repository.SubmissionRepository
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Background worker to archive submissions older than 6 months
@@ -18,12 +17,10 @@ import java.util.concurrent.TimeUnit
  * Archives old data to keep main database performant while
  * preserving historical data in archive collection
  */
-@HiltWorker
-class ArchivalWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val submissionRepository: SubmissionRepository
-) : CoroutineWorker(context, params) {
+class ArchivalWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val submissionRepository: SubmissionRepository by inject()
 
     override suspend fun doWork(): Result {
         Log.d(TAG, "📦 Starting archival worker")

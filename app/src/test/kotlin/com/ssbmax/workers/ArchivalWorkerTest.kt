@@ -7,9 +7,11 @@ import org.junit.Test
 /**
  * Unit tests for ArchivalWorker
  *
- * Note: ArchivalWorker uses Hilt for dependency injection (@HiltWorker).
- * Testing Hilt workers requires HiltAndroidTest setup which is complex.
- * The actual business logic (archiveOldSubmissions) is tested in
+ * Note: ArchivalWorker resolves its dependencies via Koin's `KoinComponent`/
+ * `by inject()` (converted from Hilt's `@HiltWorker`/`@AssistedInject`).
+ * Testing a worker that resolves from a live Koin graph requires a started
+ * Koin instance, which is out of scope for a plain unit test. The actual
+ * business logic (archiveOldSubmissions) is tested in
  * SubmissionRepositoryTest. This test verifies the Worker constants.
  */
 class ArchivalWorkerTest {

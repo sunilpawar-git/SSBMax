@@ -2,13 +2,12 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.utils.ErrorLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 
 /**
  * Periodic worker for cleaning up expired question cache entries
@@ -20,12 +19,10 @@ import dagger.assisted.AssistedInject
  *
  * Scheduled in SSBMaxApplication.onCreate()
  */
-@HiltWorker
-class QuestionCacheCleanupWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val questionCacheRepository: QuestionCacheRepository
-) : CoroutineWorker(context, params) {
+class QuestionCacheCleanupWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val questionCacheRepository: QuestionCacheRepository by inject()
 
     companion object {
         private const val TAG = "QuestionCacheCleanup"

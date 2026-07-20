@@ -2,16 +2,15 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.shared.domain.constants.InterviewConstants
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 
 /**
  * Background worker for generating interview questions after PIQ submission
@@ -27,15 +26,13 @@ import dagger.assisted.AssistedInject
  * - Requires battery not low (to avoid draining)
  * - Retry policy: 3 attempts with exponential backoff
  */
-@HiltWorker
-class InterviewQuestionGenerationWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val aiService: AIService,
-    private val submissionRepository: SubmissionRepository,
-    private val questionCacheRepository: QuestionCacheRepository,
-    private val piqDataMapper: com.ssbmax.core.data.repository.interview.PIQDataMapper
-) : CoroutineWorker(context, params) {
+class InterviewQuestionGenerationWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val aiService: AIService by inject()
+    private val submissionRepository: SubmissionRepository by inject()
+    private val questionCacheRepository: QuestionCacheRepository by inject()
+    private val piqDataMapper: com.ssbmax.core.data.repository.interview.PIQDataMapper by inject()
 
     companion object {
         private const val TAG = "QuestionGenWorker"

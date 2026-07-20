@@ -2,9 +2,10 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -18,8 +19,6 @@ import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.workers.GTOAnalysisPrompts
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 
 /**
@@ -34,15 +33,13 @@ import kotlinx.coroutines.delay
  *
  * The user is free to navigate away while this runs in the background.
  */
-@HiltWorker
-class GTOAnalysisWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val gtoRepository: GTORepository,
-    private val aiService: AIService,
-    private val notificationHelper: NotificationHelper,
-    private val getOLQDashboard: GetOLQDashboardUseCase
-) : CoroutineWorker(context, params) {
+class GTOAnalysisWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val gtoRepository: GTORepository by inject()
+    private val aiService: AIService by inject()
+    private val notificationHelper: NotificationHelper by inject()
+    private val getOLQDashboard: GetOLQDashboardUseCase by inject()
 
     companion object {
         private const val TAG = "GTOAnalysisWorker"

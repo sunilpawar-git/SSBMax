@@ -29,11 +29,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TATStoryAnalysisWorkerTest {
@@ -67,6 +71,23 @@ class TATStoryAnalysisWorkerTest {
         tatStoryAssessmentDao = mockk(relaxed = true)
 
         every { workerParams.runAttemptCount } returns 0
+
+        // TATStoryAnalysisWorker resolves its dependencies via KoinComponent/inject()
+        // (converted from Hilt's @HiltWorker/@AssistedInject) — start a Koin instance
+        // with the mocks above bound so `by inject()` resolves them in the worker.
+        startKoin {
+            modules(module {
+                single { submissionRepository }
+                single { userProfileRepository }
+                single { aiService }
+                single { tatStoryAssessmentDao }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     private fun buildInputData(
@@ -116,14 +137,7 @@ class TATStoryAnalysisWorkerTest {
         entryType = EntryType.GRADUATE
     )
 
-    private fun createWorker() = TATStoryAnalysisWorker(
-        context = context,
-        params = workerParams,
-        submissionRepository = submissionRepository,
-        userProfileRepository = userProfileRepository,
-        aiService = aiService,
-        tatStoryAssessmentDao = tatStoryAssessmentDao
-    )
+    private fun createWorker() = TATStoryAnalysisWorker(context, workerParams)
 
     // ───────────── imageUrl from inputData — no repository ─────────────
 

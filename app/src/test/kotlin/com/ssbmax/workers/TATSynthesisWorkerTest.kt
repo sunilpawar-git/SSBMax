@@ -32,11 +32,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TATSynthesisWorkerTest {
@@ -76,6 +80,25 @@ class TATSynthesisWorkerTest {
         coEvery { submissionRepository.updateTATAnalysisStatus(any(), any()) } returns Result.success(Unit)
         coEvery { submissionRepository.finalizeTATAnalysisResult(any(), any()) } returns Result.success(Unit)
         coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
+
+        // TATSynthesisWorker resolves its dependencies via KoinComponent/inject()
+        // (converted from Hilt's @HiltWorker/@AssistedInject) — start a Koin instance
+        // with the mocks above bound so `by inject()` resolves them in the worker.
+        startKoin {
+            modules(module {
+                single { tatStoryAssessmentDao }
+                single { submissionRepository }
+                single { userProfileRepository }
+                single { aiService }
+                single { notificationHelper }
+                single { getOLQDashboard }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test
@@ -313,16 +336,7 @@ class TATSynthesisWorkerTest {
         coVerify(exactly = 1) { submissionRepository.updateTATAnalysisStatus(submissionId, AnalysisStatus.FAILED) }
     }
 
-    private fun createWorker() = TATSynthesisWorker(
-        context = context,
-        params = workerParams,
-        tatStoryAssessmentDao = tatStoryAssessmentDao,
-        submissionRepository = submissionRepository,
-        userProfileRepository = userProfileRepository,
-        aiService = aiService,
-        notificationHelper = notificationHelper,
-        getOLQDashboard = getOLQDashboard
-    )
+    private fun createWorker() = TATSynthesisWorker(context, workerParams)
 
     private fun buildAssessments(validCount: Int, failedCount: Int = 0): List<TATStoryAssessmentEntity> =
         buildList {

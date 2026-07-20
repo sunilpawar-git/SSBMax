@@ -2,9 +2,10 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.shared.domain.model.TATImageContext
@@ -15,8 +16,6 @@ import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.retry.RetryBackoffPolicy
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -35,15 +34,13 @@ import java.util.UUID
  *
  * Results are cached in tat_story_assessments (Room) for immediate display.
  */
-@HiltWorker
-class TATStoryAnalysisWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val submissionRepository: SubmissionRepository,
-    private val userProfileRepository: UserProfileRepository,
-    private val aiService: AIService,
-    private val tatStoryAssessmentDao: TATStoryAssessmentDao
-) : CoroutineWorker(context, params) {
+class TATStoryAnalysisWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val submissionRepository: SubmissionRepository by inject()
+    private val userProfileRepository: UserProfileRepository by inject()
+    private val aiService: AIService by inject()
+    private val tatStoryAssessmentDao: TATStoryAssessmentDao by inject()
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"

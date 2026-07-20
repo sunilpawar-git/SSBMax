@@ -32,10 +32,14 @@ import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PPDTAnalysisWorkerTest {
@@ -75,6 +79,25 @@ class PPDTAnalysisWorkerTest {
             PPDTAnalysisWorker.KEY_SUBMISSION_ID to testSubmissionId
         )
         every { workerParams.runAttemptCount } returns 0
+
+        // PPDTAnalysisWorker resolves its dependencies via KoinComponent/inject()
+        // (converted from Hilt's @HiltWorker/@AssistedInject) — start a Koin instance
+        // with the mocks above bound so `by inject()` resolves them in the worker.
+        startKoin {
+            modules(module {
+                single { submissionRepository }
+                single { aiService }
+                single { notificationHelper }
+                single { testContentRepository }
+                single { getOLQDashboard }
+                single { userProfileRepository }
+            })
+        }
+    }
+
+    @After
+    fun tearDown() {
+        stopKoin()
     }
 
     private fun buildFakeSubmission(
@@ -128,16 +151,7 @@ class PPDTAnalysisWorkerTest {
         coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
     }
 
-    private fun createWorker() = PPDTAnalysisWorker(
-        context = context,
-        params = workerParams,
-        submissionRepository = submissionRepository,
-        aiService = aiService,
-        notificationHelper = notificationHelper,
-        testContentRepository = testContentRepository,
-        getOLQDashboard = getOLQDashboard,
-        userProfileRepository = userProfileRepository
-    )
+    private fun createWorker() = PPDTAnalysisWorker(context, workerParams)
 
     @Test
     fun `doWork passes Male candidateGender when user gender is MALE`() = runTest {

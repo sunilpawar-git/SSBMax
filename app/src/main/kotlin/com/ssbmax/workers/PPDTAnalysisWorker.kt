@@ -2,9 +2,10 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import com.ssbmax.shared.domain.model.PPDTImageContext
 import com.ssbmax.shared.domain.model.PPDTQuestion
 import com.ssbmax.shared.domain.model.PPDTRating
@@ -22,8 +23,6 @@ import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -46,17 +45,15 @@ import java.net.URL
  *
  * The user is free to navigate away while this runs in the background.
  */
-@HiltWorker
-class PPDTAnalysisWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-    private val submissionRepository: SubmissionRepository,
-    private val aiService: AIService,
-    private val notificationHelper: NotificationHelper,
-    private val testContentRepository: TestContentRepository,
-    private val getOLQDashboard: GetOLQDashboardUseCase,
-    private val userProfileRepository: UserProfileRepository
-) : CoroutineWorker(context, params) {
+class PPDTAnalysisWorker(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params), KoinComponent {
+
+    private val submissionRepository: SubmissionRepository by inject()
+    private val aiService: AIService by inject()
+    private val notificationHelper: NotificationHelper by inject()
+    private val testContentRepository: TestContentRepository by inject()
+    private val getOLQDashboard: GetOLQDashboardUseCase by inject()
+    private val userProfileRepository: UserProfileRepository by inject()
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"
