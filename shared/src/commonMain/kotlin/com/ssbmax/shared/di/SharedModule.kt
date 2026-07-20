@@ -9,6 +9,8 @@ import com.ssbmax.shared.data.repository.GitLiveGPEImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveGradingQueueRepository
 import com.ssbmax.shared.data.repository.GitLiveGTORepository
 import com.ssbmax.shared.data.repository.GitLiveGTOTaskCacheManager
+import com.ssbmax.shared.data.repository.GitLiveNotificationCacheManager
+import com.ssbmax.shared.data.repository.GitLiveNotificationRepository
 import com.ssbmax.shared.data.repository.GitLiveOirResultRepository
 import com.ssbmax.shared.data.repository.GitLiveOIRQuestionCacheManager
 import com.ssbmax.shared.data.repository.GitLiveOIRQuestionSelector
@@ -32,6 +34,7 @@ import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.repository.OirResultRepository
 import com.ssbmax.shared.domain.repository.StudyContentRepository
 import com.ssbmax.shared.domain.repository.StudyProgressRepository
@@ -116,8 +119,10 @@ val sharedModule = module {
     single { GitLiveTATImageCacheManager(get()) }
     single { GitLiveOIRQuestionSelector(get()) }
     single { GitLiveOIRQuestionCacheManager(get(), get()) }
+    single { GitLiveNotificationCacheManager(get()) }
     singleOf(::GitLiveTestContentRepository) bind TestContentRepository::class
     singleOf(::GitLiveGTORepository) bind GTORepository::class
+    singleOf(::GitLiveNotificationRepository) bind NotificationRepository::class
     factoryOf(::KtorInterviewResponseAnalysisService) bind InterviewResponseAnalysisService::class
 
     factoryOf(::SignInWithGoogleUseCase)

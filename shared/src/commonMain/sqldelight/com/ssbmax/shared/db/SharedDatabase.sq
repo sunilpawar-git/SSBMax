@@ -621,3 +621,48 @@ SELECT * FROM OIRSyncMetadata WHERE id = 0;
 upsertOIRSyncMetadata:
 INSERT OR REPLACE INTO OIRSyncMetadata(id, contentVersion, lastSyncAt)
 VALUES (0, ?, ?);
+
+-- Phase 2 continuation (16th slice): local store backing
+-- GitLiveNotificationCacheManager (NotificationDao -> NotificationEntity).
+-- Only the DAO surface NotificationRepositoryImpl actually calls is ported
+-- here -- insert, getNotifications, getUnreadCount, markAsRead,
+-- markAllAsRead, delete. deleteAll(userId) and deleteExpired(currentTime)
+-- were confirmed (grep across core/data + app) to have zero callers outside
+-- NotificationDao's own test -- same "dead scaffolding in the Android
+-- original" category as prior slices' findings. isRead is stored as INTEGER
+-- (0/1) since SQLDelight has no native Boolean affinity on this driver set.
+CREATE TABLE Notification (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    type TEXT NOT NULL,
+    priority TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    imageUrl TEXT,
+    actionUrl TEXT,
+    actionDataJson TEXT,
+    isRead INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    expiresAt INTEGER
+);
+
+insertOrReplaceNotification:
+INSERT OR REPLACE INTO Notification(
+    id, userId, type, priority, title, message, imageUrl, actionUrl,
+    actionDataJson, isRead, createdAt, expiresAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectNotificationsByUser:
+SELECT * FROM Notification WHERE userId = :userId ORDER BY createdAt DESC;
+
+selectUnreadNotificationCount:
+SELECT COUNT(*) FROM Notification WHERE userId = :userId AND isRead = 0;
+
+markNotificationAsRead:
+UPDATE Notification SET isRead = 1 WHERE id = :notificationId;
+
+markAllNotificationsAsRead:
+UPDATE Notification SET isRead = 1 WHERE userId = :userId;
+
+deleteNotificationById:
+DELETE FROM Notification WHERE id = :notificationId;
