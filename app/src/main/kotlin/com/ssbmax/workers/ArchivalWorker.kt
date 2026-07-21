@@ -57,48 +57,10 @@ class ArchivalWorker(context: Context, params: WorkerParameters) :
 
     companion object {
         private const val TAG = "ArchivalWorker"
-        private const val WORK_NAME = "archival_worker"
         private const val MAX_RETRIES = 3
-
-        /**
-         * Schedule periodic archival worker
-         * Runs daily at night when device is charging
-         */
-        fun schedule(workManager: WorkManager) {
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .setRequiresCharging(true)  // Only run when charging
-                .setRequiresBatteryNotLow(true)  // Don't drain battery
-                .build()
-
-            val archivalRequest = PeriodicWorkRequestBuilder<ArchivalWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.DAYS
-            )
-                .setConstraints(constraints)
-                .setInitialDelay(1, TimeUnit.HOURS)  // Delay first run by 1 hour
-                .setBackoffCriteria(
-                    BackoffPolicy.EXPONENTIAL,
-                    WorkRequest.MIN_BACKOFF_MILLIS,
-                    TimeUnit.MILLISECONDS
-                )
-                .build()
-
-            workManager.enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,  // Keep existing schedule
-                archivalRequest
-            )
-            
-            Log.d(TAG, "📅 Archival worker scheduled (daily)")
-        }
-        
-        /**
-         * Cancel archival worker
-         */
-        fun cancel(workManager: WorkManager) {
-            workManager.cancelUniqueWork(WORK_NAME)
-            Log.d(TAG, "🚫 Archival worker cancelled")
-        }
+        // Scheduling (periodic request + constraints) moved to
+        // com.ssbmax.shared.platform.worker.WorkManagerBackgroundTaskScheduler
+        // (Phase 4 platform shim) -- same constraints/interval, unchanged.
+        // This class now only implements doWork(); it no longer schedules itself.
     }
 }

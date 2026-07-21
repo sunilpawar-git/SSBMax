@@ -38,14 +38,14 @@ object AppConstants {
 
     /**
      * WorkManager constants
+     *
+     * CLEANUP_INTERVAL_HOURS/CLEANUP_WORK_NAME moved (Phase 4 platform shim)
+     * into com.ssbmax.shared.platform.worker.WorkManagerBackgroundTaskScheduler
+     * (same literal values) since periodic-cleanup scheduling itself moved
+     * there; PIQ_GENERATION_TAG stays here (a one-off worker tag, not a
+     * shared-scheduler concern).
      */
     object WorkManager {
-        /** Periodic cleanup interval in hours */
-        const val CLEANUP_INTERVAL_HOURS = 24L
-
-        /** Unique work name for question cache cleanup */
-        const val CLEANUP_WORK_NAME = "question_cache_cleanup_periodic"
-
         /** Tag for PIQ question generation jobs */
         const val PIQ_GENERATION_TAG = "piq_question_generation"
     }

@@ -27,14 +27,18 @@ class ArchivalWorkerTest {
     }
 
     @Test
-    fun `worker has unique work name`() {
-        // Verify work name constant
-        val workNameField = ArchivalWorker::class.java.getDeclaredField("WORK_NAME")
+    fun `scheduler uses the same unique work name archival was scheduled under pre-shim`() {
+        // WORK_NAME (and the scheduling logic that used it) moved to
+        // com.ssbmax.shared.platform.worker.WorkManagerBackgroundTaskScheduler
+        // (Phase 4 platform shim) -- verify the literal is unchanged there,
+        // so WorkManager's uniqueWork identity stays stable across the move.
+        val workNameField = com.ssbmax.shared.platform.worker.WorkManagerBackgroundTaskScheduler::class.java
+            .getDeclaredField("ARCHIVAL_WORK_NAME")
         workNameField.isAccessible = true
         val workName = workNameField.get(null) as String
 
-        assertTrue("WORK_NAME should not be empty", workName.isNotEmpty())
-        assertEquals("WORK_NAME should be 'archival_worker'", "archival_worker", workName)
+        assertTrue("ARCHIVAL_WORK_NAME should not be empty", workName.isNotEmpty())
+        assertEquals("ARCHIVAL_WORK_NAME should be 'archival_worker'", "archival_worker", workName)
     }
 
     @Test
