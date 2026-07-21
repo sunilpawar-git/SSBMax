@@ -1,12 +1,13 @@
-package com.ssbmax.utils.tts
+package com.ssbmax.shared.platform.tts
 
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
- * Interface for Text-to-Speech services
+ * Interface for Text-to-Speech services.
  *
- * Implementation:
- * - AndroidTTSService: Built-in Android TTS engine
+ * Implementations:
+ * - Android: `AndroidTTSService` (`android.speech.tts.TextToSpeech`)
+ * - iOS: `IosTTSService` (`AVSpeechSynthesizer`)
  */
 interface TTSService {
     /**

@@ -1,6 +1,6 @@
 package com.ssbmax.ui.interview.session
 
-import com.ssbmax.utils.tts.TTSService
+import com.ssbmax.shared.platform.tts.TTSService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

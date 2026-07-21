@@ -14,7 +14,7 @@ import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.utils.tts.TTSService
+import com.ssbmax.shared.platform.tts.TTSService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

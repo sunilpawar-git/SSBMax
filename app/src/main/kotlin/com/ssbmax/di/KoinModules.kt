@@ -47,7 +47,6 @@ val appModules = listOf(
     debugModule,
     gtoTestModule,
     imageModule,
-    ttsModule,
     workManagerModule,
     appInjectablesModule,
     viewModelModule

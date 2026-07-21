@@ -16,7 +16,7 @@ import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.testing.BaseViewModelTest
-import com.ssbmax.utils.tts.TTSService
+import com.ssbmax.shared.platform.tts.TTSService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

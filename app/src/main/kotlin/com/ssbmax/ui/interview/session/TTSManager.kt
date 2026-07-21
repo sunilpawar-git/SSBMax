@@ -1,7 +1,7 @@
 package com.ssbmax.ui.interview.session
 
 import android.util.Log
-import com.ssbmax.utils.tts.TTSService
+import com.ssbmax.shared.platform.tts.TTSService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
