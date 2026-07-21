@@ -2,7 +2,6 @@ package com.ssbmax.di
 
 import com.ssbmax.admin.AdminContentManager
 import com.ssbmax.billing.BillingRepository
-import com.ssbmax.billing.SSBMaxBillingClient
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.ui.tests.tat.TATAnalysisPipelineOrchestrator
@@ -19,7 +18,6 @@ import org.koin.dsl.module
 val appInjectablesModule = module {
     singleOf(::AdminContentManager)
     singleOf(::BillingRepository)
-    singleOf(::SSBMaxBillingClient)
     singleOf(::NotificationHelper)
     singleOf(::GTOSequentialAccessManager)
     // WhiteNoisePlayer: provided by shared's platformModule (Phase 4 shim).

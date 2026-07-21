@@ -104,6 +104,7 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.ktor.client.android)
             implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.billing.ktx)
             // GitLive's Android artifacts declare com.google.firebase:* deps
             // without version pins (expects the consumer to apply Firebase's
             // BOM) -- confirmed via a real build failure ("Could not find

@@ -2,6 +2,8 @@ package com.ssbmax.shared.di
 
 import com.ssbmax.shared.db.DatabaseDriverFactory
 import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
+import com.ssbmax.shared.platform.billing.BillingClient
+import com.ssbmax.shared.platform.billing.PlayBillingClient
 import com.ssbmax.shared.platform.settings.AppThemeSettings
 import com.ssbmax.shared.platform.settings.SettingsFactory
 import com.ssbmax.shared.platform.tts.AndroidTTSService
@@ -15,4 +17,5 @@ actual val platformModule = module {
     single { AppThemeSettings(get()) }
     single<TTSService> { AndroidTTSService(androidContext()) }
     single { WhiteNoisePlayer() }
+    single<BillingClient> { PlayBillingClient(androidContext()) }
 }

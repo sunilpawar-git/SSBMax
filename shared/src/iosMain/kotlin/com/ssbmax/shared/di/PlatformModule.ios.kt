@@ -2,6 +2,8 @@ package com.ssbmax.shared.di
 
 import com.ssbmax.shared.db.DatabaseDriverFactory
 import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
+import com.ssbmax.shared.platform.billing.BillingClient
+import com.ssbmax.shared.platform.billing.StoreKitBillingClient
 import com.ssbmax.shared.platform.permissions.IosNotificationPermissionController
 import com.ssbmax.shared.platform.permissions.NotificationPermissionController
 import com.ssbmax.shared.platform.settings.AppThemeSettings
@@ -23,4 +25,5 @@ actual val platformModule = module {
     // constraint, so it can be a plain Application-scoped Koin single.
     single<NotificationPermissionController> { IosNotificationPermissionController() }
     single<BackgroundTaskScheduler> { BGTaskSchedulerBackgroundTaskScheduler() }
+    single<BillingClient> { StoreKitBillingClient() }
 }
