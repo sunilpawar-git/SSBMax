@@ -48,6 +48,13 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            // Phase 5: Login/RoleSelection need Icons.AutoMirrored.Filled.Login /
+            // Icons.Default.{School,Groups}, which aren't in the small default
+            // icon set bundled with compose.material3 -- this is the JetBrains
+            // Compose Multiplatform-published extended icon pack (not the
+            // Android-only androidx-compose-material-icons-extended catalog
+            // alias `app` uses, which has no common variant).
+            implementation(compose.materialIconsExtended)
 
             // Phase 5 (UI): navigation + image loading, both real KMP artifacts
             // (versions verified against maven-central metadata before adding).
@@ -113,6 +120,9 @@ kotlin {
             implementation(libs.ktor.client.android)
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.billing.ktx)
+            // Phase 5: legacy GoogleSignInClient, matching the pre-KMP
+            // FirebaseAuthService flow -- see AndroidGoogleSignInLauncher.
+            implementation(libs.play.services.auth)
             // GitLive's Android artifacts declare com.google.firebase:* deps
             // without version pins (expects the consumer to apply Firebase's
             // BOM) -- confirmed via a real build failure ("Could not find
