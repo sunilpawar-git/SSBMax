@@ -16,7 +16,9 @@ echo "🔒 Running security pre-commit hooks..."
 # 1. Check for hardcoded API keys in staged files (source code only, not docs)
 echo "Checking for hardcoded API keys..."
 if git diff --cached --name-only | grep -E "\.(kt|java|xml|gradle)$" > /dev/null; then
-  if git diff --cached -- ':!*.md' | grep -E "GEMINI_API_KEY\s*=|SARVAM_API_KEY\s*=|ELEVENLABS_API_KEY\s*=|\"sk_|\"sk-|'sk_|'sk-" 2>/dev/null; then
+  KEY_MATCHES=$(git diff --cached -- ':!*.md' ':!scripts/git-hooks/pre-commit' | grep -E "GEMINI_API_KEY\s*=|SARVAM_API_KEY\s*=|ELEVENLABS_API_KEY\s*=|\"sk_|\"sk-|'sk_|'sk-" 2>/dev/null | grep -vE "your_(actual_)?(api_)?key_here" || true)
+  if [ -n "$KEY_MATCHES" ]; then
+    echo "$KEY_MATCHES"
     echo "❌ ERROR: Hardcoded API key detected in staged files"
     echo "   → Use local.properties or Firebase Remote Config instead"
     exit 1

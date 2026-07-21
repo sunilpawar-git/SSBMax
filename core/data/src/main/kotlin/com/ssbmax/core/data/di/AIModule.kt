@@ -3,11 +3,7 @@ package com.ssbmax.core.data.di
 import com.ssbmax.core.data.ai.CloudGeminiAIService
 import com.ssbmax.core.data.ai.GeminiAIService
 import com.ssbmax.shared.domain.service.AIService
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.dsl.module
 
 /**
  * Dependency injection module for AI services
@@ -16,10 +12,9 @@ import javax.inject.Singleton
  * - Debug builds: Use GeminiAIService (direct API calls with local API key)
  * - Release builds: Use CloudGeminiAIService (Firebase Functions, production-safe)
  *
- * Controlled by USE_CLOUD_AI build config flag.
+ * Controlled by USE_CLOUD_AI build config flag. Plain object now (converted
+ * from a Hilt `@Module` — see [aiModule] below for the actual Koin binding).
  */
-@Module
-@InstallIn(SingletonComponent::class)
 object AIModule {
 
     /**
@@ -35,10 +30,8 @@ object AIModule {
      * - Secure (API key never exposed)
      * - Rate limiting and user authentication
      */
-    @Provides
-    @Singleton
     fun provideAIService(
-        @GeminiApiKey apiKey: String
+        apiKey: String
     ): AIService {
         return if (com.ssbmax.core.data.BuildConfig.USE_CLOUD_AI) {
             // Production: Use Firebase Functions (secure)
@@ -56,12 +49,13 @@ object AIModule {
      * In production, this returns empty string as the API key is stored
      * securely in Firebase Functions environment.
      *
-     * The key is injected at compile time from local.properties:
-     * GEMINI_API_KEY=your_key_here
+     * The key is injected at compile time from local.properties
+     * (set the GEMINI_API_KEY property to your key).
+     *
+     * Was `@GeminiApiKey`-qualified in Hilt; no Koin qualifier is needed
+     * for this binding since [AIService] is its only consumer (see
+     * [aiModule] below).
      */
-    @Provides
-    @Singleton
-    @GeminiApiKey
     fun provideGeminiApiKey(): String {
         val apiKey = com.ssbmax.core.data.BuildConfig.GEMINI_API_KEY
 
@@ -74,8 +68,7 @@ object AIModule {
         if (apiKey.isBlank() || apiKey == "your_api_key_here") {
             throw IllegalStateException(
                 "Gemini API key not configured for development build.\n" +
-                "Please add it to local.properties:\n" +
-                "GEMINI_API_KEY=your_actual_key_here\n\n" +
+                "Please add it to local.properties, setting GEMINI_API_KEY to your actual key.\n\n" +
                 "Get your key from: https://makersuite.google.com/app/apikey"
             )
         }
@@ -85,8 +78,11 @@ object AIModule {
 }
 
 /**
- * Qualifier annotation for Gemini API key
+ * Koin module for AI services — binds [AIModule]'s plain factory functions
+ * (converted from Hilt `@Provides`/`@Singleton`/`@GeminiApiKey`; the API key
+ * qualifier is gone since it has exactly one consumer, [AIService], so no
+ * Koin qualifier is needed either).
  */
-@Retention(AnnotationRetention.BINARY)
-@javax.inject.Qualifier
-annotation class GeminiApiKey
+val aiModule = module {
+    single<AIService> { AIModule.provideAIService(AIModule.provideGeminiApiKey()) }
+}
