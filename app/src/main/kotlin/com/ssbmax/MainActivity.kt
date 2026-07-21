@@ -11,7 +11,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.ssbmax.shared.platform.auth.AndroidGoogleSignInLauncher
 import com.ssbmax.shared.platform.permissions.AndroidNotificationPermissionController
+import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
 import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.SSBMaxApp
 import com.ssbmax.ui.permissions.LocalNotificationPermissionController
@@ -33,6 +35,10 @@ class MainActivity : ComponentActivity() {
     // AndroidNotificationPermissionController's class doc.
     private lateinit var notificationPermissionController: AndroidNotificationPermissionController
 
+    // Same STARTED-lifecycle constraint as notificationPermissionController --
+    // see GoogleSignInLauncher's class doc.
+    private lateinit var googleSignInLauncher: AndroidGoogleSignInLauncher
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,6 +47,11 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.RequestPermission()
         ) { granted -> notificationPermissionController.onPermissionResult(granted) }
         notificationPermissionController = AndroidNotificationPermissionController(this, permissionLauncher)
+
+        val signInLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result -> googleSignInLauncher.onSignInResult(result) }
+        googleSignInLauncher = AndroidGoogleSignInLauncher(this, signInLauncher)
 
         // Handle deep link from notification (app was closed)
         pendingDeepLink = extractDeepLinkFromIntent(intent)
@@ -51,7 +62,8 @@ class MainActivity : ComponentActivity() {
 
             CompositionLocalProvider(
                 LocalThemeState provides themeState,
-                LocalNotificationPermissionController provides notificationPermissionController
+                LocalNotificationPermissionController provides notificationPermissionController,
+                LocalGoogleSignInLauncher provides googleSignInLauncher
             ) {
                 SSBMaxTheme(appTheme = themeState.currentTheme) {
                     SSBMaxApp(

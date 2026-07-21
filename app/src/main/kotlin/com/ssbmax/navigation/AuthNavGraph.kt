@@ -3,18 +3,26 @@ package com.ssbmax.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.ssbmax.ui.auth.LoginScreen
-import com.ssbmax.ui.auth.RoleSelectionScreen
-import com.ssbmax.ui.splash.SplashScreen
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.ui.auth.LoginScreen
+import com.ssbmax.shared.ui.auth.RoleSelectionScreen
+import com.ssbmax.shared.ui.splash.SplashScreen
 
 /**
  * Authentication navigation graph
  * Contains splash, login, and role selection screens
- * 
+ *
  * This graph handles the pre-authenticated user flow:
  * - Splash screen (initial app entry)
  * - Login screen (authentication)
  * - Role selection screen (for new users)
+ *
+ * Phase 5: these three composables now come from `:shared`'s
+ * `commonMain/ui` (Compose Multiplatform), not the old Android-only
+ * `app/.../ui/{splash,auth}` versions (both deleted — grep-confirmed this
+ * was their last real caller). The Android-only `NavGraphBuilder` extension
+ * function shape stays as-is (no KMP equivalent needed here — only the
+ * screens inside needed porting, not this file's own plumbing).
  */
 fun NavGraphBuilder.authNavGraph(
     navController: NavHostController,
