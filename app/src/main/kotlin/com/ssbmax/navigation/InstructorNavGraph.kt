@@ -5,17 +5,24 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
 
 /**
  * Instructor navigation graph
  * Contains all instructor-specific screens and flows
- * 
+ *
  * This graph handles instructor user journeys:
  * - Instructor home dashboard
  * - Student management
  * - Grading queue and grading details
  * - Batch management
  * - Analytics
+ *
+ * Phase 5: Instructor Home now comes from `:shared`'s `commonMain/ui`
+ * (Compose Multiplatform), not the old Android-only
+ * `app/.../ui/home/instructor/InstructorHomeScreen.kt` (still exists,
+ * unused by this graph now — same precedent as `studentNavGraph`). Every
+ * other screen below this one in the graph is unchanged.
  */
 fun NavGraphBuilder.instructorNavGraph(
     navController: NavHostController,
@@ -23,7 +30,7 @@ fun NavGraphBuilder.instructorNavGraph(
 ) {
     // Instructor Home
     composable(SSBMaxDestinations.InstructorHome.route) {
-        com.ssbmax.ui.home.instructor.InstructorHomeScreen(
+        InstructorHomeScreen(
             onNavigateToStudent = { studentId ->
                 navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
             },

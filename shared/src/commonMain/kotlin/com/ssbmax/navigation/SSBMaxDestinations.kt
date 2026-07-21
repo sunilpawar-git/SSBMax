@@ -195,6 +195,17 @@ sealed class SSBMaxDestinations(val route: String) {
     data object SubmissionDetail : SSBMaxDestinations("submission/{submissionId}") {
         fun createRoute(submissionId: String) = "submission/$submissionId"
     }
+
+    // Dev-facing catch-all for any destination the commonMain nav graph must route to
+    // but whose real screen hasn't been ported into `shared/commonMain/ui` yet (Phase 5
+    // continuation). Every ported home screen's sub-navigation callbacks that target an
+    // unported destination (topic detail, phase detail, result screens, notifications,
+    // marketplace, analytics, grading, batches, etc.) route here with the intended
+    // destination's display name, rather than navigating to a route this NavHost never
+    // registered (which would crash) or being silently dropped.
+    data object NotYetPorted : SSBMaxDestinations("dev/not_yet_ported?screen={screen}") {
+        fun createRoute(screenName: String) = "dev/not_yet_ported?screen=$screenName"
+    }
 }
 
 /**

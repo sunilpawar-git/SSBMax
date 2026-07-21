@@ -17,6 +17,7 @@ import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
 import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.SSBMaxApp
 import com.ssbmax.ui.permissions.LocalNotificationPermissionController
+import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController as SharedLocalNotificationPermissionController
 import com.ssbmax.ui.theme.LocalThemeState
 import com.ssbmax.ui.theme.SSBMaxTheme
 import com.ssbmax.utils.DeepLinkParser
@@ -63,6 +64,11 @@ class MainActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalThemeState provides themeState,
                 LocalNotificationPermissionController provides notificationPermissionController,
+                // Same underlying controller provided under `shared`'s own CompositionLocal
+                // too (Phase 5) -- ported `shared/commonMain/ui` screens (StudentHomeScreen)
+                // read this one instead of the `app`-only original above; both must be live
+                // since old and new screens currently coexist on the same nav graph.
+                SharedLocalNotificationPermissionController provides notificationPermissionController,
                 LocalGoogleSignInLauncher provides googleSignInLauncher
             ) {
                 SSBMaxTheme(appTheme = themeState.currentTheme) {

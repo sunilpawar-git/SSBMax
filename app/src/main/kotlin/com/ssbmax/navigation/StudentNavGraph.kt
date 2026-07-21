@@ -3,17 +3,26 @@ package com.ssbmax.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.ssbmax.shared.ui.home.student.StudentHomeScreen
 
 /**
  * Student navigation graph
  * Contains all student-specific screens and flows
- * 
+ *
  * This graph handles student user journeys:
  * - Student home dashboard
  * - Tests overview
  * - Submissions list
  * - Study materials
  * - Student profile
+ *
+ * Phase 5: Student Home now comes from `:shared`'s `commonMain/ui`
+ * (Compose Multiplatform), not the old Android-only
+ * `app/.../ui/home/student/StudentHomeScreen.kt` (still exists, unused by
+ * this graph now — its `StudentHomeViewModel` Koin binding in
+ * `ViewModelModule.kt` is likewise left in place, same precedent as the
+ * Login/RoleSelection port). Every other screen below this one in the
+ * graph is unchanged.
  */
 fun NavGraphBuilder.studentNavGraph(
     navController: NavHostController,
@@ -21,7 +30,7 @@ fun NavGraphBuilder.studentNavGraph(
 ) {
     // Student Home
     composable(SSBMaxDestinations.StudentHome.route) {
-        com.ssbmax.ui.home.student.StudentHomeScreen(
+        StudentHomeScreen(
             onNavigateToTopic = { topicRoute ->
                 // topicRoute includes query param: "oir?selectedTab=2"
                 navController.navigate("topic/$topicRoute")
