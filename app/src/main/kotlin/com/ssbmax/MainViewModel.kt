@@ -2,25 +2,25 @@ package com.ssbmax
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.platform.settings.AppThemeSettings
 import com.ssbmax.ui.theme.ThemeState
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val themePreferenceManager: ThemePreferenceManager,
+    private val appThemeSettings: AppThemeSettings,
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
-    
-    val themeState: ThemeState = ThemeState(themePreferenceManager.getTheme())
-    
+
+    val themeState: ThemeState = ThemeState(appThemeSettings.getTheme())
+
     init {
         // Observe theme changes
-        themePreferenceManager.themeFlow.value.let { theme ->
+        appThemeSettings.themeFlow.value.let { theme ->
             themeState.updateTheme(theme)
         }
         

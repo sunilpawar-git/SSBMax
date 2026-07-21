@@ -2,7 +2,6 @@ package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.data.metrics.ContentMetrics
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.core.data.remote.CommonSubmissionRepository
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirebaseInitializer
@@ -74,7 +73,6 @@ val coreDataInjectablesModule = module {
     singleOf(::SubmissionArchiveRepository)
     singleOf(::TATImageCacheManager)
     singleOf(::TATSubmissionRepository)
-    singleOf(::ThemePreferenceManager)
     singleOf(::WATSubmissionRepository)
     singleOf(::WATWordCacheManager)
 }

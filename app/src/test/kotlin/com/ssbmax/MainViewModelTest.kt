@@ -1,9 +1,9 @@
 package com.ssbmax
 
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.platform.settings.AppThemeSettings
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.shared.domain.model.AppTheme
 import io.mockk.*
@@ -26,10 +26,10 @@ class MainViewModelTest : BaseViewModelTest() {
     @Test
     fun `init sets up theme state`() = runTest {
         // Given
-        val mockThemeManager = mockk<ThemePreferenceManager>()
+        val mockThemeManager = mockk<AppThemeSettings>()
         val mockAuthRepo = mockk<AuthRepository>()
         val mockUserProfileRepo = mockk<UserProfileRepository>(relaxed = true)
-        
+
         every { mockThemeManager.getTheme() } returns AppTheme.SYSTEM
         every { mockThemeManager.themeFlow } returns MutableStateFlow(AppTheme.SYSTEM)
         every { mockAuthRepo.currentUser } returns MutableStateFlow(null)
