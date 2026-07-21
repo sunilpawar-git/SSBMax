@@ -56,7 +56,10 @@ import com.ssbmax.shared.domain.repository.TestRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
@@ -148,6 +151,9 @@ val sharedModule = module {
     singleOf(::GitLiveInterviewRepository) bind InterviewRepository::class
 
     factoryOf(::SignInWithGoogleUseCase)
+    factoryOf(::UpdateUserRoleUseCase)
+    factoryOf(::SignOutUseCase)
+    factoryOf(::ObserveCurrentUserUseCase)
     factoryOf(::GetOirResultUseCase)
 
     factoryOf(::AuthViewModel)

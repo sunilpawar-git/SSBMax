@@ -2,4 +2,33 @@
     <string name="splash_app_name">SSBMax</string>
     <string name="splash_tagline">Your Path to SSB Success</string>
     <string name="splash_version">Version 1.0.0</string>
+
+    <!-- Login screen (Phase 5 port of app/.../ui/auth/LoginScreen.kt).
+         Reuses splash_app_name/splash_tagline above for the logo/title
+         block, same strings the Android original's R.string.app_name /
+         R.string.app_tagline pointed at. -->
+    <string name="login_welcome">Welcome!</string>
+    <string name="login_description">Sign in to access study materials, practice tests, and track your progress</string>
+    <string name="login_cd_login">Login</string>
+    <string name="login_continue_google">Continue with Google</string>
+    <string name="login_terms_privacy">By continuing, you agree to our Terms of Service and Privacy Policy</string>
+
+    <!-- Role selection screen (Phase 5 port of app/.../ui/auth/RoleSelectionScreen.kt).
+         The Android original hardcoded these strings (a pre-existing lint-rule
+         violation); ported here as real resources instead of carrying the
+         violation forward. -->
+    <string name="role_selection_title">Welcome to SSBMax!</string>
+    <string name="role_selection_subtitle">How would you like to use SSBMax?</string>
+    <string name="role_selection_student_title">I\'m a Student</string>
+    <string name="role_selection_student_description">Prepare for SSB interviews, take tests, and track progress</string>
+    <string name="role_selection_instructor_title">I\'m an Instructor</string>
+    <string name="role_selection_instructor_description">Create batches, grade tests, and guide students</string>
+    <string name="role_selection_continue">Continue</string>
+    <string name="role_selection_both">I want to use both roles</string>
+
+    <!-- NotYetPortedScreen: dev-facing placeholder for the 57 screens not
+         yet ported into commonMain/ui (Phase 5 continuation). Still real
+         composeResources entries, not hardcoded, per this repo's own rule. -->
+    <string name="not_yet_ported_title">%1$s not yet ported to Compose Multiplatform</string>
+    <string name="not_yet_ported_body">This destination still lives on the Android-only nav graph (app/.../navigation). See the KMP migration plan, Phase 5.</string>
 </resources>
