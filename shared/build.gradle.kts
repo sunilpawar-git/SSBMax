@@ -49,6 +49,14 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
 
+            // Phase 5 (UI): navigation + image loading, both real KMP artifacts
+            // (versions verified against maven-central metadata before adding).
+            implementation(libs.navigation.compose.kmp)
+            implementation(libs.coil3.compose)
+            implementation(libs.coil3.network.ktor3)
+            implementation(libs.androidx.lifecycle.runtime.compose.kmp)
+            implementation(libs.androidx.lifecycle.viewmodel.compose.kmp)
+
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
