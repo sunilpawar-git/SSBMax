@@ -6,37 +6,53 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.ssbmax.shared.platform.permissions.AndroidNotificationPermissionController
 import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.SSBMaxApp
+import com.ssbmax.ui.permissions.LocalNotificationPermissionController
 import com.ssbmax.ui.theme.LocalThemeState
 import com.ssbmax.ui.theme.SSBMaxTheme
 import com.ssbmax.utils.DeepLinkParser
 
 class MainActivity : ComponentActivity() {
-    
+
     companion object {
         private const val TAG = "MainActivity"
     }
-    
+
     // Deep link state that can be observed by Compose
     private var pendingDeepLink by mutableStateOf<String?>(null)
-    
+
+    // Must be registered before this Activity reaches STARTED -- registering
+    // lazily from a Composable would crash. See
+    // AndroidNotificationPermissionController's class doc.
+    private lateinit var notificationPermissionController: AndroidNotificationPermissionController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
+        val permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted -> notificationPermissionController.onPermissionResult(granted) }
+        notificationPermissionController = AndroidNotificationPermissionController(this, permissionLauncher)
+
         // Handle deep link from notification (app was closed)
         pendingDeepLink = extractDeepLinkFromIntent(intent)
-        
+
         setContent {
             val mainViewModel: MainViewModel = koinViewModel()
             val themeState = mainViewModel.themeState
-            
-            CompositionLocalProvider(LocalThemeState provides themeState) {
+
+            CompositionLocalProvider(
+                LocalThemeState provides themeState,
+                LocalNotificationPermissionController provides notificationPermissionController
+            ) {
                 SSBMaxTheme(appTheme = themeState.currentTheme) {
                     SSBMaxApp(
                         pendingDeepLink = pendingDeepLink,

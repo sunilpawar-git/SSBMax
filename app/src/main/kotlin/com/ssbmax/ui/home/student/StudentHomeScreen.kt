@@ -1,10 +1,5 @@
 package com.ssbmax.ui.home.student
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -28,12 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
@@ -47,6 +40,7 @@ import com.ssbmax.ui.home.student.components.StatsCard
 import com.ssbmax.ui.home.student.components.QuickActionCard
 import com.ssbmax.ui.home.student.components.SectionDivider
 import com.ssbmax.ui.home.student.components.SectionHeader
+import com.ssbmax.ui.permissions.LocalNotificationPermissionController
 
 /**
  * Student Home Screen with Phase Progress Ribbon
@@ -68,21 +62,13 @@ fun StudentHomeScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val notificationPermissionController = LocalNotificationPermissionController.current
 
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* proceed regardless — all test result notifications are best-effort */ }
-
-    // Request notification permission once on home screen load (Android 13+).
-    // Covers TAT, WAT, SRT, SDT, PPDT — all workers deliver results via local notification.
+    // Request notification permission once on home screen load. Covers TAT,
+    // WAT, SRT, SDT, PPDT -- all workers deliver results via local
+    // notification. Best-effort: proceeds regardless of grant/deny.
     LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = ContextCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!granted) notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
+        notificationPermissionController.request()
     }
 
     Scaffold(
