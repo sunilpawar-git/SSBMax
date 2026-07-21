@@ -61,6 +61,7 @@ import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
+import com.ssbmax.shared.presentation.splash.SplashViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -151,4 +152,5 @@ val sharedModule = module {
 
     factoryOf(::AuthViewModel)
     factoryOf(::OirResultViewModel)
+    factoryOf(::SplashViewModel)
 }

@@ -1,0 +1,5 @@
+<resources>
+    <string name="splash_app_name">SSBMax</string>
+    <string name="splash_tagline">Your Path to SSB Success</string>
+    <string name="splash_version">Version 1.0.0</string>
+</resources>
