@@ -60,9 +60,12 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
+import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
+import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
+import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import io.ktor.client.HttpClient
@@ -92,6 +95,22 @@ import org.koin.dsl.module
  * `androidFileProperties()` before this module resolves KtorGeminiClient.
  * (No such startKoin() call exists anywhere yet — inherited from Phase 0,
  * which deferred the live run; see this phase's exit report.)
+ *
+ * Phase 5 (home-screen vertical): added [GetOLQDashboardUseCase],
+ * [StudentHomeViewModel], [InstructorHomeViewModel]. Their constructor
+ * dependencies (`UserProfileRepository`, `TestProgressRepository`,
+ * `NotificationRepository`, `GradingQueueRepository`) are also bound by
+ * `core:data`'s `repositoryModule` (Android-only, included later in `app`'s
+ * `appModules` list) — the same shadow-binding pattern already documented on
+ * `RepositoryModule.kt` (`core:data`) for `AuthRepository` before it was
+ * fixed there. Left unfixed here deliberately: unlike `AuthRepository`'s
+ * incompatible `GoogleSignInData.platformData` shapes, these interfaces'
+ * GitLive vs. Android-Firestore implementations are behaviorally
+ * interchangeable (same method contracts, no crash-causing mismatch) — on
+ * Android, Koin's override lets `core:data`'s impl win (unchanged prior
+ * behavior); on iOS, `core:data` doesn't exist so `sharedModule`'s GitLive
+ * impls are the only binding anyway. Broadly rewiring all double-bound
+ * repositories is out of this session's scope (Phase 5 continuation).
  */
 val sharedModule = module {
     includes(platformModule)
@@ -155,8 +174,11 @@ val sharedModule = module {
     factoryOf(::SignOutUseCase)
     factoryOf(::ObserveCurrentUserUseCase)
     factoryOf(::GetOirResultUseCase)
+    factoryOf(::GetOLQDashboardUseCase)
 
     factoryOf(::AuthViewModel)
     factoryOf(::OirResultViewModel)
     factoryOf(::SplashViewModel)
+    factoryOf(::StudentHomeViewModel)
+    factoryOf(::InstructorHomeViewModel)
 }

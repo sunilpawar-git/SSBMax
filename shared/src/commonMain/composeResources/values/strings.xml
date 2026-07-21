@@ -31,4 +31,88 @@
          composeResources entries, not hardcoded, per this repo's own rule. -->
     <string name="not_yet_ported_title">%1$s not yet ported to Compose Multiplatform</string>
     <string name="not_yet_ported_body">This destination still lives on the Android-only nav graph (app/.../navigation). See the KMP migration plan, Phase 5.</string>
+
+    <!-- Student/Instructor Home (Phase 5 port of app/.../ui/home/{student,instructor}).
+         Values copied verbatim from app/src/main/res/values/strings.xml. -->
+    <string name="home_welcome">Welcome, %1$s 🎖️</string>
+    <string name="home_journey_starts">Your SSB journey starts here</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="stats_study_streak">Study Streak</string>
+    <string name="stats_days">days</string>
+    <string name="stats_tests_done">Tests Done</string>
+    <string name="stats_tests">tests</string>
+    <string name="cd_stats_streak_icon">Study streak icon</string>
+    <string name="cd_stats_tests_icon">Tests completed icon</string>
+    <string name="section_your_progress">Your Progress</string>
+    <string name="dashboard_olq_dashboard">OLQ Dashboard</string>
+    <string name="dashboard_error_load_failed">Failed to load dashboard</string>
+    <string name="section_quick_actions">Quick Actions</string>
+    <string name="action_self_preparation">Self Preparation</string>
+    <string name="action_join_batch">Join Batch</string>
+    <string name="action_view_analytics">View Analytics</string>
+    <string name="action_study_materials">Study Materials</string>
+    <string name="icon_trophy">🏆</string>
+    <string name="phase_progress_title">SSB Preparation Progress</string>
+    <string name="phase_1_label">PHASE 1</string>
+    <string name="phase_1_subtitle">Screening</string>
+    <string name="phase_2_label">PHASE 2</string>
+    <string name="phase_2_subtitle">Assessment</string>
+    <string name="progress_no_tests">No tests attempted yet</string>
+    <string name="progress_view_all">View All Tests</string>
+    <string name="cd_phase_view_all">View all tests in this phase</string>
+    <string name="cd_test_status_completed">Test completed</string>
+    <string name="cd_test_status_in_progress">Test in progress</string>
+    <string name="cd_test_status_not_attempted">Test not attempted</string>
+    <string name="progress_completed_on">Completed on %1$s</string>
+    <string name="progress_not_attempted">Not Attempted</string>
+    <string name="dashboard_your_progress">Your SSB Progress</string>
+    <string name="cd_refresh_dashboard">Refresh dashboard</string>
+    <string name="dashboard_tests">Tests</string>
+    <string name="dashboard_some_unavailable">Some results couldn\'t load. Tap retry.</string>
+    <string name="dashboard_retry">Retry</string>
+    <string name="dashboard_overall_average">Overall Average</string>
+    <string name="dashboard_your_strengths">🌟 Your Strengths</string>
+    <string name="dashboard_focus_areas">📈 Focus Areas</string>
+    <string name="dashboard_last_updated_now">Updated just now</string>
+    <string name="dashboard_no_score">—</string>
+    <string name="dashboard_gto">GTO</string>
+    <string name="dashboard_interview">Interview</string>
+    <string name="dashboard_test_interview">Interview</string>
+    <string name="dashboard_phase_1">PHASE 1</string>
+    <string name="dashboard_test_oir">OIR</string>
+    <string name="dashboard_test_ppdt">PPDT</string>
+    <string name="dashboard_psychology">Psychology</string>
+    <string name="dashboard_test_tat">TAT</string>
+    <string name="dashboard_test_wat">WAT</string>
+    <string name="dashboard_test_srt">SRT</string>
+    <string name="dashboard_test_self_desc">Self Desc</string>
+    <string name="instructor_dashboard">Instructor Dashboard</string>
+    <string name="instructor_stats_summary">%1$d Students • %2$d Batches</string>
+    <string name="cd_pending_grading">Pending Grading</string>
+    <string name="action_create_batch">Create Batch</string>
+    <string name="cd_create_batch">Create Batch</string>
+    <string name="stat_tests_graded">Tests Graded</string>
+    <string name="stat_today">today</string>
+    <string name="stat_pending">Pending</string>
+    <string name="stat_to_grade">to grade</string>
+    <string name="stat_avg_response">Avg Response</string>
+    <string name="stat_time">time</string>
+    <string name="tab_students">Students</string>
+    <string name="tab_batches">Batches</string>
+    <string name="empty_no_students">No students yet</string>
+    <string name="empty_create_batch_prompt">Create a batch and share the invite code with students</string>
+    <string name="empty_no_batches">No batches created yet</string>
+    <string name="student_tests_count">%1$d tests</string>
+    <string name="student_avg_score">%1$d%% avg</string>
+    <string name="batch_code">Code: %1$s</string>
+
+    <!-- PhaseProgressRibbon's Phase 2 test-progress row labels (Phase 5 port of
+         app/.../ui/home/student/PhaseProgressRibbon.kt). The Android original hardcoded these
+         directly in the Composable, a pre-existing "zero hardcoded strings" lint-rule
+         violation (same class as RoleSelectionScreen's), ported here as real resources instead
+         of carrying the violation forward. -->
+    <string name="progress_psychology_tests">Psychology Tests</string>
+    <string name="progress_gto_tasks">GTO Tasks</string>
+    <string name="progress_interview">Interview</string>
 </resources>
