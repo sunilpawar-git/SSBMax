@@ -1,30 +1,17 @@
 package com.ssbmax.di
 
-import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import org.koin.core.module.dsl.factoryOf
+import org.koin.dsl.module
 
 /**
- * Hilt module bridging :shared (KMP) subscription use cases into the Android Hilt graph.
+ * Koin module bridging :shared (KMP) subscription use cases into the app's Koin graph.
  *
- * See [AuthUseCaseModule] for why these bindings are explicit rather than
- * `@Inject`-constructor based.
+ * See [authUseCaseModule] for why these bindings are explicit rather than
+ * relying on annotation processing.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object SubscriptionUseCaseModule {
-
-    @Provides
-    fun provideGetMonthlyUsageUseCase(
-        subscriptionRepository: SubscriptionRepository
-    ): GetMonthlyUsageUseCase = GetMonthlyUsageUseCase(subscriptionRepository)
-
-    @Provides
-    fun provideGetSubscriptionTierUseCase(
-        subscriptionRepository: SubscriptionRepository
-    ): GetSubscriptionTierUseCase = GetSubscriptionTierUseCase(subscriptionRepository)
+val subscriptionUseCaseModule = module {
+    factoryOf(::GetMonthlyUsageUseCase)
+    factoryOf(::GetSubscriptionTierUseCase)
 }

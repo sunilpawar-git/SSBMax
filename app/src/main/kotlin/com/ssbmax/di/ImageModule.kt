@@ -1,15 +1,10 @@
 package com.ssbmax.di
 
-import android.content.Context
 import coil.ImageLoader
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 
 /**
  * Provides a singleton [ImageLoader] used for prefetching question figures in
@@ -18,13 +13,9 @@ import javax.inject.Singleton
  *
  * Cache sizing follows Coil defaults (25% heap for memory, 250MB for disk).
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object ImageModule {
-
-    @Provides
-    @Singleton
-    fun provideImageLoader(@ApplicationContext context: Context): ImageLoader =
+val imageModule = module {
+    single<ImageLoader> {
+        val context = androidContext()
         ImageLoader.Builder(context)
             .memoryCache {
                 MemoryCache.Builder(context)
@@ -39,4 +30,5 @@ object ImageModule {
             }
             .respectCacheHeaders(false) // Firebase CDN responses may omit cache headers
             .build()
+    }
 }

@@ -1,69 +1,43 @@
 package com.ssbmax.di
 
+import androidx.work.WorkManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
-import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
-import androidx.work.WorkManager
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.dsl.module
 
 /**
- * Hilt module for GTO test helper classes
+ * Koin module for GTO test helper classes.
+ *
+ * `GTOWhiteNoisePlayer` no longer needs the Hilt-EntryPoint-style
+ * indirection ([com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer] used to
+ * be reached via `GTOWhiteNoisePlayerEntryPoint`/`EntryPointAccessors` in
+ * Compose screens that aren't ViewModels) — Koin has no
+ * ViewModel-vs-plain-Composable distinction, so `GDTestScreen`/
+ * `LecturetteTestScreen` now resolve it directly via `koinInject()`. See
+ * [appInjectablesModule] for its binding.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object GTOTestModule {
-
-    @Provides
-    @Singleton
-    fun provideGTOTestEligibilityChecker(
-        observeCurrentUser: ObserveCurrentUserUseCase,
-        userProfileRepository: UserProfileRepository,
-        subscriptionManager: SubscriptionManager,
-        sequentialAccessManager: GTOSequentialAccessManager,
-        securityLogger: SecurityEventLogger
-    ): GTOTestEligibilityChecker {
-        return GTOTestEligibilityChecker(
-            observeCurrentUser = observeCurrentUser,
-            userProfileRepository = userProfileRepository,
-            subscriptionManager = subscriptionManager,
-            sequentialAccessManager = sequentialAccessManager,
-            securityLogger = securityLogger
+val gtoTestModule = module {
+    single {
+        GTOTestEligibilityChecker(
+            observeCurrentUser = get<ObserveCurrentUserUseCase>(),
+            userProfileRepository = get<UserProfileRepository>(),
+            subscriptionManager = get<SubscriptionManager>(),
+            sequentialAccessManager = get<GTOSequentialAccessManager>(),
+            securityLogger = get<SecurityEventLogger>()
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideGTOTestSubmissionHelper(
-        gtoRepository: GTORepository,
-        submissionRepository: com.ssbmax.shared.domain.repository.SubmissionRepository,
-        workManager: WorkManager
-    ): GTOTestSubmissionHelper {
-        return GTOTestSubmissionHelper(
-            gtoRepository = gtoRepository,
-            submissionRepository = submissionRepository,
-            workManager = workManager
+    single {
+        GTOTestSubmissionHelper(
+            gtoRepository = get<GTORepository>(),
+            submissionRepository = get<SubmissionRepository>(),
+            workManager = get<WorkManager>()
         )
     }
-}
-
-/**
- * Hilt Entry Point for accessing GTOWhiteNoisePlayer in Compose screens
- * 
- * This allows non-ViewModel dependencies to be injected in Compose using hiltEntryPoint()
- */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface GTOWhiteNoisePlayerEntryPoint {
-    fun whiteNoisePlayer(): GTOWhiteNoisePlayer
 }

@@ -1,26 +1,12 @@
 package com.ssbmax.di
 
-import android.content.Context
 import androidx.work.WorkManager
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 
 /**
- * Dagger Hilt module for providing WorkManager
+ * Koin module for providing WorkManager.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object WorkManagerModule {
-
-    @Provides
-    @Singleton
-    fun provideWorkManager(
-        @ApplicationContext context: Context
-    ): WorkManager {
-        return WorkManager.getInstance(context)
-    }
+val workManagerModule = module {
+    single { WorkManager.getInstance(androidContext()) }
 }

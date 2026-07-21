@@ -1,39 +1,18 @@
 package com.ssbmax.di
 
-import android.content.Context
-import com.ssbmax.utils.tts.AndroidTTS
 import com.ssbmax.utils.tts.AndroidTTSService
 import com.ssbmax.utils.tts.TTSService
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 
 /**
- * Dependency injection module for Text-to-Speech services
+ * Dependency injection module for Text-to-Speech services.
  *
- * Provides:
- * - AndroidTTSService: Built-in Android TTS engine
- *   Works offline, available on all devices.
+ * Only one implementation is bound today (AndroidTTSService, Android's
+ * built-in offline TTS engine). Hilt's `@AndroidTTS` qualifier existed to
+ * disambiguate a future Sarvam/ElevenLabs premium TTS implementation that
+ * was never added; with a single binding, no Koin qualifier is needed.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object TTSModule {
-
-    /**
-     * Provide Android TTS service
-     *
-     * Uses Android's built-in TextToSpeech engine.
-     * Works offline, available on all devices.
-     */
-    @Provides
-    @Singleton
-    @AndroidTTS
-    fun provideAndroidTTSService(
-        @ApplicationContext context: Context
-    ): TTSService {
-        return AndroidTTSService(context)
-    }
+val ttsModule = module {
+    single<TTSService> { AndroidTTSService(androidContext()) }
 }

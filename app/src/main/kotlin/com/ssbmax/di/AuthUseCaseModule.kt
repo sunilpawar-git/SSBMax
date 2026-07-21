@@ -1,50 +1,24 @@
 package com.ssbmax.di
 
-import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.usecase.auth.GetGoogleSignInIntentUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import org.koin.core.module.dsl.factoryOf
+import org.koin.dsl.module
 
 /**
- * Hilt module bridging :shared (KMP) auth use cases into the Android Hilt graph.
+ * Koin module bridging :shared (KMP) auth use cases into the app's Koin graph.
  *
- * These use cases live in shared/commonMain and cannot carry `@Inject` constructors
- * there (javax.inject doesn't resolve on the iOS native target), so their Android
- * bindings are provided explicitly here instead. Plain constructor calls only —
- * no behavior change from the previous `@Inject constructor` versions.
+ * `factoryOf` resolves each use case's constructor via reflection (an
+ * `AuthRepository` binding already lives in :shared's own Koin module) —
+ * matches Hilt's previous unscoped (non-`@Singleton`) `@Provides` behavior.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object AuthUseCaseModule {
-
-    @Provides
-    fun provideGetGoogleSignInIntentUseCase(
-        authRepository: AuthRepository
-    ): GetGoogleSignInIntentUseCase = GetGoogleSignInIntentUseCase(authRepository)
-
-    @Provides
-    fun provideObserveCurrentUserUseCase(
-        authRepository: AuthRepository
-    ): ObserveCurrentUserUseCase = ObserveCurrentUserUseCase(authRepository)
-
-    @Provides
-    fun provideSignInWithGoogleUseCase(
-        authRepository: AuthRepository
-    ): SignInWithGoogleUseCase = SignInWithGoogleUseCase(authRepository)
-
-    @Provides
-    fun provideSignOutUseCase(
-        authRepository: AuthRepository
-    ): SignOutUseCase = SignOutUseCase(authRepository)
-
-    @Provides
-    fun provideUpdateUserRoleUseCase(
-        authRepository: AuthRepository
-    ): UpdateUserRoleUseCase = UpdateUserRoleUseCase(authRepository)
+val authUseCaseModule = module {
+    factoryOf(::GetGoogleSignInIntentUseCase)
+    factoryOf(::ObserveCurrentUserUseCase)
+    factoryOf(::SignInWithGoogleUseCase)
+    factoryOf(::SignOutUseCase)
+    factoryOf(::UpdateUserRoleUseCase)
 }

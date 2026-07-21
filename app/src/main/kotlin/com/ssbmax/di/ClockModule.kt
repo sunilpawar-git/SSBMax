@@ -2,17 +2,10 @@ package com.ssbmax.di
 
 import com.ssbmax.time.Clock
 import com.ssbmax.time.SystemClock
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ClockModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindClock(impl: SystemClock): Clock
+val clockModule = module {
+    singleOf(::SystemClock) bind Clock::class
 }
