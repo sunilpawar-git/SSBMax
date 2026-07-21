@@ -5,7 +5,6 @@ import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -14,15 +13,13 @@ import org.junit.Test
 /**
  * UI tests for StudentHomeScreen
  */
-@HiltAndroidTest
 class StudentHomeScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: StudentHomeViewModel
     private lateinit var uiStateFlow: MutableStateFlow<StudentHomeUiState>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup mocks
         mockViewModel = mockk(relaxed = true)

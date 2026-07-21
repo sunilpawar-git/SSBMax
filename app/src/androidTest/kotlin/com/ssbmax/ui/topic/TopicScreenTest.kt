@@ -2,7 +2,6 @@ package com.ssbmax.ui.topic
 
 import androidx.compose.ui.test.*
 import com.ssbmax.testing.BaseComposeTest
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -11,15 +10,13 @@ import org.junit.Test
 /**
  * UI tests for TopicScreen
  */
-@HiltAndroidTest
 class TopicScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: TopicViewModel
     private lateinit var uiStateFlow: MutableStateFlow<TopicUiState>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup mocks
         mockViewModel = mockk(relaxed = true)

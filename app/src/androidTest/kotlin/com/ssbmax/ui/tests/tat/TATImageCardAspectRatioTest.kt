@@ -4,7 +4,6 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.ui.tests.tat.components.phases.TATImageViewingPhase
-import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Test
 
 /**
@@ -19,7 +18,6 @@ import org.junit.Test
  * - Replace weight(1f) with aspectRatio(4f/3f)
  * - Use ContentScale.Crop instead of Fit
  */
-@HiltAndroidTest
 class TATImageCardAspectRatioTest : BaseComposeTest() {
 
     companion object {

@@ -4,7 +4,6 @@ import androidx.compose.ui.test.*
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.testing.BaseComposeTest
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -14,7 +13,6 @@ import org.junit.Test
  * UI tests for LoginScreen
  * Tests focus on UI state handling, as actual Google Sign-In requires real auth
  */
-@HiltAndroidTest
 class LoginScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: AuthViewModel
@@ -23,8 +21,7 @@ class LoginScreenTest : BaseComposeTest() {
     private var roleSelectionCalled = false
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup mocks
         mockViewModel = mockk(relaxed = true)

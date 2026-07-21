@@ -1,35 +1,23 @@
 package com.ssbmax.testing
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import org.junit.Before
 import org.junit.Rule
 
 /**
- * Base class for Compose UI tests with Hilt support
+ * Base class for Compose UI tests.
+ *
+ * Previously used Hilt's `@HiltAndroidTest`/`HiltAndroidRule` to inject the
+ * test application before each test. Koin has no per-test injection rule
+ * equivalent for this app's setup — `SSBMaxApplication.onCreate()` already
+ * calls `startKoin()` unconditionally (see [com.ssbmax.SSBMaxApplication]),
+ * so the instrumented test process's real Application instance brings up
+ * the same Koin graph production does, with no extra rule needed here.
  */
-@HiltAndroidTest
 abstract class BaseComposeTest {
-
-    /**
-     * Hilt rule must be first to ensure proper DI setup
-     */
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
 
     /**
      * Compose test rule for UI testing
      */
-    @get:Rule(order = 1)
+    @get:Rule(order = 0)
     val composeTestRule = createComposeRule()
-
-    /**
-     * Setup method called before each test
-     */
-    @Before
-    open fun setup() {
-        hiltRule.inject()
-    }
 }
-

@@ -4,7 +4,6 @@ import androidx.compose.ui.test.*
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -13,7 +12,6 @@ import org.junit.Test
 /**
  * UI tests for StudentProfileScreen
  */
-@HiltAndroidTest
 class StudentProfileScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: StudentProfileViewModel
@@ -21,8 +19,7 @@ class StudentProfileScreenTest : BaseComposeTest() {
     private lateinit var testProfile: UserProfile
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup test data
         testProfile = TestDataFactory.createTestUserProfile(

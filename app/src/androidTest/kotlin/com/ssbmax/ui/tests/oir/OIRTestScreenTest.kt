@@ -5,7 +5,6 @@ import com.ssbmax.R
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -14,7 +13,6 @@ import org.junit.Test
 /**
  * UI tests for OIRTestScreen
  */
-@HiltAndroidTest
 class OIRTestScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: OIRTestViewModel
@@ -23,8 +21,7 @@ class OIRTestScreenTest : BaseComposeTest() {
     private lateinit var testQuestions: List<OIRQuestion>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
 
         // Setup test data
         testQuestions = listOf(

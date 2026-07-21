@@ -5,7 +5,6 @@ import androidx.compose.ui.test.*
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import com.ssbmax.testing.BaseComposeTest
-import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
 import org.junit.Test
 
@@ -13,14 +12,12 @@ import org.junit.Test
  * Navigation tests for SSBMax app
  * Tests verify navigation flows work correctly
  */
-@HiltAndroidTest
 class NavigationTest : BaseComposeTest() {
 
     private lateinit var navController: TestNavHostController
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
     }
 
     @Test

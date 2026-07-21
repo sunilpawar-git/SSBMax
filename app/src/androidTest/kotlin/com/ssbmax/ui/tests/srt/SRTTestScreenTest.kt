@@ -4,7 +4,6 @@ import androidx.compose.ui.test.*
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -13,7 +12,6 @@ import org.junit.Test
 /**
  * UI tests for SRTTestScreen
  */
-@HiltAndroidTest
 class SRTTestScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: SRTTestViewModel
@@ -22,8 +20,7 @@ class SRTTestScreenTest : BaseComposeTest() {
     private lateinit var testSituations: List<SRTSituation>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup test data
         testSituations = listOf(

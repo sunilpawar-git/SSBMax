@@ -4,13 +4,11 @@ import androidx.compose.ui.test.*
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Test
 
 /**
  * UI tests for DrawerHeader component with subscription badges
  */
-@HiltAndroidTest
 class DrawerHeaderTest : BaseComposeTest() {
 
     @Test

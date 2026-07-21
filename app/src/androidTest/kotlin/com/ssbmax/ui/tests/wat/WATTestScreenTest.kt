@@ -6,7 +6,6 @@ import com.ssbmax.shared.domain.model.WATWord
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -15,7 +14,6 @@ import org.junit.Test
 /**
  * UI tests for WATTestScreen
  */
-@HiltAndroidTest
 class WATTestScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: WATTestViewModel
@@ -24,8 +22,7 @@ class WATTestScreenTest : BaseComposeTest() {
     private lateinit var testWords: List<WATWord>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
         
         // Setup test data
         testWords = listOf(

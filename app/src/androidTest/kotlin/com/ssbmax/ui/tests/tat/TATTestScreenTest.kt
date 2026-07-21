@@ -6,7 +6,6 @@ import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
-import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -15,7 +14,6 @@ import org.junit.Test
 /**
  * UI tests for TATTestScreen
  */
-@HiltAndroidTest
 class TATTestScreenTest : BaseComposeTest() {
 
     private lateinit var mockViewModel: TATTestViewModel
@@ -25,8 +23,7 @@ class TATTestScreenTest : BaseComposeTest() {
     private lateinit var testQuestions: List<TATQuestion>
 
     @Before
-    override fun setup() {
-        super.setup()
+    fun setup() {
 
         // Setup test data
         testQuestions = (1..12).map { position ->

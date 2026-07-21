@@ -5,13 +5,11 @@ import com.ssbmax.shared.domain.model.*
 import com.ssbmax.testing.BaseComposeTest
 import com.ssbmax.testing.TestDataFactory
 import com.ssbmax.ui.home.student.PhaseProgressRibbon
-import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Test
 
 /**
  * UI tests for reusable components
  */
-@HiltAndroidTest
 class ComponentsTest : BaseComposeTest() {
 
     @Test
