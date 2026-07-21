@@ -14,7 +14,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
 import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
-import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
+import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.ui.tests.gto.common.rememberWhiteNoiseState
 import com.ssbmax.ui.tests.gto.gd.*
 
@@ -40,7 +40,7 @@ fun GDTestScreen(
     viewModel: GDTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val whiteNoisePlayer = koinInject<GTOWhiteNoisePlayer>()
+    val whiteNoisePlayer = koinInject<WhiteNoisePlayer>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val whiteNoiseState = rememberWhiteNoiseState(whiteNoisePlayer)
     var showExitDialog by rememberSaveable { mutableStateOf(false) }

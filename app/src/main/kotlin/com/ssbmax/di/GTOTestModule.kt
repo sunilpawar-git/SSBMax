@@ -15,13 +15,13 @@ import org.koin.dsl.module
 /**
  * Koin module for GTO test helper classes.
  *
- * `GTOWhiteNoisePlayer` no longer needs the Hilt-EntryPoint-style
- * indirection ([com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer] used to
- * be reached via `GTOWhiteNoisePlayerEntryPoint`/`EntryPointAccessors` in
- * Compose screens that aren't ViewModels) — Koin has no
- * ViewModel-vs-plain-Composable distinction, so `GDTestScreen`/
- * `LecturetteTestScreen` now resolve it directly via `koinInject()`. See
- * [appInjectablesModule] for its binding.
+ * `com.ssbmax.shared.platform.audio.WhiteNoisePlayer` (Phase 4 platform
+ * shim, MediaPlayer/AVAudioPlayer expect-actual) no longer needs the
+ * Hilt-EntryPoint-style indirection used to reach it from Compose screens
+ * that aren't ViewModels — Koin has no ViewModel-vs-plain-Composable
+ * distinction, so `GDTestScreen`/`LecturetteTestScreen` now resolve it
+ * directly via `koinInject()`. Its binding lives in shared's
+ * `platformModule` (both Android and iOS actuals), not here.
  */
 val gtoTestModule = module {
     single {

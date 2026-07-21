@@ -1,8 +1,5 @@
 package com.ssbmax.ui.tests.gto.common
 
-import android.content.Context
-import android.media.MediaPlayer
-import android.util.Log
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,103 +8,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import com.ssbmax.R
-import com.ssbmax.utils.ErrorLogger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 /**
- * White Noise Player for GTO Tests (Group Discussion & Lecturette)
- * 
- * Simulates the real SSB GTO environment with:
- * - Pink noise audio (65% volume, looping)
- * - Visual grain overlay (animated static effect)
- * 
+ * Visual noise overlay + state wiring for GTO Tests (Group Discussion &
+ * Lecturette). Simulates the real SSB GTO environment with:
+ * - Pink noise audio (65% volume, looping) -- via the shared-module
+ *   `com.ssbmax.shared.platform.audio.WhiteNoisePlayer` (Koin-injected)
+ * - Visual grain overlay (animated static effect, stays here -- Compose UI)
+ *
  * Purpose: Creates realistic test conditions to help candidates
  * practice focusing and communicating under distracting conditions.
  */
-class GTOWhiteNoisePlayer(
-    private val context: Context
-) {
-    private var mediaPlayer: MediaPlayer? = null
-    private var isPlaying = false
-    
-    companion object {
-        private const val TAG = "GTOWhiteNoise"
-        private const val NOISE_VOLUME = 0.65f // 65% volume
-    }
-    
-    /**
-     * Start playing white noise audio
-     * Uses pink_noise.wav from res/raw/
-     */
-    fun startAudio() {
-        try {
-            if (isPlaying) {
-                Log.d(TAG, "⚠️ White noise already playing")
-                return
-            }
-            
-            // Create MediaPlayer with pink noise audio
-            mediaPlayer = MediaPlayer.create(context, R.raw.pink_noise)?.apply {
-                isLooping = true
-                setVolume(NOISE_VOLUME, NOISE_VOLUME)
-                start()
-            }
-            isPlaying = mediaPlayer != null
-            if (isPlaying) {
-                Log.d(TAG, "🔊 White noise audio started (${NOISE_VOLUME * 100}% volume)")
-            }
-            
-            if (mediaPlayer == null) {
-                ErrorLogger.log(
-                    "Failed to create MediaPlayer for white noise",
-                    mapOf("resourceId" to R.raw.pink_noise.toString()),
-                    ErrorLogger.Severity.ERROR
-                )
-            }
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to start white noise audio")
-        }
-    }
-    
-    /**
-     * Stop playing white noise audio
-     */
-    fun stopAudio() {
-        try {
-            mediaPlayer?.apply {
-                if (isPlaying) {
-                    stop()
-                }
-                release()
-            }
-            mediaPlayer = null
-            isPlaying = false
-            Log.d(TAG, "🔇 White noise audio stopped")
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to stop white noise audio")
-        }
-    }
-    
-    /**
-     * Check if white noise is currently playing
-     */
-    fun isAudioPlaying(): Boolean = isPlaying
-    
-    /**
-     * Adjust volume (0.0 - 1.0)
-     */
-    fun setVolume(volume: Float) {
-        try {
-            val clampedVolume = volume.coerceIn(0f, 1f)
-            mediaPlayer?.setVolume(clampedVolume, clampedVolume)
-            Log.d(TAG, "🔊 Volume adjusted to ${clampedVolume * 100}%")
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to adjust white noise volume")
-        }
-    }
-}
 
 /**
  * Visual white noise overlay composable
@@ -211,22 +126,22 @@ fun AnimatedWhiteNoiseOverlay(
  */
 @Stable
 class WhiteNoiseState(
-    private val player: GTOWhiteNoisePlayer
+    private val player: com.ssbmax.shared.platform.audio.WhiteNoisePlayer,
+    private val scope: CoroutineScope
 ) {
     private val _isEnabled = mutableStateOf(false)
     val isEnabled: State<Boolean> = _isEnabled
-    
+
     /**
      * Enable white noise (audio + visual)
      */
     fun enable() {
         if (!_isEnabled.value) {
-            player.startAudio()
+            scope.launch { player.startAudio() }
             _isEnabled.value = true
-            Log.d("WhiteNoiseState", "✅ White noise enabled")
         }
     }
-    
+
     /**
      * Disable white noise (audio + visual)
      */
@@ -234,10 +149,9 @@ class WhiteNoiseState(
         if (_isEnabled.value) {
             player.stopAudio()
             _isEnabled.value = false
-            Log.d("WhiteNoiseState", "❌ White noise disabled")
         }
     }
-    
+
     /**
      * Toggle white noise on/off
      */
@@ -255,7 +169,8 @@ class WhiteNoiseState(
  */
 @Composable
 fun rememberWhiteNoiseState(
-    player: GTOWhiteNoisePlayer
+    player: com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 ): WhiteNoiseState {
-    return remember(player) { WhiteNoiseState(player) }
+    val scope = rememberCoroutineScope()
+    return remember(player) { WhiteNoiseState(player, scope) }
 }

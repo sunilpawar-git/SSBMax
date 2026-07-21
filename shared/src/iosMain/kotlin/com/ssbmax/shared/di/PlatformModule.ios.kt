@@ -1,6 +1,7 @@
 package com.ssbmax.shared.di
 
 import com.ssbmax.shared.db.DatabaseDriverFactory
+import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.shared.platform.settings.AppThemeSettings
 import com.ssbmax.shared.platform.settings.SettingsFactory
 import com.ssbmax.shared.platform.tts.IosTTSService
@@ -12,4 +13,5 @@ actual val platformModule = module {
     single { SettingsFactory().create() }
     single { AppThemeSettings(get()) }
     single<TTSService> { IosTTSService() }
+    single { WhiteNoisePlayer() }
 }
