@@ -2,23 +2,13 @@ package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.repository.StudyContentRepositoryImpl
 import com.ssbmax.shared.domain.repository.StudyContentRepository
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
 
 /**
- * Hilt module for providing content repository implementations
+ * Koin module for providing content repository implementations.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class ContentRepositoryModule {
-    
-    @Binds
-    @Singleton
-    abstract fun bindStudyContentRepository(
-        impl: StudyContentRepositoryImpl
-    ): StudyContentRepository
+val contentRepositoryModule = module {
+    singleOf(::StudyContentRepositoryImpl) bind StudyContentRepository::class
 }
-
