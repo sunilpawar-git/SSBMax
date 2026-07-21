@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.TestType
@@ -42,7 +42,7 @@ fun TopicScreen(
     onNavigateToStudyMaterial: (String) -> Unit = {},
     onNavigateToTest: (String) -> Unit = {},
     onNavigateToInterviewResult: (String) -> Unit = {},
-    viewModel: TopicViewModel = hiltViewModel(),
+    viewModel: TopicViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val testType = topicId // Alias for compatibility

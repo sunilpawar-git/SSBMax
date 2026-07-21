@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.StudentPerformance
 
@@ -33,7 +33,7 @@ import com.ssbmax.shared.domain.model.StudentPerformance
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstructorHomeScreen(
-    viewModel: InstructorHomeViewModel = hiltViewModel(),
+    viewModel: InstructorHomeViewModel = koinViewModel(),
     onNavigateToStudent: (String) -> Unit,
     onNavigateToGrading: () -> Unit,
     onNavigateToBatchDetail: (String) -> Unit,

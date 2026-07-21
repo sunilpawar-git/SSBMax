@@ -44,7 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.R
 import com.ssbmax.utils.DateFormatter
 
@@ -57,7 +57,7 @@ import com.ssbmax.utils.DateFormatter
 fun TestDetailGradingScreen(
     submissionId: String,
     onNavigateBack: () -> Unit,
-    viewModel: TestDetailGradingViewModel = hiltViewModel()
+    viewModel: TestDetailGradingViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }

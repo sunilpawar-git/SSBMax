@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.shared.domain.model.UserRole
 
 /**
@@ -23,7 +23,7 @@ import com.ssbmax.shared.domain.model.UserRole
  */
 @Composable
 fun RoleSelectionScreen(
-    viewModel: AuthViewModel = hiltViewModel(),
+    viewModel: AuthViewModel = koinViewModel(),
     onRoleSelected: (UserRole) -> Unit,
     modifier: Modifier = Modifier
 ) {

@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SSBInfoCard
 import com.ssbmax.shared.domain.model.SSBInfoIcon
@@ -32,7 +32,7 @@ import com.ssbmax.ui.components.MarkdownText
 @Composable
 fun SSBOverviewScreen(
     onNavigateBack: () -> Unit,
-    viewModel: SSBOverviewViewModel = hiltViewModel(),
+    viewModel: SSBOverviewViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

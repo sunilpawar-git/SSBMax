@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
@@ -32,7 +32,7 @@ fun TATSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
     onViewFeedback: () -> Unit = {},
-    viewModel: TATSubmissionResultViewModel = hiltViewModel(),
+    viewModel: TATSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

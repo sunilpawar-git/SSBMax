@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.result.OLQResultContent
@@ -22,7 +22,7 @@ fun SRTSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
     onViewFeedback: () -> Unit = {},
-    viewModel: SRTSubmissionResultViewModel = hiltViewModel(),
+    viewModel: SRTSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

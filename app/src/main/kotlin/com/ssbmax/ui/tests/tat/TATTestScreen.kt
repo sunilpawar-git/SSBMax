@@ -9,7 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.TATPhase
@@ -29,7 +29,7 @@ fun TATTestScreen(
     testId: String,
     onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> }, // submissionId, subscriptionType
     onNavigateBack: () -> Unit = {},
-    viewModel: TATTestViewModel = hiltViewModel(),
+    viewModel: TATTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

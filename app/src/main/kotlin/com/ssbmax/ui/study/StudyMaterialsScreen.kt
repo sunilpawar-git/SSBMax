@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
@@ -34,7 +34,7 @@ fun StudyMaterialsScreen(
     onNavigateToTopic: (String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToBookmarks: () -> Unit = {},
-    viewModel: StudyMaterialsViewModel = hiltViewModel(),
+    viewModel: StudyMaterialsViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQCategory
@@ -38,7 +38,7 @@ import com.ssbmax.ui.components.result.OLQScoreCard
 fun GPESubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit,
-    viewModel: GPESubmissionResultViewModel = hiltViewModel(),
+    viewModel: GPESubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.results.HistoricResult
 
@@ -29,7 +29,7 @@ import com.ssbmax.shared.domain.model.results.HistoricResult
 fun HistoricResultsScreen(
     onNavigateBack: () -> Unit,
     onResultClick: (String, TestType) -> Unit,
-    viewModel: HistoricResultsViewModel = hiltViewModel()
+    viewModel: HistoricResultsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showFilterDialog by remember { mutableStateOf(false) }

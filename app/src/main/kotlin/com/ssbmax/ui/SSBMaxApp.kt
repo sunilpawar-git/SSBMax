@@ -2,7 +2,7 @@ package com.ssbmax.ui
 
 import android.util.Log
 import androidx.compose.runtime.*
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -24,7 +24,7 @@ private val AUTH_SCREENS = setOf("splash", "login", "role_selection")
  */
 @Composable
 fun SSBMaxApp(
-    viewModel: AppViewModel = hiltViewModel(),
+    viewModel: AppViewModel = koinViewModel(),
     pendingDeepLink: String? = null,
     onDeepLinkHandled: () -> Unit = {}
 ) {

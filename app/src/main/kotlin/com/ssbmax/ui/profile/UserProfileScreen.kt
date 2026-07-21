@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
 
@@ -29,7 +29,7 @@ fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onProfileSaved: () -> Unit,
     isOnboarding: Boolean = false,
-    viewModel: UserProfileViewModel = hiltViewModel()
+    viewModel: UserProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

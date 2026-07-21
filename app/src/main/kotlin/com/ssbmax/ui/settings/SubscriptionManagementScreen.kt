@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Subscription Management Screen
@@ -26,7 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun SubscriptionManagementScreen(
     onNavigateBack: () -> Unit,
     onUpgrade: (SubscriptionTierModel) -> Unit,
-    viewModel: SubscriptionManagementViewModel = hiltViewModel(),
+    viewModel: SubscriptionManagementViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val TAG = "SubscriptionManagementScreen"

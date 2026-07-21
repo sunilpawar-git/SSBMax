@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.PIQPage
@@ -27,7 +27,7 @@ fun PIQTestScreen(
     testId: String,
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit = {},
-    viewModel: PIQTestViewModel = hiltViewModel()
+    viewModel: PIQTestViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

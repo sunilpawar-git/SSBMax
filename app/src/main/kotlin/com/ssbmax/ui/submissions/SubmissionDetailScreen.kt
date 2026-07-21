@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubmissionStatus
 
@@ -24,7 +24,7 @@ import com.ssbmax.shared.domain.model.SubmissionStatus
 fun SubmissionDetailScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: SubmissionDetailViewModel = hiltViewModel(),
+    viewModel: SubmissionDetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

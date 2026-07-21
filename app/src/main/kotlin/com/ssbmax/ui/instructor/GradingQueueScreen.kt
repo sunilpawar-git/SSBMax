@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.GradingPriority
 import com.ssbmax.shared.domain.model.GradingQueueItem
@@ -29,7 +29,7 @@ import com.ssbmax.shared.domain.model.TestType
 fun GradingQueueScreen(
     onSubmissionClick: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    viewModel: InstructorGradingViewModel = hiltViewModel(),
+    viewModel: InstructorGradingViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

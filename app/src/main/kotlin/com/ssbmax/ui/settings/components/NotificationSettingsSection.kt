@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.NotificationPreferences
@@ -27,7 +27,7 @@ import com.ssbmax.ui.settings.notifications.NotificationSettingsViewModel
 @Composable
 fun NotificationSettingsSection(
     modifier: Modifier = Modifier,
-    viewModel: NotificationSettingsViewModel = hiltViewModel()
+    viewModel: NotificationSettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -71,7 +71,7 @@ fun NotificationSettingsSection(
  *
  * **Breaking Changes:**
  * - All state management parameters removed
- * - ViewModel now injected via `hiltViewModel()` internally
+ * - ViewModel now injected via `koinViewModel()` internally
  * - Simpler API with single modifier parameter
  *
  * **Why This Change:**

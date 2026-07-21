@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ssbmax.shared.domain.model.SSBMaxUser
@@ -43,7 +43,7 @@ fun SSBMaxScaffold(
     var phase2Expanded by remember { mutableStateOf(false) }
     
     // Load user profile using ViewModel
-    val profileViewModel: UserProfileViewModel = hiltViewModel()
+    val profileViewModel: UserProfileViewModel = koinViewModel()
     val profileUiState by profileViewModel.uiState.collectAsState()
     val userProfile = profileUiState.profile
     val isLoadingProfile = profileUiState.isLoading

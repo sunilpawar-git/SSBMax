@@ -6,12 +6,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.di.GTOWhiteNoisePlayerEntryPoint
-import dagger.hilt.android.EntryPointAccessors
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
@@ -43,16 +41,10 @@ fun LecturetteTestScreen(
     onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToUpgrade: () -> Unit = {},
-    viewModel: LecturetteTestViewModel = hiltViewModel(),
+    viewModel: LecturetteTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    // Inject GTOWhiteNoisePlayer via Hilt entry point (not a ViewModel)
-    val context = LocalContext.current
-    val entryPoint = EntryPointAccessors.fromApplication(
-        context.applicationContext,
-        GTOWhiteNoisePlayerEntryPoint::class.java
-    )
-    val whiteNoisePlayer = entryPoint.whiteNoisePlayer()
+    val whiteNoisePlayer = koinInject<GTOWhiteNoisePlayer>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val whiteNoiseState = rememberWhiteNoiseState(whiteNoisePlayer)
     var showExitDialog by rememberSaveable { mutableStateOf(false) }

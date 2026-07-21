@@ -61,7 +61,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.shared.domain.model.NotificationPriority
 import com.ssbmax.shared.domain.model.NotificationType
 import com.ssbmax.shared.domain.model.SSBMaxNotification
@@ -75,7 +75,7 @@ import com.ssbmax.shared.domain.model.SSBMaxNotification
 fun NotificationCenterScreen(
     onNavigateBack: () -> Unit,
     onNotificationClick: (SSBMaxNotification) -> Unit = {},
-    viewModel: NotificationCenterViewModel = hiltViewModel()
+    viewModel: NotificationCenterViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()

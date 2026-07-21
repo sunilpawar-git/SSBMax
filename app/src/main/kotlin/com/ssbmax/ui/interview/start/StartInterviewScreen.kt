@@ -43,7 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.interview.InterviewMode
@@ -55,7 +55,7 @@ fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSession: (sessionId: String) -> Unit,
     onNavigateToResult: (String) -> Unit = {},  // Kept for compatibility but history now on TopicScreen
-    viewModel: StartInterviewViewModel = hiltViewModel()
+    viewModel: StartInterviewViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var consentGiven by remember { mutableStateOf(false) }

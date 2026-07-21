@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 
@@ -30,7 +30,7 @@ fun StudentProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAchievements: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
-    viewModel: StudentProfileViewModel = hiltViewModel(),
+    viewModel: StudentProfileViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

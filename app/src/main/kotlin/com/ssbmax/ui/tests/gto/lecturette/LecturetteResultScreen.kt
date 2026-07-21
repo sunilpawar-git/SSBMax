@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.ui.tests.gto.lecturette.LecturetteResultContent
 
@@ -31,7 +31,7 @@ import com.ssbmax.ui.tests.gto.lecturette.LecturetteResultContent
 fun LecturetteResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit,
-    viewModel: LecturetteResultViewModel = hiltViewModel(),
+    viewModel: LecturetteResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

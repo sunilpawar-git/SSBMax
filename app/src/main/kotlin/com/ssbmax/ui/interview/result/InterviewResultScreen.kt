@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.SSBRecommendationBanner
@@ -30,7 +30,7 @@ import com.ssbmax.ui.components.SSBRecommendationBanner
 fun InterviewResultScreen(
     resultId: String,
     onNavigateBack: () -> Unit,
-    viewModel: InterviewResultViewModel = hiltViewModel()
+    viewModel: InterviewResultViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

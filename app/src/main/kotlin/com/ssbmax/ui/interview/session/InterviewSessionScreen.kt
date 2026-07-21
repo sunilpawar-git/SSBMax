@@ -51,7 +51,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 
@@ -73,7 +73,7 @@ fun InterviewSessionScreen(
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit,
     onNavigateToHome: () -> Unit,
-    viewModel: InterviewSessionViewModel = hiltViewModel()
+    viewModel: InterviewSessionViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by remember { mutableStateOf(false) }

@@ -156,7 +156,7 @@ class ArchitectureTest {
             if (!content.contains("@Composable")) continue
 
             // Check if it uses a ViewModel
-            val hasViewModel = content.contains("hiltViewModel()") ||
+            val hasViewModel = content.contains("koinViewModel()") ||
                     content.contains("viewModel:") ||
                     content.contains("ViewModel =")
 

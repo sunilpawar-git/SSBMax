@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.R
 import com.ssbmax.core.designsystem.theme.SSBColors
 import com.ssbmax.core.designsystem.theme.Spacing
@@ -55,7 +55,7 @@ import com.ssbmax.ui.home.student.components.SectionHeader
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentHomeScreen(
-    viewModel: StudentHomeViewModel = hiltViewModel(),
+    viewModel: StudentHomeViewModel = koinViewModel(),
     onNavigateToTopic: (String) -> Unit,
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
