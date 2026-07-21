@@ -10,14 +10,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.hilt.navigation.compose.hiltViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.SSBMaxApp
 import com.ssbmax.ui.theme.LocalThemeState
 import com.ssbmax.ui.theme.SSBMaxTheme
 import com.ssbmax.utils.DeepLinkParser
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
     companion object {
@@ -35,7 +33,7 @@ class MainActivity : ComponentActivity() {
         pendingDeepLink = extractDeepLinkFromIntent(intent)
         
         setContent {
-            val mainViewModel: MainViewModel = hiltViewModel()
+            val mainViewModel: MainViewModel = koinViewModel()
             val themeState = mainViewModel.themeState
             
             CompositionLocalProvider(LocalThemeState provides themeState) {

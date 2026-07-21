@@ -2,48 +2,49 @@ package com.ssbmax
 
 import android.app.Application
 import android.util.Log
-import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.ssbmax.di.appModules
 import com.ssbmax.utils.AppConstants
 import com.ssbmax.workers.QuestionCacheCleanupWorker
-import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
 
 private const val TAG = "SSBMaxApplication"
 
 /**
  * SSBMax Application class
- * Hilt entry point for dependency injection
+ * Koin entry point for dependency injection.
  *
  * Responsibilities:
- * - Initialize WorkManager for background jobs
- * - Configure custom HiltWorkerFactory for dependency injection in workers
+ * - Start Koin with all app/core:data/:shared modules
+ * - Initialize WorkManager for background jobs (default WorkManager worker
+ *   factory now that workers resolve their own dependencies via
+ *   `KoinComponent`/`inject()` instead of Hilt's assisted-injection worker
+ *   factory — no custom `android.app.Configuration` provider override
+ *   needed, so default WorkManager initialization is used again)
  * - Schedule periodic question cache cleanup (daily)
  */
-@HiltAndroidApp
-class SSBMaxApplication : Application(), Configuration.Provider {
+class SSBMaxApplication : Application() {
 
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .setMinimumLoggingLevel(android.util.Log.INFO)
-            .build()
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "🚀 SSBMax Application starting...")
 
+        startKoin {
+            androidLogger()
+            androidContext(this@SSBMaxApplication)
+            modules(appModules)
+        }
+
         // Schedule periodic cleanup of expired question cache
         scheduleQuestionCacheCleanup()
-        
+
         // Schedule daily archival of old submissions (6+ months)
         com.ssbmax.workers.ArchivalWorker.schedule(WorkManager.getInstance(this))
 

@@ -129,10 +129,10 @@ dependencies {
     // Gemini AI
     implementation(libs.generativeai)
 
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    
+    // Koin dependency injection (replaces Hilt as of Phase 3 of the KMP migration)
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+
     // Gson for JSON serialization
     implementation(libs.gson)
     

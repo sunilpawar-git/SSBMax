@@ -7,10 +7,7 @@ import com.android.build.api.dsl.ApplicationExtension
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    kotlin("kapt")
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.hilt)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
 }
@@ -77,7 +74,7 @@ extensions.getByType<ApplicationExtension>().apply {
         versionCode = 1
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "com.ssbmax.testing.HiltTestRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -253,16 +250,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Hilt - Use KAPT for both Dagger and AndroidX Hilt to ensure proper processing order
-    // KSP runs before KAPT, so if Dagger uses KSP, worker modules won't be included
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)  // Dagger Hilt compiler
-    implementation(libs.hilt.navigation.compose)
+    // Koin dependency injection (replaces Hilt as of Phase 3 of the KMP migration)
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
 
-    // WorkManager (background jobs for question pre-generation)
+    // WorkManager (background jobs for question pre-generation).
+    // Workers resolve their own dependencies via KoinComponent/inject() now
+    // (see e.g. GTOAnalysisWorker), so no Hilt-work assisted-injection
+    // compiler is needed — the default WorkerFactory works.
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")  // AndroidX Hilt compiler for @HiltWorker
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -294,8 +292,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    testImplementation(libs.hilt.android.testing)
-    kaptTest(libs.hilt.compiler)
 
     // WorkManager testing (for Phase 1 worker tests)
     testImplementation("androidx.work:work-testing:2.9.0")
@@ -310,11 +306,9 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.mockk.android) // For mocking in UI tests
     androidTestImplementation(libs.androidx.navigation.testing) // For navigation testing
-    kaptAndroidTest(libs.hilt.compiler)
-    
+
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
