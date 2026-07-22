@@ -788,4 +788,76 @@
     <string name="user_profile_save_button">Save Profile</string>
     <string name="user_profile_avatar_default_initial">U</string>
 
+    <!-- Settings screen (Phase 5: Settings vertical) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_cd_back">Back</string>
+    <string name="about_section_title">About</string>
+    <string name="about_version">Version</string>
+    <string name="about_version_value">1.0.0 Beta</string>
+    <string name="about_support">Support</string>
+    <string name="about_support_email">support@ssbmax.com</string>
+    <string name="about_privacy_policy">Privacy Policy</string>
+    <string name="about_terms_of_service">Terms of Service</string>
+    <string name="about_view">View</string>
+
+    <string name="theme_section_title">Appearance</string>
+    <string name="theme_section_description">Choose your preferred theme</string>
+    <string name="theme_light_description">Light theme</string>
+    <string name="theme_dark_description">Dark theme</string>
+    <string name="theme_system_description">Follow system setting</string>
+
+    <string name="notification_settings_title">Notifications</string>
+    <string name="notification_settings_description">Manage your notification preferences</string>
+    <string name="notification_push_title">Push Notifications</string>
+    <string name="notification_push_description">Enable or disable all push notifications</string>
+    <string name="notification_grading_complete_title">Grading Complete</string>
+    <string name="notification_grading_complete_description">When your test is graded</string>
+    <string name="notification_feedback_title">Feedback Available</string>
+    <string name="notification_feedback_description">When new feedback is added</string>
+    <string name="notification_batch_invitations_title">Batch Invitations</string>
+    <string name="notification_batch_invitations_description">When you\'re invited to a batch</string>
+    <string name="notification_announcements_title">Announcements</string>
+    <string name="notification_announcements_description">General updates from SSBMax</string>
+    <string name="notification_study_reminders_title">Study Reminders</string>
+    <string name="notification_study_reminders_description">Daily study reminders</string>
+    <string name="notification_test_reminders_title">Test Reminders</string>
+    <string name="notification_test_reminders_description">Reminders to complete tests</string>
+    <string name="notification_marketplace_updates_title">Marketplace Updates</string>
+    <string name="notification_marketplace_updates_description">New classes and assessors</string>
+
+    <string name="subscription_billing_title">Subscription &amp; Billing</string>
+    <string name="subscription_current_plan_label">Current Plan</string>
+    <string name="action_upgrade_options">Upgrade Options</string>
+    <string name="action_manage_subscription">Manage Subscription</string>
+
+    <string name="help_section_title">Help &amp; Support</string>
+    <string name="help_faq_title">Frequently Asked Questions</string>
+    <string name="help_contact_support_title">Contact Support</string>
+    <string name="help_contact_support_email">support@ssbmax.com</string>
+
+    <!-- Subscription Management screen (Phase 5: Settings vertical) -->
+    <string name="subscription_mgmt_title">Subscription &amp; Billing</string>
+    <string name="subscription_mgmt_cd_back">Back</string>
+    <string name="subscription_mgmt_current_plan_label">Current Plan</string>
+    <string name="subscription_mgmt_renews_on">Renews on %1$s</string>
+    <string name="subscription_mgmt_usage_title">This Month\'s Usage</string>
+    <string name="subscription_mgmt_expand_cd">Expand</string>
+    <string name="subscription_mgmt_collapse_cd">Collapse</string>
+    <string name="subscription_mgmt_na">N/A</string>
+    <string name="subscription_mgmt_used_suffix">%1$d used</string>
+    <string name="subscription_mgmt_used_of_limit">%1$d/%2$d</string>
+    <string name="subscription_mgmt_compare_plans">Compare Plans</string>
+    <string name="subscription_mgmt_most_popular">Most Popular</string>
+    <string name="subscription_mgmt_current_plan_badge">Current Plan</string>
+    <string name="subscription_mgmt_upgrade_to">Upgrade to %1$s</string>
+    <string name="subscription_mgmt_select_plan">Select Plan</string>
+    <string name="subscription_mgmt_faq_title">Frequently Asked Questions</string>
+    <string name="subscription_mgmt_faq_q1">Can I cancel anytime?</string>
+    <string name="subscription_mgmt_faq_a1">Yes! You can cancel your subscription at any time. You\'ll continue to have access until the end of your billing period.</string>
+    <string name="subscription_mgmt_faq_q2">What payment methods do you accept?</string>
+    <string name="subscription_mgmt_faq_a2">We accept UPI, credit/debit cards, net banking, and popular digital wallets.</string>
+    <string name="subscription_mgmt_faq_q3">Do test limits reset monthly?</string>
+    <string name="subscription_mgmt_faq_a3">Yes! Your test limits reset on the 1st of every month based on your subscription tier.</string>
+    <string name="subscription_mgmt_retry">Retry</string>
+    <string name="subscription_mgmt_error_generic">Failed to load subscription data</string>
 </resources>

@@ -35,6 +35,8 @@ import com.ssbmax.shared.ui.profile.StudentProfileScreen
 import com.ssbmax.shared.ui.profile.UserProfileScreen
 import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
 import com.ssbmax.shared.ui.sdt.SDTTestScreen
+import com.ssbmax.shared.ui.settings.SettingsScreen
+import com.ssbmax.shared.ui.settings.SubscriptionManagementScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
@@ -728,18 +730,51 @@ fun SSBMaxNavHost(
         }
 
         // StudentProfile (summary/stats display, distinct from UserProfile's
-        // create/edit form above). onNavigateToSettings/Achievements/History all
-        // route to the honest placeholder -- Settings isn't ported yet this
-        // commit (see the Settings-vertical commit that follows), and there is
-        // no ported AchievementsScreen/TestHistoryScreen either.
+        // create/edit form above). Settings/achievements/history callbacks
+        // route to Settings (now ported, this session) and the honest
+        // placeholder respectively -- there is no ported AchievementsScreen/
+        // TestHistoryScreen yet.
         composable(SSBMaxDestinations.StudentProfile.route) {
             val notYetPorted: (String) -> Unit = { screen ->
                 navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
             }
             StudentProfileScreen(
-                onNavigateToSettings = { notYetPorted("SettingsScreen") },
+                onNavigateToSettings = { navController.navigate(SSBMaxDestinations.Settings.route) },
                 onNavigateToAchievements = { notYetPorted("AchievementsScreen") },
                 onNavigateToHistory = { notYetPorted("TestHistoryScreen") }
+            )
+        }
+
+        // Settings vertical (this session). onNavigateToFAQ/onNavigateToUpgrade
+        // route to the honest placeholder -- there is no ported FAQScreen/
+        // UpgradeScreen yet; onNavigateToSubscriptionManagement routes to the
+        // real SubscriptionManagementScreen registered below.
+        composable(SSBMaxDestinations.Settings.route) {
+            val notYetPorted: (String) -> Unit = { screen ->
+                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            }
+            SettingsScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToFAQ = { notYetPorted("FAQScreen") },
+                onNavigateToUpgrade = { notYetPorted("UpgradeScreen") },
+                onNavigateToSubscriptionManagement = {
+                    navController.navigate(SSBMaxDestinations.SubscriptionManagement.route)
+                }
+            )
+        }
+
+        // Subscription Management (this session). onUpgrade has no ported
+        // real-billing destination yet (PlayBillingClient/StoreKitBillingClient
+        // exist as Phase 4 shims but are NOT wired into SubscriptionManager --
+        // a known, separately-tracked gap; see this plan's own risk register) --
+        // routes to the honest placeholder rather than pretending a purchase
+        // flow exists.
+        composable(SSBMaxDestinations.SubscriptionManagement.route) {
+            SubscriptionManagementScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onUpgrade = { tier ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("UpgradeFlow(${tier.name})"))
+                }
             )
         }
 

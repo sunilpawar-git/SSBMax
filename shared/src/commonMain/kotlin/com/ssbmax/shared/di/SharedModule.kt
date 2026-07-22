@@ -77,6 +77,8 @@ import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
@@ -104,6 +106,10 @@ import com.ssbmax.shared.presentation.profile.StudentProfileViewModel
 import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
+import com.ssbmax.shared.presentation.settings.SettingsViewModel
+import com.ssbmax.shared.presentation.settings.SubscriptionManagementViewModel
+import com.ssbmax.shared.presentation.settings.notifications.NotificationSettingsViewModel
+import com.ssbmax.shared.presentation.settings.theme.ThemeSettingsViewModel
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
 import com.ssbmax.shared.presentation.srtresult.SRTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
@@ -424,4 +430,24 @@ val sharedModule = module {
     // [StudentProfileViewModel] (summary/stats display) are new here.
     factoryOf(::UserProfileViewModel)
     factoryOf(::StudentProfileViewModel)
+
+    // Settings vertical (this session): [GetSubscriptionTierUseCase]/
+    // [GetMonthlyUsageUseCase] already existed in `core:domain`/`shared` but
+    // were never bound in this Koin module before this session -- same
+    // "existed but unbound" finding as WAT/SRT/SDT's use cases in earlier
+    // Phase 5 sessions; without these factories, [SubscriptionManagementViewModel]
+    // would fail to resolve at runtime. [AppThemeSettings] is bound in
+    // `platformModule` (Phase 4 platform-shims item), not here.
+    // [NotificationSettingsViewModel] reuses the already-bound
+    // `NotificationRepository`/`ObserveCurrentUserUseCase`. None of these
+    // Settings screens are swapped into the live Android app's nav graph --
+    // per this session's own judgment call (see `SSBMaxNavHost`'s doc
+    // comment), Settings/Profile are less monetization-adjacent than the
+    // test verticals, but still deferred pending their own review pass.
+    factoryOf(::GetSubscriptionTierUseCase)
+    factoryOf(::GetMonthlyUsageUseCase)
+    factoryOf(::SettingsViewModel)
+    factoryOf(::ThemeSettingsViewModel)
+    factoryOf(::NotificationSettingsViewModel)
+    factoryOf(::SubscriptionManagementViewModel)
 }
