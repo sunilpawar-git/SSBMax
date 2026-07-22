@@ -183,4 +183,89 @@
     <string name="test_limit_premium_title">Premium Plan</string>
     <string name="test_limit_premium_subtitle">Unlimited all tests for ₹999/month</string>
     <string name="test_limit_recommended">Recommended</string>
+
+    <!-- Unified OLQ result-screen components (Phase 5 port of
+         app/.../ui/components/result/*.kt). Shared by every OLQ-based test
+         result screen; PPDT is the first KMP consumer (this session). -->
+    <string name="result_test_submitted_title">Test Submitted Successfully!</string>
+    <string name="result_back_to_home">Back to Home</string>
+    <string name="result_analyzing_title">Analyzing Your Response…</string>
+    <string name="result_analyzing_description">AI is evaluating your response across 15 Officer-Like Qualities. This usually takes 30–60 seconds.</string>
+    <string name="result_analysis_failed_title">Analysis Failed</string>
+    <string name="result_analysis_failed_description">AI analysis could not be completed. Please contact support or retake the test.</string>
+    <string name="result_pending_analysis_title">OLQ Analysis Pending</string>
+    <string name="result_pending_analysis_description">Your submission will be analyzed shortly.</string>
+    <string name="result_instructor_review_pending_title">Pending Instructor Review</string>
+    <string name="result_instructor_review_pending_description">Your instructor will review and provide final feedback</string>
+    <string name="result_overall_performance">Overall Performance</string>
+    <string name="result_score_out_of_10">out of 10</string>
+    <string name="result_ai_confidence">AI Confidence: %1$d%%</string>
+    <string name="result_ssb_scale_note">Note: SSB uses 1–10 scale where LOWER scores indicate BETTER performance</string>
+    <string name="result_top_strengths_title">Top Strengths</string>
+    <string name="result_areas_improvement_title">Areas for Improvement</string>
+    <string name="result_olq_assessment_title">Officer-Like Qualities Assessment</string>
+    <string name="result_recommendations_title">Recommendations</string>
+    <string name="olq_result_score_breakdown_title">Score Breakdown</string>
+    <string name="olq_result_expand_hint">Tap for reasoning</string>
+    <string name="olq_result_reasoning_unavailable">No reasoning available</string>
+
+    <!-- SSBRecommendationBanner (Phase 5 port of app/.../ui/components/SSBRecommendationBanner.kt). -->
+    <string name="ssb_banner_limitations_label">Limitations</string>
+    <string name="ssb_banner_critical_label">Critical</string>
+    <string name="ssb_banner_factor_ii_label">Factor II</string>
+    <string name="ssb_banner_expand_cd">Expand</string>
+    <string name="ssb_banner_collapse_cd">Collapse</string>
+    <string name="ssb_banner_critical_weaknesses_label">Critical Weaknesses:</string>
+    <string name="ssb_banner_factor_consistency_label">Factor Consistency:</string>
+    <string name="ssb_banner_factor_consistency_value">Score variation exceeds allowed range</string>
+    <string name="ssb_banner_scale_note">💡 SSB uses 1-10 scale where LOWER scores indicate BETTER performance</string>
+
+    <!-- PPDT result screen (Phase 5 port of app/.../ui/tests/ppdt/PPDTSubmissionResultScreen.kt). -->
+    <string name="result_ppdt_title">PPDT Test Results</string>
+    <string name="result_ppdt_story_submitted_title">Story Submitted Successfully!</string>
+    <string name="result_ppdt_characters_written">%1$d characters written</string>
+    <string name="result_ppdt_your_story_title">Your Story</string>
+    <string name="result_ppdt_character_count_label">Character Count:</string>
+    <string name="result_ppdt_writing_time_label">Writing Time:</string>
+    <string name="result_ppdt_writing_time_value">%1$d minutes</string>
+
+    <!-- PPDT test-taking screen (Phase 5 port of app/.../ui/tests/ppdt/*.kt). -->
+    <string name="ppdt_loading">Loading PPDT test from cloud...</string>
+    <string name="ppdt_retry_button">Retry</string>
+    <string name="ppdt_profile_required_title">Complete Your Profile</string>
+    <string name="ppdt_profile_required_message">Your gender is needed for PPDT assessment. Set it in Settings before continuing.</string>
+    <string name="ppdt_profile_go_to_settings">Go to Settings</string>
+    <string name="ppdt_profile_required_cancel">Cancel</string>
+    <string name="ppdt_image_observe_instruction">Observe the image carefully. Try to identify characters, their mood, and what\'s happening.</string>
+    <string name="ppdt_image_content_description">PPDT Test Image</string>
+    <string name="ppdt_topbar_title">PPDT Test</string>
+    <string name="ppdt_review_button">Review</string>
+    <string name="ppdt_submit_button">Submit Test</string>
+    <string name="ppdt_exit_cd">Exit Test</string>
+    <string name="ppdt_exit_title">Exit Test?</string>
+    <string name="ppdt_exit_message">Your progress will be saved. You can continue later from where you left off.</string>
+    <string name="ppdt_exit_confirm">Exit</string>
+    <string name="ppdt_exit_continue">Continue Test</string>
+    <string name="ppdt_submit_title">Submit Test?</string>
+    <string name="ppdt_submit_message">Once submitted, you cannot make changes.</string>
+    <string name="ppdt_submit_note">Your story will be reviewed by your instructor.</string>
+    <string name="ppdt_submit_confirm">Submit</string>
+    <string name="ppdt_submit_cancel">Cancel</string>
+    <string name="ppdt_instructions_title">PPDT Instructions</string>
+    <string name="ppdt_instruction_1">You will be shown a hazy picture for 30 seconds</string>
+    <string name="ppdt_instruction_2">Observe carefully: characters, their age, gender, mood</string>
+    <string name="ppdt_instruction_3">After viewing, you\'ll have 4 minutes to write a story</string>
+    <string name="ppdt_instruction_4">Your story should include:\n• What led to this situation?\n• What is happening now?\n• What will be the outcome?</string>
+    <string name="ppdt_instruction_5">Write a clear, positive, and imaginative story</string>
+    <string name="ppdt_instructions_note">Your story will be reviewed by your instructor. You\'ll receive AI-based preliminary feedback immediately.</string>
+    <string name="ppdt_start_test_button">Start Test</string>
+    <string name="ppdt_writing_title">Write your story based on the image you saw</string>
+    <string name="ppdt_writing_subtitle">Include: What led to this? What\'s happening? What will be the outcome?</string>
+    <string name="ppdt_writing_placeholder">Start writing your story here...</string>
+    <string name="ppdt_writing_minimum_label">Minimum: %1$d characters</string>
+    <string name="ppdt_writing_count_format">%1$d / %2$d</string>
+    <string name="ppdt_review_title">Review Your Submission</string>
+    <string name="ppdt_review_story_label">Your Story</string>
+    <string name="ppdt_review_character_count">%1$d characters</string>
+    <string name="ppdt_review_edit_button">Edit Story</string>
 </resources>

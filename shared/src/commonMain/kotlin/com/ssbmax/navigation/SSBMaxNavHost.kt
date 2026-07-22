@@ -18,6 +18,8 @@ import com.ssbmax.shared.ui.home.student.StudentHomeScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
+import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
+import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 
 /**
@@ -32,8 +34,9 @@ import com.ssbmax.shared.ui.splash.SplashScreen
  * `app/.../navigation/{NavGraph,AuthNavGraph,Student/InstructorNavGraph}.kt`
  * set, scoped to exactly the screens ported into `shared/commonMain/ui` so
  * far: Splash -> Login -> RoleSelection -> Student/Instructor home ->
- * OIR test-taking + OIR result (this session's addition). The other 57
- * screens (student submissions/study, instructor grading/analytics/batches,
+ * OIR test-taking + OIR result -> PPDT test-taking + PPDT result (this
+ * session's addition). The other 55 screens (student submissions/study,
+ * instructor grading/analytics/batches,
  * every other Phase 1/2 test flow, interview, GTO, etc.) are NOT reachable
  * from here — this is not an oversight, they simply haven't been ported yet
  * (Phase 5 continues). Every sub-navigation callback the two ported home
@@ -55,6 +58,19 @@ import com.ssbmax.shared.ui.splash.SplashScreen
  * with `TestType.OIR`). Starting a *first* OIR test from Student Home isn't
  * wired yet — that's gated on porting Phase1DetailScreen, out of this
  * session's scope.
+ *
+ * PPDT reachability gap, named explicitly (this session's addition): same
+ * shape as OIR's gap above -- `onNavigateToPhaseDetail` isn't ported, so
+ * there is no in-graph path to *start* a new `PPDTTest` at all (unlike OIR,
+ * PPDT's own result screen has no "retake" callback either, so there isn't
+ * even a retake path). `PPDTTest` is registered and fully functional if
+ * navigated to directly, but nothing in this graph currently does so.
+ * `PPDTSubmissionResult` is reachable via `StudentHomeScreen`'s "view past
+ * PPDT result" tile (`onNavigateToResult` with `TestType.PPDT`). Also see
+ * [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]'s doc
+ * comment: a submission made via `PPDTTest` today persists correctly but
+ * will not be AI-analyzed, so `PPDTSubmissionResult` will show "pending
+ * analysis" indefinitely for it.
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
@@ -149,13 +165,13 @@ fun SSBMaxNavHost(
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
-                    // OIR is the first (and, so far, only) test-type result screen
-                    // ported into commonMain/ui this phase -- every other test type's
-                    // result screen still routes to the honest placeholder.
-                    if (testType == TestType.OIR) {
-                        navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
-                    } else {
-                        notYetPorted("TestResultScreen")
+                    // OIR and PPDT are the test-type result screens ported into
+                    // commonMain/ui so far -- every other test type's result screen
+                    // still routes to the honest placeholder.
+                    when (testType) {
+                        TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
+                        TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
+                        else -> notYetPorted("TestResultScreen")
                     }
                 },
                 onOpenDrawer = { notYetPorted("NavigationDrawer") }
@@ -198,6 +214,47 @@ fun SSBMaxNavHost(
                     // Review-answers screen isn't ported yet (same gap as the Android
                     // original, which also just has a `// TODO` here) -- not a new gap
                     // introduced by this port.
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.PPDTTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "ppdt_standard"
+            PPDTTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.PPDTTest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // PPDT reachability gap, named explicitly (same shape as the OIR gap
+        // documented above): the Android original's `PPDTSubmissionResultScreen`
+        // has no "retake test" callback either (only `onNavigateHome`), so unlike
+        // OIR's result screen, there is genuinely no in-graph path back to
+        // `PPDTTest` today -- it's reachable only via `StudentHomeScreen`'s
+        // "view past PPDT result" tile landing on `PPDTSubmissionResult`, which
+        // itself has no forward link to `PPDTTest`. The route is still registered
+        // here (not omitted) so a future direct-navigation caller or deep link has
+        // somewhere real to land, consistent with this graph's own "no crash on
+        // unregistered destination" principle.
+        composable(
+            route = SSBMaxDestinations.PPDTSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            PPDTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
                 }
             )
         }

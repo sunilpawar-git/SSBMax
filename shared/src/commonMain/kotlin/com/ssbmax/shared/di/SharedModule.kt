@@ -59,6 +59,8 @@ import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
+import com.ssbmax.shared.domain.service.LoggingSubmissionAnalysisTrigger
+import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
@@ -67,6 +69,8 @@ import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
+import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
@@ -75,6 +79,8 @@ import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
 import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
 import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
+import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
+import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -144,6 +150,16 @@ import org.koin.dsl.module
  * session's scope justifies. The new vertical is reachable today via
  * `SSBMaxNavHost` (iOS + the future full Android switchover), not yet via
  * `app`'s production nav graph.
+ *
+ * Phase 5 (PPDT test-taking vertical): added [LoadPPDTTestUseCase]/
+ * [SubmitPPDTTestUseCase] factories, [PPDTTestViewModel],
+ * [PPDTSubmissionResultViewModel], and [LoggingSubmissionAnalysisTrigger]
+ * bound to [SubmissionAnalysisTrigger] -- the *only* binding for that
+ * interface anywhere in `shared`; see its own doc comment for the real
+ * consequence (no background AI analysis is actually triggered yet for a
+ * submission made through this vertical). Same "not swapped into the live
+ * Android app" precedent as OIR: `app/.../ui/tests/ppdt` is untouched, this
+ * vertical is reachable only via `SSBMaxNavHost`.
  */
 val sharedModule = module {
     includes(platformModule)
@@ -213,6 +229,10 @@ val sharedModule = module {
     factoryOf(::CheckTestEligibilityUseCase)
     factoryOf(::OIRTestScoreCalculator)
     factoryOf(::SubmitOIRTestUseCase)
+    factoryOf(::LoadPPDTTestUseCase)
+    factoryOf(::SubmitPPDTTestUseCase)
+
+    singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 
     factoryOf(::AuthViewModel)
     factoryOf(::OirResultViewModel)
@@ -220,4 +240,6 @@ val sharedModule = module {
     factoryOf(::StudentHomeViewModel)
     factoryOf(::InstructorHomeViewModel)
     factoryOf(::OIRTestViewModel)
+    factoryOf(::PPDTTestViewModel)
+    factoryOf(::PPDTSubmissionResultViewModel)
 }

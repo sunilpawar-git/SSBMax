@@ -1,0 +1,265 @@
+package com.ssbmax.shared.presentation.ppdt
+
+import com.ssbmax.shared.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.TestEligibility
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.DomainLogger
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+
+/**
+ * KMP port of `app/.../ui/tests/ppdt/PPDTTestViewModel.kt`.
+ *
+ * Follows this phase's plain-class + own-`CoroutineScope` ViewModel pattern
+ * ([com.ssbmax.shared.presentation.oir.OIRTestViewModel] is the closest
+ * sibling — same shape: load -> phase state machine -> submit -> timer).
+ * Screen uses `koinInject()`, not `koinViewModel()`; [close] must be called
+ * from a `DisposableEffect` the way [com.ssbmax.shared.ui.oir.OIRTestScreen]
+ * already does for OIR.
+ *
+ * Deviations from the Android original, all deliberate and documented:
+ * - `androidx.work.WorkManager` (`BaseTestViewModel.enqueueAnalysisWork`,
+ *   called via `enqueuePPDTAnalysisWorker`) is replaced by
+ *   [SubmissionAnalysisTrigger] — see that interface's own doc comment for
+ *   the full explanation of why (the concrete `PPDTAnalysisWorker` class
+ *   lives in `app`, which `shared` cannot depend on) and exactly what this
+ *   means for a submission made through this ViewModel today (it will NOT
+ *   be analyzed until a real platform trigger is wired in from `app`).
+ * - `SubscriptionManager`/`TestEligibility` (Android `core:data`) replaced by
+ *   [CheckTestEligibilityUseCase] — same substitution and same caveats
+ *   (debug bypass, Room usage mirror, `SecurityEventLogger` all dropped) as
+ *   already documented on that use case and on `OIRTestViewModel`.
+ * - `DifficultyProgressionManager.recordPerformance()` (Android `core:data`)
+ *   dropped — no KMP port of that class exists yet (nothing in `shared`
+ *   needed it before this session); it only affects adaptive-difficulty
+ *   recommendations, not correctness of the submission itself.
+ * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only) dropped, same
+ *   reasoning as `OIRTestViewModel`'s doc comment: this isn't an
+ *   `androidx.lifecycle.ViewModel`, so the leak class it targeted doesn't
+ *   apply; [close] cancels the scope instead.
+ * - `System.currentTimeMillis()` (JVM-only) replaced with
+ *   `kotlinx.datetime.Clock.System`, matching every other ported ViewModel.
+ */
+class PPDTTestViewModel(
+    private val loadPPDTTest: LoadPPDTTestUseCase,
+    private val submitPPDTTest: SubmitPPDTTestUseCase,
+    private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val checkTestEligibility: CheckTestEligibilityUseCase,
+    private val analysisTrigger: SubmissionAnalysisTrigger,
+    private val logger: DomainLogger
+) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val tag = "PPDTTestViewModel"
+
+    private val _uiState = MutableStateFlow(PPDTTestUiState())
+    val uiState: StateFlow<PPDTTestUiState> = _uiState.asStateFlow()
+
+    private var timerGeneration = 0L
+
+    fun loadTest(testId: String = "ppdt_standard") {
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...", error = null) }
+
+            val userId = observeCurrentUser().first()?.id ?: run {
+                logger.e(tag, "SECURITY: Unauthenticated PPDT test access blocked", null)
+                _uiState.update {
+                    it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
+                }
+                return@launch
+            }
+
+            when (val eligibility = checkTestEligibility(TestType.PPDT, userId)) {
+                is TestEligibility.LimitReached -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false, loadingMessage = null, error = null,
+                            isLimitReached = true, subscriptionTier = eligibility.tier,
+                            testsLimit = eligibility.limit, testsUsed = eligibility.usedCount,
+                            resetsAt = eligibility.resetsAt
+                        )
+                    }
+                    return@launch
+                }
+                is TestEligibility.NetworkError -> {
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                    return@launch
+                }
+                is TestEligibility.Eligible -> Unit
+            }
+
+            _uiState.update { it.copy(loadingMessage = "Fetching questions from cloud...") }
+
+            loadPPDTTest(userId, testId)
+                .onSuccess { session ->
+                    _uiState.update { it.copy(session = session) }
+                    updateUiFromSession()
+                }
+                .onFailure { e ->
+                    when (e) {
+                        is LoadPPDTTestUseCase.ProfileIncompleteException ->
+                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, isProfileIncomplete = true) }
+                        is CancellationException -> throw e
+                        else -> {
+                            logger.e(tag, "PPDT loadTest failed: ${e.message}", e)
+                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = mapLoadError(e)) }
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun mapLoadError(e: Throwable): String = when {
+        e.message?.contains("Firestore", ignoreCase = true) == true -> "Firestore connection failed: ${e.message}"
+        e.message?.contains("database", ignoreCase = true) == true -> "Database error: ${e.message}"
+        e.message?.contains("Cache", ignoreCase = true) == true -> "Cache initialization failed: ${e.message}"
+        else -> "Failed to load test. ${e.message ?: "Check your internet connection."}"
+    }
+
+    fun startTest() {
+        val session = _uiState.value.session ?: return
+        _uiState.update {
+            it.copy(session = session.copy(
+                currentPhase = PPDTPhase.IMAGE_VIEWING,
+                imageViewingStartTime = Clock.System.now().toEpochMilliseconds()
+            ))
+        }
+        updateUiFromSession()
+        startTimer(session.question.viewingTimeSeconds)
+    }
+
+    fun proceedToNextPhase() {
+        val session = _uiState.value.session ?: return
+        when (session.currentPhase) {
+            PPDTPhase.IMAGE_VIEWING -> {
+                _uiState.update {
+                    it.copy(
+                        isTimerActive = false,
+                        session = session.copy(
+                            currentPhase = PPDTPhase.WRITING,
+                            writingStartTime = Clock.System.now().toEpochMilliseconds()
+                        )
+                    )
+                }
+                updateUiFromSession()
+                startTimer(session.question.writingTimeMinutes * 60)
+            }
+            PPDTPhase.WRITING -> {
+                if (_uiState.value.story.length >= session.question.minCharacters) {
+                    _uiState.update { it.copy(isTimerActive = false, session = session.copy(currentPhase = PPDTPhase.REVIEW)) }
+                    updateUiFromSession()
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    fun returnToWriting() {
+        val session = _uiState.value.session ?: return
+        _uiState.update { it.copy(session = session.copy(currentPhase = PPDTPhase.WRITING)) }
+        updateUiFromSession()
+        startTimer(session.question.writingTimeMinutes * 60)
+    }
+
+    fun updateStory(newStory: String) {
+        val session = _uiState.value.session ?: return
+        _uiState.update {
+            it.copy(
+                session = session.copy(story = newStory),
+                story = newStory,
+                charactersCount = newStory.length,
+                canProceedToNextPhase = newStory.length >= session.question.minCharacters
+            )
+        }
+    }
+
+    fun submitTest() {
+        _uiState.update { it.copy(isTimerActive = false) }
+        val session = _uiState.value.session ?: return
+        scope.launch {
+            submitPPDTTest(session)
+                .onSuccess { result ->
+                    analysisTrigger.trigger(TestType.PPDT, result.submissionId)
+                    _uiState.update {
+                        it.copy(
+                            session = session.copy(currentPhase = PPDTPhase.SUBMITTED, isCompleted = true),
+                            isSubmitted = true, submissionId = result.submissionId,
+                            subscriptionType = result.subscriptionType, submission = result.submission
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
+                    logger.e(tag, "Failed to submit PPDT test for user: ${session.userId}", error)
+                    _uiState.update { it.copy(error = "Failed to submit: ${error.message}") }
+                }
+        }
+    }
+
+    fun pauseTest() {
+        val session = _uiState.value.session ?: return
+        _uiState.update { it.copy(isTimerActive = false, session = session.copy(isPaused = true)) }
+    }
+
+    private fun startTimer(seconds: Int) {
+        val myGeneration = ++timerGeneration
+        _uiState.update { it.copy(timeRemainingSeconds = seconds, isTimerActive = true, timerStartTime = myGeneration) }
+        scope.launch {
+            try {
+                while (isActive && _uiState.value.isTimerActive && _uiState.value.timeRemainingSeconds > 0) {
+                    delay(1000)
+                    if (!isActive || !_uiState.value.isTimerActive) return@launch
+                    val newTime = _uiState.value.timeRemainingSeconds - 1
+                    _uiState.update { it.copy(timeRemainingSeconds = newTime) }
+                    // IMAGE_VIEWING hands off to a new 240s timer; return so this coroutine's
+                    // finally{} sees a newer timerGeneration and is a no-op (generation-token invariant,
+                    // ported verbatim from the Android original -- see its own comment for the race it guards).
+                    if (newTime == 0 && advancePhaseOnTimeout()) return@launch
+                }
+            } finally {
+                _uiState.update { current ->
+                    if (current.timerStartTime == myGeneration) current.copy(isTimerActive = false) else current
+                }
+            }
+        }
+    }
+
+    private fun advancePhaseOnTimeout(): Boolean = when (_uiState.value.currentPhase) {
+        PPDTPhase.IMAGE_VIEWING -> { proceedToNextPhase(); true }
+        PPDTPhase.WRITING -> { proceedToNextPhase(); false }
+        else -> false
+    }
+
+    private fun updateUiFromSession() {
+        val session = _uiState.value.session ?: return
+        _uiState.update {
+            it.copy(
+                isLoading = false, loadingMessage = null,
+                currentPhase = session.currentPhase, imageUrl = session.question.imageUrl,
+                story = session.story, charactersCount = session.story.length,
+                minCharacters = session.question.minCharacters, maxCharacters = session.question.maxCharacters,
+                canProceedToNextPhase = session.story.length >= session.question.minCharacters
+            )
+        }
+    }
+
+    fun close() {
+        scope.cancel()
+    }
+}
