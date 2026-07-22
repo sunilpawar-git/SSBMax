@@ -71,6 +71,7 @@ import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
@@ -84,6 +85,8 @@ import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
+import com.ssbmax.shared.presentation.srt.SRTTestViewModel
+import com.ssbmax.shared.presentation.srtresult.SRTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
 import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
@@ -203,6 +206,28 @@ import org.koin.dsl.module
  * directly. Same "not swapped into the live Android app" precedent as
  * OIR/PPDT/TAT: `app/.../ui/tests/wat` is untouched, this vertical is
  * reachable only via `SSBMaxNavHost`.
+ *
+ * Phase 5 (SRT test-taking vertical): added [SubmitSRTTestUseCase] factory --
+ * real finding, matching the WAT session's `SubmitWATTestUseCase` discovery:
+ * [SubmitSRTTestUseCase] already existed in `core:domain`/`shared` (it's a
+ * thin pass-through to `SubmissionRepository.submitSRT`) but was NEVER bound
+ * in this Koin module before this session; without this factory,
+ * [SRTTestViewModel] would fail to resolve at runtime. `GitLiveSRTSituationCacheManager`/
+ * `TestContentRepository.getSRTQuestions` were already bound above from an
+ * earlier phase. Added [SRTTestViewModel], [SRTSubmissionResultViewModel].
+ * Real finding, stated plainly per this session's brief: SRT DOES use the
+ * async-analysis seam (the Android original enqueues `SRTAnalysisWorker` via
+ * WorkManager after submission, same shape as TAT/WAT/PPDT) -- it is not
+ * synchronous/rule-based scoring. Reuses the same
+ * [LoggingSubmissionAnalysisTrigger]/[SubmissionAnalysisTrigger] binding, no
+ * new binding needed; same real consequence (an SRT submission through this
+ * vertical persists but is not yet AI-analyzed). Like WAT, SRT's Android
+ * original has no gender/profile-completeness gate before loading, so no
+ * `LoadSRTTestUseCase` wrapper was introduced -- [SRTTestViewModel] calls
+ * [TestSessionRepository]/[TestContentRepository] directly. Same "not
+ * swapped into the live Android app" precedent as OIR/PPDT/TAT/WAT:
+ * `app/.../ui/tests/srt` is untouched, this vertical is reachable only via
+ * `SSBMaxNavHost`.
  */
 val sharedModule = module {
     includes(platformModule)
@@ -277,6 +302,7 @@ val sharedModule = module {
     factoryOf(::LoadTATTestUseCase)
     factoryOf(::SubmitTATTestUseCase)
     factoryOf(::SubmitWATTestUseCase)
+    factoryOf(::SubmitSRTTestUseCase)
 
     singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 
@@ -292,4 +318,6 @@ val sharedModule = module {
     factoryOf(::TATSubmissionResultViewModel)
     factoryOf(::WATTestViewModel)
     factoryOf(::WATSubmissionResultViewModel)
+    factoryOf(::SRTTestViewModel)
+    factoryOf(::SRTSubmissionResultViewModel)
 }

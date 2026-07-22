@@ -360,4 +360,52 @@
     <string name="wat_tip_3">• Avoid negative or violent associations</string>
     <string name="wat_tip_4">• Don\'t skip unless truly stuck -- every response counts</string>
     <string name="wat_start_test">Start Test</string>
+
+    <!-- SRT result screen (Phase 5 port of app/.../ui/tests/srt/SRTSubmissionResultScreen.kt). -->
+    <string name="result_srt_title">SRT Test Results</string>
+    <string name="result_srt_situations_completed">%1$d/%2$d situations answered</string>
+
+    <!-- SRT test-taking screen (Phase 5 port of app/.../ui/tests/srt/*.kt). -->
+    <string name="srt_loading">Loading SRT test situations from cloud...</string>
+    <string name="srt_retry_button">Retry</string>
+    <string name="srt_test">SRT Test</string>
+    <string name="srt_back_cd">Back</string>
+    <string name="srt_full_title">SRT - Situation Reaction Test</string>
+    <string name="srt_subtitle">Describe how you would react in practical situations</string>
+    <string name="srt_instructions_title">Instructions</string>
+    <string name="srt_instruction_1">60 practical situations will be presented</string>
+    <string name="srt_instruction_2">Describe YOUR reaction in 20-200 characters</string>
+    <string name="srt_instruction_3">Total time: 30 minutes (~30 sec per situation)</string>
+    <string name="srt_instruction_4">You can review and edit responses before submitting</string>
+    <string name="srt_tips_title">Tips for Success</string>
+    <string name="srt_tip_1">• Be practical and realistic</string>
+    <string name="srt_tip_2">• Show initiative and leadership</string>
+    <string name="srt_tip_3">• Focus on action, not just thinking</string>
+    <string name="srt_tip_4">• Consider others\' wellbeing</string>
+    <string name="srt_tip_5">• Demonstrate responsibility</string>
+    <string name="srt_start_test">Start Test</string>
+    <string name="srt_situation_number">Situation %1$d of %2$d</string>
+    <string name="srt_situation">Situation</string>
+    <string name="srt_your_response">Your Response</string>
+    <string name="srt_response_placeholder">Describe what YOU would do in this situation...</string>
+    <string name="srt_char_count">%1$d / %2$d characters</string>
+    <string name="srt_skip">Skip</string>
+    <string name="srt_next">Next</string>
+    <string name="srt_exit_title">Exit Test?</string>
+    <string name="srt_exit_message">Your progress will be lost. Are you sure?</string>
+    <string name="srt_continue">Continue</string>
+    <string name="srt_exit">Exit</string>
+    <string name="srt_submit_title">Submit Test?</string>
+    <string name="srt_submit_message">You have completed %1$d/%2$d situations.</string>
+    <string name="srt_submit_incomplete">You have %1$d pending situations. They will be marked as unattempted.</string>
+    <string name="srt_time_up_title">Time\'s Up!</string>
+    <string name="srt_time_up_message">Submitting your test...</string>
+    <string name="srt_submit">Submit</string>
+    <string name="srt_cancel">Cancel</string>
+    <string name="srt_review_title">Review Your Responses</string>
+    <string name="srt_review_completed">%1$d/%2$d completed</string>
+    <string name="srt_submit_test">Submit Test</string>
+    <string name="srt_situation_prefix">Situation %1$d</string>
+    <string name="srt_skipped">Skipped</string>
+    <string name="srt_edit">Edit</string>
 </resources>

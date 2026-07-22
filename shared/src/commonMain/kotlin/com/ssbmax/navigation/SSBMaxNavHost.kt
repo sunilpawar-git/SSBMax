@@ -21,6 +21,8 @@ import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
+import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
+import com.ssbmax.shared.ui.srt.SRTTestScreen
 import com.ssbmax.shared.ui.tat.TATSubmissionResultScreen
 import com.ssbmax.shared.ui.tat.TATTestScreen
 import com.ssbmax.shared.ui.wat.WATSubmissionResultScreen
@@ -95,6 +97,16 @@ import com.ssbmax.shared.ui.wat.WATTestScreen
  * "view past WAT result" tile (`onNavigateToResult` with `TestType.WAT`).
  * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
  * applies -- a WAT submission persists but will not be AI-analyzed.
+ *
+ * SRT reachability gap, named explicitly (this session's addition): exact
+ * same shape as WAT's gap immediately above -- `onNavigateToPhaseDetail`
+ * isn't ported, so there is no in-graph path to *start* a new `SRTTest`, and
+ * the Android original's `SRTSubmissionResultScreen` has no "retake"
+ * callback either. `SRTTest` is registered and fully functional if navigated
+ * to directly; `SRTSubmissionResult` is reachable via `StudentHomeScreen`'s
+ * "view past SRT result" tile (`onNavigateToResult` with `TestType.SRT`).
+ * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
+ * applies -- an SRT submission persists but will not be AI-analyzed.
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
@@ -189,7 +201,7 @@ fun SSBMaxNavHost(
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
-                    // OIR, PPDT, TAT, and WAT are the test-type result screens ported
+                    // OIR, PPDT, TAT, WAT, and SRT are the test-type result screens ported
                     // into commonMain/ui so far -- every other test type's result screen
                     // still routes to the honest placeholder.
                     when (testType) {
@@ -197,6 +209,7 @@ fun SSBMaxNavHost(
                         TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
                         TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId))
                         TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId))
+                        TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId))
                         else -> notYetPorted("TestResultScreen")
                     }
                 },
@@ -356,6 +369,46 @@ fun SSBMaxNavHost(
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
             WATSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.SRTTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "srt_standard"
+            SRTTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.SRTTest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // SRT reachability gap, named explicitly (same shape as the WAT gap
+        // documented above): the Android original's `SRTSubmissionResultScreen`
+        // has no "retake test" callback either (only `onNavigateHome`), so there is
+        // genuinely no in-graph path back to `SRTTest` today -- it's reachable only
+        // via `StudentHomeScreen`'s "view past SRT result" tile landing on
+        // `SRTSubmissionResult`, which itself has no forward link to `SRTTest`. The
+        // route is still registered here (not omitted) so a future direct-navigation
+        // caller or deep link has somewhere real to land, consistent with this
+        // graph's own "no crash on unregistered destination" principle.
+        composable(
+            route = SSBMaxDestinations.SRTSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            SRTSubmissionResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {
