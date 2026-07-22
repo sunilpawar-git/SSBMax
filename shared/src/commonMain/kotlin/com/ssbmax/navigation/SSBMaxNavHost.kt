@@ -23,6 +23,12 @@ import com.ssbmax.shared.ui.gto.lecturette.LecturetteResultScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteTestScreen
 import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
 import com.ssbmax.shared.ui.home.student.StudentHomeScreen
+import com.ssbmax.shared.ui.instructorgrading.BatchDetailScreen
+import com.ssbmax.shared.ui.instructorgrading.CreateBatchScreen
+import com.ssbmax.shared.ui.instructorgrading.GradingQueueScreen
+import com.ssbmax.shared.ui.instructorgrading.InstructorAnalyticsScreen
+import com.ssbmax.shared.ui.instructorgrading.InstructorStudentsScreen
+import com.ssbmax.shared.ui.instructorgrading.StudentDetailScreen
 import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
 import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
 import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
@@ -710,16 +716,91 @@ fun SSBMaxNavHost(
             )
         }
 
+        // Instructor vertical (this session): Students/Grading/Analytics/CreateBatch/
+        // BatchDetail/StudentDetail all now real ported screens -- matches the
+        // Android original's `InstructorNavGraph.kt` wiring exactly. Only
+        // `onOpenDrawer` still routes to the honest placeholder (no ported
+        // NavigationDrawer yet, same gap as every other home screen in this graph).
         composable(SSBMaxDestinations.InstructorHome.route) {
-            val notYetPorted: (String) -> Unit = { screen ->
-                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
-            }
             InstructorHomeScreen(
-                onNavigateToStudent = { notYetPorted("StudentDetailScreen") },
-                onNavigateToGrading = { notYetPorted("GradingQueueScreen") },
-                onNavigateToBatchDetail = { notYetPorted("BatchDetailScreen") },
-                onNavigateToCreateBatch = { notYetPorted("CreateBatchScreen") },
-                onOpenDrawer = { notYetPorted("NavigationDrawer") }
+                onNavigateToStudent = { studentId ->
+                    navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+                },
+                onNavigateToGrading = {
+                    navController.navigate(SSBMaxDestinations.InstructorGrading.route)
+                },
+                onNavigateToBatchDetail = { batchId ->
+                    navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId))
+                },
+                onNavigateToCreateBatch = {
+                    navController.navigate(SSBMaxDestinations.CreateBatch.route)
+                },
+                onOpenDrawer = {
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("NavigationDrawer"))
+                }
+            )
+        }
+
+        composable(SSBMaxDestinations.InstructorStudents.route) {
+            InstructorStudentsScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onStudentClick = { studentId ->
+                    navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+                }
+            )
+        }
+
+        composable(SSBMaxDestinations.InstructorGrading.route) {
+            GradingQueueScreen(
+                onSubmissionClick = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.InstructorGradingDetail.createRoute(submissionId))
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(SSBMaxDestinations.InstructorAnalytics.route) {
+            InstructorAnalyticsScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(SSBMaxDestinations.CreateBatch.route) {
+            CreateBatchScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onBatchCreated = { batchId ->
+                    navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId)) {
+                        popUpTo(SSBMaxDestinations.CreateBatch.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.BatchDetail.route,
+            arguments = listOf(navArgument("batchId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val batchId = backStackEntry.arguments?.read { getStringOrNull("batchId") } ?: ""
+            BatchDetailScreen(
+                batchId = batchId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToStudent = { studentId ->
+                    navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.StudentDetail.route,
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val studentId = backStackEntry.arguments?.read { getStringOrNull("studentId") } ?: ""
+            StudentDetailScreen(
+                studentId = studentId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToSubmission = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
+                }
             )
         }
 

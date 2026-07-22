@@ -94,6 +94,7 @@ import com.ssbmax.shared.presentation.gdresult.GDResultViewModel
 import com.ssbmax.shared.presentation.gpe.GPETestViewModel
 import com.ssbmax.shared.presentation.gperesult.GPEResultViewModel
 import com.ssbmax.shared.presentation.grading.TestDetailGradingViewModel
+import com.ssbmax.shared.presentation.instructorgrading.InstructorGradingViewModel
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
@@ -493,6 +494,11 @@ val sharedModule = module {
     factoryOf(::SubmissionDetailViewModel)
     factoryOf(::TestDetailGradingViewModel)
     factoryOf(::AnalyticsViewModel)
+
+    // Instructor Grading Queue vertical (this session). [GradingQueueRepository]/
+    // [AuthRepository] were both already bound above -- [InstructorGradingViewModel]
+    // is a straightforward KMP port needing no new repository work.
+    factoryOf(::InstructorGradingViewModel)
 
     // Premium/Marketplace vertical (this session): [UpgradeViewModel] is the
     // KMP port of the Android LIVE upgrade screen (`com.ssbmax.ui.premium`,
