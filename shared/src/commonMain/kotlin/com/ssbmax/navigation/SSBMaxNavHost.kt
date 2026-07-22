@@ -21,6 +21,8 @@ import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
+import com.ssbmax.shared.ui.tat.TATSubmissionResultScreen
+import com.ssbmax.shared.ui.tat.TATTestScreen
 
 /**
  * commonMain NavHost — Phase 5's first real multi-screen Compose
@@ -71,6 +73,16 @@ import com.ssbmax.shared.ui.splash.SplashScreen
  * comment: a submission made via `PPDTTest` today persists correctly but
  * will not be AI-analyzed, so `PPDTSubmissionResult` will show "pending
  * analysis" indefinitely for it.
+ *
+ * TAT reachability gap, named explicitly (this session's addition): exact
+ * same shape as PPDT's gap immediately above -- `onNavigateToPhaseDetail`
+ * isn't ported, so there is no in-graph path to *start* a new `TATTest`, and
+ * the Android original's `TATSubmissionResultScreen` has no "retake"
+ * callback either. `TATTest` is registered and fully functional if navigated
+ * to directly; `TATSubmissionResult` is reachable via `StudentHomeScreen`'s
+ * "view past TAT result" tile (`onNavigateToResult` with `TestType.TAT`).
+ * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
+ * applies -- a TAT submission persists but will not be AI-analyzed.
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
@@ -165,12 +177,13 @@ fun SSBMaxNavHost(
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
-                    // OIR and PPDT are the test-type result screens ported into
+                    // OIR, PPDT, and TAT are the test-type result screens ported into
                     // commonMain/ui so far -- every other test type's result screen
                     // still routes to the honest placeholder.
                     when (testType) {
                         TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
                         TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
+                        TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId))
                         else -> notYetPorted("TestResultScreen")
                     }
                 },
@@ -250,6 +263,46 @@ fun SSBMaxNavHost(
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
             PPDTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.TATTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "tat_standard"
+            TATTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.TATTest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // TAT reachability gap, named explicitly (same shape as the PPDT gap
+        // documented above): the Android original's `TATSubmissionResultScreen`
+        // has no "retake test" callback either (only `onNavigateHome`), so there is
+        // genuinely no in-graph path back to `TATTest` today -- it's reachable only
+        // via `StudentHomeScreen`'s "view past TAT result" tile landing on
+        // `TATSubmissionResult`, which itself has no forward link to `TATTest`. The
+        // route is still registered here (not omitted) so a future direct-navigation
+        // caller or deep link has somewhere real to land, consistent with this
+        // graph's own "no crash on unregistered destination" principle.
+        composable(
+            route = SSBMaxDestinations.TATSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            TATSubmissionResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {

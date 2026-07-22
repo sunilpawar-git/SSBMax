@@ -268,4 +268,60 @@
     <string name="ppdt_review_story_label">Your Story</string>
     <string name="ppdt_review_character_count">%1$d characters</string>
     <string name="ppdt_review_edit_button">Edit Story</string>
+
+    <!-- TAT result screen (Phase 5 port of app/.../ui/tests/tat/TATSubmissionResultScreen.kt). -->
+    <string name="result_tat_title">TAT Test Results</string>
+    <string name="result_tat_stories_completed">%1$d of %2$d stories completed</string>
+    <string name="result_tat_partial_assessment_title">Partial Assessment</string>
+    <string name="result_tat_partial_assessment_message">This result is based on %1$d of %2$d stories -- some stories could not be analyzed.</string>
+
+    <!-- TAT test-taking screen (Phase 5 port of app/.../ui/tests/tat/*.kt). -->
+    <string name="tat_loading">Loading TAT test from cloud...</string>
+    <string name="tat_retry_button">Retry</string>
+    <string name="tat_test_title">TAT Test</string>
+    <string name="tat_picture_number">Picture %1$d of %2$d</string>
+    <string name="tat_back_cd">Back</string>
+    <string name="tat_profile_required_title">Complete Your Profile</string>
+    <string name="tat_profile_required_message">Your gender is needed for TAT assessment. Set it in Settings before continuing.</string>
+    <string name="tat_profile_go_to_settings">Go to Settings</string>
+    <string name="tat_profile_required_cancel">Cancel</string>
+    <string name="tat_exit_title">Exit Test?</string>
+    <string name="tat_exit_message">Your progress will be saved. You can continue later from where you left off.</string>
+    <string name="tat_exit_confirm">Exit</string>
+    <string name="tat_cancel">Cancel</string>
+    <string name="tat_submit_title">Submit Test?</string>
+    <string name="tat_submit_progress">%1$d of %2$d stories completed.</string>
+    <string name="tat_submit_incomplete_message">You have not completed all stories. Are you sure you want to submit?</string>
+    <string name="tat_submit">Submit</string>
+    <string name="tat_button_next">Next</string>
+    <string name="tat_button_submit_test">Submit Test</string>
+    <string name="tat_button_confirm">Confirm</string>
+    <string name="tat_edit">Edit</string>
+    <string name="tat_instructions_title">TAT - Thematic Apperception Test</string>
+    <string name="tat_instructions_subtitle">Write creative stories based on ambiguous pictures</string>
+    <string name="tat_instructions_section_title">Instructions</string>
+    <string name="tat_instruction_1">You will see 12 pictures, one at a time</string>
+    <string name="tat_instruction_2">View each picture for 30 seconds</string>
+    <string name="tat_instruction_3">Write a story for each picture in 4 minutes</string>
+    <string name="tat_instruction_4">Write 150-1500 characters per story</string>
+    <string name="tat_instruction_5">Be creative, positive, and describe characters</string>
+    <string name="tat_tips_title">Tips for Success</string>
+    <string name="tat_tip_1">• Create complete stories with beginning, middle, and end</string>
+    <string name="tat_tip_2">• Show leadership qualities and positive outlook</string>
+    <string name="tat_tip_3">• Describe characters\' emotions and motivations</string>
+    <string name="tat_tip_4">• Focus on action and resolution</string>
+    <string name="tat_start_test_button">Start Test</string>
+    <string name="tat_image_number">Picture %1$d of %2$d</string>
+    <string name="tat_observe_carefully">Observe carefully</string>
+    <string name="tat_picture_content_description">TAT picture %1$d</string>
+    <string name="tat_blank_slide_instruction">No picture -- use your imagination</string>
+    <string name="tat_writing_title">Write Your Story</string>
+    <string name="tat_writing_title_blank">Write Your Imagination</string>
+    <string name="tat_writing_placeholder">Write a complete story with characters, situation, action, and outcome...</string>
+    <string name="tat_writing_supporting_text">Include: Who, What, Why, How the story unfolds, and What happens in the end</string>
+    <string name="tat_writing_count_format">%1$d / %2$d characters</string>
+    <string name="tat_blank_slide_reminder_title">Blank Slide (Picture 12/12)</string>
+    <string name="tat_blank_slide_reminder_message">Use your imagination to create a story. There was no picture shown -- write what you visualize in your mind.</string>
+    <string name="tat_review_story_title">Story %1$d</string>
+    <string name="tat_review_character_count">%1$d characters</string>
 </resources>

@@ -71,7 +71,9 @@ import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
@@ -82,6 +84,8 @@ import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
+import com.ssbmax.shared.presentation.tat.TATTestViewModel
+import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -160,6 +164,25 @@ import org.koin.dsl.module
  * submission made through this vertical). Same "not swapped into the live
  * Android app" precedent as OIR: `app/.../ui/tests/ppdt` is untouched, this
  * vertical is reachable only via `SSBMaxNavHost`.
+ *
+ * Phase 5 (TAT test-taking vertical): added [LoadTATTestUseCase] (already
+ * bound as a plain constructor since Phase 2, wired here for the first
+ * time)/[SubmitTATTestUseCase] factories, [TATTestViewModel],
+ * [TATSubmissionResultViewModel]. Reuses the exact same
+ * [LoggingSubmissionAnalysisTrigger]/[SubmissionAnalysisTrigger] binding
+ * PPDT's session introduced -- no new binding needed, same real consequence
+ * (a TAT submission through this vertical persists but is not yet
+ * AI-analyzed). Unlike PPDT, `SubmitTATTestUseCase` was deliberately kept as
+ * its pre-existing thin pass-through (an attempt to widen it to PPDT's
+ * build-then-record-usage shape was reverted after it broke
+ * `:app:compileDebugKotlin` -- `app/.../ui/tests/tat/TATTestViewModel.kt`, the
+ * live Android production TAT flow, already calls this exact signature; see
+ * that use case's own doc comment for the full story). [TATTestViewModel]
+ * (the KMP port) instead builds the submission and records usage directly,
+ * requiring [UserProfileRepository]/[TestUsageRecorder] as constructor
+ * dependencies -- both already bound above for other verticals. Same "not
+ * swapped into the live Android app" precedent as OIR/PPDT: `app/.../ui/tests/tat`
+ * is untouched, this vertical is reachable only via `SSBMaxNavHost`.
  */
 val sharedModule = module {
     includes(platformModule)
@@ -231,6 +254,8 @@ val sharedModule = module {
     factoryOf(::SubmitOIRTestUseCase)
     factoryOf(::LoadPPDTTestUseCase)
     factoryOf(::SubmitPPDTTestUseCase)
+    factoryOf(::LoadTATTestUseCase)
+    factoryOf(::SubmitTATTestUseCase)
 
     singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 
@@ -242,4 +267,6 @@ val sharedModule = module {
     factoryOf(::OIRTestViewModel)
     factoryOf(::PPDTTestViewModel)
     factoryOf(::PPDTSubmissionResultViewModel)
+    factoryOf(::TATTestViewModel)
+    factoryOf(::TATSubmissionResultViewModel)
 }
