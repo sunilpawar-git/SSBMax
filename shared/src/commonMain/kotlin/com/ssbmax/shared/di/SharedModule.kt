@@ -82,6 +82,8 @@ import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.gd.GDTestViewModel
 import com.ssbmax.shared.presentation.gdresult.GDResultViewModel
+import com.ssbmax.shared.presentation.gpe.GPETestViewModel
+import com.ssbmax.shared.presentation.gperesult.GPEResultViewModel
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
@@ -359,6 +361,16 @@ val sharedModule = module {
     factoryOf(::GDResultViewModel)
     factoryOf(::LecturetteTestViewModel)
     factoryOf(::LecturetteResultViewModel)
+
+    // GTO GPE (this session): confirmed (by reading `GTOTestSubmissionHelper.submitTest`,
+    // which switches on `GTOSubmission.GPESubmission` -> `submissionRepository.submitGPE`
+    // with the exact same recordTestUsage/updateProgress/enqueue-GTOAnalysisWorker tail
+    // as GD/Lecturette) to use the same async-analysis seam -- same real consequence:
+    // a submission persists but is not yet AI-analyzed through this KMP path. Like
+    // GD/Lecturette, `app/.../ui/tests/gpe` is untouched -- not swapped into the live
+    // Android app.
+    factoryOf(::GPETestViewModel)
+    factoryOf(::GPEResultViewModel)
 
     singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 

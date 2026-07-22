@@ -15,6 +15,8 @@ import com.ssbmax.shared.ui.auth.LoginScreen
 import com.ssbmax.shared.ui.auth.RoleSelectionScreen
 import com.ssbmax.shared.ui.gto.gd.GDResultScreen
 import com.ssbmax.shared.ui.gto.gd.GDTestScreen
+import com.ssbmax.shared.ui.gto.gpe.GPEResultScreen
+import com.ssbmax.shared.ui.gto.gpe.GPETestScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteResultScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteTestScreen
 import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
@@ -583,6 +585,39 @@ fun SSBMaxNavHost(
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
             LecturetteResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // GTO - Group Planning Exercise (this session's addition). Same shape as
+        // GD's/Lecturette's gap above.
+        composable(
+            route = SSBMaxDestinations.GTOGPETest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "gpe_standard"
+            GPETestScreen(
+                testId = testId,
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.GTOGPETest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.GTOGPEResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            GPEResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {

@@ -672,4 +672,34 @@
     <string name="lecturette_your_speech">Your Speech</string>
     <string name="lecturette_result_title">Lecturette Results</string>
     <string name="lecturette_result_situations">Time spent: %1$s</string>
+
+    <string name="gpe_title">GPE Test</string>
+    <string name="gpe_back_cd">Back</string>
+    <string name="gpe_instructions_headline">Group Planning Exercise</string>
+    <string name="gpe_instructions_subtitle">Analyze a tactical scenario and write a detailed planning response</string>
+    <string name="gpe_instruction_scenario_title">Tactical Scenario</string>
+    <string name="gpe_instruction_scenario_desc">Review the scenario image, resources, and constraints</string>
+    <string name="gpe_instruction_time_title">10 Minutes</string>
+    <string name="gpe_instruction_time_desc">Write your planning response within the time limit</string>
+    <string name="gpe_instruction_response_title">Planning Response</string>
+    <string name="gpe_instruction_response_desc">Type your plan (500-2000 characters)</string>
+    <string name="gpe_instruction_review_title">Review Before Submit</string>
+    <string name="gpe_instruction_review_desc">Check your response, then submit for evaluation</string>
+    <string name="gpe_tip">Tip: Define clear objectives, assign roles, and account for time and contingencies in your plan.</string>
+    <string name="gpe_start_test">Start Planning Exercise</string>
+    <string name="gpe_scenario_label">Tactical Scenario</string>
+    <string name="gpe_resources_available">Available Resources</string>
+    <string name="gpe_planning_response_label">Your Planning Response</string>
+    <string name="gpe_planning_response_placeholder">Describe your tactical plan: objectives, strategy, resource allocation, team roles, timeline, and contingencies…</string>
+    <string name="gpe_planning_guidelines">Planning Guidelines</string>
+    <string name="gpe_guideline_1">Define clear objectives and success criteria</string>
+    <string name="gpe_guideline_2">Assign roles and responsibilities to team members</string>
+    <string name="gpe_guideline_3">Consider time management and contingency plans</string>
+    <string name="gpe_test_image">GPE Tactical Scenario Image</string>
+    <string name="gpe_continue_to_review">Review Response</string>
+    <string name="gpe_review_title">Review Planning Response</string>
+    <string name="gpe_your_planning_response">Your Planning Response</string>
+    <string name="gpe_submit_test">Submit Test</string>
+    <string name="gpe_result_title">GPE Test Results</string>
+    <string name="gpe_result_time_spent">Time spent: %1$s</string>
 </resources>
