@@ -49,6 +49,7 @@ import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.settings.SettingsScreen
 import com.ssbmax.shared.ui.settings.SubscriptionManagementScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
+import com.ssbmax.shared.ui.ssboverview.SSBOverviewScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
 import com.ssbmax.shared.ui.submissions.SubmissionDetailScreen
@@ -988,6 +989,22 @@ fun SSBMaxNavHost(
         // `StudentHomeScreen`'s `onNavigateToAnalytics` (wired above).
         composable(SSBMaxDestinations.Analytics.route) {
             AnalyticsScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // SSB Overview (this session) -- static/educational content about the
+        // SSB selection process. Reachability gap, named explicitly (same
+        // shape as every other vertical above): the Android original only
+        // reaches this screen via the navigation drawer
+        // (`SSBMaxDrawer`/`DrawerContent`'s `onNavigateToSSBOverview`), and
+        // `NavigationDrawer` isn't ported yet (every `onOpenDrawer` callback
+        // in this graph still routes to the honest placeholder) -- so this
+        // route is registered and fully functional if navigated to directly
+        // or via a future deep link, but nothing in this graph currently
+        // does so.
+        composable(SSBMaxDestinations.SSBOverview.route) {
+            SSBOverviewScreen(
                 onNavigateBack = { navController.navigateUp() }
             )
         }

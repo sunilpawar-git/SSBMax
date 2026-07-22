@@ -1026,4 +1026,9 @@
     <string name="student_detail_placeholder_description">Viewing performance for student: %1$s</string>
     <string name="student_detail_features_title">Coming Soon</string>
     <string name="student_detail_features_list">• Complete test history\n• Performance trends and charts\n• All submissions with scores\n• Instructor notes and feedback\n• Compare with batch average\n• Track engagement</string>
+
+    <!-- SSB Overview screen -->
+    <string name="ssb_overview_title">Overview of SSB</string>
+    <string name="ssb_overview_back">Back</string>
+    <string name="ssb_overview_retry">Retry</string>
 </resources>
