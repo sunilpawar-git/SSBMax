@@ -1063,4 +1063,8 @@
     <string name="study_material_breadcrumb_root">Study Materials</string>
     <string name="study_material_related">Related Materials</string>
     <string name="study_material_tags">Tags</string>
+
+    <!-- Topic screen (past-interview-results section, Interview topic only) -->
+    <string name="interview_history_title">Past Interview Results</string>
+    <string name="interview_no_past_results">No past interview results yet</string>
 </resources>

@@ -102,6 +102,7 @@ import com.ssbmax.shared.presentation.ssboverview.SSBOverviewViewModel
 import com.ssbmax.shared.presentation.studenttests.StudentTestsViewModel
 import com.ssbmax.shared.presentation.study.StudyMaterialDetailViewModel
 import com.ssbmax.shared.presentation.study.StudyMaterialsViewModel
+import com.ssbmax.shared.presentation.topic.TopicViewModel
 import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
 import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialsUseCase
 import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
@@ -540,6 +541,11 @@ val sharedModule = module {
     factoryOf(::GetStudyProgressUseCase)
     factoryOf(::StudyMaterialsViewModel)
     factoryOf(::StudyMaterialDetailViewModel)
+
+    // Topic vertical (this session): [TestProgressRepository]/
+    // [ObserveCurrentUserUseCase]/[StudyContentRepository]/[InterviewRepository]/
+    // [DomainLogger] were all already bound above.
+    factoryOf(::TopicViewModel)
 
     // Premium/Marketplace vertical (this session): [UpgradeViewModel] is the
     // KMP port of the Android LIVE upgrade screen (`com.ssbmax.ui.premium`,

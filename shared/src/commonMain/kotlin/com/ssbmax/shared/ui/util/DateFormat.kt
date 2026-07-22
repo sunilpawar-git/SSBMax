@@ -48,3 +48,23 @@ fun formatDateTime(timestampMillis: Long): String {
     val minute = localDateTime.minute.toString().padStart(2, '0')
     return "$month $day, ${localDateTime.year} at ${hour12.toString().padStart(2, '0')}:$minute $amPm"
 }
+
+/**
+ * KMP-safe replacement for the Android original's
+ * `DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm").withZone(ZoneId.systemDefault())`
+ * (`app/.../ui/topic/TopicScreen.kt`'s past-interview-results list) --
+ * `java.time.ZoneId`/`DateTimeFormatter` are JVM-only, same unavailability
+ * rationale as [formatFullDate]/[formatDateTime] above. 24-hour clock (no
+ * AM/PM), matching the Android original's own `HH:mm` pattern exactly (a
+ * different format from [formatDateTime]'s 12-hour `hh:mm a`, not a
+ * simplification).
+ */
+fun formatFullDateTime24h(timestampMillis: Long): String {
+    val localDateTime = Instant.fromEpochMilliseconds(timestampMillis)
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+    val month = monthAbbreviations[localDateTime.monthNumber - 1]
+    val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+    val hour = localDateTime.hour.toString().padStart(2, '0')
+    val minute = localDateTime.minute.toString().padStart(2, '0')
+    return "$month $day, ${localDateTime.year} $hour:$minute"
+}

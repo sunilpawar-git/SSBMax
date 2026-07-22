@@ -55,6 +55,7 @@ import com.ssbmax.shared.ui.splash.SplashScreen
 import com.ssbmax.shared.ui.studenttests.StudentTestsScreen
 import com.ssbmax.shared.ui.study.StudyMaterialDetailScreen
 import com.ssbmax.shared.ui.study.StudyMaterialsScreen
+import com.ssbmax.shared.ui.topic.TopicScreen
 import com.ssbmax.shared.ui.ssboverview.SSBOverviewScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
@@ -242,7 +243,9 @@ fun SSBMaxNavHost(
                 navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
             }
             StudentHomeScreen(
-                onNavigateToTopic = { notYetPorted("TopicScreen") },
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                },
                 onNavigateToPhaseDetail = { phase ->
                     // Phase1Detail/Phase2Detail are real ported screens (this session) --
                     // Topic (their own onNavigateToTopic target) isn't ported yet, so the
@@ -1041,14 +1044,14 @@ fun SSBMaxNavHost(
 
         // Study Materials vertical (this session), reachable from
         // StudentHomeScreen's onNavigateToStudy (wired above).
-        // onNavigateToTopic/onNavigateToSearch/onNavigateToBookmarks route to
-        // the honest placeholder -- Topic isn't ported yet this session, and
-        // Search/Bookmarks have no ported destination in the Android original
-        // either (both are bare no-op default parameters there).
+        // onNavigateToTopic routes to the real Topic screen (also this
+        // session). onNavigateToSearch/onNavigateToBookmarks have no ported
+        // destination -- both are bare no-op default parameters in the
+        // Android original too.
         composable(SSBMaxDestinations.StudyMaterialsList.route) {
             StudyMaterialsScreen(
                 onNavigateToTopic = { topicName ->
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicName)"))
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicName))
                 }
             )
         }
@@ -1063,6 +1066,50 @@ fun SSBMaxNavHost(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToRelatedMaterial = { relatedId ->
                     navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(relatedId))
+                }
+            )
+        }
+
+        // Topic (this session) -- 3-tab detail screen (Overview/Study Material/
+        // Tests) reachable from StudentHomeScreen/Phase1Detail/Phase2Detail/
+        // StudyMaterialsScreen's onNavigateToTopic (all wired above).
+        // onNavigateToStudyMaterial routes to the real StudyMaterialDetail
+        // screen. onNavigateToTest maps the testId string (e.g. "oir_standard")
+        // back to the matching registered test route where one exists;
+        // GTO's 5 not-yet-ported sub-tests (PGT/HGT/GOR/IO/CT) and PPDT (no
+        // testId-keyed route registered under that exact prefix) fall through
+        // to the honest placeholder. onNavigateToInterviewResult routes to the
+        // real InterviewResult screen.
+        composable(
+            route = SSBMaxDestinations.TopicScreen.route,
+            arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val topicId = backStackEntry.arguments?.read { getStringOrNull("topicId") } ?: "OIR"
+            TopicScreen(
+                topicId = topicId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToStudyMaterial = { materialId ->
+                    navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))
+                },
+                onNavigateToTest = { testId ->
+                    val route = when {
+                        testId.startsWith("oir") -> SSBMaxDestinations.OIRTest.createRoute(testId)
+                        testId.startsWith("ppdt") -> SSBMaxDestinations.PPDTTest.createRoute(testId)
+                        testId.startsWith("tat") -> SSBMaxDestinations.TATTest.createRoute(testId)
+                        testId.startsWith("wat") -> SSBMaxDestinations.WATTest.createRoute(testId)
+                        testId.startsWith("srt") -> SSBMaxDestinations.SRTTest.createRoute(testId)
+                        testId.startsWith("sd") -> SSBMaxDestinations.SDTest.createRoute(testId)
+                        testId.startsWith("piq") -> SSBMaxDestinations.PIQTest.createRoute(testId)
+                        testId.startsWith("gto_gd") -> SSBMaxDestinations.GTOGDTest.createRoute(testId)
+                        testId.startsWith("gto_lecturette") -> SSBMaxDestinations.GTOLecturetteTest.createRoute(testId)
+                        testId.startsWith("gto_gpe") -> SSBMaxDestinations.GTOGPETest.createRoute(testId)
+                        testId.startsWith("io") -> SSBMaxDestinations.StartInterview.route
+                        else -> SSBMaxDestinations.NotYetPorted.createRoute("Test($testId)")
+                    }
+                    navController.navigate(route)
+                },
+                onNavigateToInterviewResult = { resultId ->
+                    navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
                 }
             )
         }
@@ -1083,14 +1130,20 @@ fun SSBMaxNavHost(
         }
 
         // Phase 1/2 Detail (this session) -- reachable from StudentHomeScreen's
-        // onNavigateToPhaseDetail (wired above). onNavigateToTopic routes to the
-        // honest placeholder -- Topic isn't ported yet, so there's still no
-        // in-graph path from here to an actual test-taking screen.
+        // onNavigateToPhaseDetail (wired above). onNavigateToTopic now routes
+        // to the real Topic screen (this session's addition) -- a student can
+        // finally reach an actual test-taking screen from Student Home via
+        // Phase1/2Detail -> Topic -> Tests tab -> onNavigateToTest, closing
+        // the OIR/PPDT/TAT/etc. "no path to start a new test" gap documented
+        // at the top of this file (Topic's own onNavigateToTest still routes
+        // to the honest placeholder below, since none of the individual test
+        // screens are wired from here by testId string yet -- see Topic's own
+        // registration for exactly which test types ARE reachable that way).
         composable(SSBMaxDestinations.Phase1Detail.route) {
             Phase1DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTopic = { topicId ->
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicId)"))
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
                 }
             )
         }
@@ -1099,7 +1152,7 @@ fun SSBMaxNavHost(
             Phase2DetailScreen(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTopic = { topicId ->
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicId)"))
+                    navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
                 }
             )
         }
