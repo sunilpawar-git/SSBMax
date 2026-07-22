@@ -754,4 +754,38 @@
     <string name="interview_result_olq_scores_title">OLQ Scores</string>
     <string name="interview_result_feedback_title">Feedback</string>
     <string name="interview_result_button_done">Done</string>
+
+    <!-- Student Profile screen (Phase 5: Profile vertical) -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_premium_member">Premium Member</string>
+    <string name="profile_stats_title">Your Statistics</string>
+    <string name="profile_stat_tests">Tests</string>
+    <string name="profile_stat_hours">Hours</string>
+    <string name="profile_stat_day_streak">Day Streak</string>
+    <string name="profile_stat_avg_score">Avg Score</string>
+    <string name="profile_phase_progress_title">Phase Progress</string>
+    <string name="profile_phase1_screening">Phase 1 - Screening</string>
+    <string name="profile_phase2_assessment">Phase 2 - Assessment</string>
+    <string name="profile_achievements_title">Recent Achievements</string>
+    <string name="profile_view_all">View All</string>
+    <string name="profile_tests_title">Recent Tests</string>
+    <string name="profile_account_actions">Account Actions</string>
+    <string name="profile_upgrade_premium">Upgrade to Premium</string>
+    <string name="profile_edit_profile">Edit Profile</string>
+    <string name="profile_view_badges">View All Badges</string>
+
+    <!-- User Profile edit form (Phase 5: Profile vertical) -->
+    <string name="user_profile_title">User Profile</string>
+    <string name="user_profile_title_onboarding">Complete Your Profile</string>
+    <string name="user_profile_cd_back">Back</string>
+    <string name="user_profile_full_name_label">Full Name *</string>
+    <string name="user_profile_full_name_placeholder">Enter your full name</string>
+    <string name="user_profile_age_label">Age *</string>
+    <string name="user_profile_age_placeholder">18-35</string>
+    <string name="user_profile_gender_label">Gender *</string>
+    <string name="user_profile_entry_type_label">Type of Entry *</string>
+    <string name="user_profile_save_button">Save Profile</string>
+    <string name="user_profile_avatar_default_initial">U</string>
+
 </resources>

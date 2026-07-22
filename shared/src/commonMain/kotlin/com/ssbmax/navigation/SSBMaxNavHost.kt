@@ -31,6 +31,8 @@ import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
 import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
 import com.ssbmax.shared.ui.piq.PIQTestScreen
+import com.ssbmax.shared.ui.profile.StudentProfileScreen
+import com.ssbmax.shared.ui.profile.UserProfileScreen
 import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
 import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
@@ -706,8 +708,39 @@ fun SSBMaxNavHost(
             )
         }
 
+        // Profile vertical (this session). UserProfileScreen (create/edit form)
+        // replaces the earlier NotYetPortedScreen placeholder -- Splash's
+        // onNavigateToProfileOnboarding still lands here (isOnboarding defaults
+        // false; the onboarding query-string variant `createOnboardingRoute()`
+        // is not parsed by this route registration, a named gap: Nav Compose
+        // needs the query param declared in the route pattern itself to bind
+        // it, and nothing in this graph currently calls that variant anyway --
+        // Splash navigates to the plain `UserProfile.route`).
         composable(SSBMaxDestinations.UserProfile.route) {
-            NotYetPortedScreen("UserProfileScreen")
+            UserProfileScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onProfileSaved = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.UserProfile.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // StudentProfile (summary/stats display, distinct from UserProfile's
+        // create/edit form above). onNavigateToSettings/Achievements/History all
+        // route to the honest placeholder -- Settings isn't ported yet this
+        // commit (see the Settings-vertical commit that follows), and there is
+        // no ported AchievementsScreen/TestHistoryScreen either.
+        composable(SSBMaxDestinations.StudentProfile.route) {
+            val notYetPorted: (String) -> Unit = { screen ->
+                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            }
+            StudentProfileScreen(
+                onNavigateToSettings = { notYetPorted("SettingsScreen") },
+                onNavigateToAchievements = { notYetPorted("AchievementsScreen") },
+                onNavigateToHistory = { notYetPorted("TestHistoryScreen") }
+            )
         }
 
         composable(

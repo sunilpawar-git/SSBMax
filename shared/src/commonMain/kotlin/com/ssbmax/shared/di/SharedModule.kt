@@ -100,6 +100,8 @@ import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.piq.PIQTestViewModel
 import com.ssbmax.shared.presentation.piqresult.PIQSubmissionResultViewModel
+import com.ssbmax.shared.presentation.profile.StudentProfileViewModel
+import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
@@ -415,4 +417,11 @@ val sharedModule = module {
     factoryOf(::StartInterviewViewModel)
     factoryOf(::InterviewSessionViewModel)
     factoryOf(::InterviewResultViewModel)
+
+    // Profile vertical (this session): UserProfileRepository/AuthRepository/
+    // TestProgressRepository/ObserveCurrentUserUseCase were all already bound
+    // above (Phase 2/5). [UserProfileViewModel] (create/edit form) and
+    // [StudentProfileViewModel] (summary/stats display) are new here.
+    factoryOf(::UserProfileViewModel)
+    factoryOf(::StudentProfileViewModel)
 }
