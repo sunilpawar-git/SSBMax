@@ -35,6 +35,8 @@ import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
 import com.ssbmax.shared.ui.marketplace.MarketplaceScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
+import com.ssbmax.shared.ui.phase.Phase1DetailScreen
+import com.ssbmax.shared.ui.phase.Phase2DetailScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
@@ -238,7 +240,15 @@ fun SSBMaxNavHost(
             StudentHomeScreen(
                 onNavigateToTopic = { notYetPorted("TopicScreen") },
                 onNavigateToPhaseDetail = { phase ->
-                    notYetPorted(if (phase == TestPhase.PHASE_1) "Phase1DetailScreen" else "Phase2DetailScreen")
+                    // Phase1Detail/Phase2Detail are real ported screens (this session) --
+                    // Topic (their own onNavigateToTopic target) isn't ported yet, so the
+                    // "start a new test" path still ends at the honest placeholder one
+                    // level deeper than before, not at this callback.
+                    if (phase == TestPhase.PHASE_1) {
+                        navController.navigate(SSBMaxDestinations.Phase1Detail.route)
+                    } else {
+                        navController.navigate(SSBMaxDestinations.Phase2Detail.route)
+                    }
                 },
                 onNavigateToStudy = { notYetPorted("StudyMaterialsScreen") },
                 onNavigateToSubmissions = {
@@ -990,6 +1000,28 @@ fun SSBMaxNavHost(
         composable(SSBMaxDestinations.Analytics.route) {
             AnalyticsScreen(
                 onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // Phase 1/2 Detail (this session) -- reachable from StudentHomeScreen's
+        // onNavigateToPhaseDetail (wired above). onNavigateToTopic routes to the
+        // honest placeholder -- Topic isn't ported yet, so there's still no
+        // in-graph path from here to an actual test-taking screen.
+        composable(SSBMaxDestinations.Phase1Detail.route) {
+            Phase1DetailScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicId)"))
+                }
+            )
+        }
+
+        composable(SSBMaxDestinations.Phase2Detail.route) {
+            Phase2DetailScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTopic = { topicId ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicId)"))
+                }
             )
         }
 
