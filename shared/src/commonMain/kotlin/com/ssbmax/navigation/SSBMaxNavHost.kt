@@ -15,6 +15,8 @@ import com.ssbmax.shared.ui.auth.LoginScreen
 import com.ssbmax.shared.ui.auth.RoleSelectionScreen
 import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
 import com.ssbmax.shared.ui.home.student.StudentHomeScreen
+import com.ssbmax.shared.ui.oir.OIRTestResultScreen
+import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 
@@ -29,19 +31,30 @@ import com.ssbmax.shared.ui.splash.SplashScreen
  * Structure is the commonMain-portable equivalent of the Android-only
  * `app/.../navigation/{NavGraph,AuthNavGraph,Student/InstructorNavGraph}.kt`
  * set, scoped to exactly the screens ported into `shared/commonMain/ui` so
- * far: Splash -> Login -> RoleSelection -> Student/Instructor home. The
- * other 59 screens (student tests/submissions/study, instructor
- * grading/analytics/batches, all Phase 1/2 test flows, interview, GTO,
- * etc.) are NOT reachable from here — this is not an oversight, they simply
- * haven't been ported yet (Phase 5 continues). Every sub-navigation
- * callback the two ported home screens expose (topic detail, phase detail,
- * result screens, notifications, marketplace, analytics, grading, batches,
- * student/batch detail) routes to the single [SSBMaxDestinations.NotYetPorted]
- * destination with the intended screen's display name, rather than
- * navigating to a route this graph never registered (which would crash Nav
- * Compose's destination lookup) or being silently dropped — the graph is
- * honestly navigable end-to-end today without pretending unported work is
- * done.
+ * far: Splash -> Login -> RoleSelection -> Student/Instructor home ->
+ * OIR test-taking + OIR result (this session's addition). The other 57
+ * screens (student submissions/study, instructor grading/analytics/batches,
+ * every other Phase 1/2 test flow, interview, GTO, etc.) are NOT reachable
+ * from here — this is not an oversight, they simply haven't been ported yet
+ * (Phase 5 continues). Every sub-navigation callback the two ported home
+ * screens expose that targets an unported destination (topic detail, phase
+ * detail, non-OIR result screens, notifications, marketplace, analytics,
+ * grading, batches, student/batch detail) routes to the single
+ * [SSBMaxDestinations.NotYetPorted] destination with the intended screen's
+ * display name, rather than navigating to a route this graph never
+ * registered (which would crash Nav Compose's destination lookup) or being
+ * silently dropped — the graph is honestly navigable end-to-end today
+ * without pretending unported work is done.
+ *
+ * OIR reachability gap, named explicitly: `StudentHomeScreen`'s
+ * `onNavigateToPhaseDetail` (Phase 1 detail screen, where the Android app
+ * lets a student actually launch a *new* OIR test) is NOT ported — it still
+ * routes to `NotYetPorted`. So `OIRTest` is only reachable this session via
+ * `OIRTestResultScreen`'s "Retake Test" button, and `OIRTestResult` only via
+ * `StudentHomeScreen`'s "view past OIR result" tile (`onNavigateToResult`
+ * with `TestType.OIR`). Starting a *first* OIR test from Student Home isn't
+ * wired yet — that's gated on porting Phase1DetailScreen, out of this
+ * session's scope.
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
@@ -135,8 +148,57 @@ fun SSBMaxNavHost(
                 onNavigateToNotifications = { notYetPorted("NotificationCenterScreen") },
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
-                onNavigateToResult = { _: TestType, _: String -> notYetPorted("TestResultScreen") },
+                onNavigateToResult = { testType: TestType, sessionId: String ->
+                    // OIR is the first (and, so far, only) test-type result screen
+                    // ported into commonMain/ui this phase -- every other test type's
+                    // result screen still routes to the honest placeholder.
+                    if (testType == TestType.OIR) {
+                        navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
+                    } else {
+                        notYetPorted("TestResultScreen")
+                    }
+                },
                 onOpenDrawer = { notYetPorted("NavigationDrawer") }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.OIRTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "oir_standard"
+            OIRTestScreen(
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.OIRTest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.OIRTestResult.route,
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("sessionId") } ?: ""
+            OIRTestResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                },
+                onRetakeTest = {
+                    navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard")) {
+                        popUpTo(SSBMaxDestinations.OIRTestResult.createRoute(submissionId)) { inclusive = true }
+                    }
+                },
+                onReviewAnswers = {
+                    // Review-answers screen isn't ported yet (same gap as the Android
+                    // original, which also just has a `// TODO` here) -- not a new gap
+                    // introduced by this port.
+                }
             )
         }
 

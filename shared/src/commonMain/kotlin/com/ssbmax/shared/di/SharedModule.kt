@@ -32,6 +32,8 @@ import com.ssbmax.shared.data.repository.GitLiveTATImageCacheManager
 import com.ssbmax.shared.data.repository.GitLiveTestContentRepository
 import com.ssbmax.shared.data.repository.GitLiveTestProgressRepository
 import com.ssbmax.shared.data.repository.GitLiveTestRepository
+import com.ssbmax.shared.data.repository.GitLiveTestSessionRepository
+import com.ssbmax.shared.data.repository.GitLiveTestUsageRecorder
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
 import com.ssbmax.shared.data.repository.GitLiveWATWordCacheManager
 import com.ssbmax.shared.data.repository.InterviewQuestionGenerator
@@ -53,6 +55,8 @@ import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.TestRepository
+import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
@@ -61,11 +65,15 @@ import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
+import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
+import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
 import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
+import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import io.ktor.client.HttpClient
@@ -111,6 +119,31 @@ import org.koin.dsl.module
  * behavior); on iOS, `core:data` doesn't exist so `sharedModule`'s GitLive
  * impls are the only binding anyway. Broadly rewiring all double-bound
  * repositories is out of this session's scope (Phase 5 continuation).
+ *
+ * Phase 5 (OIR test-taking vertical): added [CheckTestEligibilityUseCase],
+ * [GitLiveTestUsageRecorder] (`TestUsageRecorder`), [GitLiveTestSessionRepository]
+ * (`TestSessionRepository`), [OIRTestScoreCalculator]/[SubmitOIRTestUseCase]
+ * factories, and [OIRTestViewModel]. `TestUsageRecorder`/`TestSessionRepository`
+ * are the same kind of double-bound interface as `StudentHomeViewModel`'s
+ * dependencies above: `core:data`'s `repositoryModule` binds its own
+ * `SubscriptionManager`/`TestSessionManagerImpl` to these same interfaces,
+ * and (per `app/.../di/KoinModules.kt`'s `appModules` list) `repositoryModule`
+ * loads *after* `sharedModule`, so on Android the `core:data` impls still win
+ * — this session's Android production OIR flow (the whole `app/.../ui/tests/oir`
+ * package, unchanged, still on its own Hilt-era-turned-Koin ViewModel) keeps its
+ * existing behavior (debug bypass, Room usage mirror, `SecurityEventLogger`)
+ * unaffected. On iOS, `core:data` doesn't exist, so these `GitLive*`/
+ * `CheckTestEligibilityUseCase` bindings are the only ones and are what
+ * [OIRTestViewModel] actually runs against. Deliberately NOT swapping the
+ * Android app's `SharedNavGraph.kt` OIR entries over to the new `shared`
+ * screens this session (unlike the auth/home verticals' precedent) — see
+ * this phase's exit report for why: `CheckTestEligibilityUseCase` is new,
+ * unreviewed-in-production code touching subscription-limit enforcement
+ * (monetization-critical), and swapping it into the live Android OIR flow
+ * without its own dedicated test coverage first is a bigger risk than this
+ * session's scope justifies. The new vertical is reachable today via
+ * `SSBMaxNavHost` (iOS + the future full Android switchover), not yet via
+ * `app`'s production nav graph.
  */
 val sharedModule = module {
     includes(platformModule)
@@ -168,6 +201,8 @@ val sharedModule = module {
     single { GitLiveSubmissionRepository() } bind SubmissionRepository::class
     single { InterviewQuestionGenerator(get(), get(), get()) }
     singleOf(::GitLiveInterviewRepository) bind InterviewRepository::class
+    singleOf(::GitLiveTestSessionRepository) bind TestSessionRepository::class
+    singleOf(::GitLiveTestUsageRecorder) bind TestUsageRecorder::class
 
     factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::UpdateUserRoleUseCase)
@@ -175,10 +210,14 @@ val sharedModule = module {
     factoryOf(::ObserveCurrentUserUseCase)
     factoryOf(::GetOirResultUseCase)
     factoryOf(::GetOLQDashboardUseCase)
+    factoryOf(::CheckTestEligibilityUseCase)
+    factoryOf(::OIRTestScoreCalculator)
+    factoryOf(::SubmitOIRTestUseCase)
 
     factoryOf(::AuthViewModel)
     factoryOf(::OirResultViewModel)
     factoryOf(::SplashViewModel)
     factoryOf(::StudentHomeViewModel)
     factoryOf(::InstructorHomeViewModel)
+    factoryOf(::OIRTestViewModel)
 }

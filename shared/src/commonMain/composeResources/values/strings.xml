@@ -115,4 +115,72 @@
     <string name="progress_psychology_tests">Psychology Tests</string>
     <string name="progress_gto_tasks">GTO Tasks</string>
     <string name="progress_interview">Interview</string>
+
+    <!-- OIR test screen (Phase 5 port of app/.../ui/tests/oir/OIRTestScreen.kt
+         + components/{OIRQuestionCard,OIRTestTopBar,OIRTestBottomBar}.kt).
+         Values copied verbatim from app/src/main/res/values/strings.xml. -->
+    <string name="oir_loading">Loading OIR test questions from cloud...</string>
+    <string name="oir_question_format">Q %1$d/%2$d</string>
+    <string name="oir_exit_test">Exit Test</string>
+    <string name="oir_exit_title">Exit Test?</string>
+    <string name="oir_exit_message">Are you sure you want to exit? Your current progress will be lost.</string>
+    <string name="oir_exit">Exit</string>
+    <string name="oir_continue_test">Continue Test</string>
+    <string name="oir_previous">Previous</string>
+    <string name="oir_next">Next</string>
+    <string name="oir_submit_test">Submit Test</string>
+    <string name="oir_progress_format">%1$d/%2$d</string>
+    <string name="oir_correct">Correct!</string>
+    <string name="oir_incorrect">Incorrect</string>
+    <string name="oir_error_auth_required">Authentication required. Please login to continue.</string>
+    <string name="oir_error_submit_failed">Failed to submit test. Please try again.</string>
+    <string name="oir_error_invalid_question">Invalid question state. Please click Submit Test button.</string>
+    <string name="oir_error_questions_unavailable">OIR questions are temporarily unavailable. Please check your connection and try again.</string>
+    <string name="oir_question_figure_description">OIR question figure</string>
+    <string name="oir_multi_select_hint">Select exactly 2 options</string>
+    <string name="oir_multi_select_selections_complete">2 options selected</string>
+
+    <!-- OIR test result screen (Phase 5 port of app/.../ui/tests/oir/OIRTestResultScreen.kt).
+         The Android original hardcoded these strings (a pre-existing lint-rule violation,
+         same class as RoleSelectionScreen's); ported here as real resources instead of
+         carrying the violation forward. -->
+    <string name="oir_result_title">Test Results</string>
+    <string name="oir_result_cd_home">Home</string>
+    <string name="oir_result_loading">Loading your results...</string>
+    <string name="oir_result_error_title">Failed to Load Results</string>
+    <string name="oir_result_retry">Retry</string>
+    <string name="oir_result_go_home">Go Home</string>
+    <string name="oir_result_passed">PASSED</string>
+    <string name="oir_result_needs_improvement">NEEDS IMPROVEMENT</string>
+    <string name="oir_result_quick_stats">Quick Stats</string>
+    <string name="oir_result_correct">Correct</string>
+    <string name="oir_result_incorrect">Incorrect</string>
+    <string name="oir_result_skipped">Skipped</string>
+    <string name="oir_result_time_taken">Time Taken</string>
+    <string name="oir_result_raw_score">Raw Score</string>
+    <string name="oir_result_performance_by_category">Performance by Category</string>
+    <string name="oir_result_difficulty_breakdown">Difficulty Breakdown</string>
+    <string name="oir_result_correct_of_total">%1$d/%2$d correct</string>
+    <string name="oir_result_avg_time">Avg: %1$ds/q</string>
+    <string name="oir_result_review_answers">Review Answers</string>
+    <string name="oir_result_retake_test">Retake Test</string>
+    <string name="oir_result_back_home">Back to Home</string>
+    <string name="oir_result_submission_not_found">Submission not found</string>
+    <string name="oir_result_parse_failed">Failed to parse submission data</string>
+    <string name="oir_result_load_failed">Failed to load submission</string>
+
+    <!-- Test-limit-reached dialog (Phase 5 port of app/.../ui/tests/common/TestLimitReachedDialog.kt),
+         shared across every test type, first wired for OIR. Hardcoded strings in the
+         Android original, ported here as real resources. -->
+    <string name="test_limit_title">Test Limit Reached</string>
+    <string name="test_limit_upgrade_now">Upgrade Now</string>
+    <string name="test_limit_maybe_later">Maybe Later</string>
+    <string name="test_limit_usage_stats">You\'ve completed %1$d of %2$d tests this month on the %3$s plan.</string>
+    <string name="test_limit_resets_label">Your test limit resets on:</string>
+    <string name="test_limit_upgrade_heading">Upgrade to continue practicing:</string>
+    <string name="test_limit_pro_title">Pro Plan</string>
+    <string name="test_limit_pro_subtitle">More tests per month for just ₹99</string>
+    <string name="test_limit_premium_title">Premium Plan</string>
+    <string name="test_limit_premium_subtitle">Unlimited all tests for ₹999/month</string>
+    <string name="test_limit_recommended">Recommended</string>
 </resources>
