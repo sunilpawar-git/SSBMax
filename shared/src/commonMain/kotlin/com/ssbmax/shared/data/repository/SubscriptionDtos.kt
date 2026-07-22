@@ -1,6 +1,7 @@
 package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestType
 import kotlinx.serialization.Serializable
 
 /** Wire-format DTO for users/{userId}/data/subscription. */
@@ -51,4 +52,27 @@ object SubscriptionLimits {
 
     fun limitFor(testTypeKey: String, tier: SubscriptionTier): Int =
         limits[testTypeKey]?.get(tier) ?: 0
+
+    /**
+     * Maps a [TestType] to the display-string key this table (and
+     * [GitLiveSubscriptionRepository.getMonthlyUsage]'s `usedByKey` map) uses.
+     * Mirrors the Android `SubscriptionManager.getTestLimitForTier`/
+     * `getUsedCountForTestType` when-blocks' groupings (all 8 GTO sub-tests
+     * share one "GTO Tests" bucket, same as the Android original) — added
+     * for [com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase],
+     * which needs to go from a [TestType] to this table's key, not just look
+     * up an already-known key.
+     */
+    fun keyFor(testType: TestType): String = when (testType) {
+        TestType.OIR -> "OIR Tests"
+        TestType.PPDT -> "PPDT Tests"
+        TestType.PIQ -> "PIQ Forms"
+        TestType.TAT -> "TAT Tests"
+        TestType.WAT -> "WAT Tests"
+        TestType.SRT -> "SRT Tests"
+        TestType.SD -> "Self Description"
+        TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+        TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> "GTO Tests"
+        TestType.IO -> "Interview"
+    }
 }
