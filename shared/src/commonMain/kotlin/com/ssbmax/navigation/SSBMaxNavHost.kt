@@ -52,6 +52,7 @@ import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.settings.SettingsScreen
 import com.ssbmax.shared.ui.settings.SubscriptionManagementScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
+import com.ssbmax.shared.ui.studenttests.StudentTestsScreen
 import com.ssbmax.shared.ui.ssboverview.SSBOverviewScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
@@ -948,9 +949,8 @@ fun SSBMaxNavHost(
         }
 
         // Submissions list, reachable from `StudentHomeScreen`'s
-        // `onNavigateToSubmissions` (wired above). `onNavigateToTests` has no
-        // ported "browse all tests" destination yet -- routes to the honest
-        // placeholder, same as every other unported cross-cutting screen.
+        // `onNavigateToSubmissions` (wired above). `onNavigateToTests` now
+        // routes to the real "All Tests" overview screen (this session).
         composable(SSBMaxDestinations.StudentSubmissions.route) {
             SubmissionsListScreen(
                 onSubmissionClick = { submissionId ->
@@ -958,7 +958,36 @@ fun SSBMaxNavHost(
                 },
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToTests = {
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("BrowseTestsScreen"))
+                    navController.navigate(SSBMaxDestinations.StudentTests.route)
+                }
+            )
+        }
+
+        // Student "All Tests" overview (this session), reachable from
+        // SubmissionsListScreen's onNavigateToTests (wired above) -- the
+        // Android original's own reachability path (bottom nav) isn't ported
+        // yet (no bottom nav bar in this commonMain graph), so this cross-link
+        // is this session's only in-graph entry point. onNavigateToPhase
+        // routes to the real Phase1Detail/Phase2Detail screens (also this
+        // session); onNavigateToTest routes to the honest placeholder for
+        // every GTO sub-test type not yet individually reachable from here
+        // (GD/Lecturette/GPE already have their own routes registered above,
+        // but this screen doesn't yet distinguish which GTO card maps to
+        // which -- same simplification the Android original's own nav graph
+        // makes, since `StudentTestsScreen`'s `onNavigateToTest` isn't wired
+        // to anything in `SharedNavGraph.kt` either).
+        composable(SSBMaxDestinations.StudentTests.route) {
+            StudentTestsScreen(
+                onNavigateToPhase = { phase ->
+                    val route = if (phase == TestPhase.PHASE_1) {
+                        SSBMaxDestinations.Phase1Detail.route
+                    } else {
+                        SSBMaxDestinations.Phase2Detail.route
+                    }
+                    navController.navigate(route)
+                },
+                onNavigateToTest = { testType ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("Test($testType)"))
                 }
             )
         }

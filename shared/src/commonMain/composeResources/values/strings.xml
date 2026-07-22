@@ -1031,4 +1031,28 @@
     <string name="ssb_overview_title">Overview of SSB</string>
     <string name="ssb_overview_back">Back</string>
     <string name="ssb_overview_retry">Retry</string>
+
+    <!-- Student Tests screen ("All Tests" overview, Phase 1/2 tabs) -->
+    <string name="student_tests_title">All Tests</string>
+    <string name="student_tests_tab_phase1">Phase 1</string>
+    <string name="student_tests_tab_phase2">Phase 2</string>
+    <string name="student_tests_phase1_title">Phase 1 - Screening</string>
+    <string name="student_tests_phase1_description">The screening phase consists of OIR and PPDT tests. Your performance determines eligibility for Phase 2.</string>
+    <string name="student_tests_phase2_title">Phase 2 - Assessment</string>
+    <string name="student_tests_phase2_description">Phase 2 includes Psychology Tests, GTO Tasks, and Personal Interview. These comprehensively evaluate your officer-like qualities.</string>
+    <string name="student_tests_progress_label">Progress</string>
+    <string name="student_tests_progress_format">%1$d of %2$d tests completed</string>
+    <string name="student_tests_view_details">View Details</string>
+    <string name="student_tests_category_psychology">Psychology Tests</string>
+    <string name="student_tests_category_gto">GTO Tasks</string>
+    <string name="student_tests_category_interview">Interview</string>
+    <string name="student_tests_duration_format">%1$d min</string>
+    <string name="student_tests_question_single">question</string>
+    <string name="student_tests_question_plural">questions</string>
+    <string name="student_tests_latest_score">Latest: %1$d%%</string>
+    <string name="student_tests_action_start">Start</string>
+    <string name="student_tests_action_resume">Resume</string>
+    <string name="student_tests_action_view">View</string>
+    <string name="student_tests_action_results">Results</string>
+    <string name="student_tests_action_retake">Retake</string>
 </resources>
