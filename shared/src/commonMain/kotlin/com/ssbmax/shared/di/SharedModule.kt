@@ -86,6 +86,8 @@ import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
+import com.ssbmax.shared.presentation.piq.PIQTestViewModel
+import com.ssbmax.shared.presentation.piqresult.PIQSubmissionResultViewModel
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
@@ -350,4 +352,6 @@ val sharedModule = module {
     factoryOf(::SRTSubmissionResultViewModel)
     factoryOf(::SDTTestViewModel)
     factoryOf(::SDTSubmissionResultViewModel)
+    factoryOf(::PIQTestViewModel)
+    factoryOf(::PIQSubmissionResultViewModel)
 }

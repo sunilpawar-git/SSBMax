@@ -20,6 +20,8 @@ import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
+import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
+import com.ssbmax.shared.ui.piq.PIQTestScreen
 import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
 import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
@@ -466,6 +468,45 @@ fun SSBMaxNavHost(
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
             SDTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // PIQ (Personal Information Questionnaire) -- untimed ~90-field form,
+        // not a scored test; unlike every other test type in this graph, its
+        // own screen calls `onNavigateToResult(submissionId)` directly (no
+        // `onTestComplete(submissionId, subscriptionType)` -- PIQ has no
+        // downstream use for subscriptionType, see PIQTestViewModel.kt's doc
+        // comment). Same reachability gap as SRT/SDT above: no in-graph path
+        // back to `PIQTest` from `PIQSubmissionResult` (no retake callback in
+        // the Android original either) -- both routes registered regardless.
+        composable(
+            route = SSBMaxDestinations.PIQTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "piq_standard"
+            PIQTestScreen(
+                testId = testId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToResult = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.PIQTest.createRoute(testId)) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.PIQSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            PIQSubmissionResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {
