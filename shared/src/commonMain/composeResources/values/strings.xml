@@ -1055,4 +1055,12 @@
     <string name="student_tests_action_view">View</string>
     <string name="student_tests_action_results">Results</string>
     <string name="student_tests_action_retake">Retake</string>
+
+    <!-- Study Material Detail screen -->
+    <string name="study_material_detail_title">Study Material</string>
+    <string name="study_material_back">Back</string>
+    <string name="study_material_error_loading">Error loading material</string>
+    <string name="study_material_breadcrumb_root">Study Materials</string>
+    <string name="study_material_related">Related Materials</string>
+    <string name="study_material_tags">Tags</string>
 </resources>

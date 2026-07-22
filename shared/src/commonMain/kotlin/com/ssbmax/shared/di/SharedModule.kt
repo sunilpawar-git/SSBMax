@@ -100,6 +100,13 @@ import com.ssbmax.shared.presentation.phase1detail.Phase1DetailViewModel
 import com.ssbmax.shared.presentation.phase2detail.Phase2DetailViewModel
 import com.ssbmax.shared.presentation.ssboverview.SSBOverviewViewModel
 import com.ssbmax.shared.presentation.studenttests.StudentTestsViewModel
+import com.ssbmax.shared.presentation.study.StudyMaterialDetailViewModel
+import com.ssbmax.shared.presentation.study.StudyMaterialsViewModel
+import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
+import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialsUseCase
+import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
+import com.ssbmax.shared.domain.usecase.study.SaveStudyProgressUseCase
+import com.ssbmax.shared.domain.usecase.study.TrackStudySessionUseCase
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
@@ -521,6 +528,18 @@ val sharedModule = module {
     // Student "All Tests" overview vertical (this session): [TestProgressRepository]/
     // [ObserveCurrentUserUseCase]/[DomainLogger] were all already bound above.
     factoryOf(::StudentTestsViewModel)
+
+    // Study Materials vertical (this session): [StudyContentRepository]/
+    // [StudyProgressRepository] were both already bound above (Phase 2) but
+    // their use cases were never bound to Koin until now -- same
+    // "existed but unbound" finding as several earlier verticals this phase.
+    factoryOf(::GetStudyMaterialsUseCase)
+    factoryOf(::GetStudyMaterialDetailUseCase)
+    factoryOf(::SaveStudyProgressUseCase)
+    factoryOf(::TrackStudySessionUseCase)
+    factoryOf(::GetStudyProgressUseCase)
+    factoryOf(::StudyMaterialsViewModel)
+    factoryOf(::StudyMaterialDetailViewModel)
 
     // Premium/Marketplace vertical (this session): [UpgradeViewModel] is the
     // KMP port of the Android LIVE upgrade screen (`com.ssbmax.ui.premium`,

@@ -53,6 +53,8 @@ import com.ssbmax.shared.ui.settings.SettingsScreen
 import com.ssbmax.shared.ui.settings.SubscriptionManagementScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 import com.ssbmax.shared.ui.studenttests.StudentTestsScreen
+import com.ssbmax.shared.ui.study.StudyMaterialDetailScreen
+import com.ssbmax.shared.ui.study.StudyMaterialsScreen
 import com.ssbmax.shared.ui.ssboverview.SSBOverviewScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
@@ -252,7 +254,9 @@ fun SSBMaxNavHost(
                         navController.navigate(SSBMaxDestinations.Phase2Detail.route)
                     }
                 },
-                onNavigateToStudy = { notYetPorted("StudyMaterialsScreen") },
+                onNavigateToStudy = {
+                    navController.navigate(SSBMaxDestinations.StudyMaterialsList.route)
+                },
                 onNavigateToSubmissions = {
                     navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
                 },
@@ -1032,6 +1036,34 @@ fun SSBMaxNavHost(
         composable(SSBMaxDestinations.Analytics.route) {
             AnalyticsScreen(
                 onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // Study Materials vertical (this session), reachable from
+        // StudentHomeScreen's onNavigateToStudy (wired above).
+        // onNavigateToTopic/onNavigateToSearch/onNavigateToBookmarks route to
+        // the honest placeholder -- Topic isn't ported yet this session, and
+        // Search/Bookmarks have no ported destination in the Android original
+        // either (both are bare no-op default parameters there).
+        composable(SSBMaxDestinations.StudyMaterialsList.route) {
+            StudyMaterialsScreen(
+                onNavigateToTopic = { topicName ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("TopicScreen($topicName)"))
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.StudyMaterialDetail.route,
+            arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.read { getStringOrNull("categoryId") } ?: ""
+            StudyMaterialDetailScreen(
+                categoryId = categoryId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToRelatedMaterial = { relatedId ->
+                    navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(relatedId))
+                }
             )
         }
 

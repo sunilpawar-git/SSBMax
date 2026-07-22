@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSB Personal Information Questionnaire (PIQ)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 8px;
+            background-color: #f5f5f5;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1976d2;
+            margin-bottom: 4px;
+            font-size: 18px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+        .section {
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .form-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .form-field {
+            flex: 1;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 1px;
+            display: block;
+            font-size: 11px;
+        }
+        .form-value {
+            padding: 2px 4px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            min-height: 10px;
+            background-color: #fafafa;
+            font-size: 11px;
+            height: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 2px 4px;
+            text-align: left;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 8px;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+        .page-break {
+            page-break-after: always;
+            margin-top: 20px;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PERSONAL INFORMATION QUESTIONNAIRE (PIQ)</h1>
+        <div class="subtitle">Services Selection Board</div>
+
+        <!-- Page 1 -->
+        <div class="section">
+            <div class="section-title">Header Information</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">OIR Number</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Selection Board (No. & Place)</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Batch No.</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Chest Number</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">UPSC/Other Roll No.</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Name (in CAPITALS)</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Father's Name</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Residence Information</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Place of Maximum Residence</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Population</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Present Address</div>
+                    <div class="form-value" style="min-height: 20px; height: 20px;"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Permanent Address</div>
+                    <div class="form-value" style="min-height: 20px; height: 20px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Personal Details</div>
+            <table>
+                <tr>
+                    <th>State & District</th>
+                    <th>Religion</th>
+                    <th>SC/ST/OBC</th>
+                    <th>Mother Tongue</th>
+                    <th>Date of Birth</th>
+                    <th>Marital Status</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Family Information</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Parents Alive</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Education</th>
+                    <th>Occupation</th>
+                    <th>Income per month</th>
+                </tr>
+                <tr>
+                    <td>Father</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Mother</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Guardian (if applicable)</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Elder Brother/Sister</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Elder Brother/Sister</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Younger Brother/Sister</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Younger Brother/Sister</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Educational Record</div>
+            <table>
+                <tr>
+                    <th>Level</th>
+                    <th>Full Name of Institution</th>
+                    <th>Board/University</th>
+                    <th>Year</th>
+                    <th>Div. & Marks %</th>
+                    <th>Medium of Instruction</th>
+                    <th>Boarder/Day Scholar</th>
+                    <th>Outstanding Achievement</th>
+                </tr>
+                <tr>
+                    <td>Matric/Hr. Sec.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>10+2</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Graduation</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Post-Graduation/Professional</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- Page 2 -->
+        <h1>PERSONAL INFORMATION QUESTIONNAIRE (PIQ)</h1>
+        <div class="subtitle">Services Selection Board - Page 2</div>
+
+        <div class="section">
+            <div class="section-title">Physical Details</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Age (Years & Months)</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Height (metres)</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Weight (kilograms)</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Occupation</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Present Occupation</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Personal Monthly Income</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">NCC Training</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Have NCC Training?</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Total Training</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Wing</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Division</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Certificate Obtained</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Participation in Games & Sports</div>
+            <table>
+                <tr>
+                    <th>Sport</th>
+                    <th>Period</th>
+                    <th>Represented Institution</th>
+                    <th>Outstanding Achievement</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Hobbies/Interest</div>
+            <div class="form-value" style="min-height: 20px; height: 20px;"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Participation in Extra-Curricular Activities</div>
+            <table>
+                <tr>
+                    <th>Activity Name</th>
+                    <th>Duration</th>
+                    <th>Outstanding Achievement</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Position of Responsibility/Offices Held</div>
+            <div class="form-value" style="min-height: 20px; height: 20px;"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Service Selection</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <div class="form-label">Nature of Commission</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Choice of Service</div>
+                    <div class="form-value"></div>
+                </div>
+                <div class="form-field">
+                    <div class="form-label">Number of Chances Availed</div>
+                    <div class="form-value"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Details of All Previous Interviews</div>
+            <table>
+                <tr>
+                    <th>Type of Entry</th>
+                    <th>SSB No. & Place</th>
+                    <th>Date</th>
+                    <th>Chest No.</th>
+                    <th>Batch No.</th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="note">
+            <strong>Note:</strong> This is a reference document showing the structure of the actual SSB PIQ form. 
+            Use this as a guide when filling out the practice form in the app. All information entered in the app 
+            is stored securely in the cloud. Please use generic or sample information only for practice purposes.
+        </div>
+    </div>
+</body>
+</html>
+
