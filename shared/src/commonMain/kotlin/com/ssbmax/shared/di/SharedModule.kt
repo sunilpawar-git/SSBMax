@@ -95,6 +95,7 @@ import com.ssbmax.shared.presentation.gpe.GPETestViewModel
 import com.ssbmax.shared.presentation.gperesult.GPEResultViewModel
 import com.ssbmax.shared.presentation.grading.TestDetailGradingViewModel
 import com.ssbmax.shared.presentation.instructorgrading.InstructorGradingViewModel
+import com.ssbmax.shared.presentation.notifications.NotificationCenterViewModel
 import com.ssbmax.shared.presentation.phase1detail.Phase1DetailViewModel
 import com.ssbmax.shared.presentation.phase2detail.Phase2DetailViewModel
 import com.ssbmax.shared.presentation.ssboverview.SSBOverviewViewModel
@@ -511,6 +512,10 @@ val sharedModule = module {
     // [ObserveCurrentUserUseCase] were both already bound above.
     factoryOf(::Phase1DetailViewModel)
     factoryOf(::Phase2DetailViewModel)
+
+    // Notification Center vertical (this session): [NotificationRepository]/
+    // [ObserveCurrentUserUseCase] were both already bound above.
+    factoryOf(::NotificationCenterViewModel)
 
     // Premium/Marketplace vertical (this session): [UpgradeViewModel] is the
     // KMP port of the Android LIVE upgrade screen (`com.ssbmax.ui.premium`,

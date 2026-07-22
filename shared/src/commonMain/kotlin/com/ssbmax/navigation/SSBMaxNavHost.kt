@@ -33,6 +33,7 @@ import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
 import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
 import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
 import com.ssbmax.shared.ui.marketplace.MarketplaceScreen
+import com.ssbmax.shared.ui.notifications.NotificationCenterScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.phase.Phase1DetailScreen
@@ -254,7 +255,9 @@ fun SSBMaxNavHost(
                 onNavigateToSubmissions = {
                     navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
                 },
-                onNavigateToNotifications = { notYetPorted("NotificationCenterScreen") },
+                onNavigateToNotifications = {
+                    navController.navigate(SSBMaxDestinations.NotificationCenter.route)
+                },
                 onNavigateToMarketplace = {
                     navController.navigate(SSBMaxDestinations.Marketplace.route)
                 },
@@ -1000,6 +1003,21 @@ fun SSBMaxNavHost(
         composable(SSBMaxDestinations.Analytics.route) {
             AnalyticsScreen(
                 onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // Notification Center (this session), reachable from StudentHomeScreen's
+        // onNavigateToNotifications (wired above). onNotificationClick has no
+        // ported per-notification deep-link destination yet -- routes to the
+        // honest placeholder, same as the Android original's own bare
+        // `onNotificationClick = {}` default parameter (no real caller wires it
+        // to anything either).
+        composable(SSBMaxDestinations.NotificationCenter.route) {
+            NotificationCenterScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNotificationClick = { notification ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("NotificationDeepLink(${notification.actionUrl})"))
+                }
             )
         }
 
