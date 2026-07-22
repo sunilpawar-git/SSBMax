@@ -20,6 +20,8 @@ import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
+import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
+import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
@@ -107,6 +109,20 @@ import com.ssbmax.shared.ui.wat.WATTestScreen
  * "view past SRT result" tile (`onNavigateToResult` with `TestType.SRT`).
  * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
  * applies -- an SRT submission persists but will not be AI-analyzed.
+ *
+ * SDT reachability gap, named explicitly (this session's addition): exact
+ * same shape as SRT's gap immediately above -- `onNavigateToPhaseDetail`
+ * isn't ported, so there is no in-graph path to *start* a new `SDTest`, and
+ * the Android original's `SDTSubmissionResultScreen` has no "retake"
+ * callback either. `SDTest` is registered and fully functional if navigated
+ * to directly; `SDSubmissionResult` is reachable via `StudentHomeScreen`'s
+ * "view past SDT result" tile (`onNavigateToResult` with `TestType.SD` --
+ * note the enum/route naming mismatch: the domain model calls this test type
+ * `SD`, `SSBMaxDestinations` calls the routes `SDTest`/`SDSubmissionResult`,
+ * but the actual code package/screens are `sdt`/`SDT*`, matching the
+ * Android original's own naming -- reconciled here, not introduced by this
+ * port). Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]
+ * caveat applies -- an SDT submission persists but will not be AI-analyzed.
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
@@ -201,15 +217,16 @@ fun SSBMaxNavHost(
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
-                    // OIR, PPDT, TAT, WAT, and SRT are the test-type result screens ported
-                    // into commonMain/ui so far -- every other test type's result screen
-                    // still routes to the honest placeholder.
+                    // OIR, PPDT, TAT, WAT, SRT, and SDT are the test-type result screens
+                    // ported into commonMain/ui so far -- every other test type's result
+                    // screen still routes to the honest placeholder.
                     when (testType) {
                         TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
                         TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
                         TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId))
                         TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId))
                         TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId))
+                        TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(sessionId))
                         else -> notYetPorted("TestResultScreen")
                     }
                 },
@@ -409,6 +426,46 @@ fun SSBMaxNavHost(
         ) { backStackEntry ->
             val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
             SRTSubmissionResultScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.SDTest.route,
+            arguments = listOf(navArgument("testId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "sdt_standard"
+            SDTTestScreen(
+                testId = testId,
+                onTestComplete = { submissionId, _ ->
+                    navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)) {
+                        popUpTo(SSBMaxDestinations.SDTest.createRoute(testId)) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // SDT reachability gap, named explicitly (same shape as the SRT gap
+        // documented above): the Android original's `SDTSubmissionResultScreen`
+        // has no "retake test" callback either (only `onNavigateHome`), so there is
+        // genuinely no in-graph path back to `SDTest` today -- it's reachable only
+        // via `StudentHomeScreen`'s "view past SDT result" tile landing on
+        // `SDSubmissionResult`, which itself has no forward link to `SDTest`. The
+        // route is still registered here (not omitted) so a future direct-navigation
+        // caller or deep link has somewhere real to land, consistent with this
+        // graph's own "no crash on unregistered destination" principle.
+        composable(
+            route = SSBMaxDestinations.SDSubmissionResult.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            SDTSubmissionResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {
