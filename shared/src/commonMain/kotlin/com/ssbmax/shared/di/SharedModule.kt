@@ -33,6 +33,7 @@ import com.ssbmax.shared.data.repository.GitLiveTestContentRepository
 import com.ssbmax.shared.data.repository.GitLiveTestProgressRepository
 import com.ssbmax.shared.data.repository.GitLiveTestRepository
 import com.ssbmax.shared.data.repository.GitLiveTestSessionRepository
+import com.ssbmax.shared.data.repository.GitLiveTestSubmissionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestUsageRecorder
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
 import com.ssbmax.shared.data.repository.GitLiveWATWordCacheManager
@@ -56,6 +57,7 @@ import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.TestRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
+import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
@@ -72,6 +74,9 @@ import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
+import com.ssbmax.shared.domain.usecase.results.GetHistoricResultsUseCase
+import com.ssbmax.shared.domain.usecase.submission.GetUserSubmissionsUseCase
+import com.ssbmax.shared.domain.usecase.submission.ObserveSubmissionUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
@@ -82,11 +87,13 @@ import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.analytics.AnalyticsViewModel
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import com.ssbmax.shared.presentation.gd.GDTestViewModel
 import com.ssbmax.shared.presentation.gdresult.GDResultViewModel
 import com.ssbmax.shared.presentation.gpe.GPETestViewModel
 import com.ssbmax.shared.presentation.gperesult.GPEResultViewModel
+import com.ssbmax.shared.presentation.grading.TestDetailGradingViewModel
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
@@ -104,6 +111,7 @@ import com.ssbmax.shared.presentation.piq.PIQTestViewModel
 import com.ssbmax.shared.presentation.piqresult.PIQSubmissionResultViewModel
 import com.ssbmax.shared.presentation.profile.StudentProfileViewModel
 import com.ssbmax.shared.presentation.profile.UserProfileViewModel
+import com.ssbmax.shared.presentation.results.HistoricResultsViewModel
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.settings.SettingsViewModel
@@ -113,6 +121,8 @@ import com.ssbmax.shared.presentation.settings.theme.ThemeSettingsViewModel
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
 import com.ssbmax.shared.presentation.srtresult.SRTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
+import com.ssbmax.shared.presentation.submissions.SubmissionDetailViewModel
+import com.ssbmax.shared.presentation.submissions.SubmissionsListViewModel
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
 import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
@@ -450,4 +460,35 @@ val sharedModule = module {
     factoryOf(::ThemeSettingsViewModel)
     factoryOf(::NotificationSettingsViewModel)
     factoryOf(::SubscriptionManagementViewModel)
+
+    // Results/Submissions/Grading/Analytics vertical (this session):
+    // [GetHistoricResultsUseCase] already existed in `shared` (ported in an
+    // earlier phase, only ever queries TAT submissions per its own doc
+    // comment -- a pre-existing limitation, not introduced here) but was
+    // never bound in this Koin module before now, same "existed but unbound"
+    // finding as Settings' use cases above. [GetUserSubmissionsUseCase]/
+    // [ObserveSubmissionUseCase] (both thin `SubmissionRepository`
+    // pass-throughs) were likewise already ported but unbound.
+    // [GitLiveTestSubmissionRepository] (`TestSubmissionRepository`) --
+    // needed only by [TestDetailGradingViewModel] -- was fully implemented
+    // in Phase 2 but never bound anywhere in this module; added here.
+    // `AnalyticsRepository`/`NotificationRepository`/`UserProfileRepository`/
+    // `AuthRepository` were all already bound above (Phase 2/5). Real finding
+    // for this session's `AnalyticsManager` risk check (flagged during the
+    // earlier home-vertical session as a possible KMP wall): `AnalyticsScreen`
+    // depends only on the already-KMP-safe `AnalyticsRepository` interface,
+    // NOT the Android-only `AnalyticsManager` -- no expect/actual shim needed,
+    // no partial port required. Same "not swapped into the live Android app"
+    // precedent as every other Phase 5 vertical: `app/.../ui/{results,
+    // submissions,grading,analytics}` is untouched, these screens are
+    // reachable only via `SSBMaxNavHost`.
+    singleOf(::GitLiveTestSubmissionRepository) bind TestSubmissionRepository::class
+    factoryOf(::GetHistoricResultsUseCase)
+    factoryOf(::GetUserSubmissionsUseCase)
+    factoryOf(::ObserveSubmissionUseCase)
+    factoryOf(::HistoricResultsViewModel)
+    factoryOf(::SubmissionsListViewModel)
+    factoryOf(::SubmissionDetailViewModel)
+    factoryOf(::TestDetailGradingViewModel)
+    factoryOf(::AnalyticsViewModel)
 }

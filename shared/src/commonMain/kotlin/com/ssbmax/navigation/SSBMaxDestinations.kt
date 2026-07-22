@@ -154,6 +154,9 @@ sealed class SSBMaxDestinations(val route: String) {
     
     // Analytics (Student Performance Dashboard)
     data object Analytics : SSBMaxDestinations("analytics")
+
+    // Historic Results (cross-test-type results list, last 6 months)
+    data object HistoricResults : SSBMaxDestinations("results/historic")
     
     // User Profile
     data object UserProfile : SSBMaxDestinations("user/profile") {

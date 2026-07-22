@@ -860,4 +860,89 @@
     <string name="subscription_mgmt_faq_a3">Yes! Your test limits reset on the 1st of every month based on your subscription tier.</string>
     <string name="subscription_mgmt_retry">Retry</string>
     <string name="subscription_mgmt_error_generic">Failed to load subscription data</string>
+
+    <!-- Historic Results screen (Phase 5: results/submissions/grading/analytics session) -->
+    <string name="historic_results_title">Historic Results</string>
+    <string name="historic_results_cd_back">Back</string>
+    <string name="historic_results_action_retry">Retry</string>
+    <string name="historic_results_cd_filter">Filter</string>
+    <string name="historic_results_clear_filter">%1$s - Clear filter</string>
+    <string name="historic_results_new_badge">NEW</string>
+    <string name="historic_results_score_format">%1$s</string>
+    <string name="historic_results_empty_title">No historic results</string>
+    <string name="historic_results_empty_message">Results from the last 6 months will appear here</string>
+    <string name="historic_results_filter_dialog_title">Filter by Test Type</string>
+    <string name="historic_results_filter_all">All Tests</string>
+    <string name="historic_results_filter_close">Close</string>
+
+    <!-- Submissions List screen -->
+    <string name="submissions_list_title">My Submissions</string>
+    <string name="submissions_list_cd_back">Back</string>
+    <string name="submissions_list_subtitle">SSB Preparation &gt; Test Results</string>
+    <string name="submissions_list_action_refresh">Refresh</string>
+    <string name="submissions_list_filter_test_type">Test Type</string>
+    <string name="submissions_list_filter_status">Status</string>
+    <string name="submissions_list_filter_all">All</string>
+    <string name="submissions_list_filter_pending">Pending</string>
+    <string name="submissions_list_filter_graded">Graded</string>
+    <string name="submissions_list_submitted">Submitted %1$s</string>
+    <string name="submissions_list_loading">Loading submissions...</string>
+    <string name="submissions_list_error">Error</string>
+    <string name="submissions_list_empty_title">No Submissions Yet</string>
+    <string name="submissions_list_empty_message">Complete tests to see your submissions here</string>
+    <string name="submissions_list_action_take_test">Take a Test</string>
+    <string name="submissions_list_view_details">View details</string>
+    <string name="submissions_list_score_format">Score: %1$d/100</string>
+
+    <!-- Submission Detail screen -->
+    <string name="submission_detail_title">Submission Details</string>
+    <string name="submission_detail_action_back_home">Back to Home</string>
+    <string name="submission_detail_label_submitted">Submitted</string>
+    <string name="submission_detail_label_status">Status</string>
+    <string name="submission_detail_score_title">Score</string>
+    <string name="submission_detail_grade_label">Grade: %1$s</string>
+    <string name="submission_detail_ai_preliminary">AI Preliminary</string>
+    <string name="submission_detail_instructor_graded">Instructor Graded</string>
+    <string name="submission_detail_graded_by">Graded by: %1$s</string>
+    <string name="submission_detail_feedback_title">Feedback</string>
+    <string name="submission_detail_strengths_title">Strengths</string>
+    <string name="submission_detail_improvement_title">Areas for Improvement</string>
+    <string name="submission_detail_pending_message">Your submission is awaiting instructor review. You\'ll be notified once it\'s graded.</string>
+    <string name="submission_detail_action_retry">Retry</string>
+
+    <!-- Grading (Test Detail Grading) screen -->
+    <string name="grading_title">Grade Submission</string>
+    <string name="grading_back">Back</string>
+    <string name="grading_submit_notify">Submit Grading &amp; Notify Student</string>
+    <string name="grading_submission_not_found">Submission not found</string>
+    <string name="grading_submission_content">Submission Content</string>
+    <string name="grading_time_spent">Time Spent: %1$d minutes</string>
+    <string name="grading_responses_count">Responses: %1$d questions</string>
+    <string name="grading_student_label">Student: %1$s</string>
+    <string name="grading_grade_label">Grade</string>
+    <string name="grading_grade_value">%1$d/100</string>
+    <string name="grading_remarks_title">Remarks &amp; Feedback</string>
+    <string name="grading_remarks_hint">Enter detailed feedback for the student…</string>
+    <string name="success_grading_submitted">Grading submitted! Student notified.</string>
+
+    <!-- Analytics Dashboard screen -->
+    <string name="analytics_screen_title">Performance Analytics</string>
+    <string name="analytics_cd_back">Back</string>
+    <string name="analytics_error_unknown">Unknown error</string>
+    <string name="analytics_empty_state">No data yet</string>
+    <string name="analytics_empty_description">Complete some tests to see your analytics</string>
+    <string name="analytics_test_performance">Test Performance</string>
+    <string name="analytics_overall_performance">Overall Performance</string>
+    <string name="analytics_stat_tests">Tests</string>
+    <string name="analytics_stat_avg_score">Avg Score</string>
+    <string name="analytics_stat_study_time">Study Time</string>
+    <string name="analytics_stat_attempts">Attempts</string>
+    <string name="analytics_stat_best">Best</string>
+    <string name="analytics_difficulty_breakdown">Difficulty Breakdown</string>
+    <string name="analytics_difficulty_easy">Easy</string>
+    <string name="analytics_difficulty_medium">Medium</string>
+    <string name="analytics_difficulty_hard">Hard</string>
+    <string name="analytics_accuracy_format">%1$s%% accuracy</string>
+    <string name="analytics_progress_to">Progress to %1$s</string>
+    <string name="analytics_progression_needed">Need %1$d more attempts &amp; %2$s%% accuracy</string>
 </resources>

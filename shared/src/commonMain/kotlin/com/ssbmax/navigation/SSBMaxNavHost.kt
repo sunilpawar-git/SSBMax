@@ -11,12 +11,14 @@ import androidx.savedstate.read
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.ui.analytics.AnalyticsScreen
 import com.ssbmax.shared.ui.auth.LoginScreen
 import com.ssbmax.shared.ui.auth.RoleSelectionScreen
 import com.ssbmax.shared.ui.gto.gd.GDResultScreen
 import com.ssbmax.shared.ui.gto.gd.GDTestScreen
 import com.ssbmax.shared.ui.gto.gpe.GPEResultScreen
 import com.ssbmax.shared.ui.gto.gpe.GPETestScreen
+import com.ssbmax.shared.ui.grading.TestDetailGradingScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteResultScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteTestScreen
 import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
@@ -33,6 +35,7 @@ import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
 import com.ssbmax.shared.ui.piq.PIQTestScreen
 import com.ssbmax.shared.ui.profile.StudentProfileScreen
 import com.ssbmax.shared.ui.profile.UserProfileScreen
+import com.ssbmax.shared.ui.results.HistoricResultsScreen
 import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
 import com.ssbmax.shared.ui.sdt.SDTTestScreen
 import com.ssbmax.shared.ui.settings.SettingsScreen
@@ -40,6 +43,8 @@ import com.ssbmax.shared.ui.settings.SubscriptionManagementScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
+import com.ssbmax.shared.ui.submissions.SubmissionDetailScreen
+import com.ssbmax.shared.ui.submissions.SubmissionsListScreen
 import com.ssbmax.shared.ui.tat.TATSubmissionResultScreen
 import com.ssbmax.shared.ui.tat.TATTestScreen
 import com.ssbmax.shared.ui.wat.WATSubmissionResultScreen
@@ -227,10 +232,14 @@ fun SSBMaxNavHost(
                     notYetPorted(if (phase == TestPhase.PHASE_1) "Phase1DetailScreen" else "Phase2DetailScreen")
                 },
                 onNavigateToStudy = { notYetPorted("StudyMaterialsScreen") },
-                onNavigateToSubmissions = { notYetPorted("SubmissionsListScreen") },
+                onNavigateToSubmissions = {
+                    navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
+                },
                 onNavigateToNotifications = { notYetPorted("NotificationCenterScreen") },
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
-                onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
+                onNavigateToAnalytics = {
+                    navController.navigate(SSBMaxDestinations.Analytics.route)
+                },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
                     // OIR, PPDT, TAT, WAT, SRT, SDT, and IO (Interview) are the test-type
                     // result screens ported into commonMain/ui so far -- every other test
@@ -741,7 +750,9 @@ fun SSBMaxNavHost(
             StudentProfileScreen(
                 onNavigateToSettings = { navController.navigate(SSBMaxDestinations.Settings.route) },
                 onNavigateToAchievements = { notYetPorted("AchievementsScreen") },
-                onNavigateToHistory = { notYetPorted("TestHistoryScreen") }
+                onNavigateToHistory = {
+                    navController.navigate(SSBMaxDestinations.HistoricResults.route)
+                }
             )
         }
 
@@ -775,6 +786,92 @@ fun SSBMaxNavHost(
                 onUpgrade = { tier ->
                     navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("UpgradeFlow(${tier.name})"))
                 }
+            )
+        }
+
+        // Results/Submissions/Grading/Analytics vertical (this session).
+        // HistoricResults' `onResultClick` mirrors StudentHomeScreen's
+        // `onNavigateToResult` switch above: OIR/PPDT/TAT/WAT/SRT/SD/IO are the
+        // test-type result screens ported into commonMain/ui so far -- every
+        // other test type still routes to the honest placeholder. Reachable
+        // from `StudentProfileScreen`'s "history" tile (wired above).
+        composable(SSBMaxDestinations.HistoricResults.route) {
+            val notYetPorted: (String) -> Unit = { screen ->
+                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            }
+            HistoricResultsScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onResultClick = { submissionId, testType ->
+                    when (testType) {
+                        TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(submissionId))
+                        TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId))
+                        TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId))
+                        TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId))
+                        TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId))
+                        TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId))
+                        TestType.IO -> navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(submissionId))
+                        else -> notYetPorted("TestResultScreen")
+                    }
+                }
+            )
+        }
+
+        // Submissions list, reachable from `StudentHomeScreen`'s
+        // `onNavigateToSubmissions` (wired above). `onNavigateToTests` has no
+        // ported "browse all tests" destination yet -- routes to the honest
+        // placeholder, same as every other unported cross-cutting screen.
+        composable(SSBMaxDestinations.StudentSubmissions.route) {
+            SubmissionsListScreen(
+                onSubmissionClick = { submissionId ->
+                    navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
+                },
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToTests = {
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("BrowseTestsScreen"))
+                }
+            )
+        }
+
+        // Submission detail (student's own view of a single submission),
+        // reachable from `SubmissionsListScreen` above.
+        composable(
+            route = SSBMaxDestinations.SubmissionDetail.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            SubmissionDetailScreen(
+                submissionId = submissionId,
+                onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Instructor grading detail (grade a single pending submission).
+        // Registered and fully functional if navigated to directly, but
+        // `InstructorHomeScreen`'s own `onNavigateToGrading` targets a
+        // not-yet-ported *queue/list* screen (`GradingQueueScreen`, still
+        // routing to the honest placeholder above) rather than this detail
+        // screen directly -- same "registered, no in-graph entry point yet"
+        // shape as this migration's OIR/PPDT start-test gaps.
+        composable(
+            route = SSBMaxDestinations.InstructorGradingDetail.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+            TestDetailGradingScreen(
+                submissionId = submissionId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // Student performance analytics dashboard, reachable from
+        // `StudentHomeScreen`'s `onNavigateToAnalytics` (wired above).
+        composable(SSBMaxDestinations.Analytics.route) {
+            AnalyticsScreen(
+                onNavigateBack = { navController.navigateUp() }
             )
         }
 
