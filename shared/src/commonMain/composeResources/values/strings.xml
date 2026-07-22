@@ -702,4 +702,56 @@
     <string name="gpe_submit_test">Submit Test</string>
     <string name="gpe_result_title">GPE Test Results</string>
     <string name="gpe_result_time_spent">Time spent: %1$s</string>
+
+    <!-- Interview vertical (Phase 5 port of app/.../ui/interview/{start,session,result}).
+         Dynamic loadingMessage/error strings live as plain hardcoded English in the
+         ViewModels themselves (same documented convention as every other Phase 5
+         ViewModel, see PPDTTestViewModel's doc comment): only static UI labels,
+         buttons, and content-descriptions are resourced here. -->
+    <string name="interview_start_title">Start Interview</string>
+    <string name="interview_cd_back">Back</string>
+    <string name="interview_generating_questions">Generating personalized questions…</string>
+    <string name="interview_generating_questions_hint">This will take 30–60 seconds</string>
+    <string name="interview_error_generic">An error occurred</string>
+    <string name="interview_action_retry">Retry</string>
+    <string name="interview_new_interview_title">New Interview</string>
+    <string name="interview_prerequisites_title">Prerequisites</string>
+    <string name="interview_prerequisites_met">All prerequisites met</string>
+    <string name="interview_consent_message">I consent to storing my interview transcript for analysis and feedback</string>
+    <string name="interview_button_start">Start Interview</string>
+
+    <string name="interview_question_number">Question %1$d of %2$d</string>
+    <string name="interview_cd_mute_tts">Mute audio</string>
+    <string name="interview_cd_unmute_tts">Unmute audio</string>
+    <string name="interview_cd_exit">Exit Interview</string>
+    <string name="interview_exit_title">Exit Interview?</string>
+    <string name="interview_exit_message">Are you sure you want to exit? Your progress will be saved, but you\'ll need to start a new interview session to continue.</string>
+    <string name="interview_exit_confirm">Exit</string>
+    <string name="interview_button_cancel">Cancel</string>
+    <string name="interview_button_ok">OK</string>
+    <string name="interview_results_pending_title">Results Being Analyzed</string>
+    <string name="interview_results_pending_message">Your interview is complete! Results will be ready shortly. We\'ll notify you when they\'re available.</string>
+    <string name="interview_question_label">Question</string>
+    <string name="interview_cd_speaking">Interviewer is speaking the question</string>
+    <string name="interview_interviewer_speaking">Speaking…</string>
+    <string name="interview_audio_muted">Audio Muted</string>
+    <string name="interview_response_hint">Your Response</string>
+    <string name="interview_response_placeholder">Type your response or tap the keyboard mic to speak…</string>
+    <string name="interview_char_count">%1$d characters</string>
+    <string name="interview_button_submit">Submit Response</string>
+    <string name="interview_button_complete">Complete Interview</string>
+
+    <string name="interview_result_title">Interview Results</string>
+    <string name="interview_cd_close">Close</string>
+    <string name="interview_results_analyzing">Your results are being analyzed…</string>
+    <string name="interview_button_retry">Retry</string>
+    <string name="interview_result_overall_rating">Overall Rating</string>
+    <string name="interview_result_average_score">Average Score: %1$s / 10.0</string>
+    <string name="interview_result_duration">Duration: %1$d minutes</string>
+    <string name="interview_result_completion">Completion: %1$d%%</string>
+    <string name="interview_result_strengths_title">Strengths</string>
+    <string name="interview_result_weaknesses_title">Areas for Improvement</string>
+    <string name="interview_result_olq_scores_title">OLQ Scores</string>
+    <string name="interview_result_feedback_title">Feedback</string>
+    <string name="interview_result_button_done">Done</string>
 </resources>

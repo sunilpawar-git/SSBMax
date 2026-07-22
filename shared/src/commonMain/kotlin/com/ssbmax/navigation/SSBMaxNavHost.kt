@@ -21,6 +21,9 @@ import com.ssbmax.shared.ui.gto.lecturette.LecturetteResultScreen
 import com.ssbmax.shared.ui.gto.lecturette.LecturetteTestScreen
 import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
 import com.ssbmax.shared.ui.home.student.StudentHomeScreen
+import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
+import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
+import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
@@ -225,9 +228,9 @@ fun SSBMaxNavHost(
                 onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
                 onNavigateToAnalytics = { notYetPorted("AnalyticsScreen") },
                 onNavigateToResult = { testType: TestType, sessionId: String ->
-                    // OIR, PPDT, TAT, WAT, SRT, and SDT are the test-type result screens
-                    // ported into commonMain/ui so far -- every other test type's result
-                    // screen still routes to the honest placeholder.
+                    // OIR, PPDT, TAT, WAT, SRT, SDT, and IO (Interview) are the test-type
+                    // result screens ported into commonMain/ui so far -- every other test
+                    // type's result screen still routes to the honest placeholder.
                     when (testType) {
                         TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
                         TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
@@ -235,6 +238,7 @@ fun SSBMaxNavHost(
                         TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId))
                         TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId))
                         TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(sessionId))
+                        TestType.IO -> navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(sessionId))
                         else -> notYetPorted("TestResultScreen")
                     }
                 },
@@ -620,6 +624,68 @@ fun SSBMaxNavHost(
             GPEResultScreen(
                 submissionId = submissionId,
                 onNavigateHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Interview vertical (start/session/result, this session). Reachability gap,
+        // named explicitly (same shape as every other vertical above): `StudentHomeScreen`
+        // has no "start new interview" callback at all (the Android original's own
+        // `StartInterviewScreen` is reached via a route not exposed through any ported
+        // home-screen callback yet), so `StartInterview` is registered but not reachable
+        // from Student Home -- only via direct navigation/deep link. `InterviewResult` IS
+        // reachable via `StudentHomeScreen`'s "view past interview result" tile
+        // (`onNavigateToResult` with `TestType.IO`, wired above). See
+        // [com.ssbmax.shared.presentation.interviewsession.InterviewCompleter]'s doc
+        // comment for this vertical's own async-analysis finding: a completed interview
+        // session persists correctly but is not yet AI-analyzed through this path, same
+        // as every other Phase 5 vertical. This vertical's mic/audio-recording
+        // investigation found no audio recording anywhere in the Android original (plain
+        // text input + platform keyboard voice-to-text), so no new platform shim was
+        // needed here at all.
+        composable(SSBMaxDestinations.StartInterview.route) {
+            StartInterviewScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToSession = { sessionId ->
+                    navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)) {
+                        popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.VoiceInterviewSession.route,
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.read { getStringOrNull("sessionId") } ?: ""
+            InterviewSessionScreen(
+                sessionId = sessionId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToResult = { resultId ->
+                    navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
+                        popUpTo(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)) { inclusive = true }
+                    }
+                },
+                onNavigateToHome = {
+                    navController.navigate(SSBMaxDestinations.StudentHome.route) {
+                        popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = SSBMaxDestinations.InterviewResult.route,
+            arguments = listOf(navArgument("resultId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val resultId = backStackEntry.arguments?.read { getStringOrNull("resultId") } ?: ""
+            InterviewResultScreen(
+                resultId = resultId,
+                onNavigateBack = {
                     navController.navigate(SSBMaxDestinations.StudentHome.route) {
                         popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
                     }

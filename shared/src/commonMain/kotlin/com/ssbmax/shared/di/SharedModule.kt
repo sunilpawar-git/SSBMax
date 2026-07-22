@@ -61,6 +61,7 @@ import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.service.LoggingSubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
+import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
@@ -88,6 +89,9 @@ import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
 import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
+import com.ssbmax.shared.presentation.interviewresult.InterviewResultViewModel
+import com.ssbmax.shared.presentation.interviewsession.InterviewSessionViewModel
+import com.ssbmax.shared.presentation.interviewstart.StartInterviewViewModel
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestViewModel
 import com.ssbmax.shared.presentation.lecturetteresult.LecturetteResultViewModel
 import com.ssbmax.shared.presentation.oir.OIRTestViewModel
@@ -392,4 +396,23 @@ val sharedModule = module {
     factoryOf(::SDTSubmissionResultViewModel)
     factoryOf(::PIQTestViewModel)
     factoryOf(::PIQSubmissionResultViewModel)
+
+    // Interview vertical (start/session/result, this session): GitLiveInterviewRepository/
+    // GitLiveQuestionCacheRepository/InterviewQuestionGenerator were already bound (Phase 2);
+    // CheckInterviewPrerequisitesUseCase (already ported, unbound until now) is new here.
+    // Real finding for this session's async-analysis check: InterviewCompleter uses the same
+    // SubmissionAnalysisTrigger seam as PPDT/TAT/WAT/SRT/SDT/GTO (Android original enqueues
+    // InterviewAnalysisWorker via WorkManager after session completion) -- fired via the same
+    // LoggingSubmissionAnalysisTrigger binding above, no new binding needed; same real
+    // consequence as every other Phase 5 vertical (a completed session persists but is not yet
+    // AI-analyzed through this path). Separately, this vertical's own mic/audio-recording
+    // investigation (this session's other brief item) found NO audio recording anywhere in the
+    // Android original -- the session screen uses a plain text field plus the platform
+    // keyboard's own voice-to-text, so no new platform expect/actual shim was needed at all.
+    // Like WAT/SRT/SDT/GTO, `app/.../ui/interview` is untouched -- this vertical is NOT swapped
+    // into the live Android app, same precedent as every prior Phase 5 session.
+    factoryOf(::CheckInterviewPrerequisitesUseCase)
+    factoryOf(::StartInterviewViewModel)
+    factoryOf(::InterviewSessionViewModel)
+    factoryOf(::InterviewResultViewModel)
 }
