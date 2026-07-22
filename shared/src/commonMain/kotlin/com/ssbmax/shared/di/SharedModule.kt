@@ -80,8 +80,14 @@ import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.auth.AuthViewModel
+import com.ssbmax.shared.presentation.gd.GDTestViewModel
+import com.ssbmax.shared.presentation.gdresult.GDResultViewModel
+import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
+import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
 import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
+import com.ssbmax.shared.presentation.lecturette.LecturetteTestViewModel
+import com.ssbmax.shared.presentation.lecturetteresult.LecturetteResultViewModel
 import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
@@ -333,6 +339,26 @@ val sharedModule = module {
     factoryOf(::SubmitWATTestUseCase)
     factoryOf(::SubmitSRTTestUseCase)
     factoryOf(::SubmitSDTTestUseCase)
+
+    // GTO (GD/Lecturette, this session): GTORepository/TestContentRepository/
+    // SubmissionRepository were already bound above (Phase 2). GTOEligibilityChecker
+    // and GTOSubmissionCoordinator are new, shared factories (not per-vertical) --
+    // see those classes' own doc comments for why a shared class earns its keep here
+    // unlike WAT/SRT/SDT's inlined single-call eligibility checks. Real finding, stated
+    // plainly per this session's brief: both GD and Lecturette DO use the async-analysis
+    // seam (the Android original enqueues `GTOAnalysisWorker` via WorkManager after
+    // submission) -- fired via GTOSubmissionCoordinator using the same
+    // LoggingSubmissionAnalysisTrigger binding below, no new binding needed; same real
+    // consequence as every other Phase 5 vertical (a submission persists but is not yet
+    // AI-analyzed through this path). Like WAT/SRT/SDT, `app/.../ui/tests/gto/{gd,lecturette}`
+    // is untouched -- this vertical is NOT swapped into the live Android app, same
+    // "unreviewed/monetization-adjacent" precedent.
+    factoryOf(::GTOEligibilityChecker)
+    factoryOf(::GTOSubmissionCoordinator)
+    factoryOf(::GDTestViewModel)
+    factoryOf(::GDResultViewModel)
+    factoryOf(::LecturetteTestViewModel)
+    factoryOf(::LecturetteResultViewModel)
 
     singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 
