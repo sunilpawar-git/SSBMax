@@ -324,4 +324,40 @@
     <string name="tat_blank_slide_reminder_message">Use your imagination to create a story. There was no picture shown -- write what you visualize in your mind.</string>
     <string name="tat_review_story_title">Story %1$d</string>
     <string name="tat_review_character_count">%1$d characters</string>
+
+    <!-- WAT result screen (Phase 5 port of app/.../ui/tests/wat/WATSubmissionResultScreen.kt). -->
+    <string name="result_wat_title">WAT Test Results</string>
+    <string name="result_wat_responses_completed">%1$d of %2$d responses completed</string>
+
+    <!-- WAT test-taking screen (Phase 5 port of app/.../ui/tests/wat/*.kt). -->
+    <string name="wat_loading">Loading WAT test from cloud...</string>
+    <string name="wat_retry_button">Retry</string>
+    <string name="wat_test_title">WAT Test</string>
+    <string name="wat_back_cd">Back</string>
+    <string name="wat_exit_title">Exit Test?</string>
+    <string name="wat_exit_message_1">Your progress will be lost if you exit now.</string>
+    <string name="wat_exit_message_2">Are you sure you want to exit the test?</string>
+    <string name="wat_exit">Exit</string>
+    <string name="wat_continue_test">Continue Test</string>
+    <string name="wat_progress_format">%1$d / %2$d</string>
+    <string name="wat_timer_format">%1$ds</string>
+    <string name="wat_response_placeholder">Type your response...</string>
+    <string name="wat_skip">Skip</string>
+    <string name="wat_submit">Submit</string>
+    <string name="wat_full_title">WAT - Word Association Test</string>
+    <string name="wat_subtitle">Write the first word or phrase that comes to mind for each prompt</string>
+    <string name="wat_instructions_title">Instructions</string>
+    <string name="wat_instruction_1">You will see 60 words, one at a time</string>
+    <string name="wat_instruction_2">You have 15 seconds to respond to each word</string>
+    <string name="wat_instruction_3">Write the first thought that comes to mind</string>
+    <string name="wat_instruction_4">Respond quickly -- don\'t overthink it</string>
+    <string name="wat_instruction_5">The test auto-advances if you run out of time</string>
+    <string name="wat_important">Important</string>
+    <string name="wat_important_message">There are no right or wrong answers. Be spontaneous and honest -- your first reaction matters most.</string>
+    <string name="wat_tips_title">Tips for Success</string>
+    <string name="wat_tip_1">• Write short, natural phrases or sentences</string>
+    <string name="wat_tip_2">• Reflect a positive, constructive outlook</string>
+    <string name="wat_tip_3">• Avoid negative or violent associations</string>
+    <string name="wat_tip_4">• Don\'t skip unless truly stuck -- every response counts</string>
+    <string name="wat_start_test">Start Test</string>
 </resources>

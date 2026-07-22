@@ -72,6 +72,7 @@ import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
@@ -86,6 +87,8 @@ import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
 import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
+import com.ssbmax.shared.presentation.wat.WATTestViewModel
+import com.ssbmax.shared.presentation.watresult.WATSubmissionResultViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -183,6 +186,23 @@ import org.koin.dsl.module
  * dependencies -- both already bound above for other verticals. Same "not
  * swapped into the live Android app" precedent as OIR/PPDT: `app/.../ui/tests/tat`
  * is untouched, this vertical is reachable only via `SSBMaxNavHost`.
+ *
+ * Phase 5 (WAT test-taking vertical): added [SubmitWATTestUseCase] factory
+ * (`GitLiveWATWordCacheManager`/`TestContentRepository.getWATQuestions` were
+ * already bound above from an earlier phase), [WATTestViewModel],
+ * [WATSubmissionResultViewModel]. Real finding, stated plainly per this
+ * session's brief: WAT DOES use the async-analysis seam (the Android
+ * original enqueues `WATAnalysisWorker` via WorkManager after submission,
+ * same shape as TAT/PPDT) -- it is not synchronous/rule-based scoring.
+ * Reuses the same [LoggingSubmissionAnalysisTrigger]/[SubmissionAnalysisTrigger]
+ * binding, no new binding needed; same real consequence (a WAT submission
+ * through this vertical persists but is not yet AI-analyzed). Unlike TAT,
+ * WAT's Android original has no gender/profile-completeness gate before
+ * loading, so no `LoadWATTestUseCase` wrapper was introduced --
+ * [WATTestViewModel] calls [TestSessionRepository]/[TestContentRepository]
+ * directly. Same "not swapped into the live Android app" precedent as
+ * OIR/PPDT/TAT: `app/.../ui/tests/wat` is untouched, this vertical is
+ * reachable only via `SSBMaxNavHost`.
  */
 val sharedModule = module {
     includes(platformModule)
@@ -256,6 +276,7 @@ val sharedModule = module {
     factoryOf(::SubmitPPDTTestUseCase)
     factoryOf(::LoadTATTestUseCase)
     factoryOf(::SubmitTATTestUseCase)
+    factoryOf(::SubmitWATTestUseCase)
 
     singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 
@@ -269,4 +290,6 @@ val sharedModule = module {
     factoryOf(::PPDTSubmissionResultViewModel)
     factoryOf(::TATTestViewModel)
     factoryOf(::TATSubmissionResultViewModel)
+    factoryOf(::WATTestViewModel)
+    factoryOf(::WATSubmissionResultViewModel)
 }
