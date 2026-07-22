@@ -26,6 +26,7 @@ import com.ssbmax.shared.ui.home.student.StudentHomeScreen
 import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
 import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
 import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
+import com.ssbmax.shared.ui.marketplace.MarketplaceScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.placeholder.NotYetPortedScreen
@@ -33,6 +34,7 @@ import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
 import com.ssbmax.shared.ui.ppdt.PPDTTestScreen
 import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
 import com.ssbmax.shared.ui.piq.PIQTestScreen
+import com.ssbmax.shared.ui.premium.UpgradeScreen
 import com.ssbmax.shared.ui.profile.StudentProfileScreen
 import com.ssbmax.shared.ui.profile.UserProfileScreen
 import com.ssbmax.shared.ui.results.HistoricResultsScreen
@@ -236,7 +238,9 @@ fun SSBMaxNavHost(
                     navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
                 },
                 onNavigateToNotifications = { notYetPorted("NotificationCenterScreen") },
-                onNavigateToMarketplace = { notYetPorted("MarketplaceScreen") },
+                onNavigateToMarketplace = {
+                    navController.navigate(SSBMaxDestinations.Marketplace.route)
+                },
                 onNavigateToAnalytics = {
                     navController.navigate(SSBMaxDestinations.Analytics.route)
                 },
@@ -756,10 +760,10 @@ fun SSBMaxNavHost(
             )
         }
 
-        // Settings vertical (this session). onNavigateToFAQ/onNavigateToUpgrade
-        // route to the honest placeholder -- there is no ported FAQScreen/
-        // UpgradeScreen yet; onNavigateToSubscriptionManagement routes to the
-        // real SubscriptionManagementScreen registered below.
+        // Settings vertical (this session). onNavigateToFAQ routes to the
+        // honest placeholder -- there is no ported FAQScreen yet.
+        // onNavigateToUpgrade/onNavigateToSubscriptionManagement route to the
+        // real UpgradeScreen/SubscriptionManagementScreen registered below.
         composable(SSBMaxDestinations.Settings.route) {
             val notYetPorted: (String) -> Unit = { screen ->
                 navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
@@ -767,24 +771,56 @@ fun SSBMaxNavHost(
             SettingsScreen(
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToFAQ = { notYetPorted("FAQScreen") },
-                onNavigateToUpgrade = { notYetPorted("UpgradeScreen") },
+                onNavigateToUpgrade = {
+                    navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+                },
                 onNavigateToSubscriptionManagement = {
                     navController.navigate(SSBMaxDestinations.SubscriptionManagement.route)
                 }
             )
         }
 
-        // Subscription Management (this session). onUpgrade has no ported
-        // real-billing destination yet (PlayBillingClient/StoreKitBillingClient
-        // exist as Phase 4 shims but are NOT wired into SubscriptionManager --
-        // a known, separately-tracked gap; see this plan's own risk register) --
-        // routes to the honest placeholder rather than pretending a purchase
-        // flow exists.
+        // Subscription Management (this session). onUpgrade routes to the
+        // real UpgradeScreen below -- note this loses the `tier` argument
+        // (the Android original's `com.ssbmax.ui.settings.SubscriptionManagementScreen`
+        // does the exact same thing: `onUpgrade = { tier -> navController.navigate(...UpgradeScreen.route) }`
+        // in `SharedNavGraph.kt`, ignoring `tier` too -- not a port regression).
+        // [UpgradeScreen] itself is "visual only" (see its own class doc):
+        // PlayBillingClient/StoreKitBillingClient exist as Phase 4 shims but
+        // are NOT wired into SubscriptionManager -- a known, separately-tracked
+        // gap that matches the Android original having no working purchase
+        // flow either (its own upgrade button just shows a "Coming Soon" dialog).
         composable(SSBMaxDestinations.SubscriptionManagement.route) {
             SubscriptionManagementScreen(
                 onNavigateBack = { navController.navigateUp() },
-                onUpgrade = { tier ->
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("UpgradeFlow(${tier.name})"))
+                onUpgrade = { _ ->
+                    navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+                }
+            )
+        }
+
+        // Premium Upgrade screen (this session) -- the KMP port of the
+        // Android LIVE `com.ssbmax.ui.premium.UpgradeScreen` (route
+        // "premium/upgrade"). See [UpgradeScreen]'s own class doc for why the
+        // sibling Android `com.ssbmax.ui.upgrade`/`com.ssbmax.ui.payment`
+        // packages (dead code, unreachable from any Android nav graph) were
+        // NOT ported.
+        composable(SSBMaxDestinations.UpgradeScreen.route) {
+            UpgradeScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        // Marketplace (this session) -- coaching-institute directory, mock
+        // data only (no backend on either platform). onInstituteClick routes
+        // to the honest placeholder -- there is no ported institute-detail
+        // screen yet (the Android original's own `onInstituteClick` callback
+        // is also just a `// TODO: Navigate to institute detail` no-op).
+        composable(SSBMaxDestinations.Marketplace.route) {
+            MarketplaceScreen(
+                onNavigateBack = { navController.navigateUp() },
+                onInstituteClick = { instituteId ->
+                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("InstituteDetail($instituteId)"))
                 }
             )
         }

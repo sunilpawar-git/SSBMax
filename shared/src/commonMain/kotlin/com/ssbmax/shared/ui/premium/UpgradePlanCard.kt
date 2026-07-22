@@ -1,0 +1,300 @@
+package com.ssbmax.shared.ui.premium
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Construction
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.ssbmax.shared.domain.model.BillingCycle
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.premium.SubscriptionPlan
+import org.jetbrains.compose.resources.stringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.premium_dialog_action_got_it
+import ssbmax.shared.generated.resources.premium_dialog_coming_soon_message
+import ssbmax.shared.generated.resources.premium_dialog_coming_soon_title
+import ssbmax.shared.generated.resources.premium_plan_action_current
+import ssbmax.shared.generated.resources.premium_plan_action_downgrade
+import ssbmax.shared.generated.resources.premium_plan_action_upgrade
+import ssbmax.shared.generated.resources.premium_plan_badge_current
+import ssbmax.shared.generated.resources.premium_plan_badge_popular
+import ssbmax.shared.generated.resources.premium_plan_period_month
+import ssbmax.shared.generated.resources.premium_plan_period_quarter
+import ssbmax.shared.generated.resources.premium_plan_period_year
+import ssbmax.shared.generated.resources.premium_plan_price_free
+
+/**
+ * Per-plan animated card + "coming soon" dialog for [UpgradeScreen]. Split
+ * out to keep both files under this repo's 300-line Quality Limit.
+ */
+@Composable
+internal fun AnimatedPlanCard(
+    plan: SubscriptionPlan,
+    currentTier: SubscriptionTier,
+    selectedBillingCycle: BillingCycle,
+    isVisible: Boolean,
+    onUpgradeClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.8f,
+        animationSpec = tween(durationMillis = 300),
+        label = "scale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "alpha"
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .alpha(alpha),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (plan.isRecommended) 8.dp else 2.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (plan.tier == currentTier) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+            PlanCardHeader(plan, currentTier, selectedBillingCycle)
+            Spacer(Modifier.height(16.dp))
+            plan.features.forEach { feature ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (feature.isIncluded) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                        contentDescription = null,
+                        tint = if (feature.isIncluded) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        },
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        feature.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (feature.isIncluded) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = onUpgradeClick,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = plan.tier != currentTier,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Text(
+                    stringResource(
+                        when {
+                            plan.tier == currentTier -> Res.string.premium_plan_action_current
+                            plan.tier < currentTier -> Res.string.premium_plan_action_downgrade
+                            else -> Res.string.premium_plan_action_upgrade
+                        }
+                    ),
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlanCardHeader(
+    plan: SubscriptionPlan,
+    currentTier: SubscriptionTier,
+    selectedBillingCycle: BillingCycle
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.horizontalGradient(colors = plan.gradient.map { parseColor(it) }),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column {
+                    Text(
+                        plan.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        plan.tagline,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
+                if (plan.isRecommended) {
+                    PlanBadge(stringResource(Res.string.premium_plan_badge_popular))
+                }
+                if (plan.tier == currentTier) {
+                    PlanBadge(stringResource(Res.string.premium_plan_badge_current))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.Bottom) {
+                if (plan.tier == SubscriptionTier.FREE) {
+                    Text(
+                        stringResource(Res.string.premium_plan_price_free),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                } else {
+                    Text(
+                        "₹${plan.getPriceForCycle(selectedBillingCycle).toInt()}",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        stringResource(
+                            when (selectedBillingCycle) {
+                                BillingCycle.MONTHLY -> Res.string.premium_plan_period_month
+                                BillingCycle.QUARTERLY -> Res.string.premium_plan_period_quarter
+                                BillingCycle.ANNUALLY -> Res.string.premium_plan_period_year
+                            }
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+            }
+            plan.getSavingsForCycle(selectedBillingCycle)?.let { savings ->
+                Text(
+                    savings,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlanBadge(text: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White.copy(alpha = 0.3f)
+    ) {
+        Text(
+            text,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+internal fun ComingSoonDialog(
+    planName: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(Icons.Default.Construction, contentDescription = null, modifier = Modifier.size(48.dp))
+        },
+        title = {
+            Text(stringResource(Res.string.premium_dialog_coming_soon_title), fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Text(
+                stringResource(Res.string.premium_dialog_coming_soon_message, planName),
+                textAlign = TextAlign.Center
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.premium_dialog_action_got_it))
+            }
+        }
+    )
+}
+
+/**
+ * Parse hex color string to Compose Color. KMP-safe replacement for the
+ * Android original's `android.graphics.Color.parseColor` (Android-only) --
+ * these gradient hex strings are always 6-digit `#RRGGBB`, hardcoded in
+ * [com.ssbmax.shared.presentation.premium.UpgradeViewModel]'s plan list.
+ */
+private fun parseColor(hex: String): Color = try {
+    val colorLong = hex.removePrefix("#").toLong(16)
+    Color(
+        red = (colorLong shr 16 and 0xFF) / 255f,
+        green = (colorLong shr 8 and 0xFF) / 255f,
+        blue = (colorLong and 0xFF) / 255f,
+        alpha = 1f
+    )
+} catch (e: Exception) {
+    Color.Gray
+}

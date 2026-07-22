@@ -945,4 +945,46 @@
     <string name="analytics_accuracy_format">%1$s%% accuracy</string>
     <string name="analytics_progress_to">Progress to %1$s</string>
     <string name="analytics_progression_needed">Need %1$d more attempts &amp; %2$s%% accuracy</string>
+
+    <!-- Premium Upgrade screen (live upgrade flow, com.ssbmax.ui.premium on Android) -->
+    <string name="premium_cd_back">Back</string>
+    <string name="premium_upgrade_title">Choose Your Plan</string>
+    <string name="premium_upgrade_header">Unlock Your Potential</string>
+    <string name="premium_upgrade_subtitle">Choose the perfect plan for your SSB journey</string>
+    <string name="premium_billing_cycle_monthly">Monthly</string>
+    <string name="premium_billing_cycle_quarterly">Quarterly</string>
+    <string name="premium_billing_cycle_annually">Annually</string>
+    <string name="premium_billing_save_quarterly">Save 13%</string>
+    <string name="premium_billing_save_annually">Save 25%</string>
+    <string name="premium_plan_badge_popular">POPULAR</string>
+    <string name="premium_plan_badge_current">CURRENT</string>
+    <string name="premium_plan_price_free">Free</string>
+    <string name="premium_plan_period_month">/month</string>
+    <string name="premium_plan_period_quarter">/quarter</string>
+    <string name="premium_plan_period_year">/year</string>
+    <string name="premium_plan_action_current">Current Plan</string>
+    <string name="premium_plan_action_downgrade">Downgrade</string>
+    <string name="premium_plan_action_upgrade">Upgrade Now</string>
+    <string name="premium_info_secure">Secure payment processing</string>
+    <string name="premium_info_cancel">Cancel anytime, no questions asked</string>
+    <string name="premium_info_support">24/7 customer support</string>
+    <string name="premium_dialog_coming_soon_title">Coming Soon!</string>
+    <string name="premium_dialog_coming_soon_message">Payment integration for the %1$s plan is coming soon! We\'re working hard to bring you seamless subscription management.</string>
+    <string name="premium_dialog_action_got_it">Got it</string>
+
+    <!-- Marketplace screen (coaching institute directory, mock data) -->
+    <string name="marketplace_cd_back">Back</string>
+    <string name="marketplace_title">SSB Coaching Institutes</string>
+    <string name="marketplace_toggle_filters">Toggle Filters</string>
+    <string name="marketplace_search_hint">Search institutes, locations...</string>
+    <string name="marketplace_clear">Clear</string>
+    <string name="marketplace_filters_title">Filters</string>
+    <string name="marketplace_clear_all">Clear All</string>
+    <string name="marketplace_class_type">Class Type</string>
+    <string name="marketplace_all">All</string>
+    <string name="marketplace_price_range">Price Range</string>
+    <string name="marketplace_no_institutes">No institutes found</string>
+    <string name="marketplace_adjust_filters">Try adjusting your filters</string>
+    <string name="marketplace_institutes_found">%1$d institutes found</string>
+    <string name="marketplace_success_rate">%1$d%% Success Rate</string>
 </resources>

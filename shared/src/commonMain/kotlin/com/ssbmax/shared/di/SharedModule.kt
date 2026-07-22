@@ -114,6 +114,8 @@ import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import com.ssbmax.shared.presentation.results.HistoricResultsViewModel
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
+import com.ssbmax.shared.presentation.marketplace.MarketplaceViewModel
+import com.ssbmax.shared.presentation.premium.UpgradeViewModel
 import com.ssbmax.shared.presentation.settings.SettingsViewModel
 import com.ssbmax.shared.presentation.settings.SubscriptionManagementViewModel
 import com.ssbmax.shared.presentation.settings.notifications.NotificationSettingsViewModel
@@ -491,4 +493,20 @@ val sharedModule = module {
     factoryOf(::SubmissionDetailViewModel)
     factoryOf(::TestDetailGradingViewModel)
     factoryOf(::AnalyticsViewModel)
+
+    // Premium/Marketplace vertical (this session): [UpgradeViewModel] is the
+    // KMP port of the Android LIVE upgrade screen (`com.ssbmax.ui.premium`,
+    // route "premium/upgrade") -- reuses the already-bound
+    // [GetSubscriptionTierUseCase] (see Settings vertical above) instead of
+    // duplicating the Android original's inline `UserProfileRepository` +
+    // `SubscriptionType` mapping (see [UpgradeViewModel]'s own class doc).
+    // The Android app's sibling `com.ssbmax.ui.upgrade`/`com.ssbmax.ui.payment`
+    // packages are dead code (zero nav call sites, confirmed by grep + git
+    // log) and were deliberately NOT ported or bound here.
+    // [MarketplaceViewModel] has no repository dependency yet -- backed by
+    // [com.ssbmax.shared.presentation.marketplace.MarketplaceMockData] on
+    // both platforms, same as the Android original (no `MarketplaceRepository`
+    // exists on either side).
+    factoryOf(::UpgradeViewModel)
+    factoryOf(::MarketplaceViewModel)
 }
