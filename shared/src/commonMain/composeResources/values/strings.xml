@@ -1067,4 +1067,60 @@
     <!-- Topic screen (past-interview-results section, Interview topic only) -->
     <string name="interview_history_title">Past Interview Results</string>
     <string name="interview_no_past_results">No past interview results yet</string>
+
+    <!-- Nav chrome: drawer + bottom nav bar (Phase 5 continuation). Ports
+         app/.../ui/components/drawer/{DrawerHeader,DrawerContent,SSBMaxDrawer}.kt
+         and app/.../ui/components/SSBMaxBottomBar.kt. Also closes the
+         pre-existing hardcoded-string debt on SSBMaxDestinations.kt's
+         DrawerItem/BottomNavItem (flagged when SSBMaxDestinations was first
+         moved to shared, fixed here now that these items are wired to real
+         UI for the first time). Bottom-nav labels reuse the exact wording
+         already present in app/src/main/res/values/strings.xml's
+         nav_home/nav_tests/.../nav_analytics keys. -->
+    <string name="nav_home">Home</string>
+    <string name="nav_tests">Tests</string>
+    <string name="nav_results">Results</string>
+    <string name="nav_study">Study</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_students">Students</string>
+    <string name="nav_grading">Grading</string>
+    <string name="nav_analytics">Analytics</string>
+
+    <string name="drawer_phase1_description">OIR &amp; PPDT</string>
+    <string name="drawer_phase2_description">Psychology, GTO, IO</string>
+    <string name="drawer_all_tests">All Tests</string>
+    <string name="drawer_study_materials">Study Materials</string>
+    <string name="drawer_pending_grading">Pending Grading</string>
+    <string name="drawer_my_students">My Students</string>
+    <string name="drawer_batch_management">Batch Management</string>
+    <string name="drawer_analytics_dashboard">Analytics Dashboard</string>
+
+    <string name="drawer_ssb_tests">SSB Tests</string>
+    <string name="drawer_quick_access">Quick Access</string>
+    <string name="drawer_account">Account</string>
+    <string name="drawer_sign_out">Sign Out</string>
+    <string name="drawer_phase1_title">Phase 1 - Screening Tests (Day 1)</string>
+    <string name="drawer_oir_test">OIR Test</string>
+    <string name="drawer_ppdt">PPDT</string>
+    <string name="drawer_phase2_title">Phase 2 - Assessments (Day 2-5)</string>
+    <string name="drawer_piq_form">Filling PIQ Form</string>
+    <string name="drawer_psychology_tests">Psychology Tests</string>
+    <string name="drawer_gto_tests">GTO Tests</string>
+    <string name="drawer_interview">Interview</string>
+    <string name="drawer_conference">Conference</string>
+    <string name="drawer_medicals">Medicals</string>
+    <string name="drawer_ssb_overview">Overview of SSB</string>
+    <string name="drawer_my_batches">My Batches</string>
+    <string name="drawer_settings">Settings</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="version_footer">Version 1.0.0</string>
+
+    <!-- Drawer header (user profile summary card) -->
+    <string name="drawer_header_loading">Loading profile...</string>
+    <string name="drawer_header_age_gender_format">%1$d years • %2$s</string>
+    <string name="drawer_header_complete_profile_title">Complete Your Profile</string>
+    <string name="drawer_header_complete_profile_subtitle">Tap the edit button below to get started</string>
+    <string name="drawer_header_edit_profile">Edit Profile</string>
+    <string name="drawer_header_create_profile">Create Profile</string>
 </resources>

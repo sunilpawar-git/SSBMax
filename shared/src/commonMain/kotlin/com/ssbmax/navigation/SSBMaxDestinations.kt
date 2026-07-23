@@ -1,5 +1,27 @@
 package com.ssbmax.navigation
 
+import org.jetbrains.compose.resources.StringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.drawer_all_tests
+import ssbmax.shared.generated.resources.drawer_analytics_dashboard
+import ssbmax.shared.generated.resources.drawer_batch_management
+import ssbmax.shared.generated.resources.drawer_my_batches
+import ssbmax.shared.generated.resources.drawer_my_students
+import ssbmax.shared.generated.resources.drawer_pending_grading
+import ssbmax.shared.generated.resources.drawer_phase1_description
+import ssbmax.shared.generated.resources.drawer_phase1_title
+import ssbmax.shared.generated.resources.drawer_phase2_description
+import ssbmax.shared.generated.resources.drawer_phase2_title
+import ssbmax.shared.generated.resources.drawer_study_materials
+import ssbmax.shared.generated.resources.nav_analytics
+import ssbmax.shared.generated.resources.nav_grading
+import ssbmax.shared.generated.resources.nav_home
+import ssbmax.shared.generated.resources.nav_profile
+import ssbmax.shared.generated.resources.nav_results
+import ssbmax.shared.generated.resources.nav_students
+import ssbmax.shared.generated.resources.nav_study
+import ssbmax.shared.generated.resources.nav_tests
+
 /**
  * Type-safe navigation destinations for SSBMax app
  */
@@ -212,45 +234,54 @@ sealed class SSBMaxDestinations(val route: String) {
 }
 
 /**
- * Navigation drawer items for quick access
+ * Navigation drawer items for quick access.
+ *
+ * `titleRes`/`descriptionRes` are [StringResource] handles, not resolved
+ * strings — render with `stringResource(item.titleRes)` from a `@Composable`
+ * call site (e.g. [com.ssbmax.shared.ui.components.drawer.DrawerContent]).
+ * Previously plain hardcoded `String`/`String?` (a pre-existing lint-rule
+ * violation flagged when this file was first moved into `shared` in an
+ * earlier Phase 5 session, before any real UI wired these items) — fixed
+ * here, the first session that actually renders them.
  */
 sealed class DrawerItem(
     val route: String,
-    val title: String,
-    val description: String? = null
+    val titleRes: StringResource,
+    val descriptionRes: StringResource? = null
 ) {
     // Student Drawer Items
-    data object Phase1Tests : DrawerItem("drawer/phase1", "Phase 1 Tests", "OIR & PPDT")
-    data object Phase2Tests : DrawerItem("drawer/phase2", "Phase 2 Tests", "Psychology, GTO, IO")
-    data object AllTests : DrawerItem("drawer/all_tests", "All Tests")
-    data object StudyMaterials : DrawerItem("drawer/study", "Study Materials")
-    data object MyBatches : DrawerItem("drawer/batches", "My Batches")
-    
+    data object Phase1Tests : DrawerItem("drawer/phase1", Res.string.drawer_phase1_title, Res.string.drawer_phase1_description)
+    data object Phase2Tests : DrawerItem("drawer/phase2", Res.string.drawer_phase2_title, Res.string.drawer_phase2_description)
+    data object AllTests : DrawerItem("drawer/all_tests", Res.string.drawer_all_tests)
+    data object StudyMaterials : DrawerItem("drawer/study", Res.string.drawer_study_materials)
+    data object MyBatches : DrawerItem("drawer/batches", Res.string.drawer_my_batches)
+
     // Instructor Drawer Items
-    data object PendingGrading : DrawerItem("drawer/pending", "Pending Grading")
-    data object MyStudents : DrawerItem("drawer/students", "My Students")
-    data object BatchManagement : DrawerItem("drawer/batch_mgmt", "Batch Management")
-    data object Analytics : DrawerItem("drawer/analytics", "Analytics Dashboard")
+    data object PendingGrading : DrawerItem("drawer/pending", Res.string.drawer_pending_grading)
+    data object MyStudents : DrawerItem("drawer/students", Res.string.drawer_my_students)
+    data object BatchManagement : DrawerItem("drawer/batch_mgmt", Res.string.drawer_batch_management)
+    data object Analytics : DrawerItem("drawer/analytics", Res.string.drawer_analytics_dashboard)
 }
 
 /**
- * Bottom navigation items
+ * Bottom navigation items. `titleRes` — see [DrawerItem]'s class doc for why
+ * this is a [StringResource] handle rather than a hardcoded `String` now.
  */
 sealed class BottomNavItem(
     val route: String,
-    val title: String
+    val titleRes: StringResource
 ) {
     // Student Bottom Nav
-    data object StudentHome : BottomNavItem(SSBMaxDestinations.StudentHome.route, "Home")
-    data object StudentTests : BottomNavItem(SSBMaxDestinations.StudentTests.route, "Tests")
-    data object StudentSubmissions : BottomNavItem(SSBMaxDestinations.StudentSubmissions.route, "Results")
-    data object StudentStudy : BottomNavItem(SSBMaxDestinations.StudentStudy.route, "Study")
-    data object StudentProfile : BottomNavItem(SSBMaxDestinations.StudentProfile.route, "Profile")
-    
+    data object StudentHome : BottomNavItem(SSBMaxDestinations.StudentHome.route, Res.string.nav_home)
+    data object StudentTests : BottomNavItem(SSBMaxDestinations.StudentTests.route, Res.string.nav_tests)
+    data object StudentSubmissions : BottomNavItem(SSBMaxDestinations.StudentSubmissions.route, Res.string.nav_results)
+    data object StudentStudy : BottomNavItem(SSBMaxDestinations.StudentStudy.route, Res.string.nav_study)
+    data object StudentProfile : BottomNavItem(SSBMaxDestinations.StudentProfile.route, Res.string.nav_profile)
+
     // Instructor Bottom Nav
-    data object InstructorHome : BottomNavItem(SSBMaxDestinations.InstructorHome.route, "Home")
-    data object InstructorStudents : BottomNavItem(SSBMaxDestinations.InstructorStudents.route, "Students")
-    data object InstructorGrading : BottomNavItem(SSBMaxDestinations.InstructorGrading.route, "Grading")
-    data object InstructorAnalytics : BottomNavItem(SSBMaxDestinations.InstructorAnalytics.route, "Analytics")
+    data object InstructorHome : BottomNavItem(SSBMaxDestinations.InstructorHome.route, Res.string.nav_home)
+    data object InstructorStudents : BottomNavItem(SSBMaxDestinations.InstructorStudents.route, Res.string.nav_students)
+    data object InstructorGrading : BottomNavItem(SSBMaxDestinations.InstructorGrading.route, Res.string.nav_grading)
+    data object InstructorAnalytics : BottomNavItem(SSBMaxDestinations.InstructorAnalytics.route, Res.string.nav_analytics)
 }
 

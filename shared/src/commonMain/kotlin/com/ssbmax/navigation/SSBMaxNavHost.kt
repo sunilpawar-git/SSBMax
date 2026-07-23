@@ -168,11 +168,25 @@ import com.ssbmax.shared.ui.wat.WATTestScreen
  * — see `app/.../navigation/{AuthNavGraph,Student/InstructorNavGraph}.kt`)
  * — swapping the whole app over to this graph is gated on porting the
  * remaining screens, not this phase.
+ *
+ * Nav chrome (drawer + bottom nav bar), this session's addition: this
+ * `NavHost` itself stays chrome-agnostic (exactly the composable destination
+ * graph, as before) -- the persistent drawer/bottom-nav UI wrapping it lives
+ * one level up, in [com.ssbmax.shared.ui.components.SSBMaxAppScaffold]
+ * (ported from `app/.../ui/components/SSBMaxScaffold.kt`), which owns the
+ * `NavHostController` passed to this composable and threads a real
+ * [onOpenDrawer] callback down into the two home screens' `onOpenDrawer`
+ * parameter (previously both routed to the honest [NotYetPorted] placeholder
+ * -- now they open the real drawer). See [MainViewController] for how the
+ * two compose together on iOS; `app` is unaffected (still Android-only
+ * `SSBMaxScaffold`/`SSBMaxNavGraph`, per this migration's standing judgment
+ * not to swap `shared` screens into the live Android app yet).
  */
 @Composable
 fun SSBMaxNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = SSBMaxDestinations.Splash.route
+    startDestination: String = SSBMaxDestinations.Splash.route,
+    onOpenDrawer: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -287,7 +301,7 @@ fun SSBMaxNavHost(
                         else -> notYetPorted("TestResultScreen")
                     }
                 },
-                onOpenDrawer = { notYetPorted("NavigationDrawer") }
+                onOpenDrawer = onOpenDrawer
             )
         }
 
@@ -740,9 +754,10 @@ fun SSBMaxNavHost(
 
         // Instructor vertical (this session): Students/Grading/Analytics/CreateBatch/
         // BatchDetail/StudentDetail all now real ported screens -- matches the
-        // Android original's `InstructorNavGraph.kt` wiring exactly. Only
-        // `onOpenDrawer` still routes to the honest placeholder (no ported
-        // NavigationDrawer yet, same gap as every other home screen in this graph).
+        // Android original's `InstructorNavGraph.kt` wiring exactly.
+        // `onOpenDrawer` now opens the real ported drawer (this session's nav-chrome
+        // work, see [SSBMaxNavHost]'s own `onOpenDrawer` parameter and
+        // [com.ssbmax.shared.ui.components.SSBMaxAppScaffold]).
         composable(SSBMaxDestinations.InstructorHome.route) {
             InstructorHomeScreen(
                 onNavigateToStudent = { studentId ->
@@ -757,9 +772,7 @@ fun SSBMaxNavHost(
                 onNavigateToCreateBatch = {
                     navController.navigate(SSBMaxDestinations.CreateBatch.route)
                 },
-                onOpenDrawer = {
-                    navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("NavigationDrawer"))
-                }
+                onOpenDrawer = onOpenDrawer
             )
         }
 
@@ -970,11 +983,11 @@ fun SSBMaxNavHost(
             )
         }
 
-        // Student "All Tests" overview (this session), reachable from
-        // SubmissionsListScreen's onNavigateToTests (wired above) -- the
-        // Android original's own reachability path (bottom nav) isn't ported
-        // yet (no bottom nav bar in this commonMain graph), so this cross-link
-        // is this session's only in-graph entry point. onNavigateToPhase
+        // Student "All Tests" overview, reachable both from
+        // SubmissionsListScreen's onNavigateToTests (wired above) and, as of
+        // this session's nav-chrome work, from the bottom nav bar's "Tests"
+        // tab ([com.ssbmax.shared.ui.components.SSBMaxAppScaffold] ->
+        // [com.ssbmax.shared.ui.components.SSBMaxBottomBar]). onNavigateToPhase
         // routes to the real Phase1Detail/Phase2Detail screens (also this
         // session); onNavigateToTest routes to the honest placeholder for
         // every GTO sub-test type not yet individually reachable from here
@@ -1157,16 +1170,14 @@ fun SSBMaxNavHost(
             )
         }
 
-        // SSB Overview (this session) -- static/educational content about the
-        // SSB selection process. Reachability gap, named explicitly (same
-        // shape as every other vertical above): the Android original only
-        // reaches this screen via the navigation drawer
-        // (`SSBMaxDrawer`/`DrawerContent`'s `onNavigateToSSBOverview`), and
-        // `NavigationDrawer` isn't ported yet (every `onOpenDrawer` callback
-        // in this graph still routes to the honest placeholder) -- so this
-        // route is registered and fully functional if navigated to directly
-        // or via a future deep link, but nothing in this graph currently
-        // does so.
+        // SSB Overview -- static/educational content about the SSB selection
+        // process. Reachable via the navigation drawer's "Overview of SSB"
+        // item ([com.ssbmax.shared.ui.components.drawer.DrawerContent]'s
+        // `onNavigateToSSBOverview`, wired in
+        // [com.ssbmax.shared.ui.components.SSBMaxAppScaffold]) as of this
+        // session's nav-chrome work -- previously registered but reachable
+        // only by direct navigation/deep link, since the drawer wasn't
+        // ported yet.
         composable(SSBMaxDestinations.SSBOverview.route) {
             SSBOverviewScreen(
                 onNavigateBack = { navController.navigateUp() }
