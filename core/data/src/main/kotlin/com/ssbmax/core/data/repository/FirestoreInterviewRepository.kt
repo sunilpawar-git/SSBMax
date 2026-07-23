@@ -75,12 +75,17 @@ class FirestoreInterviewRepository(
     // PREREQUISITES (Delegated to UseCases)
     // ============================================
 
+    // Real checks are performed by shared's CheckInterviewPrerequisitesUseCase, injected
+    // directly into StartInterviewViewModel -- this repository method is an unconditional
+    // stub only because the domain interface still declares it.
     override suspend fun checkPrerequisites(userId: String): Result<PrerequisiteCheckResult> {
-        return Result.failure(UnsupportedOperationException("Use CheckInterviewPrerequisitesUseCase"))
+        return Result.failure(UnsupportedOperationException("checkPrerequisites not implemented"))
     }
 
+    // No use-case for this check exists (nor has any caller ever invoked this method) --
+    // unconditional stub, kept only because the domain interface still declares it.
     override suspend fun checkInterviewLimits(userId: String, mode: InterviewMode): Result<Boolean> {
-        return Result.failure(UnsupportedOperationException("Use CheckInterviewLimitsUseCase"))
+        return Result.failure(UnsupportedOperationException("checkInterviewLimits not implemented"))
     }
 
     // ============================================
