@@ -76,89 +76,56 @@ import com.ssbmax.shared.ui.wat.WATTestScreen
  *
  * Structure is the commonMain-portable equivalent of the Android-only
  * `app/.../navigation/{NavGraph,AuthNavGraph,Student/InstructorNavGraph}.kt`
- * set, scoped to exactly the screens ported into `shared/commonMain/ui` so
- * far: Splash -> Login -> RoleSelection -> Student/Instructor home ->
- * OIR test-taking + OIR result -> PPDT test-taking + PPDT result (this
- * session's addition). The other 55 screens (student submissions/study,
- * instructor grading/analytics/batches,
- * every other Phase 1/2 test flow, interview, GTO, etc.) are NOT reachable
- * from here — this is not an oversight, they simply haven't been ported yet
- * (Phase 5 continues). Every sub-navigation callback the two ported home
- * screens expose that targets an unported destination (topic detail, phase
- * detail, non-OIR result screens, notifications, marketplace, analytics,
- * grading, batches, student/batch detail) routes to the single
- * [SSBMaxDestinations.NotYetPorted] destination with the intended screen's
- * display name, rather than navigating to a route this graph never
- * registered (which would crash Nav Compose's destination lookup) or being
- * silently dropped — the graph is honestly navigable end-to-end today
- * without pretending unported work is done.
+ * set. This note described a much narrower graph (Splash/Login/Home/OIR/PPDT
+ * only) in early Phase 5 sessions -- stale as of this file's current state,
+ * corrected here: 55 of the 61 live Compose screens are now registered
+ * below (the 6 not registered -- `FAQScreen`, `GradingDetailScreen`,
+ * `MemoryLeakTestScreen`, `MockPaymentScreen`, `PaymentSuccessScreen`,
+ * `app/ui/upgrade/UpgradeScreen` -- are confirmed dead code in the Android
+ * original, zero real nav-graph callers, correctly not ported). Every
+ * sub-navigation callback that still targets a destination with no ported
+ * screen (a handful of true leaves: FAQ, achievements, institute detail,
+ * notification deep-link, the bottom-nav "Tests" tab's per-test-type
+ * routing) routes to the single [SSBMaxDestinations.NotYetPorted]
+ * destination with the intended screen's display name, rather than
+ * navigating to a route this graph never registered (which would crash Nav
+ * Compose's destination lookup) or being silently dropped — the graph is
+ * honestly navigable end-to-end today without pretending unported work is
+ * done.
  *
- * OIR reachability gap, named explicitly: `StudentHomeScreen`'s
- * `onNavigateToPhaseDetail` (Phase 1 detail screen, where the Android app
- * lets a student actually launch a *new* OIR test) is NOT ported — it still
- * routes to `NotYetPorted`. So `OIRTest` is only reachable this session via
- * `OIRTestResultScreen`'s "Retake Test" button, and `OIRTestResult` only via
- * `StudentHomeScreen`'s "view past OIR result" tile (`onNavigateToResult`
- * with `TestType.OIR`). Starting a *first* OIR test from Student Home isn't
- * wired yet — that's gated on porting Phase1DetailScreen, out of this
- * session's scope.
- *
- * PPDT reachability gap, named explicitly (this session's addition): same
- * shape as OIR's gap above -- `onNavigateToPhaseDetail` isn't ported, so
- * there is no in-graph path to *start* a new `PPDTTest` at all (unlike OIR,
- * PPDT's own result screen has no "retake" callback either, so there isn't
- * even a retake path). `PPDTTest` is registered and fully functional if
- * navigated to directly, but nothing in this graph currently does so.
- * `PPDTSubmissionResult` is reachable via `StudentHomeScreen`'s "view past
- * PPDT result" tile (`onNavigateToResult` with `TestType.PPDT`). Also see
- * [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]'s doc
- * comment: a submission made via `PPDTTest` today persists correctly but
- * will not be AI-analyzed, so `PPDTSubmissionResult` will show "pending
- * analysis" indefinitely for it.
- *
- * TAT reachability gap, named explicitly (this session's addition): exact
- * same shape as PPDT's gap immediately above -- `onNavigateToPhaseDetail`
- * isn't ported, so there is no in-graph path to *start* a new `TATTest`, and
- * the Android original's `TATSubmissionResultScreen` has no "retake"
- * callback either. `TATTest` is registered and fully functional if navigated
- * to directly; `TATSubmissionResult` is reachable via `StudentHomeScreen`'s
- * "view past TAT result" tile (`onNavigateToResult` with `TestType.TAT`).
- * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
- * applies -- a TAT submission persists but will not be AI-analyzed.
- *
- * WAT reachability gap, named explicitly (this session's addition): exact
- * same shape as TAT's gap immediately above -- `onNavigateToPhaseDetail`
- * isn't ported, so there is no in-graph path to *start* a new `WATTest`, and
- * the Android original's `WATSubmissionResultScreen` has no "retake"
- * callback either. `WATTest` is registered and fully functional if navigated
- * to directly; `WATSubmissionResult` is reachable via `StudentHomeScreen`'s
- * "view past WAT result" tile (`onNavigateToResult` with `TestType.WAT`).
- * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
- * applies -- a WAT submission persists but will not be AI-analyzed.
- *
- * SRT reachability gap, named explicitly (this session's addition): exact
- * same shape as WAT's gap immediately above -- `onNavigateToPhaseDetail`
- * isn't ported, so there is no in-graph path to *start* a new `SRTTest`, and
- * the Android original's `SRTSubmissionResultScreen` has no "retake"
- * callback either. `SRTTest` is registered and fully functional if navigated
- * to directly; `SRTSubmissionResult` is reachable via `StudentHomeScreen`'s
- * "view past SRT result" tile (`onNavigateToResult` with `TestType.SRT`).
- * Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] caveat
- * applies -- an SRT submission persists but will not be AI-analyzed.
- *
- * SDT reachability gap, named explicitly (this session's addition): exact
- * same shape as SRT's gap immediately above -- `onNavigateToPhaseDetail`
- * isn't ported, so there is no in-graph path to *start* a new `SDTest`, and
- * the Android original's `SDTSubmissionResultScreen` has no "retake"
- * callback either. `SDTest` is registered and fully functional if navigated
- * to directly; `SDSubmissionResult` is reachable via `StudentHomeScreen`'s
- * "view past SDT result" tile (`onNavigateToResult` with `TestType.SD` --
- * note the enum/route naming mismatch: the domain model calls this test type
- * `SD`, `SSBMaxDestinations` calls the routes `SDTest`/`SDSubmissionResult`,
- * but the actual code package/screens are `sdt`/`SDT*`, matching the
- * Android original's own naming -- reconciled here, not introduced by this
- * port). Same [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]
- * caveat applies -- an SDT submission persists but will not be AI-analyzed.
+ * OIR/PPDT/TAT/WAT/SRT/SDT/PIQ/GTO "start a new test" reachability, corrected
+ * (this note was stale in earlier sessions and is fixed here, not just
+ * re-copied forward): `StudentHomeScreen`'s `onNavigateToPhaseDetail` DOES
+ * navigate to the real, ported `Phase1DetailScreen`/`Phase2DetailScreen`
+ * (registered near the bottom of this file), whose own `onNavigateToTopic`
+ * navigates to the real, ported `TopicScreen`, whose own `onNavigateToTest`
+ * maps a `testId` string prefix to a real registered test route for OIR,
+ * PPDT, TAT, WAT, SRT, SD, PIQ, and all three GTO sub-tests (GD/Lecturette/
+ * GPE) plus Interview (`io` prefix) -- see `TopicScreen`'s own registration
+ * below for the exact prefix table. So Student Home -> Phase1/2Detail ->
+ * Topic -> a specific test IS a real, working "start a new test" path for
+ * every one of those test types today, not just a placeholder. The *other*
+ * path to a test-taking screen -- the bottom nav bar's "Tests" tab
+ * (`StudentTestsScreen`) -- does NOT yet do this mapping: its own
+ * `onNavigateToTest` always routes to `NotYetPorted` regardless of which
+ * test card was tapped (see its own registration below), matching a
+ * simplification already present in the Android original's own nav graph
+ * (`StudentTestsScreen.onNavigateToTest` isn't wired to anything in
+ * `SharedNavGraph.kt` either), not a new gap introduced by this port.
+ * Every test type's own result screen (`OIRTestResultScreen` excepted, which
+ * has a real "Retake Test" callback) still has no "retake" callback of its
+ * own, matching the Android originals exactly -- from a result screen, the
+ * only way back to a new test is via Student Home -> Phase1/2Detail -> Topic
+ * again, not a missing feature of this port. See
+ * [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]'s doc comment
+ * for a separate, still-open gap: a submission made via PPDT/TAT/WAT/SRT/SDT/
+ * GTO today persists correctly but is not yet AI-analyzed through this path,
+ * so its result screen will show "pending analysis" indefinitely. (Note the
+ * SDT enum/route naming mismatch, reconciled here not introduced by this
+ * port: the domain model calls this test type `SD`, `SSBMaxDestinations`
+ * calls the routes `SDTest`/`SDSubmissionResult`, but the actual code
+ * package/screens are `sdt`/`SDT*`, matching the Android original's own
+ * naming.)
  *
  * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
  * which has no other nav graph. On Android, this graph is NOT yet the
