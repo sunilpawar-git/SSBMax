@@ -30,9 +30,11 @@ import kotlinx.datetime.Clock
  * under this repo's 300-line limit.
  *
  * [checkPrerequisites]/[checkInterviewLimits] are kept as unconditional
- * `UnsupportedOperationException` stubs, identical to the Android original: real checks live in
- * `CheckInterviewPrerequisitesUseCase`/`CheckInterviewLimitsUseCase` (use-case layer, out of this
- * phase's repository-only scope), not dropped since the domain interface still declares them.
+ * `UnsupportedOperationException` stubs, identical to the Android original: [checkPrerequisites]'s
+ * real check lives in `CheckInterviewPrerequisitesUseCase` (use-case layer, out of this phase's
+ * repository-only scope); [checkInterviewLimits] has no such use-case anymore (its would-be
+ * use-case was confirmed dead code and deleted in the Phase 5 exit sweep) -- both stubs stay
+ * since the domain interface still declares them.
  */
 class GitLiveInterviewRepository(
     private val questionCacheRepository: QuestionCacheRepository,
@@ -50,7 +52,7 @@ class GitLiveInterviewRepository(
         Result.failure(UnsupportedOperationException("Use CheckInterviewPrerequisitesUseCase"))
 
     override suspend fun checkInterviewLimits(userId: String, mode: InterviewMode): Result<Boolean> =
-        Result.failure(UnsupportedOperationException("Use CheckInterviewLimitsUseCase"))
+        Result.failure(UnsupportedOperationException("checkInterviewLimits not implemented"))
 
     // ==================== Session Management ====================
 
