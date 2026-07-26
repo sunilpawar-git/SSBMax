@@ -7,19 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */; };
 		0A10BB2025684FE43AB60AAE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA4C4A74FBB745C68DA0941 /* ContentView.swift */; };
 		135B029D4A547E0911332BB1 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5BC58D6A473472F59BE040F5 /* FirebaseCore */; };
 		45CC1BB1D6854EEAE3ECCA94 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7A53FD79FB80A85AE16311 /* FirebaseAuth */; };
 		4CEA61298A30E62686B8FD82 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D01E028B85E0E71E07326C0 /* Foundation.framework */; };
 		D3204FBF30256FC4DB314B67 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */; };
 		F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */; };
+		7C2E9A1B4F6D4082A3B5E7D1 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */; };
+		9F3D8C2A5E1B4076B4C6D8F2 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */; };
+		2B6E7F1C3A9D4568B1C2E9A4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		0CA4C4A74FBB745C68DA0941 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8D01E028B85E0E71E07326C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		AA0EA979E474648E59EA28B7 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iosAppApp.swift; sourceTree = "<group>"; };
+		9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		2B6E7F1C3A9D4568B1C2E9A5 /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,6 +40,8 @@
 				45CC1BB1D6854EEAE3ECCA94 /* FirebaseAuth in Frameworks */,
 				D3204FBF30256FC4DB314B67 /* FirebaseFirestore in Frameworks */,
 				135B029D4A547E0911332BB1 /* FirebaseCore in Frameworks */,
+				7C2E9A1B4F6D4082A3B5E7D1 /* FirebaseStorage in Frameworks */,
+				9F3D8C2A5E1B4076B4C6D8F2 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,7 +60,11 @@
 			isa = PBXGroup;
 			children = (
 				F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */,
+				6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */,
 				0CA4C4A74FBB745C68DA0941 /* ContentView.swift */,
+				6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */,
+				2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */,
+				2B6E7F1C3A9D4568B1C2E9A5 /* GoogleService-Info.plist.example */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -75,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				8D01E028B85E0E71E07326C0 /* Foundation.framework */,
+				9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -88,6 +104,7 @@
 			buildPhases = (
 				B8C431142ABC21C52E814650 /* Sources */,
 				0A28B3FEF0680FA1BF3AF3E8 /* Frameworks */,
+				4D8A2C6E9F1B4573A0D3E8B6 /* Ensure GoogleService-Info.plist */,
 				9C4A2FC96D375558B850985E /* Resources */,
 			);
 			buildRules = (
@@ -99,6 +116,7 @@
 				1C7A53FD79FB80A85AE16311 /* FirebaseAuth */,
 				85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */,
 				5BC58D6A473472F59BE040F5 /* FirebaseCore */,
+				7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */,
 			);
 			productName = iosApp;
 			productReference = AA0EA979E474648E59EA28B7 /* iosApp.app */;
@@ -140,10 +158,30 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B6E7F1C3A9D4568B1C2E9A4 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4D8A2C6E9F1B4573A0D3E8B6 /* Ensure GoogleService-Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/iosApp/GoogleService-Info.plist.example",
+			);
+			name = "Ensure GoogleService-Info.plist";
+			outputPaths = (
+				"$(SRCROOT)/iosApp/GoogleService-Info.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Phase 6 (KMP migration plan, item 1): GoogleService-Info.plist is a\n# real Firebase credential and is gitignored, same treatment as\n# app/google-services.json on the Android side -- it will not exist in a\n# fresh checkout. Auto-provision the checked-in placeholder template so\n# the build still compiles/runs against Compose UI, and loudly (but\n# non-fatally, matching the Android side's own gap) warn if the resolved\n# file is still the placeholder, so live Firebase calls failing at\n# runtime is never a silent surprise.\nPLIST=\"${SRCROOT}/iosApp/GoogleService-Info.plist\"\nEXAMPLE=\"${SRCROOT}/iosApp/GoogleService-Info.plist.example\"\nif [ ! -f \"$PLIST\" ]; then\n  cp \"$EXAMPLE\" \"$PLIST\"\n  echo \"warning: GoogleService-Info.plist was missing -- copied the placeholder template. Live iOS Firebase (Auth/Firestore/Storage) calls will fail until you replace it with a real file from the Firebase console. See iosApp/iosApp/GoogleService-Info.plist.example for exact steps.\"\nfi\nif grep -q \"REPLACE_WITH_REAL\" \"$PLIST\"; then\n  echo \"warning: GoogleService-Info.plist still contains placeholder values -- live iOS Firebase (Auth/Firestore/Storage) calls will fail. See iosApp/iosApp/GoogleService-Info.plist.example for exact Firebase console steps.\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B8C431142ABC21C52E814650 /* Sources */ = {
@@ -151,6 +189,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */,
+				6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */,
 				0A10BB2025684FE43AB60AAE /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -289,6 +328,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CCVJR9P725;
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
@@ -310,7 +350,7 @@
 					"-framework",
 					SharedKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ssbmax.spike.iosApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ssbmax;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -325,6 +365,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CCVJR9P725;
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
@@ -346,7 +387,7 @@
 					"-framework",
 					SharedKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ssbmax.spike.iosApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ssbmax;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -403,6 +444,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

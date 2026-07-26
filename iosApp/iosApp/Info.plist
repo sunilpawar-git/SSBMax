@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>com.ssbmax.spike.iosApp</string>
+    <string>com.ssbmax</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -15,7 +15,7 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.0.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
@@ -25,6 +25,25 @@
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <!-- Phase 6: real BGTaskScheduler identifiers, must exactly match the
+         constants in shared/src/iosMain/.../BGTaskSchedulerBackgroundTaskScheduler.kt
+         (CLEANUP_TASK_ID / ARCHIVAL_TASK_ID) -- registration in
+         AppDelegate.swift will silently no-op at the OS level if these
+         drift out of sync. -->
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.ssbmax.questioncachecleanup</string>
+        <string>com.ssbmax.submissionarchival</string>
+    </array>
+    <!-- "fetch"/"processing" let the two BGTaskScheduler jobs above actually
+         run in the background at all; "remote-notification" lets a
+         content-available APNs push wake the app for silent updates. -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+        <string>remote-notification</string>
     </array>
 </dict>
 </plist>

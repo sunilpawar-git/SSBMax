@@ -90,6 +90,11 @@ firebase-admin-key.json
 app/google-services.json
 core/**/google-services.json
 
+# iOS Firebase config (KMP migration Phase 6) -- same "real secret, never
+# committed" treatment as google-services.json above. The checked-in
+# GoogleService-Info.plist.example is a placeholder template, not this.
+iosApp/iosApp/GoogleService-Info.plist
+
 # Freeline
 freeline.py
 freeline/

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Phase 6 (KMP migration plan, item 1: "iOS GoogleService-Info.plist not
+	registered"). This is a TEMPLATE, not a real config -- every value below
+	is an obvious placeholder, not a real (if unused) credential. Mirrors
+	how app/google-services.json is handled for Android: a real Firebase
+	config file is never committed to git (see .gitignore), only this
+	example template is.
+
+	TO MAKE THIS REAL (steps a human must do in the Firebase console --
+	no code change can substitute for this):
+	  1. Go to https://console.firebase.google.com and open this app's
+	     existing Firebase project (the same one app/google-services.json
+	     already points at for Android -- check its "project_id" if unsure
+	     which project).
+	  2. Project Settings -> "Add app" -> iOS. Use bundle ID `com.ssbmax`
+	     (must exactly match PRODUCT_BUNDLE_IDENTIFIER in
+	     iosApp/iosApp.xcodeproj/project.pbxproj, both Debug and Release
+	     configurations -- Phase 6 already set both to `com.ssbmax`).
+	  3. Download the real GoogleService-Info.plist Firebase generates.
+	  4. Copy it to iosApp/iosApp/GoogleService-Info.plist (same directory
+	     as this file, NOT committed -- .gitignore already covers this
+	     exact path).
+	  5. Re-open/re-resolve the Xcode project; the file is already wired
+	     into the app target's Resources build phase (Phase 6), and a
+	     Run Script build phase will stop warning about a placeholder once
+	     it detects your real file replaced this template's sentinel
+	     values.
+
+	Until that's done, iOS builds compile and run against Compose UI, but
+	any live Firebase Auth/Firestore/Storage call from the iOS target will
+	fail at runtime (the underlying native SDK has no real project to talk
+	to) -- this is a real, human-owned gap, not a code-level one, and is
+	tracked as such in docs/architecture/iOS_Store_Readiness.md.
+	-->
+	<key>API_KEY</key>
+	<string>REPLACE_WITH_REAL_IOS_API_KEY_FROM_FIREBASE_CONSOLE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>REPLACE_WITH_REAL_PROJECT_NUMBER</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.ssbmax</string>
+	<key>PROJECT_ID</key>
+	<string>REPLACE_WITH_REAL_FIREBASE_PROJECT_ID</string>
+	<key>STORAGE_BUCKET</key>
+	<string>REPLACE_WITH_REAL_PROJECT_ID.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<false/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:REPLACE_WITH_REAL_PROJECT_NUMBER:ios:REPLACE_WITH_REAL_APP_ID_SUFFIX</string>
+</dict>
+</plist>
