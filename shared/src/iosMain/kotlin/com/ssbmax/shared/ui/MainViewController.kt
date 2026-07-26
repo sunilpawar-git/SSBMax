@@ -6,15 +6,18 @@ import androidx.compose.ui.window.ComposeUIViewController
 import androidx.navigation.compose.rememberNavController
 import com.ssbmax.navigation.SSBMaxNavHost
 import com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher
+import com.ssbmax.shared.platform.ensureKoinStarted
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
 import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
-import org.koin.core.context.startKoin
 
 /**
- * iOS entry point. `startKoin` is called lazily on first invocation
- * (guarded) rather than from a platform-specific Application/AppDelegate
- * lifecycle hook, since this app has none yet — Phase 6 will need a proper
- * iOS lifecycle-integrated Koin bootstrap.
+ * iOS entry point. Koin is started via [ensureKoinStarted] -- as of Phase 6,
+ * the real bootstrap happens earlier, from `AppDelegate.swift`'s
+ * `application(_:didFinishLaunchingWithOptions:)` (needed before
+ * `BGTaskScheduler` registration/APNs token hand-off, both Koin-dependent).
+ * The call here is a guarded no-op in that case; kept as a defensive
+ * fallback for any future entry point that renders this Composable without
+ * going through `AppDelegate` first.
  *
  * Phase 5: renders the real [SSBMaxNavHost] wrapped in [SSBMaxAppScaffold]
  * (this session's nav-chrome addition -- drawer + bottom nav bar) instead of
@@ -29,15 +32,8 @@ import org.koin.core.context.startKoin
  * equivalent `ActivityResultLauncher` lifecycle constraint, so it's
  * constructed inline rather than needing an earlier registration hook.
  */
-private var koinStarted = false
-
 fun MainViewController() = ComposeUIViewController {
-    if (!koinStarted) {
-        startKoin {
-            modules(com.ssbmax.shared.di.sharedModule)
-        }
-        koinStarted = true
-    }
+    ensureKoinStarted()
     MaterialTheme {
         CompositionLocalProvider(
             LocalGoogleSignInLauncher provides IosGoogleSignInLauncher()
