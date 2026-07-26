@@ -49,7 +49,6 @@ class GTOSequentialAccessManager(
                 true to null
             } else {
                 // User is missing prerequisite tests
-                val missingNames = missingTests.joinToString(", ") { it.displayName }
                 val message = buildAccessDeniedMessage(testType, missingTests)
                 false to message
             }

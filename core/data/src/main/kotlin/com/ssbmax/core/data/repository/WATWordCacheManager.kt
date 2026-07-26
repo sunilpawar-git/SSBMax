@@ -19,7 +19,6 @@ class WATWordCacheManager(
     companion object {
         private const val TAG = "WATCacheManager"
         private const val COLLECTION_PATH = "test_content/wat/word_batches"
-        private const val METADATA_PATH = "test_content/wat/meta"
         private const val TARGET_CACHE_SIZE = 60 // Full WAT test size
         private const val MIN_CACHE_SIZE = 20 // Minimum before resyncing
     }

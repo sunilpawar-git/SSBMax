@@ -18,7 +18,6 @@ class InterviewQuestionCacheManager(
     companion object {
         private const val TAG = "InterviewCacheManager"
         private const val COLLECTION_PATH = "test_content/interview/question_batches"
-        private const val METADATA_PATH = "test_content/interview/meta"
         private const val TARGET_CACHE_SIZE = 50 // Comprehensive interview prep
         private const val MIN_CACHE_SIZE = 15 // Minimum before resyncing
     }

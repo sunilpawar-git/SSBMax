@@ -48,9 +48,7 @@ class GTOAnalysisWorker(context: Context, params: WorkerParameters) :
         
         // Retry configuration
         private const val MAX_AI_RETRIES = 3
-        
-        // API call delays
-        private const val API_CALL_DELAY_MS = 1000L
+
         private const val FALLBACK_CONFIDENCE = 30 // Low confidence for fallback scores
     }
 

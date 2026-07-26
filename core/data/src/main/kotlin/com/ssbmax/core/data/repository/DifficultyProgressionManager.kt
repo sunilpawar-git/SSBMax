@@ -24,9 +24,6 @@ class DifficultyProgressionManager(
         // Progression thresholds
         private const val MIN_ATTEMPTS_FOR_PROGRESSION = 10
         private const val ACCURACY_THRESHOLD = 80f // 80% accuracy required
-        
-        // Difficulty levels in order
-        private val DIFFICULTY_ORDER = listOf("EASY", "MEDIUM", "HARD")
     }
     
     /**

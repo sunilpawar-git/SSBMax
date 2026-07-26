@@ -18,10 +18,6 @@ class PIQSubmissionResultViewModel(
     private val _uiState = MutableStateFlow(PIQSubmissionResultUiState())
     val uiState: StateFlow<PIQSubmissionResultUiState> = _uiState.asStateFlow()
 
-    companion object {
-        private const val TAG = "PIQResultViewModel"
-    }
-
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }

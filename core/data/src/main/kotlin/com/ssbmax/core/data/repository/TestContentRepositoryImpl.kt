@@ -30,15 +30,11 @@ class TestContentRepositoryImpl(
     private val gpeCache = ConcurrentHashMap<String, List<GPEQuestion>>()
     private val watCache = ConcurrentHashMap<String, List<WATWord>>()
     private val srtCache = ConcurrentHashMap<String, List<SRTSituation>>()
-    
-    private val testsCollection = firestore.collection("tests")
-    
+
     companion object {
         private const val TAG = "TestContent"
         private const val COLLECTION_TEST_CONTENT = "test_content"
         private const val PATH_GTO = "gto"
-        private const val PATH_TOPICS = "topics"
-        private const val PATH_BATCHES = "batches"
         private const val DEFAULT_BATCH_ID = "batch_001"
     }
 

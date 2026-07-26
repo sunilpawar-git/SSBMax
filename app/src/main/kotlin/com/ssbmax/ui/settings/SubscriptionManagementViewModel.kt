@@ -26,11 +26,7 @@ class SubscriptionManagementViewModel(
     
     private val _uiState = MutableStateFlow(SubscriptionManagementUiState())
     val uiState: StateFlow<SubscriptionManagementUiState> = _uiState.asStateFlow()
-    
-    companion object {
-        private const val TAG = "SubscriptionVM"
-    }
-    
+
     fun loadSubscriptionData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }

@@ -323,16 +323,6 @@ class SubscriptionManager(
         return dateFormat.format(calendar.time)
     }
     
-    private suspend fun createNewMonthUsage(userId: String, month: String): TestUsageEntity {
-        val newUsage = TestUsageEntity(
-            id = "${userId}_$month",
-            userId = userId,
-            month = month
-        )
-        testUsageDao.insertOrReplace(newUsage)
-        return newUsage
-    }
-    
     /**
      * Get usage from Firestore (server-side source of truth)
      * SECURITY: Cannot be bypassed by clearing app cache

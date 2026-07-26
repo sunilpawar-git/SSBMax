@@ -40,7 +40,6 @@ class SRTSituationCacheDaoTest {
 
     @Test
     fun insertAndGetLeastUsed_ordersByUsageThenLastUsed() = runTest {
-        val now = 10L
         val situations = listOf(
             entity(id = "a", usage = 2, lastUsed = 5L),
             entity(id = "b", usage = 0, lastUsed = 1L),

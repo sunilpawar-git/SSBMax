@@ -18,7 +18,6 @@ class GTOTaskCacheManager(
     companion object {
         private const val TAG = "GTOCacheManager"
         private const val COLLECTION_PATH = "test_content/gto/task_batches"
-        private const val METADATA_PATH = "test_content/gto/meta"
         private const val TARGET_CACHE_SIZE = 40 // Multiple GTO tasks
         private const val MIN_CACHE_SIZE = 10 // Minimum before resyncing
     }

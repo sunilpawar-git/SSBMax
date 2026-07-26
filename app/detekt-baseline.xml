@@ -9,13 +9,12 @@
     <ID>ComplexCondition:OIRTestViewModel.kt$OIRTestViewModel$isActive &amp;&amp; _uiState.value.isTimerActive &amp;&amp; _uiState.value.timeRemainingSeconds &gt; 0 &amp;&amp; !_uiState.value.isCompleted</ID>
     <ID>ComplexCondition:TestResultHandler.kt$TestResultHandler$testType == TestType.OIR || testType == TestType.PPDT || testType == TestType.TAT || testType == TestType.WAT || testType == TestType.PIQ || testType == TestType.GTO_GD || testType == TestType.GTO_LECTURETTE || testType == TestType.GTO_GPE</ID>
     <ID>ComplexCondition:WATTestViewModel.kt$WATTestViewModel$!state.isLoading &amp;&amp; state.phase == WATPhase.IN_PROGRESS &amp;&amp; state.timeRemaining &gt; 0 &amp;&amp; !state.isTimerActive</ID>
-    <ID>CyclomaticComplexMethod:AndroidTTSService.kt$AndroidTTSService$private fun selectBestVoice(tts: TextToSpeech)</ID>
     <ID>CyclomaticComplexMethod:DashboardTestScoreChip.kt$@Composable fun TestScoreChip( testName: String, score: Float?, isOLQBased: Boolean = true, isRefreshing: Boolean = false, onClick: (() -&gt; Unit)? = null )</ID>
-    <ID>CyclomaticComplexMethod:GDTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: GDTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>CyclomaticComplexMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:GDTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: GDTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:InterviewAnalysisWorker.kt$InterviewAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>CyclomaticComplexMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = hiltViewModel() )</ID>
-    <ID>CyclomaticComplexMethod:LecturetteTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = koinViewModel() )</ID>
+    <ID>CyclomaticComplexMethod:LecturetteTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MarkdownText.kt$@Composable fun MarkdownText( content: String, modifier: Modifier = Modifier, textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant )</ID>
     <ID>CyclomaticComplexMethod:OIRSubmissionResultViewModel.kt$OIRSubmissionResultViewModel$private fun parseOIRTestResult(data: Map&lt;String, Any&gt;): OIRTestResult?</ID>
     <ID>CyclomaticComplexMethod:PIQSubmissionResultViewModel.kt$PIQSubmissionResultViewModel$private fun parsePIQSubmission(data: Map&lt;String, Any&gt;): PIQSubmission?</ID>
@@ -27,19 +26,18 @@
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$private fun parseSDTSubmission(data: Map&lt;String, Any&gt;): SDTSubmission?</ID>
-    <ID>CyclomaticComplexMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:SRTAnalysisWorker.kt$SRTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$private fun parseSRTSubmission(data: Map&lt;String, Any&gt;): SRTSubmission?</ID>
-    <ID>CyclomaticComplexMethod:SRTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SRTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SRTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:SRTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SRTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SRTTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:SharedNavGraph.kt$fun NavGraphBuilder.sharedNavGraph( navController: NavHostController )</ID>
     <ID>CyclomaticComplexMethod:StudentNavGraph.kt$fun NavGraphBuilder.studentNavGraph( navController: NavHostController, onOpenDrawer: () -&gt; Unit )</ID>
-    <ID>CyclomaticComplexMethod:TATAnalysisWorker.kt$TATAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>CyclomaticComplexMethod:TATSubmissionResultViewModel.kt$TATSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
     <ID>CyclomaticComplexMethod:TATSubmissionResultViewModel.kt$TATSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:TATSubmissionResultViewModel.kt$TATSubmissionResultViewModel$private fun parseTATSubmission(data: Map&lt;String, Any&gt;): TATSubmission?</ID>
-    <ID>CyclomaticComplexMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>CyclomaticComplexMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:TopicScreen.kt$private fun getTestColor(testType: TestType): Color</ID>
     <ID>CyclomaticComplexMethod:UpgradeScreen.kt$@Composable private fun AnimatedPlanCard( plan: SubscriptionPlan, currentTier: SubscriptionTier, selectedBillingCycle: BillingCycle, isVisible: Boolean, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:WATSubmissionResultViewModel.kt$WATSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
@@ -47,8 +45,6 @@
     <ID>CyclomaticComplexMethod:WATSubmissionResultViewModel.kt$WATSubmissionResultViewModel$private fun parseWATSubmission(data: Map&lt;String, Any&gt;): WATSubmission?</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:SSBRecommendationBanner.kt$val (backgroundColor, gradientColors, iconTint, icon) = when (model.recommendation) { RecommendationOutcome.RECOMMENDED -&gt; Quadruple( Color(0xFF1B5E20), // Dark green listOf(Color(0xFF2E7D32), Color(0xFF1B5E20)), Color.White, Icons.Default.CheckCircle ) RecommendationOutcome.BORDERLINE -&gt; Quadruple( Color(0xFFF57F17), // Dark amber listOf(Color(0xFFFFA000), Color(0xFFF57F17)), Color.White, Icons.Default.Warning ) RecommendationOutcome.NOT_RECOMMENDED -&gt; Quadruple( Color(0xFFB71C1C), // Dark red listOf(Color(0xFFC62828), Color(0xFFB71C1C)), Color.White, Icons.Default.Cancel ) }</ID>
     <ID>ForbiddenComment:BatchDetailScreen.kt$* Batch Detail Screen * * Shows detailed information about a specific batch * Allows managing batch members, assignments, and performance * * TODO: Implement full functionality with BatchRepository * - Load batch details from Firestore (name, description, members) * - Display member list with performance summary * - Show batch-wide analytics (average scores, completion rates) * - Edit batch details (name, description) * - Add/remove members * - Assign tests to entire batch * - Archive/delete batch</ID>
-    <ID>ForbiddenComment:BillingRepository.kt$BillingRepository$* Mock Billing Repository * TODO: Replace with real Google Play Billing when ready for production</ID>
-    <ID>ForbiddenComment:BillingRepository.kt$ProductInfo$* Mock product info * TODO: Replace with real ProductDetails from Google Play Billing</ID>
     <ID>ForbiddenComment:CreateBatchScreen.kt$* Create Batch Screen * * Allows instructors to create new student batches/groups * Batches help organize students for group assessments and tracking * * TODO: Implement full functionality with BatchRepository * - Form to create batch (name, description, capacity) * - Add students to batch (search, select multiple) * - Set batch metadata (start date, end date, goals) * - Assign default tests to batch * - Save to Firestore</ID>
     <ID>ForbiddenComment:GPETestScreen.kt$// TODO: Navigate to upgrade screen</ID>
     <ID>ForbiddenComment:GPETestViewModel.kt$GPETestViewModel$// TODO: Save session state</ID>
@@ -56,7 +52,7 @@
     <ID>ForbiddenComment:InstructorHomeViewModel.kt$InstructorHomeViewModel$// TODO: Load batches and students from BatchRepository</ID>
     <ID>ForbiddenComment:InstructorStudentsScreen.kt$* Instructor Students Screen * * Shows list of all students in instructor's batches * Allows filtering, searching, and viewing individual student details * * TODO: Implement full functionality with StudentRepository * - Load students from Firestore * - Search and filter functionality * - Click to view student detail * - Batch filtering</ID>
     <ID>ForbiddenComment:InterviewQuestionGenerationWorker.kt$InterviewQuestionGenerationWorker$// TODO: Implement notification (future enhancement)</ID>
-    <ID>ForbiddenComment:MarketplaceViewModel.kt$MarketplaceViewModel$* ViewModel for Marketplace Screen * Manages coaching institute listings, filters, and search * * Note: Marketplace feature currently uses mock data (MarketplaceMockData) * TODO: Create MarketplaceRepository when backend API is ready * TODO: Integrate with payment gateway for bookings * TODO: Add user reviews and ratings system</ID>
+    <ID>ForbiddenComment:MarketplaceViewModel.kt$MarketplaceViewModel$* ViewModel for Marketplace Screen * Manages coaching institute listings, filters, and search * * Note: Marketplace feature currently uses mock data (MarketplaceMockData) * TODO: Create MarketplaceRepository when backend API is ready * TODO: Integrate with payment gateway for bookings * TODO: Add user reviews and ratings system * * Marketplace backend not yet implemented — using MarketplaceMockData for UI development.</ID>
     <ID>ForbiddenComment:NotificationHelperTest.kt$NotificationHelperTest$* NotificationHelperTest - temporarily ignored due to Robolectric SDK version mismatch * TODO: Re-enable when Robolectric supports SDK 35</ID>
     <ID>ForbiddenComment:PIQTestViewModel.kt$PIQTestViewModel$// TODO: Extract actual OIR number from OIR test result when available</ID>
     <ID>ForbiddenComment:PIQTestViewModel.kt$PIQTestViewModel$// TODO: Implement draft loading from Firestore</ID>
@@ -67,23 +63,12 @@
     <ID>ForbiddenComment:SRTTestScreen.kt$// TODO: Navigate to upgrade screen</ID>
     <ID>ForbiddenComment:SRTTestViewModel.kt$SRTTestViewModel$// TODO: Track actual time</ID>
     <ID>ForbiddenComment:SRTTestViewModelTest.kt$SRTTestViewModelTest$* Unit tests for SRTTestViewModel * Tests situation loading, response handling, navigation, and submission * * NOTE: This file is 920 lines and violates the 300-line limit. * TODO: Split into multiple focused test files: * - SRTTestViewModelLoadingTest.kt (loading &amp; setup tests) * - SRTTestViewModelNavigationTest.kt (navigation &amp; response handling) * - SRTTestViewModelSubmissionTest.kt (submission &amp; analytics) * - SRTTestViewModelLimitsTest.kt (subscription limits) * * @Ignore - Tests timeout because: * 1. startTest() launches a 30-minute timer coroutine that uses delay(500) in a loop * 2. submitTest() does NOT cancel the timer * 3. Tests hang waiting for timer to complete * * ROOT CAUSE: Production bug - SRTTestViewModel.submitTest() should call timerJob?.cancel() * * TEMPORARY FIX OPTIONS: * - Option A: Add timerJob?.cancel() at start of submitTest() in SRTTestViewModel.kt * - Option B: Refactor tests to not call startTest() unless testing timer-specific behavior * - Option C: Inject a test-friendly time source (Clock) to control time in tests</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* Disconnects from billing client. * TODO: Clean up billing connection</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* Initializes the billing client connection. * TODO: Connect to Google Play Billing</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* Launches purchase flow for a subscription. * TODO: Implement purchase flow</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* Queries available subscription products. * TODO: Query BASIC and PREMIUM subscription SKUs</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* SSBMax Billing Client * * Manages Google Play Billing integration for subscription management. * * TODO: Implement full billing flow in Phase 4: * - Initialize BillingClient * - Query available subscriptions * - Handle purchase flow * - Verify purchases * - Handle subscription upgrades/downgrades * - Restore purchases * * @see com.ssbmax.subscription.SubscriptionManager for current subscription logic</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$* Verifies an existing purchase. * TODO: Implement purchase verification</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$// TODO: Implement billing client initialization</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$// TODO: Implement cleanup</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$// TODO: Implement purchase flow</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$// TODO: Implement purchase verification</ID>
-    <ID>ForbiddenComment:SSBMaxBillingClient.kt$SSBMaxBillingClient$// TODO: Implement subscription query</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$* Firebase Cloud Messaging Service for SSBMax * Handles incoming push notifications from Firebase * * Note: Firebase services can't use constructor injection easily. * For now, notifications are handled directly in this service. * * TODO: Create NotificationRepository for: * - Saving notification history to local/remote database * - Tracking notification read/unread status * - Managing notification preferences * - Syncing FCM tokens to Firestore * * TODO: Consider using WorkManager for: * - Handling notifications when app is killed * - Background notification processing * - Retry logic for failed operations</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Add specific icons for each type</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Save notification to local database via NotificationRepository</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Send token to NotificationRepository to save in Firestore</ID>
     <ID>ForbiddenComment:SSBOverviewScreen.kt$/* TODO: Open video */</ID>
-    <ID>ForbiddenComment:SSBOverviewViewModel.kt$SSBOverviewViewModel$* ViewModel for SSB Overview Screen * Manages informational content about SSB selection process * * Note: SSB overview content is currently code-based (SSBContentProvider) * This is appropriate for static educational content that rarely changes. * TODO: Consider CMS integration if content needs frequent updates</ID>
+    <ID>ForbiddenComment:SSBOverviewViewModel.kt$SSBOverviewViewModel$* ViewModel for SSB Overview Screen * Manages informational content about SSB selection process * * Note: SSB overview content is currently code-based (SSBContentProvider) * This is appropriate for static educational content that rarely changes. * TODO: Consider CMS integration if content needs frequent updates * * SSB overview content is static/educational, loaded from SSBContentProvider — * no repository needed unless content becomes dynamic/user-specific.</ID>
     <ID>ForbiddenComment:SettingsScreen.kt$// TODO: Open email intent</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Handle notification deep linking</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Implement GTOTestScreen</ID>
@@ -112,7 +97,6 @@
     <ID>ForbiddenComment:UpgradeViewModel.kt$UpgradeViewModel$// TODO: Migrate to Google Play Billing Library for production</ID>
     <ID>ForbiddenComment:UpgradeViewModel.kt$UpgradeViewModel$// TODO: Migrate to Google Play Billing Library for production - prices will be fetched from Play Console</ID>
     <ID>ForbiddenComment:WATTestScreen.kt$// TODO: Navigate to upgrade screen</ID>
-    <ID>FunctionOnlyReturningConstant:SSBMaxDestinations.kt$SSBMaxDestinations.UserProfile$fun createOnboardingRoute()</ID>
     <ID>FunctionOnlyReturningConstant:SSBMaxScaffold.kt$private fun shouldShowBottomBar(route: String): Boolean</ID>
     <ID>ImplicitDefaultLocale:GPEComponents.kt$String.format("%02d:%02d", minutes, seconds)</ID>
     <ID>ImplicitDefaultLocale:MarketplaceScreen.kt$String.format("%.1f", rating)</ID>
@@ -124,43 +108,43 @@
     <ID>LongMethod:DrawerContent.kt$@Composable fun DrawerContent( currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:DrawerHeader.kt$@Composable fun DrawerHeader( userProfile: UserProfile?, isLoading: Boolean = false, onEditProfile: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:FAQContentProvider.kt$FAQContentProvider$fun getFAQItems(): List&lt;FAQItem&gt;</ID>
-    <ID>LongMethod:GDResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit, viewModel: GDResultViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:GDResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit, viewModel: GDResultViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GDTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun DiscussionPhase( topic: String, response: String, charCount: Int, timeRemaining: String, isTimeLow: Boolean, onResponseChanged: (String) -&gt; Unit, onProceedToReview: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
     <ID>LongMethod:GDTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructionsPhase( onStart: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
     <ID>LongMethod:GDTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ReviewPhase( topic: String, response: String, charCount: Int, isSubmitting: Boolean, onBackToDiscussion: () -&gt; Unit, onSubmit: () -&gt; Unit )</ID>
-    <ID>LongMethod:GDTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: GDTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:GDTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: GDTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GPEImageViewingPhase.kt$@Composable fun GPEImageViewingPhase( imageUrl: String, timeRemainingSeconds: Int )</ID>
     <ID>LongMethod:GPEInstructionsPhase.kt$@Composable fun GPEInstructionsPhase(onStart: () -&gt; Unit)</ID>
     <ID>LongMethod:GPEPlanningPhase.kt$@Composable fun GPEPlanningPhase( planningResponse: String, onPlanningResponseChange: (String) -&gt; Unit, charactersCount: Int, minCharacters: Int, maxCharacters: Int, scenario: String, resources: List&lt;String&gt;, imageUrl: String )</ID>
     <ID>LongMethod:GPEReviewPhase.kt$@Composable fun GPEReviewPhase( imageUrl: String, scenario: String, resources: List&lt;String&gt;, planningResponse: String, charactersCount: Int, onEdit: () -&gt; Unit )</ID>
-    <ID>LongMethod:GPESubmissionResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPESubmissionResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit, viewModel: GPESubmissionResultViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:GPESubmissionResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPESubmissionResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit, viewModel: GPESubmissionResultViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GPETestViewModel.kt$GPETestViewModel$fun loadTest(testId: String = "gpe_standard")</ID>
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGDPrompt(submission: GTOSubmission.GDSubmission): String</ID>
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String</ID>
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateLecturettePrompt(submission: GTOSubmission.LecturetteSubmission): String</ID>
     <ID>LongMethod:GTOAnalysisWorker.kt$GTOAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:InstructorHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructorHomeScreen( viewModel: InstructorHomeViewModel = hiltViewModel(), onNavigateToStudent: (String) -&gt; Unit, onNavigateToGrading: () -&gt; Unit, onNavigateToBatchDetail: (String) -&gt; Unit, onNavigateToCreateBatch: () -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:InstructorHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructorHomeScreen( viewModel: InstructorHomeViewModel = koinViewModel(), onNavigateToStudent: (String) -&gt; Unit, onNavigateToGrading: () -&gt; Unit, onNavigateToBatchDetail: (String) -&gt; Unit, onNavigateToCreateBatch: () -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:InstructorHomeViewModel.kt$InstructorHomeViewModel$private fun loadInstructorData()</ID>
     <ID>LongMethod:InstructorNavGraph.kt$fun NavGraphBuilder.instructorNavGraph( navController: NavHostController, onOpenDrawer: () -&gt; Unit )</ID>
     <ID>LongMethod:InterviewAnalysisWorker.kt$InterviewAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:InterviewResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewResultScreen( resultId: String, onNavigateBack: () -&gt; Unit, viewModel: InterviewResultViewModel = hiltViewModel() )</ID>
-    <ID>LongMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:InterviewResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewResultScreen( resultId: String, onNavigateBack: () -&gt; Unit, viewModel: InterviewResultViewModel = koinViewModel() )</ID>
+    <ID>LongMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = koinViewModel() )</ID>
     <ID>LongMethod:LecturetteResultContent.kt$@Composable fun LecturetteResultContent( submission: GTOSubmission.LecturetteSubmission, result: GTOResult?, ssbRecommendation: SSBRecommendationUIModel?, isAnalyzing: Boolean, isFailed: Boolean, formattedTimeSpent: String, onNavigateHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:LecturetteTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructionsPhase( onStart: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
     <ID>LongMethod:LecturetteTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ReviewPhase( selectedTopic: String, speechTranscript: String, charCount: Int, isSubmitting: Boolean, onBackToSpeech: () -&gt; Unit, onSubmit: () -&gt; Unit )</ID>
     <ID>LongMethod:LecturetteTestPhases.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SpeechPhase( selectedTopic: String, speechTranscript: String, charCount: Int, timeRemaining: String, isTimeLow: Boolean, onTranscriptChanged: (String) -&gt; Unit, onProceedToReview: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
-    <ID>LongMethod:LecturetteTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen( viewModel: AuthViewModel = hiltViewModel(), onLoginSuccess: () -&gt; Unit = {}, onNeedsRoleSelection: () -&gt; Unit = {}, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:LecturetteTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:LoginScreen.kt$@Composable fun LoginScreen( viewModel: AuthViewModel = koinViewModel(), onLoginSuccess: () -&gt; Unit = {}, onNeedsRoleSelection: () -&gt; Unit = {}, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:MarkdownText.kt$@Composable fun MarkdownText( content: String, modifier: Modifier = Modifier, textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant )</ID>
     <ID>LongMethod:MarketplaceMockData.kt$MarketplaceMockData$fun getInstitutes(): List&lt;CoachingInstitute&gt;</ID>
     <ID>LongMethod:MarketplaceScreen.kt$@Composable fun InstituteCard( institute: CoachingInstitute, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:MarketplaceScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MarketplaceScreen( onNavigateBack: () -&gt; Unit, onInstituteClick: (String) -&gt; Unit = {}, viewModel: MarketplaceViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:MarketplaceScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MarketplaceScreen( onNavigateBack: () -&gt; Unit, onInstituteClick: (String) -&gt; Unit = {}, viewModel: MarketplaceViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:MemoryLeakTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) /** * Debug screen for memory leak verification * * ONLY AVAILABLE IN DEBUG BUILDS * * Use this screen to: * 1. Run controlled leak test scenarios * 2. Monitor memory usage with Android Profiler * 3. Verify that ViewModels are properly cleaned up * * To access: Add to navigation graph in debug builds only */ @Composable fun MemoryLeakTestScreen( viewModel: MemoryLeakTestViewModel = viewModel(), onNavigateBack: () -&gt; Unit = {} )</ID>
     <ID>LongMethod:MockPaymentScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MockPaymentScreen( plan: SubscriptionPlan, onPaymentSuccess: () -&gt; Unit, onNavigateBack: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:NotificationSettingsSection.kt$@Composable private fun NotificationSettingsSectionContent( preferences: NotificationPreferences?, onTogglePushNotifications: (Boolean) -&gt; Unit, onToggleGradingComplete: (Boolean) -&gt; Unit, onToggleFeedbackAvailable: (Boolean) -&gt; Unit, onToggleBatchInvitation: (Boolean) -&gt; Unit, onToggleGeneralAnnouncement: (Boolean) -&gt; Unit, onToggleStudyReminders: (Boolean) -&gt; Unit, onToggleTestReminders: (Boolean) -&gt; Unit, onToggleMarketplaceUpdates: (Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:OIRSubmissionResultViewModel.kt$OIRSubmissionResultViewModel$private fun parseOIRTestResult(data: Map&lt;String, Any&gt;): OIRTestResult?</ID>
-    <ID>LongMethod:OIRTestResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun OIRTestResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit = {}, onRetakeTest: () -&gt; Unit = {}, onReviewAnswers: () -&gt; Unit = {}, viewModel: OIRSubmissionResultViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:OIRTestResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun OIRTestResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit = {}, onRetakeTest: () -&gt; Unit = {}, onReviewAnswers: () -&gt; Unit = {}, viewModel: OIRSubmissionResultViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:OLQDashboardCard.kt$@Composable fun OLQDashboardCard( processedData: ProcessedDashboardData, onNavigateToResult: (TestType, String) -&gt; Unit = { _, _ -&gt; }, isLoading: Boolean = false, isRefreshing: Boolean = false, onRefresh: () -&gt; Unit = {}, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:PIQReviewScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PIQReviewScreen( answers: Map&lt;String, String&gt;, onEdit: (PIQPage) -&gt; Unit, onSubmit: () -&gt; Unit, onBack: () -&gt; Unit )</ID>
     <ID>LongMethod:PIQSubmissionResultScreen.kt$@Composable private fun ResultContent( submissionId: String, aiScore: PIQAIScore?, onNavigateHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -168,21 +152,21 @@
     <ID>LongMethod:PIQSubmissionResultViewModelTest.kt$PIQSubmissionResultViewModelTest$private fun createMockSubmissionData( submissionId: String, userId: String = "user_123", fullName: String = "Test User", dateOfBirth: String = "01/01/2000", phone: String = "1234567890", includeAIScore: Boolean = true ): Map&lt;String, Any&gt;</ID>
     <ID>LongMethod:PIQTestScreen.kt$@Composable private fun Page1Content( answers: Map&lt;String, String&gt;, onFieldChange: (String, String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:PIQTestScreen.kt$@Composable private fun Page2Content( answers: Map&lt;String, String&gt;, onFieldChange: (String, String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:PIQTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PIQTestScreen( testId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit = {}, viewModel: PIQTestViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:PIQTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PIQTestScreen( testId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit = {}, viewModel: PIQTestViewModel = koinViewModel() )</ID>
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission</ID>
     <ID>LongMethod:PPDTAnalysisWorker.kt$PPDTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:PPDTInstructionsPhase.kt$@Composable fun PPDTInstructionsPhase(onStart: () -&gt; Unit)</ID>
     <ID>LongMethod:PaymentSuccessScreen.kt$@Composable fun PaymentSuccessScreen( plan: SubscriptionPlan, onNavigateToHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:Phase2DetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Phase2DetailScreen( onNavigateBack: () -&gt; Unit = {}, onNavigateToTopic: (String) -&gt; Unit = {}, viewModel: Phase2DetailViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:Phase2DetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Phase2DetailScreen( onNavigateBack: () -&gt; Unit = {}, onNavigateToTopic: (String) -&gt; Unit = {}, viewModel: Phase2DetailViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:Phase2DetailViewModel.kt$Phase2DetailViewModel$private fun loadPhase2Tests()</ID>
     <ID>LongMethod:PhaseProgressRibbon.kt$@Composable private fun Phase2Card( progress: Phase2Progress?, onPhaseClick: () -&gt; Unit, onTopicClick: (String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:PremiumLockCard.kt$@Composable fun PremiumLockCard( requiredTier: SubscriptionTier, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier, message: String? = null, showBackground: Boolean = true )</ID>
     <ID>LongMethod:SDTAnalysisWorker.kt$SDTAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun QuestionInProgressView( question: String, questionNumber: Int, totalQuestions: Int, answer: String, onAnswerChange: (String) -&gt; Unit, charCount: Int, minChars: Int, maxChars: Int, timeRemaining: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
     <ID>LongMethod:SRTAnalysisWorker.kt$SRTAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:SRTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SRTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SRTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SRTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SRTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SRTTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:SRTTestViewModel.kt$SRTTestViewModel$fun loadTest(testId: String)</ID>
     <ID>LongMethod:SRTTestViewModel.kt$SRTTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:SSBContentProvider.kt$SSBContentProvider$fun getInfoCards(): List&lt;SSBInfoCard&gt;</ID>
@@ -190,24 +174,22 @@
     <ID>LongMethod:SSBRecommendationBanner.kt$@Composable fun SSBRecommendationBanner( model: SSBRecommendationUIModel, modifier: Modifier = Modifier, showExpandedDetails: Boolean = false )</ID>
     <ID>LongMethod:SharedNavGraph.kt$fun NavGraphBuilder.sharedNavGraph( navController: NavHostController )</ID>
     <ID>LongMethod:StartInterviewViewModel.kt$StartInterviewViewModel$fun createSession(consentGiven: Boolean)</ID>
-    <ID>LongMethod:StudentHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun StudentHomeScreen( viewModel: StudentHomeViewModel = hiltViewModel(), onNavigateToTopic: (String) -&gt; Unit, onNavigateToPhaseDetail: (TestPhase) -&gt; Unit, onNavigateToStudy: () -&gt; Unit, onNavigateToSubmissions: () -&gt; Unit = {}, onNavigateToNotifications: () -&gt; Unit = {}, onNavigateToMarketplace: () -&gt; Unit = {}, onNavigateToAnalytics: () -&gt; Unit = {}, onNavigateToResult: (TestType, String) -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:StudentHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun StudentHomeScreen( viewModel: StudentHomeViewModel = koinViewModel(), onNavigateToTopic: (String) -&gt; Unit, onNavigateToPhaseDetail: (TestPhase) -&gt; Unit, onNavigateToStudy: () -&gt; Unit, onNavigateToSubmissions: () -&gt; Unit = {}, onNavigateToNotifications: () -&gt; Unit = {}, onNavigateToMarketplace: () -&gt; Unit = {}, onNavigateToAnalytics: () -&gt; Unit = {}, onNavigateToResult: (TestType, String) -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:StudentNavGraph.kt$fun NavGraphBuilder.studentNavGraph( navController: NavHostController, onOpenDrawer: () -&gt; Unit )</ID>
     <ID>LongMethod:StudentTestsViewModel.kt$StudentTestsViewModel$private fun loadAllTests()</ID>
-    <ID>LongMethod:StudyMaterialDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun StudyMaterialDetailScreen( categoryId: String, onNavigateBack: () -&gt; Unit, onNavigateToRelatedMaterial: (String) -&gt; Unit = {}, viewModel: StudyMaterialDetailViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:StudyMaterialDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun StudyMaterialDetailScreen( categoryId: String, onNavigateBack: () -&gt; Unit, onNavigateToRelatedMaterial: (String) -&gt; Unit = {}, viewModel: StudyMaterialDetailViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:StudyMaterialsScreen.kt$@Composable private fun CategoryCardVertical( category: StudyCategoryItem, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:StudyMaterialsViewModel.kt$StudyMaterialsViewModel$private fun loadCategories()</ID>
     <ID>LongMethod:SubscriptionManagementScreen.kt$@Composable private fun PlanCard( tier: SubscriptionTierModel, isCurrentPlan: Boolean, onUpgrade: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:SubscriptionRibbon.kt$@Composable fun SubscriptionRibbon( currentTier: SubscriptionTier, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier, isDismissible: Boolean = false, onDismiss: (() -&gt; Unit)? = null )</ID>
     <ID>LongMethod:SubscriptionSection.kt$@Composable fun SubscriptionSection( currentTier: SubscriptionTier, onUpgradeClick: () -&gt; Unit, onManageSubscriptionClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:TATAnalysisWorker.kt$TATAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>LongMethod:TATImageViewingPhase.kt$@Composable fun TATImageViewingPhase( imageUrl: String, timeRemaining: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TATInstructionsPhase.kt$@Composable fun TATInstructionsPhase(onStart: () -&gt; Unit)</ID>
-    <ID>LongMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:TATTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TATTestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, // submissionId, subscriptionType onNavigateBack: () -&gt; Unit = {}, viewModel: TATTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:TATWritingPhase.kt$@Composable fun TATWritingPhase( story: String, onStoryChange: (String) -&gt; Unit, timeRemaining: Int, minCharacters: Int, maxCharacters: Int, charactersCount: Int, sequenceNumber: Int )</ID>
     <ID>LongMethod:TopicContentLoader.kt$TopicContentLoader$private fun getIntroduction(testType: String): String</ID>
     <ID>LongMethod:UpgradeScreen.kt$@Composable private fun AnimatedPlanCard( plan: SubscriptionPlan, currentTier: SubscriptionTier, selectedBillingCycle: BillingCycle, isVisible: Boolean, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:UpgradeScreen.kt$@Composable private fun PlanCard( plan: SubscriptionPlan, isCurrentPlan: Boolean, onSelectPlan: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:UpgradeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun UpgradeScreen( onNavigateBack: () -&gt; Unit, onPlanSelected: (SubscriptionPlan) -&gt; Unit, viewModel: UpgradeViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:UpgradeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun UpgradeScreen( onNavigateBack: () -&gt; Unit, onPlanSelected: (SubscriptionPlan) -&gt; Unit, viewModel: UpgradeViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:UpgradeViewModel.kt$UpgradeViewModel$private fun loadAvailablePlans()</ID>
     <ID>LongMethod:WATTestViewModel.kt$WATTestViewModel$fun loadTest(testId: String)</ID>
     <ID>LongParameterList:DrawerContent.kt$( currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -215,16 +197,16 @@
     <ID>LongParameterList:GPEPlanningPhase.kt$( planningResponse: String, onPlanningResponseChange: (String) -&gt; Unit, charactersCount: Int, minCharacters: Int, maxCharacters: Int, scenario: String, resources: List&lt;String&gt;, imageUrl: String )</ID>
     <ID>LongParameterList:LecturetteTestPhases.kt$( selectedTopic: String, speechTranscript: String, charCount: Int, timeRemaining: String, isTimeLow: Boolean, onTranscriptChanged: (String) -&gt; Unit, onProceedToReview: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
     <ID>LongParameterList:NotificationSettingsSection.kt$( preferences: NotificationPreferences?, onTogglePushNotifications: (Boolean) -&gt; Unit, onToggleGradingComplete: (Boolean) -&gt; Unit, onToggleFeedbackAvailable: (Boolean) -&gt; Unit, onToggleBatchInvitation: (Boolean) -&gt; Unit, onToggleGeneralAnnouncement: (Boolean) -&gt; Unit, onToggleStudyReminders: (Boolean) -&gt; Unit, onToggleTestReminders: (Boolean) -&gt; Unit, onToggleMarketplaceUpdates: (Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
-    <ID>LongParameterList:OIRTestViewModel.kt$OIRTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val securityLogger: SecurityEventLogger, private val scoreCalculator: OIRTestScoreCalculator, private val submitOIRTestUseCase: SubmitOIRTestUseCase, private val clock: Clock, @ApplicationContext private val appContext: Context, private val imageLoader: ImageLoader )</ID>
+    <ID>LongParameterList:OIRTestViewModel.kt$OIRTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository, private val subscriptionManager: com.ssbmax.core.data.repository.SubscriptionManager, private val securityLogger: SecurityEventLogger, private val scoreCalculator: OIRTestScoreCalculator, private val submitOIRTestUseCase: SubmitOIRTestUseCase, private val clock: Clock, private val appContext: Context, private val imageLoader: ImageLoader )</ID>
     <ID>LongParameterList:SDTTestScreen.kt$( question: String, questionNumber: Int, totalQuestions: Int, answer: String, onAnswerChange: (String) -&gt; Unit, charCount: Int, minChars: Int, maxChars: Int, timeRemaining: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:SDTTestViewModel.kt$SDTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSDTTest: SubmitSDTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
+    <ID>LongParameterList:SDTTestViewModel.kt$SDTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSDTTest: SubmitSDTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LongParameterList:SRTInProgressView.kt$( situation: String, situationNumber: Int, totalSituations: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, minChars: Int, maxChars: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:SRTTestViewModel.kt$SRTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSRTTest: SubmitSRTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
+    <ID>LongParameterList:SRTTestViewModel.kt$SRTTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitSRTTest: SubmitSRTTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LongParameterList:SSBMaxDrawer.kt$( userProfile: UserProfile?, isLoadingProfile: Boolean = false, currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onEditProfile: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongParameterList:SubscriptionManagementViewModel.kt$SubscriptionTierModel$( val displayName: String, val price: String, val oirTestLimit: Int, val tatTestLimit: Int, val watTestLimit: Int, val srtTestLimit: Int, val ppdtTestLimit: Int, val piqTestLimit: Int, val sdTestLimit: Int, val gtoTestLimit: Int, val interviewTestLimit: Int, val features: List&lt;String&gt; )</ID>
     <ID>LongParameterList:UnifiedOLQResultTemplate.kt$( uiState: T, paddingValues: PaddingValues, submissionConfirmationContent: @Composable (T) -&gt; Unit, testSpecificContent: (@Composable (T) -&gt; Unit)?, submissionStatus: SubmissionStatus?, showInstructorReview: Boolean, onNavigateHome: () -&gt; Unit, onRetry: (() -&gt; Unit)? )</ID>
     <ID>LongParameterList:WATInProgressView.kt$( word: String, wordNumber: Int, totalWords: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, onSubmit: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongParameterList:WATTestViewModel.kt$WATTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitWATTest: SubmitWATTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.core.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
+    <ID>LongParameterList:WATTestViewModel.kt$WATTestViewModel$( private val testContentRepository: TestContentRepository, private val testSessionRepository: TestSessionRepository, private val submitWATTest: SubmitWATTestUseCase, observeCurrentUser: ObserveCurrentUserUseCase, private val userProfileRepository: com.ssbmax.shared.domain.repository.UserProfileRepository, private val difficultyManager: com.ssbmax.core.data.repository.DifficultyProgressionManager, subscriptionManager: SubscriptionManager, private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase, securityLogger: SecurityEventLogger, workManager: WorkManager )</ID>
     <ID>LoopWithTooManyJumpStatements:ArchitectureTest.kt$ArchitectureTest$for</ID>
     <ID>LoopWithTooManyJumpStatements:ErrorHandlingArchitectureTest.kt$ErrorHandlingArchitectureTest$for</ID>
     <ID>LoopWithTooManyJumpStatements:MemoryLeakDetectionTest.kt$MemoryLeakDetectionTest$for</ID>
@@ -273,7 +255,8 @@
     <ID>MaxLineLength:MemoryLeakTestScreen.kt$"Use Android Profiler to verify memory leaks are prevented. Run test scenarios, then rotate device or navigate away to trigger cleanup."</ID>
     <ID>MaxLineLength:NavigationArchitectureTest.kt$NavigationArchitectureTest$"""// Text Interview Session[\s\S]*?composable\([\s\S]*?route = SSBMaxDestinations\.TextInterviewSession\.route[\s\S]*?onNavigateBack = \{([\s\S]*?)\}[\s\S]*?onNavigateToHome = \{([\s\S]*?)\}"""</ID>
     <ID>MaxLineLength:NavigationArchitectureTest.kt$NavigationArchitectureTest$"""// Voice Interview Session[\s\S]*?composable\([\s\S]*?route = SSBMaxDestinations\.VoiceInterviewSession\.route[\s\S]*?onNavigateBack = \{([\s\S]*?)\}[\s\S]*?onNavigateToHome = \{([\s\S]*?)\}"""</ID>
-    <ID>MaxLineLength:NotificationCenterViewModel.kt$NotificationCenterViewModel$NotificationFilter.ANNOUNCEMENTS -&gt; notification.type == com.ssbmax.core.domain.model.NotificationType.GENERAL_ANNOUNCEMENT</ID>
+    <ID>MaxLineLength:NotificationCenterViewModel.kt$NotificationCenterViewModel$NotificationFilter.ANNOUNCEMENTS -&gt; notification.type == com.ssbmax.shared.domain.model.NotificationType.GENERAL_ANNOUNCEMENT</ID>
+    <ID>MaxLineLength:NotificationCenterViewModel.kt$NotificationCenterViewModel$NotificationFilter.FEEDBACK -&gt; notification.type == com.ssbmax.shared.domain.model.NotificationType.FEEDBACK_AVAILABLE</ID>
     <ID>MaxLineLength:NotificationHelper.kt$NotificationHelper$showPsychologyTestFailedNotification(submissionId, "PPDT", R.string.notification_ppdt_failed_title, R.string.notification_ppdt_failed_body)</ID>
     <ID>MaxLineLength:NotificationHelper.kt$NotificationHelper$showPsychologyTestFailedNotification(submissionId, "SDT", R.string.notification_sdt_failed_title, R.string.notification_sdt_failed_body)</ID>
     <ID>MaxLineLength:NotificationHelper.kt$NotificationHelper$showPsychologyTestFailedNotification(submissionId, "SRT", R.string.notification_srt_failed_title, R.string.notification_srt_failed_body)</ID>
@@ -308,7 +291,8 @@
     <ID>MaxLineLength:SRTTestViewModel.kt$SRTTestViewModel$android.util.Log.d("SRTTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage% (${validCount}/${totalCount})")</ID>
     <ID>MaxLineLength:SRTTestViewModelTest.kt$SRTTestViewModelTest$"You are the captain of your college team. During an important match, you notice that your best player is not feeling well but insists on playing." to SRTCategory.LEADERSHIP</ID>
     <ID>MaxLineLength:SSBMaxScaffold.kt$Log.d("SSBMaxScaffold", "📱 Profile state: userProfile=${userProfile?.fullName}, isLoading=$isLoadingProfile, hasProfile=${userProfile != null}")</ID>
-    <ID>MaxLineLength:StudentNavGraph.kt$com.ssbmax.core.domain.model.TestType.OIR -&gt; SSBMaxDestinations.OIRTestResult.createRoute(submissionId)</ID>
+    <ID>MaxLineLength:StudentNavGraph.kt$com.ssbmax.shared.domain.model.TestType.GTO_LECTURETTE -&gt; SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)</ID>
+    <ID>MaxLineLength:StudentNavGraph.kt$com.ssbmax.shared.domain.model.TestType.OIR -&gt; SSBMaxDestinations.OIRTestResult.createRoute(submissionId)</ID>
     <ID>MaxLineLength:StudentTestsScreen.kt$text = "${test.questionCount} ${if (test.questionCount == 1) stringResource(R.string.student_tests_question_single) else stringResource(R.string.student_tests_question_plural)}"</ID>
     <ID>MaxLineLength:SubscriptionManagementScreen.kt$answer = "Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period."</ID>
     <ID>MaxLineLength:TopicScreen.kt$label = { Text(if (testType.equals("PIQ", ignoreCase = true) || testType.equals("PIQ_FORM", ignoreCase = true)) "Fill PIQ" else "Tests") }</ID>
@@ -316,7 +300,6 @@
     <ID>MaxLineLength:UserProfileViewModel.kt$UserProfileViewModel$Log.d(TAG, "📝 Current state: fullName=${state.fullName}, age=${state.age}, gender=${state.gender}, entryType=${state.entryType}")</ID>
     <ID>MaxLineLength:WATTestViewModel.kt$WATTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
     <ID>MaxLineLength:WATTestViewModel.kt$WATTestViewModel$android.util.Log.d("WATTestViewModel", "📊 Recorded performance ($difficulty): $scorePercentage% (${validCount}/${totalCount})")</ID>
-    <ID>NestedBlockDepth:AndroidTTSService.kt$AndroidTTSService$private fun selectBestVoice(tts: TextToSpeech)</ID>
     <ID>NestedBlockDepth:ErrorHandlingArchitectureTest.kt$ErrorHandlingArchitectureTest$@Test fun `ViewModels should use ErrorLogger in catch blocks`()</ID>
     <ID>NestedBlockDepth:GDResultViewModel.kt$GDResultViewModel$private suspend fun loadResult(submissionId: String)</ID>
     <ID>NestedBlockDepth:GPESubmissionResultViewModel.kt$GPESubmissionResultViewModel$private suspend fun loadResult(submissionId: String)</ID>
@@ -339,7 +322,6 @@
     <ID>ReturnCount:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>ReturnCount:SessionManager.kt$SessionManager$suspend fun loadNextQuestion(): Result&lt;InterviewQuestion?&gt;</ID>
     <ID>ReturnCount:SessionManager.kt$SessionManager$suspend fun loadSession(sessionId: String): Result&lt;Unit&gt;</ID>
-    <ID>ReturnCount:TATAnalysisWorker.kt$TATAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>ReturnCount:TATSubmissionResultViewModel.kt$TATSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>ReturnCount:WATAnalysisWorker.kt$WATAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>ReturnCount:WATSubmissionResultViewModel.kt$WATSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
@@ -358,8 +340,6 @@
     <ID>TooGenericExceptionThrown:SubscriptionManagementViewModel.kt$SubscriptionManagementViewModel$throw Exception("User not authenticated")</ID>
     <ID>TooGenericExceptionThrown:WATTestViewModel.kt$WATTestViewModel$throw Exception("No words found for this test")</ID>
     <ID>UnusedParameter:BatchDetailScreen.kt$onNavigateToStudent: (String) -&gt; Unit</ID>
-    <ID>UnusedParameter:BillingRepository.kt$BillingRepository$activity: Activity</ID>
-    <ID>UnusedParameter:BillingRepository.kt$BillingRepository$productId: String</ID>
     <ID>UnusedParameter:CreateBatchScreen.kt$onBatchCreated: (String) -&gt; Unit</ID>
     <ID>UnusedParameter:DashboardTestScoreChip.kt$isOLQBased: Boolean = true</ID>
     <ID>UnusedParameter:GDResultComponents.kt$status: GTOSubmissionStatus</ID>
@@ -387,8 +367,6 @@
     <ID>UnusedParameter:SDTTestScreen.kt$modifier: Modifier = Modifier</ID>
     <ID>UnusedParameter:SRTSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:SRTTestScreen.kt$modifier: Modifier = Modifier</ID>
-    <ID>UnusedParameter:SSBMaxBillingClient.kt$SSBMaxBillingClient$purchaseToken: String</ID>
-    <ID>UnusedParameter:SSBMaxBillingClient.kt$SSBMaxBillingClient$subscriptionId: String</ID>
     <ID>UnusedParameter:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$type: NotificationType</ID>
     <ID>UnusedParameter:SSBMaxScaffold.kt$route: String</ID>
     <ID>UnusedParameter:StableAsyncImage.kt$error: @Composable ((String) -&gt; Unit)? = null</ID>
@@ -396,6 +374,7 @@
     <ID>UnusedParameter:StartInterviewScreen.kt$onNavigateToResult: (String) -&gt; Unit = {}</ID>
     <ID>UnusedParameter:StudentDetailScreen.kt$onNavigateToSubmission: (String) -&gt; Unit</ID>
     <ID>UnusedParameter:StudentHomeScreen.kt$onNavigateToSubmissions: () -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:StudyMaterialDetailScreen.kt$categoryId: String</ID>
     <ID>UnusedParameter:StudyMaterialsScreen.kt$onNavigateToBookmarks: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:SubmissionDetailScreen.kt$modifier: Modifier = Modifier</ID>
     <ID>UnusedParameter:SubmissionDetailScreen.kt$submissionId: String</ID>
@@ -408,31 +387,16 @@
     <ID>UnusedParameter:UnifiedOLQResultTemplate.kt$onRetry: (() -&gt; Unit)?</ID>
     <ID>UnusedParameter:WATSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:WATTestScreen.kt$modifier: Modifier = Modifier</ID>
-    <ID>UnusedPrivateMember:DrawerHeader.kt$@Composable private fun ProfileAvatar( initials: String, modifier: Modifier = Modifier )</ID>
-    <ID>UnusedPrivateProperty:BillingRepository.kt$BillingRepository$@ApplicationContext private val context: Context</ID>
-    <ID>UnusedPrivateProperty:FAQViewModelTest.kt$FAQViewModelTest$val searchCount = viewModel.uiState.value.displayedFAQs.size</ID>
     <ID>UnusedPrivateProperty:GDTestViewModel.kt$GDTestViewModel$private val gtoRepository: GTORepository</ID>
-    <ID>UnusedPrivateProperty:GPETestViewModel.kt$GPETestViewModel$private val submissionRepository: com.ssbmax.core.domain.repository.SubmissionRepository</ID>
-    <ID>UnusedPrivateProperty:GPETestViewModel.kt$GPETestViewModel$val config = GPETestConfig()</ID>
-    <ID>UnusedPrivateProperty:GPETestViewModelTest.kt$GPETestViewModelTest$private val mockWorkManager = mockk&lt;androidx.work.WorkManager&gt;(relaxed = true)</ID>
-    <ID>UnusedPrivateProperty:GTOAnalysisWorker.kt$GTOAnalysisWorker.Companion$// API call delays private const val API_CALL_DELAY_MS = 1000L</ID>
-    <ID>UnusedPrivateProperty:GTOSequentialAccessManager.kt$GTOSequentialAccessManager$val missingNames = missingTests.joinToString(", ") { it.displayName }</ID>
+    <ID>UnusedPrivateProperty:GPETestViewModel.kt$GPETestViewModel$private val submissionRepository: com.ssbmax.shared.domain.repository.SubmissionRepository</ID>
     <ID>UnusedPrivateProperty:InterviewSessionViewModel.kt$InterviewSessionViewModel$analyticsManager: AnalyticsManager</ID>
     <ID>UnusedPrivateProperty:InterviewSessionViewModel.kt$InterviewSessionViewModel$authRepository: AuthRepository</ID>
     <ID>UnusedPrivateProperty:InterviewSessionViewModel.kt$InterviewSessionViewModel$userProfileRepository: UserProfileRepository</ID>
     <ID>UnusedPrivateProperty:LecturetteTestViewModel.kt$LecturetteTestViewModel$private val gtoRepository: GTORepository</ID>
-    <ID>UnusedPrivateProperty:LoginScreen.kt$val context = LocalContext.current</ID>
-    <ID>UnusedPrivateProperty:MemoryLeakTestScreen.kt$val context = LocalContext.current</ID>
-    <ID>UnusedPrivateProperty:PIQFormWebView.kt$val context = LocalContext.current</ID>
-    <ID>UnusedPrivateProperty:PIQSubmissionResultViewModel.kt$PIQSubmissionResultViewModel.Companion$private const val TAG = "PIQResultViewModel"</ID>
-    <ID>UnusedPrivateProperty:SDTTestViewModel.kt$SDTTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
-    <ID>UnusedPrivateProperty:SRTTestViewModel.kt$SRTTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
-    <ID>UnusedPrivateProperty:SpeechToTextManager.kt$SpeechToTextManager$private var accumulatedTranscription = StringBuilder()</ID>
-    <ID>UnusedPrivateProperty:StudentHomeViewModel.kt$StudentHomeViewModel$private val unifiedResultRepository: com.ssbmax.core.domain.repository.UnifiedResultRepository</ID>
-    <ID>UnusedPrivateProperty:StudyMaterialDetailScreen.kt$val materialId = categoryId // Alias for compatibility</ID>
-    <ID>UnusedPrivateProperty:SubscriptionManagementViewModel.kt$SubscriptionManagementViewModel.Companion$private const val TAG = "SubscriptionVM"</ID>
-    <ID>UnusedPrivateProperty:TestProgressTrackingContractTest.kt$TestProgressTrackingContractTest$private val submissionRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/FirestoreSubmissionRepository.kt"</ID>
-    <ID>UnusedPrivateProperty:WATTestViewModel.kt$WATTestViewModel$private val getOLQDashboard: com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
+    <ID>UnusedPrivateProperty:SDTTestViewModel.kt$SDTTestViewModel$private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
+    <ID>UnusedPrivateProperty:SRTTestViewModel.kt$SRTTestViewModel$private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
+    <ID>UnusedPrivateProperty:StudentHomeViewModel.kt$StudentHomeViewModel$private val unifiedResultRepository: com.ssbmax.shared.domain.repository.UnifiedResultRepository</ID>
+    <ID>UnusedPrivateProperty:WATTestViewModel.kt$WATTestViewModel$private val getOLQDashboard: com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase</ID>
     <ID>UseCheckOrError:AuthViewModel.kt$AuthViewModel$throw IllegalStateException("Failed to get Android Intent from GoogleSignInData")</ID>
     <ID>VariableNaming:SubscriptionManagementScreen.kt$val TAG = "MonthlyUsageCard"</ID>
     <ID>VariableNaming:SubscriptionManagementScreen.kt$val TAG = "SubscriptionContent"</ID>
@@ -441,8 +405,8 @@
     <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:AnalyticsViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:AnalyticsViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:AnalyticsViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:AnalyticsViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:AnalyticsViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:AppViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:ArchivalWorker.kt$import androidx.work.*</ID>
@@ -501,8 +465,8 @@
     <ID>WildcardImport:GPETestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:GPETestScreen.kt$import com.ssbmax.ui.tests.gpe.components.*</ID>
     <ID>WildcardImport:GPETestScreen.kt$import com.ssbmax.ui.tests.gpe.components.phases.*</ID>
-    <ID>WildcardImport:GPETestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:GPETestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:GPETestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:GPETestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:GPETestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:GPETestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:GTOResultComponents.kt$import androidx.compose.foundation.layout.*</ID>
@@ -528,7 +492,7 @@
     <ID>WildcardImport:HistoricResultsViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:InstructorAnalyticsScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:InstructorAnalyticsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:InstructorGradingViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:InstructorGradingViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:InstructorGradingViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:InstructorGradingViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:InstructorHomeScreen.kt$import androidx.compose.foundation.layout.*</ID>
@@ -562,7 +526,7 @@
     <ID>WildcardImport:LoginScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:LoginScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:LoginScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:MainViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:MainViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:MainViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:MainViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:MarkdownText.kt$import androidx.compose.foundation.layout.*</ID>
@@ -576,12 +540,12 @@
     <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:MockDataFactory.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:MockDataFactory.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:NotificationCenterViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:NotificationCenterViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:NotificationCenterViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:NotificationSettingsSection.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:NotificationSettingsSection.kt$import androidx.compose.material.icons.filled.*</ID>
@@ -594,14 +558,14 @@
     <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:OIRSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:OIRSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRTestAnsweringTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestAnsweringTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRTestBottomBar.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:OIRTestBottomBar.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRTestLoadingTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRTestLoadingTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestLoadingTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestLoadingTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.animation.core.*</ID>
@@ -609,17 +573,17 @@
     <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRTestResultScreen.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:OIRTestSubmissionTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRTestSubmissionTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestSubmissionTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestSubmissionTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRTestTopBar.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:OIRTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:OIRTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRViewModelTestBase.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRViewModelTestBase.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRViewModelTestBase.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OLQDashboardCard.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:OLQDashboardCard.kt$import androidx.compose.material3.*</ID>
@@ -634,16 +598,16 @@
     <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PIQSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PIQSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:PIQTestScreen.kt$import com.ssbmax.ui.tests.piq.components.*</ID>
-    <ID>WildcardImport:PIQTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PIQTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQTestViewModel.kt$import kotlinx.coroutines.flow.*</ID>
-    <ID>WildcardImport:PIQTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PIQTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQTestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:PIQTestViewModelTest.kt$import kotlinx.coroutines.test.*</ID>
     <ID>WildcardImport:PPDTComponents.kt$import androidx.compose.foundation.layout.*</ID>
@@ -652,15 +616,15 @@
     <ID>WildcardImport:PPDTInstructionsPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PPDTReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTReviewPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PPDTSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PPDTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PPDTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.*</ID>
     <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.phases.*</ID>
-    <ID>WildcardImport:PPDTTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PPDTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTTestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.material3.*</ID>
@@ -689,15 +653,15 @@
     <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SDTSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SDTSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SDTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SDTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SDTTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SDTTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SDTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SDTTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTTestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SRTInProgressView.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SRTInProgressView.kt$import androidx.compose.material3.*</ID>
@@ -706,14 +670,14 @@
     <ID>WildcardImport:SRTInstructionsView.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SRTReviewView.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SRTReviewView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SRTSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SRTSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SRTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SRTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SRTTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SRTTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SRTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SRTTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTTestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SSBMaxApp.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:SSBMaxBottomBar.kt$import androidx.compose.material.icons.filled.*</ID>
@@ -747,21 +711,21 @@
     <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:StudentHomeViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:StudentHomeViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:StudentHomeViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:StudentHomeViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentHomeViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:StudentProfileViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:StudentProfileViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentProfileViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:StudentTestsViewModelTest.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudentTestsViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:StudentTestsViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentTestsViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
@@ -779,15 +743,15 @@
     <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SubmissionDetailViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SubmissionDetailViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SubmissionDetailViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SubmissionDetailViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionDetailViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.animation.*</ID>
     <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SubmissionsListViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SubmissionsListViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionsListViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.material.icons.filled.*</ID>
@@ -811,17 +775,13 @@
     <ID>WildcardImport:TATInstructionsPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:TATReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:TATReviewPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TATSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TATSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:TATSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:TATTestScreen.kt$import com.ssbmax.ui.tests.tat.components.*</ID>
     <ID>WildcardImport:TATTestScreen.kt$import com.ssbmax.ui.tests.tat.components.phases.*</ID>
-    <ID>WildcardImport:TATTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TATTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TATTestViewModelTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:TATTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TATWritingPhase.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:TATWritingPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:TestDetailGradingViewModelTest.kt$import org.junit.Assert.*</ID>
@@ -834,8 +794,8 @@
     <ID>WildcardImport:TopicScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:TopicScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:TopicScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.core.domain.repository.*</ID>
+    <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.shared.domain.repository.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:UnifiedResultUiStateTest.kt$import org.junit.Assert.*</ID>
@@ -853,16 +813,16 @@
     <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:WATSubmissionResultViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:WATSubmissionResultViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:WATSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:WATSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.animation.*</ID>
     <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:WATTestViewModel.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:WATTestViewModelTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:WATTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:WATTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATTestViewModelTest.kt$import org.junit.Assert.*</ID>
   </CurrentIssues>
 </SmellBaseline>

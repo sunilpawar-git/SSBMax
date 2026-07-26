@@ -7,9 +7,6 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.repository.UsageInfo
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * Implementation of SubscriptionRepository using Firebase Firestore
@@ -21,7 +18,6 @@ class SubscriptionRepositoryImpl(
 
     companion object {
         private const val TAG = "SubscriptionRepoImpl"
-        private val monthFormat = SimpleDateFormat("yyyy-MM", Locale.US)
     }
 
     override suspend fun getSubscriptionTier(userId: String): Result<SubscriptionTier> {
@@ -168,12 +164,5 @@ class SubscriptionRepositoryImpl(
 
             Log.d(TAG, "Updated subscription tier for user $userId to $tier")
         }
-    }
-
-    /**
-     * Get the current month in yyyy-MM format
-     */
-    private fun getCurrentMonth(): String {
-        return monthFormat.format(Date())
     }
 }

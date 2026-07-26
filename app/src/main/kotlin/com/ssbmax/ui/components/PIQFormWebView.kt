@@ -5,7 +5,6 @@ import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 
 /**
@@ -17,8 +16,6 @@ fun PIQFormWebView(
     htmlContent: String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    
     AndroidView(
         factory = { ctx ->
             WebView(ctx).apply {

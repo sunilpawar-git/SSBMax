@@ -148,7 +148,6 @@ class OIRCacheManagerIntegrationTest {
     @Test
     fun `getTestQuestions avoids recently used questions`() = runTest {
         // Given - mock returns questions based on timestamp filter
-        val unusedThreshold = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
         val freshQuestions = (1..20).map { createMockCachedQuestion("fresh$it", OIRQuestionType.VERBAL_REASONING.name, lastUsed = null) }
         
         coEvery { mockCacheDao.getCachedQuestionCount() } returns 100

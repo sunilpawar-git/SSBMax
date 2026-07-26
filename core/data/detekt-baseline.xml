@@ -11,12 +11,11 @@
     <ID>CyclomaticComplexMethod:GPEImageCacheManager.kt$GPEImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
     <ID>CyclomaticComplexMethod:NotificationRepositoryImpl.kt$NotificationRepositoryImpl$override suspend fun getPreferences(userId: String): Result&lt;NotificationPreferences&gt;</ID>
     <ID>CyclomaticComplexMethod:OIRPersonalSubmissionDataSource.kt$OIRPersonalSubmissionDataSource$@Suppress("UNCHECKED_CAST") internal fun parseOIRSubmission(data: Map&lt;*, *&gt;): OIRSubmission</ID>
+    <ID>CyclomaticComplexMethod:OLQResultMapper.kt$internal fun parseSharedOLQResult(data: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$@Suppress("UNCHECKED_CAST") private fun buildPersonalizationNotes(data: Map&lt;String, Any&gt;): String</ID>
     <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$private fun buildActivitiesAndInterests( hobbies: String, sports: String, sportsParticipation: List&lt;Map&lt;String, Any&gt;&gt;, extraCurricularActivities: List&lt;Map&lt;String, Any&gt;&gt; ): String</ID>
     <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$private fun buildEducationJourney( education10th: Map&lt;String, Any&gt;, education12th: Map&lt;String, Any&gt;, educationGraduation: Map&lt;String, Any&gt;, educationPostGraduation: Map&lt;String, Any&gt; ): String</ID>
-    <ID>CyclomaticComplexMethod:PPDTImageCacheManager.kt$PPDTImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
     <ID>CyclomaticComplexMethod:PPDTSubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePPDTSubmission(data: Map&lt;*, *&gt;): PPDTSubmission</ID>
-    <ID>CyclomaticComplexMethod:OLQResultMapper.kt$internal fun parseSharedOLQResult(data: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSDTSubmission(data: Map&lt;*, *&gt;): SDTSubmission</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSRTSubmission(data: Map&lt;*, *&gt;): SRTSubmission</ID>
     <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseTATSubmission(data: Map&lt;*, *&gt;): TATSubmission</ID>
@@ -26,7 +25,6 @@
     <ID>CyclomaticComplexMethod:SubscriptionManager.kt$SubscriptionManager$override suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String?)</ID>
     <ID>CyclomaticComplexMethod:SubscriptionManager.kt$SubscriptionManager$private fun getTestLimitForTier(tier: SubscriptionTier, testType: TestType): Int</ID>
     <ID>CyclomaticComplexMethod:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$override suspend fun getMonthlyUsage(userId: String, month: String): Result&lt;Map&lt;String, UsageInfo&gt;&gt;</ID>
-    <ID>CyclomaticComplexMethod:TATImageCacheManager.kt$TATImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
     <ID>EmptyFunctionBlock:SSBDatabaseMigrationTest.kt$SSBDatabaseMigrationTest.&lt;no name provided&gt;${}</ID>
     <ID>ExplicitGarbageCollectionCall:MemoryLeakTracker.kt$MemoryLeakTracker$gc()</ID>
     <ID>ExplicitGarbageCollectionCall:MemoryLeakTracker.kt$MemoryLeakTracker$runFinalization()</ID>
@@ -39,7 +37,7 @@
     <ID>ForbiddenComment:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$// TODO: Calculate from timestamps</ID>
     <ID>ForbiddenComment:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$// TODO: Fetch student name from a user cache or separate query</ID>
     <ID>ForbiddenComment:MockTestDataProvider.kt$MockTestDataProvider$* TEMPORARY: Provides mock test data for development and fallback when Firestore is unavailable. * * This ensures seamless UX while Firestore integration is being set up. * When Firestore has real data, these mocks automatically stop being used. * * TODO: Remove this file once all test questions are uploaded to Firestore in production.</ID>
-    <ID>ForbiddenComment:SecurityEventLogger.kt$SecurityEventLogger$* Centralized security event logger for detecting and tracking suspicious activity * * Logs security events to: * 1. Android Log (for debugging) * 2. Firebase Analytics (for production monitoring) * * Key Use Cases: * - Unauthenticated test access attempts * - Subscription limit bypass attempts * - Usage recording failures * - Firestore transaction failures * * ═══════════════════════════════════════════════════════════════════════════ * ⚠️ CRITICAL TODO: When implementing new test ViewModels, ensure they include: * ═══════════════════════════════════════════════════════════════════════════ * * SECURITY CHECKLIST FOR NEW TEST VIEWMODELS: * * ✅ IMPLEMENTED (5/8 test types): * - OIRTestViewModel ✅ Auth guard + Security logging * - WATTestViewModel ✅ Auth guard + Security logging * - SRTTestViewModel ✅ Auth guard + Security logging * - TATTestViewModel ✅ Auth guard + Security logging * - PPDTTestViewModel ✅ Auth guard + Security logging * * ❌ PENDING IMPLEMENTATION (3/8 test types): * - SDTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * - GTOTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * - IOTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * * REQUIRED IMPLEMENTATION PATTERN: * ──────────────────────────────────────────────────────────────────────────── * * @HiltViewModel * class [TestType]ViewModel @Inject constructor( * private val observeCurrentUser: ObserveCurrentUserUseCase, * private val subscriptionManager: SubscriptionManager, * private val difficultyManager: DifficultyProgressionManager, * private val securityLogger: SecurityEventLogger, // ← INJECT THIS * // ... other dependencies * ) : ViewModel() { * * fun loadTest(testId: String) { * viewModelScope.launch { * // 1. AUTHENTICATION GUARD (REQUIRED) * val user = observeCurrentUser().first() * val userId = user?.id ?: run { * Log.e(TAG, "🚨 SECURITY: Unauthenticated test access blocked") * * // 2. LOG SECURITY EVENT (REQUIRED) * securityLogger.logUnauthenticatedAccess( * testType = TestType.[YOUR_TEST_TYPE], * context = "[TestType]ViewModel.loadTest" * ) * * // 3. UPDATE UI WITH ERROR (REQUIRED) * _uiState.update { it.copy( * isLoading = false, * error = "Authentication required. Please login to continue." * ) } * return@launch * } * * // 4. CHECK SUBSCRIPTION ELIGIBILITY (REQUIRED) * val eligibility = subscriptionManager.canTakeTest(userId, TestType.[YOUR_TEST_TYPE]) * when (eligibility) { * is TestEligibility.LimitReached -&gt; { * _uiState.update { it.copy( * isLimitReached = true, * subscriptionTier = eligibility.subscriptionTier, * testsLimit = eligibility.testsLimit, * testsUsed = eligibility.testsUsed, * resetsAt = eligibility.resetsAt * ) } * return@launch * } * is TestEligibility.Allowed -&gt; { * // Proceed with loading test * } * } * * // ... rest of test loading logic * } * } * * fun submitTest() { * viewModelScope.launch { * val userId = observeCurrentUser().first()?.id ?: return@launch * * // 5. RECORD PERFORMANCE (REQUIRED for analytics) * difficultyManager.recordPerformance( * userId = userId, * testType = TestType.[YOUR_TEST_TYPE], * score = calculatedScore, * timeSpent = timeSpentMillis, * submissionId = submissionId * ) * * // 6. RECORD USAGE (REQUIRED for subscription enforcement) * subscriptionManager.recordTestUsage( * userId = userId, * testType = TestType.[YOUR_TEST_TYPE], * submissionId = submissionId * ) * } * } * } * * REFERENCE IMPLEMENTATIONS: * ──────────────────────────────────────────────────────────────────────────── * - See: app/src/main/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModel.kt * - See: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt * * UNIT TEST REQUIREMENTS: * ──────────────────────────────────────────────────────────────────────────── * For each new ViewModel, create corresponding tests that verify: * 1. Unauthenticated access is blocked * 2. SecurityEventLogger.logUnauthenticatedAccess() is called * 3. Subscription limits are enforced * 4. Performance is recorded after submission * 5. Test usage is recorded after submission * * See: app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt * ═══════════════════════════════════════════════════════════════════════════</ID>
+    <ID>ForbiddenComment:SecurityEventLogger.kt$SecurityEventLogger$* Centralized security event logger for detecting and tracking suspicious activity * * Logs security events to: * 1. Android Log (for debugging) * 2. Firebase Analytics (for production monitoring) * * Key Use Cases: * - Unauthenticated test access attempts * - Subscription limit bypass attempts * - Usage recording failures * - Firestore transaction failures * * ═══════════════════════════════════════════════════════════════════════════ * ⚠️ CRITICAL TODO: When implementing new test ViewModels, ensure they include: * ═══════════════════════════════════════════════════════════════════════════ * * SECURITY CHECKLIST FOR NEW TEST VIEWMODELS: * * ✅ IMPLEMENTED (5/8 test types): * - OIRTestViewModel ✅ Auth guard + Security logging * - WATTestViewModel ✅ Auth guard + Security logging * - SRTTestViewModel ✅ Auth guard + Security logging * - TATTestViewModel ✅ Auth guard + Security logging * - PPDTTestViewModel ✅ Auth guard + Security logging * * ❌ PENDING IMPLEMENTATION (3/8 test types): * - SDTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * - GTOTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * - IOTestViewModel ⚠️ NOT YET CREATED - Needs auth guard + logging * * REQUIRED IMPLEMENTATION PATTERN: * ──────────────────────────────────────────────────────────────────────────── * * class [TestType]ViewModel( * private val observeCurrentUser: ObserveCurrentUserUseCase, * private val subscriptionManager: SubscriptionManager, * private val difficultyManager: DifficultyProgressionManager, * private val securityLogger: SecurityEventLogger, // ← INJECT THIS * // ... other dependencies * ) : ViewModel() { * * fun loadTest(testId: String) { * viewModelScope.launch { * // 1. AUTHENTICATION GUARD (REQUIRED) * val user = observeCurrentUser().first() * val userId = user?.id ?: run { * Log.e(TAG, "🚨 SECURITY: Unauthenticated test access blocked") * * // 2. LOG SECURITY EVENT (REQUIRED) * securityLogger.logUnauthenticatedAccess( * testType = TestType.[YOUR_TEST_TYPE], * context = "[TestType]ViewModel.loadTest" * ) * * // 3. UPDATE UI WITH ERROR (REQUIRED) * _uiState.update { it.copy( * isLoading = false, * error = "Authentication required. Please login to continue." * ) } * return@launch * } * * // 4. CHECK SUBSCRIPTION ELIGIBILITY (REQUIRED) * val eligibility = subscriptionManager.canTakeTest(userId, TestType.[YOUR_TEST_TYPE]) * when (eligibility) { * is TestEligibility.LimitReached -&gt; { * _uiState.update { it.copy( * isLimitReached = true, * subscriptionTier = eligibility.subscriptionTier, * testsLimit = eligibility.testsLimit, * testsUsed = eligibility.testsUsed, * resetsAt = eligibility.resetsAt * ) } * return@launch * } * is TestEligibility.Allowed -&gt; { * // Proceed with loading test * } * } * * // ... rest of test loading logic * } * } * * fun submitTest() { * viewModelScope.launch { * val userId = observeCurrentUser().first()?.id ?: return@launch * * // 5. RECORD PERFORMANCE (REQUIRED for analytics) * difficultyManager.recordPerformance( * userId = userId, * testType = TestType.[YOUR_TEST_TYPE], * score = calculatedScore, * timeSpent = timeSpentMillis, * submissionId = submissionId * ) * * // 6. RECORD USAGE (REQUIRED for subscription enforcement) * subscriptionManager.recordTestUsage( * userId = userId, * testType = TestType.[YOUR_TEST_TYPE], * submissionId = submissionId * ) * } * } * } * * REFERENCE IMPLEMENTATIONS: * ──────────────────────────────────────────────────────────────────────────── * - See: app/src/main/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModel.kt * - See: app/src/main/kotlin/com/ssbmax/ui/tests/tat/TATTestViewModel.kt * * UNIT TEST REQUIREMENTS: * ──────────────────────────────────────────────────────────────────────────── * For each new ViewModel, create corresponding tests that verify: * 1. Unauthenticated access is blocked * 2. SecurityEventLogger.logUnauthenticatedAccess() is called * 3. Subscription limits are enforced * 4. Performance is recorded after submission * 5. Test usage is recorded after submission * * See: app/src/test/kotlin/com/ssbmax/ui/tests/wat/WATTestViewModelTest.kt * ═══════════════════════════════════════════════════════════════════════════</ID>
     <ID>ForbiddenComment:TestRepositoryImpl.kt$TestRepositoryImpl$* Sample tests for development * TODO: Replace with real API calls</ID>
     <ID>ForbiddenComment:TestSubmissionRepositoryImpl.kt$TestSubmissionRepositoryImpl$// TODO: Implement proper deserialization based on "type" field</ID>
     <ID>FunctionOnlyReturningConstant:AnalyticsManager.kt$AnalyticsManager$private fun getCurrentUserTier(): String</ID>
@@ -51,23 +49,16 @@
     <ID>ImplicitDefaultLocale:ContentMetrics.kt$ContentMetrics.MetricsSnapshot$String.format("%.2f", estimatedMonthlyStorageGB)</ID>
     <ID>ImplicitDefaultLocale:EnhancedPsychologyPrompts.kt$EnhancedPsychologyPrompts$String.format("%.1f", averageResponseTime)</ID>
     <ID>ImplicitDefaultLocale:EnhancedPsychologyPrompts.kt$EnhancedPsychologyPrompts$String.format("%.1f", writingTimeMinutes)</ID>
-    <ID>ImplicitDefaultLocale:PPDTImageCacheManagerTest.kt$PPDTImageCacheManagerTest$String.format("%03d", index)</ID>
     <ID>ImplicitDefaultLocale:SubscriptionManagerEdgeCasesTest.kt$SubscriptionManagerEdgeCasesTest$String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)</ID>
-    <ID>ImplicitDefaultLocale:TATImageCacheManagerTest.kt$TATImageCacheManagerTest$String.format("%03d", index)</ID>
-    <ID>ImplicitDefaultLocale:TATImageCacheManagerTest.kt$TATImageCacheManagerTest$String.format("%04d", index)</ID>
     <ID>LargeClass:FirestoreGTORepository.kt$FirestoreGTORepository : GTORepository</ID>
     <ID>LongMethod:EnhancedInterviewPrompts.kt$EnhancedInterviewPrompts$fun buildFeedbackPrompt( piqContext: String, questionAnswerPairs: List&lt;Pair&lt;String, String&gt;&gt;, olqScores: Map&lt;OLQ, Float&gt; ): String</ID>
     <ID>LongMethod:EnhancedInterviewPrompts.kt$EnhancedInterviewPrompts$private fun getOLQDefinitions(): String</ID>
     <ID>LongMethod:FirestoreGTORepository.kt$FirestoreGTORepository$private fun mapToSubmission(data: Map&lt;String, Any&gt;): GTOSubmission</ID>
     <ID>LongMethod:PIQDataMapper.kt$PIQDataMapper$fun buildComprehensivePIQContext(piqMap: Map&lt;String, Any&gt;): String</ID>
-    <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generatePPDTAnalysisPrompt( submission: com.ssbmax.core.domain.model.PPDTSubmission, imageContext: String, candidateGender: String ): String</ID>
     <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateSDAnalysisPrompt(submission: SDTSubmission): String</ID>
     <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateSRTAnalysisPrompt(submission: SRTSubmission): String</ID>
     <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateTATAnalysisPrompt(submission: TATSubmission): String</ID>
     <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateWATAnalysisPrompt(submission: WATSubmission): String</ID>
-    <ID>LongMethod:SSBInterviewPrompts.kt$SSBInterviewPrompts$fun buildFeedbackPrompt( piqContext: String, questionAnswerPairs: List&lt;Pair&lt;String, String&gt;&gt;, olqScores: Map&lt;OLQ, Float&gt; ): String</ID>
-    <ID>LongMethod:SSBInterviewPrompts.kt$SSBInterviewPrompts$fun buildQuestionGenerationPrompt( piqContext: String, count: Int, difficulty: Int, targetOLQs: List&lt;OLQ&gt;? = null ): String</ID>
-    <ID>LongMethod:SSBInterviewPrompts.kt$SSBInterviewPrompts$fun buildResponseAnalysisPrompt( questionText: String, responseText: String, expectedOLQs: List&lt;OLQ&gt;, responseMode: String ): String</ID>
     <ID>LongMethod:SubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePIQSubmission(data: Map&lt;*, *&gt;): PIQSubmission</ID>
     <ID>LongMethod:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$override suspend fun getMonthlyUsage(userId: String, month: String): Result&lt;Map&lt;String, UsageInfo&gt;&gt;</ID>
     <ID>LongMethod:TestDataFactory.kt$TestDataFactory$fun getOIRQuestions(): List&lt;OIRQuestion&gt;</ID>
@@ -78,27 +69,21 @@
     <ID>MaxLineLength:DifficultyProgressionManager.kt$DifficultyProgressionManager$Log.d(TAG, "Performance updated: attempts=${updated.totalAttempts}, avgScore=${updated.averageScore}, readyForNext=${updated.readyForNextLevel}")</ID>
     <ID>MaxLineLength:FirestoreGTORepository.kt$FirestoreGTORepository$topicChoices = ((if (hasNestedData) nestedData["topicChoices"] else data["topicChoices"]) as? List&lt;*&gt;)?.filterIsInstance&lt;String&gt;() ?: emptyList()</ID>
     <ID>MaxLineLength:FirestoreGTORepository.kt$FirestoreGTORepository$val</ID>
-    <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val expired = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Instant.now().toEpochMilli()).get().await().size()</ID>
+    <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val expired = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await().size()</ID>
+    <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val expiredQuery = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await()</ID>
     <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val mostUsedSnapshot = cacheCollection.orderBy(QuestionCacheMappers.FIELD_USAGE_COUNT, Query.Direction.DESCENDING).limit(5).get().await()</ID>
     <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val piqBased = cacheCollection.whereEqualTo(QuestionCacheMappers.FIELD_CACHE_TYPE, QuestionCacheType.PIQ_BASED.name).get().await().size()</ID>
     <ID>MaxLineLength:InterviewQuestionGenerator.kt$InterviewQuestionGenerator$Log.i(TAG, "✅ Generated ${finalQuestions.size}/$count questions (cache: $cachedCount, AI+fallback: ${finalQuestions.size - cachedCount})")</ID>
-    <ID>MaxLineLength:MockTestDataProvider.kt$MockTestDataProvider$context = "A hazy image showing a formal meeting or discussion in progress, typically interpreted as a corporate or academic setting."</ID>
     <ID>MaxLineLength:MockTestDataProvider.kt$MockTestDataProvider$imageDescription = "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads."</ID>
     <ID>MaxLineLength:MockTestDataProvider.kt$MockTestDataProvider$situation = "You are selected for a prestigious assignment, but your best friend who is more deserving is not. How do you handle this?"</ID>
     <ID>MaxLineLength:OIRCacheManagerIntegrationTest.kt$OIRCacheManagerIntegrationTest$coEvery { mockCacheDao.getUnusedQuestionsByType(OIRQuestionType.NON_VERBAL_REASONING.name, any(), any()) } returns nonVerbalQuestions</ID>
     <ID>MaxLineLength:OIRCacheManagerIntegrationTest.kt$OIRCacheManagerIntegrationTest$optionsJson = """[{"id":"opt_a","text":"Option A"},{"id":"opt_b","text":"Option B"},{"id":"opt_c","text":"Option C"},{"id":"opt_d","text":"Option D"}]"""</ID>
-    <ID>MaxLineLength:PsychologyTestPrompts.kt$PsychologyTestPrompts$candidateGender.equals("female", ignoreCase = true) -&gt; "Prefer a female protagonist in the story, but other genders are acceptable if justified."</ID>
-    <ID>MaxLineLength:PsychologyTestPrompts.kt$PsychologyTestPrompts$candidateGender.equals("male", ignoreCase = true) -&gt; "Prefer a male protagonist in the story, but other genders are acceptable if justified."</ID>
-    <ID>MaxLineLength:PsychologyTestPrompts.kt$PsychologyTestPrompts$val rewardPenaltyHint = "Avoid giving the protagonist a material reward (money, prize, trophy) at the end; this caps the maximum possible score."</ID>
-    <ID>MaxLineLength:TestDataFactory.kt$TestDataFactory$prompt = "Write a story about what is happening in this picture. Include what led to this situation and what will happen next."</ID>
     <ID>NestedBlockDepth:AnalyticsManager.kt$AnalyticsManager$fun trackFeatureUsed(featureName: String, parameters: Map&lt;String, Any&gt; = emptyMap())</ID>
     <ID>NestedBlockDepth:GPEImageCacheManager.kt$GPEImageCacheManager$suspend fun getImageForTest(): Result&lt;GPEQuestion&gt;</ID>
-    <ID>NestedBlockDepth:GeminiAIService.kt$GeminiAIService$private fun parseAnalysisResponse(response: GenerateContentResponse): Result&lt;ResponseAnalysis&gt;</ID>
     <ID>NestedBlockDepth:OIRQuestionSelector.kt$OIRQuestionSelector$suspend fun selectQuestions( count: Int = 50, difficulty: String? = null ): Result&lt;List&lt;OIRQuestion&gt;&gt;</ID>
     <ID>NestedBlockDepth:SubmissionArchiveRepository.kt$SubmissionArchiveRepository$suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result&lt;Int&gt;</ID>
     <ID>ReturnCount:AuthRepositoryImpl.kt$AuthRepositoryImpl$override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result&lt;SSBMaxUser&gt;</ID>
     <ID>ReturnCount:CloudGeminiAIService.kt$CloudGeminiAIService$private fun parseAnalysisResult(data: Any): Result&lt;ResponseAnalysis&gt;</ID>
-    <ID>ReturnCount:FirestoreGTORepository.kt$FirestoreGTORepository$override suspend fun getTestResult(submissionId: String): Result&lt;GTOResult&gt;</ID>
     <ID>ReturnCount:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$private fun documentToGradingQueueItem(data: Map&lt;String, Any&gt;): GradingQueueItem?</ID>
     <ID>ReturnCount:InterviewQuestionGenerator.kt$InterviewQuestionGenerator$private suspend fun generateAIQuestions( piqSnapshotId: String, count: Int ): List&lt;InterviewQuestion&gt;</ID>
     <ID>ReturnCount:QuestionCacheMappers.kt$QuestionCacheMappers$fun mapToCacheEntry(data: Map&lt;String, Any&gt;): QuestionCacheEntry?</ID>
@@ -143,9 +128,7 @@
     <ID>TooGenericExceptionThrown:SRTSubmissionRepository.kt$SRTSubmissionRepository$throw Exception("Cannot find userId for submission: $submissionId")</ID>
     <ID>TooGenericExceptionThrown:TATImageCacheManager.kt$TATImageCacheManager$throw Exception("Batch $batchId not found in Firestore")</ID>
     <ID>TooGenericExceptionThrown:TATImageCacheManager.kt$TATImageCacheManager$throw Exception("No images found in batch $batchId")</ID>
-    <ID>TooGenericExceptionThrown:TATImageCacheManager.kt$TATImageCacheManager$throw Exception("No images in cache")</ID>
     <ID>TooGenericExceptionThrown:TATImageCacheManager.kt$TATImageCacheManager$throw Exception("No valid images parsed from batch $batchId")</ID>
-    <ID>TooGenericExceptionThrown:TATSubmissionRepository.kt$TATSubmissionRepository$throw Exception("Cannot find userId for submission: $submissionId")</ID>
     <ID>TooGenericExceptionThrown:WATSubmissionRepository.kt$WATSubmissionRepository$throw Exception("Cannot find userId for submission: $submissionId")</ID>
     <ID>TooGenericExceptionThrown:WATWordCacheManager.kt$WATWordCacheManager$throw Exception("Batch $batchId not found in Firestore")</ID>
     <ID>TooGenericExceptionThrown:WATWordCacheManager.kt$WATWordCacheManager$throw Exception("No valid words parsed from batch $batchId")</ID>
@@ -156,39 +139,13 @@
     <ID>UnusedParameter:PIQDataMapper.kt$PIQDataMapper$maximumResidence: String</ID>
     <ID>UnusedParameter:PIQDataMapper.kt$PIQDataMapper$presentResidencePopulation: String</ID>
     <ID>UnusedParameter:TestProgressRepositoryImpl.kt$TestProgressRepositoryImpl$isPsychologyGroup: Boolean = false</ID>
-    <ID>UnusedPrivateMember:FirestoreGTORepository.kt$FirestoreGTORepository$private fun obstacleToMap(obstacle: ObstacleConfig): Map&lt;String, Any?&gt;</ID>
-    <ID>UnusedPrivateMember:FirestoreGTORepository.kt$FirestoreGTORepository$private fun solutionToMap(solution: ObstacleSolution): Map&lt;String, Any?&gt;</ID>
     <ID>UnusedPrivateMember:NotificationRepositoryImpl.kt$NotificationRepositoryImpl$private fun getDeviceId(): String</ID>
-    <ID>UnusedPrivateMember:SubscriptionManager.kt$SubscriptionManager$private suspend fun createNewMonthUsage(userId: String, month: String): TestUsageEntity</ID>
-    <ID>UnusedPrivateMember:SubscriptionManagerEdgeCasesTest.kt$SubscriptionManagerEdgeCasesTest$private fun mockFirestoreMissingUsage(userId: String)</ID>
-    <ID>UnusedPrivateMember:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$private fun getCurrentMonth(): String</ID>
     <ID>UnusedPrivateProperty:AnalyticsManager.kt$AnalyticsManager$private val firebaseAuth: FirebaseAuth</ID>
-    <ID>UnusedPrivateProperty:CloudGeminiAIService.kt$CloudGeminiAIService.Companion$private const val FUNCTION_ANALYZE_RESPONSE_STORED = "analyzeInterviewResponse"</ID>
-    <ID>UnusedPrivateProperty:DifficultyProgressionManager.kt$DifficultyProgressionManager.Companion$// Difficulty levels in order private val DIFFICULTY_ORDER = listOf("EASY", "MEDIUM", "HARD")</ID>
-    <ID>UnusedPrivateProperty:FirestoreGTORepository.kt$FirestoreGTORepository.Companion$private const val PATH_TOPICS = "topics"</ID>
-    <ID>UnusedPrivateProperty:FirestoreSubmissionRepositoryTest.kt$FirestoreSubmissionRepositoryTest$private lateinit var mockCollectionReference: com.google.firebase.firestore.CollectionReference</ID>
-    <ID>UnusedPrivateProperty:FirestoreSubmissionRepositoryTest.kt$FirestoreSubmissionRepositoryTest$private lateinit var mockDocumentReference: DocumentReference</ID>
-    <ID>UnusedPrivateProperty:FirestoreSubmissionRepositoryTest.kt$FirestoreSubmissionRepositoryTest$private lateinit var mockFirestore: FirebaseFirestore</ID>
-    <ID>UnusedPrivateProperty:GPEImageCacheManager.kt$GPEImageCacheManager$val resourcesList = if (resourcesJson != null) { try { @Suppress("UNCHECKED_CAST") gson.fromJson(resourcesJson, List::class.java) as? List&lt;String&gt; } catch (e: Exception) { Log.w(TAG, "Failed to parse resources JSON: $resourcesJson", e) null } } else { null }</ID>
-    <ID>UnusedPrivateProperty:GPEImageCacheManager.kt$GPEImageCacheManager.Companion$private const val METADATA_PATH = "test_content/gto/scenarios/gpe/meta"</ID>
-    <ID>UnusedPrivateProperty:GTOTaskCacheManager.kt$GTOTaskCacheManager.Companion$private const val METADATA_PATH = "test_content/gto/meta"</ID>
-    <ID>UnusedPrivateProperty:GeminiAIService.kt$GeminiAIService$val confidence = scoreObj.optInt("confidence", 50)</ID>
-    <ID>UnusedPrivateProperty:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$private val usersCollection = firestore.collection("users")</ID>
-    <ID>UnusedPrivateProperty:InterviewQuestionCacheManager.kt$InterviewQuestionCacheManager.Companion$private const val METADATA_PATH = "test_content/interview/meta"</ID>
-    <ID>UnusedPrivateProperty:OIRCacheManagerIntegrationTest.kt$OIRCacheManagerIntegrationTest$val unusedThreshold = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)</ID>
     <ID>UnusedPrivateProperty:OIRQuestionCacheManager.kt$OIRQuestionCacheManager$private val gson: Gson</ID>
-    <ID>UnusedPrivateProperty:PPDTImageCacheManager.kt$PPDTImageCacheManager.Companion$private const val METADATA_PATH = "test_content/ppdt/meta"</ID>
-    <ID>UnusedPrivateProperty:SRTSituationCacheDaoTest.kt$SRTSituationCacheDaoTest$val now = 10L</ID>
-    <ID>UnusedPrivateProperty:SRTSituationCacheManager.kt$SRTSituationCacheManager.Companion$private const val METADATA_PATH = "test_content/srt/meta"</ID>
     <ID>UnusedPrivateProperty:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$private val firebaseAuth: FirebaseAuth</ID>
-    <ID>UnusedPrivateProperty:TATImageCacheManager.kt$TATImageCacheManager.Companion$private const val METADATA_PATH = "test_content/tat/meta"</ID>
-    <ID>UnusedPrivateProperty:TestContentRepositoryImpl.kt$TestContentRepositoryImpl$private val testsCollection = firestore.collection("tests")</ID>
-    <ID>UnusedPrivateProperty:TestContentRepositoryImpl.kt$TestContentRepositoryImpl.Companion$private const val PATH_BATCHES = "batches"</ID>
-    <ID>UnusedPrivateProperty:TestContentRepositoryImpl.kt$TestContentRepositoryImpl.Companion$private const val PATH_TOPICS = "topics"</ID>
-    <ID>UnusedPrivateProperty:WATWordCacheManager.kt$WATWordCacheManager.Companion$private const val METADATA_PATH = "test_content/wat/meta"</ID>
     <ID>UseCheckOrError:FirebaseAuthService.kt$FirebaseAuthService$throw IllegalStateException("Web Client ID not found. Check google-services.json configuration.")</ID>
     <ID>VariableNaming:SubscriptionManager.kt$SubscriptionManager$private val TAG = "SubscriptionManager"</ID>
-    <ID>WildcardImport:AnalyticsRepositoryImpl.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:AnalyticsRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:AnalyticsRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:AuthRepositoryImpl.kt$import kotlinx.coroutines.flow.*</ID>
     <ID>WildcardImport:AuthRepositoryImplTest.kt$import org.junit.Assert.*</ID>
@@ -197,44 +154,42 @@
     <ID>WildcardImport:EnhancedInterviewPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:EnhancedPsychologyPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirebaseRulesValidationTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:FirestoreGTORepository.kt$import com.ssbmax.core.domain.model.gto.*</ID>
-    <ID>WildcardImport:FirestoreSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:FirestoreGTORepository.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
+    <ID>WildcardImport:FirestoreSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirestoreUserRepositoryTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:GPEImageCacheDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:GTOTaskCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:GradingQueueRepositoryImpl.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:GradingQueueRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:ImageUrlValidationTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:ImageUrlValidationTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:InterviewQuestionCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:MockTestDataProvider.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:MockTestDataProvider.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:NotificationDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:OIRCacheManagerIntegrationTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRCacheManagerIntegrationTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRPersonalSubmissionDataSource.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:OIRPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRPersonalSubmissionDataSourceTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRPersonalSubmissionDataSourceTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRQuestionCacheDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:OIRQuestionSelectorTest.kt$import io.mockk.*</ID>
-    <ID>WildcardImport:PIQPersonalSubmissionDataSource.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PIQPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTImageCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:PPDTImageCacheManagerTest.kt$import io.mockk.*</ID>
-    <ID>WildcardImport:PPDTImageCacheManagerTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PPDTPersonalSubmissionDataSource.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PPDTSubmissionMappers.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PersonalTestSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PsychTestMapper.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:PsychTestMapperTest.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PPDTPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PPDTSubmissionMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PersonalTestSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PsychTestMapper.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:PsychTestMapperTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PsychTestMapperTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PsychTestSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:SDTSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:PsychTestSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:SDTSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTSituationCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:SRTSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SRTSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudyContentRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:StudyProgressRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubmissionMappers.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:SubmissionMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubscriptionManagerEdgeCasesTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:SubscriptionManagerEdgeCasesTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SubscriptionManagerMasterTest.kt$import io.mockk.*</ID>
@@ -245,16 +200,16 @@
     <ID>WildcardImport:TATImageCacheDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:TATImageCacheManagerTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TATImageCacheManagerTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:TATSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TestContentMappers.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TestContentRepositoryImpl.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:TATSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:TestContentMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:TestContentRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TestContentRepositoryImplTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TestContentRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:TestDataFactory.kt$import com.ssbmax.core.domain.model.*</ID>
-    <ID>WildcardImport:TestProgressRepositoryImpl.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:TestDataFactory.kt$import com.ssbmax.shared.domain.model.*</ID>
+    <ID>WildcardImport:TestProgressRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TestRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:UserPerformanceDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:WATSubmissionRepository.kt$import com.ssbmax.core.domain.model.*</ID>
+    <ID>WildcardImport:WATSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATWordCacheDao.kt$import androidx.room.*</ID>
   </CurrentIssues>
 </SmellBaseline>

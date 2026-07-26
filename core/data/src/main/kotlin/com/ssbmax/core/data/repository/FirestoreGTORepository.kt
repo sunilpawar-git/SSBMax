@@ -44,7 +44,6 @@ class FirestoreGTORepository(
         
         // Subcollection paths
         private const val PATH_GTO = "gto"
-        private const val PATH_TOPICS = "topics"
         private const val PATH_SCENARIOS = "scenarios"
         private const val PATH_OBSTACLES = "obstacles"
         private const val PATH_BATCHES = "batches"
@@ -1114,29 +1113,6 @@ class FirestoreGTORepository(
             lastResetDate = (data["lastResetDate"] as? Long) ?: System.currentTimeMillis(),
             currentSequentialOrder = ((data["currentSequentialOrder"] as? Number)?.toInt()) ?: 1,
             lastCompletedAt = data["lastCompletedAt"] as? Long
-        )
-    }
-    
-    private fun obstacleToMap(obstacle: ObstacleConfig): Map<String, Any?> {
-        return mapOf(
-            "id" to obstacle.id,
-            "name" to obstacle.name,
-            "description" to obstacle.description,
-            "difficulty" to obstacle.difficulty,
-            "animationAsset" to obstacle.animationAsset,
-            "resources" to obstacle.resources,
-            "height" to obstacle.height,
-            "width" to obstacle.width,
-            "depth" to obstacle.depth
-        )
-    }
-    
-    private fun solutionToMap(solution: ObstacleSolution): Map<String, Any?> {
-        return mapOf(
-            "obstacleId" to solution.obstacleId,
-            "solutionText" to solution.solutionText,
-            "resourcesUsed" to solution.resourcesUsed,
-            "estimatedTime" to solution.estimatedTime
         )
     }
     

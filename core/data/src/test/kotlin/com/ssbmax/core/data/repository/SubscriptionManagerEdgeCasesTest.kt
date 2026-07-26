@@ -488,38 +488,6 @@ class SubscriptionManagerEdgeCasesTest {
         coEvery { mockTestUsageDao.insertOrReplace(any()) } just Runs
     }
     
-    private fun mockFirestoreMissingUsage(userId: String) {
-        val mockCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
-        val mockDocRef = mockk<DocumentReference>(relaxed = true)
-        val mockSubCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
-        val mockUsageDocRef = mockk<DocumentReference>(relaxed = true)
-        val mockTask = mockk<Task<DocumentSnapshot>>(relaxed = true)
-        val mockSnapshot = mockk<DocumentSnapshot>(relaxed = true)
-        
-        every { mockFirestore.collection("users") } returns mockCollectionRef
-        every { mockCollectionRef.document(userId) } returns mockDocRef
-        every { mockDocRef.collection("subscription") } returns mockSubCollectionRef
-        every { mockSubCollectionRef.document(any()) } returns mockUsageDocRef
-        every { mockUsageDocRef.get() } returns mockTask
-        
-        every { mockTask.isSuccessful } returns true
-        every { mockTask.isComplete } returns true
-        every { mockTask.result } returns mockSnapshot
-        every { mockTask.exception } returns null
-        every { mockSnapshot.exists() } returns false
-        every { mockSnapshot.getLong(any()) } returns null
-        
-        every { mockTask.addOnSuccessListener(any()) } answers {
-            val listener = firstArg<com.google.android.gms.tasks.OnSuccessListener<DocumentSnapshot>>()
-            listener.onSuccess(mockSnapshot)
-            mockTask
-        }
-        every { mockTask.addOnFailureListener(any()) } returns mockTask
-        every { mockTask.addOnCompleteListener(any()) } returns mockTask
-        
-        coEvery { mockTestUsageDao.insertOrReplace(any()) } just Runs
-    }
-    
     private fun mockFirestoreNetworkError(userId: String) {
         val mockCollectionRef = mockk<com.google.firebase.firestore.CollectionReference>(relaxed = true)
         val mockDocRef = mockk<DocumentReference>(relaxed = true)

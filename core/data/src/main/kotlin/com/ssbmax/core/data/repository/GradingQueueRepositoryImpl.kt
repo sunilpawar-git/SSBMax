@@ -22,7 +22,6 @@ class GradingQueueRepositoryImpl(
 ) : GradingQueueRepository {
 
     private val submissionsCollection = firestore.collection("submissions")
-    private val usersCollection = firestore.collection("users")
 
     companion object {
         private const val TAG = "GradingQueueRepo"

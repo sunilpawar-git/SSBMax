@@ -1,8 +1,6 @@
 package com.ssbmax.core.data.remote
 
 import com.google.android.gms.tasks.Tasks
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.ssbmax.shared.domain.model.*
 import io.mockk.*
@@ -23,9 +21,6 @@ import org.junit.Test
  */
 class FirestoreSubmissionRepositoryTest {
 
-    private lateinit var mockFirestore: FirebaseFirestore
-    private lateinit var mockCollectionReference: com.google.firebase.firestore.CollectionReference
-    private lateinit var mockDocumentReference: DocumentReference
     private lateinit var repository: FirestoreSubmissionRepository
 
     @Before

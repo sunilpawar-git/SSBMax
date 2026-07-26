@@ -20,7 +20,6 @@ class SRTSituationCacheManager(
     companion object {
         private const val TAG = "SRTCacheManager"
         private const val COLLECTION_PATH = "test_content/srt/situation_batches"
-        private const val METADATA_PATH = "test_content/srt/meta"
         private const val TARGET_CACHE_SIZE = 60 // Full SRT test size
         private const val MIN_CACHE_SIZE = 20 // Minimum before resyncing
     }

@@ -25,7 +25,6 @@ class GPEImageCacheManager(
         private const val TAG = "GPECacheManager"
         // Updated to match FirestoreGTORepository and upload script paths
         private const val COLLECTION_PATH = "test_content/gto/scenarios/gpe/batches"
-        private const val METADATA_PATH = "test_content/gto/scenarios/gpe/meta"
         private const val TARGET_CACHE_SIZE = 15 // Multiple GPE scenarios
         private const val MIN_CACHE_SIZE = 5 // Minimum before resyncing
     }
@@ -78,17 +77,6 @@ class GPEImageCacheManager(
                 try {
                     // Parse resources JSON array if present
                     val resourcesJson = imageMap["resources"] as? String
-                    val resourcesList = if (resourcesJson != null) {
-                        try {
-                            @Suppress("UNCHECKED_CAST")
-                            gson.fromJson(resourcesJson, List::class.java) as? List<String>
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Failed to parse resources JSON: $resourcesJson", e)
-                            null
-                        }
-                    } else {
-                        null
-                    }
 
                     CachedGPEImageEntity(
                         id = imageMap["id"] as? String ?: return@mapNotNull null,

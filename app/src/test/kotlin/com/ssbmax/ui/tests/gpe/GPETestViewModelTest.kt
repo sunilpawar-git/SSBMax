@@ -40,7 +40,6 @@ class GPETestViewModelTest : BaseViewModelTest() {
     private val mockSubscriptionManager = mockk<SubscriptionManager>(relaxed = true)
     private val mockSecurityLogger = mockk<SecurityEventLogger>(relaxed = true)
     private val mockSubmissionHelper = mockk<GTOTestSubmissionHelper>(relaxed = true)
-    private val mockWorkManager = mockk<androidx.work.WorkManager>(relaxed = true)
 
     private val mockUser = SSBMaxUser(
         id = "user-gpe-123",

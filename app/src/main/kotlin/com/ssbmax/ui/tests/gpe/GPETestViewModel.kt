@@ -194,8 +194,6 @@ class GPETestViewModel(
                 android.util.Log.d("GPETestViewModel", "📸 Loaded scenario: ${question.id}")
                 android.util.Log.d("GPETestViewModel", "📸 Scenario imageUrl: ${question.imageUrl}")
 
-                val config = GPETestConfig()
-
                 val newSession = GPETestSession(
                     sessionId = sessionResult.getOrNull()!!,
                     userId = userId,

@@ -226,8 +226,7 @@ class FAQViewModelTest : BaseViewModelTest() {
     fun `searchFAQs then filterByCategory applies both filters`() = runTest {
         // Given - search first
         viewModel.searchFAQs("test")
-        val searchCount = viewModel.uiState.value.displayedFAQs.size
-        
+
         // When - then filter by category
         viewModel.filterByCategory(FAQCategory.TESTS)
         

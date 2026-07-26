@@ -42,8 +42,7 @@ class SpeechToTextManager(
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
-    private var accumulatedTranscription = StringBuilder()
-    
+
     /** Flag to prevent callbacks after release/cancel */
     @Volatile
     private var isReleased = false

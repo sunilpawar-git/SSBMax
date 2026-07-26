@@ -42,7 +42,6 @@ class CloudGeminiAIService : AIService {
 
         // Firebase Function names
         private const val FUNCTION_ANALYZE_RESPONSE_INLINE = "analyzeResponseInline"
-        private const val FUNCTION_ANALYZE_RESPONSE_STORED = "analyzeInterviewResponse"
         private const val FUNCTION_GENERATE_QUESTIONS = "generateInterviewQuestions"
 
         // Timeout values (milliseconds)

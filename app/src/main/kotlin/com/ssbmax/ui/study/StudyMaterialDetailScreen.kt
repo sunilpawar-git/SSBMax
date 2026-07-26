@@ -36,7 +36,6 @@ fun StudyMaterialDetailScreen(
     viewModel: StudyMaterialDetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val materialId = categoryId // Alias for compatibility
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val context = androidx.compose.ui.platform.LocalContext.current
