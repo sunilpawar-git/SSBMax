@@ -1,408 +1,174 @@
 package com.ssbmax.core.data.repository
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.cash.turbine.test
-import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.data.local.SSBDatabase
-import com.ssbmax.core.data.preferences.ThemePreferenceManager
-import com.ssbmax.core.data.remote.FirebaseAuthService
-import com.ssbmax.core.data.remote.FirebaseInitializer
-import com.ssbmax.core.data.remote.FirestoreSubmissionRepository
-import com.ssbmax.core.data.remote.FirestoreUserRepository
-import com.ssbmax.shared.domain.model.*
-import com.ssbmax.shared.domain.repository.AuthRepository
-import com.ssbmax.shared.domain.repository.GradingQueueRepository
-import com.ssbmax.testing.BaseRepositoryTest
-import com.ssbmax.testing.FirebaseTestHelper
-import dagger.hilt.android.testing.HiltAndroidTest
+import com.ssbmax.core.data.FirebaseTestHelper
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.*
-import org.junit.runner.RunWith
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
 
 /**
- * Integration tests for GradingQueueRepositoryImpl
+ * Integration tests for [GradingQueueRepositoryImpl] with Firebase Emulator.
  *
- * Tests the instructor grading workflow where submissions are queued for grading,
- * instructors can claim submissions, and track grading progress.
+ * Ported (KMP Phase 7) from a Hilt/`BaseRepositoryTest`-based version that predated the
+ * Phase 3 Hilt->Koin migration and never compiled afterwards (missing `hilt-android-testing`
+ * dependency, deleted `ThemePreferenceManager` import, and an API surface — `getPendingSubmissions`,
+ * `claimSubmission`, `getInstructorQueue`, `submitGrading`, `getSubmissionDetails`,
+ * `observeQueueUpdates` — that no longer matches [com.ssbmax.shared.domain.repository.GradingQueueRepository]'s
+ * real methods). Rewritten against the actual current interface, using this module's plain-JUnit +
+ * `FirebaseTestHelper.getEmulatorFirestore()` pattern (matches `TestSubmissionRepositoryImplTest`,
+ * `TestContentRepositoryImplTest`), not the abandoned Hilt-DI harness.
+ *
+ * Prerequisites: Firebase Emulator running (`firebase emulators:start --only firestore`).
  */
-@HiltAndroidTest
-@RunWith(AndroidJUnit4::class)
-class GradingQueueRepositoryImplTest : BaseRepositoryTest() {
+class GradingQueueRepositoryImplTest {
 
-    @Inject
-    lateinit var gradingQueueRepository: GradingQueueRepository
-
-    @Inject
-    lateinit var firestore: FirebaseFirestore
-
-    @Inject
-    lateinit var authRepository: AuthRepository
-
-    @Inject
-    lateinit var firebaseTestHelper: FirebaseTestHelper
-
-    private lateinit var testInstructor: SSBMaxUser
-    private lateinit var testStudent: SSBMaxUser
-    private lateinit var testTATSubmission: TATSubmission
-    private lateinit var testWATSubmission: WATSubmission
+    private lateinit var firestore: FirebaseFirestore
+    private lateinit var repository: GradingQueueRepositoryImpl
+    private val seededIds = mutableListOf<String>()
 
     @Before
-    override fun setup() {
-        super.setup()
-
-        // Initialize Firebase for testing
-        FirebaseInitializer.initialize()
-        firebaseTestHelper.setupEmulator()
-
-        // Create test users
-        testInstructor = SSBMaxUser(
-            id = "instructor_001",
-            email = "instructor@test.com",
-            displayName = "Test Instructor",
-            photoUrl = null,
-            role = UserRole.INSTRUCTOR,
-            createdAt = System.currentTimeMillis(),
-            lastLoginAt = System.currentTimeMillis()
-        )
-
-        testStudent = SSBMaxUser(
-            id = "student_001",
-            email = "student@test.com",
-            displayName = "Test Student",
-            photoUrl = null,
-            role = UserRole.STUDENT,
-            createdAt = System.currentTimeMillis(),
-            lastLoginAt = System.currentTimeMillis()
-        )
-
-        // Create test submissions
-        testTATSubmission = createTestTATSubmission()
-        testWATSubmission = createTestWATSubmission()
+    fun setUp() {
+        firestore = FirebaseTestHelper.getEmulatorFirestore()
+        repository = GradingQueueRepositoryImpl(firestore)
     }
 
     @After
-    override fun tearDown() {
-        super.tearDown()
-        firebaseTestHelper.cleanup()
-    }
-
-    @Test
-    fun `getPendingSubmissions returns submissions awaiting grading`() = runTest(timeout = 30.seconds) {
-        // Given: Create test submissions in Firestore
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-        firebaseTestHelper.createTestSubmission(testWATSubmission)
-
-        // When: Get pending submissions
-        val pendingSubmissions = gradingQueueRepository.getPendingSubmissions().first()
-
-        // Then: Should return both submissions
-        Assert.assertTrue("Should have pending submissions", pendingSubmissions.isSuccess)
-        val submissions = pendingSubmissions.getOrNull() ?: emptyList()
-
-        // Verify TAT submission
-        val tatSubmission = submissions.find { it.submissionId == testTATSubmission.id }
-        Assert.assertNotNull("TAT submission should be in queue", tatSubmission)
-        Assert.assertEquals("TAT submission should have correct type", TestType.TAT, tatSubmission?.testType)
-        Assert.assertNull("TAT submission should not be claimed", tatSubmission?.claimedByInstructorId)
-
-        // Verify WAT submission
-        val watSubmission = submissions.find { it.submissionId == testWATSubmission.id }
-        Assert.assertNotNull("WAT submission should be in queue", watSubmission)
-        Assert.assertEquals("WAT submission should have correct type", TestType.WAT, watSubmission?.testType)
-        Assert.assertNull("WAT submission should not be claimed", watSubmission?.claimedByInstructorId)
-    }
-
-    @Test
-    fun `claimSubmission successfully claims submission for instructor`() = runTest(timeout = 30.seconds) {
-        // Given: Create test submission
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-
-        // When: Instructor claims the submission
-        val claimResult = gradingQueueRepository.claimSubmission(
-            submissionId = testTATSubmission.id,
-            instructorId = testInstructor.id
-        )
-
-        // Then: Claim should succeed
-        Assert.assertTrue("Claim should succeed", claimResult.isSuccess)
-
-        // Verify submission is now claimed
-        val updatedSubmissions = gradingQueueRepository.getPendingSubmissions().first()
-        Assert.assertTrue("Should get updated submissions", updatedSubmissions.isSuccess)
-
-        val claimedSubmission = updatedSubmissions.getOrNull()?.find { it.submissionId == testTATSubmission.id }
-        Assert.assertNotNull("Submission should still exist", claimedSubmission)
-        Assert.assertEquals("Submission should be claimed by instructor", testInstructor.id, claimedSubmission?.claimedByInstructorId)
-    }
-
-    @Test
-    fun `claimSubmission fails if already claimed by another instructor`() = runTest(timeout = 30.seconds) {
-        // Given: Create and claim submission with first instructor
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-        val firstClaim = gradingQueueRepository.claimSubmission(testTATSubmission.id, testInstructor.id)
-        Assert.assertTrue("First claim should succeed", firstClaim.isSuccess)
-
-        // When: Second instructor tries to claim the same submission
-        val secondInstructorId = "instructor_002"
-        val secondClaim = gradingQueueRepository.claimSubmission(testTATSubmission.id, secondInstructorId)
-
-        // Then: Second claim should fail
-        Assert.assertTrue("Second claim should fail", secondClaim.isFailure)
-        Assert.assertTrue("Should indicate already claimed", secondClaim.exceptionOrNull()?.message?.contains("already claimed") == true)
-    }
-
-    @Test
-    fun `getInstructorQueue returns submissions claimed by specific instructor`() = runTest(timeout = 30.seconds) {
-        // Given: Create multiple submissions and have instructor claim some
-        val anotherSubmission = testTATSubmission.copy(id = "tat_submission_002", userId = "student_002")
-
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-        firebaseTestHelper.createTestSubmission(anotherSubmission)
-        firebaseTestHelper.createTestSubmission(testWATSubmission)
-
-        // Instructor claims TAT submissions
-        gradingQueueRepository.claimSubmission(testTATSubmission.id, testInstructor.id)
-        gradingQueueRepository.claimSubmission(anotherSubmission.id, testInstructor.id)
-        // WAT submission remains unclaimed
-
-        // When: Get instructor's queue
-        val instructorQueue = gradingQueueRepository.getInstructorQueue(testInstructor.id).first()
-
-        // Then: Should return only claimed submissions
-        Assert.assertTrue("Should get instructor queue", instructorQueue.isSuccess)
-        val queueItems = instructorQueue.getOrNull() ?: emptyList()
-
-        Assert.assertEquals("Should have 2 items in instructor queue", 2, queueItems.size)
-
-        // Verify both TAT submissions are in queue
-        val tatIds = queueItems.map { it.submissionId }.toSet()
-        Assert.assertTrue("Should contain first TAT submission", testTATSubmission.id in tatIds)
-        Assert.assertTrue("Should contain second TAT submission", anotherSubmission.id in tatIds)
-        Assert.assertFalse("Should not contain WAT submission", testWATSubmission.id in tatIds)
-
-        // Verify all items are claimed by this instructor
-        queueItems.forEach { item ->
-            Assert.assertEquals("Item should be claimed by instructor", testInstructor.id, item.claimedByInstructorId)
+    fun tearDown() = runTest {
+        seededIds.forEach { id ->
+            try {
+                firestore.collection("submissions").document(id).delete().await()
+            } catch (e: Exception) {
+                // Ignore cleanup errors
+            }
         }
+        seededIds.clear()
     }
 
+    // Why this matters: instructors triage the queue oldest-first so nothing gets neglected,
+    // and already-graded/not-yet-submitted work must never reappear in their pending queue.
     @Test
-    fun `submitGrading completes grading workflow and removes from queue`() = runTest(timeout = 30.seconds) {
-        // Given: Create and claim submission
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-        gradingQueueRepository.claimSubmission(testTATSubmission.id, testInstructor.id)
+    fun observePendingSubmissions_excludes_graded_and_draft_and_sorts_oldest_first() = runTest {
+        val now = System.currentTimeMillis()
+        val oldest = seedSubmission(status = SubmissionStatus.SUBMITTED_PENDING_REVIEW, submittedAt = now - 100_000)
+        val newer = seedSubmission(status = SubmissionStatus.UNDER_REVIEW, submittedAt = now - 10_000)
+        seedSubmission(status = SubmissionStatus.GRADED, submittedAt = now - 200_000)
+        seedSubmission(status = SubmissionStatus.DRAFT, submittedAt = now - 300_000)
 
-        val grading = TATGrading(
-            submissionId = testTATSubmission.id,
-            instructorId = testInstructor.id,
-            overallScore = 85f,
-            thematicPerceptionScore = 18f,
-            imaginationScore = 17f,
-            characterDepictionScore = 17f,
-            emotionalToneScore = 17f,
-            narrativeStructureScore = 16f,
-            feedback = "Excellent storytelling with strong leadership themes",
-            storyWiseFeedback = listOf(
-                StoryGrading(
-                    storyId = testTATSubmission.stories[0].questionId,
-                    score = 85f,
-                    strengths = listOf("Leadership theme", "Positive resolution"),
-                    areasForImprovement = listOf("Add more emotional depth")
-                )
-            ),
-            gradedAt = System.currentTimeMillis()
-        )
+        val items = repository.observePendingSubmissions("instructor_001").first()
 
-        // When: Submit grading
-        val submitResult = gradingQueueRepository.submitGrading(grading)
-
-        // Then: Grading submission should succeed
-        Assert.assertTrue("Grading submission should succeed", submitResult.isSuccess)
-
-        // Submission should be removed from pending queue
-        val pendingAfterGrading = gradingQueueRepository.getPendingSubmissions().first()
-        Assert.assertTrue("Should get pending submissions", pendingAfterGrading.isSuccess)
-
-        val stillPending = pendingAfterGrading.getOrNull()?.find { it.submissionId == testTATSubmission.id }
-        Assert.assertNull("Graded submission should be removed from pending queue", stillPending)
+        assertEquals("Should only surface the pending+under_review items", 2, items.size)
+        assertEquals("Oldest submission must be first", oldest, items[0].submissionId)
+        assertEquals("Newer submission must be second", newer, items[1].submissionId)
     }
 
+    // Why this matters: the instructor's per-test-type queue view (e.g. "only show me TAT")
+    // must not leak submissions of other test types.
     @Test
-    fun `releaseSubmission returns claimed submission back to queue`() = runTest(timeout = 30.seconds) {
-        // Given: Create and claim submission
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
-        gradingQueueRepository.claimSubmission(testTATSubmission.id, testInstructor.id)
+    fun observeSubmissionsByTestType_filters_to_requested_type_only() = runTest {
+        val tatId = seedSubmission(testType = TestType.TAT, status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
+        seedSubmission(testType = TestType.WAT, status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
 
-        // Verify it's claimed
-        val claimedSubmissions = gradingQueueRepository.getInstructorQueue(testInstructor.id).first()
-        Assert.assertTrue("Should have claimed submission", claimedSubmissions.getOrNull()?.isNotEmpty() == true)
+        val items = repository.observeSubmissionsByTestType(TestType.TAT).first()
 
-        // When: Release the submission
-        val releaseResult = gradingQueueRepository.releaseSubmission(testTATSubmission.id, testInstructor.id)
-
-        // Then: Release should succeed
-        Assert.assertTrue("Release should succeed", releaseResult.isSuccess)
-
-        // Submission should be back in pending queue and unclaimed
-        val pendingAfterRelease = gradingQueueRepository.getPendingSubmissions().first()
-        Assert.assertTrue("Should get pending submissions", pendingAfterRelease.isSuccess)
-
-        val releasedSubmission = pendingAfterRelease.getOrNull()?.find { it.submissionId == testTATSubmission.id }
-        Assert.assertNotNull("Submission should be back in pending queue", releasedSubmission)
-        Assert.assertNull("Submission should be unclaimed", releasedSubmission?.claimedByInstructorId)
-
-        // Should not be in instructor's queue anymore
-        val instructorQueueAfterRelease = gradingQueueRepository.getInstructorQueue(testInstructor.id).first()
-        Assert.assertTrue("Should get instructor queue", instructorQueueAfterRelease.isSuccess)
-
-        val stillInQueue = instructorQueueAfterRelease.getOrNull()?.find { it.submissionId == testTATSubmission.id }
-        Assert.assertNull("Submission should not be in instructor queue", stillInQueue)
+        assertEquals("Only TAT submissions should be returned", 1, items.size)
+        assertEquals(tatId, items[0].submissionId)
     }
 
+    // Why this matters: instructor batches must be strictly isolated - grading a different
+    // batch's submissions by accident is a real workflow bug, not a cosmetic one.
     @Test
-    fun `getSubmissionDetails returns full submission data for grading`() = runTest(timeout = 30.seconds) {
-        // Given: Create test submission
-        firebaseTestHelper.createTestSubmission(testTATSubmission)
+    fun observeSubmissionsByBatch_filters_to_requested_batch_only() = runTest {
+        val batchAId = seedSubmission(batchId = "batch_A", status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
+        seedSubmission(batchId = "batch_B", status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
 
-        // When: Get submission details
-        val detailsResult = gradingQueueRepository.getSubmissionDetails(testTATSubmission.id)
+        val items = repository.observeSubmissionsByBatch("batch_A").first()
 
-        // Then: Should return complete submission data
-        Assert.assertTrue("Should get submission details", detailsResult.isSuccess)
-        val submission = detailsResult.getOrNull()
-
-        Assert.assertNotNull("Submission should exist", submission)
-        Assert.assertEquals("Should have correct submission ID", testTATSubmission.id, submission?.id)
-        Assert.assertEquals("Should have correct user ID", testTATSubmission.userId, submission?.userId)
-        Assert.assertEquals("Should have correct test type", TestType.TAT, submission?.testType)
-        Assert.assertEquals("Should have correct number of responses", testTATSubmission.stories.size, submission?.responses?.size)
+        assertEquals("Only batch_A submissions should be returned", 1, items.size)
+        assertEquals(batchAId, items[0].submissionId)
     }
 
+    // Why this matters: this is the mutual-exclusion mechanism preventing two instructors
+    // from grading the same submission simultaneously - it must actually persist the claim.
     @Test
-    fun `observeQueueUpdates provides real-time queue changes`() = runTest(timeout = 30.seconds) {
-        // Given: Start observing queue
-        gradingQueueRepository.observeQueueUpdates().test {
-            val initialQueue = awaitItem()
-            Assert.assertTrue("Initial queue should be empty or contain existing items", initialQueue.size >= 0)
+    fun markSubmissionUnderReview_claims_submission_for_instructor() = runTest {
+        val id = seedSubmission(status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
 
-            // When: Add new submission
-            firebaseTestHelper.createTestSubmission(testTATSubmission)
+        val result = repository.markSubmissionUnderReview(id, "instructor_001")
 
-            // Then: Should receive queue update
-            val updatedQueue = awaitItem()
-            val newSubmission = updatedQueue.find { it.submissionId == testTATSubmission.id }
-            Assert.assertNotNull("New submission should appear in queue updates", newSubmission)
+        assertTrue("Claim should succeed", result.isSuccess)
+        val doc = firestore.collection("submissions").document(id).get().await()
+        assertEquals(SubmissionStatus.UNDER_REVIEW.name, doc.getString("status"))
+        assertEquals("instructor_001", doc.getString("gradedByInstructorId"))
+    }
 
-            // When: Claim the submission
-            gradingQueueRepository.claimSubmission(testTATSubmission.id, testInstructor.id)
+    // Why this matters: an instructor abandoning a review must return the submission to the
+    // shared pending pool, unclaimed - otherwise it is silently lost from every instructor's queue.
+    @Test
+    fun releaseSubmissionFromReview_reverts_to_pending_and_clears_claim() = runTest {
+        val id = seedSubmission(status = SubmissionStatus.UNDER_REVIEW)
+        firestore.collection("submissions").document(id)
+            .update("gradedByInstructorId", "instructor_001").await()
 
-            // Then: Should receive another update
-            val claimedQueue = awaitItem()
-            val claimedSubmission = claimedQueue.find { it.submissionId == testTATSubmission.id }
-            Assert.assertNotNull("Claimed submission should still exist", claimedSubmission)
-            Assert.assertEquals("Should show as claimed", testInstructor.id, claimedSubmission?.claimedByInstructorId)
-        }
+        val result = repository.releaseSubmissionFromReview(id)
+
+        assertTrue("Release should succeed", result.isSuccess)
+        val doc = firestore.collection("submissions").document(id).get().await()
+        assertEquals(SubmissionStatus.SUBMITTED_PENDING_REVIEW.name, doc.getString("status"))
+        assertNull("Instructor claim must be cleared", doc.getString("gradedByInstructorId"))
+    }
+
+    // Why this matters: the instructor dashboard's headline counters (pending/graded/today/week)
+    // drive their workload picture - wrong counts mean instructors misjudge their queue.
+    // NOTE: `observeGradingStats` (production code, unchanged here) listens to the entire
+    // "submissions" collection with no per-instructor/per-run filter, so this asserts
+    // "at least" the counts this test seeded rather than exact equality - a real emulator
+    // instance may carry documents from other test classes in the same run.
+    @Test
+    fun observeGradingStats_computes_pending_and_graded_counts() = runTest {
+        val now = System.currentTimeMillis()
+        val oneDay = 24 * 60 * 60 * 1000L
+        seedSubmission(status = SubmissionStatus.SUBMITTED_PENDING_REVIEW)
+        seedSubmission(status = SubmissionStatus.UNDER_REVIEW)
+        seedSubmission(status = SubmissionStatus.GRADED, gradedAt = now - (2 * 60 * 60 * 1000L)) // today
+        seedSubmission(status = SubmissionStatus.GRADED, gradedAt = now - (8 * oneDay)) // outside the week window
+
+        val stats = repository.observeGradingStats("instructor_001").first()
+
+        assertTrue("Pending + under-review both count as pending", stats.totalPending >= 2)
+        assertTrue("Both graded submissions should count as graded", stats.totalGraded >= 2)
+        assertTrue("The recent grading should count as today", stats.todayGraded >= 1)
+        assertTrue("The recent grading falls within the week window", stats.weekGraded >= 1)
     }
 
     // ==================== HELPER METHODS ====================
 
-    private fun createTestTATSubmission(): TATSubmission {
-        val storyResponse = TATStoryResponse(
-            questionId = "tat_q_1",
-            story = "A young officer leads his team through a difficult situation, showing courage and leadership.",
-            charactersCount = 120,
-            viewingTimeTakenSeconds = 30,
-            writingTimeTakenSeconds = 180,
-            submittedAt = System.currentTimeMillis()
+    private suspend fun seedSubmission(
+        testType: TestType = TestType.TAT,
+        status: SubmissionStatus,
+        submittedAt: Long = System.currentTimeMillis(),
+        batchId: String? = null,
+        gradedAt: Long? = null
+    ): String {
+        val id = "submission_${System.nanoTime()}"
+        val data = mutableMapOf<String, Any?>(
+            "id" to id,
+            "userId" to "student_001",
+            "testType" to testType.name,
+            "status" to status.name,
+            "submittedAt" to submittedAt,
+            "batchId" to batchId
         )
-
-        return TATSubmission(
-            id = "tat_submission_001",
-            userId = testStudent.id,
-            testId = "tat_test_001",
-            stories = listOf(storyResponse),
-            totalTimeTakenMinutes = 4,
-            submittedAt = System.currentTimeMillis(),
-            aiPreliminaryScore = TATAIScore(
-                overallScore = 78f,
-                thematicPerceptionScore = 16f,
-                imaginationScore = 15f,
-                characterDepictionScore = 16f,
-                emotionalToneScore = 16f,
-                narrativeStructureScore = 15f,
-                feedback = "Good leadership themes",
-                storyWiseAnalysis = listOf(
-                    StoryAnalysis(
-                        questionId = "tat_q_1",
-                        sequenceNumber = 1,
-                        score = 78f,
-                        themes = listOf("Leadership", "Courage"),
-                        sentimentScore = 0.7f,
-                        keyInsights = listOf("Shows initiative")
-                    )
-                ),
-                strengths = listOf("Leadership themes"),
-                areasForImprovement = listOf("Add more detail")
-            )
-        )
-    }
-
-    private fun createTestWATSubmission(): WATSubmission {
-        val wordResponses = listOf(
-            WATWordResponse(
-                wordId = "wat_w_1",
-                word = "Leadership",
-                response = "Leading a team to success",
-                timeTakenSeconds = 8,
-                submittedAt = System.currentTimeMillis(),
-                isSkipped = false
-            ),
-            WATWordResponse(
-                wordId = "wat_w_2",
-                word = "Courage",
-                response = "Facing fears bravely",
-                timeTakenSeconds = 6,
-                submittedAt = System.currentTimeMillis(),
-                isSkipped = false
-            )
-        )
-
-        return WATSubmission(
-            id = "wat_submission_001",
-            userId = testStudent.id,
-            testId = "wat_test_001",
-            responses = wordResponses,
-            totalTimeTakenMinutes = 15,
-            submittedAt = System.currentTimeMillis(),
-            aiPreliminaryScore = WATAIScore(
-                overallScore = 82f,
-                positiveResponses = 1,
-                negativeResponses = 0,
-                neutralResponses = 1,
-                uniqueResponses = 2,
-                averageResponseLength = 12.5f,
-                creativityScore = 16f,
-                relevanceScore = 17f,
-                sentimentScore = 0.8f,
-                feedback = "Good positive associations",
-                wordWiseAnalysis = wordResponses.map { response ->
-                    WordAnalysis(
-                        wordId = response.wordId,
-                        word = response.word,
-                        response = response.response,
-                        score = 82f,
-                        sentiment = if (response.response.contains("success") || response.response.contains("bravely")) "positive" else "neutral",
-                        themes = listOf("Leadership", "Success"),
-                        isOriginal = true
-                    )
-                },
-                strengths = listOf("Positive outlook", "Good associations"),
-                areasForImprovement = listOf("More detailed responses")
-            )
-        )
+        if (gradedAt != null) {
+            data["gradedAt"] = gradedAt
+        }
+        firestore.collection("submissions").document(id).set(data).await()
+        seededIds.add(id)
+        return id
     }
 }
