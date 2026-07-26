@@ -1,0 +1,66 @@
+package com.ssbmax.shared.di
+
+import com.ssbmax.shared.ai.KtorAIService
+import com.ssbmax.shared.ai.KtorGeminiClient
+import com.ssbmax.shared.ai.KtorPPDTAnalyzer
+import com.ssbmax.shared.ai.KtorTATStoryAnalyzer
+import com.ssbmax.shared.data.repository.OirResultCache
+import com.ssbmax.shared.db.DatabaseDriverFactory
+import com.ssbmax.shared.db.SharedDatabase
+import com.ssbmax.shared.domain.service.AIService
+import com.ssbmax.shared.domain.service.LoggingSubmissionAnalysisTrigger
+import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
+import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.NoOpLogger
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
+
+/**
+ * Cross-cutting infrastructure: platform shims, local DB, HTTP/Gemini client,
+ * and the one [SubmissionAnalysisTrigger] binding shared by every async-analyzed
+ * test vertical (PPDT/TAT/WAT/SRT/SDT/GTO/Interview) — see that interface's own
+ * doc comment for the still-open real consequence (submissions persist but
+ * aren't yet AI-analyzed through this `shared` path).
+ *
+ * DomainLogger is bound to a no-op implementation here — a real cross-platform
+ * logger (Android logcat / iOS os_log) remains unbuilt (tracked in the plan's
+ * open-items table, not gated to a specific phase).
+ *
+ * The Gemini API key is read from Koin's property store (`getProperty`, empty
+ * default) rather than hardcoded, per this repo's "never hardcode secrets"
+ * rule — the app's `startKoin()` call must supply it via `properties()`/
+ * `androidFileProperties()` before this module resolves [KtorGeminiClient].
+ */
+val coreInfraModule = module {
+    includes(platformModule)
+
+    single<DomainLogger> { NoOpLogger() }
+
+    single { SharedDatabase(get<DatabaseDriverFactory>().createDriver()) }
+    single { OirResultCache(get()) }
+
+    single<HttpClient> {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+    }
+    single {
+        KtorGeminiClient(
+            httpClient = get(),
+            apiKey = getProperty("GEMINI_API_KEY", "")
+        )
+    }
+    single { KtorPPDTAnalyzer(client = get(), logger = get()) }
+    single { KtorTATStoryAnalyzer(client = get(), logger = get()) }
+    factoryOf(::KtorAIService) bind AIService::class
+
+    singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
+}
