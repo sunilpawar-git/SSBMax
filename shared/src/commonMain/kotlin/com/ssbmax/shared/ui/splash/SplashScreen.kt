@@ -49,14 +49,11 @@ import ssbmax.shared.generated.resources.splash_version
  * silently different:
  * - `koinInject()`, not `koinViewModel()` / a default-arg constructor param —
  *   this codebase's KMP ViewModels are plain classes (see [SplashViewModel]
- *   doc), so they're resolved like any other Koin single/factory, matching
- *   the pattern already established by `SpikeApp.kt`'s `OirResultStatusText`.
+ *   doc), so they're resolved like any other Koin single/factory.
  * - `collectAsState()`, not `collectAsStateWithLifecycle()` — the Android
- *   original uses the latter, but the only other KMP screen in this codebase
- *   (`SpikeApp.kt`) uses plain `collectAsState()` to sidestep needing a real
- *   `LifecycleOwner` on iOS. Matches that established convention rather than
- *   introducing a second pattern; revisit if iOS's CMP `LifecycleOwner`
- *   support is confirmed sufficient in a later phase.
+ *   original uses the latter, but this screen uses plain `collectAsState()`
+ *   to sidestep needing a real `LifecycleOwner` on iOS; revisit if iOS's
+ *   CMP `LifecycleOwner` support is confirmed sufficient in a later phase.
  * - Dropped two unused imports present in the Android original
  *   (`androidx.compose.foundation.Image`, `androidx.compose.ui.res.painterResource`)
  *   — grep-confirmed dead in the original (no `Image(...)` call in the body).

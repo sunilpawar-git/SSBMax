@@ -18,7 +18,7 @@ import org.koin.core.context.startKoin
  *
  * Phase 5: renders the real [SSBMaxNavHost] wrapped in [SSBMaxAppScaffold]
  * (this session's nav-chrome addition -- drawer + bottom nav bar) instead of
- * the Phase 0 [SpikeApp] demo screen — the first real multi-screen,
+ * the Phase 0 single-screen demo it replaced — the first real multi-screen,
  * chrome-wrapped flow exercised on iOS. The `NavHostController` is created
  * here (not inside [SSBMaxNavHost]) so the scaffold and the nav graph share
  * the same controller instance, matching the Android original's
