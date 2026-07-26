@@ -7,52 +7,55 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.ssbmax.MainActivity
+import com.ssbmax.shared.domain.model.FCMToken
 import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.NotificationRepository
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Firebase Cloud Messaging Service for SSBMax
  * Handles incoming push notifications from Firebase
- * 
- * Note: Firebase services can't use constructor injection easily.
- * For now, notifications are handled directly in this service.
- * 
- * TODO: Create NotificationRepository for:
- *  - Saving notification history to local/remote database
- *  - Tracking notification read/unread status
- *  - Managing notification preferences
- *  - Syncing FCM tokens to Firestore
- * 
- * TODO: Consider using WorkManager for:
- *  - Handling notifications when app is killed
- *  - Background notification processing
- *  - Retry logic for failed operations
  */
-class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
-    
-    // Note: Services in Android can't easily use Hilt constructor injection
-    // Would need @AndroidEntryPoint and lateinit var with @Inject
-    // For now, keeping notification handling self-contained
-    
+class SSBMaxFirebaseMessagingService : FirebaseMessagingService(), KoinComponent {
+
+    private val authRepository: AuthRepository by inject()
+    private val notificationRepository: NotificationRepository by inject()
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
+
     /**
      * Called when a new FCM token is generated
      * This happens on first app install and when token is refreshed
      */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        
+
         android.util.Log.i(TAG, "New FCM token generated (length: ${token.length})")
-        android.util.Log.d(TAG, "Full token: $token")
-        
-        // TODO: Send token to NotificationRepository to save in Firestore
-        // This will allow:
-        //  - Sending targeted push notifications to this device
-        //  - Managing tokens per user (multiple devices)
-        //  - Removing stale tokens when user logs out
+
+        val userId = authRepository.currentUser.value?.id ?: return
+        val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+            ?: token.take(DEVICE_ID_FALLBACK_LENGTH)
+
+        serviceScope.launch {
+            notificationRepository.saveFCMToken(
+                FCMToken(
+                    userId = userId,
+                    token = token,
+                    deviceId = deviceId,
+                    platform = "android"
+                )
+            )
+        }
     }
     
     /**
@@ -279,7 +282,8 @@ class SSBMaxFirebaseMessagingService : FirebaseMessagingService() {
     
     companion object {
         private const val TAG = "SSBMaxFCM"
-        
+        private const val DEVICE_ID_FALLBACK_LENGTH = 16
+
         // Notification channel IDs
         private const val CHANNEL_GRADING = "grading_channel"
         private const val CHANNEL_FEEDBACK = "feedback_channel"

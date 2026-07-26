@@ -236,7 +236,7 @@ class TestProgressRepositoryImplTest {
             
             assertEquals(TestStatus.COMPLETED, progress.gtoProgress.status)
             assertEquals(70f, progress.gtoProgress.latestScore)
-            assertEquals(TestType.GTO, progress.gtoProgress.testType)
+            assertEquals(TestType.GTO_GD, progress.gtoProgress.testType)
             
             cancelAndIgnoreRemainingEvents()
         }

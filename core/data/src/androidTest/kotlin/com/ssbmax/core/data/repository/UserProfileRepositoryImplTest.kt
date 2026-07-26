@@ -287,8 +287,8 @@ class UserProfileRepositoryImplTest {
     fun profile_supports_all_subscription_types() = runTest {
         val subscriptionTypes = listOf(
             SubscriptionType.FREE,
-            SubscriptionType.PREMIUM_ASSESSOR,
-            SubscriptionType.PREMIUM_AI
+            SubscriptionType.PRO,
+            SubscriptionType.PREMIUM
         )
         
         subscriptionTypes.forEach { subType ->

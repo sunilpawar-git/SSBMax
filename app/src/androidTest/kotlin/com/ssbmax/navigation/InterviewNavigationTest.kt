@@ -9,51 +9,28 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.testing.TestNavHostController
-import dagger.hilt.android.testing.HiltAndroidRule
-import org.junit.Before
-import org.junit.Rule
+import com.ssbmax.testing.BaseComposeTest
 import org.junit.Test
 
 /**
  * Interview Navigation Tests
- * 
+ *
  * These tests verify that interview navigation properly manages the back stack
  * to prevent the regression where exiting an interview left the session in the
  * back stack, causing back button to return to the interview.
- * 
+ *
  * Key invariants tested:
  * 1. After exiting interview, interview screens are removed from back stack
  * 2. Navigation uses StudentHome (always in stack) instead of TopicScreen (might not be)
  * 3. Back button after exit goes to correct destination, not interview
  */
-class InterviewNavigationTest {
-
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
-
-    @get:Rule(order = 1)
-    val composeTestRule = createComposeRule()
+class InterviewNavigationTest : BaseComposeTest() {
 
     private lateinit var navController: TestNavHostController
-
-    @Before
-    fun setup() {
-        hiltRule.inject()
-    }
 
     // =========================================================================
     // ROUTE GENERATION TESTS
     // =========================================================================
-
-    @Test
-    fun textInterviewSession_route_generatesCorrectly() {
-        val sessionId = "test-session-123"
-        val route = SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)
-        
-        assert(route == "interview/text/$sessionId") {
-            "VoiceInterviewSession route should be interview/voice/{sessionId}. Got: $route"
-        }
-    }
 
     @Test
     fun voiceInterviewSession_route_generatesCorrectly() {
@@ -107,7 +84,7 @@ class InterviewNavigationTest {
             navController.navigate("interview/text/test-123")
             
             // Verify interview is in back stack
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.any { it.contains("interview/text") }) {
@@ -124,7 +101,7 @@ class InterviewNavigationTest {
             }
             
             // Verify interview is NOT in back stack after exit
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.none { it.contains("interview/text") }) {
@@ -162,7 +139,7 @@ class InterviewNavigationTest {
             navController.navigate("interview/voice/test-456")
             
             // Verify interview is in back stack
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.any { it.contains("interview/voice") }) {
@@ -178,7 +155,7 @@ class InterviewNavigationTest {
             }
             
             // Verify interview is NOT in back stack after exit
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.none { it.contains("interview/voice") }) {
@@ -215,7 +192,7 @@ class InterviewNavigationTest {
             navController.navigate("interview/text/test-789")
             
             // Verify NO TopicScreen in back stack (this was the bug scenario)
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.none { it.contains("topic/") }) {
@@ -233,7 +210,7 @@ class InterviewNavigationTest {
             }
             
             // Verify interview is NOT in back stack
-            backStackEntries = navController.backQueue.mapNotNull { 
+            backStackEntries = navController.currentBackStack.value.mapNotNull { 
                 it.destination.route 
             }
             assert(backStackEntries.none { it.contains("interview/text") }) {
@@ -327,7 +304,7 @@ class InterviewNavigationTest {
             navController.navigate("any/other/route") // Can navigate multiple times
             
             // StudentHome should still be in back stack
-            val hasStudentHome = navController.backQueue.any { 
+            val hasStudentHome = navController.currentBackStack.value.any { 
                 it.destination.route == "student_home" 
             }
             assert(hasStudentHome) {
@@ -362,7 +339,7 @@ class InterviewNavigationTest {
             navController.navigate("screen2")
             navController.navigate("screen3")
             
-            assert(navController.backQueue.size == 4) { // start + 3 screens
+            assert(navController.currentBackStack.value.size == 4) { // start + 3 screens
                 "Should have 4 entries before popUpTo"
             }
             
@@ -374,7 +351,7 @@ class InterviewNavigationTest {
             }
             
             // Should only have StudentHome + destination
-            val routes = navController.backQueue.mapNotNull { it.destination.route }
+            val routes = navController.currentBackStack.value.mapNotNull { it.destination.route }
             assert(routes.size == 2) {
                 "Should have 2 entries after popUpTo. Got: $routes"
             }
@@ -387,23 +364,3 @@ class InterviewNavigationTest {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

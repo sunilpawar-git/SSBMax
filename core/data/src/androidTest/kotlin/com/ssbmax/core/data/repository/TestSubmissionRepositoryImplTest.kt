@@ -433,7 +433,7 @@ class TestSubmissionRepositoryImplTest {
         val testTypes = listOf(
             TestType.OIR, TestType.PPDT, TestType.TAT,
             TestType.WAT, TestType.SRT, TestType.SD,
-            TestType.GTO, TestType.IO
+            TestType.GTO_GD, TestType.IO
         )
         
         testTypes.forEach { testType ->
