@@ -46,6 +46,7 @@ class GitLiveDifficultyProgressionManager(
         val now = Clock.System.now().toEpochMilliseconds()
 
         val newTotal: Int
+        val newQuestionsAttempted: Int
         val newCorrect: Int
         val newIncorrect: Int
         val newAvgScore: Float
@@ -54,6 +55,7 @@ class GitLiveDifficultyProgressionManager(
 
         if (existing != null) {
             newTotal = existing.totalAttempts.toInt() + 1
+            newQuestionsAttempted = existing.totalQuestionsAttempted.toInt() + totalQuestions
             newCorrect = existing.correctAnswers.toInt() + correctAnswers
             newIncorrect = existing.incorrectAnswers.toInt() + (totalQuestions - correctAnswers)
             newAvgScore = ((existing.averageScore.toFloat() * existing.totalAttempts) + score) / newTotal
@@ -61,6 +63,7 @@ class GitLiveDifficultyProgressionManager(
             firstAttemptAt = existing.firstAttemptAt
         } else {
             newTotal = 1
+            newQuestionsAttempted = totalQuestions
             newCorrect = correctAnswers
             newIncorrect = totalQuestions - correctAnswers
             newAvgScore = score
@@ -72,6 +75,7 @@ class GitLiveDifficultyProgressionManager(
             testType = testType,
             difficulty = difficulty,
             totalAttempts = newTotal.toLong(),
+            totalQuestionsAttempted = newQuestionsAttempted.toLong(),
             correctAnswers = newCorrect.toLong(),
             incorrectAnswers = newIncorrect.toLong(),
             averageScore = newAvgScore.toDouble(),
@@ -97,8 +101,9 @@ class GitLiveDifficultyProgressionManager(
 
         val currentDifficulty = performances.maxByOrNull { it.lastAttemptAt }?.currentLevel ?: "EASY"
         val totalTests = performances.sumOf { it.totalAttempts }.toInt()
-        val overallAccuracy = if (totalTests > 0) {
-            performances.sumOf { it.correctAnswers }.toFloat() / totalTests * 100
+        val totalQuestionsAttempted = performances.sumOf { it.totalQuestionsAttempted }.toInt()
+        val overallAccuracy = if (totalQuestionsAttempted > 0) {
+            performances.sumOf { it.correctAnswers }.toFloat() / totalQuestionsAttempted * 100
         } else 0f
 
         emit(

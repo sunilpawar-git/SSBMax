@@ -828,5 +828,23 @@ object DatabaseMigrations {
             )
         }
     }
+
+    /**
+     * Migration from version 25 to 26
+     * Fixes the accuracy >100% bug: `totalAttempts` counts sessions but `correctAnswers`
+     * accumulates raw per-question counts. Adds `totalQuestionsAttempted` as the correct
+     * accuracy denominator. Backfilled from `correctAnswers + incorrectAnswers`, which has
+     * always been the true historical per-question total (no data loss).
+     */
+    val MIGRATION_25_26 = object : Migration(25, 26) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "ALTER TABLE user_performance ADD COLUMN totalQuestionsAttempted INTEGER NOT NULL DEFAULT 0"
+            )
+            database.execSQL(
+                "UPDATE user_performance SET totalQuestionsAttempted = correctAnswers + incorrectAnswers"
+            )
+        }
+    }
 }
 

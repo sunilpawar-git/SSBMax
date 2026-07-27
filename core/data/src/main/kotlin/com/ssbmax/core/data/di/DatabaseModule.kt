@@ -43,7 +43,8 @@ val databaseModule = module {
                 DatabaseMigrations.MIGRATION_21_22, // Phase 6: context→imageContextJson + genderTag on ppdt images
                 DatabaseMigrations.MIGRATION_22_23, // Phase 6: 24h TTL staleness-check column on ppdt_batch_metadata
                 DatabaseMigrations.MIGRATION_23_24, // Phase 2 TAT: pool-aware schema + tat_batch_metadata TTL
-                DatabaseMigrations.MIGRATION_24_25  // Phase 3 TAT: tat_story_assessments table for per-story multimodal cache
+                DatabaseMigrations.MIGRATION_24_25, // Phase 3 TAT: tat_story_assessments table for per-story multimodal cache
+                DatabaseMigrations.MIGRATION_25_26  // Add totalQuestionsAttempted, fixes accuracy >100% bug
             )
             .fallbackToDestructiveMigration() // If migration fails, recreate database
             .build()

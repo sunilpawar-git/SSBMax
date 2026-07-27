@@ -17,7 +17,8 @@ data class UserPerformanceEntity(
     val difficulty: String, // "EASY", "MEDIUM", "HARD"
     
     // Performance metrics
-    val totalAttempts: Int = 0,
+    val totalAttempts: Int = 0, // sessions recorded
+    val totalQuestionsAttempted: Int = 0, // cumulative questions across all sessions (accuracy denominator)
     val correctAnswers: Int = 0,
     val incorrectAnswers: Int = 0,
     val averageScore: Float = 0f, // 0-100
@@ -36,8 +37,8 @@ data class UserPerformanceEntity(
      * Calculate accuracy percentage
      */
     val accuracy: Float
-        get() = if (totalAttempts > 0) {
-            (correctAnswers.toFloat() / totalAttempts) * 100
+        get() = if (totalQuestionsAttempted > 0) {
+            (correctAnswers.toFloat() / totalQuestionsAttempted) * 100
         } else 0f
     
     /**

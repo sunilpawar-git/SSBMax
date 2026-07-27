@@ -88,14 +88,31 @@ class GitLiveAnalyticsRepositoryTest {
         assertEquals("MEDIUM", manager.getRecommendedDifficulty("SRT"))
     }
 
-    // Note on correctAnswers vs. accuracy: UserPerformanceRow.accuracy (like the
-    // Android UserPerformanceEntity it mirrors) is correctAnswers / totalAttempts
-    // * 100, where totalAttempts counts recorded *sessions* but correctAnswers
-    // accumulates per-question correct counts across those sessions -- so for
-    // any multi-question test this can exceed 100%. That's a faithfully-ported
-    // quirk from the Android original (AnalyticsRepositoryImpl/
-    // DifficultyProgressionManager), not something this slice fixes. These
-    // tests use correctAnswers = 0 to get a clean, unambiguous 0% reading.
+    @Test
+    fun `accuracy stays at 80 percent on the very first session of a 10-question test`() = runTest {
+        // WHY: totalAttempts counts sessions (1 here), while correctAnswers accumulates the
+        // raw per-question correct count (8). The old formula divided by totalAttempts,
+        // giving 8/1*100 = 800% on the very first test taken. accuracy must use the
+        // cumulative totalQuestionsAttempted (10) as its denominator instead: 8/10*100 = 80%.
+        manager.recordPerformance("OIR", "EASY", score = 80f, correctAnswers = 8, totalQuestions = 10, timeSeconds = 30f)
+
+        val stats = repository.getDifficultyStats("OIR", "EASY")
+
+        assertEquals(80f, stats?.accuracy)
+    }
+
+    @Test
+    fun `accuracy stays at 80 percent across two sessions of a 10-question test`() = runTest {
+        // WHY: two sessions of 8/10 correct raw-accumulate to 16 correct out of 20 questions
+        // attempted (not 2 sessions). Old formula: 16/2*100 = 800%. Fixed: 16/20*100 = 80%.
+        manager.recordPerformance("OIR", "EASY", score = 80f, correctAnswers = 8, totalQuestions = 10, timeSeconds = 30f)
+        manager.recordPerformance("OIR", "EASY", score = 80f, correctAnswers = 8, totalQuestions = 10, timeSeconds = 30f)
+
+        val stats = repository.getDifficultyStats("OIR", "EASY")
+
+        assertEquals(80f, stats?.accuracy)
+        assertTrue((stats?.accuracy ?: 0f) <= 100f)
+    }
 
     @Test
     fun `getRecommendedDifficulty stays EASY below the accuracy threshold`() = runTest {

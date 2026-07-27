@@ -68,7 +68,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         UserPerformanceEntity::class,
         TATStoryAssessmentEntity::class
     ],
-    version = 25, // Phase 3 TAT: tat_story_assessments table for per-story multimodal analysis cache (migrated from 24)
+    version = 26, // Adds totalQuestionsAttempted to user_performance (fixes accuracy >100% bug, migrated from 25)
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)

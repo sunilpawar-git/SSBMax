@@ -82,13 +82,15 @@ class DifficultyProgressionManager(
         val updated = if (existing != null) {
             // Update existing record
             val newTotal = existing.totalAttempts + 1
+            val newQuestionsAttempted = existing.totalQuestionsAttempted + totalQuestions
             val newCorrect = existing.correctAnswers + correctAnswers
             val newIncorrect = existing.incorrectAnswers + (totalQuestions - correctAnswers)
             val newAvgScore = ((existing.averageScore * existing.totalAttempts) + score) / newTotal
             val newAvgTime = ((existing.averageTimeSeconds * existing.totalAttempts) + timeSeconds) / newTotal
-            
+
             existing.copy(
                 totalAttempts = newTotal,
+                totalQuestionsAttempted = newQuestionsAttempted,
                 correctAnswers = newCorrect,
                 incorrectAnswers = newIncorrect,
                 averageScore = newAvgScore,
@@ -104,6 +106,7 @@ class DifficultyProgressionManager(
                 testType = testType,
                 difficulty = difficulty,
                 totalAttempts = 1,
+                totalQuestionsAttempted = totalQuestions,
                 correctAnswers = correctAnswers,
                 incorrectAnswers = totalQuestions - correctAnswers,
                 averageScore = score,
@@ -134,9 +137,10 @@ class DifficultyProgressionManager(
             
             val currentDifficulty = performances.maxByOrNull { it.lastAttemptAt }?.currentLevel ?: "EASY"
             val totalTests = performances.sumOf { it.totalAttempts }
-            val overallAccuracy = if (totalTests > 0) {
-                performances.sumOf { it.correctAnswers }.toFloat() / 
-                performances.sumOf { it.totalAttempts } * 100
+            val totalQuestionsAttempted = performances.sumOf { it.totalQuestionsAttempted }
+            val overallAccuracy = if (totalQuestionsAttempted > 0) {
+                performances.sumOf { it.correctAnswers }.toFloat() /
+                totalQuestionsAttempted * 100
             } else 0f
             
             TestPerformanceSummary(

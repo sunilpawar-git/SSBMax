@@ -13,6 +13,7 @@ import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_20_21
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_21_22
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_22_23
 import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_23_24
+import com.ssbmax.core.data.local.DatabaseMigrations.MIGRATION_25_26
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -641,6 +642,78 @@ class SSBDatabaseMigrationTest {
         }
         openHelper.close()
         context.deleteDatabase("migration-test-23-24")
+    }
+
+    @Test
+    fun migrate25To26_addsTotalQuestionsAttemptedAndBackfillsFromExistingCounts() {
+        // WHY: the old accuracy formula divided correctAnswers by totalAttempts (sessions),
+        // which could exceed 100% for multi-question tests. The new totalQuestionsAttempted
+        // column is the correct denominator, and must be backfilled from
+        // correctAnswers + incorrectAnswers (the true historical per-question total) so
+        // existing users don't see their accuracy silently reset to 0%.
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val config = SupportSQLiteOpenHelper.Configuration.builder(context)
+            .name("migration-test-25-26")
+            .callback(object : SupportSQLiteOpenHelper.Callback(25) {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS user_performance (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            testType TEXT NOT NULL,
+                            difficulty TEXT NOT NULL,
+                            totalAttempts INTEGER NOT NULL DEFAULT 0,
+                            correctAnswers INTEGER NOT NULL DEFAULT 0,
+                            incorrectAnswers INTEGER NOT NULL DEFAULT 0,
+                            averageScore REAL NOT NULL DEFAULT 0.0,
+                            averageTimeSeconds REAL NOT NULL DEFAULT 0.0,
+                            currentLevel TEXT NOT NULL,
+                            readyForNextLevel INTEGER NOT NULL DEFAULT 0,
+                            lastAttemptAt INTEGER NOT NULL,
+                            firstAttemptAt INTEGER NOT NULL,
+                            updatedAt INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT INTO user_performance
+                        (testType, difficulty, totalAttempts, correctAnswers, incorrectAnswers,
+                         currentLevel, lastAttemptAt, firstAttemptAt, updatedAt)
+                        VALUES ('OIR', 'EASY', 2, 16, 4, 'EASY', 1000, 1000, 1000)
+                        """.trimIndent()
+                    )
+                }
+
+                override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+            })
+            .build()
+        val openHelper = factory.create(config)
+        openHelper.writableDatabase.apply {
+            MIGRATION_25_26.migrate(this)
+            version = 26
+
+            query("PRAGMA table_info(user_performance)").use { cursor ->
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) columns.add(cursor.getString(1))
+                assert(columns.contains("totalQuestionsAttempted")) {
+                    "Migration 25→26 failed: totalQuestionsAttempted column not found"
+                }
+            }
+
+            query("SELECT totalQuestionsAttempted FROM user_performance WHERE testType = 'OIR'")
+                .use { cursor ->
+                    assert(cursor.moveToFirst()) { "Migration 25→26: existing row disappeared" }
+                    assertEquals(
+                        "totalQuestionsAttempted must backfill to correctAnswers + incorrectAnswers",
+                        20L, cursor.getLong(0)
+                    )
+                }
+
+            close()
+        }
+        openHelper.close()
+        context.deleteDatabase("migration-test-25-26")
     }
 }
 

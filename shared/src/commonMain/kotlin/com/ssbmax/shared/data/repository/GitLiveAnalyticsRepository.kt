@@ -214,14 +214,8 @@ class GitLiveAnalyticsRepository(
     }
 }
 
-// Ported verbatim from the Android UserPerformanceEntity.accuracy getter,
-// including its quirk: totalAttempts counts recorded sessions while
-// correctAnswers accumulates per-question correct counts across those
-// sessions, so accuracy can exceed 100% for multi-question tests. A real fix
-// needs a product decision on what "accuracy" should mean here -- out of
-// this slice's scope, documented not silently corrected.
 internal val UserPerformanceRow.accuracy: Float
-    get() = if (totalAttempts > 0) (correctAnswers.toFloat() / totalAttempts) * 100 else 0f
+    get() = if (totalQuestionsAttempted > 0) (correctAnswers.toFloat() / totalQuestionsAttempted) * 100 else 0f
 
 internal fun UserPerformanceRow.canProgressToNextLevel(accuracyThreshold: Float = 80f): Boolean {
     return totalAttempts >= 10 && accuracy >= accuracyThreshold

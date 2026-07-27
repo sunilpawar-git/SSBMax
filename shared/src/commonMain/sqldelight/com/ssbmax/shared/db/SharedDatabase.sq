@@ -56,6 +56,7 @@ CREATE TABLE UserPerformance (
     testType TEXT NOT NULL,
     difficulty TEXT NOT NULL,
     totalAttempts INTEGER NOT NULL,
+    totalQuestionsAttempted INTEGER NOT NULL,
     correctAnswers INTEGER NOT NULL,
     incorrectAnswers INTEGER NOT NULL,
     averageScore REAL NOT NULL,
@@ -79,10 +80,10 @@ SELECT * FROM UserPerformance ORDER BY testType, difficulty;
 
 insertOrReplacePerformance:
 INSERT OR REPLACE INTO UserPerformance(
-    testType, difficulty, totalAttempts, correctAnswers, incorrectAnswers,
+    testType, difficulty, totalAttempts, totalQuestionsAttempted, correctAnswers, incorrectAnswers,
     averageScore, averageTimeSeconds, currentLevel, readyForNextLevel,
     lastAttemptAt, firstAttemptAt, updatedAt
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deletePerformanceByTestType:
 DELETE FROM UserPerformance WHERE testType = ?;
