@@ -347,15 +347,20 @@ class AnalyticsRepositoryImplTest {
         attempts: Int = 1,
         avgScore: Float = 80f,
         avgTime: Float = 300f,
-        correctAnswers: Int = 8, // Default: 8 out of 10 attempts = 80% accuracy
+        correctAnswers: Int = 8, // Default: 8 out of 10 questions attempted = 80% accuracy
+        // Accuracy denominator (questions), independent from `attempts` (sessions).
+        // Defaults to `attempts` so callers that don't care about the sessions/questions
+        // distinction keep their existing correct/attempts ratio as the accuracy.
+        questionsAttempted: Int = attempts,
         lastAttempt: Long = System.currentTimeMillis()
     ): UserPerformanceEntity {
         return UserPerformanceEntity(
             testType = testType,
             difficulty = difficulty,
             totalAttempts = attempts,
+            totalQuestionsAttempted = questionsAttempted,
             correctAnswers = correctAnswers,
-            incorrectAnswers = attempts - correctAnswers,
+            incorrectAnswers = questionsAttempted - correctAnswers,
             averageScore = avgScore,
             averageTimeSeconds = avgTime,
             currentLevel = difficulty,
