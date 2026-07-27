@@ -2,6 +2,9 @@ package com.ssbmax.ui.profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssbmax.core.domain.model.TestPerformancePoint
+import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.repository.AnalyticsRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -22,6 +25,7 @@ import javax.inject.Inject
 class StudentProfileViewModel @Inject constructor(
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: TestProgressRepository,
+    private val analyticsRepository: AnalyticsRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
 ) : ViewModel() {
     
@@ -54,6 +58,9 @@ class StudentProfileViewModel @Inject constructor(
                 // Load test progress
                 val phase1Progress = testProgressRepository.getPhase1Progress(currentUser.id).first()
                 val phase2Progress = testProgressRepository.getPhase2Progress(currentUser.id).first()
+
+                // Load analytics (study time, streak, recent tests)
+                val overview = analyticsRepository.getPerformanceOverview().first()
                 
                 // Calculate stats
                 val testsWithScores = listOfNotNull(
@@ -88,13 +95,13 @@ class StudentProfileViewModel @Inject constructor(
                     photoUrl = userProfile?.profilePictureUrl ?: currentUser.photoUrl,
                     isPremium = userProfile?.subscriptionType?.name == "PREMIUM",
                     totalTestsAttempted = totalTestsAttempted,
-                    totalStudyHours = 0, // TODO: Track study hours
-                    streakDays = 0, // TODO: Track streak
+                    totalStudyHours = (overview?.totalStudyTimeMinutes ?: 0) / 60,
+                    streakDays = overview?.currentStreak ?: 0,
                     averageScore = averageScore,
                     phase1Completion = phase1Completion,
                     phase2Completion = phase2Completion,
                     recentAchievements = emptyList(), // TODO: Implement achievements system
-                    recentTests = emptyList(), // TODO: Fetch recent test history
+                    recentTests = overview?.recentProgress.orEmpty().map { it.toRecentTest() },
                     isLoading = false,
                     error = null
                 )
@@ -108,6 +115,12 @@ class StudentProfileViewModel @Inject constructor(
             }
         }
     }
+
+    private fun TestPerformancePoint.toRecentTest() = RecentTest(
+        name = runCatching { TestType.valueOf(testType).displayName }.getOrDefault(testType),
+        date = date,
+        score = score.toInt()
+    )
 }
 
 /**

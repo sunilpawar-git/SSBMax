@@ -1,6 +1,7 @@
 package com.ssbmax.ui.profile
 
 import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.repository.AnalyticsRepository
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -28,6 +29,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
     private lateinit var viewModel: StudentProfileViewModel
     private lateinit var mockUserProfileRepository: UserProfileRepository
     private lateinit var mockTestProgressRepository: TestProgressRepository
+    private lateinit var mockAnalyticsRepository: AnalyticsRepository
     private lateinit var mockObserveCurrentUser: ObserveCurrentUserUseCase
     private lateinit var mockCurrentUserFlow: MutableStateFlow<SSBMaxUser?>
     
@@ -88,15 +90,35 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         )
     )
     
+    private val testOverview = PerformanceOverview(
+        totalTests = 5,
+        averageScore = 84.6f,
+        totalStudyTimeMinutes = 125,
+        currentStreak = 7,
+        testsByType = emptyMap(),
+        recentProgress = listOf(
+            TestPerformancePoint(
+                testType = "OIR",
+                difficulty = "STANDARD",
+                score = 80f,
+                timestamp = System.currentTimeMillis(),
+                date = "Jan 15"
+            )
+        )
+    )
+
     @Before
     fun setup() {
         mockUserProfileRepository = mockk(relaxed = true)
         mockTestProgressRepository = mockk(relaxed = true)
+        mockAnalyticsRepository = mockk(relaxed = true)
         mockObserveCurrentUser = mockk(relaxed = true)
         mockCurrentUserFlow = MutableStateFlow(null)
-        
+
         // Mock current user flow
         every { mockObserveCurrentUser() } returns mockCurrentUserFlow
+        // Default analytics overview (individual tests may override)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns MutableStateFlow(testOverview)
     }
     
     @After
@@ -121,6 +143,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -133,8 +156,172 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         assertEquals("Should have correct email", "user-123", state.userEmail)
         assertEquals("Should have correct photo URL", "https://example.com/profile.jpg", state.photoUrl)
         assertFalse("Should not be premium (FREE tier)", state.isPremium)
+        // Achievements have no real backing data source yet anywhere in the codebase;
+        // this must stay empty rather than showing fabricated data (product decision).
+        assertTrue("Achievements should remain empty (no backing system yet)", state.recentAchievements.isEmpty())
     }
-    
+
+    // ==================== Analytics Integration Tests ====================
+
+    @Test
+    fun `profile maps study hours from analytics overview`() = runTest {
+        // Given
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            MutableStateFlow(Result.success(testUserProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(testPhase1Progress)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(testPhase2Progress)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns
+            MutableStateFlow(testOverview.copy(totalStudyTimeMinutes = 125))
+
+        // When
+        viewModel = StudentProfileViewModel(
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockAnalyticsRepository,
+            mockObserveCurrentUser
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("125 minutes should become 2 whole hours", 2, state.totalStudyHours)
+    }
+
+    @Test
+    fun `profile maps streak days from analytics overview`() = runTest {
+        // Given
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            MutableStateFlow(Result.success(testUserProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(testPhase1Progress)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(testPhase2Progress)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns
+            MutableStateFlow(testOverview.copy(currentStreak = 9))
+
+        // When
+        viewModel = StudentProfileViewModel(
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockAnalyticsRepository,
+            mockObserveCurrentUser
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Streak should come straight from analytics overview", 9, state.streakDays)
+    }
+
+    @Test
+    fun `profile maps recent tests from analytics recent progress`() = runTest {
+        // Given
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            MutableStateFlow(Result.success(testUserProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(testPhase1Progress)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(testPhase2Progress)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns
+            MutableStateFlow(testOverview)
+
+        // When
+        viewModel = StudentProfileViewModel(
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockAnalyticsRepository,
+            mockObserveCurrentUser
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals("Should surface the one recent test from analytics", 1, state.recentTests.size)
+        val recentTest = state.recentTests.first()
+        assertEquals("Should resolve display name via TestType", TestType.OIR.displayName, recentTest.name)
+        assertEquals("Jan 15", recentTest.date)
+        assertEquals(80, recentTest.score)
+    }
+
+    @Test
+    fun `profile falls back to raw testType string for unknown test type`() = runTest {
+        // Given
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            MutableStateFlow(Result.success(testUserProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(testPhase1Progress)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(testPhase2Progress)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns
+            MutableStateFlow(
+                testOverview.copy(
+                    recentProgress = listOf(
+                        TestPerformancePoint(
+                            testType = "UNKNOWN_TYPE",
+                            difficulty = "STANDARD",
+                            score = 50f,
+                            timestamp = System.currentTimeMillis(),
+                            date = "Jan 1"
+                        )
+                    )
+                )
+            )
+
+        // When
+        viewModel = StudentProfileViewModel(
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockAnalyticsRepository,
+            mockObserveCurrentUser
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(
+            "Unknown testType strings should fall back to themselves, not crash",
+            "UNKNOWN_TYPE",
+            state.recentTests.first().name
+        )
+    }
+
+    @Test
+    fun `profile handles null analytics overview gracefully`() = runTest {
+        // Given
+        mockCurrentUserFlow.value = testUser
+        coEvery { mockUserProfileRepository.getUserProfile(testUser.id) } returns
+            MutableStateFlow(Result.success(testUserProfile))
+        coEvery { mockTestProgressRepository.getPhase1Progress(testUser.id) } returns
+            MutableStateFlow(testPhase1Progress)
+        coEvery { mockTestProgressRepository.getPhase2Progress(testUser.id) } returns
+            MutableStateFlow(testPhase2Progress)
+        every { mockAnalyticsRepository.getPerformanceOverview() } returns MutableStateFlow(null)
+
+        // When
+        viewModel = StudentProfileViewModel(
+            mockUserProfileRepository,
+            mockTestProgressRepository,
+            mockAnalyticsRepository,
+            mockObserveCurrentUser
+        )
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse("Should not be loading", state.isLoading)
+        assertNull("Should have no error", state.error)
+        assertEquals(0, state.totalStudyHours)
+        assertEquals(0, state.streakDays)
+        assertTrue(state.recentTests.isEmpty())
+    }
+
+
     @Test
     fun `profile calculates total tests attempted correctly`() = runTest {
         // Given
@@ -150,6 +337,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -175,6 +363,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -200,6 +389,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -225,6 +415,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -263,6 +454,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -290,6 +482,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -319,6 +512,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -339,6 +533,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -364,6 +559,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()
@@ -392,6 +588,7 @@ class StudentProfileViewModelTest : BaseViewModelTest() {
         viewModel = StudentProfileViewModel(
             mockUserProfileRepository,
             mockTestProgressRepository,
+            mockAnalyticsRepository,
             mockObserveCurrentUser
         )
         advanceUntilIdle()

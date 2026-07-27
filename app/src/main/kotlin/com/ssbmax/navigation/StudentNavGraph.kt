@@ -93,7 +93,7 @@ fun NavGraphBuilder.studentNavGraph(
                 }
             },
             onNavigateToTest = { testType ->
-                // TODO: Navigate to specific test based on type
+                navigateToTestId(navController, standardTestId(testType))
             }
         )
     }
