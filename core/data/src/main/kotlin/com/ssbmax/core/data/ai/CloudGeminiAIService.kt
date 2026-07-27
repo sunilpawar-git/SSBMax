@@ -334,6 +334,25 @@ class CloudGeminiAIService : AIService {
     /**
      * Parse analysis result from Cloud Function
      */
+    private fun parseOLQScoreEntry(scoreData: Any?): Pair<OLQ, OLQScoreWithReasoning>? {
+        val scoreMap = scoreData as? Map<*, *> ?: return null
+        val olqName = scoreMap["olq"]?.toString() ?: return null
+        val olq = OLQ.entries.find { it.name == olqName } ?: return null
+
+        val evidenceData: List<*> = scoreMap["evidence"] as? List<*> ?: emptyList<Any>()
+        val evidence = evidenceData.mapNotNull { it?.toString() }
+
+        return olq to OLQScoreWithReasoning(
+            olq = olq,
+            score = (scoreMap["score"] as? Number)?.toFloat() ?: 5.0f,
+            reasoning = scoreMap["reasoning"]?.toString() ?: "",
+            evidence = evidence
+        )
+    }
+
+    private fun parseOLQScoresList(olqScoresData: List<*>): Map<OLQ, OLQScoreWithReasoning> =
+        olqScoresData.mapNotNull { parseOLQScoreEntry(it) }.toMap()
+
     private fun parseAnalysisResult(data: Any): Result<ResponseAnalysis> {
         return try {
             val map = data as? Map<*, *>
@@ -349,23 +368,7 @@ class CloudGeminiAIService : AIService {
             val olqScoresData = analysisData["olqScores"] as? List<*>
                 ?: return Result.failure(IllegalStateException("Missing olqScores"))
 
-            val olqScores = mutableMapOf<OLQ, OLQScoreWithReasoning>()
-
-            olqScoresData.forEach { scoreData ->
-                val scoreMap = scoreData as? Map<*, *> ?: return@forEach
-                val olqName = scoreMap["olq"]?.toString() ?: return@forEach
-                val olq = OLQ.entries.find { it.name == olqName } ?: return@forEach
-
-                val evidenceData: List<*> = scoreMap["evidence"] as? List<*> ?: emptyList<Any>()
-                val evidence = evidenceData.mapNotNull { it?.toString() }
-
-                olqScores[olq] = OLQScoreWithReasoning(
-                    olq = olq,
-                    score = (scoreMap["score"] as? Number)?.toFloat() ?: 5.0f,
-                    reasoning = scoreMap["reasoning"]?.toString() ?: "",
-                    evidence = evidence
-                )
-            }
+            val olqScores = parseOLQScoresList(olqScoresData)
 
             val insightsData: List<*> = analysisData["keyInsights"] as? List<*> ?: emptyList<Any>()
             val insights = insightsData.mapNotNull { it?.toString() }

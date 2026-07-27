@@ -25,7 +25,7 @@ object EnhancedInterviewPrompts {
     // OLQ DEFINITIONS (Enhanced with SSB context)
     // ===========================================
 
-    private fun getOLQDefinitions(): String = """
+    private val OLQ_DEFINITIONS: String = """
 ═══════════════════════════════════════════════════════════════════════════════
 OFFICER-LIKE QUALITIES (OLQs) - Definitions & Behavioral Indicators:
 ═══════════════════════════════════════════════════════════════════════════════
@@ -250,7 +250,7 @@ ${SSBPromptCore.getFactorContextPrompt()}
 
 ${SSBPromptCore.getCriticalQualityWarning()}
 
-${getOLQDefinitions()}
+${OLQ_DEFINITIONS}
 
 ${getPIQToOLQMapping()}
 
@@ -433,7 +433,7 @@ ${SSBPromptCore.getPenalizingBehaviorsPrompt(SSBPromptCore.TestType.INTERVIEW)}
 
 ${SSBPromptCore.getBoostingBehaviorsPrompt(SSBPromptCore.TestType.INTERVIEW)}
 
-${getOLQDefinitions()}
+${OLQ_DEFINITIONS}
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL VALIDATION (MUST CHECK FIRST):
@@ -475,82 +475,7 @@ ${getJsonOutputInstructionsAnalysis()}
     /**
      * Build prompt for comprehensive feedback generation with SSB context.
      */
-    fun buildFeedbackPrompt(
-        piqContext: String,
-        questionAnswerPairs: List<Pair<String, String>>,
-        olqScores: Map<OLQ, Float>
-    ): String {
-        val qaHistory = questionAnswerPairs.mapIndexed { index, (q, a) ->
-            "Q${index + 1}: $q\nA${index + 1}: $a"
-        }.joinToString("\n\n")
-
-        // Lower is better in SSB
-        val scoresSummary = olqScores.entries
-            .sortedBy { it.value }
-            .joinToString("\n") { (olq, score) ->
-                val assessment = when {
-                    score <= 3 -> "Exceptional"
-                    score <= 5 -> "Very Good"
-                    score <= 6 -> "Good"
-                    score <= 7 -> "Average"
-                    score >= 8 -> "LIMITATION"
-                    else -> "Needs Improvement"
-                }
-                val critical = if (olq.isCritical) " [CRITICAL]" else ""
-                "- ${olq.displayName}$critical: ${"%.1f".format(score)}/10 ($assessment)"
-            }
-
-        val strongOLQs = olqScores.entries
-            .filter { it.value <= 5 }
-            .sortedBy { it.value }
-            .take(3)
-            .map { it.key.displayName }
-
-        val weakOLQs = olqScores.entries
-            .filter { it.value >= 7 }
-            .sortedByDescending { it.value }
-            .take(3)
-            .map { "${it.key.displayName}${if (it.key.isCritical) " [CRITICAL]" else ""}" }
-
-        val limitations = olqScores.entries
-            .filter { it.value >= 8 }
-            .map { it.key.displayName }
-
-        val limitationWarning = if (limitations.isNotEmpty()) {
-            "\n⚠️ LIMITATIONS DETECTED (score ≥ 8): ${limitations.joinToString(", ")}"
-        } else ""
-
-        return """
-You are a SENIOR SSB PSYCHOLOGIST providing final interview feedback.
-
-═══════════════════════════════════════════════════════════════════════════════
-CANDIDATE PROFILE:
-═══════════════════════════════════════════════════════════════════════════════
-
-$piqContext
-
-${SSBPromptCore.getScoringScaleInstructions()}
-
-${SSBPromptCore.getFactorContextPrompt()}
-
-${SSBPromptCore.getCriticalQualityWarning()}
-
-═══════════════════════════════════════════════════════════════════════════════
-INTERVIEW TRANSCRIPT:
-═══════════════════════════════════════════════════════════════════════════════
-
-$qaHistory
-
-═══════════════════════════════════════════════════════════════════════════════
-OLQ ASSESSMENT SCORES (1-10 scale, lower is better):
-═══════════════════════════════════════════════════════════════════════════════
-
-$scoresSummary
-$limitationWarning
-
-Strong Areas (score ≤ 5): ${strongOLQs.joinToString(", ").ifBlank { "None identified" }}
-Areas for Development (score ≥ 7): ${weakOLQs.joinToString(", ").ifBlank { "None identified" }}
-
+    private val FEEDBACK_TASK_INSTRUCTIONS: String = """
 ═══════════════════════════════════════════════════════════════════════════════
 YOUR TASK:
 ═══════════════════════════════════════════════════════════════════════════════
@@ -599,6 +524,105 @@ TONE REQUIREMENTS:
 - Length: 400-500 words
 
 Write the feedback directly as plain text (not JSON).
+""".trimIndent()
+
+    private data class FeedbackScoreSummary(
+        val scoresSummary: String,
+        val limitationWarning: String,
+        val strongOLQsText: String,
+        val weakOLQsText: String
+    )
+
+    private fun formatOLQScoreLine(olq: OLQ, score: Float): String {
+        // Lower is better in SSB
+        val assessment = when {
+            score <= 3 -> "Exceptional"
+            score <= 5 -> "Very Good"
+            score <= 6 -> "Good"
+            score <= 7 -> "Average"
+            score >= 8 -> "LIMITATION"
+            else -> "Needs Improvement"
+        }
+        val critical = if (olq.isCritical) " [CRITICAL]" else ""
+        return "- ${olq.displayName}$critical: ${"%.1f".format(score)}/10 ($assessment)"
+    }
+
+    private fun buildFeedbackScoreSummary(olqScores: Map<OLQ, Float>): FeedbackScoreSummary {
+        val scoresSummary = olqScores.entries
+            .sortedBy { it.value }
+            .joinToString("\n") { (olq, score) -> formatOLQScoreLine(olq, score) }
+
+        val strongOLQs = olqScores.entries
+            .filter { it.value <= 5 }
+            .sortedBy { it.value }
+            .take(3)
+            .map { it.key.displayName }
+
+        val weakOLQs = olqScores.entries
+            .filter { it.value >= 7 }
+            .sortedByDescending { it.value }
+            .take(3)
+            .map { "${it.key.displayName}${if (it.key.isCritical) " [CRITICAL]" else ""}" }
+
+        val limitations = olqScores.entries
+            .filter { it.value >= 8 }
+            .map { it.key.displayName }
+
+        val limitationWarning = if (limitations.isNotEmpty()) {
+            "\n⚠️ LIMITATIONS DETECTED (score ≥ 8): ${limitations.joinToString(", ")}"
+        } else ""
+
+        return FeedbackScoreSummary(
+            scoresSummary = scoresSummary,
+            limitationWarning = limitationWarning,
+            strongOLQsText = strongOLQs.joinToString(", ").ifBlank { "None identified" },
+            weakOLQsText = weakOLQs.joinToString(", ").ifBlank { "None identified" }
+        )
+    }
+
+    fun buildFeedbackPrompt(
+        piqContext: String,
+        questionAnswerPairs: List<Pair<String, String>>,
+        olqScores: Map<OLQ, Float>
+    ): String {
+        val qaHistory = questionAnswerPairs.mapIndexed { index, (q, a) ->
+            "Q${index + 1}: $q\nA${index + 1}: $a"
+        }.joinToString("\n\n")
+
+        val summary = buildFeedbackScoreSummary(olqScores)
+
+        return """
+You are a SENIOR SSB PSYCHOLOGIST providing final interview feedback.
+
+═══════════════════════════════════════════════════════════════════════════════
+CANDIDATE PROFILE:
+═══════════════════════════════════════════════════════════════════════════════
+
+$piqContext
+
+${SSBPromptCore.getScoringScaleInstructions()}
+
+${SSBPromptCore.getFactorContextPrompt()}
+
+${SSBPromptCore.getCriticalQualityWarning()}
+
+═══════════════════════════════════════════════════════════════════════════════
+INTERVIEW TRANSCRIPT:
+═══════════════════════════════════════════════════════════════════════════════
+
+$qaHistory
+
+═══════════════════════════════════════════════════════════════════════════════
+OLQ ASSESSMENT SCORES (1-10 scale, lower is better):
+═══════════════════════════════════════════════════════════════════════════════
+
+${summary.scoresSummary}
+${summary.limitationWarning}
+
+Strong Areas (score ≤ 5): ${summary.strongOLQsText}
+Areas for Development (score ≥ 7): ${summary.weakOLQsText}
+
+$FEEDBACK_TASK_INSTRUCTIONS
 """.trimIndent()
     }
 }

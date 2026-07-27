@@ -4,27 +4,9 @@
   <CurrentIssues>
     <ID>ConstructorParameterNaming:OIRQuestionCacheDao.kt$QuestionUsageStats$val avg_usage: Double</ID>
     <ID>ConstructorParameterNaming:OIRQuestionCacheDao.kt$QuestionUsageStats$val unused_count: Int</ID>
-    <ID>CyclomaticComplexMethod:CloudGeminiAIService.kt$CloudGeminiAIService$private fun parseAnalysisResult(data: Any): Result&lt;ResponseAnalysis&gt;</ID>
-    <ID>CyclomaticComplexMethod:FirestoreGTORepository.kt$FirestoreGTORepository$override suspend fun getObstaclesForTest(testType: GTOTestType): Result&lt;List&lt;ObstacleConfig&gt;&gt;</ID>
-    <ID>CyclomaticComplexMethod:FirestoreGTORepository.kt$FirestoreGTORepository$override suspend fun getTestResult(submissionId: String): Result&lt;GTOResult&gt;</ID>
     <ID>CyclomaticComplexMethod:FirestoreGTORepository.kt$FirestoreGTORepository$private fun mapToSubmission(data: Map&lt;String, Any&gt;): GTOSubmission</ID>
-    <ID>CyclomaticComplexMethod:GPEImageCacheManager.kt$GPEImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
-    <ID>CyclomaticComplexMethod:NotificationRepositoryImpl.kt$NotificationRepositoryImpl$override suspend fun getPreferences(userId: String): Result&lt;NotificationPreferences&gt;</ID>
-    <ID>CyclomaticComplexMethod:OIRPersonalSubmissionDataSource.kt$OIRPersonalSubmissionDataSource$@Suppress("UNCHECKED_CAST") internal fun parseOIRSubmission(data: Map&lt;*, *&gt;): OIRSubmission</ID>
     <ID>CyclomaticComplexMethod:OLQResultMapper.kt$internal fun parseSharedOLQResult(data: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
-    <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$@Suppress("UNCHECKED_CAST") private fun buildPersonalizationNotes(data: Map&lt;String, Any&gt;): String</ID>
-    <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$private fun buildActivitiesAndInterests( hobbies: String, sports: String, sportsParticipation: List&lt;Map&lt;String, Any&gt;&gt;, extraCurricularActivities: List&lt;Map&lt;String, Any&gt;&gt; ): String</ID>
-    <ID>CyclomaticComplexMethod:PIQDataMapper.kt$PIQDataMapper$private fun buildEducationJourney( education10th: Map&lt;String, Any&gt;, education12th: Map&lt;String, Any&gt;, educationGraduation: Map&lt;String, Any&gt;, educationPostGraduation: Map&lt;String, Any&gt; ): String</ID>
     <ID>CyclomaticComplexMethod:PPDTSubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePPDTSubmission(data: Map&lt;*, *&gt;): PPDTSubmission</ID>
-    <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSDTSubmission(data: Map&lt;*, *&gt;): SDTSubmission</ID>
-    <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseSRTSubmission(data: Map&lt;*, *&gt;): SRTSubmission</ID>
-    <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseTATSubmission(data: Map&lt;*, *&gt;): TATSubmission</ID>
-    <ID>CyclomaticComplexMethod:PsychTestMapper.kt$PsychTestMapper$fun parseWATSubmission(data: Map&lt;*, *&gt;): WATSubmission</ID>
-    <ID>CyclomaticComplexMethod:SubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parseOLQResult(olqResultMap: Map&lt;*, *&gt;?): OLQAnalysisResult?</ID>
-    <ID>CyclomaticComplexMethod:SubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePIQSubmission(data: Map&lt;*, *&gt;): PIQSubmission</ID>
-    <ID>CyclomaticComplexMethod:SubscriptionManager.kt$SubscriptionManager$override suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String?)</ID>
-    <ID>CyclomaticComplexMethod:SubscriptionManager.kt$SubscriptionManager$private fun getTestLimitForTier(tier: SubscriptionTier, testType: TestType): Int</ID>
-    <ID>CyclomaticComplexMethod:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$override suspend fun getMonthlyUsage(userId: String, month: String): Result&lt;Map&lt;String, UsageInfo&gt;&gt;</ID>
     <ID>EmptyFunctionBlock:SSBDatabaseMigrationTest.kt$SSBDatabaseMigrationTest.&lt;no name provided&gt;${}</ID>
     <ID>ExplicitGarbageCollectionCall:MemoryLeakTracker.kt$MemoryLeakTracker$gc()</ID>
     <ID>ExplicitGarbageCollectionCall:MemoryLeakTracker.kt$MemoryLeakTracker$runFinalization()</ID>
@@ -51,23 +33,9 @@
     <ID>ImplicitDefaultLocale:EnhancedPsychologyPrompts.kt$EnhancedPsychologyPrompts$String.format("%.1f", writingTimeMinutes)</ID>
     <ID>ImplicitDefaultLocale:SubscriptionManagerEdgeCasesTest.kt$SubscriptionManagerEdgeCasesTest$String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)</ID>
     <ID>LargeClass:FirestoreGTORepository.kt$FirestoreGTORepository : GTORepository</ID>
-    <ID>LongMethod:EnhancedInterviewPrompts.kt$EnhancedInterviewPrompts$fun buildFeedbackPrompt( piqContext: String, questionAnswerPairs: List&lt;Pair&lt;String, String&gt;&gt;, olqScores: Map&lt;OLQ, Float&gt; ): String</ID>
-    <ID>LongMethod:EnhancedInterviewPrompts.kt$EnhancedInterviewPrompts$private fun getOLQDefinitions(): String</ID>
-    <ID>LongMethod:FirestoreGTORepository.kt$FirestoreGTORepository$private fun mapToSubmission(data: Map&lt;String, Any&gt;): GTOSubmission</ID>
-    <ID>LongMethod:PIQDataMapper.kt$PIQDataMapper$fun buildComprehensivePIQContext(piqMap: Map&lt;String, Any&gt;): String</ID>
-    <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateSDAnalysisPrompt(submission: SDTSubmission): String</ID>
-    <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateSRTAnalysisPrompt(submission: SRTSubmission): String</ID>
-    <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateTATAnalysisPrompt(submission: TATSubmission): String</ID>
-    <ID>LongMethod:PsychologyTestPrompts.kt$PsychologyTestPrompts$fun generateWATAnalysisPrompt(submission: WATSubmission): String</ID>
-    <ID>LongMethod:SubmissionMappers.kt$@Suppress("UNCHECKED_CAST") internal fun parsePIQSubmission(data: Map&lt;*, *&gt;): PIQSubmission</ID>
-    <ID>LongMethod:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$override suspend fun getMonthlyUsage(userId: String, month: String): Result&lt;Map&lt;String, UsageInfo&gt;&gt;</ID>
-    <ID>LongMethod:TestDataFactory.kt$TestDataFactory$fun getOIRQuestions(): List&lt;OIRQuestion&gt;</ID>
-    <ID>LongParameterList:PIQDataMapper.kt$PIQDataMapper$( fatherName: String, fatherOccupation: String, fatherEducation: String, fatherIncome: String, motherName: String, motherOccupation: String, motherEducation: String, parentsAlive: String, ageAtFatherDeath: String, ageAtMotherDeath: String, guardianName: String, guardianOccupation: String, siblings: List&lt;Map&lt;String, Any&gt;&gt; )</ID>
-    <ID>LongParameterList:PIQDataMapper.kt$PIQDataMapper$( fullName: String, age: String, gender: String, state: String, district: String, maritalStatus: String, religion: String, motherTongue: String, permanentAddress: String, presentAddress: String, maximumResidence: String, maxResidencePopulation: String, presentResidencePopulation: String, isDistrictHQ: Boolean, height: String, weight: String )</ID>
     <ID>LoopWithTooManyJumpStatements:OIRQuestionSelector.kt$OIRQuestionSelector$for</ID>
     <ID>LoopWithTooManyJumpStatements:SubmissionMappers.kt$for</ID>
     <ID>MaxLineLength:DifficultyProgressionManager.kt$DifficultyProgressionManager$Log.d(TAG, "Performance updated: attempts=${updated.totalAttempts}, avgScore=${updated.averageScore}, readyForNext=${updated.readyForNextLevel}")</ID>
-    <ID>MaxLineLength:FirestoreGTORepository.kt$FirestoreGTORepository$topicChoices = ((if (hasNestedData) nestedData["topicChoices"] else data["topicChoices"]) as? List&lt;*&gt;)?.filterIsInstance&lt;String&gt;() ?: emptyList()</ID>
     <ID>MaxLineLength:FirestoreGTORepository.kt$FirestoreGTORepository$val</ID>
     <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val expired = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await().size()</ID>
     <ID>MaxLineLength:FirestoreQuestionCacheRepository.kt$FirestoreQuestionCacheRepository$val expiredQuery = cacheCollection.whereLessThan(QuestionCacheMappers.FIELD_EXPIRES_AT, Clock.System.now().toEpochMilliseconds()).get().await()</ID>
@@ -136,8 +104,6 @@
     <ID>TooGenericExceptionThrown:WATWordCacheManager.kt$WATWordCacheManager$throw Exception("No words in cache")</ID>
     <ID>UnusedParameter:DifficultyProgressionManager.kt$DifficultyProgressionManager$hardPerf: UserPerformanceEntity?</ID>
     <ID>UnusedParameter:LeakVerificationHelper.kt$LeakVerificationHelper$viewModel: ViewModel</ID>
-    <ID>UnusedParameter:PIQDataMapper.kt$PIQDataMapper$maximumResidence: String</ID>
-    <ID>UnusedParameter:PIQDataMapper.kt$PIQDataMapper$presentResidencePopulation: String</ID>
     <ID>UnusedParameter:TestProgressRepositoryImpl.kt$TestProgressRepositoryImpl$isPsychologyGroup: Boolean = false</ID>
     <ID>UnusedPrivateMember:NotificationRepositoryImpl.kt$NotificationRepositoryImpl$private fun getDeviceId(): String</ID>
     <ID>UnusedPrivateProperty:AnalyticsManager.kt$AnalyticsManager$private val firebaseAuth: FirebaseAuth</ID>

@@ -45,6 +45,28 @@ class SubscriptionRepositoryImpl(
         }
     }
 
+    /** Every usage category's PREMIUM limit is unlimited (-1); only FREE/PRO vary by test type. */
+    private fun tierLimit(tier: SubscriptionTier, freeLimit: Int, proLimit: Int): Int = when (tier) {
+        SubscriptionTier.FREE -> freeLimit
+        SubscriptionTier.PRO -> proLimit
+        SubscriptionTier.PREMIUM -> -1 // Unlimited
+    }
+
+    private fun buildMonthlyUsageMap(
+        doc: com.google.firebase.firestore.DocumentSnapshot,
+        tier: SubscriptionTier
+    ): Map<String, UsageInfo> = mapOf(
+        "OIR Tests" to UsageInfo(doc.getLong("oirTestsUsed")?.toInt() ?: 0, tierLimit(tier, 1, 5)),
+        "PPDT Tests" to UsageInfo(doc.getLong("ppdtTestsUsed")?.toInt() ?: 0, tierLimit(tier, 1, 5)),
+        "PIQ Forms" to UsageInfo(doc.getLong("piqTestsUsed")?.toInt() ?: 0, tierLimit(tier, 1, -1)),
+        "TAT Tests" to UsageInfo(doc.getLong("tatTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 3)),
+        "WAT Tests" to UsageInfo(doc.getLong("watTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 3)),
+        "SRT Tests" to UsageInfo(doc.getLong("srtTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 3)),
+        "Self Description" to UsageInfo(doc.getLong("sdTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 3)),
+        "GTO Tests" to UsageInfo(doc.getLong("gtoTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 3)),
+        "Interview" to UsageInfo(doc.getLong("interviewTestsUsed")?.toInt() ?: 0, tierLimit(tier, 0, 1))
+    )
+
     override suspend fun getMonthlyUsage(userId: String, month: String): Result<Map<String, UsageInfo>> {
         return try {
             Log.d(TAG, "Loading monthly usage for userId=$userId, month=$month")
@@ -62,80 +84,7 @@ class SubscriptionRepositoryImpl(
             val tierResult = getSubscriptionTier(userId)
             val tier = tierResult.getOrNull() ?: SubscriptionTier.FREE
 
-            val usageMap = mapOf(
-                "OIR Tests" to UsageInfo(
-                    used = doc.getLong("oirTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 1
-                        SubscriptionTier.PRO -> 5
-                        SubscriptionTier.PREMIUM -> -1 // Unlimited
-                    }
-                ),
-                "PPDT Tests" to UsageInfo(
-                    used = doc.getLong("ppdtTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 1
-                        SubscriptionTier.PRO -> 5
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "PIQ Forms" to UsageInfo(
-                    used = doc.getLong("piqTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 1
-                        SubscriptionTier.PRO -> -1
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "TAT Tests" to UsageInfo(
-                    used = doc.getLong("tatTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 3
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "WAT Tests" to UsageInfo(
-                    used = doc.getLong("watTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 3
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "SRT Tests" to UsageInfo(
-                    used = doc.getLong("srtTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 3
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "Self Description" to UsageInfo(
-                    used = doc.getLong("sdTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 3
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "GTO Tests" to UsageInfo(
-                    used = doc.getLong("gtoTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 3
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                ),
-                "Interview" to UsageInfo(
-                    used = doc.getLong("interviewTestsUsed")?.toInt() ?: 0,
-                    limit = when (tier) {
-                        SubscriptionTier.FREE -> 0
-                        SubscriptionTier.PRO -> 1
-                        SubscriptionTier.PREMIUM -> -1
-                    }
-                )
-            )
+            val usageMap = buildMonthlyUsageMap(doc, tier)
 
             Log.d(TAG, "Successfully loaded ${usageMap.size} usage items")
             usageMap.forEach { (key, value) ->

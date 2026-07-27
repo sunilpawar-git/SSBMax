@@ -7,31 +7,16 @@ import com.ssbmax.shared.domain.model.SDTSubmission
 
 /**
  * Optimized Psychology Test Prompts for Gemini AI
- * 
+ *
  * Token-efficient prompts matching GTO format (~900 tokens each).
  * Reduced from ~1,800 tokens to avoid TPM rate limits.
- * 
+ *
  * All prompts enforce JSON-only responses with all 15 OLQs scored.
  */
 object PsychologyTestPrompts {
 
-    /**
-     * Generate TAT analysis prompt (optimized for token efficiency)
-     */
-    fun generateTATAnalysisPrompt(submission: TATSubmission): String {
-        val storiesText = submission.stories.mapIndexed { index, story ->
-            "Story ${index + 1}: ${story.story}"
-        }.joinToString("\n\n")
-
-        return """
-You are analyzing TAT (Thematic Apperception Test) stories for SSB assessment.
-
-═══════════════════════════════════════════════════════════════════════════════
-TAT STORIES (${submission.stories.size} stories):
-═══════════════════════════════════════════════════════════════════════════════
-
-$storiesText
-
+    // Shared across TAT/WAT/SRT/SD — the 15-OLQ evaluation rubric is identical for every test.
+    private val OLQ_EVALUATION_CRITERIA_SECTION: String = """
 ═══════════════════════════════════════════════════════════════════════════════
 EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 ═══════════════════════════════════════════════════════════════════════════════
@@ -51,7 +36,10 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 13. DETERMINATION: Persistence, goal-oriented
 14. COURAGE: Facing fears, standing up for beliefs
 15. STAMINA: Endurance, resilience
+""".trimIndent()
 
+    // Shared across TAT/WAT/SRT/SD — the unified SSB scoring scale is identical for every test.
+    private val SSB_SCORING_SCALE_SECTION: String = """
 ═══════════════════════════════════════════════════════════════════════════════
 SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 ═══════════════════════════════════════════════════════════════════════════════
@@ -61,6 +49,56 @@ SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
 7: Average (Typical performance)
 8: Poor (Needs improvement)
 9: Fail (Gibberish/Irrelevant/Blank)
+""".trimIndent()
+
+    // Shared across WAT/SRT/SD (TAT has extra length-check/averaging guidance, kept inline there).
+    private val STANDARD_CRITICAL_VALIDATION_SECTION: String = """
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
+""".trimIndent()
+
+    // Shared across WAT/SRT/SD (TAT has an extra field-shape reminder item, kept inline there).
+    private val STANDARD_CRITICAL_INSTRUCTIONS_SECTION: String = """
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+""".trimIndent()
+
+    /**
+     * Generate TAT analysis prompt (optimized for token efficiency)
+     */
+    fun generateTATAnalysisPrompt(submission: TATSubmission): String {
+        val storiesText = submission.stories.mapIndexed { index, story ->
+            "Story ${index + 1}: ${story.story}"
+        }.joinToString("\n\n")
+
+        return """
+You are analyzing TAT (Thematic Apperception Test) stories for SSB assessment.
+
+═══════════════════════════════════════════════════════════════════════════════
+TAT STORIES (${submission.stories.size} stories):
+═══════════════════════════════════════════════════════════════════════════════
+
+$storiesText
+
+$OLQ_EVALUATION_CRITERIA_SECTION
+
+$SSB_SCORING_SCALE_SECTION
 
 ═══════════════════════════════════════════════════════════════════════════════
 CRITICAL VALIDATION (MUST CHECK FIRST):
@@ -134,57 +172,13 @@ $responsesText
 
 Average response time: ${submission.averageResponseTime}s
 
-═══════════════════════════════════════════════════════════════════════════════
-EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════
+$OLQ_EVALUATION_CRITERIA_SECTION
 
-1. EFFECTIVE_INTELLIGENCE: Practical wisdom, common sense
-2. REASONING_ABILITY: Logical thinking, problem-solving
-3. ORGANIZING_ABILITY: Planning, systematic approach
-4. POWER_OF_EXPRESSION: Communication clarity
-5. SOCIAL_ADJUSTMENT: Adaptability, flexibility
-6. COOPERATION: Teamwork, helping others
-7. SENSE_OF_RESPONSIBILITY: Accountability, reliability
-8. INITIATIVE: Proactive action, self-starting
-9. SELF_CONFIDENCE: Composure, positive self-image
-10. SPEED_OF_DECISION: Quick decision-making
-11. INFLUENCE_GROUP: Leadership, persuasion
-12. LIVELINESS: Energy, optimism
-13. DETERMINATION: Persistence, goal-oriented
-14. COURAGE: Facing fears, standing up for beliefs
-15. STAMINA: Endurance, resilience
+$SSB_SCORING_SCALE_SECTION
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$STANDARD_CRITICAL_VALIDATION_SECTION
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
-
-1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS:
-═══════════════════════════════════════════════════════════════════════════════
-
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
+$STANDARD_CRITICAL_INSTRUCTIONS_SECTION
 
 ═══════════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT:
@@ -229,57 +223,13 @@ SRT RESPONSES (60 situations):
 
 $responsesText
 
-═══════════════════════════════════════════════════════════════════════════════
-EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════
+$OLQ_EVALUATION_CRITERIA_SECTION
 
-1. EFFECTIVE_INTELLIGENCE: Practical wisdom, common sense
-2. REASONING_ABILITY: Logical thinking, problem-solving
-3. ORGANIZING_ABILITY: Planning, systematic approach
-4. POWER_OF_EXPRESSION: Communication clarity
-5. SOCIAL_ADJUSTMENT: Adaptability, flexibility
-6. COOPERATION: Teamwork, helping others
-7. SENSE_OF_RESPONSIBILITY: Accountability, reliability
-8. INITIATIVE: Proactive action, self-starting
-9. SELF_CONFIDENCE: Composure, positive self-image
-10. SPEED_OF_DECISION: Quick decision-making
-11. INFLUENCE_GROUP: Leadership, persuasion
-12. LIVELINESS: Energy, optimism
-13. DETERMINATION: Persistence, goal-oriented
-14. COURAGE: Facing fears, standing up for beliefs
-15. STAMINA: Endurance, resilience
+$SSB_SCORING_SCALE_SECTION
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$STANDARD_CRITICAL_VALIDATION_SECTION
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
-
-1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS:
-═══════════════════════════════════════════════════════════════════════════════
-
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
+$STANDARD_CRITICAL_INSTRUCTIONS_SECTION
 
 ═══════════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT:
@@ -331,57 +281,13 @@ SELF DESCRIPTION RESPONSES:
 
 $descriptionsText
 
-═══════════════════════════════════════════════════════════════════════════════
-EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
-═══════════════════════════════════════════════════════════════════════════════
+$OLQ_EVALUATION_CRITERIA_SECTION
 
-1. EFFECTIVE_INTELLIGENCE: Practical wisdom, common sense
-2. REASONING_ABILITY: Logical thinking, problem-solving
-3. ORGANIZING_ABILITY: Planning, systematic approach
-4. POWER_OF_EXPRESSION: Communication clarity
-5. SOCIAL_ADJUSTMENT: Adaptability, flexibility
-6. COOPERATION: Teamwork, helping others
-7. SENSE_OF_RESPONSIBILITY: Accountability, reliability
-8. INITIATIVE: Proactive action, self-starting
-9. SELF_CONFIDENCE: Composure, positive self-image
-10. SPEED_OF_DECISION: Quick decision-making
-11. INFLUENCE_GROUP: Leadership, persuasion
-12. LIVELINESS: Energy, optimism
-13. DETERMINATION: Persistence, goal-oriented
-14. COURAGE: Facing fears, standing up for beliefs
-15. STAMINA: Endurance, resilience
+$SSB_SCORING_SCALE_SECTION
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$STANDARD_CRITICAL_VALIDATION_SECTION
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
-
-1. **GARBAGE DETECTION**: If responses are gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-3. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS:
-═══════════════════════════════════════════════════════════════════════════════
-
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
+$STANDARD_CRITICAL_INSTRUCTIONS_SECTION
 
 ═══════════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT:

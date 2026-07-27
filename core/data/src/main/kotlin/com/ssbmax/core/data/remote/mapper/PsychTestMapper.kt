@@ -11,8 +11,30 @@ import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 object PsychTestMapper {
 
     fun parseTATSubmission(data: Map<*, *>): TATSubmission {
+        val stories = parseTATStories(data)
+        val instructorScore = (data["instructorScore"] as? Map<*, *>)?.let { parseTATInstructorScore(it) }
+        val olqResult = parseOLQResult(data["olqResult"] as? Map<*, *>)
+        val analysisStatus = parseAnalysisStatus(data)
+
+        return TATSubmission(
+            id = data["id"] as? String ?: "",
+            userId = data["userId"] as? String ?: "",
+            testId = data["testId"] as? String ?: "",
+            stories = stories,
+            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
+            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            status = parseSubmissionStatus(data),
+            instructorScore = instructorScore,
+            gradedByInstructorId = data["gradedByInstructorId"] as? String,
+            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
+            analysisStatus = analysisStatus,
+            olqResult = olqResult
+        )
+    }
+
+    private fun parseTATStories(data: Map<*, *>): List<TATStoryResponse> {
         val storiesList = data["stories"] as? List<*> ?: emptyList<Any>()
-        val stories = storiesList.mapNotNull { storyData ->
+        return storiesList.mapNotNull { storyData ->
             (storyData as? Map<*, *>)?.let {
                 TATStoryResponse(
                     questionId = it["questionId"] as? String ?: "",
@@ -24,44 +46,42 @@ object PsychTestMapper {
                 )
             }
         }
+    }
 
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            TATInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
-                characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
-                narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                storyWiseComments = (it["storyWiseComments"] as? Map<*, *>)?.mapNotNull { (k, v) ->
-                    (k as? String)?.let { key -> key to (v as? String ?: "") }
-                }?.toMap() ?: emptyMap(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
+    private fun parseTATStoryWiseComments(it: Map<*, *>): Map<String, String> =
+        (it["storyWiseComments"] as? Map<*, *>)?.mapNotNull { (k, v) ->
+            (k as? String)?.let { key -> key to (v as? String ?: "") }
+        }?.toMap() ?: emptyMap()
 
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
+    private fun parseTATInstructorScore(it: Map<*, *>): TATInstructorScore = TATInstructorScore(
+        overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+        thematicPerceptionScore = (it["thematicPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+        imaginationScore = (it["imaginationScore"] as? Number)?.toFloat() ?: 0f,
+        characterDepictionScore = (it["characterDepictionScore"] as? Number)?.toFloat() ?: 0f,
+        emotionalToneScore = (it["emotionalToneScore"] as? Number)?.toFloat() ?: 0f,
+        narrativeStructureScore = (it["narrativeStructureScore"] as? Number)?.toFloat() ?: 0f,
+        feedback = it["feedback"] as? String ?: "",
+        storyWiseComments = parseTATStoryWiseComments(it),
+        gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+        gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+        gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+        agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+    )
 
-        return TATSubmission(
+    fun parseWATSubmission(data: Map<*, *>): WATSubmission {
+        val responses = parseWATResponses(data)
+        val instructorScore = (data["instructorScore"] as? Map<*, *>)?.let { parseWATInstructorScore(it) }
+        val olqResult = parseOLQResult(data["olqResult"] as? Map<*, *>)
+        val analysisStatus = parseAnalysisStatus(data)
+
+        return WATSubmission(
             id = data["id"] as? String ?: "",
             userId = data["userId"] as? String ?: "",
             testId = data["testId"] as? String ?: "",
-            stories = stories,
+            responses = responses,
             totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
             submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
+            status = parseSubmissionStatus(data),
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -70,9 +90,9 @@ object PsychTestMapper {
         )
     }
 
-    fun parseWATSubmission(data: Map<*, *>): WATSubmission {
+    private fun parseWATResponses(data: Map<*, *>): List<WATWordResponse> {
         val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
+        return responsesList.mapNotNull { responseData ->
             (responseData as? Map<*, *>)?.let {
                 WATWordResponse(
                     wordId = it["wordId"] as? String ?: "",
@@ -84,43 +104,38 @@ object PsychTestMapper {
                 )
             }
         }
+    }
 
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            WATInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
-                creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
-                speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
-                relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                notableResponses = (it["notableResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
+    private fun parseWATInstructorScore(it: Map<*, *>): WATInstructorScore = WATInstructorScore(
+        overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+        positivityScore = (it["positivityScore"] as? Number)?.toFloat() ?: 0f,
+        creativityScore = (it["creativityScore"] as? Number)?.toFloat() ?: 0f,
+        speedScore = (it["speedScore"] as? Number)?.toFloat() ?: 0f,
+        relevanceScore = (it["relevanceScore"] as? Number)?.toFloat() ?: 0f,
+        emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+        feedback = it["feedback"] as? String ?: "",
+        flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+        notableResponses = (it["notableResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+        gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+        gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+        gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+        agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+    )
 
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
+    fun parseSRTSubmission(data: Map<*, *>): SRTSubmission {
+        val responses = parseSRTResponses(data)
+        val instructorScore = (data["instructorScore"] as? Map<*, *>)?.let { parseSRTInstructorScore(it) }
+        val olqResult = parseOLQResult(data["olqResult"] as? Map<*, *>)
+        val analysisStatus = parseAnalysisStatus(data)
 
-        return WATSubmission(
+        return SRTSubmission(
             id = data["id"] as? String ?: "",
             userId = data["userId"] as? String ?: "",
             testId = data["testId"] as? String ?: "",
             responses = responses,
             totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
             submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
+            status = parseSubmissionStatus(data),
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -129,9 +144,9 @@ object PsychTestMapper {
         )
     }
 
-    fun parseSRTSubmission(data: Map<*, *>): SRTSubmission {
+    private fun parseSRTResponses(data: Map<*, *>): List<SRTSituationResponse> {
         val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
+        return responsesList.mapNotNull { responseData ->
             (responseData as? Map<*, *>)?.let {
                 SRTSituationResponse(
                     situationId = it["situationId"] as? String ?: "",
@@ -144,51 +159,69 @@ object PsychTestMapper {
                 )
             }
         }
+    }
 
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            val categoryWiseCommentsMap = it["categoryWiseComments"] as? Map<*, *> ?: emptyMap<Any, Any>()
-            val categoryWiseComments = categoryWiseCommentsMap.mapNotNull { (k, v) ->
-                try {
-                    val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
-                    category to (v as? String ?: "")
-                } catch (e: Exception) { null }
-            }.toMap()
-            SRTInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
-                decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
-                practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
-                initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
-                socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                categoryWiseComments = categoryWiseComments,
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
+    private fun parseSRTCategoryWiseComments(categoryWiseCommentsMap: Map<*, *>): Map<SRTCategory, String> =
+        categoryWiseCommentsMap.mapNotNull { (k, v) ->
+            try {
+                val category = SRTCategory.valueOf(k as? String ?: "GENERAL")
+                category to (v as? String ?: "")
+            } catch (e: Exception) { null }
+        }.toMap()
 
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
-        val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
-            if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
-            else AnalysisStatus.PENDING_ANALYSIS
-        } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
+    private data class SRTScoreFields(
+        val overallScore: Float,
+        val leadershipScore: Float,
+        val decisionMakingScore: Float,
+        val practicalityScore: Float,
+        val initiativeScore: Float,
+        val socialResponsibilityScore: Float
+    )
 
-        return SRTSubmission(
+    private fun parseSRTScoreFields(it: Map<*, *>) = SRTScoreFields(
+        overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+        leadershipScore = (it["leadershipScore"] as? Number)?.toFloat() ?: 0f,
+        decisionMakingScore = (it["decisionMakingScore"] as? Number)?.toFloat() ?: 0f,
+        practicalityScore = (it["practicalityScore"] as? Number)?.toFloat() ?: 0f,
+        initiativeScore = (it["initiativeScore"] as? Number)?.toFloat() ?: 0f,
+        socialResponsibilityScore = (it["socialResponsibilityScore"] as? Number)?.toFloat() ?: 0f
+    )
+
+    private fun parseSRTInstructorScore(it: Map<*, *>): SRTInstructorScore {
+        val categoryWiseComments = parseSRTCategoryWiseComments(it["categoryWiseComments"] as? Map<*, *> ?: emptyMap<Any, Any>())
+        val scores = parseSRTScoreFields(it)
+        return SRTInstructorScore(
+            overallScore = scores.overallScore,
+            leadershipScore = scores.leadershipScore,
+            decisionMakingScore = scores.decisionMakingScore,
+            practicalityScore = scores.practicalityScore,
+            initiativeScore = scores.initiativeScore,
+            socialResponsibilityScore = scores.socialResponsibilityScore,
+            feedback = it["feedback"] as? String ?: "",
+            categoryWiseComments = categoryWiseComments,
+            flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+            exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+            gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+            gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+            gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+            agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+        )
+    }
+
+    fun parseSDTSubmission(data: Map<*, *>): SDTSubmission {
+        val responses = parseSDTResponses(data)
+        val instructorScore = (data["instructorScore"] as? Map<*, *>)?.let { parseSDTInstructorScore(it) }
+        val olqResult = parseOLQResult(data["olqResult"] as? Map<*, *>)
+        val analysisStatus = parseAnalysisStatus(data)
+
+        return SDTSubmission(
             id = data["id"] as? String ?: "",
             userId = data["userId"] as? String ?: "",
             testId = data["testId"] as? String ?: "",
             responses = responses,
             totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
             submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
+            status = parseSubmissionStatus(data),
             instructorScore = instructorScore,
             gradedByInstructorId = data["gradedByInstructorId"] as? String,
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
@@ -197,9 +230,9 @@ object PsychTestMapper {
         )
     }
 
-    fun parseSDTSubmission(data: Map<*, *>): SDTSubmission {
+    private fun parseSDTResponses(data: Map<*, *>): List<SDTQuestionResponse> {
         val responsesList = data["responses"] as? List<*> ?: emptyList<Any>()
-        val responses = responsesList.mapNotNull { responseData ->
+        return responsesList.mapNotNull { responseData ->
             (responseData as? Map<*, *>)?.let {
                 SDTQuestionResponse(
                     questionId = it["questionId"] as? String ?: "",
@@ -212,49 +245,34 @@ object PsychTestMapper {
                 )
             }
         }
+    }
 
-        val instructorScoreMap = data["instructorScore"] as? Map<*, *>
-        val instructorScore = instructorScoreMap?.let {
-            SDTInstructorScore(
-                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
-                emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
-                socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
-                introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
-                feedback = it["feedback"] as? String ?: "",
-                flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
-                gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
-                gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
-                gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-                agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
-            )
-        }
+    private fun parseSDTInstructorScore(it: Map<*, *>): SDTInstructorScore = SDTInstructorScore(
+        overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+        selfAwarenessScore = (it["selfAwarenessScore"] as? Number)?.toFloat() ?: 0f,
+        emotionalMaturityScore = (it["emotionalMaturityScore"] as? Number)?.toFloat() ?: 0f,
+        socialPerceptionScore = (it["socialPerceptionScore"] as? Number)?.toFloat() ?: 0f,
+        introspectionScore = (it["introspectionScore"] as? Number)?.toFloat() ?: 0f,
+        feedback = it["feedback"] as? String ?: "",
+        flaggedResponses = (it["flaggedResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+        exemplaryResponses = (it["exemplaryResponses"] as? List<*>)?.mapNotNull { r -> r as? String } ?: emptyList(),
+        gradedByInstructorId = it["gradedByInstructorId"] as? String ?: "",
+        gradedByInstructorName = it["gradedByInstructorName"] as? String ?: "",
+        gradedAt = (it["gradedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+        agreedWithAI = it["agreedWithAI"] as? Boolean ?: false
+    )
 
-        val olqResultMap = data["olqResult"] as? Map<*, *>
-        val olqResult = parseOLQResult(olqResultMap)
+    private fun parseAnalysisStatus(data: Map<*, *>): AnalysisStatus {
         val analysisStatusStr = data["analysisStatus"] as? String
-        val analysisStatus = try {
+        return try {
             if (analysisStatusStr != null) AnalysisStatus.valueOf(analysisStatusStr)
             else AnalysisStatus.PENDING_ANALYSIS
         } catch (e: Exception) { AnalysisStatus.PENDING_ANALYSIS }
-
-        return SDTSubmission(
-            id = data["id"] as? String ?: "",
-            userId = data["userId"] as? String ?: "",
-            testId = data["testId"] as? String ?: "",
-            responses = responses,
-            totalTimeTakenMinutes = (data["totalTimeTakenMinutes"] as? Number)?.toInt() ?: 0,
-            submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            status = try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
-                     catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW },
-            instructorScore = instructorScore,
-            gradedByInstructorId = data["gradedByInstructorId"] as? String,
-            gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong(),
-            analysisStatus = analysisStatus,
-            olqResult = olqResult
-        )
     }
+
+    private fun parseSubmissionStatus(data: Map<*, *>): SubmissionStatus =
+        try { SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED_PENDING_REVIEW") }
+        catch (e: Exception) { SubmissionStatus.SUBMITTED_PENDING_REVIEW }
 
     fun parseOLQResult(data: Map<*, *>?): OLQAnalysisResult? = parseSharedOLQResult(data)
 }

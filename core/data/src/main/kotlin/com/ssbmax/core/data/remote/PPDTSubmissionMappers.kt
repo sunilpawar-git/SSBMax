@@ -9,28 +9,7 @@ private const val PPDT_MAPPER_TAG = "PPDTMapper"
 
 @Suppress("UNCHECKED_CAST")
 internal fun parsePPDTSubmission(data: Map<*, *>): PPDTSubmission {
-    val instructorReviewMap = data["instructorReview"] as? Map<*, *>
-    val instructorReview = instructorReviewMap?.let {
-        val detailedScoresMap = it["detailedScores"] as? Map<*, *> ?: emptyMap<String, Any>()
-        val detailedScores = PPDTDetailedScores(
-            perception = (detailedScoresMap["perception"] as? Number)?.toFloat() ?: 0f,
-            imagination = (detailedScoresMap["imagination"] as? Number)?.toFloat() ?: 0f,
-            narration = (detailedScoresMap["narration"] as? Number)?.toFloat() ?: 0f,
-            characterDepiction = (detailedScoresMap["characterDepiction"] as? Number)?.toFloat() ?: 0f,
-            positivity = (detailedScoresMap["positivity"] as? Number)?.toFloat() ?: 0f
-        )
-        PPDTInstructorReview(
-            reviewId = it["reviewId"] as? String ?: "",
-            instructorId = it["instructorId"] as? String ?: "",
-            instructorName = it["instructorName"] as? String ?: "",
-            finalScore = (it["finalScore"] as? Number)?.toFloat() ?: 0f,
-            feedback = it["feedback"] as? String ?: "",
-            detailedScores = detailedScores,
-            agreedWithAI = it["agreedWithAI"] as? Boolean ?: false,
-            reviewedAt = (it["reviewedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
-            timeSpentMinutes = (it["timeSpentMinutes"] as? Number)?.toInt() ?: 0
-        )
-    }
+    val instructorReview = (data["instructorReview"] as? Map<*, *>)?.let { parsePPDTInstructorReview(it) }
 
     val olqResultMap = data["olqResult"] as? Map<*, *>
     val olqResult = parseOLQResult(olqResultMap)
@@ -57,6 +36,30 @@ internal fun parsePPDTSubmission(data: Map<*, *>): PPDTSubmission {
         instructorReview = instructorReview,
         analysisStatus = analysisStatus,
         olqResult = olqResult
+    )
+}
+
+private fun parsePPDTDetailedScores(detailedScoresMap: Map<*, *>) = PPDTDetailedScores(
+    perception = (detailedScoresMap["perception"] as? Number)?.toFloat() ?: 0f,
+    imagination = (detailedScoresMap["imagination"] as? Number)?.toFloat() ?: 0f,
+    narration = (detailedScoresMap["narration"] as? Number)?.toFloat() ?: 0f,
+    characterDepiction = (detailedScoresMap["characterDepiction"] as? Number)?.toFloat() ?: 0f,
+    positivity = (detailedScoresMap["positivity"] as? Number)?.toFloat() ?: 0f
+)
+
+@Suppress("UNCHECKED_CAST")
+private fun parsePPDTInstructorReview(reviewMap: Map<*, *>): PPDTInstructorReview {
+    val detailedScores = parsePPDTDetailedScores(reviewMap["detailedScores"] as? Map<*, *> ?: emptyMap<String, Any>())
+    return PPDTInstructorReview(
+        reviewId = reviewMap["reviewId"] as? String ?: "",
+        instructorId = reviewMap["instructorId"] as? String ?: "",
+        instructorName = reviewMap["instructorName"] as? String ?: "",
+        finalScore = (reviewMap["finalScore"] as? Number)?.toFloat() ?: 0f,
+        feedback = reviewMap["feedback"] as? String ?: "",
+        detailedScores = detailedScores,
+        agreedWithAI = reviewMap["agreedWithAI"] as? Boolean ?: false,
+        reviewedAt = (reviewMap["reviewedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+        timeSpentMinutes = (reviewMap["timeSpentMinutes"] as? Number)?.toInt() ?: 0
     )
 }
 

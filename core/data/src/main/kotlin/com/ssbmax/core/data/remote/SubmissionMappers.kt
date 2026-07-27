@@ -457,18 +457,8 @@ internal fun parseOLQResult(olqResultMap: Map<*, *>?): OLQAnalysisResult? {
     if (olqResultMap == null) return null
     return try {
         val olqScoresMap = olqResultMap["olqScores"] as? Map<*, *> ?: emptyMap<String, Any>()
-        val olqScores = mutableMapOf<OLQ, OLQScore>()
-        for ((key, value) in olqScoresMap) {
-            val olqName = key as? String ?: continue
-            val scoreMap = value as? Map<*, *> ?: continue
-            val olq = try { OLQ.valueOf(olqName) } catch (e: Exception) { continue }
-            olqScores[olq] = OLQScore(
-                score = (scoreMap["score"] as? Number)?.toInt() ?: 0,
-                confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
-                reasoning = scoreMap["reasoning"] as? String ?: ""
-            )
-        }
-        
+        val olqScores = parseOLQScoresMap(olqScoresMap)
+
         val testTypeName = olqResultMap["testType"] as? String ?: "PPDT"
         val testType = try { TestType.valueOf(testTypeName) } catch (e: Exception) { TestType.PPDT }
         
@@ -490,6 +480,21 @@ internal fun parseOLQResult(olqResultMap: Map<*, *>?): OLQAnalysisResult? {
     }
 }
 
+private fun parseOLQScoresMap(olqScoresMap: Map<*, *>): Map<OLQ, OLQScore> {
+    val olqScores = mutableMapOf<OLQ, OLQScore>()
+    for ((key, value) in olqScoresMap) {
+        val olqName = key as? String ?: continue
+        val scoreMap = value as? Map<*, *> ?: continue
+        val olq = try { OLQ.valueOf(olqName) } catch (e: Exception) { continue }
+        olqScores[olq] = OLQScore(
+            score = (scoreMap["score"] as? Number)?.toInt() ?: 0,
+            confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
+            reasoning = scoreMap["reasoning"] as? String ?: ""
+        )
+    }
+    return olqScores
+}
+
 // ===========================
 // PIQ Submission Parsers
 // ===========================
@@ -498,44 +503,38 @@ internal fun parseOLQResult(olqResultMap: Map<*, *>?): OLQAnalysisResult? {
  * Parse PIQ submission from Firestore map.
  * Extracted from FirestoreSubmissionRepository during Phase 4 refactoring.
  */
-@Suppress("UNCHECKED_CAST")
-internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
-    // Helper to safely get list of maps
-    fun getListOfMaps(key: String): List<Map<*, *>> {
-        return (data[key] as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
-    }
+private fun piqListOfMaps(data: Map<*, *>, key: String): List<Map<*, *>> =
+    (data[key] as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
 
-    // Parse siblings
-    val siblings = getListOfMaps("siblings").map {
-        Sibling(
-            id = it["id"] as? String ?: "",
-            name = it["name"] as? String ?: "",
-            age = it["age"] as? String ?: "",
-            occupation = it["occupation"] as? String ?: "",
-            education = it["education"] as? String ?: "",
-            income = it["income"] as? String ?: ""
-        )
-    }
+private fun parsePIQSiblings(data: Map<*, *>): List<Sibling> = piqListOfMaps(data, "siblings").map {
+    Sibling(
+        id = it["id"] as? String ?: "",
+        name = it["name"] as? String ?: "",
+        age = it["age"] as? String ?: "",
+        occupation = it["occupation"] as? String ?: "",
+        education = it["education"] as? String ?: "",
+        income = it["income"] as? String ?: ""
+    )
+}
 
-    // Parse education levels
-    fun parseEducation(key: String, level: String): Education {
-        val eduMap = data[key] as? Map<*, *> ?: emptyMap<String, Any>()
-        return Education(
-            level = level,
-            institution = eduMap["institution"] as? String ?: "",
-            board = eduMap["board"] as? String ?: "",
-            stream = eduMap["stream"] as? String ?: "",
-            year = eduMap["year"] as? String ?: "",
-            percentage = eduMap["percentage"] as? String ?: "",
-            cgpa = eduMap["cgpa"] as? String ?: "",
-            mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
-            boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
-            outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
-        )
-    }
+private fun parsePIQEducation(data: Map<*, *>, key: String, level: String): Education {
+    val eduMap = data[key] as? Map<*, *> ?: emptyMap<String, Any>()
+    return Education(
+        level = level,
+        institution = eduMap["institution"] as? String ?: "",
+        board = eduMap["board"] as? String ?: "",
+        stream = eduMap["stream"] as? String ?: "",
+        year = eduMap["year"] as? String ?: "",
+        percentage = eduMap["percentage"] as? String ?: "",
+        cgpa = eduMap["cgpa"] as? String ?: "",
+        mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
+        boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
+        outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
+    )
+}
 
-    // Parse sports participation
-    val sportsParticipation = getListOfMaps("sportsParticipation").map {
+private fun parsePIQSportsParticipation(data: Map<*, *>): List<SportsParticipation> =
+    piqListOfMaps(data, "sportsParticipation").map {
         SportsParticipation(
             id = it["id"] as? String ?: "",
             sport = it["sport"] as? String ?: "",
@@ -545,8 +544,8 @@ internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
         )
     }
 
-    // Parse extra-curricular activities
-    val extraCurricularActivities = getListOfMaps("extraCurricularActivities").map {
+private fun parsePIQExtraCurricularActivities(data: Map<*, *>): List<ExtraCurricularActivity> =
+    piqListOfMaps(data, "extraCurricularActivities").map {
         ExtraCurricularActivity(
             id = it["id"] as? String ?: "",
             activityName = it["activityName"] as? String ?: "",
@@ -555,8 +554,8 @@ internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
         )
     }
 
-    // Parse work experience
-    val workExperience = getListOfMaps("workExperience").map {
+private fun parsePIQWorkExperience(data: Map<*, *>): List<WorkExperience> =
+    piqListOfMaps(data, "workExperience").map {
         WorkExperience(
             id = it["id"] as? String ?: "",
             company = it["company"] as? String ?: "",
@@ -566,18 +565,19 @@ internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
         )
     }
 
-    // Parse NCC training
+private fun parsePIQNCCTraining(data: Map<*, *>): NCCTraining {
     val nccTrainingMap = data["nccTraining"] as? Map<*, *> ?: emptyMap<String, Any>()
-    val nccTraining = NCCTraining(
+    return NCCTraining(
         hasTraining = nccTrainingMap["hasTraining"] as? Boolean ?: false,
         totalTraining = nccTrainingMap["totalTraining"] as? String ?: "",
         wing = nccTrainingMap["wing"] as? String ?: "",
         division = nccTrainingMap["division"] as? String ?: "",
         certificateObtained = nccTrainingMap["certificateObtained"] as? String ?: ""
     )
+}
 
-    // Parse previous interviews
-    val previousInterviews = getListOfMaps("previousInterviews").map {
+private fun parsePIQPreviousInterviews(data: Map<*, *>): List<PreviousInterview> =
+    piqListOfMaps(data, "previousInterviews").map {
         PreviousInterview(
             id = it["id"] as? String ?: "",
             typeOfEntry = it["typeOfEntry"] as? String ?: "",
@@ -589,71 +589,227 @@ internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
         )
     }
 
+/** Name/contact fields — grouped (and split from location/residence) purely to keep [parsePIQSubmission] short. */
+private data class PIQIdentityFields(
+    val oirNumber: String,
+    val selectionBoard: String,
+    val batchNumber: String,
+    val chestNumber: String,
+    val upscRollNumber: String,
+    val fullName: String,
+    val dateOfBirth: String,
+    val age: String,
+    val gender: String,
+    val phone: String,
+    val email: String
+)
+
+private fun parsePIQIdentityFields(data: Map<*, *>) = PIQIdentityFields(
+    oirNumber = data["oirNumber"] as? String ?: "",
+    selectionBoard = data["selectionBoard"] as? String ?: "",
+    batchNumber = data["batchNumber"] as? String ?: "",
+    chestNumber = data["chestNumber"] as? String ?: "",
+    upscRollNumber = data["upscRollNumber"] as? String ?: "",
+    fullName = data["fullName"] as? String ?: "",
+    dateOfBirth = data["dateOfBirth"] as? String ?: "",
+    age = data["age"] as? String ?: "",
+    gender = data["gender"] as? String ?: "",
+    phone = data["phone"] as? String ?: "",
+    email = data["email"] as? String ?: ""
+)
+
+/** Location fields — split from [PIQIdentityFields] purely to keep [parsePIQSubmission] short. */
+private data class PIQLocationFields(
+    val state: String,
+    val district: String,
+    val religion: String,
+    val scStObcStatus: String,
+    val motherTongue: String,
+    val maritalStatus: String,
+    val permanentAddress: String,
+    val presentAddress: String,
+    val maximumResidence: String
+)
+
+private fun parsePIQLocationFields(data: Map<*, *>) = PIQLocationFields(
+    state = data["state"] as? String ?: "",
+    district = data["district"] as? String ?: "",
+    religion = data["religion"] as? String ?: "",
+    scStObcStatus = data["scStObcStatus"] as? String ?: "",
+    motherTongue = data["motherTongue"] as? String ?: "",
+    maritalStatus = data["maritalStatus"] as? String ?: "",
+    permanentAddress = data["permanentAddress"] as? String ?: "",
+    presentAddress = data["presentAddress"] as? String ?: "",
+    maximumResidence = data["maximumResidence"] as? String ?: ""
+)
+
+/** Residence-stats fields — split from [PIQLocationFields] purely to keep [parsePIQSubmission] short. */
+private data class PIQResidenceStatsFields(
+    val maximumResidencePopulation: String,
+    val presentResidencePopulation: String,
+    val permanentResidencePopulation: String,
+    val isDistrictHQ: Boolean,
+    val height: String,
+    val weight: String
+)
+
+private fun parsePIQResidenceStatsFields(data: Map<*, *>) = PIQResidenceStatsFields(
+    maximumResidencePopulation = data["maximumResidencePopulation"] as? String ?: "",
+    presentResidencePopulation = data["presentResidencePopulation"] as? String ?: "",
+    permanentResidencePopulation = data["permanentResidencePopulation"] as? String ?: "",
+    isDistrictHQ = data["isDistrictHQ"] as? Boolean ?: false,
+    height = data["height"] as? String ?: "",
+    weight = data["weight"] as? String ?: ""
+)
+
+/** Parent fields — grouped (and split from guardian/sibling fields) purely to keep [parsePIQSubmission] short. */
+private data class PIQParentFields(
+    val fatherName: String,
+    val fatherOccupation: String,
+    val fatherEducation: String,
+    val fatherIncome: String,
+    val motherName: String,
+    val motherOccupation: String,
+    val motherEducation: String
+)
+
+private fun parsePIQParentFields(data: Map<*, *>) = PIQParentFields(
+    fatherName = data["fatherName"] as? String ?: "",
+    fatherOccupation = data["fatherOccupation"] as? String ?: "",
+    fatherEducation = data["fatherEducation"] as? String ?: "",
+    fatherIncome = data["fatherIncome"] as? String ?: "",
+    motherName = data["motherName"] as? String ?: "",
+    motherOccupation = data["motherOccupation"] as? String ?: "",
+    motherEducation = data["motherEducation"] as? String ?: ""
+)
+
+/** Guardian-status fields — split from [PIQParentFields] purely to keep [parsePIQSubmission] short. */
+private data class PIQGuardianFields(
+    val parentsAlive: String,
+    val ageAtFatherDeath: String,
+    val ageAtMotherDeath: String,
+    val guardianName: String,
+    val guardianOccupation: String,
+    val guardianEducation: String,
+    val guardianIncome: String
+)
+
+private fun parsePIQGuardianFields(data: Map<*, *>) = PIQGuardianFields(
+    parentsAlive = data["parentsAlive"] as? String ?: "",
+    ageAtFatherDeath = data["ageAtFatherDeath"] as? String ?: "",
+    ageAtMotherDeath = data["ageAtMotherDeath"] as? String ?: "",
+    guardianName = data["guardianName"] as? String ?: "",
+    guardianOccupation = data["guardianOccupation"] as? String ?: "",
+    guardianEducation = data["guardianEducation"] as? String ?: "",
+    guardianIncome = data["guardianIncome"] as? String ?: ""
+)
+
+/** Career/background fields — grouped purely to keep [parsePIQSubmission] short. */
+private data class PIQBackgroundFields(
+    val presentOccupation: String,
+    val personalMonthlyIncome: String,
+    val hobbies: String,
+    val sports: String,
+    val positionsOfResponsibility: String,
+    val natureOfCommission: String,
+    val choiceOfService: String,
+    val chancesAvailed: String,
+    val whyDefenseForces: String,
+    val strengths: String,
+    val weaknesses: String
+)
+
+private fun parsePIQBackgroundFields(data: Map<*, *>) = PIQBackgroundFields(
+    presentOccupation = data["presentOccupation"] as? String ?: "",
+    personalMonthlyIncome = data["personalMonthlyIncome"] as? String ?: "",
+    hobbies = data["hobbies"] as? String ?: "",
+    sports = data["sports"] as? String ?: "",
+    positionsOfResponsibility = data["positionsOfResponsibility"] as? String ?: "",
+    natureOfCommission = data["natureOfCommission"] as? String ?: "",
+    choiceOfService = data["choiceOfService"] as? String ?: "",
+    chancesAvailed = data["chancesAvailed"] as? String ?: "",
+    whyDefenseForces = data["whyDefenseForces"] as? String ?: "",
+    strengths = data["strengths"] as? String ?: "",
+    weaknesses = data["weaknesses"] as? String ?: ""
+)
+
+/**
+ * Parse PIQ submission from Firestore map.
+ * Extracted from FirestoreSubmissionRepository during Phase 4 refactoring.
+ */
+internal fun parsePIQSubmission(data: Map<*, *>): PIQSubmission {
+    val identity = parsePIQIdentityFields(data)
+    val parents = parsePIQParentFields(data)
+    val guardian = parsePIQGuardianFields(data)
+    val background = parsePIQBackgroundFields(data)
+    val location = parsePIQLocationFields(data)
+    val residenceStats = parsePIQResidenceStatsFields(data)
+
     return PIQSubmission(
         id = data["id"] as? String ?: "",
         userId = data["userId"] as? String ?: "",
         testId = data["testId"] as? String ?: "piq_standard",
-        oirNumber = data["oirNumber"] as? String ?: "",
-        selectionBoard = data["selectionBoard"] as? String ?: "",
-        batchNumber = data["batchNumber"] as? String ?: "",
-        chestNumber = data["chestNumber"] as? String ?: "",
-        upscRollNumber = data["upscRollNumber"] as? String ?: "",
-        fullName = data["fullName"] as? String ?: "",
-        dateOfBirth = data["dateOfBirth"] as? String ?: "",
-        age = data["age"] as? String ?: "",
-        gender = data["gender"] as? String ?: "",
-        phone = data["phone"] as? String ?: "",
-        email = data["email"] as? String ?: "",
-        state = data["state"] as? String ?: "",
-        district = data["district"] as? String ?: "",
-        religion = data["religion"] as? String ?: "",
-        scStObcStatus = data["scStObcStatus"] as? String ?: "",
-        motherTongue = data["motherTongue"] as? String ?: "",
-        maritalStatus = data["maritalStatus"] as? String ?: "",
-        permanentAddress = data["permanentAddress"] as? String ?: "",
-        presentAddress = data["presentAddress"] as? String ?: "",
-        maximumResidence = data["maximumResidence"] as? String ?: "",
-        maximumResidencePopulation = data["maximumResidencePopulation"] as? String ?: "",
-        presentResidencePopulation = data["presentResidencePopulation"] as? String ?: "",
-        permanentResidencePopulation = data["permanentResidencePopulation"] as? String ?: "",
-        isDistrictHQ = data["isDistrictHQ"] as? Boolean ?: false,
-        height = data["height"] as? String ?: "",
-        weight = data["weight"] as? String ?: "",
-        fatherName = data["fatherName"] as? String ?: "",
-        fatherOccupation = data["fatherOccupation"] as? String ?: "",
-        fatherEducation = data["fatherEducation"] as? String ?: "",
-        fatherIncome = data["fatherIncome"] as? String ?: "",
-        motherName = data["motherName"] as? String ?: "",
-        motherOccupation = data["motherOccupation"] as? String ?: "",
-        motherEducation = data["motherEducation"] as? String ?: "",
-        parentsAlive = data["parentsAlive"] as? String ?: "",
-        ageAtFatherDeath = data["ageAtFatherDeath"] as? String ?: "",
-        ageAtMotherDeath = data["ageAtMotherDeath"] as? String ?: "",
-        guardianName = data["guardianName"] as? String ?: "",
-        guardianOccupation = data["guardianOccupation"] as? String ?: "",
-        guardianEducation = data["guardianEducation"] as? String ?: "",
-        guardianIncome = data["guardianIncome"] as? String ?: "",
-        siblings = siblings,
-        presentOccupation = data["presentOccupation"] as? String ?: "",
-        personalMonthlyIncome = data["personalMonthlyIncome"] as? String ?: "",
-        education10th = parseEducation("education10th", "10th"),
-        education12th = parseEducation("education12th", "12th"),
-        educationGraduation = parseEducation("educationGraduation", "Graduation"),
-        educationPostGraduation = parseEducation("educationPostGraduation", "Post-Graduation"),
-        hobbies = data["hobbies"] as? String ?: "",
-        sports = data["sports"] as? String ?: "",
-        sportsParticipation = sportsParticipation,
-        extraCurricularActivities = extraCurricularActivities,
-        positionsOfResponsibility = data["positionsOfResponsibility"] as? String ?: "",
-        workExperience = workExperience,
-        nccTraining = nccTraining,
-        natureOfCommission = data["natureOfCommission"] as? String ?: "",
-        choiceOfService = data["choiceOfService"] as? String ?: "",
-        chancesAvailed = data["chancesAvailed"] as? String ?: "",
-        previousInterviews = previousInterviews,
-        whyDefenseForces = data["whyDefenseForces"] as? String ?: "",
-        strengths = data["strengths"] as? String ?: "",
-        weaknesses = data["weaknesses"] as? String ?: "",
+        oirNumber = identity.oirNumber,
+        selectionBoard = identity.selectionBoard,
+        batchNumber = identity.batchNumber,
+        chestNumber = identity.chestNumber,
+        upscRollNumber = identity.upscRollNumber,
+        fullName = identity.fullName,
+        dateOfBirth = identity.dateOfBirth,
+        age = identity.age,
+        gender = identity.gender,
+        phone = identity.phone,
+        email = identity.email,
+        state = location.state,
+        district = location.district,
+        religion = location.religion,
+        scStObcStatus = location.scStObcStatus,
+        motherTongue = location.motherTongue,
+        maritalStatus = location.maritalStatus,
+        permanentAddress = location.permanentAddress,
+        presentAddress = location.presentAddress,
+        maximumResidence = location.maximumResidence,
+        maximumResidencePopulation = residenceStats.maximumResidencePopulation,
+        presentResidencePopulation = residenceStats.presentResidencePopulation,
+        permanentResidencePopulation = residenceStats.permanentResidencePopulation,
+        isDistrictHQ = residenceStats.isDistrictHQ,
+        height = residenceStats.height,
+        weight = residenceStats.weight,
+        fatherName = parents.fatherName,
+        fatherOccupation = parents.fatherOccupation,
+        fatherEducation = parents.fatherEducation,
+        fatherIncome = parents.fatherIncome,
+        motherName = parents.motherName,
+        motherOccupation = parents.motherOccupation,
+        motherEducation = parents.motherEducation,
+        parentsAlive = guardian.parentsAlive,
+        ageAtFatherDeath = guardian.ageAtFatherDeath,
+        ageAtMotherDeath = guardian.ageAtMotherDeath,
+        guardianName = guardian.guardianName,
+        guardianOccupation = guardian.guardianOccupation,
+        guardianEducation = guardian.guardianEducation,
+        guardianIncome = guardian.guardianIncome,
+        siblings = parsePIQSiblings(data),
+        presentOccupation = background.presentOccupation,
+        personalMonthlyIncome = background.personalMonthlyIncome,
+        education10th = parsePIQEducation(data, "education10th", "10th"),
+        education12th = parsePIQEducation(data, "education12th", "12th"),
+        educationGraduation = parsePIQEducation(data, "educationGraduation", "Graduation"),
+        educationPostGraduation = parsePIQEducation(data, "educationPostGraduation", "Post-Graduation"),
+        hobbies = background.hobbies,
+        sports = background.sports,
+        sportsParticipation = parsePIQSportsParticipation(data),
+        extraCurricularActivities = parsePIQExtraCurricularActivities(data),
+        positionsOfResponsibility = background.positionsOfResponsibility,
+        workExperience = parsePIQWorkExperience(data),
+        nccTraining = parsePIQNCCTraining(data),
+        natureOfCommission = background.natureOfCommission,
+        choiceOfService = background.choiceOfService,
+        chancesAvailed = background.chancesAvailed,
+        previousInterviews = parsePIQPreviousInterviews(data),
+        whyDefenseForces = background.whyDefenseForces,
+        strengths = background.strengths,
+        weaknesses = background.weaknesses,
         status = SubmissionStatus.valueOf(data["status"] as? String ?: "SUBMITTED"),
         submittedAt = (data["submittedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
         lastModifiedAt = (data["lastModifiedAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),

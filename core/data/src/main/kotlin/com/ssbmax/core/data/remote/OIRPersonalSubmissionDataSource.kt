@@ -86,51 +86,7 @@ class OIRPersonalSubmissionDataSource(
     @Suppress("UNCHECKED_CAST")
     internal fun parseOIRSubmission(data: Map<*, *>): OIRSubmission {
         val testResultMap = data["testResult"] as? Map<*, *> ?: emptyMap<String, Any>()
-
-        val categoryScoresMap = testResultMap["categoryScores"] as? Map<*, *> ?: emptyMap<String, Any>()
-        val categoryScores = categoryScoresMap.mapNotNull { (key, value) ->
-            val categoryName = key as? String ?: return@mapNotNull null
-            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
-            val category = try { OIRQuestionType.valueOf(categoryName) } catch (e: Exception) { return@mapNotNull null }
-            category to CategoryScore(
-                category = category,
-                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
-                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
-                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f,
-                averageTimeSeconds = (scoreMap["averageTimeSeconds"] as? Number)?.toInt() ?: 0
-            )
-        }.toMap()
-
-        val difficultyBreakdownMap = testResultMap["difficultyBreakdown"] as? Map<*, *> ?: emptyMap<String, Any>()
-        val difficultyBreakdown = difficultyBreakdownMap.mapNotNull { (key, value) ->
-            val difficultyName = key as? String ?: return@mapNotNull null
-            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
-            val difficulty = try { QuestionDifficulty.valueOf(difficultyName) } catch (e: Exception) { return@mapNotNull null }
-            difficulty to DifficultyScore(
-                difficulty = difficulty,
-                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
-                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
-                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f
-            )
-        }.toMap()
-
-        val testResult = OIRTestResult(
-            testId = testResultMap["testId"] as? String ?: "",
-            sessionId = testResultMap["sessionId"] as? String ?: "",
-            userId = testResultMap["userId"] as? String ?: "",
-            totalQuestions = (testResultMap["totalQuestions"] as? Number)?.toInt() ?: 0,
-            correctAnswers = (testResultMap["correctAnswers"] as? Number)?.toInt() ?: 0,
-            incorrectAnswers = (testResultMap["incorrectAnswers"] as? Number)?.toInt() ?: 0,
-            skippedQuestions = (testResultMap["skippedQuestions"] as? Number)?.toInt() ?: 0,
-            totalTimeSeconds = (testResultMap["totalTimeSeconds"] as? Number)?.toInt() ?: 0,
-            timeTakenSeconds = (testResultMap["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-            rawScore = (testResultMap["rawScore"] as? Number)?.toInt() ?: 0,
-            percentageScore = (testResultMap["percentageScore"] as? Number)?.toFloat() ?: 0f,
-            categoryScores = categoryScores,
-            difficultyBreakdown = difficultyBreakdown,
-            answeredQuestions = emptyList(),
-            completedAt = (testResultMap["completedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
-        )
+        val testResult = parseOIRTestResult(testResultMap)
 
         return OIRSubmission(
             id = data["id"] as? String ?: "",
@@ -143,4 +99,69 @@ class OIRPersonalSubmissionDataSource(
             gradingTimestamp = (data["gradingTimestamp"] as? Number)?.toLong()
         )
     }
+
+    private data class OIRQuestionCounts(
+        val totalQuestions: Int,
+        val correctAnswers: Int,
+        val incorrectAnswers: Int,
+        val skippedQuestions: Int
+    )
+
+    private fun parseOIRQuestionCounts(testResultMap: Map<*, *>) = OIRQuestionCounts(
+        totalQuestions = (testResultMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+        correctAnswers = (testResultMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+        incorrectAnswers = (testResultMap["incorrectAnswers"] as? Number)?.toInt() ?: 0,
+        skippedQuestions = (testResultMap["skippedQuestions"] as? Number)?.toInt() ?: 0
+    )
+
+    private fun parseOIRTestResult(testResultMap: Map<*, *>): OIRTestResult {
+        val categoryScoresMap = testResultMap["categoryScores"] as? Map<*, *> ?: emptyMap<String, Any>()
+        val difficultyBreakdownMap = testResultMap["difficultyBreakdown"] as? Map<*, *> ?: emptyMap<String, Any>()
+        val counts = parseOIRQuestionCounts(testResultMap)
+
+        return OIRTestResult(
+            testId = testResultMap["testId"] as? String ?: "",
+            sessionId = testResultMap["sessionId"] as? String ?: "",
+            userId = testResultMap["userId"] as? String ?: "",
+            totalQuestions = counts.totalQuestions,
+            correctAnswers = counts.correctAnswers,
+            incorrectAnswers = counts.incorrectAnswers,
+            skippedQuestions = counts.skippedQuestions,
+            totalTimeSeconds = (testResultMap["totalTimeSeconds"] as? Number)?.toInt() ?: 0,
+            timeTakenSeconds = (testResultMap["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+            rawScore = (testResultMap["rawScore"] as? Number)?.toInt() ?: 0,
+            percentageScore = (testResultMap["percentageScore"] as? Number)?.toFloat() ?: 0f,
+            categoryScores = parseCategoryScores(categoryScoresMap),
+            difficultyBreakdown = parseDifficultyBreakdown(difficultyBreakdownMap),
+            answeredQuestions = emptyList(),
+            completedAt = (testResultMap["completedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+        )
+    }
+
+    private fun parseCategoryScores(categoryScoresMap: Map<*, *>): Map<OIRQuestionType, CategoryScore> =
+        categoryScoresMap.mapNotNull { (key, value) ->
+            val categoryName = key as? String ?: return@mapNotNull null
+            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
+            val category = try { OIRQuestionType.valueOf(categoryName) } catch (e: Exception) { return@mapNotNull null }
+            category to CategoryScore(
+                category = category,
+                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f,
+                averageTimeSeconds = (scoreMap["averageTimeSeconds"] as? Number)?.toInt() ?: 0
+            )
+        }.toMap()
+
+    private fun parseDifficultyBreakdown(difficultyBreakdownMap: Map<*, *>): Map<QuestionDifficulty, DifficultyScore> =
+        difficultyBreakdownMap.mapNotNull { (key, value) ->
+            val difficultyName = key as? String ?: return@mapNotNull null
+            val scoreMap = value as? Map<*, *> ?: return@mapNotNull null
+            val difficulty = try { QuestionDifficulty.valueOf(difficultyName) } catch (e: Exception) { return@mapNotNull null }
+            difficulty to DifficultyScore(
+                difficulty = difficulty,
+                totalQuestions = (scoreMap["totalQuestions"] as? Number)?.toInt() ?: 0,
+                correctAnswers = (scoreMap["correctAnswers"] as? Number)?.toInt() ?: 0,
+                percentage = (scoreMap["percentage"] as? Number)?.toFloat() ?: 0f
+            )
+        }.toMap()
 }

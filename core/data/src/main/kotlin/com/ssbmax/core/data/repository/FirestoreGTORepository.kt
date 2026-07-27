@@ -166,22 +166,8 @@ class FirestoreGTORepository(
             
             val obstacles = doc.get("obstacles") as? List<*>
             val obstacleObjects = obstacles?.filterIsInstance<Map<*, *>>() ?: emptyList()
-            
-            val obstacleConfigs = obstacleObjects.map { obstacle ->
-                ObstacleConfig(
-                    id = obstacle["id"] as? String ?: UUID.randomUUID().toString(),
-                    name = obstacle["name"] as? String ?: "",
-                    description = obstacle["description"] as? String ?: "",
-                    difficulty = (obstacle["difficulty"] as? Long)?.toInt() ?: 1,
-                    animationAsset = obstacle["animationAsset"] as? String ?: "",
-                    resources = (obstacle["resources"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    height = (obstacle["height"] as? Number)?.toFloat(),
-                    width = (obstacle["width"] as? Number)?.toFloat(),
-                    depth = (obstacle["depth"] as? Number)?.toFloat()
-                )
-            }
-            
-            Result.success(obstacleConfigs)
+
+            Result.success(obstacleObjects.map { mapObstacleFromContent(it) })
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get obstacles for test: $testType", e)
             Result.failure(e)
@@ -602,49 +588,7 @@ class FirestoreGTORepository(
                 .await()
                 
             if (resultDoc.exists()) {
-                // Map from result document
-                val data = resultDoc.data ?: emptyMap()
-                val testTypeStr = data["testType"] as? String ?: return Result.failure(Exception("Missing test type"))
-                val testType = GTOTestType.valueOf(testTypeStr)
-                
-                @Suppress("UNCHECKED_CAST")
-                val scoresMap = (data["olqScores"] as? Map<String, Map<String, Any>>) ?: emptyMap()
-                
-                // Safely map OLQ scores
-                val parsedScores = scoresMap.mapNotNull { (key, value) ->
-                    try {
-                        val olq = OLQ.valueOf(key)
-                        val score = (value["score"] as? Number)?.toInt() ?: 0
-                        val confidence = (value["confidence"] as? Number)?.toInt() ?: 0
-                        val reasoning = value["reasoning"] as? String ?: ""
-                        olq to OLQScore(score, confidence, reasoning)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error parsing OLQ score: $key", e)
-                        null
-                    }
-                }.toMap()
-                
-                // Fill missing OLQs with default zero values to satisfy UI requirements
-                val olqScores = OLQ.values().associateWith { olq ->
-                    parsedScores[olq] ?: OLQScore(
-                        score = 0,
-                        confidence = 0,
-                        reasoning = "Not analyzed"
-                    )
-                }
-                
-                val result = GTOResult(
-                    submissionId = submissionId,
-                    userId = data["userId"] as? String ?: "",
-                    testType = testType,
-                    olqScores = olqScores,
-                    overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    overallRating = data["overallRating"] as? String ?: "",
-                    aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0,
-                    analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
-                )
-                
-                return Result.success(result)
+                return buildResultFromResultDocument(submissionId, resultDoc.data ?: emptyMap())
             }
             
             // Fallback: legacy data — scores embedded on the submission doc, never migrated to
@@ -991,108 +935,136 @@ class FirestoreGTORepository(
         @Suppress("UNCHECKED_CAST")
         val nestedData = (data["data"] as? Map<String, Any>) ?: emptyMap()
         val hasNestedData = nestedData.isNotEmpty()
-        
+        // Read from nested data if available, otherwise fall back to root level (legacy)
+        val effectiveData = if (hasNestedData) nestedData else data
+
+        val common = SubmissionCommonFields(id, userId, testId, submittedAt, timeSpent, finalStatus, olqScores)
+
         return when (testType) {
-            GTOTestType.GROUP_DISCUSSION -> GTOSubmission.GDSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                // Read from nested data if available, otherwise fall back to root level (legacy)
-                topic = (if (hasNestedData) nestedData["topic"] else data["topic"]) as? String ?: "",
-                response = (if (hasNestedData) nestedData["response"] else data["response"]) as? String ?: "",
-                charCount = ((if (hasNestedData) nestedData["charCount"] else data["charCount"]) as? Number)?.toInt() ?: 0,
-                submittedAt = submittedAt,
-                // Fix: Read timeSpent from nested data, same as wordCount
-                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.GROUP_PLANNING_EXERCISE -> GTOSubmission.GPESubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                imageUrl = (if (hasNestedData) nestedData["imageUrl"] else data["imageUrl"]) as? String ?: "",
-                scenario = (if (hasNestedData) nestedData["scenario"] else data["scenario"]) as? String ?: "",
-                plan = (if (hasNestedData) nestedData["plan"] else data["plan"]) as? String ?: "",
-                characterCount = ((if (hasNestedData) nestedData["characterCount"] else data["characterCount"]) as? Number)?.toInt() ?: 0,
-                submittedAt = submittedAt,
-                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.LECTURETTE -> GTOSubmission.LecturetteSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                topicChoices = ((if (hasNestedData) nestedData["topicChoices"] else data["topicChoices"]) as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                selectedTopic = (if (hasNestedData) nestedData["selectedTopic"] else data["selectedTopic"]) as? String ?: "",
-                speechTranscript = (if (hasNestedData) nestedData["speechTranscript"] else data["speechTranscript"]) as? String ?: "",
-                charCount = ((if (hasNestedData) nestedData["charCount"] else data["charCount"]) as? Number)?.toInt() ?: 0,
-                submittedAt = submittedAt,
-                timeSpent = ((if (hasNestedData) nestedData["timeSpent"] else data["timeSpent"]) as? Number)?.toInt() ?: 0,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.PROGRESSIVE_GROUP_TASK -> GTOSubmission.PGTSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                obstacles = parseObstacleConfigList(data["obstacles"]),
-                solutions = parseObstacleSolutionList(data["solutions"]),
-                submittedAt = submittedAt,
-                timeSpent = timeSpent,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.HALF_GROUP_TASK -> GTOSubmission.HGTSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                obstacle = parseObstacleConfig(data["obstacle"]),
-                solution = parseObstacleSolution(data["solution"]),
-                leadershipDecisions = data["leadershipDecisions"] as? String ?: "",
-                submittedAt = submittedAt,
-                timeSpent = timeSpent,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.GROUP_OBSTACLE_RACE -> GTOSubmission.GORSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                obstacles = parseObstacleConfigList(data["obstacles"]),
-                coordinationStrategy = data["coordinationStrategy"] as? String ?: "",
-                submittedAt = submittedAt,
-                timeSpent = timeSpent,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.INDIVIDUAL_OBSTACLES -> GTOSubmission.IOSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                obstacles = parseObstacleConfigList(data["obstacles"]),
-                approach = data["approach"] as? String ?: "",
-                submittedAt = submittedAt,
-                timeSpent = timeSpent,
-                status = finalStatus,
-                olqScores = olqScores
-            )
-            GTOTestType.COMMAND_TASK -> GTOSubmission.CTSubmission(
-                id = id,
-                userId = userId,
-                testId = testId,
-                scenario = data["scenario"] as? String ?: "",
-                obstacle = parseObstacleConfig(data["obstacle"]),
-                commandDecisions = data["commandDecisions"] as? String ?: "",
-                resourceAllocation = data["resourceAllocation"] as? String ?: "",
-                submittedAt = submittedAt,
-                timeSpent = timeSpent,
-                status = finalStatus,
-                olqScores = olqScores
-            )
+            GTOTestType.GROUP_DISCUSSION -> buildGDSubmission(common, effectiveData)
+            GTOTestType.GROUP_PLANNING_EXERCISE -> buildGPESubmission(common, effectiveData)
+            GTOTestType.LECTURETTE -> buildLecturetteSubmission(common, effectiveData)
+            GTOTestType.PROGRESSIVE_GROUP_TASK -> buildPGTSubmission(common, data)
+            GTOTestType.HALF_GROUP_TASK -> buildHGTSubmission(common, data)
+            GTOTestType.GROUP_OBSTACLE_RACE -> buildGORSubmission(common, data)
+            GTOTestType.INDIVIDUAL_OBSTACLES -> buildIOSubmission(common, data)
+            GTOTestType.COMMAND_TASK -> buildCTSubmission(common, data)
         }
     }
+
+    private data class SubmissionCommonFields(
+        val id: String,
+        val userId: String,
+        val testId: String,
+        val submittedAt: Long,
+        val timeSpent: Int,
+        val status: GTOSubmissionStatus,
+        val olqScores: Map<OLQ, OLQScore>
+    )
+
+    private fun buildGDSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.GDSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        topic = data["topic"] as? String ?: "",
+        response = data["response"] as? String ?: "",
+        charCount = (data["charCount"] as? Number)?.toInt() ?: 0,
+        submittedAt = c.submittedAt,
+        timeSpent = (data["timeSpent"] as? Number)?.toInt() ?: 0,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildGPESubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.GPESubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        imageUrl = data["imageUrl"] as? String ?: "",
+        scenario = data["scenario"] as? String ?: "",
+        plan = data["plan"] as? String ?: "",
+        characterCount = (data["characterCount"] as? Number)?.toInt() ?: 0,
+        submittedAt = c.submittedAt,
+        timeSpent = (data["timeSpent"] as? Number)?.toInt() ?: 0,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildLecturetteSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.LecturetteSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        topicChoices = (data["topicChoices"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+        selectedTopic = data["selectedTopic"] as? String ?: "",
+        speechTranscript = data["speechTranscript"] as? String ?: "",
+        charCount = (data["charCount"] as? Number)?.toInt() ?: 0,
+        submittedAt = c.submittedAt,
+        timeSpent = (data["timeSpent"] as? Number)?.toInt() ?: 0,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildPGTSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.PGTSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        obstacles = parseObstacleConfigList(data["obstacles"]),
+        solutions = parseObstacleSolutionList(data["solutions"]),
+        submittedAt = c.submittedAt,
+        timeSpent = c.timeSpent,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildHGTSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.HGTSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        obstacle = parseObstacleConfig(data["obstacle"]),
+        solution = parseObstacleSolution(data["solution"]),
+        leadershipDecisions = data["leadershipDecisions"] as? String ?: "",
+        submittedAt = c.submittedAt,
+        timeSpent = c.timeSpent,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildGORSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.GORSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        obstacles = parseObstacleConfigList(data["obstacles"]),
+        coordinationStrategy = data["coordinationStrategy"] as? String ?: "",
+        submittedAt = c.submittedAt,
+        timeSpent = c.timeSpent,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildIOSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.IOSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        obstacles = parseObstacleConfigList(data["obstacles"]),
+        approach = data["approach"] as? String ?: "",
+        submittedAt = c.submittedAt,
+        timeSpent = c.timeSpent,
+        status = c.status,
+        olqScores = c.olqScores
+    )
+
+    private fun buildCTSubmission(c: SubmissionCommonFields, data: Map<String, Any>) = GTOSubmission.CTSubmission(
+        id = c.id,
+        userId = c.userId,
+        testId = c.testId,
+        scenario = data["scenario"] as? String ?: "",
+        obstacle = parseObstacleConfig(data["obstacle"]),
+        commandDecisions = data["commandDecisions"] as? String ?: "",
+        resourceAllocation = data["resourceAllocation"] as? String ?: "",
+        submittedAt = c.submittedAt,
+        timeSpent = c.timeSpent,
+        status = c.status,
+        olqScores = c.olqScores
+    )
     
     private fun mapToProgress(userId: String, data: Map<String, Any>): GTOProgress {
         val completedTestsStr = (data[FIELD_COMPLETED_TESTS] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
@@ -1155,6 +1127,48 @@ class FirestoreGTORepository(
         )
     }
 
+    /**
+     * Build a [GTOResult] from a `gto_results` document body. Split out of [getTestResult] so
+     * the found-document path is its own function rather than inlined into the caller's `if`.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun buildResultFromResultDocument(submissionId: String, data: Map<String, Any>): Result<GTOResult> {
+        val testTypeStr = data["testType"] as? String ?: return Result.failure(Exception("Missing test type"))
+        val testType = GTOTestType.valueOf(testTypeStr)
+
+        val scoresMap = (data["olqScores"] as? Map<String, Map<String, Any>>) ?: emptyMap()
+        val parsedScores = scoresMap.mapNotNull { (key, value) ->
+            try {
+                val olq = OLQ.valueOf(key)
+                val score = (value["score"] as? Number)?.toInt() ?: 0
+                val confidence = (value["confidence"] as? Number)?.toInt() ?: 0
+                val reasoning = value["reasoning"] as? String ?: ""
+                olq to OLQScore(score, confidence, reasoning)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing OLQ score: $key", e)
+                null
+            }
+        }.toMap()
+
+        // Fill missing OLQs with default zero values to satisfy UI requirements
+        val olqScores = OLQ.values().associateWith { olq ->
+            parsedScores[olq] ?: OLQScore(score = 0, confidence = 0, reasoning = "Not analyzed")
+        }
+
+        val result = GTOResult(
+            submissionId = submissionId,
+            userId = data["userId"] as? String ?: "",
+            testType = testType,
+            olqScores = olqScores,
+            overallScore = (data["overallScore"] as? Number)?.toFloat() ?: 0f,
+            overallRating = data["overallRating"] as? String ?: "",
+            aiConfidence = (data["aiConfidence"] as? Number)?.toInt() ?: 0,
+            analyzedAt = (data["analyzedAt"] as? Number)?.toLong() ?: System.currentTimeMillis()
+        )
+
+        return Result.success(result)
+    }
+
     private fun calculateRating(score: Float): String {
         return when {
             score <= 3f -> "Exceptional"
@@ -1167,6 +1181,23 @@ class FirestoreGTORepository(
         }
     }
     
+    /**
+     * Map a single obstacle-content entry (from `test_content/.../obstacles`) into an
+     * [ObstacleConfig]. Distinct from [parseObstacleConfig] (submission-side parsing): this uses
+     * a random-UUID id fallback and a `Long`-only difficulty cast, matching the content schema.
+     */
+    private fun mapObstacleFromContent(obstacle: Map<*, *>): ObstacleConfig = ObstacleConfig(
+        id = obstacle["id"] as? String ?: UUID.randomUUID().toString(),
+        name = obstacle["name"] as? String ?: "",
+        description = obstacle["description"] as? String ?: "",
+        difficulty = (obstacle["difficulty"] as? Long)?.toInt() ?: 1,
+        animationAsset = obstacle["animationAsset"] as? String ?: "",
+        resources = (obstacle["resources"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+        height = (obstacle["height"] as? Number)?.toFloat(),
+        width = (obstacle["width"] as? Number)?.toFloat(),
+        depth = (obstacle["depth"] as? Number)?.toFloat()
+    )
+
     /**
      * Parse single ObstacleConfig from Firestore map
      */

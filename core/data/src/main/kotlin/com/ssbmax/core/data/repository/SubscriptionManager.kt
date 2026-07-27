@@ -140,6 +140,59 @@ class SubscriptionManager(
      * SECURITY: Uses Firestore transaction for atomic increment
      * RACE CONDITION PREVENTION: Multiple simultaneous submissions handled correctly
      */
+    private fun fieldNameForTestUsage(testType: TestType): String = when (testType) {
+        TestType.OIR -> "oirTestsUsed"
+        TestType.TAT -> "tatTestsUsed"
+        TestType.WAT -> "watTestsUsed"
+        TestType.SRT -> "srtTestsUsed"
+        TestType.PPDT -> "ppdtTestsUsed"
+        TestType.PIQ -> "piqTestsUsed"
+        // GTO Tasks
+        TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+        TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> "gtoTestsUsed"
+        TestType.IO -> "interviewTestsUsed"
+        TestType.SD -> "sdTestsUsed"
+    }
+
+    private fun isSubmissionAlreadyRecorded(
+        snapshot: com.google.firebase.firestore.DocumentSnapshot,
+        submissionId: String?
+    ): Boolean {
+        if (submissionId == null || !snapshot.exists()) return false
+        val recordedSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
+        return recordedSubmissions.contains(submissionId)
+    }
+
+    private fun buildInitialUsageData(userId: String, currentMonth: String, submissionId: String?) = hashMapOf(
+        "userId" to userId,
+        "month" to currentMonth,
+        "oirTestsUsed" to 0,
+        "tatTestsUsed" to 0,
+        "watTestsUsed" to 0,
+        "srtTestsUsed" to 0,
+        "ppdtTestsUsed" to 0,
+        "piqTestsUsed" to 0,
+        "gtoTestsUsed" to 0,
+        "interviewTestsUsed" to 0,
+        "sdTestsUsed" to 0,
+        "lastUpdated" to System.currentTimeMillis(),
+        "recordedSubmissions" to (if (submissionId != null) listOf(submissionId) else emptyList<String>())
+    )
+
+    private fun buildUsageUpdateMap(
+        snapshot: com.google.firebase.firestore.DocumentSnapshot,
+        submissionId: String?
+    ): HashMap<String, Any> {
+        val updates = hashMapOf<String, Any>(
+            "lastUpdated" to System.currentTimeMillis()
+        )
+        if (submissionId != null) {
+            val existingSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
+            updates["recordedSubmissions"] = existingSubmissions + submissionId
+        }
+        return updates
+    }
+
     override suspend fun recordTestUsage(testType: TestType, userId: String, submissionId: String?) {
         try {
             val currentMonth = getCurrentMonth()
@@ -147,70 +200,27 @@ class SubscriptionManager(
                 .document(userId)
                 .collection("subscription")
                 .document("usage_$currentMonth")
-            
+
             // Use Firestore Transaction for atomic operations
             firestore.runTransaction { transaction ->
                 val snapshot = transaction.get(docRef)
-                
+
                 // Idempotency check: Prevent duplicate recording for same submission
-                if (submissionId != null && snapshot.exists()) {
-                    val recordedSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
-                    if (recordedSubmissions.contains(submissionId)) {
-                        Log.d(TAG, "⚠️ Submission $submissionId already recorded, skipping (idempotent)")
-                        return@runTransaction // Exit transaction without recording
-                    }
+                if (isSubmissionAlreadyRecorded(snapshot, submissionId)) {
+                    Log.d(TAG, "⚠️ Submission $submissionId already recorded, skipping (idempotent)")
+                    return@runTransaction // Exit transaction without recording
                 }
-                
+
                 if (!snapshot.exists()) {
-                    // Create new document with initial data
-                    val initialData = hashMapOf(
-                        "userId" to userId,
-                        "month" to currentMonth,
-                        "oirTestsUsed" to 0,
-                        "tatTestsUsed" to 0,
-                        "watTestsUsed" to 0,
-                        "srtTestsUsed" to 0,
-                        "ppdtTestsUsed" to 0,
-                        "piqTestsUsed" to 0,
-                        "gtoTestsUsed" to 0,
-                        "interviewTestsUsed" to 0,
-                        "sdTestsUsed" to 0,
-                        "lastUpdated" to System.currentTimeMillis(),
-                        "recordedSubmissions" to (if (submissionId != null) listOf(submissionId) else emptyList<String>())
-                    )
-                    transaction.set(docRef, initialData)
+                    transaction.set(docRef, buildInitialUsageData(userId, currentMonth, submissionId))
                     Log.d(TAG, "📝 Created new usage document for $currentMonth")
                 } else {
-                    // Document exists, update with atomic increment
-                    val updates = hashMapOf<String, Any>(
-                        "lastUpdated" to System.currentTimeMillis()
-                    )
-                    
-                    // Add submission ID to recorded list if provided
-                    if (submissionId != null) {
-                        val existingSubmissions = snapshot.get("recordedSubmissions") as? List<*> ?: emptyList<String>()
-                        updates["recordedSubmissions"] = existingSubmissions + submissionId
-                    }
-                    
-                    transaction.update(docRef, updates)
+                    transaction.update(docRef, buildUsageUpdateMap(snapshot, submissionId))
                 }
-                
+
                 // Atomic increment using FieldValue (prevents race conditions)
-                val fieldName = when (testType) {
-                    TestType.OIR -> "oirTestsUsed"
-                    TestType.TAT -> "tatTestsUsed"
-                    TestType.WAT -> "watTestsUsed"
-                    TestType.SRT -> "srtTestsUsed"
-                    TestType.PPDT -> "ppdtTestsUsed"
-                    TestType.PIQ -> "piqTestsUsed"
-                    // GTO Tasks
-                    TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
-                    TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> "gtoTestsUsed"
-                    TestType.IO -> "interviewTestsUsed"
-                    TestType.SD -> "sdTestsUsed"
-                }
-                
-                    transaction.update(docRef, fieldName, com.google.firebase.firestore.FieldValue.increment(1))
+                val fieldName = fieldNameForTestUsage(testType)
+                transaction.update(docRef, fieldName, com.google.firebase.firestore.FieldValue.increment(1))
             }.await()
             
             // After successful Firestore transaction, update local Room DB
@@ -258,34 +268,38 @@ class SubscriptionManager(
      * Get test limit for a specific test type and tier
      * SINGLE SOURCE OF TRUTH for subscription limits
      */
+    private fun getFreeTierLimit(testType: TestType): Int = when (testType) {
+        TestType.OIR -> 1
+        TestType.PPDT -> 1
+        TestType.PIQ -> 1
+        TestType.TAT -> 0
+        TestType.WAT -> 0
+        TestType.SRT -> 0
+        TestType.SD -> 0  // Self Description
+        // GTO Tests (8 individual tests, each with separate limits)
+        TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+        TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 0
+        TestType.IO -> 0  // Interview Officer
+    }
+
+    private fun getProTierLimit(testType: TestType): Int = when (testType) {
+        TestType.OIR -> 5
+        TestType.PPDT -> 5
+        TestType.PIQ -> Int.MAX_VALUE  // Unlimited
+        TestType.TAT -> 3
+        TestType.WAT -> 3
+        TestType.SRT -> 3
+        TestType.SD -> 3  // Self Description
+        // GTO Tests: 3 attempts per sub-test
+        TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+        TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 3
+        TestType.IO -> 2  // Interview Test (text mode only)
+    }
+
     private fun getTestLimitForTier(tier: SubscriptionTier, testType: TestType): Int {
         return when (tier) {
-            SubscriptionTier.FREE -> when (testType) {
-                TestType.OIR -> 1
-                TestType.PPDT -> 1
-                TestType.PIQ -> 1
-                TestType.TAT -> 0
-                TestType.WAT -> 0
-                TestType.SRT -> 0
-                TestType.SD -> 0  // Self Description
-                // GTO Tests (8 individual tests, each with separate limits)
-                TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
-                TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 0
-                TestType.IO -> 0  // Interview Officer
-            }
-            SubscriptionTier.PRO -> when (testType) {
-                TestType.OIR -> 5
-                TestType.PPDT -> 5
-                TestType.PIQ -> Int.MAX_VALUE  // Unlimited
-                TestType.TAT -> 3
-                TestType.WAT -> 3
-                TestType.SRT -> 3
-                TestType.SD -> 3  // Self Description
-                // GTO Tests: 3 attempts per sub-test
-                TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
-                TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT -> 3
-                TestType.IO -> 2  // Interview Test (text mode only)
-            }
+            SubscriptionTier.FREE -> getFreeTierLimit(testType)
+            SubscriptionTier.PRO -> getProTierLimit(testType)
             SubscriptionTier.PREMIUM -> Int.MAX_VALUE  // Unlimited for all
         }
     }

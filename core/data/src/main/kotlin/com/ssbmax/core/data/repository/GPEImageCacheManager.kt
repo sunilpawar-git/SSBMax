@@ -57,6 +57,39 @@ class GPEImageCacheManager(
     /**
      * Download a specific batch from Firestore
      */
+    private fun parseGPEImage(imageMap: Map<String, Any?>, batchId: String): CachedGPEImageEntity? {
+        return try {
+            // Parse resources JSON array if present
+            val resourcesJson = imageMap["resources"] as? String
+
+            CachedGPEImageEntity(
+                id = imageMap["id"] as? String ?: return null,
+                imageUrl = imageMap["imageUrl"] as? String ?: return null,
+                localFilePath = null, // Will be set when image is downloaded
+                scenario = imageMap["scenario"] as? String
+                    ?: "Tactical scenario requiring planning and resource allocation",
+                solution = imageMap["solution"] as? String, // Parse solution
+                imageDescription = imageMap["imageDescription"] as? String
+                    ?: "Tactical scenario image showing obstacles and constraints",
+                resources = resourcesJson, // Store as JSON string
+                viewingTimeSeconds = (imageMap["viewingTimeSeconds"] as? Long)?.toInt() ?: 60,
+                planningTimeSeconds = (imageMap["planningTimeSeconds"] as? Long)?.toInt() ?: 1740,
+                minCharacters = (imageMap["minCharacters"] as? Long)?.toInt() ?: 500,
+                maxCharacters = (imageMap["maxCharacters"] as? Long)?.toInt() ?: 2000,
+                category = imageMap["category"] as? String,
+                difficulty = imageMap["difficulty"] as? String,
+                batchId = batchId,
+                cachedAt = System.currentTimeMillis(),
+                lastUsed = null,
+                usageCount = 0,
+                imageDownloaded = false
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to parse image: ${imageMap["id"]}", e)
+            null
+        }
+    }
+
     suspend fun downloadBatch(batchId: String): Result<Unit> {
         return try {
             Log.d(TAG, "Downloading batch: $batchId")
@@ -73,38 +106,7 @@ class GPEImageCacheManager(
 
             val version = doc.getString("version") ?: "1.0.0"
 
-            val images = imagesData.mapNotNull { imageMap ->
-                try {
-                    // Parse resources JSON array if present
-                    val resourcesJson = imageMap["resources"] as? String
-
-                    CachedGPEImageEntity(
-                        id = imageMap["id"] as? String ?: return@mapNotNull null,
-                        imageUrl = imageMap["imageUrl"] as? String ?: return@mapNotNull null,
-                        localFilePath = null, // Will be set when image is downloaded
-                        scenario = imageMap["scenario"] as? String
-                            ?: "Tactical scenario requiring planning and resource allocation",
-                        solution = imageMap["solution"] as? String, // Parse solution
-                        imageDescription = imageMap["imageDescription"] as? String
-                            ?: "Tactical scenario image showing obstacles and constraints",
-                        resources = resourcesJson, // Store as JSON string
-                        viewingTimeSeconds = (imageMap["viewingTimeSeconds"] as? Long)?.toInt() ?: 60,
-                        planningTimeSeconds = (imageMap["planningTimeSeconds"] as? Long)?.toInt() ?: 1740,
-                        minCharacters = (imageMap["minCharacters"] as? Long)?.toInt() ?: 500,
-                        maxCharacters = (imageMap["maxCharacters"] as? Long)?.toInt() ?: 2000,
-                        category = imageMap["category"] as? String,
-                        difficulty = imageMap["difficulty"] as? String,
-                        batchId = batchId,
-                        cachedAt = System.currentTimeMillis(),
-                        lastUsed = null,
-                        usageCount = 0,
-                        imageDownloaded = false
-                    )
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to parse image: ${imageMap["id"]}", e)
-                    null
-                }
-            }
+            val images = imagesData.mapNotNull { imageMap -> parseGPEImage(imageMap, batchId) }
 
             if (images.isEmpty()) {
                 throw Exception("No valid images parsed from batch $batchId")

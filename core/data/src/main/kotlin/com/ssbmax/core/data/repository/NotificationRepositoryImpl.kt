@@ -201,34 +201,57 @@ class NotificationRepositoryImpl(
         }
     }
     
+    private data class NotificationToggles(
+        val enablePushNotifications: Boolean,
+        val enableGradingNotifications: Boolean,
+        val enableFeedbackNotifications: Boolean,
+        val enableBatchInvitations: Boolean,
+        val enableGeneralAnnouncements: Boolean,
+        val enableStudyReminders: Boolean,
+        val enableTestReminders: Boolean,
+        val enableMarketplaceUpdates: Boolean
+    )
+
+    private fun parseNotificationToggles(doc: com.google.firebase.firestore.DocumentSnapshot) = NotificationToggles(
+        enablePushNotifications = doc.getBoolean("enablePushNotifications") ?: true,
+        enableGradingNotifications = doc.getBoolean("enableGradingNotifications") ?: true,
+        enableFeedbackNotifications = doc.getBoolean("enableFeedbackNotifications") ?: true,
+        enableBatchInvitations = doc.getBoolean("enableBatchInvitations") ?: true,
+        enableGeneralAnnouncements = doc.getBoolean("enableGeneralAnnouncements") ?: true,
+        enableStudyReminders = doc.getBoolean("enableStudyReminders") ?: true,
+        enableTestReminders = doc.getBoolean("enableTestReminders") ?: true,
+        enableMarketplaceUpdates = doc.getBoolean("enableMarketplaceUpdates") ?: true
+    )
+
     override suspend fun getPreferences(userId: String): Result<NotificationPreferences> {
         return try {
             val doc = preferencesCollection
                 .document(userId)
                 .get()
                 .await()
-            
+
             if (!doc.exists()) {
                 // Return default preferences
                 return Result.success(NotificationPreferences(userId = userId))
             }
-            
+
+            val toggles = parseNotificationToggles(doc)
             val prefs = NotificationPreferences(
                 userId = userId,
-                enablePushNotifications = doc.getBoolean("enablePushNotifications") ?: true,
-                enableGradingNotifications = doc.getBoolean("enableGradingNotifications") ?: true,
-                enableFeedbackNotifications = doc.getBoolean("enableFeedbackNotifications") ?: true,
-                enableBatchInvitations = doc.getBoolean("enableBatchInvitations") ?: true,
-                enableGeneralAnnouncements = doc.getBoolean("enableGeneralAnnouncements") ?: true,
-                enableStudyReminders = doc.getBoolean("enableStudyReminders") ?: true,
-                enableTestReminders = doc.getBoolean("enableTestReminders") ?: true,
-                enableMarketplaceUpdates = doc.getBoolean("enableMarketplaceUpdates") ?: true,
+                enablePushNotifications = toggles.enablePushNotifications,
+                enableGradingNotifications = toggles.enableGradingNotifications,
+                enableFeedbackNotifications = toggles.enableFeedbackNotifications,
+                enableBatchInvitations = toggles.enableBatchInvitations,
+                enableGeneralAnnouncements = toggles.enableGeneralAnnouncements,
+                enableStudyReminders = toggles.enableStudyReminders,
+                enableTestReminders = toggles.enableTestReminders,
+                enableMarketplaceUpdates = toggles.enableMarketplaceUpdates,
                 quietHoursEnabled = doc.getBoolean("quietHoursEnabled") ?: false,
                 quietHoursStart = (doc.getLong("quietHoursStart") ?: 22).toInt(),
                 quietHoursEnd = (doc.getLong("quietHoursEnd") ?: 8).toInt(),
                 updatedAt = doc.getLong("updatedAt") ?: System.currentTimeMillis()
             )
-            
+
             Result.success(prefs)
         } catch (e: Exception) {
             Result.failure(Exception("Failed to get notification preferences: ${e.message}", e))

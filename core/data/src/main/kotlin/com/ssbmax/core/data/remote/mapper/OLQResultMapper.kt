@@ -20,17 +20,7 @@ internal fun parseSharedOLQResult(data: Map<*, *>?): OLQAnalysisResult? {
             return null
         }
         val olqScoresMap = data["olqScores"] as? Map<*, *> ?: emptyMap<Any, Any>()
-        val olqScores = olqScoresMap.mapNotNull { (k, v) ->
-            try {
-                val olq = OLQ.valueOf(k as? String ?: "")
-                val scoreMap = v as? Map<*, *> ?: return@mapNotNull null
-                olq to OLQScore(
-                    score = (scoreMap["score"] as? Number)?.toInt() ?: 5,
-                    confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
-                    reasoning = scoreMap["reasoning"] as? String ?: ""
-                )
-            } catch (e: Exception) { null }
-        }.toMap()
+        val olqScores = parseSharedOLQScores(olqScoresMap)
 
         OLQAnalysisResult(
             submissionId = data["submissionId"] as? String ?: "",
@@ -49,3 +39,16 @@ internal fun parseSharedOLQResult(data: Map<*, *>?): OLQAnalysisResult? {
         )
     } catch (e: Exception) { null }
 }
+
+private fun parseSharedOLQScores(olqScoresMap: Map<*, *>): Map<OLQ, OLQScore> =
+    olqScoresMap.mapNotNull { (k, v) ->
+        try {
+            val olq = OLQ.valueOf(k as? String ?: "")
+            val scoreMap = v as? Map<*, *> ?: return@mapNotNull null
+            olq to OLQScore(
+                score = (scoreMap["score"] as? Number)?.toInt() ?: 5,
+                confidence = (scoreMap["confidence"] as? Number)?.toInt() ?: 0,
+                reasoning = scoreMap["reasoning"] as? String ?: ""
+            )
+        } catch (e: Exception) { null }
+    }.toMap()

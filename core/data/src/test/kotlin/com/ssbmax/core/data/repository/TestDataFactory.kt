@@ -11,9 +11,12 @@ object TestDataFactory {
     /**
      * Mock OIR Questions - 10 sample questions across different types
      */
-    fun getOIRQuestions(): List<OIRQuestion> {
+    fun getOIRQuestions(): List<OIRQuestion> =
+        getVerbalReasoningQuestions() + getNumericalAbilityQuestions() +
+            getSpatialReasoningQuestions() + getNonVerbalReasoningQuestions()
+
+    private fun getVerbalReasoningQuestions(): List<OIRQuestion> {
         return listOf(
-            // Verbal Reasoning Questions
             OIRQuestion(
                 id = "oir_mock_1",
                 questionNumber = 1,
@@ -61,9 +64,12 @@ object TestDataFactory {
                 explanation = "The series shows increasing levels of positive outlook.",
                 difficulty = QuestionDifficulty.MEDIUM,
                 timeSeconds = 60
-            ),
-            
-            // Numerical Ability Questions
+            )
+        )
+    }
+
+    private fun getNumericalAbilityQuestions(): List<OIRQuestion> {
+        return listOf(
             OIRQuestion(
                 id = "oir_mock_4",
                 questionNumber = 4,
@@ -111,9 +117,12 @@ object TestDataFactory {
                 explanation = "Speed = Distance / Time = 120 / 2 = 60 km/hr",
                 difficulty = QuestionDifficulty.EASY,
                 timeSeconds = 60
-            ),
-            
-            // Spatial Reasoning Questions
+            )
+        )
+    }
+
+    private fun getSpatialReasoningQuestions(): List<OIRQuestion> {
+        return listOf(
             OIRQuestion(
                 id = "oir_mock_7",
                 questionNumber = 7,
@@ -145,9 +154,12 @@ object TestDataFactory {
                 explanation = "A cube has 6 faces: top, bottom, front, back, left, right.",
                 difficulty = QuestionDifficulty.EASY,
                 timeSeconds = 60
-            ),
-            
-            // Non-Verbal Reasoning Questions
+            )
+        )
+    }
+
+    private fun getNonVerbalReasoningQuestions(): List<OIRQuestion> {
+        return listOf(
             OIRQuestion(
                 id = "oir_mock_9",
                 questionNumber = 9,
