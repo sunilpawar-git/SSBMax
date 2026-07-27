@@ -560,8 +560,13 @@ fun NavGraphBuilder.sharedNavGraph(
     
     // Study Materials List
     composable(SSBMaxDestinations.StudyMaterialsList.route) {
-        // TODO: Implement StudyMaterialsListScreen
-        SharedPlaceholderScreen(title = "Study Materials")
+        com.ssbmax.ui.study.StudyMaterialsScreen(
+            onNavigateToTopic = { topicId ->
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+            },
+            onNavigateToSearch = {},
+            onNavigateToBookmarks = {}
+        )
     }
     
     // Study Material Detail
@@ -668,7 +673,7 @@ fun NavGraphBuilder.sharedNavGraph(
         com.ssbmax.ui.settings.SettingsScreen(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToFAQ = {
-                // TODO: Navigate to FAQ
+                navController.navigate(SSBMaxDestinations.FAQ.route)
             },
             onNavigateToUpgrade = {
                 navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
@@ -679,6 +684,13 @@ fun NavGraphBuilder.sharedNavGraph(
         )
     }
     
+    // FAQ
+    composable(SSBMaxDestinations.FAQ.route) {
+        com.ssbmax.ui.faq.FAQScreen(
+            onNavigateBack = { navController.navigateUp() }
+        )
+    }
+
     // Subscription Management
     composable(SSBMaxDestinations.SubscriptionManagement.route) {
         com.ssbmax.ui.settings.SubscriptionManagementScreen(

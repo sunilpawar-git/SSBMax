@@ -86,8 +86,6 @@
     <ID>ForbiddenComment:SettingsScreen.kt$// TODO: Open email intent</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Handle notification deep linking</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Implement GTOTestScreen</ID>
-    <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Implement StudyMaterialsListScreen</ID>
-    <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Navigate to FAQ</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Navigate to detailed feedback screen</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Navigate to institute detail</ID>
     <ID>ForbiddenComment:SharedNavGraph.kt$// TODO: Navigate to review screen</ID>
@@ -400,8 +398,6 @@
     <ID>UnusedParameter:TATComponents.kt$phase: TATPhase</ID>
     <ID>UnusedParameter:TATSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:TopicScreen.kt$modifier: Modifier = Modifier</ID>
-    <ID>UnusedParameter:UnifiedOLQResultTemplate.kt$errorMessage: String</ID>
-    <ID>UnusedParameter:UnifiedOLQResultTemplate.kt$onRetry: (() -&gt; Unit)?</ID>
     <ID>UnusedParameter:WATSubmissionResultScreen.kt$onViewFeedback: () -&gt; Unit = {}</ID>
     <ID>UnusedParameter:WATTestScreen.kt$modifier: Modifier = Modifier</ID>
     <ID>UnusedPrivateMember:DrawerHeader.kt$@Composable private fun ProfileAvatar( initials: String, modifier: Modifier = Modifier )</ID>

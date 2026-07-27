@@ -71,9 +71,10 @@ fun <T : UnifiedResultUiState> UnifiedOLQResultTemplate(
 
             uiState.hasError -> {
                 ErrorContent(
-                    errorMessage = uiState.error ?: stringResource(R.string.result_analysis_failed_description),
+                    errorMessage = uiState.error,
                     paddingValues = paddingValues,
-                    onNavigateHome = onNavigateHome
+                    onNavigateHome = onNavigateHome,
+                    onRetry = onRetry
                 )
             }
 
@@ -107,9 +108,10 @@ private fun LoadingContent(paddingValues: PaddingValues) {
 
 @Composable
 private fun ErrorContent(
-    errorMessage: String,
+    errorMessage: String?,
     paddingValues: PaddingValues,
-    onNavigateHome: () -> Unit
+    onNavigateHome: () -> Unit,
+    onRetry: (() -> Unit)?
 ) {
     LazyColumn(
         modifier = Modifier
@@ -118,8 +120,14 @@ private fun ErrorContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { AnalysisFailedCard() }
-        item { ResultActionButtons(primaryAction = onNavigateHome) }
+        item { AnalysisFailedCard(errorMessage = errorMessage) }
+        item {
+            ResultActionButtons(
+                primaryAction = onNavigateHome,
+                secondaryAction = onRetry,
+                secondaryLabel = onRetry?.let { stringResource(R.string.action_retry) }
+            )
+        }
     }
 }
 
@@ -145,7 +153,7 @@ private fun <T : UnifiedResultUiState> ResultContent(
         item { submissionConfirmationContent(uiState) }
 
         // Analysis status or results
-        analysisStatusSection(uiState, onRetry)
+        analysisStatusSection(uiState)
 
         // Test-specific content slot
         testSpecificContent?.let {
@@ -158,7 +166,14 @@ private fun <T : UnifiedResultUiState> ResultContent(
         }
 
         // Action buttons
-        item { ResultActionButtons(primaryAction = onNavigateHome) }
+        item {
+            val retryAction = onRetry.takeIf { uiState.isFailed }
+            ResultActionButtons(
+                primaryAction = onNavigateHome,
+                secondaryAction = retryAction,
+                secondaryLabel = retryAction?.let { stringResource(R.string.action_retry) }
+            )
+        }
     }
 }
 
@@ -166,8 +181,7 @@ private fun <T : UnifiedResultUiState> ResultContent(
  * Extension function to add analysis status section to LazyListScope.
  */
 private fun <T : UnifiedResultUiState> LazyListScope.analysisStatusSection(
-    uiState: T,
-    onRetry: (() -> Unit)?
+    uiState: T
 ) {
     when {
         uiState.isPending -> {
@@ -179,7 +193,7 @@ private fun <T : UnifiedResultUiState> LazyListScope.analysisStatusSection(
         }
 
         uiState.isFailed -> {
-            item { AnalysisFailedCard() }
+            item { AnalysisFailedCard(errorMessage = uiState.error) }
         }
 
         uiState.showResults -> {

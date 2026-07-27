@@ -70,7 +70,7 @@ fun AnalyzingCard(
  * Card displayed when OLQ analysis has failed.
  */
 @Composable
-fun AnalysisFailedCard(modifier: Modifier = Modifier) {
+fun AnalysisFailedCard(modifier: Modifier = Modifier, errorMessage: String? = null) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -99,7 +99,7 @@ fun AnalysisFailedCard(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.result_analysis_failed_description),
+                    text = errorMessage ?: stringResource(R.string.result_analysis_failed_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
