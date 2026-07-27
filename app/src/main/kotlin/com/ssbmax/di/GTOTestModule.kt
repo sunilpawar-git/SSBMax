@@ -1,5 +1,6 @@
 package com.ssbmax.di
 
+import androidx.work.WorkManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.repository.GTORepository
@@ -9,7 +10,6 @@ import com.ssbmax.ui.tests.gto.common.GTOSequentialAccessManager
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
 import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
-import androidx.work.WorkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.EntryPoint

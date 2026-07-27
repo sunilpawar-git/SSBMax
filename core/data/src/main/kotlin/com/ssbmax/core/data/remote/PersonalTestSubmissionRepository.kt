@@ -1,6 +1,8 @@
 package com.ssbmax.core.data.remote
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.OIRSubmission
+import com.ssbmax.core.domain.model.PIQSubmission
+import com.ssbmax.core.domain.model.PPDTSubmission
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.flow.Flow

@@ -2,7 +2,15 @@ package com.ssbmax.ui.tests.oir
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.CategoryScore
+import com.ssbmax.core.domain.model.DifficultyScore
+import com.ssbmax.core.domain.model.OIRAnswer
+import com.ssbmax.core.domain.model.OIRAnsweredQuestion
+import com.ssbmax.core.domain.model.OIROption
+import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.core.domain.model.OIRTestResult
+import com.ssbmax.core.domain.model.QuestionDifficulty
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel

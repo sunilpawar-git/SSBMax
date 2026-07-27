@@ -2,7 +2,11 @@ package com.ssbmax.ui.home.student
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.Phase1Progress
+import com.ssbmax.core.domain.model.Phase2Progress
+import com.ssbmax.core.domain.model.TestProgress
+import com.ssbmax.core.domain.model.TestStatus
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.AuthRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.utils.ErrorLogger
@@ -13,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

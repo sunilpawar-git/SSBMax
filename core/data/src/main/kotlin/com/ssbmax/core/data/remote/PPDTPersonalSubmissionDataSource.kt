@@ -3,7 +3,8 @@ package com.ssbmax.core.data.remote
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.PPDTSubmission
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.channels.awaitClose

@@ -2,7 +2,11 @@ package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.Phase1Progress
+import com.ssbmax.core.domain.model.Phase2Progress
+import com.ssbmax.core.domain.model.TestProgress
+import com.ssbmax.core.domain.model.TestStatus
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestProgressRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

@@ -2,6 +2,7 @@ package com.ssbmax.core.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity.Companion.SINGLE_ROW_ID
 
 /**
  * Single-row table tracking the content-version of the locally-cached OIR bank.

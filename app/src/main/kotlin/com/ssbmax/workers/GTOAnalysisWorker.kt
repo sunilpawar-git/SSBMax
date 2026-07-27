@@ -12,12 +12,11 @@ import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.scoring.EntryType
-import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.core.domain.service.AIService
+import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.core.domain.validation.ValidationIntegration
 import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.core.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.workers.GTOAnalysisPrompts
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay

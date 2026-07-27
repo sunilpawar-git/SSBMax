@@ -2,7 +2,6 @@ package com.ssbmax.ui.submissions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.SSBMaxUser
 import com.ssbmax.core.domain.model.SubmissionStatus
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase

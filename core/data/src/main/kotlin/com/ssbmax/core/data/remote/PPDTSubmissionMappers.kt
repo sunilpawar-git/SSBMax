@@ -1,7 +1,11 @@
 package com.ssbmax.core.data.remote
 
 import android.util.Log
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.PPDTDetailedScores
+import com.ssbmax.core.domain.model.PPDTInstructorReview
+import com.ssbmax.core.domain.model.PPDTSubmission
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult
 

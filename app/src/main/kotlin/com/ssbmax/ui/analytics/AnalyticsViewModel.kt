@@ -2,7 +2,9 @@ package com.ssbmax.ui.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.PerformanceOverview
+import com.ssbmax.core.domain.model.TestPerformancePoint
+import com.ssbmax.core.domain.model.TestTypeStats
 import com.ssbmax.core.domain.repository.AnalyticsRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel

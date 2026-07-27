@@ -1,6 +1,14 @@
 package com.ssbmax.core.data.repository
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.OIROption
+import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.core.domain.model.PPDTQuestion
+import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.core.domain.model.SRTCategory
+import com.ssbmax.core.domain.model.SRTSituation
+import com.ssbmax.core.domain.model.TATQuestion
+import com.ssbmax.core.domain.model.WATWord
 
 /**
  * Mappers for converting Firestore data to domain models

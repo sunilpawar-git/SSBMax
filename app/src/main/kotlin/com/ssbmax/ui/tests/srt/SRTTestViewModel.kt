@@ -8,7 +8,12 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.SRTPhase
+import com.ssbmax.core.domain.model.SRTSituation
+import com.ssbmax.core.domain.model.SRTSituationResponse
+import com.ssbmax.core.domain.model.SRTSubmission
+import com.ssbmax.core.domain.model.SRTTestConfig
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.repository.TestSessionRepository
@@ -29,7 +34,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel

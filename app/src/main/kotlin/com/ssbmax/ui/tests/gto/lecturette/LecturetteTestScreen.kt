@@ -1,24 +1,28 @@
 package com.ssbmax.ui.tests.gto.lecturette
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.di.GTOWhiteNoisePlayerEntryPoint
-import dagger.hilt.android.EntryPointAccessors
 import com.ssbmax.ui.components.TestContentLoadingState
-import com.ssbmax.ui.tests.common.TestLimitReachedDialog
 import com.ssbmax.ui.tests.gto.common.AnimatedWhiteNoiseOverlay
 import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
-import com.ssbmax.ui.tests.gto.common.GTOWhiteNoisePlayer
 import com.ssbmax.ui.tests.gto.common.rememberWhiteNoiseState
-import com.ssbmax.ui.tests.gto.lecturette.*
+import dagger.hilt.android.EntryPointAccessors
 
 /**
  * Lecturette Test Screen

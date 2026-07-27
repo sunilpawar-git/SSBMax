@@ -2,7 +2,11 @@ package com.ssbmax.ui.tests.srt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.SRTInstructorScore
+import com.ssbmax.core.domain.model.SRTSituationResponse
+import com.ssbmax.core.domain.model.SRTSubmission
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.interview.OLQ
 import com.ssbmax.core.domain.model.interview.OLQScore
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus

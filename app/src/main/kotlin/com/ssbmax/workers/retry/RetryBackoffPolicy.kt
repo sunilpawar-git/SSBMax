@@ -1,5 +1,6 @@
 package com.ssbmax.workers.retry
 
+import com.ssbmax.workers.retry.RetryBackoffPolicy.nextDelayMillis
 import kotlin.random.Random
 
 /**

@@ -13,7 +13,19 @@ import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.Education
+import com.ssbmax.core.domain.model.ExtraCurricularActivity
+import com.ssbmax.core.domain.model.NCCTraining
+import com.ssbmax.core.domain.model.PIQAIScore
+import com.ssbmax.core.domain.model.PIQPage
+import com.ssbmax.core.domain.model.PIQSubmission
+import com.ssbmax.core.domain.model.PreviousInterview
+import com.ssbmax.core.domain.model.Sibling
+import com.ssbmax.core.domain.model.SportsParticipation
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.WorkExperience
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -23,9 +35,15 @@ import com.ssbmax.workers.InterviewQuestionGenerationWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 private const val TAG = "PIQTestViewModel"

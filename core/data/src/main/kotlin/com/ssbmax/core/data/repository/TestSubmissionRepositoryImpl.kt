@@ -1,7 +1,6 @@
 package com.ssbmax.core.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.SubmissionStatus
 import com.ssbmax.core.domain.model.TestSubmission
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.repository.TestSubmissionRepository

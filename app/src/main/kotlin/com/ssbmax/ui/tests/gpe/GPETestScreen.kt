@@ -1,9 +1,17 @@
 package com.ssbmax.ui.tests.gpe
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -13,9 +21,13 @@ import com.ssbmax.R
 import com.ssbmax.core.domain.model.GPEPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
-import com.ssbmax.ui.tests.gpe.components.*
-import com.ssbmax.ui.tests.gpe.components.phases.*
-import com.ssbmax.ui.tests.gto.common.GTOSubmissionSuccessScreen
+import com.ssbmax.ui.tests.gpe.components.GPEBottomBar
+import com.ssbmax.ui.tests.gpe.components.GPEExitDialog
+import com.ssbmax.ui.tests.gpe.components.GPESubmitDialog
+import com.ssbmax.ui.tests.gpe.components.GPETopBar
+import com.ssbmax.ui.tests.gpe.components.phases.GPEInstructionsPhase
+import com.ssbmax.ui.tests.gpe.components.phases.GPEPlanningPhase
+import com.ssbmax.ui.tests.gpe.components.phases.GPEReviewPhase
 
 /**
  * GPE Test Screen - Image viewing + Planning response

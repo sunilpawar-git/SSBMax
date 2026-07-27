@@ -4,7 +4,8 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.PIQSubmission
+import com.ssbmax.core.domain.model.TestType
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

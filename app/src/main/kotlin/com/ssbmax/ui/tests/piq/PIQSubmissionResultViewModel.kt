@@ -2,7 +2,16 @@ package com.ssbmax.ui.tests.piq
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.Education
+import com.ssbmax.core.domain.model.ExtraCurricularActivity
+import com.ssbmax.core.domain.model.NCCTraining
+import com.ssbmax.core.domain.model.PIQAIScore
+import com.ssbmax.core.domain.model.PIQSubmission
+import com.ssbmax.core.domain.model.PreviousInterview
+import com.ssbmax.core.domain.model.Sibling
+import com.ssbmax.core.domain.model.SportsParticipation
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.WorkExperience
 import com.ssbmax.core.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel

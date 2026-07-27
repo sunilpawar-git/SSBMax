@@ -2,11 +2,18 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.ssbmax.core.domain.model.*
-import com.ssbmax.core.domain.repository.TestContentRepository
 import com.ssbmax.core.domain.model.CacheStatus
+import com.ssbmax.core.domain.model.GPEQuestion
+import com.ssbmax.core.domain.model.GenderTag
+import com.ssbmax.core.domain.model.OIRQuestion
+import com.ssbmax.core.domain.model.PPDTQuestion
+import com.ssbmax.core.domain.model.SDTQuestion
+import com.ssbmax.core.domain.model.SRTSituation
+import com.ssbmax.core.domain.model.TATQuestion
+import com.ssbmax.core.domain.model.WATWord
+import com.ssbmax.core.domain.model.createStandardSDTQuestions
+import com.ssbmax.core.domain.repository.TestContentRepository
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -5,7 +5,6 @@ import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.domain.model.SubscriptionType
 import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.gto.GTOTestType
-import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.utils.ErrorLogger

@@ -1,6 +1,14 @@
 package com.ssbmax.core.data.remote
 
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.OIRSubmission
+import com.ssbmax.core.domain.model.PIQSubmission
+import com.ssbmax.core.domain.model.PPDTSubmission
+import com.ssbmax.core.domain.model.SDTSubmission
+import com.ssbmax.core.domain.model.SRTSubmission
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.TATSubmission
+import com.ssbmax.core.domain.model.TestType
+import com.ssbmax.core.domain.model.WATSubmission
 import com.ssbmax.core.domain.model.gto.GTOSubmission
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.model.scoring.OLQAnalysisResult

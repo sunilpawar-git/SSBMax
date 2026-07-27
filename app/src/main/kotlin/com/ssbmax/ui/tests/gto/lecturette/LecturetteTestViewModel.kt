@@ -9,7 +9,6 @@ import com.ssbmax.core.domain.model.gto.GTOTestType
 import com.ssbmax.core.domain.repository.GTORepository
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
-import com.ssbmax.ui.tests.gto.common.GTOTestUtils
 import com.ssbmax.utils.ErrorLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

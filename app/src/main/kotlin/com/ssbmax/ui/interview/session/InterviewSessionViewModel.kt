@@ -6,7 +6,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
-import com.ssbmax.BuildConfig
 import com.ssbmax.R
 import com.ssbmax.core.data.analytics.AnalyticsManager
 import com.ssbmax.core.data.util.trackMemoryLeaks

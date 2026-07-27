@@ -8,8 +8,12 @@ import com.ssbmax.core.data.repository.TestEligibility
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.core.domain.model.*
 import com.ssbmax.core.domain.model.SubscriptionType
+import com.ssbmax.core.domain.model.TATPhase
+import com.ssbmax.core.domain.model.TATStoryResponse
+import com.ssbmax.core.domain.model.TATSubmission
+import com.ssbmax.core.domain.model.TATTestConfig
+import com.ssbmax.core.domain.model.TestType
 import com.ssbmax.core.domain.model.scoring.AnalysisStatus
 import com.ssbmax.core.domain.repository.UserProfileRepository
 import com.ssbmax.core.domain.usecase.auth.ObserveCurrentUserUseCase

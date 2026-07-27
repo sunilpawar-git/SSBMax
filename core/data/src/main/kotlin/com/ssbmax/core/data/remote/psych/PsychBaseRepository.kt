@@ -2,7 +2,6 @@ package com.ssbmax.core.data.remote.psych
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.ssbmax.core.data.remote.OLQMapper
 import com.ssbmax.core.data.remote.SubmissionConstants

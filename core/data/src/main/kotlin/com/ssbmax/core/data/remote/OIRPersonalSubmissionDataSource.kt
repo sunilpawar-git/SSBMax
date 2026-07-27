@@ -4,7 +4,14 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.ssbmax.core.domain.model.*
+import com.ssbmax.core.domain.model.CategoryScore
+import com.ssbmax.core.domain.model.DifficultyScore
+import com.ssbmax.core.domain.model.OIRQuestionType
+import com.ssbmax.core.domain.model.OIRSubmission
+import com.ssbmax.core.domain.model.OIRTestResult
+import com.ssbmax.core.domain.model.QuestionDifficulty
+import com.ssbmax.core.domain.model.SubmissionStatus
+import com.ssbmax.core.domain.model.TestType
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
