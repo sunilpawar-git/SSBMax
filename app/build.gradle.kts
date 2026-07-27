@@ -221,7 +221,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation("androidx.compose.material:material:1.6.0") // For pull-to-refresh
+    implementation("androidx.compose.material:material:1.11.4") // For pull-to-refresh
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -241,9 +241,9 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     // WorkManager (background jobs for question pre-generation)
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")  // AndroidX Hilt compiler for @HiltWorker
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation("androidx.hilt:hilt-work:1.4.0")
+    kapt("androidx.hilt:hilt-compiler:1.4.0")  // AndroidX Hilt compiler for @HiltWorker
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -279,7 +279,7 @@ dependencies {
     kaptTest(libs.hilt.compiler)
 
     // WorkManager testing (for Phase 1 worker tests)
-    testImplementation("androidx.work:work-testing:2.9.0")
+    testImplementation("androidx.work:work-testing:2.11.2")
 
     // Real org.json for JVM unit tests — Android's stub jar throws Stub! on JSONArray/JSONObject put()
     testImplementation("org.json:json:20231013")
