@@ -82,13 +82,11 @@ class PPDTAnalysisWorker @AssistedInject constructor(
 
         return try {
             // 1. Get submission from repository
-            val submissionResult = submissionRepository.getPPDTSubmission(submissionId)
-            val submission = submissionResult.getOrNull()
+            val submission = submissionRepository.getPPDTSubmission(submissionId).getOrNull()
             if (submission == null) {
                 Log.e(TAG, "❌ PPDT submission not found: $submissionId")
                 return Result.failure()
             }
-
             Log.d(TAG, "   Step 1: PPDT submission found (${submission.charactersCount} characters)")
 
             // 2. Verify PENDING_ANALYSIS status (don't process if already done)
@@ -102,46 +100,13 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
             // 4. Resolve candidate profile (gender + entryType); falls back on any error
-            val userProfile = try {
-                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to fetch user profile for PPDT analysis")
-                null
-            }
-            val candidateGender = userProfile?.gender?.displayName ?: "Unknown"
-            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
+            val candidateContext = resolveCandidateContext(submission.userId)
 
             // 5. Fetch full question (imageUrl + imageContext rubric)
-            var ppdtQuestion: PPDTQuestion? = null
-            try {
-                val questionResult = testContentRepository.getPPDTQuestion(submission.questionId)
-                ppdtQuestion = questionResult.getOrNull()
-                if (ppdtQuestion != null) {
-                    Log.d(TAG, "   Step 3: Retrieved PPDT question for ID: ${submission.questionId}")
-                } else {
-                    Log.w(TAG, "   ⚠️ PPDT question not found for ID: ${submission.questionId}")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "   ❌ Error fetching PPDT question", e)
-            }
+            val ppdtQuestion = fetchPPDTQuestion(submission.questionId)
 
             // 6. Download image bytes (best-effort — analysis continues with empty bytes if download fails)
-            val imageBytes: ByteArray = ppdtQuestion?.imageUrl
-                ?.takeIf { it.isNotBlank() }
-                ?.let { imageUrl ->
-                    try {
-                        withContext(Dispatchers.IO) {
-                            val conn = URL(imageUrl).openConnection().apply {
-                                connectTimeout = 10_000
-                                readTimeout = 20_000
-                            }
-                            conn.getInputStream().readBytes()
-                        }
-                    } catch (e: Exception) {
-                        ErrorLogger.log(e, "PPDT image download failed — proceeding with empty bytes")
-                        null
-                    }
-                } ?: ByteArray(0)
+            val imageBytes = downloadImageBytes(ppdtQuestion?.imageUrl)
             Log.d(TAG, "   Step 4: Image bytes prepared (${imageBytes.size} bytes)")
 
             // 7. Analyze with Gemini AI multimodal (with retry logic)
@@ -150,75 +115,23 @@ class PPDTAnalysisWorker @AssistedInject constructor(
                 imageBytes = imageBytes,
                 story = submission.story,
                 imageContext = imageContext,
-                candidateGender = candidateGender
+                candidateGender = candidateContext.gender
             )
             if (olqScores == null) {
                 Log.e(TAG, "❌ AI analysis failed after $MAX_AI_RETRIES retries")
                 handleAnalysisFailure(submissionId)
                 return Result.failure()
             }
-
             Log.d(TAG, "   Step 5: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
 
             // 7.5. Validate OLQ scores against SSB rules using actual candidate entry type
-            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
-            Log.d(TAG, "   Step 6: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
-            }
+            validateOLQScores(olqScores, candidateContext.entryType)
 
             // 8. Create OLQAnalysisResult
-            val overallScore = olqScores.values.map { it.score }.average().toFloat()
-            val overallRating = PPDTRating.fromScore(overallScore).displayKey
+            val olqResult = buildOLQResult(submissionId, olqScores)
 
-            val strengths = olqScores.entries
-                .sortedBy { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            val weaknesses = olqScores.entries
-                .sortedByDescending { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            val recommendations = listOf(
-                "Continue practicing PPDT with diverse scenarios",
-                "Focus on strengthening: ${weaknesses.joinToString(", ")}",
-                "Maintain clear and positive storytelling"
-            )
-
-            val olqResult = OLQAnalysisResult(
-                submissionId = submissionId,
-                testType = TestType.PPDT,
-                olqScores = olqScores,
-                overallScore = overallScore,
-                overallRating = overallRating,
-                strengths = strengths,
-                weaknesses = weaknesses,
-                recommendations = recommendations,
-                analyzedAt = System.currentTimeMillis(),
-                aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
-            )
-
-            // 9. Update submission with OLQ result (atomically sets COMPLETED status)
-            submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
-            Log.d(TAG, "   Step 7: Submission updated with OLQ result")
-
-            // 10. Invalidate dashboard cache AFTER result is in Firestore
-            try {
-                getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Step 8: Dashboard cache invalidated")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-            }
-
-            // 11. Send notification
-            try {
-                notificationHelper.showPPDTResultsReadyNotification(submissionId)
-                Log.d(TAG, "✅ Push notification sent successfully!")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to send notification: ${e.message}")
-            }
+            // 9-11. Persist result, invalidate cache, notify
+            finalizeSubmission(submissionId, submission.userId, olqResult)
 
             val duration = System.currentTimeMillis() - startTime
             Log.d(TAG, "✅ PPDT analysis complete in ${duration}ms")
@@ -228,6 +141,122 @@ class PPDTAnalysisWorker @AssistedInject constructor(
             ErrorLogger.log(e, "PPDT analysis failed for submission: $submissionId")
             handleAnalysisFailure(submissionId)
             Result.failure()
+        }
+    }
+
+    private data class CandidateContext(
+        val gender: String,
+        val entryType: com.ssbmax.core.domain.scoring.EntryType
+    )
+
+    private suspend fun resolveCandidateContext(userId: String): CandidateContext {
+        val userProfile = try {
+            userProfileRepository.getUserProfile(userId).first().getOrNull()
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to fetch user profile for PPDT analysis")
+            null
+        }
+        return CandidateContext(
+            gender = userProfile?.gender?.displayName ?: "Unknown",
+            entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
+        )
+    }
+
+    private suspend fun fetchPPDTQuestion(questionId: String): PPDTQuestion? {
+        return try {
+            val ppdtQuestion = testContentRepository.getPPDTQuestion(questionId).getOrNull()
+            if (ppdtQuestion != null) {
+                Log.d(TAG, "   Step 3: Retrieved PPDT question for ID: $questionId")
+            } else {
+                Log.w(TAG, "   ⚠️ PPDT question not found for ID: $questionId")
+            }
+            ppdtQuestion
+        } catch (e: Exception) {
+            Log.e(TAG, "   ❌ Error fetching PPDT question", e)
+            null
+        }
+    }
+
+    private suspend fun downloadImageBytes(imageUrl: String?): ByteArray {
+        return imageUrl
+            ?.takeIf { it.isNotBlank() }
+            ?.let { url ->
+                try {
+                    withContext(Dispatchers.IO) {
+                        val conn = URL(url).openConnection().apply {
+                            connectTimeout = 10_000
+                            readTimeout = 20_000
+                        }
+                        conn.getInputStream().readBytes()
+                    }
+                } catch (e: Exception) {
+                    ErrorLogger.log(e, "PPDT image download failed — proceeding with empty bytes")
+                    null
+                }
+            } ?: ByteArray(0)
+    }
+
+    private fun validateOLQScores(
+        olqScores: Map<OLQ, OLQScore>,
+        entryType: com.ssbmax.core.domain.scoring.EntryType
+    ) {
+        val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
+        Log.d(TAG, "   Step 6: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+        if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+            Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
+        }
+    }
+
+    private fun buildOLQResult(submissionId: String, olqScores: Map<OLQ, OLQScore>): OLQAnalysisResult {
+        val overallScore = olqScores.values.map { it.score }.average().toFloat()
+        val overallRating = PPDTRating.fromScore(overallScore).displayKey
+
+        val strengths = olqScores.entries
+            .sortedBy { it.value.score }
+            .take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+
+        val weaknesses = olqScores.entries
+            .sortedByDescending { it.value.score }
+            .take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+
+        val recommendations = listOf(
+            "Continue practicing PPDT with diverse scenarios",
+            "Focus on strengthening: ${weaknesses.joinToString(", ")}",
+            "Maintain clear and positive storytelling"
+        )
+
+        return OLQAnalysisResult(
+            submissionId = submissionId,
+            testType = TestType.PPDT,
+            olqScores = olqScores,
+            overallScore = overallScore,
+            overallRating = overallRating,
+            strengths = strengths,
+            weaknesses = weaknesses,
+            recommendations = recommendations,
+            analyzedAt = System.currentTimeMillis(),
+            aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
+        )
+    }
+
+    private suspend fun finalizeSubmission(submissionId: String, userId: String, olqResult: OLQAnalysisResult) {
+        submissionRepository.updatePPDTOLQResult(submissionId, olqResult)
+        Log.d(TAG, "   Step 7: Submission updated with OLQ result")
+
+        try {
+            getOLQDashboard.invalidateCache(userId)
+            Log.d(TAG, "   Step 8: Dashboard cache invalidated")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+        }
+
+        try {
+            notificationHelper.showPPDTResultsReadyNotification(submissionId)
+            Log.d(TAG, "✅ Push notification sent successfully!")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to send notification: ${e.message}")
         }
     }
 

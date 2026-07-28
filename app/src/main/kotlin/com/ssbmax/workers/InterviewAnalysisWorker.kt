@@ -52,12 +52,7 @@ class InterviewAnalysisWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val sessionId = inputData.getString(KEY_SESSION_ID)
         if (sessionId.isNullOrBlank()) {
-            Log.e(TAG, "❌ No session ID provided")
-            ErrorLogger.log(
-                "Interview analysis worker started without session ID",
-                emptyMap(),
-                ErrorLogger.Severity.ERROR
-            )
+            logMissingSessionId()
             return Result.failure()
         }
 
@@ -70,181 +65,218 @@ class InterviewAnalysisWorker @AssistedInject constructor(
         )
 
         return try {
-            // 1. Get session
-            val sessionResult = interviewRepository.getSession(sessionId)
-            val session = sessionResult.getOrNull()
-            if (session == null) {
-                Log.e(TAG, "❌ Session not found: $sessionId")
-                return Result.failure()
-            }
+            runAnalysisPipeline(sessionId, startTime)
+        } catch (e: Exception) {
+            handleWorkerFailure(e, sessionId, startTime)
+        }
+    }
 
-            Log.d(TAG, "   Step 1: Session found with ${session.questionIds.size} questions")
+    private fun logMissingSessionId() {
+        Log.e(TAG, "❌ No session ID provided")
+        ErrorLogger.log(
+            "Interview analysis worker started without session ID",
+            emptyMap(),
+            ErrorLogger.Severity.ERROR
+        )
+    }
 
-            // Verify session is in PENDING_ANALYSIS state
-            if (session.status != InterviewStatus.PENDING_ANALYSIS) {
-                Log.w(TAG, "⚠️ Session not in PENDING_ANALYSIS state: ${session.status}")
-                // Don't fail, just skip - might be already processed
-                return Result.success()
-            }
+    private suspend fun runAnalysisPipeline(sessionId: String, startTime: Long): Result {
+        // 1. Get session
+        val session = interviewRepository.getSession(sessionId).getOrNull()
+        if (session == null) {
+            Log.e(TAG, "❌ Session not found: $sessionId")
+            return Result.failure()
+        }
+        Log.d(TAG, "   Step 1: Session found with ${session.questionIds.size} questions")
 
-            // 2. Get all responses
-            val responsesResult = interviewRepository.getResponses(sessionId)
-            val responses = responsesResult.getOrNull()
-            if (responses.isNullOrEmpty()) {
-                Log.e(TAG, "❌ No responses found for session: $sessionId")
-                updateSessionFailed(sessionId)
-                return Result.failure()
-            }
+        // Verify session is in PENDING_ANALYSIS state
+        if (session.status != InterviewStatus.PENDING_ANALYSIS) {
+            Log.w(TAG, "⚠️ Session not in PENDING_ANALYSIS state: ${session.status}")
+            // Don't fail, just skip - might be already processed
+            return Result.success()
+        }
 
-            Log.d(TAG, "   Step 2: Found ${responses.size} responses to analyze")
+        // 2. Get all responses
+        val responses = interviewRepository.getResponses(sessionId).getOrNull()
+        if (responses.isNullOrEmpty()) {
+            Log.e(TAG, "❌ No responses found for session: $sessionId")
+            updateSessionFailed(sessionId)
+            return Result.failure()
+        }
+        Log.d(TAG, "   Step 2: Found ${responses.size} responses to analyze")
 
-            // 3. Analyze each response with AI
-            var successCount = 0
-            var failCount = 0
+        // 3. Analyze each response with AI
+        val (successCount, failCount) = analyzeAllResponses(responses)
+        Log.d(TAG, "   Step 3: Analysis complete - $successCount success, $failCount failed")
 
-            for ((index, response) in responses.withIndex()) {
-                Log.d(TAG, "   Analyzing response ${index + 1}/${responses.size}...")
+        // 3.5. SSB validation on aggregated scores
+        validateAggregatedScores(responses)
 
-                val analysisResult = analyzeResponseWithRetry(response)
-                if (analysisResult != null) {
-                    // Update response with OLQ scores
-                    val updatedResponse = response.copy(
-                        olqScores = analysisResult.olqScores,
-                        confidenceScore = analysisResult.confidence
-                    )
+        // 4-5. Generate final result + send notification
+        val completionOutcome = completeInterviewAndNotify(sessionId, session.userId)
+        return if (completionOutcome == CompletionOutcome.FAILED) {
+            Result.failure()
+        } else {
+            logSuccessCompletion(sessionId, startTime, successCount, failCount)
+            Result.success()
+        }
+    }
 
-                    val updateResult = interviewRepository.updateResponse(updatedResponse)
-                    if (updateResult.isSuccess) {
-                        successCount++
-                        Log.d(TAG, "   ✅ Response ${index + 1} analyzed and saved")
-                    } else {
-                        failCount++
-                        Log.e(TAG, "   ❌ Failed to save response ${index + 1}")
-                    }
-                } else {
-                    failCount++
-                    Log.e(TAG, "   ❌ AI analysis failed for response ${index + 1}")
+    private fun logSuccessCompletion(sessionId: String, startTime: Long, successCount: Int, failCount: Int) {
+        val durationMs = System.currentTimeMillis() - startTime
+        Log.d(TAG, "🎉 InterviewAnalysisWorker completed successfully for session: $sessionId")
+        ErrorLogger.log(
+            "Interview analysis worker completed successfully",
+            mapOf(
+                "sessionId" to sessionId,
+                "successCount" to successCount.toString(),
+                "failCount" to failCount.toString(),
+                "durationMs" to durationMs.toString()
+            ),
+            ErrorLogger.Severity.INFO
+        )
+    }
 
-                    // Save with default scores so interview can still complete
-                    val fallbackResponse = response.copy(
-                        olqScores = generateFallbackOLQScores(),
-                        confidenceScore = InterviewConstants.FALLBACK_CONFIDENCE
-                    )
-                    interviewRepository.updateResponse(fallbackResponse)
-                }
+    private suspend fun handleWorkerFailure(e: Exception, sessionId: String, startTime: Long): Result {
+        val durationMs = System.currentTimeMillis() - startTime
+        ErrorLogger.log(e, "Background interview analysis failed for session: $sessionId")
 
-                // Small delay between API calls to avoid rate limiting
-                if (index < responses.size - 1) {
-                    delay(InterviewConstants.API_CALL_DELAY_MS)
-                }
-            }
-
-            Log.d(TAG, "   Step 3: Analysis complete - $successCount success, $failCount failed")
-
-            // 3.5. SSB validation on aggregated scores
-            val aggregatedScores = aggregateOLQScores(responses.mapNotNull { 
-                interviewRepository.getResponse(it.id).getOrNull()?.olqScores 
-            })
-            if (aggregatedScores.isNotEmpty()) {
-                val validationResult = ValidationIntegration.validateScores(aggregatedScores, EntryType.NDA)
-                Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-                if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                    Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
-                }
-            }
-
-            // 4. Generate final result
-            Log.d(TAG, "   Step 4: Generating final interview result...")
-            val resultResult = interviewRepository.completeInterview(sessionId)
-            Log.d(TAG, "   Step 4a: completeInterview returned, isSuccess=${resultResult.isSuccess}")
-
-            if (resultResult.isFailure) {
-                Log.e(TAG, "❌ Failed to complete interview", resultResult.exceptionOrNull())
-                updateSessionFailed(sessionId)
-                notificationHelper.showInterviewAnalysisFailedNotification(sessionId)
-                return Result.failure()
-            }
-
-            Log.d(TAG, "   Step 4b: Getting interview result...")
-            val interviewResult = resultResult.getOrNull()
-            Log.d(TAG, "   Step 4c: Got interviewResult, id=${interviewResult?.id}")
-            Log.d(TAG, "✅ Interview analysis complete! Result ID: ${interviewResult?.id}")
-            Log.d(TAG, "   interviewResult is null: ${interviewResult == null}")
-
-            // 5. Send notification
-            if (interviewResult != null) {
-                try {
-                    Log.d(TAG, "📱 About to send notification for result: ${interviewResult.id}")
-                    notificationHelper.showInterviewResultsReadyNotification(
-                        sessionId = sessionId,
-                        resultId = interviewResult.id
-                    )
-                    Log.d(TAG, "✅ Push notification sent successfully!")
-                } catch (e: Exception) {
-                    Log.e(TAG, "❌ Failed to send notification", e)
-                    ErrorLogger.log(e, "Failed to send interview result notification")
-                }
-            } else {
-                Log.w(TAG, "⚠️ interviewResult is null, skipping notification")
-            }
-
-            // Invalidate dashboard cache AFTER result is saved
-            // CRITICAL: Must happen after result is in Firestore, not at submission time
-            try {
-                getOLQDashboard.invalidateCache(session.userId)
-                Log.d(TAG, "   Dashboard cache invalidated for user: ${session.userId}")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-            }
-
-            val durationMs = System.currentTimeMillis() - startTime
-            Log.d(TAG, "🎉 InterviewAnalysisWorker completed successfully for session: $sessionId")
+        return if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
+            Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS}")
             ErrorLogger.log(
-                "Interview analysis worker completed successfully",
+                "Interview analysis worker will retry",
                 mapOf(
                     "sessionId" to sessionId,
-                    "successCount" to successCount.toString(),
-                    "failCount" to failCount.toString(),
+                    "attempt" to runAttemptCount.toString(),
+                    "maxAttempts" to InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS.toString(),
                     "durationMs" to durationMs.toString()
                 ),
-                ErrorLogger.Severity.INFO
+                ErrorLogger.Severity.WARNING
             )
-            Result.success()
+            Result.retry()
+        } else {
+            Log.e(TAG, "❌ Max retries reached, marking session as failed")
+            ErrorLogger.log(
+                e,
+                "Interview analysis worker failed permanently",
+                mapOf(
+                    "sessionId" to sessionId,
+                    "attempt" to runAttemptCount.toString(),
+                    "durationMs" to durationMs.toString()
+                ),
+                ErrorLogger.Severity.ERROR
+            )
+            updateSessionFailed(sessionId)
+            notificationHelper.showInterviewAnalysisFailedNotification(sessionId)
+            Result.failure()
+        }
+    }
 
-        } catch (e: Exception) {
-            val durationMs = System.currentTimeMillis() - startTime
-            ErrorLogger.log(e, "Background interview analysis failed for session: $sessionId")
+    private enum class CompletionOutcome { SUCCESS, FAILED }
 
-            if (runAttemptCount < InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS) {
-                Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/${InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS}")
-                ErrorLogger.log(
-                    "Interview analysis worker will retry",
-                    mapOf(
-                        "sessionId" to sessionId,
-                        "attempt" to runAttemptCount.toString(),
-                        "maxAttempts" to InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS.toString(),
-                        "durationMs" to durationMs.toString()
-                    ),
-                    ErrorLogger.Severity.WARNING
+    private suspend fun analyzeAllResponses(responses: List<InterviewResponse>): Pair<Int, Int> {
+        var successCount = 0
+        var failCount = 0
+
+        for ((index, response) in responses.withIndex()) {
+            Log.d(TAG, "   Analyzing response ${index + 1}/${responses.size}...")
+
+            val analysisResult = analyzeResponseWithRetry(response)
+            if (analysisResult != null) {
+                // Update response with OLQ scores
+                val updatedResponse = response.copy(
+                    olqScores = analysisResult.olqScores,
+                    confidenceScore = analysisResult.confidence
                 )
-                Result.retry()
+
+                val updateResult = interviewRepository.updateResponse(updatedResponse)
+                if (updateResult.isSuccess) {
+                    successCount++
+                    Log.d(TAG, "   ✅ Response ${index + 1} analyzed and saved")
+                } else {
+                    failCount++
+                    Log.e(TAG, "   ❌ Failed to save response ${index + 1}")
+                }
             } else {
-                Log.e(TAG, "❌ Max retries reached, marking session as failed")
-                ErrorLogger.log(
-                    e,
-                    "Interview analysis worker failed permanently",
-                    mapOf(
-                        "sessionId" to sessionId,
-                        "attempt" to runAttemptCount.toString(),
-                        "durationMs" to durationMs.toString()
-                    ),
-                    ErrorLogger.Severity.ERROR
+                failCount++
+                Log.e(TAG, "   ❌ AI analysis failed for response ${index + 1}")
+
+                // Save with default scores so interview can still complete
+                val fallbackResponse = response.copy(
+                    olqScores = generateFallbackOLQScores(),
+                    confidenceScore = InterviewConstants.FALLBACK_CONFIDENCE
                 )
-                updateSessionFailed(sessionId)
-                notificationHelper.showInterviewAnalysisFailedNotification(sessionId)
-                Result.failure()
+                interviewRepository.updateResponse(fallbackResponse)
+            }
+
+            // Small delay between API calls to avoid rate limiting
+            if (index < responses.size - 1) {
+                delay(InterviewConstants.API_CALL_DELAY_MS)
             }
         }
+
+        return successCount to failCount
+    }
+
+    private suspend fun validateAggregatedScores(responses: List<InterviewResponse>) {
+        val aggregatedScores = aggregateOLQScores(responses.mapNotNull {
+            interviewRepository.getResponse(it.id).getOrNull()?.olqScores
+        })
+        if (aggregatedScores.isNotEmpty()) {
+            val validationResult = ValidationIntegration.validateScores(aggregatedScores, EntryType.NDA)
+            Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+                Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
+            }
+        }
+    }
+
+    private suspend fun completeInterviewAndNotify(sessionId: String, userId: String): CompletionOutcome {
+        // 4. Generate final result
+        Log.d(TAG, "   Step 4: Generating final interview result...")
+        val resultResult = interviewRepository.completeInterview(sessionId)
+        Log.d(TAG, "   Step 4a: completeInterview returned, isSuccess=${resultResult.isSuccess}")
+
+        if (resultResult.isFailure) {
+            Log.e(TAG, "❌ Failed to complete interview", resultResult.exceptionOrNull())
+            updateSessionFailed(sessionId)
+            notificationHelper.showInterviewAnalysisFailedNotification(sessionId)
+            return CompletionOutcome.FAILED
+        }
+
+        Log.d(TAG, "   Step 4b: Getting interview result...")
+        val interviewResult = resultResult.getOrNull()
+        Log.d(TAG, "   Step 4c: Got interviewResult, id=${interviewResult?.id}")
+        Log.d(TAG, "✅ Interview analysis complete! Result ID: ${interviewResult?.id}")
+        Log.d(TAG, "   interviewResult is null: ${interviewResult == null}")
+
+        // 5. Send notification
+        if (interviewResult != null) {
+            try {
+                Log.d(TAG, "📱 About to send notification for result: ${interviewResult.id}")
+                notificationHelper.showInterviewResultsReadyNotification(
+                    sessionId = sessionId,
+                    resultId = interviewResult.id
+                )
+                Log.d(TAG, "✅ Push notification sent successfully!")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to send notification", e)
+                ErrorLogger.log(e, "Failed to send interview result notification")
+            }
+        } else {
+            Log.w(TAG, "⚠️ interviewResult is null, skipping notification")
+        }
+
+        // Invalidate dashboard cache AFTER result is saved
+        // CRITICAL: Must happen after result is in Firestore, not at submission time
+        try {
+            getOLQDashboard.invalidateCache(userId)
+            Log.d(TAG, "   Dashboard cache invalidated for user: $userId")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+        }
+
+        return CompletionOutcome.SUCCESS
     }
 
     /**

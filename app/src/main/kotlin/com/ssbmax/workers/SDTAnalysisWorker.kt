@@ -59,13 +59,11 @@ class SDTAnalysisWorker @AssistedInject constructor(
 
         return try {
             // 1. Get submission from repository
-            val submissionResult = submissionRepository.getSDTSubmission(submissionId)
-            val submission = submissionResult.getOrNull()
+            val submission = submissionRepository.getSDTSubmission(submissionId).getOrNull()
             if (submission == null) {
                 Log.e(TAG, "❌ SDT submission not found: $submissionId")
                 return Result.failure()
             }
-
             Log.d(TAG, "   Step 1: SDT submission found with ${submission.responses.size} responses")
 
             // 2. Verify PENDING_ANALYSIS status (don't process if already done)
@@ -78,95 +76,22 @@ class SDTAnalysisWorker @AssistedInject constructor(
             submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 4. Generate SDT analysis prompt
-            val prompt = PsychologyTestPrompts.generateSDAnalysisPrompt(submission)
-            Log.d(TAG, "   Step 3: Generated SDT analysis prompt")
-
-            // 5. Analyze with Gemini AI (with retry logic)
-            val olqScores = analyzeSubmissionWithRetry(prompt)
+            // 4-5. Generate prompt + analyze with Gemini AI (with retry logic)
+            val olqScores = generateAndAnalyze(submission)
             if (olqScores == null) {
                 Log.e(TAG, "❌ AI analysis failed after $MAX_AI_RETRIES retries")
                 handleAnalysisFailure(submissionId)
                 return Result.failure()
             }
-
             Log.d(TAG, "   Step 4: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
 
-            val userProfile = try {
-                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to fetch user profile for SDT analysis — defaulting to NDA")
-                null
-            }
-            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
-            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
-            Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
-            }
+            validateOLQScores(submission, olqScores)
 
             // 6. Create OLQAnalysisResult
-            val overallScore = olqScores.values.map { it.score }.average().toFloat()
-            val overallRating = when {
-                overallScore <= 5.5f -> "Exceptional"
-                overallScore <= 6.5f -> "Good"
-                overallScore <= 7.5f -> "Average"
-                else -> "Needs Improvement"
-            }
+            val olqResult = buildOLQResult(submissionId, olqScores)
 
-            // Extract top 3 strengths (lowest scores)
-            val strengths = olqScores.entries
-                .sortedBy { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            // Extract top 3 weaknesses (highest scores)
-            val weaknesses = olqScores.entries
-                .sortedByDescending { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            val recommendations = listOf(
-                "Continue developing self-awareness and goal orientation",
-                "Focus on strengthening: ${weaknesses.joinToString(", ")}",
-                "Reflect on your actions and their impact on others"
-            )
-
-            val olqResult = OLQAnalysisResult(
-                submissionId = submissionId,
-                testType = TestType.SD,
-                olqScores = olqScores,
-                overallScore = overallScore,
-                overallRating = overallRating,
-                strengths = strengths,
-                weaknesses = weaknesses,
-                recommendations = recommendations,
-                analyzedAt = System.currentTimeMillis(),
-                aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
-            )
-
-            // 7. Update submission with OLQ result
-            // Note: updateSDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
-            submissionRepository.updateSDTOLQResult(submissionId, olqResult)
-            Log.d(TAG, "   Step 5: Submission updated with OLQ result")
-
-            // 8. Invalidate dashboard cache AFTER result is saved
-            // CRITICAL: Must happen after result is in Firestore, not at submission time
-            try {
-                getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-            }
-
-            // 9. Send notification
-            try {
-                notificationHelper.showSDTResultsReadyNotification(submissionId)
-                Log.d(TAG, "✅ Push notification sent successfully!")
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Failed to send notification", e)
-                ErrorLogger.log(e, "Failed to send SDT result notification")
-            }
+            // 7-9. Persist result, invalidate cache, notify
+            finalizeSubmission(submissionId, submission.userId, olqResult)
 
             val durationMs = System.currentTimeMillis() - startTime
             Log.d(TAG, "🎉 SDT analysis completed successfully in ${durationMs}ms")
@@ -174,7 +99,7 @@ class SDTAnalysisWorker @AssistedInject constructor(
                 "SDT analysis worker completed successfully",
                 mapOf(
                     "submissionId" to submissionId,
-                    "overallScore" to overallScore.toString(),
+                    "overallScore" to olqResult.overallScore.toString(),
                     "durationMs" to durationMs.toString()
                 ),
                 ErrorLogger.Severity.INFO
@@ -193,6 +118,94 @@ class SDTAnalysisWorker @AssistedInject constructor(
                 handleAnalysisFailure(submissionId)
                 Result.failure()
             }
+        }
+    }
+
+    private suspend fun generateAndAnalyze(submission: com.ssbmax.core.domain.model.SDTSubmission): Map<OLQ, OLQScore>? {
+        val prompt = PsychologyTestPrompts.generateSDAnalysisPrompt(submission)
+        Log.d(TAG, "   Step 3: Generated SDT analysis prompt")
+        return analyzeSubmissionWithRetry(prompt)
+    }
+
+    private suspend fun validateOLQScores(
+        submission: com.ssbmax.core.domain.model.SDTSubmission,
+        olqScores: Map<OLQ, OLQScore>
+    ) {
+        val userProfile = try {
+            userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
+        } catch (e: Exception) {
+            ErrorLogger.log(e, "Failed to fetch user profile for SDT analysis — defaulting to NDA")
+            null
+        }
+        val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
+        val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
+        Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+        if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+            Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
+        }
+    }
+
+    private fun buildOLQResult(submissionId: String, olqScores: Map<OLQ, OLQScore>): OLQAnalysisResult {
+        val overallScore = olqScores.values.map { it.score }.average().toFloat()
+        val overallRating = when {
+            overallScore <= 5.5f -> "Exceptional"
+            overallScore <= 6.5f -> "Good"
+            overallScore <= 7.5f -> "Average"
+            else -> "Needs Improvement"
+        }
+
+        // Extract top 3 strengths (lowest scores)
+        val strengths = olqScores.entries
+            .sortedBy { it.value.score }
+            .take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+
+        // Extract top 3 weaknesses (highest scores)
+        val weaknesses = olqScores.entries
+            .sortedByDescending { it.value.score }
+            .take(3)
+            .map { "${it.key.displayName} (${it.value.score})" }
+
+        val recommendations = listOf(
+            "Continue developing self-awareness and goal orientation",
+            "Focus on strengthening: ${weaknesses.joinToString(", ")}",
+            "Reflect on your actions and their impact on others"
+        )
+
+        return OLQAnalysisResult(
+            submissionId = submissionId,
+            testType = TestType.SD,
+            olqScores = olqScores,
+            overallScore = overallScore,
+            overallRating = overallRating,
+            strengths = strengths,
+            weaknesses = weaknesses,
+            recommendations = recommendations,
+            analyzedAt = System.currentTimeMillis(),
+            aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
+        )
+    }
+
+    private suspend fun finalizeSubmission(submissionId: String, userId: String, olqResult: OLQAnalysisResult) {
+        // Note: updateSDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
+        submissionRepository.updateSDTOLQResult(submissionId, olqResult)
+        Log.d(TAG, "   Step 5: Submission updated with OLQ result")
+
+        // Invalidate dashboard cache AFTER result is saved
+        // CRITICAL: Must happen after result is in Firestore, not at submission time
+        try {
+            getOLQDashboard.invalidateCache(userId)
+            Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: $userId")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
+        }
+
+        try {
+            notificationHelper.showSDTResultsReadyNotification(submissionId)
+            Log.d(TAG, "✅ Push notification sent successfully!")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to send notification", e)
+            ErrorLogger.log(e, "Failed to send SDT result notification")
         }
     }
 

@@ -78,13 +78,11 @@ class GTOAnalysisWorker @AssistedInject constructor(
 
         return try {
             // 1. Get submission
-            val submissionResult = gtoRepository.getSubmission(submissionId)
-            val submission = submissionResult.getOrNull()
+            val submission = gtoRepository.getSubmission(submissionId).getOrNull()
             if (submission == null) {
                 Log.e(TAG, "❌ Submission not found: $submissionId")
                 return Result.failure()
             }
-
             Log.d(TAG, "   Step 1: Submission found - ${submission.testType}")
 
             // Verify submission is in PENDING_ANALYSIS state
@@ -98,104 +96,17 @@ class GTOAnalysisWorker @AssistedInject constructor(
             gtoRepository.updateSubmissionStatus(submissionId, GTOSubmissionStatus.ANALYZING)
             Log.d(TAG, "   Step 2: Status updated to ANALYZING")
 
-            // 3. Analyze with AI
+            // 3. Analyze with AI (with retries)
             Log.d(TAG, "   Step 3: Analyzing with AI...")
-            
-            // Analyze with retries
             val olqScores = analyzeSubmissionWithRetry(
                 submission = submission,
                 testType = submission.testType
             )
 
             if (olqScores != null) {
-                // SSB validation
-                val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
-                Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-                if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                    Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
-                }
-
-                // Update submission with OLQ scores
-                val updateResult = gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
-                
-                if (updateResult.isFailure) {
-                    // Firestore update failed - log error and retry
-                    val error = updateResult.exceptionOrNull()
-                    Log.e(TAG, "❌ Failed to save OLQ scores to Firestore", error)
-                    ErrorLogger.log(
-                        error ?: Exception("Unknown Firestore error"),
-                        "Failed to update submission OLQ scores in Firestore"
-                    )
-                    
-                    // Mark as failed so WorkManager can retry
-                    gtoRepository.updateSubmissionStatus(submissionId, GTOSubmissionStatus.FAILED)
-                    return Result.retry()
-                }
-                
-                Log.d(TAG, "   ✅ Analysis complete and saved to Firestore")
-
-                // Invalidate dashboard cache AFTER result is saved
-                // CRITICAL: Must happen after result is in Firestore, not at submission time
-                try {
-                    getOLQDashboard.invalidateCache(submission.userId)
-                    Log.d(TAG, "   Dashboard cache invalidated for user: ${submission.userId}")
-                } catch (e: Exception) {
-                    Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-                }
-
-                // Send notification
-                val duration = (System.currentTimeMillis() - startTime) / 1000
-                Log.d(TAG, "✅ GTO analysis completed in ${duration}s")
-                
-                notificationHelper.showGTOAnalysisCompleteNotification(
-                    submissionId,
-                    submission.testType.displayName,
-                    submission.testType
-                )
-
-                ErrorLogger.log(
-                    "GTO analysis worker completed successfully",
-                    mapOf(
-                        "submissionId" to submissionId,
-                        "testType" to submission.testType.name,
-                        "duration" to duration.toString()
-                    ),
-                    ErrorLogger.Severity.INFO
-                )
-
-                Result.success()
+                handleSuccessfulAnalysis(submissionId, submission, olqScores, startTime)
             } else {
-                Log.e(TAG, "   ❌ AI analysis failed after retries")
-
-                // Use fallback scores
-                val fallbackScores = generateFallbackOLQScores()
-                gtoRepository.updateSubmissionOLQScores(submissionId, fallbackScores)
-
-                // Invalidate dashboard cache even with fallback scores
-                try {
-                    getOLQDashboard.invalidateCache(submission.userId)
-                    Log.d(TAG, "   Dashboard cache invalidated for user: ${submission.userId}")
-                } catch (e: Exception) {
-                    Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-                }
-
-                Log.w(TAG, "⚠️ Using fallback scores due to AI failure")
-                notificationHelper.showGTOAnalysisCompleteNotification(
-                    submissionId,
-                    submission.testType.displayName,
-                    submission.testType
-                )
-
-                ErrorLogger.log(
-                    "GTO analysis worker completed with fallback scores",
-                    mapOf(
-                        "submissionId" to submissionId,
-                        "testType" to submission.testType.name
-                    ),
-                    ErrorLogger.Severity.WARNING
-                )
-
-                Result.success()
+                handleFallbackAnalysis(submissionId, submission)
             }
         } catch (e: Exception) {
             ErrorLogger.log(e, "GTO analysis worker failed")
@@ -216,6 +127,101 @@ class GTOAnalysisWorker @AssistedInject constructor(
                 Log.e(TAG, "❌ Max retries reached, failing")
                 Result.failure()
             }
+        }
+    }
+
+    private suspend fun handleSuccessfulAnalysis(
+        submissionId: String,
+        submission: GTOSubmission,
+        olqScores: Map<OLQ, OLQScore>,
+        startTime: Long
+    ): Result {
+        // SSB validation
+        val validationResult = ValidationIntegration.validateScores(olqScores, EntryType.NDA)
+        Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
+        if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
+            Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
+        }
+
+        // Update submission with OLQ scores
+        val updateResult = gtoRepository.updateSubmissionOLQScores(submissionId, olqScores)
+        if (updateResult.isFailure) {
+            // Firestore update failed - log error and retry
+            val error = updateResult.exceptionOrNull()
+            Log.e(TAG, "❌ Failed to save OLQ scores to Firestore", error)
+            ErrorLogger.log(
+                error ?: Exception("Unknown Firestore error"),
+                "Failed to update submission OLQ scores in Firestore"
+            )
+
+            // Mark as failed so WorkManager can retry
+            gtoRepository.updateSubmissionStatus(submissionId, GTOSubmissionStatus.FAILED)
+            return Result.retry()
+        }
+        Log.d(TAG, "   ✅ Analysis complete and saved to Firestore")
+
+        // Invalidate dashboard cache AFTER result is saved
+        // CRITICAL: Must happen after result is in Firestore, not at submission time
+        invalidateDashboardCache(submission.userId)
+
+        // Send notification
+        val duration = (System.currentTimeMillis() - startTime) / 1000
+        Log.d(TAG, "✅ GTO analysis completed in ${duration}s")
+
+        notificationHelper.showGTOAnalysisCompleteNotification(
+            submissionId,
+            submission.testType.displayName,
+            submission.testType
+        )
+
+        ErrorLogger.log(
+            "GTO analysis worker completed successfully",
+            mapOf(
+                "submissionId" to submissionId,
+                "testType" to submission.testType.name,
+                "duration" to duration.toString()
+            ),
+            ErrorLogger.Severity.INFO
+        )
+
+        return Result.success()
+    }
+
+    private suspend fun handleFallbackAnalysis(submissionId: String, submission: GTOSubmission): Result {
+        Log.e(TAG, "   ❌ AI analysis failed after retries")
+
+        // Use fallback scores
+        val fallbackScores = generateFallbackOLQScores()
+        gtoRepository.updateSubmissionOLQScores(submissionId, fallbackScores)
+
+        // Invalidate dashboard cache even with fallback scores
+        invalidateDashboardCache(submission.userId)
+
+        Log.w(TAG, "⚠️ Using fallback scores due to AI failure")
+        notificationHelper.showGTOAnalysisCompleteNotification(
+            submissionId,
+            submission.testType.displayName,
+            submission.testType
+        )
+
+        ErrorLogger.log(
+            "GTO analysis worker completed with fallback scores",
+            mapOf(
+                "submissionId" to submissionId,
+                "testType" to submission.testType.name
+            ),
+            ErrorLogger.Severity.WARNING
+        )
+
+        return Result.success()
+    }
+
+    private suspend fun invalidateDashboardCache(userId: String) {
+        try {
+            getOLQDashboard.invalidateCache(userId)
+            Log.d(TAG, "   Dashboard cache invalidated for user: $userId")
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
         }
     }
 

@@ -13,7 +13,6 @@
     <ID>CyclomaticComplexMethod:DashboardTestScoreChip.kt$@Composable fun TestScoreChip( testName: String, score: Float?, isOLQBased: Boolean = true, isRefreshing: Boolean = false, onClick: (() -&gt; Unit)? = null )</ID>
     <ID>CyclomaticComplexMethod:GDTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: GDTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>CyclomaticComplexMethod:InterviewAnalysisWorker.kt$InterviewAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>CyclomaticComplexMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = hiltViewModel() )</ID>
     <ID>CyclomaticComplexMethod:LecturetteTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit, onNavigateBack: () -&gt; Unit, onNavigateToUpgrade: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MarkdownText.kt$@Composable fun MarkdownText( content: String, modifier: Modifier = Modifier, textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant )</ID>
@@ -22,13 +21,10 @@
     <ID>CyclomaticComplexMethod:PIQTestScreen.kt$@Composable private fun Page1Content( answers: Map&lt;String, String&gt;, onFieldChange: (String, String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:PIQTestScreen.kt$@Composable private fun Page2Content( answers: Map&lt;String, String&gt;, onFieldChange: (String, String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:PIQTestViewModel.kt$PIQTestViewModel$private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission</ID>
-    <ID>CyclomaticComplexMethod:PPDTAnalysisWorker.kt$PPDTAnalysisWorker$override suspend fun doWork(): Result</ID>
-    <ID>CyclomaticComplexMethod:SDTAnalysisWorker.kt$SDTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:SDTSubmissionResultViewModel.kt$SDTSubmissionResultViewModel$private fun parseSDTSubmission(data: Map&lt;String, Any&gt;): SDTSubmission?</ID>
     <ID>CyclomaticComplexMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>CyclomaticComplexMethod:SRTAnalysisWorker.kt$SRTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$fun loadSubmission(submissionId: String)</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$private fun parseOLQResult(data: Map&lt;*, *&gt;): OLQAnalysisResult?</ID>
     <ID>CyclomaticComplexMethod:SRTSubmissionResultViewModel.kt$SRTSubmissionResultViewModel$private fun parseSRTSubmission(data: Map&lt;String, Any&gt;): SRTSubmission?</ID>
@@ -136,11 +132,9 @@
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGDPrompt(submission: GTOSubmission.GDSubmission): String</ID>
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String</ID>
     <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateLecturettePrompt(submission: GTOSubmission.LecturetteSubmission): String</ID>
-    <ID>LongMethod:GTOAnalysisWorker.kt$GTOAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:InstructorHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructorHomeScreen( viewModel: InstructorHomeViewModel = hiltViewModel(), onNavigateToStudent: (String) -&gt; Unit, onNavigateToGrading: () -&gt; Unit, onNavigateToBatchDetail: (String) -&gt; Unit, onNavigateToCreateBatch: () -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:InstructorHomeViewModel.kt$InstructorHomeViewModel$private fun loadInstructorData()</ID>
     <ID>LongMethod:InstructorNavGraph.kt$fun NavGraphBuilder.instructorNavGraph( navController: NavHostController, onOpenDrawer: () -&gt; Unit )</ID>
-    <ID>LongMethod:InterviewAnalysisWorker.kt$InterviewAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:InterviewResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewResultScreen( resultId: String, onNavigateBack: () -&gt; Unit, viewModel: InterviewResultViewModel = hiltViewModel() )</ID>
     <ID>LongMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = hiltViewModel() )</ID>
     <ID>LongMethod:LecturetteResultContent.kt$@Composable fun LecturetteResultContent( submission: GTOSubmission.LecturetteSubmission, result: GTOResult?, ssbRecommendation: SSBRecommendationUIModel?, isAnalyzing: Boolean, isFailed: Boolean, formattedTimeSpent: String, onNavigateHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -168,17 +162,14 @@
     <ID>LongMethod:PIQTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PIQTestScreen( testId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit = {}, viewModel: PIQTestViewModel = hiltViewModel() )</ID>
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$fun submitTest()</ID>
     <ID>LongMethod:PIQTestViewModel.kt$PIQTestViewModel$private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission</ID>
-    <ID>LongMethod:PPDTAnalysisWorker.kt$PPDTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:PPDTInstructionsPhase.kt$@Composable fun PPDTInstructionsPhase(onStart: () -&gt; Unit)</ID>
     <ID>LongMethod:PaymentSuccessScreen.kt$@Composable fun PaymentSuccessScreen( plan: SubscriptionPlan, onNavigateToHome: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:Phase2DetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Phase2DetailScreen( onNavigateBack: () -&gt; Unit = {}, onNavigateToTopic: (String) -&gt; Unit = {}, viewModel: Phase2DetailViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:Phase2DetailViewModel.kt$Phase2DetailViewModel$private fun loadPhase2Tests()</ID>
     <ID>LongMethod:PhaseProgressRibbon.kt$@Composable private fun Phase2Card( progress: Phase2Progress?, onPhaseClick: () -&gt; Unit, onTopicClick: (String) -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:PremiumLockCard.kt$@Composable fun PremiumLockCard( requiredTier: SubscriptionTier, onUpgradeClick: () -&gt; Unit, modifier: Modifier = Modifier, message: String? = null, showBackground: Boolean = true )</ID>
-    <ID>LongMethod:SDTAnalysisWorker.kt$SDTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SDTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SDTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:SDTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun QuestionInProgressView( question: String, questionNumber: Int, totalQuestions: Int, answer: String, onAnswerChange: (String) -&gt; Unit, charCount: Int, minChars: Int, maxChars: Int, timeRemaining: Int, canMoveNext: Boolean, onNext: () -&gt; Unit, onSkip: () -&gt; Unit, showExitDialog: Boolean, onShowExitDialog: () -&gt; Unit, onDismissExitDialog: () -&gt; Unit, onConfirmExit: () -&gt; Unit )</ID>
-    <ID>LongMethod:SRTAnalysisWorker.kt$SRTAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:SRTTestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SRTTestScreen( testId: String, onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: SRTTestViewModel = hiltViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:SRTTestViewModel.kt$SRTTestViewModel$fun loadTest(testId: String)</ID>
     <ID>LongMethod:SRTTestViewModel.kt$SRTTestViewModel$fun submitTest()</ID>
