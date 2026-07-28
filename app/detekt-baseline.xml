@@ -63,10 +63,8 @@
     <ID>ForbiddenComment:SRTTestScreen.kt$// TODO: Navigate to upgrade screen</ID>
     <ID>ForbiddenComment:SRTTestViewModel.kt$SRTTestViewModel$// TODO: Track actual time</ID>
     <ID>ForbiddenComment:SRTTestViewModelTest.kt$SRTTestViewModelTest$* Unit tests for SRTTestViewModel * Tests situation loading, response handling, navigation, and submission * * NOTE: This file is 920 lines and violates the 300-line limit. * TODO: Split into multiple focused test files: * - SRTTestViewModelLoadingTest.kt (loading &amp; setup tests) * - SRTTestViewModelNavigationTest.kt (navigation &amp; response handling) * - SRTTestViewModelSubmissionTest.kt (submission &amp; analytics) * - SRTTestViewModelLimitsTest.kt (subscription limits) * * @Ignore - Tests timeout because: * 1. startTest() launches a 30-minute timer coroutine that uses delay(500) in a loop * 2. submitTest() does NOT cancel the timer * 3. Tests hang waiting for timer to complete * * ROOT CAUSE: Production bug - SRTTestViewModel.submitTest() should call timerJob?.cancel() * * TEMPORARY FIX OPTIONS: * - Option A: Add timerJob?.cancel() at start of submitTest() in SRTTestViewModel.kt * - Option B: Refactor tests to not call startTest() unless testing timer-specific behavior * - Option C: Inject a test-friendly time source (Clock) to control time in tests</ID>
-    <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$* Firebase Cloud Messaging Service for SSBMax * Handles incoming push notifications from Firebase * * Note: Firebase services can't use constructor injection easily. * For now, notifications are handled directly in this service. * * TODO: Create NotificationRepository for: * - Saving notification history to local/remote database * - Tracking notification read/unread status * - Managing notification preferences * - Syncing FCM tokens to Firestore * * TODO: Consider using WorkManager for: * - Handling notifications when app is killed * - Background notification processing * - Retry logic for failed operations</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Add specific icons for each type</ID>
     <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Save notification to local database via NotificationRepository</ID>
-    <ID>ForbiddenComment:SSBMaxFirebaseMessagingService.kt$SSBMaxFirebaseMessagingService$// TODO: Send token to NotificationRepository to save in Firestore</ID>
     <ID>ForbiddenComment:SSBOverviewScreen.kt$/* TODO: Open video */</ID>
     <ID>ForbiddenComment:SSBOverviewViewModel.kt$SSBOverviewViewModel$* ViewModel for SSB Overview Screen * Manages informational content about SSB selection process * * Note: SSB overview content is currently code-based (SSBContentProvider) * This is appropriate for static educational content that rarely changes. * TODO: Consider CMS integration if content needs frequent updates * * SSB overview content is static/educational, loaded from SSBContentProvider — * no repository needed unless content becomes dynamic/user-specific.</ID>
     <ID>ForbiddenComment:SettingsScreen.kt$// TODO: Open email intent</ID>
@@ -401,427 +399,90 @@
     <ID>VariableNaming:SubscriptionManagementScreen.kt$val TAG = "MonthlyUsageCard"</ID>
     <ID>VariableNaming:SubscriptionManagementScreen.kt$val TAG = "SubscriptionContent"</ID>
     <ID>VariableNaming:SubscriptionManagementScreen.kt$val TAG = "SubscriptionManagementScreen"</ID>
-    <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:AnalyticsScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:AnalyticsViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:AnalyticsViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:AnalyticsViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:AppViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ArchivalWorker.kt$import androidx.work.*</ID>
     <ID>WildcardImport:AuthViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:BatchDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:BatchDetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:CreateBatchScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:CreateBatchScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:DashboardOLQStrengths.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DashboardSection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DashboardTestScoreChip.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:DeepLinkParserTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:DrawerContent.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DrawerContent.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:DrawerContent.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:DrawerHeader.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DrawerHeader.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:ErrorLoggerTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:FAQScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:FAQScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:FAQViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:GDResultComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GDResultComponents.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GDResultComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GDResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GDResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GDResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GDResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:GDResultScreen.kt$import com.ssbmax.ui.tests.gto.gd.*</ID>
-    <ID>WildcardImport:GDTestPhases.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GDTestPhases.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GDTestPhases.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GDTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GDTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GDTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:GDTestScreen.kt$import com.ssbmax.ui.tests.gto.gd.*</ID>
-    <ID>WildcardImport:GPEComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPEDialogs.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEDialogs.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPEImageViewingPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEImageViewingPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPEInstructionsPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEInstructionsPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPEPlanningPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEPlanningPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPEReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPEReviewPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPESubmissionResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPESubmissionResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GPESubmissionResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPESubmissionResultScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:GPESubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:GPETestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GPETestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GPETestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:GPETestScreen.kt$import com.ssbmax.ui.tests.gpe.components.*</ID>
-    <ID>WildcardImport:GPETestScreen.kt$import com.ssbmax.ui.tests.gpe.components.phases.*</ID>
-    <ID>WildcardImport:GPETestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:GPETestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:GPETestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:GPETestViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:GTOResultComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GTOResultComponents.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GTOResultComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GTOSubmissionSuccessScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GTOSubmissionSuccessScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GTOWhiteNoisePlayer.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:GTOWhiteNoisePlayer.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:GradingDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GradingDetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GradingDetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GradingDetailScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:GradingQueueScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GradingQueueScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:GradingQueueScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:GradingQueueScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:HelpSection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:HelpSection.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:HistoricResultsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:HistoricResultsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:HistoricResultsScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:HistoricResultsViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:InstructorAnalyticsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:InstructorAnalyticsScreen.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:InstructorGradingViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:InstructorGradingViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:InstructorGradingViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:InstructorHomeScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:InstructorHomeScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:InstructorHomeScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:InstructorHomeScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:InstructorHomeViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:InstructorStudentsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:InstructorStudentsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:InterviewResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:InterviewResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:InterviewResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:LecturetteResultComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LecturetteResultComponents.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:LecturetteResultComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LecturetteResultContent.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LecturetteResultContent.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LecturetteResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LecturetteResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:LecturetteResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LecturetteResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:LecturetteTestPhases.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LecturetteTestPhases.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:LecturetteTestPhases.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LecturetteTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LecturetteTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LecturetteTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:LecturetteTestScreen.kt$import com.ssbmax.ui.tests.gto.lecturette.*</ID>
-    <ID>WildcardImport:LoadingStateComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LoadingStateComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LoginScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LoginScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:LoginScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:MainViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:MainViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:MainViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:MarkdownText.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:MarkdownText.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:MarkdownText.kt$import androidx.compose.ui.text.*</ID>
-    <ID>WildcardImport:MarketplaceScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:MarketplaceScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:MarketplaceScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:MarketplaceScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:MarketplaceViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:MemoryLeakTestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:MockDataFactory.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:MockPaymentScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:NotificationCenterViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:NotificationCenterViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:NotificationSettingsSection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:NotificationSettingsSection.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:NotificationSettingsSection.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:NotificationSettingsViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:NotificationSettingsViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRDebugInfo.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OIRDebugInfo.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRDebugInfo.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:OIRQuestionCard.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRTestAnsweringTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestAnsweringTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRTestBottomBar.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OIRTestBottomBar.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:OIRTestLoadingTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestLoadingTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestLoadingTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:OIRTestResultScreen.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:OIRTestScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:OIRTestSubmissionTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestSubmissionTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestSubmissionTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRTestTopBar.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:OIRTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRTestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRTestViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:OIRViewModelTestBase.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRViewModelTestBase.kt$import io.mockk.*</ID>
-    <ID>WildcardImport:OLQDashboardCard.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OLQDashboardCard.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PIQNavigationBar.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PIQReviewScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PIQReviewScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PIQReviewScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PIQSharedComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PIQSharedComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PIQSharedComponents.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PIQSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PIQTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PIQTestScreen.kt$import com.ssbmax.ui.tests.piq.components.*</ID>
-    <ID>WildcardImport:PIQTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:PIQTestViewModel.kt$import kotlinx.coroutines.flow.*</ID>
     <ID>WildcardImport:PIQTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PIQTestViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:PIQTestViewModelTest.kt$import kotlinx.coroutines.test.*</ID>
-    <ID>WildcardImport:PPDTComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTInstructionsPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTInstructionsPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTReviewPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PPDTTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.*</ID>
-    <ID>WildcardImport:PPDTTestScreen.kt$import com.ssbmax.ui.tests.ppdt.components.phases.*</ID>
-    <ID>WildcardImport:PPDTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PPDTTestViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PPDTWritingPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PaymentSuccessScreen.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:PaymentSuccessScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PaymentSuccessScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PaymentSuccessScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:Phase1DetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:Phase1DetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:Phase1DetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:Phase1DetailScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:Phase1DetailViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:Phase2DetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:Phase2DetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:Phase2DetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:Phase2DetailScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:Phase2DetailViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PhaseProgressRibbon.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PhaseProgressRibbon.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:PhaseProgressRibbon.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PremiumLockCard.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PremiumLockCard.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:PremiumLockCard.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PsychologySection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:QuickActionCard.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:RoleSelectionScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SDTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SDTTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SDTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SDTTestViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SRTInProgressView.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SRTInProgressView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SRTInstructionsView.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SRTInstructionsView.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SRTInstructionsView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SRTReviewView.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SRTReviewView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SRTSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SRTTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SRTTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SRTTestViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SSBMaxApp.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SSBMaxBottomBar.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SSBMaxBottomBar.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SSBMaxScaffold.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SSBMaxScaffold.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SSBOverviewScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SSBOverviewScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SSBOverviewScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SSBOverviewScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:SSBOverviewViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SSBRecommendationBanner.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SSBRecommendationBanner.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SSBRecommendationBanner.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SSBRecommendationBanner.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SectionComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SettingsScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SettingsViewModel.kt$import kotlinx.coroutines.flow.*</ID>
-    <ID>WildcardImport:SplashScreen.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:SplashScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SplashScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SplashScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:SplashViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:StatsCard.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudentDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudentDetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudentHomeScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:StudentHomeViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentHomeViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentHomeViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudentProfileScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:StudentProfileViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentProfileViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudentTestsScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:StudentTestsViewModelTest.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:StudentTestsViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudentTestsViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudyMaterialDetailScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:StudyMaterialDetailViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:StudyMaterialsScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:StudyMaterialsScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:StudyMaterialsScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:StudyMaterialsScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:StudyMaterialsViewModel.kt$import androidx.compose.material.icons.filled.*</ID>
     <ID>WildcardImport:StudyMaterialsViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.animation.*</ID>
-    <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SubmissionDetailScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SubmissionDetailViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionDetailViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionDetailViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.animation.*</ID>
-    <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SubmissionsListScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:SubmissionsListViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionsListViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SubscriptionManagementScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:SubscriptionManagementViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubscriptionRibbon.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SubscriptionRibbon.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SubscriptionRibbon.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SubscriptionSection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SubscriptionSection.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SwipeableContent.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TATComponents.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATComponents.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATDialogs.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATDialogs.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATImageViewingPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATImageViewingPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATInstructionsPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATInstructionsPhase.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:TATInstructionsPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATReviewPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATReviewPhase.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TATTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TATTestScreen.kt$import com.ssbmax.ui.tests.tat.components.*</ID>
-    <ID>WildcardImport:TATTestScreen.kt$import com.ssbmax.ui.tests.tat.components.phases.*</ID>
-    <ID>WildcardImport:TATTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:TATWritingPhase.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TATWritingPhase.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:TestDetailGradingViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:TestLimitReachedDialog.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TestLimitReachedDialog.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:ThemeColorConsistencyTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:ThemeSection.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ThemeSection.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TopicScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TopicScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:TopicScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TopicScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import com.ssbmax.shared.domain.repository.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TopicViewModelTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:UnifiedResultUiStateTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:UpgradeScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:UpgradeScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:UpgradeScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:UpgradeScreen.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:UpgradeViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:UserProfileScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:UserProfileScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:UserProfileScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:WATInProgressView.kt$import androidx.compose.animation.*</ID>
-    <ID>WildcardImport:WATInProgressView.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:WATInProgressView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:WATInstructionsView.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:WATSubmissionResultViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATSubmissionResultViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATSubmissionResultViewModelTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.animation.*</ID>
-    <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:WATTestScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:WATTestViewModel.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATTestViewModelTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:WATTestViewModelTest.kt$import org.junit.Assert.*</ID>
   </CurrentIssues>

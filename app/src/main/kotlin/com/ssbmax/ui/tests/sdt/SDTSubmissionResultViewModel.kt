@@ -2,7 +2,9 @@ package com.ssbmax.ui.tests.sdt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SDTQuestionResponse
+import com.ssbmax.shared.domain.model.SDTSubmission
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus

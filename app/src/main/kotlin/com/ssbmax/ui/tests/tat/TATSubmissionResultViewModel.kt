@@ -2,7 +2,11 @@ package com.ssbmax.ui.tests.tat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TATInstructorScore
+import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.model.TATSubmission
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus

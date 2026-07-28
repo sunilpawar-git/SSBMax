@@ -1,6 +1,12 @@
 package com.ssbmax.core.data.repository
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.GPEQuestion
+import com.ssbmax.shared.domain.model.PPDTImageContext
+import com.ssbmax.shared.domain.model.PPDTQuestion
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.WATWord
 
 /**
  * TEMPORARY: Provides mock test data for development and fallback when Firestore is unavailable.

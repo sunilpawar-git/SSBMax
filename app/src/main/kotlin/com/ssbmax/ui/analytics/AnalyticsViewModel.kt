@@ -2,7 +2,9 @@ package com.ssbmax.ui.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.PerformanceOverview
+import com.ssbmax.shared.domain.model.TestPerformancePoint
+import com.ssbmax.shared.domain.model.TestTypeStats
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.MutableStateFlow

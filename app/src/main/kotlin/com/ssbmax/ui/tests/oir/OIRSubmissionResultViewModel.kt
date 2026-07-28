@@ -2,7 +2,15 @@ package com.ssbmax.ui.tests.oir
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.CategoryScore
+import com.ssbmax.shared.domain.model.DifficultyScore
+import com.ssbmax.shared.domain.model.OIRAnswer
+import com.ssbmax.shared.domain.model.OIRAnsweredQuestion
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.OIRTestResult
+import com.ssbmax.shared.domain.model.QuestionDifficulty
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.MutableStateFlow

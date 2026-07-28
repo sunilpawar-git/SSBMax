@@ -4,8 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -13,13 +12,13 @@ import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.shared.domain.scoring.EntryType
-import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.workers.GTOAnalysisPrompts
+import com.ssbmax.shared.domain.validation.ValidationIntegration
+import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.delay
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Background worker for analyzing GTO test submissions using Gemini AI

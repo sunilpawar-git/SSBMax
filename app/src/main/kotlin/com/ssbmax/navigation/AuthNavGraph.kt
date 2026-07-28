@@ -3,7 +3,6 @@ package com.ssbmax.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.ui.auth.LoginScreen
 import com.ssbmax.shared.ui.auth.RoleSelectionScreen
 import com.ssbmax.shared.ui.splash.SplashScreen

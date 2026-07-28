@@ -14,13 +14,13 @@ import androidx.compose.runtime.setValue
 import com.ssbmax.shared.platform.auth.AndroidGoogleSignInLauncher
 import com.ssbmax.shared.platform.permissions.AndroidNotificationPermissionController
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
-import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.ui.SSBMaxApp
 import com.ssbmax.ui.permissions.LocalNotificationPermissionController
-import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController as SharedLocalNotificationPermissionController
 import com.ssbmax.ui.theme.LocalThemeState
 import com.ssbmax.ui.theme.SSBMaxTheme
 import com.ssbmax.utils.DeepLinkParser
+import org.koin.compose.viewmodel.koinViewModel
+import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController as SharedLocalNotificationPermissionController
 
 class MainActivity : ComponentActivity() {
 

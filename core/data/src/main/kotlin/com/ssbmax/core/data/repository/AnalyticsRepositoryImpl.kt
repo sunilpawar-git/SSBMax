@@ -2,14 +2,22 @@ package com.ssbmax.core.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.Achievement
+import com.ssbmax.shared.domain.model.DifficultyStats
+import com.ssbmax.shared.domain.model.GoalProgress
+import com.ssbmax.shared.domain.model.PerformanceOverview
+import com.ssbmax.shared.domain.model.ProgressionStatus
+import com.ssbmax.shared.domain.model.StudyPattern
+import com.ssbmax.shared.domain.model.TestPerformancePoint
+import com.ssbmax.shared.domain.model.TestTypeStats
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 /**
  * Implementation of AnalyticsRepository

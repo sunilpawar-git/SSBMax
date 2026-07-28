@@ -3,7 +3,16 @@ package com.ssbmax.core.data.repository
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ssbmax.shared.domain.model.gto.*
+import com.ssbmax.shared.domain.model.gto.GTOAnalysisUnavailableException
+import com.ssbmax.shared.domain.model.gto.GTOProgress
+import com.ssbmax.shared.domain.model.gto.GTOResult
+import com.ssbmax.shared.domain.model.gto.GTOResultStatus
+import com.ssbmax.shared.domain.model.gto.GTOSubmission
+import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
+import com.ssbmax.shared.domain.model.gto.GTOTest
+import com.ssbmax.shared.domain.model.gto.GTOTestType
+import com.ssbmax.shared.domain.model.gto.ObstacleConfig
+import com.ssbmax.shared.domain.model.gto.ObstacleSolution
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.repository.GTORepository

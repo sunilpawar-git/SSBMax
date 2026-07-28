@@ -1,17 +1,19 @@
 package com.ssbmax.ui
 
 import android.util.Log
-import androidx.compose.runtime.*
-import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ssbmax.navigation.SSBMaxNavGraph
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
-import com.ssbmax.navigation.SSBMaxNavGraph
 import com.ssbmax.ui.components.SSBMaxScaffold
 import com.ssbmax.utils.ErrorLogger
+import org.koin.compose.viewmodel.koinViewModel
 
 private const val TAG = "SSBMaxApp"
 

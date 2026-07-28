@@ -13,7 +13,19 @@ import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.Education
+import com.ssbmax.shared.domain.model.ExtraCurricularActivity
+import com.ssbmax.shared.domain.model.NCCTraining
+import com.ssbmax.shared.domain.model.PIQAIScore
+import com.ssbmax.shared.domain.model.PIQPage
+import com.ssbmax.shared.domain.model.PIQSubmission
+import com.ssbmax.shared.domain.model.PreviousInterview
+import com.ssbmax.shared.domain.model.Sibling
+import com.ssbmax.shared.domain.model.SportsParticipation
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.WorkExperience
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -22,9 +34,15 @@ import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.InterviewQuestionGenerationWorker
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 private const val TAG = "PIQTestViewModel"
 

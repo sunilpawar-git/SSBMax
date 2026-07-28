@@ -17,7 +17,6 @@ import com.ssbmax.ui.marketplace.MarketplaceViewModel
 import com.ssbmax.ui.notifications.NotificationCenterViewModel
 import com.ssbmax.ui.phase.Phase1DetailViewModel
 import com.ssbmax.ui.phase.Phase2DetailViewModel
-import com.ssbmax.ui.premium.UpgradeViewModel as PremiumUpgradeViewModel
 import com.ssbmax.ui.profile.StudentProfileViewModel
 import com.ssbmax.ui.profile.UserProfileViewModel
 import com.ssbmax.ui.results.HistoricResultsViewModel
@@ -54,9 +53,10 @@ import com.ssbmax.ui.tests.tat.TATTestViewModel
 import com.ssbmax.ui.tests.wat.WATSubmissionResultViewModel
 import com.ssbmax.ui.tests.wat.WATTestViewModel
 import com.ssbmax.ui.topic.TopicViewModel
-import com.ssbmax.ui.upgrade.UpgradeViewModel as UpgradeUpgradeViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import com.ssbmax.ui.premium.UpgradeViewModel as PremiumUpgradeViewModel
+import com.ssbmax.ui.upgrade.UpgradeViewModel as UpgradeUpgradeViewModel
 
 /**
  * Koin bindings for all 55 app ViewModels, converted from `@HiltViewModel`.

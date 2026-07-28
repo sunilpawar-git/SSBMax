@@ -1,19 +1,33 @@
 package com.ssbmax.ui.tests.ppdt
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
-import com.ssbmax.ui.tests.ppdt.components.*
-import com.ssbmax.ui.tests.ppdt.components.phases.*
+import com.ssbmax.ui.tests.ppdt.components.PPDTBottomBar
+import com.ssbmax.ui.tests.ppdt.components.PPDTExitDialog
+import com.ssbmax.ui.tests.ppdt.components.PPDTProfileRequiredDialog
+import com.ssbmax.ui.tests.ppdt.components.PPDTSubmitDialog
+import com.ssbmax.ui.tests.ppdt.components.PPDTTopBar
+import com.ssbmax.ui.tests.ppdt.components.phases.PPDTImageViewingPhase
+import com.ssbmax.ui.tests.ppdt.components.phases.PPDTInstructionsPhase
+import com.ssbmax.ui.tests.ppdt.components.phases.PPDTReviewPhase
+import com.ssbmax.ui.tests.ppdt.components.phases.PPDTWritingPhase
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * PPDT Test Screen - Image viewing + Story writing

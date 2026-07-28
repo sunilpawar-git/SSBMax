@@ -2,8 +2,8 @@ package com.ssbmax.di
 
 import com.ssbmax.core.data.di.aiModule
 import com.ssbmax.core.data.di.contentRepositoryModule
-import com.ssbmax.core.data.di.coroutineScopeModule
 import com.ssbmax.core.data.di.coreDataInjectablesModule
+import com.ssbmax.core.data.di.coroutineScopeModule
 import com.ssbmax.core.data.di.databaseModule
 import com.ssbmax.core.data.di.firebaseModule
 import com.ssbmax.core.data.di.loggerModule

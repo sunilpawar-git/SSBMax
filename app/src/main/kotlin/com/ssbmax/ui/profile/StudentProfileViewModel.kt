@@ -8,10 +8,10 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 /**
  * ViewModel for Student Profile Screen
  * Fetches profile data from UserProfileRepository and progress from TestProgressRepository

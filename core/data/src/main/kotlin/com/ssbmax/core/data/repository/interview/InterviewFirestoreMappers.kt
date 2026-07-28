@@ -10,7 +10,6 @@ import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQCategory
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.model.interview.QuestionSource
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 /**

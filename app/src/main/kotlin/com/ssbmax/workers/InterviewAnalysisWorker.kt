@@ -4,21 +4,21 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import com.ssbmax.notifications.NotificationHelper
+import com.ssbmax.shared.domain.constants.InterviewConstants
 import com.ssbmax.shared.domain.model.interview.InterviewResponse
 import com.ssbmax.shared.domain.model.interview.InterviewStatus
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.scoring.EntryType
-import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.shared.domain.constants.InterviewConstants
-import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.validation.ValidationIntegration
+import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.delay
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Background worker for analyzing interview responses using Gemini AI

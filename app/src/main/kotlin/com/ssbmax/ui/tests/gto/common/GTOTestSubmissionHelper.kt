@@ -6,12 +6,9 @@ import androidx.work.workDataOf
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
 import com.ssbmax.shared.domain.repository.GTORepository
+import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.GTOAnalysisWorker
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.MutableStateFlow
-
-import com.ssbmax.shared.domain.repository.SubmissionRepository
 
 /**
  * Helper for submitting GTO tests

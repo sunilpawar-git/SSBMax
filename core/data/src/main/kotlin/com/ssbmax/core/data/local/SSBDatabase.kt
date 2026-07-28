@@ -4,7 +4,6 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.ssbmax.core.data.local.dao.GPEImageCacheDao
-import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
 import com.ssbmax.core.data.local.dao.NotificationDao
@@ -12,6 +11,7 @@ import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
 import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
 import com.ssbmax.core.data.local.dao.TATImageCacheDao
+import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
@@ -33,9 +33,9 @@ import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
 import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
+import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
-import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
 import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 

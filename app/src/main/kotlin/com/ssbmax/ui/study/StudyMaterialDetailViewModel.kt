@@ -1,22 +1,21 @@
 package com.ssbmax.ui.study
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.StudyMaterial
 import com.ssbmax.shared.domain.model.StudyProgress
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
+import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
 import com.ssbmax.shared.domain.usecase.study.SaveStudyProgressUseCase
 import com.ssbmax.shared.domain.usecase.study.TrackStudySessionUseCase
-import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.content.Context
 
 /**
  * ViewModel for Study Material Detail Screen

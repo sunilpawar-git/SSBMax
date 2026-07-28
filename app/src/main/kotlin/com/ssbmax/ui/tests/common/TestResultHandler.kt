@@ -1,9 +1,9 @@
 package com.ssbmax.ui.tests.common
 
 import androidx.navigation.NavController
+import com.ssbmax.navigation.SSBMaxDestinations
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TestType
-import com.ssbmax.navigation.SSBMaxDestinations
 
 /**
  * Centralized handler for test result navigation based on subscription type

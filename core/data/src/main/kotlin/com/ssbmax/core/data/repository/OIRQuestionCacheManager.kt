@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
+import com.ssbmax.core.data.repository.OIRQuestionCacheManager.Companion.LEGACY_BATCH_COUNT
 import com.ssbmax.shared.domain.model.CacheStatus
 import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.shared.domain.model.OIRQuestionType

@@ -5,7 +5,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.ssbmax.core.data.remote.mapper.PsychTestMapper
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SDTSubmission
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import kotlinx.coroutines.channels.awaitClose

@@ -1,14 +1,15 @@
 package com.ssbmax.core.data.di
 
+import com.ssbmax.core.data.remote.FirestoreSubmissionRepository
 import com.ssbmax.core.data.repository.AnalyticsRepositoryImpl
 import com.ssbmax.core.data.repository.FirestoreGTORepository
 import com.ssbmax.core.data.repository.FirestoreInterviewRepository
 import com.ssbmax.core.data.repository.FirestoreQuestionCacheRepository
 import com.ssbmax.core.data.repository.GradingQueueRepositoryImpl
 import com.ssbmax.core.data.repository.NotificationRepositoryImpl
+import com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.repository.SubscriptionRepositoryImpl
-import com.ssbmax.core.data.repository.StudyProgressRepositoryImpl
 import com.ssbmax.core.data.repository.TestContentRepositoryImpl
 import com.ssbmax.core.data.repository.TestProgressRepositoryImpl
 import com.ssbmax.core.data.repository.TestRepositoryImpl
@@ -16,7 +17,6 @@ import com.ssbmax.core.data.repository.TestSessionManagerImpl
 import com.ssbmax.core.data.repository.TestSubmissionRepositoryImpl
 import com.ssbmax.core.data.repository.UnifiedResultRepositoryImpl
 import com.ssbmax.core.data.repository.UserProfileRepositoryImpl
-import com.ssbmax.core.data.remote.FirestoreSubmissionRepository
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.GTORepository

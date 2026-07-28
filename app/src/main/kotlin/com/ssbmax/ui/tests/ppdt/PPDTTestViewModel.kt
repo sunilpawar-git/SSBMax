@@ -12,7 +12,8 @@ import com.ssbmax.core.data.repository.TestEligibility
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.PPDTPhase
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
@@ -20,7 +21,6 @@ import com.ssbmax.ui.tests.common.BaseTestViewModel
 import com.ssbmax.ui.tests.common.TestNavigationEvent
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.PPDTAnalysisWorker
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

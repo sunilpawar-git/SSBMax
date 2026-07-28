@@ -16,12 +16,12 @@ import com.ssbmax.shared.domain.model.FCMToken
 import com.ssbmax.shared.domain.model.NotificationType
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.NotificationRepository
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.random.Random
 
 /**
  * Firebase Cloud Messaging Service for SSBMax

@@ -1,22 +1,40 @@
 package com.ssbmax.ui.tests.tat
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.ui.components.TestContentErrorState
 import com.ssbmax.ui.components.TestContentLoadingState
-import com.ssbmax.ui.tests.tat.components.*
-import com.ssbmax.ui.tests.tat.components.phases.*
+import com.ssbmax.ui.tests.tat.components.TATBottomBar
+import com.ssbmax.ui.tests.tat.components.TATExitDialog
+import com.ssbmax.ui.tests.tat.components.TATProfileRequiredDialog
+import com.ssbmax.ui.tests.tat.components.TATSubmitDialog
+import com.ssbmax.ui.tests.tat.components.phases.TATImageViewingPhase
+import com.ssbmax.ui.tests.tat.components.phases.TATInstructionsPhase
+import com.ssbmax.ui.tests.tat.components.phases.TATReviewPhase
+import com.ssbmax.ui.tests.tat.components.phases.TATWritingPhase
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * TAT Test Screen - 12 pictures with story writing

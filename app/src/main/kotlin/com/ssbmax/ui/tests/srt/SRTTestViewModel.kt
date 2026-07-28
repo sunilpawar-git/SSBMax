@@ -8,7 +8,12 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SRTPhase
+import com.ssbmax.shared.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.SRTSituationResponse
+import com.ssbmax.shared.domain.model.SRTSubmission
+import com.ssbmax.shared.domain.model.SRTTestConfig
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
@@ -28,7 +33,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 class SRTTestViewModel(
     private val testContentRepository: TestContentRepository,

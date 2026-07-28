@@ -1,5 +1,6 @@
 package com.ssbmax.ui.tests.oir
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -7,20 +8,22 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.ssbmax.R
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.core.data.util.MemoryLeakTracker
+import com.ssbmax.core.data.util.trackMemoryLeaks
+import com.ssbmax.shared.domain.model.OIRAnswer
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRTestConfig
+import com.ssbmax.shared.domain.model.OIRTestSession
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
-import com.ssbmax.core.data.util.MemoryLeakTracker
-import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.time.Clock
-import android.content.Context
+import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

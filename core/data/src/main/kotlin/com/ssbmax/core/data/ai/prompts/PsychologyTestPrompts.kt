@@ -1,9 +1,9 @@
 package com.ssbmax.core.data.ai.prompts
 
+import com.ssbmax.shared.domain.model.SDTSubmission
+import com.ssbmax.shared.domain.model.SRTSubmission
 import com.ssbmax.shared.domain.model.TATSubmission
 import com.ssbmax.shared.domain.model.WATSubmission
-import com.ssbmax.shared.domain.model.SRTSubmission
-import com.ssbmax.shared.domain.model.SDTSubmission
 
 /**
  * Optimized Psychology Test Prompts for Gemini AI

@@ -16,12 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.ui.components.result.UnifiedOLQResultTemplate
 import com.ssbmax.ui.tests.ppdt.components.PPDTOLQReasoningCard
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * PPDT Submission Result Screen - Shows story submission confirmation and pending review

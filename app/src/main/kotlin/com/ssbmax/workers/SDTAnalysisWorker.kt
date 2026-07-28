@@ -4,9 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import com.ssbmax.core.data.ai.prompts.PsychologyTestPrompts
+import com.ssbmax.notifications.NotificationHelper
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
@@ -15,13 +14,14 @@ import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.scoring.ScoringUtils
-import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.validation.ValidationIntegration
+import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class SDTAnalysisWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {

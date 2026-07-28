@@ -1,6 +1,19 @@
 package com.ssbmax.core.data.remote.mapper
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SDTInstructorScore
+import com.ssbmax.shared.domain.model.SDTQuestionResponse
+import com.ssbmax.shared.domain.model.SDTSubmission
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTInstructorScore
+import com.ssbmax.shared.domain.model.SRTSituationResponse
+import com.ssbmax.shared.domain.model.SRTSubmission
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TATInstructorScore
+import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.domain.model.TATSubmission
+import com.ssbmax.shared.domain.model.WATInstructorScore
+import com.ssbmax.shared.domain.model.WATSubmission
+import com.ssbmax.shared.domain.model.WATWordResponse
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 

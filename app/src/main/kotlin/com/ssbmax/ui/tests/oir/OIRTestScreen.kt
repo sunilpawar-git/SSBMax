@@ -7,11 +7,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.TestContentErrorState
@@ -19,6 +22,7 @@ import com.ssbmax.ui.components.TestContentLoadingState
 import com.ssbmax.ui.tests.oir.components.OIRQuestionView
 import com.ssbmax.ui.tests.oir.components.OIRTestBottomBar
 import com.ssbmax.ui.tests.oir.components.OIRTestTopBar
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * OIR Test Screen — main entry point.

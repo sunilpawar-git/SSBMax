@@ -10,7 +10,12 @@ import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.security.SecurityEventLogger
 import com.ssbmax.core.data.util.MemoryLeakTracker
 import com.ssbmax.core.data.util.trackMemoryLeaks
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.WATPhase
+import com.ssbmax.shared.domain.model.WATSubmission
+import com.ssbmax.shared.domain.model.WATTestConfig
+import com.ssbmax.shared.domain.model.WATWord
+import com.ssbmax.shared.domain.model.WATWordResponse
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository

@@ -5,15 +5,16 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
+import com.ssbmax.utils.DateFormatter
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import com.ssbmax.utils.DateFormatter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Calendar
+
 /**
  * ViewModel for Subscription Management Screen
  * REFACTORED: Now uses use cases instead of direct Firebase dependencies

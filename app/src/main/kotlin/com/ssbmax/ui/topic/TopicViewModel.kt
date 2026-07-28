@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.ssbmax.core.data.repository.ContentSource
 import com.ssbmax.core.data.repository.TopicContentData
 import com.ssbmax.shared.domain.config.ContentFeatureFlags
-import com.ssbmax.shared.domain.model.StudyMaterial
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.repository.InterviewRepository

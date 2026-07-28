@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.shared.domain.model.TATImageContext
@@ -22,6 +20,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.net.URL
 import java.util.UUID
 

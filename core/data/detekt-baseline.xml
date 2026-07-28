@@ -111,51 +111,28 @@
     <ID>UnusedPrivateProperty:SubscriptionRepositoryImpl.kt$SubscriptionRepositoryImpl$private val firebaseAuth: FirebaseAuth</ID>
     <ID>UseCheckOrError:FirebaseAuthService.kt$FirebaseAuthService$throw IllegalStateException("Web Client ID not found. Check google-services.json configuration.")</ID>
     <ID>VariableNaming:SubscriptionManager.kt$SubscriptionManager$private val TAG = "SubscriptionManager"</ID>
-    <ID>WildcardImport:AnalyticsRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:AnalyticsRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:AuthRepositoryImpl.kt$import kotlinx.coroutines.flow.*</ID>
     <ID>WildcardImport:AuthRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:CoreDataTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:EnhancedGTOPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:EnhancedInterviewPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:EnhancedPsychologyPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirebaseRulesValidationTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:FirestoreGTORepository.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
-    <ID>WildcardImport:FirestoreSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirestoreUserRepositoryTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:GPEImageCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:GTOTaskCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:GradingQueueRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:ImageUrlValidationTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:ImageUrlValidationTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:InterviewQuestionCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:MockTestDataProvider.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:NotificationDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:OIRCacheManagerIntegrationTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRCacheManagerIntegrationTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:OIRPersonalSubmissionDataSourceTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:OIRPersonalSubmissionDataSourceTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:OIRQuestionCacheDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:OIRQuestionSelectorTest.kt$import io.mockk.*</ID>
-    <ID>WildcardImport:PIQPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:PPDTImageCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:PPDTPersonalSubmissionDataSource.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:PPDTSubmissionMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:PersonalTestSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:PsychTestMapper.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PsychTestMapperTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:PsychTestMapperTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:PsychTestSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:SDTSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:SRTSituationCacheDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:SRTSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:StudyContentRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:StudyProgressRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:SubmissionMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubscriptionManagerEdgeCasesTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:SubscriptionManagerEdgeCasesTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SubscriptionManagerMasterTest.kt$import io.mockk.*</ID>
@@ -163,19 +140,11 @@
     <ID>WildcardImport:SubscriptionManagerSecurityTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:SubscriptionManagerSecurityTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SubscriptionRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:TATImageCacheDao.kt$import androidx.room.*</ID>
     <ID>WildcardImport:TATImageCacheManagerTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TATImageCacheManagerTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:TATSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:TestContentMappers.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:TestContentRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TestContentRepositoryImplTest.kt$import io.mockk.*</ID>
     <ID>WildcardImport:TestContentRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:TestDataFactory.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:TestProgressRepositoryImpl.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:TestRepositoryImplTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:UserPerformanceDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:WATSubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
-    <ID>WildcardImport:WATWordCacheDao.kt$import androidx.room.*</ID>
   </CurrentIssues>
 </SmellBaseline>

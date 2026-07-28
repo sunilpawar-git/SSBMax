@@ -3,7 +3,6 @@ package com.ssbmax.ui.ssboverview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssbmax.shared.domain.model.SSBInfoCard
-import com.ssbmax.shared.domain.model.SSBInfoIcon
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,6 +1,5 @@
 package com.ssbmax.ui.interview.start
 
-import com.ssbmax.shared.domain.model.interview.InterviewMode
 import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.model.interview.InterviewStatus
 import com.ssbmax.shared.domain.model.interview.PrerequisiteCheckResult

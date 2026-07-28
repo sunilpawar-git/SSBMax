@@ -5,12 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.ui.components.result.OLQResultContent
 import com.ssbmax.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.ui.components.result.UnifiedOLQResultTemplate
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * SRT Submission Result Screen - Shows AI analysis and pending instructor review

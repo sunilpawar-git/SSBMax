@@ -2,13 +2,13 @@ package com.ssbmax.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
 import com.ssbmax.shared.domain.repository.SubmissionRepository
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * Background worker to archive submissions older than 6 months

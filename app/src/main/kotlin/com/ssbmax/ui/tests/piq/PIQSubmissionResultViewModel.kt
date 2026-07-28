@@ -2,7 +2,16 @@ package com.ssbmax.ui.tests.piq
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.Education
+import com.ssbmax.shared.domain.model.ExtraCurricularActivity
+import com.ssbmax.shared.domain.model.NCCTraining
+import com.ssbmax.shared.domain.model.PIQAIScore
+import com.ssbmax.shared.domain.model.PIQSubmission
+import com.ssbmax.shared.domain.model.PreviousInterview
+import com.ssbmax.shared.domain.model.Sibling
+import com.ssbmax.shared.domain.model.SportsParticipation
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.WorkExperience
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.flow.MutableStateFlow

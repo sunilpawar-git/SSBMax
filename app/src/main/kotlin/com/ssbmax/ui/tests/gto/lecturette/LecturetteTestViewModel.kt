@@ -9,7 +9,6 @@ import com.ssbmax.shared.domain.model.gto.GTOTestType
 import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.ui.tests.gto.common.GTOTestEligibilityChecker
 import com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper
-import com.ssbmax.ui.tests.gto.common.GTOTestUtils
 import com.ssbmax.utils.ErrorLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

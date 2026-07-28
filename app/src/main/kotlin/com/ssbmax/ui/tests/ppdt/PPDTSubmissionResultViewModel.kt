@@ -2,9 +2,7 @@ package com.ssbmax.ui.tests.ppdt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssbmax.shared.domain.model.*
-import com.ssbmax.shared.domain.model.interview.OLQ
-import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.domain.model.PPDTSubmission
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
