@@ -74,285 +74,293 @@ class PIQSubmissionResultViewModel @Inject constructor(
     private fun parsePIQSubmission(data: Map<String, Any>): PIQSubmission? {
         return try {
             val submissionData = data["data"] as? Map<*, *> ?: return null
-            
-            // Parse siblings
-            val siblingsList = submissionData["siblings"] as? List<*> ?: emptyList<Any>()
-            val siblings = siblingsList.mapNotNull { siblingData ->
-                val sibling = siblingData as? Map<*, *> ?: return@mapNotNull null
-                Sibling(
-                    id = sibling["id"] as? String ?: "",
-                    name = sibling["name"] as? String ?: "",
-                    age = sibling["age"]?.toString() ?: "",
-                    occupation = sibling["occupation"] as? String ?: "",
-                    education = sibling["education"] as? String ?: "",
-                    income = sibling["income"] as? String ?: ""
-                )
-            }
-            
-            // Parse education
-            val education10thMap = submissionData["education10th"] as? Map<*, *>
-            val education10th = education10thMap?.let { eduMap ->
-                Education(
-                    level = eduMap["level"] as? String ?: "",
-                    institution = eduMap["institution"] as? String ?: "",
-                    board = eduMap["board"] as? String ?: "",
-                    stream = "",
-                    year = eduMap["year"]?.toString() ?: "",
-                    percentage = eduMap["percentage"]?.toString() ?: "",
-                    cgpa = "",
-                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
-                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
-                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
-                )
-            } ?: Education(level = "10th")
-            
-            val education12thMap = submissionData["education12th"] as? Map<*, *>
-            val education12th = education12thMap?.let { eduMap ->
-                Education(
-                    level = eduMap["level"] as? String ?: "",
-                    institution = eduMap["institution"] as? String ?: "",
-                    board = eduMap["board"] as? String ?: "",
-                    stream = eduMap["stream"] as? String ?: "",
-                    year = eduMap["year"]?.toString() ?: "",
-                    percentage = eduMap["percentage"]?.toString() ?: "",
-                    cgpa = "",
-                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
-                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
-                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
-                )
-            } ?: Education(level = "12th")
-            
-            val educationGraduationMap = submissionData["educationGraduation"] as? Map<*, *>
-            val educationGraduation = educationGraduationMap?.let { eduMap ->
-                Education(
-                    level = eduMap["level"] as? String ?: "",
-                    institution = eduMap["institution"] as? String ?: "",
-                    board = eduMap["board"] as? String ?: "",
-                    stream = "",
-                    year = eduMap["year"]?.toString() ?: "",
-                    percentage = "",
-                    cgpa = eduMap["cgpa"]?.toString() ?: "",
-                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
-                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
-                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
-                )
-            } ?: Education(level = "Graduation")
-            
-            val educationPostGraduationMap = submissionData["educationPostGraduation"] as? Map<*, *>
-            val educationPostGraduation = educationPostGraduationMap?.let { eduMap ->
-                Education(
-                    level = eduMap["level"] as? String ?: "",
-                    institution = eduMap["institution"] as? String ?: "",
-                    board = eduMap["board"] as? String ?: "",
-                    stream = "",
-                    year = eduMap["year"]?.toString() ?: "",
-                    percentage = "",
-                    cgpa = eduMap["cgpa"]?.toString() ?: "",
-                    mediumOfInstruction = eduMap["mediumOfInstruction"] as? String ?: "",
-                    boarderDayScholar = eduMap["boarderDayScholar"] as? String ?: "",
-                    outstandingAchievement = eduMap["outstandingAchievement"] as? String ?: ""
-                )
-            } ?: Education(level = "Post-Graduation")
-            
-            // Parse NCC Training
-            val nccTrainingMap = submissionData["nccTraining"] as? Map<*, *>
-            val nccTraining = nccTrainingMap?.let { nccMap ->
-                NCCTraining(
-                    hasTraining = nccMap["hasTraining"] as? Boolean ?: false,
-                    totalTraining = nccMap["totalTraining"] as? String ?: "",
-                    wing = nccMap["wing"] as? String ?: "",
-                    division = nccMap["division"] as? String ?: "",
-                    certificateObtained = nccMap["certificateObtained"] as? String ?: ""
-                )
-            } ?: NCCTraining()
-            
-            // Parse sports participation
-            val sportsParticipationList = submissionData["sportsParticipation"] as? List<*> ?: emptyList<Any>()
-            val sportsParticipation = sportsParticipationList.mapNotNull { sportData ->
-                val sport = sportData as? Map<*, *> ?: return@mapNotNull null
-                SportsParticipation(
-                    id = sport["id"] as? String ?: "",
-                    sport = sport["sport"] as? String ?: "",
-                    period = sport["period"] as? String ?: "",
-                    representedInstitution = sport["representedInstitution"] as? String ?: "",
-                    outstandingAchievement = sport["outstandingAchievement"] as? String ?: ""
-                )
-            }
-            
-            // Parse extra-curricular activities
-            val extraCurricularList = submissionData["extraCurricularActivities"] as? List<*> ?: emptyList<Any>()
-            val extraCurricularActivities = extraCurricularList.mapNotNull { activityData ->
-                val activity = activityData as? Map<*, *> ?: return@mapNotNull null
-                ExtraCurricularActivity(
-                    id = activity["id"] as? String ?: "",
-                    activityName = activity["activityName"] as? String ?: "",
-                    duration = activity["duration"] as? String ?: "",
-                    outstandingAchievement = activity["outstandingAchievement"] as? String ?: ""
-                )
-            }
-            
-            // Parse previous interviews
-            val previousInterviewsList = submissionData["previousInterviews"] as? List<*> ?: emptyList<Any>()
-            val previousInterviews = previousInterviewsList.mapNotNull { interviewData ->
-                val interview = interviewData as? Map<*, *> ?: return@mapNotNull null
-                PreviousInterview(
-                    id = interview["id"] as? String ?: "",
-                    typeOfEntry = interview["typeOfEntry"] as? String ?: "",
-                    ssbNumber = interview["ssbNumber"] as? String ?: "",
-                    ssbPlace = interview["ssbPlace"] as? String ?: "",
-                    date = interview["date"] as? String ?: "",
-                    chestNumber = interview["chestNumber"] as? String ?: "",
-                    batchNumber = interview["batchNumber"] as? String ?: ""
-                )
-            }
-            
-            // Parse work experience
-            val workExpList = submissionData["workExperience"] as? List<*> ?: emptyList<Any>()
-            val workExperience = workExpList.mapNotNull { workData ->
-                val work = workData as? Map<*, *> ?: return@mapNotNull null
-                WorkExperience(
-                    id = work["id"] as? String ?: "",
-                    company = work["company"] as? String ?: "",
-                    role = work["role"] as? String ?: "",
-                    duration = work["duration"] as? String ?: "",
-                    description = work["description"] as? String ?: ""
-                )
-            }
-            
-            // Parse AI Score
-            val aiScoreData = submissionData["aiPreliminaryScore"] as? Map<*, *>
-            val aiScore = aiScoreData?.let {
-                PIQAIScore(
-                    overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
-                    personalInfoScore = (it["personalInfoScore"] as? Number)?.toFloat() ?: 0f,
-                    familyInfoScore = (it["familyInfoScore"] as? Number)?.toFloat() ?: 0f,
-                    motivationScore = (it["motivationScore"] as? Number)?.toFloat() ?: 0f,
-                    selfAssessmentScore = (it["selfAssessmentScore"] as? Number)?.toFloat() ?: 0f,
-                    feedback = it["feedback"] as? String ?: "",
-                    strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
-                    areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList(),
-                    completenessPercentage = (it["completenessPercentage"] as? Number)?.toInt() ?: 0,
-                    clarityScore = (it["clarityScore"] as? Number)?.toFloat() ?: 0f,
-                    consistencyScore = (it["consistencyScore"] as? Number)?.toFloat() ?: 0f,
-                    analysisTimestamp = (it["analysisTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
-                )
-            }
 
-            PIQSubmission(
-                id = submissionData["id"] as? String ?: "",
-                userId = submissionData["userId"] as? String ?: "",
-                testId = submissionData["testId"] as? String ?: "",
-                
-                // Header Section
-                oirNumber = submissionData["oirNumber"] as? String ?: "",
-                selectionBoard = submissionData["selectionBoard"] as? String ?: "",
-                batchNumber = submissionData["batchNumber"] as? String ?: "",
-                chestNumber = submissionData["chestNumber"] as? String ?: "",
-                upscRollNumber = submissionData["upscRollNumber"] as? String ?: "",
-                
-                // Personal Information
-                fullName = submissionData["fullName"] as? String ?: "",
-                dateOfBirth = submissionData["dateOfBirth"] as? String ?: "",
-                age = submissionData["age"]?.toString() ?: "",
-                gender = submissionData["gender"] as? String ?: "",
-                phone = submissionData["phone"] as? String ?: "",
-                email = submissionData["email"] as? String ?: "",
-                
-                // Personal Details Table
-                state = submissionData["state"] as? String ?: "",
-                district = submissionData["district"] as? String ?: "",
-                religion = submissionData["religion"] as? String ?: "",
-                scStObcStatus = submissionData["scStObcStatus"] as? String ?: "",
-                motherTongue = submissionData["motherTongue"] as? String ?: "",
-                maritalStatus = submissionData["maritalStatus"] as? String ?: "",
-                
-                // Residence Information
-                permanentAddress = submissionData["permanentAddress"] as? String ?: "",
-                presentAddress = submissionData["presentAddress"] as? String ?: "",
-                maximumResidence = submissionData["maximumResidence"] as? String ?: "",
-                maximumResidencePopulation = submissionData["maximumResidencePopulation"] as? String ?: "",
-                presentResidencePopulation = submissionData["presentResidencePopulation"] as? String ?: "",
-                permanentResidencePopulation = submissionData["permanentResidencePopulation"] as? String ?: "",
-                isDistrictHQ = submissionData["isDistrictHQ"] as? Boolean ?: false,
-                
-                // Physical Details
-                height = submissionData["height"] as? String ?: "",
-                weight = submissionData["weight"] as? String ?: "",
-                
-                // Father details
-                fatherName = submissionData["fatherName"] as? String ?: "",
-                fatherOccupation = submissionData["fatherOccupation"] as? String ?: "",
-                fatherEducation = submissionData["fatherEducation"] as? String ?: "",
-                fatherIncome = submissionData["fatherIncome"] as? String ?: "",
-                
-                // Mother details
-                motherName = submissionData["motherName"] as? String ?: "",
-                motherOccupation = submissionData["motherOccupation"] as? String ?: "",
-                motherEducation = submissionData["motherEducation"] as? String ?: "",
-                
-                // Family Enhancement
-                parentsAlive = submissionData["parentsAlive"] as? String ?: "",
-                ageAtFatherDeath = submissionData["ageAtFatherDeath"] as? String ?: "",
-                ageAtMotherDeath = submissionData["ageAtMotherDeath"] as? String ?: "",
-                guardianName = submissionData["guardianName"] as? String ?: "",
-                guardianOccupation = submissionData["guardianOccupation"] as? String ?: "",
-                guardianEducation = submissionData["guardianEducation"] as? String ?: "",
-                guardianIncome = submissionData["guardianIncome"] as? String ?: "",
-                
-                // Siblings
-                siblings = siblings,
-                
-                // Occupation
-                presentOccupation = submissionData["presentOccupation"] as? String ?: "",
-                personalMonthlyIncome = submissionData["personalMonthlyIncome"] as? String ?: "",
-                
-                // Education
-                education10th = education10th,
-                education12th = education12th,
-                educationGraduation = educationGraduation,
-                educationPostGraduation = educationPostGraduation,
-                
-                // Activities
-                hobbies = submissionData["hobbies"] as? String ?: "",
-                sports = submissionData["sports"] as? String ?: "",
-                sportsParticipation = sportsParticipation,
-                extraCurricularActivities = extraCurricularActivities,
-                positionsOfResponsibility = submissionData["positionsOfResponsibility"] as? String ?: "",
-                
-                // Work Experience
-                workExperience = workExperience,
-                
-                // NCC Training
-                nccTraining = nccTraining,
-                
-                // Service Selection
-                natureOfCommission = submissionData["natureOfCommission"] as? String ?: "",
-                choiceOfService = submissionData["choiceOfService"] as? String ?: "",
-                chancesAvailed = submissionData["chancesAvailed"] as? String ?: "",
-                
-                // Previous Interviews
-                previousInterviews = previousInterviews,
-                
-                // Motivation & Self Assessment
-                whyDefenseForces = submissionData["whyDefenseForces"] as? String ?: "",
-                strengths = submissionData["strengths"] as? String ?: "",
-                weaknesses = submissionData["weaknesses"] as? String ?: "",
-                
-                // Metadata
-                status = try {
-                    SubmissionStatus.valueOf(submissionData["status"] as? String ?: "DRAFT")
-                } catch (e: Exception) {
-                    SubmissionStatus.DRAFT
-                },
-                submittedAt = (submissionData["submittedAt"] as? Number)?.toLong() ?: 0L,
-                lastModifiedAt = (submissionData["lastModifiedAt"] as? Number)?.toLong() ?: 0L,
-                gradedByInstructorId = submissionData["gradedByInstructorId"] as? String,
-                gradingTimestamp = (submissionData["gradingTimestamp"] as? Number)?.toLong(),
-                aiPreliminaryScore = aiScore
-            )
+            var submission = PIQSubmission(userId = submissionData["userId"] as? String ?: "")
+            submission = applyHeaderSection(submission, submissionData)
+            submission = applyPersonalInfoSection(submission, submissionData)
+            submission = applyResidenceSection(submission, submissionData)
+            submission = applyParentDetailsSection(submission, submissionData)
+            submission = applyGuardianAndSiblingsSection(submission, submissionData)
+            submission = applyEducationAndActivitiesSection(submission, submissionData)
+            submission = applyServiceAndMetadataSection(submission, submissionData)
+            submission
         } catch (e: Exception) {
             ErrorLogger.logTestError(e, "Error parsing PIQ submission data", "PIQ")
             null
+        }
+    }
+
+    private fun applyHeaderSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            id = submissionData["id"] as? String ?: submission.id,
+            testId = submissionData["testId"] as? String ?: submission.testId,
+            oirNumber = submissionData["oirNumber"] as? String ?: "",
+            selectionBoard = submissionData["selectionBoard"] as? String ?: "",
+            batchNumber = submissionData["batchNumber"] as? String ?: "",
+            chestNumber = submissionData["chestNumber"] as? String ?: "",
+            upscRollNumber = submissionData["upscRollNumber"] as? String ?: ""
+        )
+    }
+
+    private fun applyPersonalInfoSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            fullName = submissionData["fullName"] as? String ?: "",
+            dateOfBirth = submissionData["dateOfBirth"] as? String ?: "",
+            age = submissionData["age"]?.toString() ?: "",
+            gender = submissionData["gender"] as? String ?: "",
+            phone = submissionData["phone"] as? String ?: "",
+            email = submissionData["email"] as? String ?: "",
+            state = submissionData["state"] as? String ?: "",
+            district = submissionData["district"] as? String ?: "",
+            religion = submissionData["religion"] as? String ?: "",
+            scStObcStatus = submissionData["scStObcStatus"] as? String ?: "",
+            motherTongue = submissionData["motherTongue"] as? String ?: "",
+            maritalStatus = submissionData["maritalStatus"] as? String ?: ""
+        )
+    }
+
+    private fun applyResidenceSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            permanentAddress = submissionData["permanentAddress"] as? String ?: "",
+            presentAddress = submissionData["presentAddress"] as? String ?: "",
+            maximumResidence = submissionData["maximumResidence"] as? String ?: "",
+            maximumResidencePopulation = submissionData["maximumResidencePopulation"] as? String ?: "",
+            presentResidencePopulation = submissionData["presentResidencePopulation"] as? String ?: "",
+            permanentResidencePopulation = submissionData["permanentResidencePopulation"] as? String ?: "",
+            isDistrictHQ = submissionData["isDistrictHQ"] as? Boolean ?: false,
+            height = submissionData["height"] as? String ?: "",
+            weight = submissionData["weight"] as? String ?: ""
+        )
+    }
+
+    private fun applyParentDetailsSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            fatherName = submissionData["fatherName"] as? String ?: "",
+            fatherOccupation = submissionData["fatherOccupation"] as? String ?: "",
+            fatherEducation = submissionData["fatherEducation"] as? String ?: "",
+            fatherIncome = submissionData["fatherIncome"] as? String ?: "",
+            motherName = submissionData["motherName"] as? String ?: "",
+            motherOccupation = submissionData["motherOccupation"] as? String ?: "",
+            motherEducation = submissionData["motherEducation"] as? String ?: "",
+            parentsAlive = submissionData["parentsAlive"] as? String ?: "",
+            ageAtFatherDeath = submissionData["ageAtFatherDeath"] as? String ?: "",
+            ageAtMotherDeath = submissionData["ageAtMotherDeath"] as? String ?: ""
+        )
+    }
+
+    private fun applyGuardianAndSiblingsSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            guardianName = submissionData["guardianName"] as? String ?: "",
+            guardianOccupation = submissionData["guardianOccupation"] as? String ?: "",
+            guardianEducation = submissionData["guardianEducation"] as? String ?: "",
+            guardianIncome = submissionData["guardianIncome"] as? String ?: "",
+            siblings = parseSiblings(submissionData["siblings"] as? List<*>),
+            presentOccupation = submissionData["presentOccupation"] as? String ?: "",
+            personalMonthlyIncome = submissionData["personalMonthlyIncome"] as? String ?: ""
+        )
+    }
+
+    private fun applyEducationAndActivitiesSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            education10th = parseEducation10th(submissionData["education10th"] as? Map<*, *>),
+            education12th = parseEducation12th(submissionData["education12th"] as? Map<*, *>),
+            educationGraduation = parseEducationGraduation(submissionData["educationGraduation"] as? Map<*, *>),
+            educationPostGraduation = parseEducationPostGraduation(submissionData["educationPostGraduation"] as? Map<*, *>),
+            hobbies = submissionData["hobbies"] as? String ?: "",
+            sports = submissionData["sports"] as? String ?: "",
+            sportsParticipation = parseSportsParticipation(submissionData["sportsParticipation"] as? List<*>),
+            extraCurricularActivities = parseExtraCurricularActivities(submissionData["extraCurricularActivities"] as? List<*>),
+            positionsOfResponsibility = submissionData["positionsOfResponsibility"] as? String ?: "",
+            workExperience = parseWorkExperience(submissionData["workExperience"] as? List<*>),
+            nccTraining = parseNccTraining(submissionData["nccTraining"] as? Map<*, *>)
+        )
+    }
+
+    private fun applyServiceAndMetadataSection(submission: PIQSubmission, submissionData: Map<*, *>): PIQSubmission {
+        return submission.copy(
+            natureOfCommission = submissionData["natureOfCommission"] as? String ?: "",
+            choiceOfService = submissionData["choiceOfService"] as? String ?: "",
+            chancesAvailed = submissionData["chancesAvailed"] as? String ?: "",
+            previousInterviews = parsePreviousInterviews(submissionData["previousInterviews"] as? List<*>),
+            whyDefenseForces = submissionData["whyDefenseForces"] as? String ?: "",
+            strengths = submissionData["strengths"] as? String ?: "",
+            weaknesses = submissionData["weaknesses"] as? String ?: "",
+            status = try {
+                SubmissionStatus.valueOf(submissionData["status"] as? String ?: "DRAFT")
+            } catch (e: Exception) {
+                SubmissionStatus.DRAFT
+            },
+            submittedAt = (submissionData["submittedAt"] as? Number)?.toLong() ?: 0L,
+            lastModifiedAt = (submissionData["lastModifiedAt"] as? Number)?.toLong() ?: 0L,
+            gradedByInstructorId = submissionData["gradedByInstructorId"] as? String,
+            gradingTimestamp = (submissionData["gradingTimestamp"] as? Number)?.toLong(),
+            aiPreliminaryScore = parseAiScore(submissionData["aiPreliminaryScore"] as? Map<*, *>)
+        )
+    }
+
+    private fun parseSiblings(siblingsList: List<*>?): List<Sibling> {
+        return (siblingsList ?: emptyList<Any>()).mapNotNull { siblingData ->
+            val sibling = siblingData as? Map<*, *> ?: return@mapNotNull null
+            Sibling(
+                id = sibling["id"] as? String ?: "",
+                name = sibling["name"] as? String ?: "",
+                age = sibling["age"]?.toString() ?: "",
+                occupation = sibling["occupation"] as? String ?: "",
+                education = sibling["education"] as? String ?: "",
+                income = sibling["income"] as? String ?: ""
+            )
+        }
+    }
+
+    private fun parseEducation10th(eduMap: Map<*, *>?): Education {
+        return eduMap?.let {
+            Education(
+                level = it["level"] as? String ?: "",
+                institution = it["institution"] as? String ?: "",
+                board = it["board"] as? String ?: "",
+                stream = "",
+                year = it["year"]?.toString() ?: "",
+                percentage = it["percentage"]?.toString() ?: "",
+                cgpa = "",
+                mediumOfInstruction = it["mediumOfInstruction"] as? String ?: "",
+                boarderDayScholar = it["boarderDayScholar"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        } ?: Education(level = "10th")
+    }
+
+    private fun parseEducation12th(eduMap: Map<*, *>?): Education {
+        return eduMap?.let {
+            Education(
+                level = it["level"] as? String ?: "",
+                institution = it["institution"] as? String ?: "",
+                board = it["board"] as? String ?: "",
+                stream = it["stream"] as? String ?: "",
+                year = it["year"]?.toString() ?: "",
+                percentage = it["percentage"]?.toString() ?: "",
+                cgpa = "",
+                mediumOfInstruction = it["mediumOfInstruction"] as? String ?: "",
+                boarderDayScholar = it["boarderDayScholar"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        } ?: Education(level = "12th")
+    }
+
+    private fun parseEducationGraduation(eduMap: Map<*, *>?): Education {
+        return eduMap?.let {
+            Education(
+                level = it["level"] as? String ?: "",
+                institution = it["institution"] as? String ?: "",
+                board = it["board"] as? String ?: "",
+                stream = "",
+                year = it["year"]?.toString() ?: "",
+                percentage = "",
+                cgpa = it["cgpa"]?.toString() ?: "",
+                mediumOfInstruction = it["mediumOfInstruction"] as? String ?: "",
+                boarderDayScholar = it["boarderDayScholar"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        } ?: Education(level = "Graduation")
+    }
+
+    private fun parseEducationPostGraduation(eduMap: Map<*, *>?): Education {
+        return eduMap?.let {
+            Education(
+                level = it["level"] as? String ?: "",
+                institution = it["institution"] as? String ?: "",
+                board = it["board"] as? String ?: "",
+                stream = "",
+                year = it["year"]?.toString() ?: "",
+                percentage = "",
+                cgpa = it["cgpa"]?.toString() ?: "",
+                mediumOfInstruction = it["mediumOfInstruction"] as? String ?: "",
+                boarderDayScholar = it["boarderDayScholar"] as? String ?: "",
+                outstandingAchievement = it["outstandingAchievement"] as? String ?: ""
+            )
+        } ?: Education(level = "Post-Graduation")
+    }
+
+    private fun parseNccTraining(nccMap: Map<*, *>?): NCCTraining {
+        return nccMap?.let {
+            NCCTraining(
+                hasTraining = it["hasTraining"] as? Boolean ?: false,
+                totalTraining = it["totalTraining"] as? String ?: "",
+                wing = it["wing"] as? String ?: "",
+                division = it["division"] as? String ?: "",
+                certificateObtained = it["certificateObtained"] as? String ?: ""
+            )
+        } ?: NCCTraining()
+    }
+
+    private fun parseSportsParticipation(sportsList: List<*>?): List<SportsParticipation> {
+        return (sportsList ?: emptyList<Any>()).mapNotNull { sportData ->
+            val sport = sportData as? Map<*, *> ?: return@mapNotNull null
+            SportsParticipation(
+                id = sport["id"] as? String ?: "",
+                sport = sport["sport"] as? String ?: "",
+                period = sport["period"] as? String ?: "",
+                representedInstitution = sport["representedInstitution"] as? String ?: "",
+                outstandingAchievement = sport["outstandingAchievement"] as? String ?: ""
+            )
+        }
+    }
+
+    private fun parseExtraCurricularActivities(activitiesList: List<*>?): List<ExtraCurricularActivity> {
+        return (activitiesList ?: emptyList<Any>()).mapNotNull { activityData ->
+            val activity = activityData as? Map<*, *> ?: return@mapNotNull null
+            ExtraCurricularActivity(
+                id = activity["id"] as? String ?: "",
+                activityName = activity["activityName"] as? String ?: "",
+                duration = activity["duration"] as? String ?: "",
+                outstandingAchievement = activity["outstandingAchievement"] as? String ?: ""
+            )
+        }
+    }
+
+    private fun parsePreviousInterviews(interviewsList: List<*>?): List<PreviousInterview> {
+        return (interviewsList ?: emptyList<Any>()).mapNotNull { interviewData ->
+            val interview = interviewData as? Map<*, *> ?: return@mapNotNull null
+            PreviousInterview(
+                id = interview["id"] as? String ?: "",
+                typeOfEntry = interview["typeOfEntry"] as? String ?: "",
+                ssbNumber = interview["ssbNumber"] as? String ?: "",
+                ssbPlace = interview["ssbPlace"] as? String ?: "",
+                date = interview["date"] as? String ?: "",
+                chestNumber = interview["chestNumber"] as? String ?: "",
+                batchNumber = interview["batchNumber"] as? String ?: ""
+            )
+        }
+    }
+
+    private fun parseWorkExperience(workExpList: List<*>?): List<WorkExperience> {
+        return (workExpList ?: emptyList<Any>()).mapNotNull { workData ->
+            val work = workData as? Map<*, *> ?: return@mapNotNull null
+            WorkExperience(
+                id = work["id"] as? String ?: "",
+                company = work["company"] as? String ?: "",
+                role = work["role"] as? String ?: "",
+                duration = work["duration"] as? String ?: "",
+                description = work["description"] as? String ?: ""
+            )
+        }
+    }
+
+    private fun parseAiScore(aiScoreData: Map<*, *>?): PIQAIScore? {
+        return aiScoreData?.let {
+            PIQAIScore(
+                overallScore = (it["overallScore"] as? Number)?.toFloat() ?: 0f,
+                personalInfoScore = (it["personalInfoScore"] as? Number)?.toFloat() ?: 0f,
+                familyInfoScore = (it["familyInfoScore"] as? Number)?.toFloat() ?: 0f,
+                motivationScore = (it["motivationScore"] as? Number)?.toFloat() ?: 0f,
+                selfAssessmentScore = (it["selfAssessmentScore"] as? Number)?.toFloat() ?: 0f,
+                feedback = it["feedback"] as? String ?: "",
+                strengths = (it["strengths"] as? List<*>)?.mapNotNull { s -> s as? String } ?: emptyList(),
+                areasForImprovement = (it["areasForImprovement"] as? List<*>)?.mapNotNull { a -> a as? String } ?: emptyList(),
+                completenessPercentage = (it["completenessPercentage"] as? Number)?.toInt() ?: 0,
+                clarityScore = (it["clarityScore"] as? Number)?.toFloat() ?: 0f,
+                consistencyScore = (it["consistencyScore"] as? Number)?.toFloat() ?: 0f,
+                analysisTimestamp = (it["analysisTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis()
+            )
         }
     }
 }

@@ -288,112 +288,30 @@ class PIQTestViewModel @Inject constructor(
             Log.d(TAG, "════════════════════════════════════════")
             Log.d(TAG, "📤 PIQ: submitTest() called")
             Log.d(TAG, "════════════════════════════════════════")
-            
+
             _uiState.update { it.copy(isLoading = true) }
 
             var currentUserId: String? = null
             try {
-                // Step 1: Get current user
-                Log.d(TAG, "📍 PIQ Step 1: Getting current user...")
-                currentUserId = withTimeout(3000L) { // 3 second timeout for auth state
-                    observeCurrentUser().first()?.id
-                } ?: run {
-                    ErrorLogger.log(Exception("User not authenticated during PIQ submission"), "PIQ submission failed: user not authenticated")
-                    securityLogger.logUnauthenticatedAccess(
-                        testType = TestType.PIQ,
-                        context = "PIQTestViewModel.submitTest"
-                    )
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = "Please login to submit PIQ"
-                    ) }
-                    return@launch
-                }
-                Log.d(TAG, "✅ PIQ: User ID: $currentUserId")
-                
-                // Step 2: Check subscription eligibility
-                Log.d(TAG, "📍 PIQ Step 2: Checking subscription eligibility...")
-                val eligibility = subscriptionManager.canTakeTest(TestType.PIQ, currentUserId)
-                when (eligibility) {
-                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
-                        Log.w(TAG, "⚠️ PIQ: Subscription limit reached")
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            error = "Monthly PIQ limit reached. Upgrade to submit more tests."
-                        ) }
-                        return@launch
-                    }
-                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
-                        _uiState.update { it.copy(isLoading = false, error = "No connection. Please check your network and try again.") }
-                        return@launch
-                    }
-                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
-                        Log.d(TAG, "✅ PIQ: Eligible (${eligibility.remainingTests} tests remaining)")
-                    }
-                }
-                
-                // Step 3: Get user profile for subscription type
-                Log.d(TAG, "📍 PIQ Step 3: Getting user profile...")
-                val userProfileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
-                    userProfileRepository.getUserProfile(currentUserId).first()
-                }
-                val userProfile = userProfileResult.getOrNull()
-                val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
-                Log.d(TAG, "✅ PIQ: Subscription type: $subscriptionType")
-                
+                currentUserId = resolveEligibleUserId() ?: return@launch
+
                 // Step 4: Create submission
                 Log.d(TAG, "📍 PIQ Step 4: Creating submission...")
                 val submission = createSubmissionFromState(currentUserId, SubmissionStatus.SUBMITTED_PENDING_REVIEW)
                 Log.d(TAG, "✅ PIQ: Submission created")
-                
+
                 // Step 4.5: Generate AI quality score
                 Log.d(TAG, "📍 PIQ Step 4.5: Generating AI quality score...")
                 val aiScore = generateMockAIScore(submission)
                 val submissionWithAI = submission.copy(aiPreliminaryScore = aiScore)
                 Log.d(TAG, "✅ PIQ: AI score generated - Overall: ${aiScore.overallScore}/100")
-                
+
                 // Step 5: Submit to Firestore
                 Log.d(TAG, "📍 PIQ Step 5: Submitting to Firestore...")
                 val result = submissionRepository.submitPIQ(submissionWithAI, batchId = null)
-                
+
                 result.onSuccess { submissionId ->
-                    Log.d(TAG, "✅ PIQ: Successfully submitted with ID: $submissionId")
-                    
-                    // Step 6: Record usage
-                    Log.d(TAG, "📍 PIQ Step 6: Recording test usage...")
-                    subscriptionManager.recordTestUsage(TestType.PIQ, currentUserId, submissionId)
-                    Log.d(TAG, "✅ PIQ: Usage recorded")
-
-                    // Invalidate OLQ dashboard cache (user just completed a test)
-                    Log.d(TAG, "📍 PIQ: Invalidating OLQ dashboard cache...")
-                    getOLQDashboard.invalidateCache(currentUserId)
-                    Log.d(TAG, "✅ PIQ: Dashboard cache invalidated!")
-
-                    // Step 7: Track performance (PIQ is reference data, so 100% completion)
-                    Log.d(TAG, "📍 PIQ Step 7: Recording performance...")
-                    difficultyManager.recordPerformance(
-                        testType = "PIQ",
-                        difficulty = "STANDARD",
-                        score = 100f,
-                        correctAnswers = 1,
-                        totalQuestions = 1,
-                        timeSeconds = 0f
-                    )
-                    Log.d(TAG, "✅ PIQ: Performance recorded")
-
-                    // Step 8: Trigger background question generation
-                    Log.d(TAG, "📍 PIQ Step 8: Triggering background question generation...")
-                    triggerBackgroundQuestionGeneration(submissionId)
-
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        submissionComplete = true,
-                        submissionId = submissionId
-                    ) }
-                    
-                    Log.d(TAG, "════════════════════════════════════════")
-                    Log.d(TAG, "✅ PIQ: Submission complete!")
-                    Log.d(TAG, "════════════════════════════════════════")
+                    handleSubmissionSuccess(currentUserId, submissionId)
                 }.onFailure { error ->
                     ErrorLogger.log(error, "Failed to submit PIQ test for user: $currentUserId")
                     _uiState.update { it.copy(
@@ -409,6 +327,103 @@ class PIQTestViewModel @Inject constructor(
                 ) }
             }
         }
+    }
+
+    /**
+     * Resolve the current authenticated user and verify subscription eligibility.
+     * Updates UI state and returns null if the user should not proceed with submission.
+     */
+    private suspend fun resolveEligibleUserId(): String? {
+        // Step 1: Get current user
+        Log.d(TAG, "📍 PIQ Step 1: Getting current user...")
+        val currentUserId = withTimeout(3000L) { // 3 second timeout for auth state
+            observeCurrentUser().first()?.id
+        }
+        if (currentUserId == null) {
+            ErrorLogger.log(Exception("User not authenticated during PIQ submission"), "PIQ submission failed: user not authenticated")
+            securityLogger.logUnauthenticatedAccess(
+                testType = TestType.PIQ,
+                context = "PIQTestViewModel.submitTest"
+            )
+            _uiState.update { it.copy(
+                isLoading = false,
+                error = "Please login to submit PIQ"
+            ) }
+            return null
+        }
+        Log.d(TAG, "✅ PIQ: User ID: $currentUserId")
+
+        // Step 2: Check subscription eligibility
+        Log.d(TAG, "📍 PIQ Step 2: Checking subscription eligibility...")
+        val eligibility = subscriptionManager.canTakeTest(TestType.PIQ, currentUserId)
+        when (eligibility) {
+            is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                Log.w(TAG, "⚠️ PIQ: Subscription limit reached")
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "Monthly PIQ limit reached. Upgrade to submit more tests."
+                ) }
+                return null
+            }
+            is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                _uiState.update { it.copy(isLoading = false, error = "No connection. Please check your network and try again.") }
+                return null
+            }
+            is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                Log.d(TAG, "✅ PIQ: Eligible (${eligibility.remainingTests} tests remaining)")
+            }
+        }
+
+        // Step 3: Get user profile for subscription type
+        Log.d(TAG, "📍 PIQ Step 3: Getting user profile...")
+        val userProfileResult = withTimeout(5000L) { // 5 second timeout for user profile fetch
+            userProfileRepository.getUserProfile(currentUserId).first()
+        }
+        val userProfile = userProfileResult.getOrNull()
+        val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
+        Log.d(TAG, "✅ PIQ: Subscription type: $subscriptionType")
+
+        return currentUserId
+    }
+
+    private suspend fun handleSubmissionSuccess(userId: String, submissionId: String) {
+        Log.d(TAG, "✅ PIQ: Successfully submitted with ID: $submissionId")
+
+        // Step 6: Record usage
+        Log.d(TAG, "📍 PIQ Step 6: Recording test usage...")
+        subscriptionManager.recordTestUsage(TestType.PIQ, userId, submissionId)
+        Log.d(TAG, "✅ PIQ: Usage recorded")
+
+        // Invalidate OLQ dashboard cache (user just completed a test)
+        Log.d(TAG, "📍 PIQ: Invalidating OLQ dashboard cache...")
+        getOLQDashboard.invalidateCache(userId)
+        Log.d(TAG, "✅ PIQ: Dashboard cache invalidated!")
+
+        // Step 7: Track performance (PIQ is reference data, so 100% completion)
+        Log.d(TAG, "📍 PIQ Step 7: Recording performance...")
+        difficultyManager.recordPerformance(
+            testType = "PIQ",
+            difficulty = "STANDARD",
+            score = 100f,
+            correctAnswers = 1,
+            totalQuestions = 1,
+            timeSeconds = 0f
+        )
+        Log.d(TAG, "✅ PIQ: Performance recorded")
+
+        // Step 8: Trigger background question generation
+        Log.d(TAG, "📍 PIQ Step 8: Triggering background question generation...")
+        triggerBackgroundQuestionGeneration(submissionId)
+
+        _uiState.update { it.copy(
+            isLoading = false,
+            submissionComplete = true,
+            submissionId = submissionId
+        ) }
+
+        Log.d(TAG, "════════════════════════════════════════")
+        Log.d(TAG, "✅ PIQ: Submission complete!")
+        Log.d(TAG, "════════════════════════════════════════")
     }
 
     /**
@@ -465,40 +480,128 @@ class PIQTestViewModel @Inject constructor(
     private fun createSubmissionFromState(userId: String, status: SubmissionStatus): PIQSubmission {
         val state = _uiState.value
         val answers = state.answers
-        
-        // Parse siblings from answers map (elderSibling1_name, elderSibling2_name, etc.)
+
+        var submission = PIQSubmission(userId = userId, testId = testId)
+        submission = applyHeaderAnswers(submission, answers)
+        submission = applyPersonalInfoAnswers(submission, answers)
+        submission = applyResidenceAnswers(submission, answers)
+        submission = applyParentDetailsAnswers(submission, answers)
+        submission = applyGuardianAndSiblingsAnswers(submission, answers)
+        submission = applyEducationAndActivitiesAnswers(submission, answers, state)
+        submission = applyServiceAnswers(submission, answers, state, status)
+        return submission
+    }
+
+    private fun applyHeaderAnswers(submission: PIQSubmission, answers: Map<String, String>): PIQSubmission {
+        return submission.copy(
+            oirNumber = answers["oirNumber"] ?: "",
+            selectionBoard = answers["selectionBoard"] ?: "",
+            batchNumber = answers["batchNumber"] ?: "",
+            chestNumber = answers["chestNumber"] ?: "",
+            upscRollNumber = answers["upscRollNumber"] ?: ""
+        )
+    }
+
+    private fun applyPersonalInfoAnswers(submission: PIQSubmission, answers: Map<String, String>): PIQSubmission {
+        return submission.copy(
+            fullName = answers["fullName"] ?: "",
+            dateOfBirth = answers["dateOfBirth"] ?: "",
+            age = answers["age"] ?: "",
+            gender = "", // Not in actual SSB PIQ
+            phone = "", // Not in actual SSB PIQ
+            email = "", // Not in actual SSB PIQ
+            state = answers["state"] ?: "",
+            district = answers["district"] ?: "",
+            religion = answers["religion"] ?: "",
+            scStObcStatus = answers["scStObcStatus"] ?: "",
+            motherTongue = answers["motherTongue"] ?: "",
+            maritalStatus = answers["maritalStatus"] ?: ""
+        )
+    }
+
+    private fun applyResidenceAnswers(submission: PIQSubmission, answers: Map<String, String>): PIQSubmission {
+        return submission.copy(
+            permanentAddress = answers["permanentAddress"] ?: "",
+            presentAddress = answers["presentAddress"] ?: "",
+            maximumResidence = answers["maximumResidence"] ?: "",
+            maximumResidencePopulation = answers["maximumResidencePopulation"] ?: "",
+            presentResidencePopulation = answers["presentResidencePopulation"] ?: "",
+            permanentResidencePopulation = answers["permanentResidencePopulation"] ?: "",
+            isDistrictHQ = answers["isDistrictHQ"]?.toBoolean() ?: false,
+            height = answers["height"] ?: "",
+            weight = answers["weight"] ?: ""
+        )
+    }
+
+    private fun applyParentDetailsAnswers(submission: PIQSubmission, answers: Map<String, String>): PIQSubmission {
+        return submission.copy(
+            fatherName = answers["fatherName"] ?: "",
+            fatherOccupation = answers["fatherOccupation"] ?: "",
+            fatherEducation = answers["fatherEducation"] ?: "",
+            fatherIncome = answers["fatherIncome"] ?: "",
+            motherName = answers["motherName"] ?: "",
+            motherOccupation = answers["motherOccupation"] ?: "",
+            motherEducation = answers["motherEducation"] ?: "",
+            parentsAlive = answers["parentsAlive"] ?: "",
+            ageAtFatherDeath = answers["ageAtFatherDeath"] ?: "",
+            ageAtMotherDeath = answers["ageAtMotherDeath"] ?: ""
+        )
+    }
+
+    private fun applyGuardianAndSiblingsAnswers(submission: PIQSubmission, answers: Map<String, String>): PIQSubmission {
+        return submission.copy(
+            guardianName = answers["guardianName"] ?: "",
+            guardianOccupation = answers["guardianOccupation"] ?: "",
+            guardianEducation = answers["guardianEducation"] ?: "",
+            guardianIncome = answers["guardianIncome"] ?: "",
+            siblings = parseSiblingsFromAnswers(answers),
+            presentOccupation = answers["presentOccupation"] ?: "",
+            personalMonthlyIncome = answers["personalMonthlyIncome"] ?: ""
+        )
+    }
+
+    private fun parseSiblingsFromAnswers(answers: Map<String, String>): List<Sibling> {
         val siblings = mutableListOf<Sibling>()
-        // Parse elder siblings
-        repeat(2) { index ->
-            val prefix = "elderSibling${index + 1}_"
-            val name = answers["${prefix}name"] ?: ""
-            if (name.isNotBlank()) {
-                siblings.add(Sibling(
-                    name = name,
-                    age = answers["${prefix}age"] ?: "",
-                    education = answers["${prefix}education"] ?: "",
-                    occupation = answers["${prefix}occupation"] ?: "",
-                    income = answers["${prefix}income"] ?: ""
-                ))
+        for (prefixGroup in listOf("elderSibling", "youngerSibling")) {
+            repeat(2) { index ->
+                val prefix = "$prefixGroup${index + 1}_"
+                val name = answers["${prefix}name"] ?: ""
+                if (name.isNotBlank()) {
+                    siblings.add(Sibling(
+                        name = name,
+                        age = answers["${prefix}age"] ?: "",
+                        education = answers["${prefix}education"] ?: "",
+                        occupation = answers["${prefix}occupation"] ?: "",
+                        income = answers["${prefix}income"] ?: ""
+                    ))
+                }
             }
         }
-        // Parse younger siblings
-        repeat(2) { index ->
-            val prefix = "youngerSibling${index + 1}_"
-            val name = answers["${prefix}name"] ?: ""
-            if (name.isNotBlank()) {
-                siblings.add(Sibling(
-                    name = name,
-                    age = answers["${prefix}age"] ?: "",
-                    education = answers["${prefix}education"] ?: "",
-                    occupation = answers["${prefix}occupation"] ?: "",
-                    income = answers["${prefix}income"] ?: ""
-                ))
-            }
-        }
-        
-        // Parse education details
-        val education10th = Education(
+        return siblings
+    }
+
+    private fun applyEducationAndActivitiesAnswers(
+        submission: PIQSubmission,
+        answers: Map<String, String>,
+        state: PIQUiState
+    ): PIQSubmission {
+        return submission.copy(
+            education10th = parseEducation10thAnswers(answers),
+            education12th = parseEducation12thAnswers(answers),
+            educationGraduation = parseEducationGraduationAnswers(answers),
+            educationPostGraduation = parseEducationPostGraduationAnswers(answers),
+            hobbies = answers["hobbies"] ?: "",
+            sports = answers["sports"] ?: "", // Legacy field
+            sportsParticipation = state.sportsParticipation,
+            extraCurricularActivities = state.extraCurricularActivities,
+            positionsOfResponsibility = answers["positionsOfResponsibility"] ?: "",
+            workExperience = state.workExperience,
+            nccTraining = parseNccTrainingAnswers(answers)
+        )
+    }
+
+    private fun parseEducation10thAnswers(answers: Map<String, String>): Education {
+        return Education(
             level = "10th",
             institution = answers["education10th_institution"] ?: "",
             board = answers["education10th_board"] ?: "",
@@ -508,8 +611,10 @@ class PIQTestViewModel @Inject constructor(
             boarderDayScholar = answers["education10th_boarder"] ?: "",
             outstandingAchievement = answers["education10th_achievement"] ?: ""
         )
-        
-        val education12th = Education(
+    }
+
+    private fun parseEducation12thAnswers(answers: Map<String, String>): Education {
+        return Education(
             level = "12th",
             institution = answers["education12th_institution"] ?: "",
             board = answers["education12th_board"] ?: "",
@@ -520,8 +625,10 @@ class PIQTestViewModel @Inject constructor(
             boarderDayScholar = answers["education12th_boarder"] ?: "",
             outstandingAchievement = answers["education12th_achievement"] ?: ""
         )
-        
-        val educationGraduation = Education(
+    }
+
+    private fun parseEducationGraduationAnswers(answers: Map<String, String>): Education {
+        return Education(
             level = "Graduation",
             institution = answers["educationGrad_institution"] ?: "",
             board = answers["educationGrad_university"] ?: "",
@@ -531,8 +638,10 @@ class PIQTestViewModel @Inject constructor(
             boarderDayScholar = answers["educationGrad_boarder"] ?: "",
             outstandingAchievement = answers["educationGrad_achievement"] ?: ""
         )
-        
-        val educationPostGraduation = Education(
+    }
+
+    private fun parseEducationPostGraduationAnswers(answers: Map<String, String>): Education {
+        return Education(
             level = "Post-Graduation",
             institution = answers["educationPG_institution"] ?: "",
             board = answers["educationPG_university"] ?: "",
@@ -542,125 +651,32 @@ class PIQTestViewModel @Inject constructor(
             boarderDayScholar = answers["educationPG_boarder"] ?: "",
             outstandingAchievement = answers["educationPG_achievement"] ?: ""
         )
-        
-        // Parse NCC Training
-        val nccTraining = NCCTraining(
+    }
+
+    private fun parseNccTrainingAnswers(answers: Map<String, String>): NCCTraining {
+        return NCCTraining(
             hasTraining = answers["ncc_hasTraining"]?.toBoolean() ?: false,
             totalTraining = answers["ncc_totalTraining"] ?: "",
             wing = answers["ncc_wing"] ?: "",
             division = answers["ncc_division"] ?: "",
             certificateObtained = answers["ncc_certificate"] ?: ""
         )
-        
-        // Parse sports participation (from structured list in state)
-        val sportsParticipation = state.sportsParticipation
-        
-        // Parse extra-curricular activities
-        val extraCurricularActivities = state.extraCurricularActivities
-        
-        // Parse previous interviews
-        val previousInterviews = state.previousInterviews
-        
-        return PIQSubmission(
-            userId = userId,
-            testId = testId,
-            
-            // Header Section
-            oirNumber = answers["oirNumber"] ?: "",
-            selectionBoard = answers["selectionBoard"] ?: "",
-            batchNumber = answers["batchNumber"] ?: "",
-            chestNumber = answers["chestNumber"] ?: "",
-            upscRollNumber = answers["upscRollNumber"] ?: "",
-            
-            // Personal Information
-            fullName = answers["fullName"] ?: "",
-            dateOfBirth = answers["dateOfBirth"] ?: "",
-            age = answers["age"] ?: "",
-            gender = "", // Not in actual SSB PIQ
-            phone = "", // Not in actual SSB PIQ
-            email = "", // Not in actual SSB PIQ
-            
-            // Personal Details Table
-            state = answers["state"] ?: "",
-            district = answers["district"] ?: "",
-            religion = answers["religion"] ?: "",
-            scStObcStatus = answers["scStObcStatus"] ?: "",
-            motherTongue = answers["motherTongue"] ?: "",
-            maritalStatus = answers["maritalStatus"] ?: "",
-            
-            // Residence Information
-            permanentAddress = answers["permanentAddress"] ?: "",
-            presentAddress = answers["presentAddress"] ?: "",
-            maximumResidence = answers["maximumResidence"] ?: "",
-            maximumResidencePopulation = answers["maximumResidencePopulation"] ?: "",
-            presentResidencePopulation = answers["presentResidencePopulation"] ?: "",
-            permanentResidencePopulation = answers["permanentResidencePopulation"] ?: "",
-            isDistrictHQ = answers["isDistrictHQ"]?.toBoolean() ?: false,
-            
-            // Physical Details
-            height = answers["height"] ?: "",
-            weight = answers["weight"] ?: "",
-            
-            // Father details
-            fatherName = answers["fatherName"] ?: "",
-            fatherOccupation = answers["fatherOccupation"] ?: "",
-            fatherEducation = answers["fatherEducation"] ?: "",
-            fatherIncome = answers["fatherIncome"] ?: "",
-            
-            // Mother details
-            motherName = answers["motherName"] ?: "",
-            motherOccupation = answers["motherOccupation"] ?: "",
-            motherEducation = answers["motherEducation"] ?: "",
-            
-            // Family Enhancement
-            parentsAlive = answers["parentsAlive"] ?: "",
-            ageAtFatherDeath = answers["ageAtFatherDeath"] ?: "",
-            ageAtMotherDeath = answers["ageAtMotherDeath"] ?: "",
-            guardianName = answers["guardianName"] ?: "",
-            guardianOccupation = answers["guardianOccupation"] ?: "",
-            guardianEducation = answers["guardianEducation"] ?: "",
-            guardianIncome = answers["guardianIncome"] ?: "",
-            
-            // Siblings
-            siblings = siblings,
-            
-            // Occupation
-            presentOccupation = answers["presentOccupation"] ?: "",
-            personalMonthlyIncome = answers["personalMonthlyIncome"] ?: "",
-            
-            // Education
-            education10th = education10th,
-            education12th = education12th,
-            educationGraduation = educationGraduation,
-            educationPostGraduation = educationPostGraduation,
-            
-            // Activities
-            hobbies = answers["hobbies"] ?: "",
-            sports = answers["sports"] ?: "", // Legacy field
-            sportsParticipation = sportsParticipation,
-            extraCurricularActivities = extraCurricularActivities,
-            positionsOfResponsibility = answers["positionsOfResponsibility"] ?: "",
-            
-            // Work Experience (from state)
-            workExperience = state.workExperience,
-            
-            // NCC Training
-            nccTraining = nccTraining,
-            
-            // Service Selection
+    }
+
+    private fun applyServiceAnswers(
+        submission: PIQSubmission,
+        answers: Map<String, String>,
+        state: PIQUiState,
+        status: SubmissionStatus
+    ): PIQSubmission {
+        return submission.copy(
             natureOfCommission = answers["natureOfCommission"] ?: "",
             choiceOfService = answers["choiceOfService"] ?: "",
             chancesAvailed = answers["chancesAvailed"] ?: "",
-            
-            // Previous Interviews
-            previousInterviews = previousInterviews,
-            
-            // Motivation & Self Assessment
+            previousInterviews = state.previousInterviews,
             whyDefenseForces = answers["whyDefenseForces"] ?: "",
             strengths = "", // Not in actual SSB PIQ form - kept for backward compatibility
             weaknesses = "", // Not in actual SSB PIQ form - kept for backward compatibility
-            
-            // Metadata
             status = status,
             submittedAt = System.currentTimeMillis(),
             lastModifiedAt = state.lastModifiedAt

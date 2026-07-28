@@ -90,113 +90,128 @@ class OIRSubmissionResultViewModel @Inject constructor(
             val submissionData = data["data"] as? Map<*, *> ?: return null
             val resultData = submissionData["testResult"] as? Map<*, *> ?: return null
 
-            // Parse category scores
-            val categoryScoresMap = resultData["categoryScores"] as? Map<*, *> ?: emptyMap<String, Any>()
-            val categoryScores = categoryScoresMap.mapNotNull { (key, value) ->
-                val scoreData = value as? Map<*, *> ?: return@mapNotNull null
-                val categoryName = key as? String ?: return@mapNotNull null
+            val categoryScores = parseCategoryScores(resultData["categoryScores"] as? Map<*, *>)
+            val difficultyBreakdown = parseDifficultyBreakdown(resultData["difficultyBreakdown"] as? Map<*, *>)
+            val answeredQuestions = parseAnsweredQuestions(resultData["answeredQuestions"] as? List<*>)
 
-                try {
-                    val category = OIRQuestionType.valueOf(categoryName)
-                    val categoryScore = CategoryScore(
-                        category = category,
-                        totalQuestions = (scoreData["totalQuestions"] as? Number)?.toInt() ?: 0,
-                        correctAnswers = (scoreData["correctAnswers"] as? Number)?.toInt() ?: 0,
-                        percentage = (scoreData["percentage"] as? Number)?.toFloat() ?: 0f,
-                        averageTimeSeconds = (scoreData["averageTimeSeconds"] as? Number)?.toInt() ?: 0
-                    )
-                    category to categoryScore
-                } catch (e: Exception) {
-                    null
-                }
-            }.toMap()
-
-            // Parse difficulty breakdown
-            val difficultyBreakdownMap = resultData["difficultyBreakdown"] as? Map<*, *> ?: emptyMap<String, Any>()
-            val difficultyBreakdown = difficultyBreakdownMap.mapNotNull { (key, value) ->
-                val scoreData = value as? Map<*, *> ?: return@mapNotNull null
-                val difficultyName = key as? String ?: return@mapNotNull null
-
-                try {
-                    val difficulty = QuestionDifficulty.valueOf(difficultyName)
-                    val difficultyScore = DifficultyScore(
-                        difficulty = difficulty,
-                        totalQuestions = (scoreData["totalQuestions"] as? Number)?.toInt() ?: 0,
-                        correctAnswers = (scoreData["correctAnswers"] as? Number)?.toInt() ?: 0,
-                        percentage = (scoreData["percentage"] as? Number)?.toFloat() ?: 0f
-                    )
-                    difficulty to difficultyScore
-                } catch (e: Exception) {
-                    null
-                }
-            }.toMap()
-
-            // Parse answered questions (simplified - just store question IDs and basic data)
-            val answeredQuestionsList = resultData["answeredQuestions"] as? List<*> ?: emptyList<Any>()
-            val answeredQuestions = answeredQuestionsList.mapNotNull { aqData ->
-                val aq = aqData as? Map<*, *> ?: return@mapNotNull null
-
-                try {
-                    // Create minimal question object (we don't need full question data for result screen)
-                    val question = OIRQuestion(
-                        id = aq["questionId"] as? String ?: "",
-                        questionNumber = (aq["questionNumber"] as? Number)?.toInt() ?: 0,
-                        type = OIRQuestionType.valueOf(aq["questionType"] as? String ?: "VERBAL_REASONING"),
-                        questionText = aq["questionText"] as? String ?: "",
-                        options = emptyList(), // Not needed for result display
-                        correctAnswerId = aq["correctAnswerId"] as? String ?: "",
-                        explanation = "",
-                        difficulty = QuestionDifficulty.valueOf(aq["difficulty"] as? String ?: "MEDIUM")
-                    )
-
-                    val userAnswer = OIRAnswer(
-                        questionId = aq["questionId"] as? String ?: "",
-                        selectedOptionId = aq["selectedOptionId"] as? String,
-                        isCorrect = aq["isCorrect"] as? Boolean ?: false,
-                        timeTakenSeconds = (aq["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                        skipped = aq["skipped"] as? Boolean ?: false
-                    )
-
-                    // Create placeholder options for correct/selected
-                    val correctOption = OIROption(id = question.correctAnswerId, text = "")
-                    val selectedOption = userAnswer.selectedOptionId?.let {
-                        OIROption(id = it, text = "")
-                    }
-
-                    OIRAnsweredQuestion(
-                        question = question,
-                        userAnswer = userAnswer,
-                        isCorrect = aq["isCorrect"] as? Boolean ?: false,
-                        correctOption = correctOption,
-                        selectedOption = selectedOption
-                    )
-                } catch (e: Exception) {
-                    null
-                }
-            }
-
-            // Create the OIRTestResult object
-            OIRTestResult(
-                testId = resultData["testId"] as? String ?: "",
-                sessionId = resultData["sessionId"] as? String ?: "",
-                userId = resultData["userId"] as? String ?: "",
-                totalQuestions = (resultData["totalQuestions"] as? Number)?.toInt() ?: 0,
-                correctAnswers = (resultData["correctAnswers"] as? Number)?.toInt() ?: 0,
-                incorrectAnswers = (resultData["incorrectAnswers"] as? Number)?.toInt() ?: 0,
-                skippedQuestions = (resultData["skippedQuestions"] as? Number)?.toInt() ?: 0,
-                totalTimeSeconds = (resultData["totalTimeSeconds"] as? Number)?.toInt() ?: 0,
-                timeTakenSeconds = (resultData["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
-                rawScore = (resultData["rawScore"] as? Number)?.toInt() ?: 0,
-                percentageScore = (resultData["percentageScore"] as? Number)?.toFloat() ?: 0f,
-                categoryScores = categoryScores,
-                difficultyBreakdown = difficultyBreakdown,
-                answeredQuestions = answeredQuestions,
-                completedAt = (resultData["completedAt"] as? Number)?.toLong() ?: 0L
-            )
+            buildOIRTestResult(resultData, categoryScores, difficultyBreakdown, answeredQuestions)
         } catch (e: Exception) {
             ErrorLogger.logTestError(e, "Error parsing OIR test result data", "OIR")
             null
         }
+    }
+
+    private fun parseCategoryScores(categoryScoresMap: Map<*, *>?): Map<OIRQuestionType, CategoryScore> {
+        return (categoryScoresMap ?: emptyMap<String, Any>()).mapNotNull { (key, value) ->
+            val scoreData = value as? Map<*, *> ?: return@mapNotNull null
+            val categoryName = key as? String ?: return@mapNotNull null
+
+            try {
+                val category = OIRQuestionType.valueOf(categoryName)
+                val categoryScore = CategoryScore(
+                    category = category,
+                    totalQuestions = (scoreData["totalQuestions"] as? Number)?.toInt() ?: 0,
+                    correctAnswers = (scoreData["correctAnswers"] as? Number)?.toInt() ?: 0,
+                    percentage = (scoreData["percentage"] as? Number)?.toFloat() ?: 0f,
+                    averageTimeSeconds = (scoreData["averageTimeSeconds"] as? Number)?.toInt() ?: 0
+                )
+                category to categoryScore
+            } catch (e: Exception) {
+                null
+            }
+        }.toMap()
+    }
+
+    private fun parseDifficultyBreakdown(difficultyBreakdownMap: Map<*, *>?): Map<QuestionDifficulty, DifficultyScore> {
+        return (difficultyBreakdownMap ?: emptyMap<String, Any>()).mapNotNull { (key, value) ->
+            val scoreData = value as? Map<*, *> ?: return@mapNotNull null
+            val difficultyName = key as? String ?: return@mapNotNull null
+
+            try {
+                val difficulty = QuestionDifficulty.valueOf(difficultyName)
+                val difficultyScore = DifficultyScore(
+                    difficulty = difficulty,
+                    totalQuestions = (scoreData["totalQuestions"] as? Number)?.toInt() ?: 0,
+                    correctAnswers = (scoreData["correctAnswers"] as? Number)?.toInt() ?: 0,
+                    percentage = (scoreData["percentage"] as? Number)?.toFloat() ?: 0f
+                )
+                difficulty to difficultyScore
+            } catch (e: Exception) {
+                null
+            }
+        }.toMap()
+    }
+
+    private fun parseAnsweredQuestions(answeredQuestionsList: List<*>?): List<OIRAnsweredQuestion> {
+        return (answeredQuestionsList ?: emptyList<Any>()).mapNotNull { aqData ->
+            val aq = aqData as? Map<*, *> ?: return@mapNotNull null
+            parseSingleAnsweredQuestion(aq)
+        }
+    }
+
+    private fun parseSingleAnsweredQuestion(aq: Map<*, *>): OIRAnsweredQuestion? {
+        return try {
+            // Create minimal question object (we don't need full question data for result screen)
+            val question = OIRQuestion(
+                id = aq["questionId"] as? String ?: "",
+                questionNumber = (aq["questionNumber"] as? Number)?.toInt() ?: 0,
+                type = OIRQuestionType.valueOf(aq["questionType"] as? String ?: "VERBAL_REASONING"),
+                questionText = aq["questionText"] as? String ?: "",
+                options = emptyList(), // Not needed for result display
+                correctAnswerId = aq["correctAnswerId"] as? String ?: "",
+                explanation = "",
+                difficulty = QuestionDifficulty.valueOf(aq["difficulty"] as? String ?: "MEDIUM")
+            )
+
+            val userAnswer = OIRAnswer(
+                questionId = aq["questionId"] as? String ?: "",
+                selectedOptionId = aq["selectedOptionId"] as? String,
+                isCorrect = aq["isCorrect"] as? Boolean ?: false,
+                timeTakenSeconds = (aq["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+                skipped = aq["skipped"] as? Boolean ?: false
+            )
+
+            // Create placeholder options for correct/selected
+            val correctOption = OIROption(id = question.correctAnswerId, text = "")
+            val selectedOption = userAnswer.selectedOptionId?.let {
+                OIROption(id = it, text = "")
+            }
+
+            OIRAnsweredQuestion(
+                question = question,
+                userAnswer = userAnswer,
+                isCorrect = aq["isCorrect"] as? Boolean ?: false,
+                correctOption = correctOption,
+                selectedOption = selectedOption
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun buildOIRTestResult(
+        resultData: Map<*, *>,
+        categoryScores: Map<OIRQuestionType, CategoryScore>,
+        difficultyBreakdown: Map<QuestionDifficulty, DifficultyScore>,
+        answeredQuestions: List<OIRAnsweredQuestion>
+    ): OIRTestResult {
+        return OIRTestResult(
+            testId = resultData["testId"] as? String ?: "",
+            sessionId = resultData["sessionId"] as? String ?: "",
+            userId = resultData["userId"] as? String ?: "",
+            totalQuestions = (resultData["totalQuestions"] as? Number)?.toInt() ?: 0,
+            correctAnswers = (resultData["correctAnswers"] as? Number)?.toInt() ?: 0,
+            incorrectAnswers = (resultData["incorrectAnswers"] as? Number)?.toInt() ?: 0,
+            skippedQuestions = (resultData["skippedQuestions"] as? Number)?.toInt() ?: 0,
+            totalTimeSeconds = (resultData["totalTimeSeconds"] as? Number)?.toInt() ?: 0,
+            timeTakenSeconds = (resultData["timeTakenSeconds"] as? Number)?.toInt() ?: 0,
+            rawScore = (resultData["rawScore"] as? Number)?.toInt() ?: 0,
+            percentageScore = (resultData["percentageScore"] as? Number)?.toFloat() ?: 0f,
+            categoryScores = categoryScores,
+            difficultyBreakdown = difficultyBreakdown,
+            answeredQuestions = answeredQuestions,
+            completedAt = (resultData["completedAt"] as? Number)?.toLong() ?: 0L
+        )
     }
 }
 
