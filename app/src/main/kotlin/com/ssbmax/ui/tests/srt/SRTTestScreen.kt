@@ -89,52 +89,89 @@ fun SRTTestScreen(
                 modifier = Modifier.fillMaxSize()
             )
         }
-        else -> {
-            when (uiState.phase) {
-                SRTPhase.INSTRUCTIONS -> {
-                    SRTInstructionsView(
-                        onStart = { viewModel.startTest() },
-                        onNavigateBack = onNavigateBack
-                    )
-                }
-                SRTPhase.IN_PROGRESS -> {
-                    SRTInProgressView(
-                        situation = uiState.currentSituation?.situation ?: "",
-                        situationNumber = uiState.currentSituationIndex + 1,
-                        totalSituations = uiState.situations.size,
-                        timeRemaining = uiState.timeRemaining, // Added timeRemaining
-                        response = uiState.currentResponse,
-                        onResponseChange = { viewModel.updateResponse(it) },
-                        minChars = uiState.config?.minResponseLength ?: 0,
-                        maxChars = uiState.config?.maxResponseLength ?: 200,
-                        canMoveNext = uiState.canMoveToNext,
-                        onNext = { viewModel.moveToNext() },
-                        onSkip = { viewModel.skipSituation() },
-                        showExitDialog = showExitDialog,
-                        onShowExitDialog = { showExitDialog = true },
-                        onDismissExitDialog = { showExitDialog = false },
-                        onConfirmExit = onNavigateBack
-                    )
-                }
-                SRTPhase.REVIEW -> {
-                    SRTReviewView(
-                        responses = uiState.responses,
-                        totalSituations = uiState.situations.size,
-                        onEdit = { index -> viewModel.editResponse(index) },
-                        onSubmit = { showSubmitDialog = true }
-                    )
-                }
-                SRTPhase.COMPLETED, SRTPhase.SUBMITTED -> {
-                    // Handled by navigation
-                }
-            }
+        else -> SRTPhaseContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            showExitDialog = showExitDialog,
+            onShowExitDialog = { showExitDialog = true },
+            onDismissExitDialog = { showExitDialog = false },
+            onShowSubmitDialog = { showSubmitDialog = true },
+            onNavigateBack = onNavigateBack
+        )
+    }
+
+    SRTDialogs(
+        uiState = uiState,
+        showSubmitDialog = showSubmitDialog,
+        onDismissSubmitDialog = { showSubmitDialog = false },
+        onConfirmSubmit = {
+            showSubmitDialog = false
+            viewModel.submitTest()
+        }
+    )
+}
+
+@Composable
+private fun SRTPhaseContent(
+    uiState: SRTTestUiState,
+    viewModel: SRTTestViewModel,
+    showExitDialog: Boolean,
+    onShowExitDialog: () -> Unit,
+    onDismissExitDialog: () -> Unit,
+    onShowSubmitDialog: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    when (uiState.phase) {
+        SRTPhase.INSTRUCTIONS -> {
+            SRTInstructionsView(
+                onStart = { viewModel.startTest() },
+                onNavigateBack = onNavigateBack
+            )
+        }
+        SRTPhase.IN_PROGRESS -> {
+            SRTInProgressView(
+                situation = uiState.currentSituation?.situation ?: "",
+                situationNumber = uiState.currentSituationIndex + 1,
+                totalSituations = uiState.situations.size,
+                timeRemaining = uiState.timeRemaining, // Added timeRemaining
+                response = uiState.currentResponse,
+                onResponseChange = { viewModel.updateResponse(it) },
+                minChars = uiState.config?.minResponseLength ?: 0,
+                maxChars = uiState.config?.maxResponseLength ?: 200,
+                canMoveNext = uiState.canMoveToNext,
+                onNext = { viewModel.moveToNext() },
+                onSkip = { viewModel.skipSituation() },
+                showExitDialog = showExitDialog,
+                onShowExitDialog = onShowExitDialog,
+                onDismissExitDialog = onDismissExitDialog,
+                onConfirmExit = onNavigateBack
+            )
+        }
+        SRTPhase.REVIEW -> {
+            SRTReviewView(
+                responses = uiState.responses,
+                totalSituations = uiState.situations.size,
+                onEdit = { index -> viewModel.editResponse(index) },
+                onSubmit = onShowSubmitDialog
+            )
+        }
+        SRTPhase.COMPLETED, SRTPhase.SUBMITTED -> {
+            // Handled by navigation
         }
     }
-    
+}
+
+@Composable
+private fun SRTDialogs(
+    uiState: SRTTestUiState,
+    showSubmitDialog: Boolean,
+    onDismissSubmitDialog: () -> Unit,
+    onConfirmSubmit: () -> Unit
+) {
     // Submit confirmation dialog
     if (showSubmitDialog) {
         AlertDialog(
-            onDismissRequest = { showSubmitDialog = false },
+            onDismissRequest = onDismissSubmitDialog,
             title = { Text(stringResource(R.string.srt_submit_title)) },
             text = {
                 Column {
@@ -150,38 +187,35 @@ fun SRTTestScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    showSubmitDialog = false
-                    viewModel.submitTest()
-                }) {
+                Button(onClick = onConfirmSubmit) {
                     Text(stringResource(R.string.srt_submit))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showSubmitDialog = false }) {
+                TextButton(onClick = onDismissSubmitDialog) {
                     Text(stringResource(R.string.srt_cancel))
                 }
             }
         )
         // Time's Up Dialog (Non-dismissible)
-    if (uiState.isTimeUp) {
-        AlertDialog(
-            onDismissRequest = { /* No-op: Prevent dismissal */ },
-            title = { 
-                Text(
-                    text = stringResource(R.string.srt_time_up_title),
-                    color = MaterialTheme.colorScheme.error
-                ) 
-            },
-            text = { Text(stringResource(R.string.srt_time_up_message)) },
-            confirmButton = {}, // No buttons, auto-progresses
-            dismissButton = {},
-            properties = androidx.compose.ui.window.DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
+        if (uiState.isTimeUp) {
+            AlertDialog(
+                onDismissRequest = { /* No-op: Prevent dismissal */ },
+                title = {
+                    Text(
+                        text = stringResource(R.string.srt_time_up_title),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                },
+                text = { Text(stringResource(R.string.srt_time_up_message)) },
+                confirmButton = {}, // No buttons, auto-progresses
+                dismissButton = {},
+                properties = androidx.compose.ui.window.DialogProperties(
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false
+                )
             )
-        )
+        }
     }
-}
 }
 

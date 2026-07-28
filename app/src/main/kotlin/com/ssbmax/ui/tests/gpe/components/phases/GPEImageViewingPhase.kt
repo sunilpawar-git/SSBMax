@@ -73,60 +73,9 @@ fun GPEImageViewingPhase(
                 contentAlignment = Alignment.Center
             ) {
                 if (imageUrl.isEmpty()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.error_image_url_empty),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.check_logs),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    GPEImageMissingContent()
                 } else {
-                    val context = LocalContext.current
-
-                    LaunchedEffect(imageUrl) {
-                        android.util.Log.d("GPETestScreen", "🖼️ NEW URL SET: $imageUrl")
-                    }
-
-                    val imageRequest = remember(imageUrl) {
-                        android.util.Log.d("GPETestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
-                        ImageRequest.Builder(context)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .listener(
-                                onStart = {
-                                    android.util.Log.d("GPETestScreen", "🖼️ Coil: Loading started")
-                                },
-                                onSuccess = { _, _ ->
-                                    android.util.Log.d("GPETestScreen", "✅ Coil: Image loaded successfully!")
-                                },
-                                onError = { _, result ->
-                                    android.util.Log.e("GPETestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
-                                }
-                            )
-                            .build()
-                    }
-
-                    AsyncImage(
-                        model = imageRequest,
-                        contentDescription = stringResource(R.string.gpe_test_image),
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit,
-                        onLoading = {
-                            android.util.Log.d("GPETestScreen", "⏳ State: Loading")
-                        },
-                        onSuccess = {
-                            android.util.Log.d("GPETestScreen", "✅ State: Success")
-                        },
-                        onError = { state ->
-                            android.util.Log.e("GPETestScreen", "❌ State: Error: ${state.result.throwable.message}")
-                        },
-                        error = rememberVectorPainter(Icons.Filled.BrokenImage)
-                    )
+                    GPEScenarioImage(imageUrl)
                 }
             }
         }
@@ -137,4 +86,65 @@ fun GPEImageViewingPhase(
             color = MaterialTheme.colorScheme.primary,
         )
     }
+}
+
+@Composable
+private fun GPEImageMissingContent() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = stringResource(R.string.error_image_url_empty),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.check_logs),
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+
+@Composable
+private fun GPEScenarioImage(imageUrl: String) {
+    val context = LocalContext.current
+
+    LaunchedEffect(imageUrl) {
+        android.util.Log.d("GPETestScreen", "🖼️ NEW URL SET: $imageUrl")
+    }
+
+    val imageRequest = remember(imageUrl) {
+        android.util.Log.d("GPETestScreen", "🔄 Creating NEW ImageRequest for: $imageUrl")
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(true)
+            .listener(
+                onStart = {
+                    android.util.Log.d("GPETestScreen", "🖼️ Coil: Loading started")
+                },
+                onSuccess = { _, _ ->
+                    android.util.Log.d("GPETestScreen", "✅ Coil: Image loaded successfully!")
+                },
+                onError = { _, result ->
+                    android.util.Log.e("GPETestScreen", "❌ Coil: Load failed: ${result.throwable.message}", result.throwable)
+                }
+            )
+            .build()
+    }
+
+    AsyncImage(
+        model = imageRequest,
+        contentDescription = stringResource(R.string.gpe_test_image),
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Fit,
+        onLoading = {
+            android.util.Log.d("GPETestScreen", "⏳ State: Loading")
+        },
+        onSuccess = {
+            android.util.Log.d("GPETestScreen", "✅ State: Success")
+        },
+        onError = { state ->
+            android.util.Log.e("GPETestScreen", "❌ State: Error: ${state.result.throwable.message}")
+        },
+        error = rememberVectorPainter(Icons.Filled.BrokenImage)
+    )
 }

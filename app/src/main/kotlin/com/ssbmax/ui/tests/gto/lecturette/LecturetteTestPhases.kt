@@ -67,114 +67,132 @@ fun InstructionsPhase(
             )
         }
     ) { padding ->
-        Column(
+        LecturetteInstructionsContent(
+            onStart = onStart,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        )
+    }
+}
+
+@Composable
+private fun LecturetteInstructionsContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.RecordVoiceOver,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Lecturette Test",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Deliver a 3-minute speech on a topic of your choice",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        LecturetteInstructionsCard()
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        LecturetteTipCard()
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onStart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            Text("Continue to Topic Selection", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun LecturetteInstructionsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            InstructionItem(
+                icon = Icons.AutoMirrored.Filled.ListAlt,
+                title = "4 Topic Choices",
+                description = "Select 1 topic from 4 options"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.Default.Timer,
+                title = "3 Minutes",
+                description = "No preparation time - speak immediately"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.Default.Edit,
+                title = "Speech Input",
+                description = "Type your speech (50-1500 characters)"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
+                title = "White Noise",
+                description = "Background noise simulates real GTO environment"
+            )
+        }
+    }
+}
+
+@Composable
+private fun LecturetteTipCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.RecordVoiceOver,
+                imageVector = Icons.Default.Info,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.tertiary
             )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Lecturette Test",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                text = "Tip: Speak clearly, maintain eye contact (imagine your audience), and stay within the time limit.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Deliver a 3-minute speech on a topic of your choice",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    InstructionItem(
-                        icon = Icons.AutoMirrored.Filled.ListAlt,
-                        title = "4 Topic Choices",
-                        description = "Select 1 topic from 4 options"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.Default.Timer,
-                        title = "3 Minutes",
-                        description = "No preparation time - speak immediately"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.Default.Edit,
-                        title = "Speech Input",
-                        description = "Type your speech (50-1500 characters)"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.AutoMirrored.Filled.VolumeUp,
-                        title = "White Noise",
-                        description = "Background noise simulates real GTO environment"
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Tip: Speak clearly, maintain eye contact (imagine your audience), and stay within the time limit.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            Button(
-                onClick = onStart,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Continue to Topic Selection", style = MaterialTheme.typography.titleMedium)
-            }
         }
     }
 }
@@ -310,82 +328,102 @@ fun SpeechPhase(
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Characters: $charCount",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (charCount < 50 || charCount > 1500) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Min: 50 | Max: 1500",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Button(
-                        onClick = onProceedToReview,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = charCount >= 50 && charCount <= 1500
-                    ) {
-                        Text("Review Speech")
-                    }
-                }
-            }
+            SpeechBottomBar(charCount = charCount, onProceedToReview = onProceedToReview)
         }
     ) { padding ->
-        Column(
+        SpeechContent(
+            selectedTopic = selectedTopic,
+            speechTranscript = speechTranscript,
+            onTranscriptChanged = onTranscriptChanged,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun SpeechBottomBar(charCount: Int, onProceedToReview: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Your Topic",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = selectedTopic,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Text(
+                    text = "Characters: $charCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (charCount < 50 || charCount > 1500) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Min: 50 | Max: 1500",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            
-            OutlinedTextField(
-                value = speechTranscript,
-                onValueChange = onTranscriptChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 300.dp)
-                    .padding(horizontal = 16.dp),
-                placeholder = { Text("Deliver your speech here...") },
-                textStyle = MaterialTheme.typography.bodyLarge,
-                label = { Text("Speech Transcript") },
-                maxLines = Int.MAX_VALUE
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onProceedToReview,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = charCount in 50..1500
+            ) {
+                Text("Review Speech")
+            }
         }
+    }
+}
+
+@Composable
+private fun SpeechContent(
+    selectedTopic: String,
+    speechTranscript: String,
+    onTranscriptChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Your Topic",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = selectedTopic,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = speechTranscript,
+            onValueChange = onTranscriptChanged,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 300.dp)
+                .padding(horizontal = 16.dp),
+            placeholder = { Text("Deliver your speech here...") },
+            textStyle = MaterialTheme.typography.bodyLarge,
+            label = { Text("Speech Transcript") },
+            maxLines = Int.MAX_VALUE
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -411,73 +449,93 @@ fun ReviewPhase(
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Button(
-                        onClick = onSubmit,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSubmitting
-                    ) {
-                        if (isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text("Submit Test")
-                        }
-                    }
-                }
-            }
+            LecturetteReviewBottomBar(isSubmitting = isSubmitting, onSubmit = onSubmit)
         }
     ) { padding ->
-        Column(
+        LecturetteReviewContent(
+            selectedTopic = selectedTopic,
+            speechTranscript = speechTranscript,
+            charCount = charCount,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
+        )
+    }
+}
+
+@Composable
+private fun LecturetteReviewBottomBar(isSubmitting: Boolean, onSubmit: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Button(
+                onClick = onSubmit,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting
+            ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Submit Test")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LecturetteReviewContent(
+    selectedTopic: String,
+    speechTranscript: String,
+    charCount: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Selected Topic",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = selectedTopic, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = "Selected Topic",
+                        text = "Your Speech",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = selectedTopic, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Your Speech",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "$charCount characters",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = speechTranscript,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "$charCount characters",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = speechTranscript,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

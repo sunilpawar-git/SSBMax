@@ -103,65 +103,99 @@ fun SDTTestScreen(
             onRetry = { viewModel.loadTest(testId) },
             modifier = Modifier.fillMaxSize()
         )
-        else -> {
-            when (uiState.phase) {
-                SDTPhase.INSTRUCTIONS -> InstructionsView(
-                    onStart = { viewModel.startTest() },
-                    onNavigateBack = onNavigateBack
-                )
-                SDTPhase.IN_PROGRESS -> QuestionInProgressView(
-                    question = uiState.currentQuestion?.question ?: "",
-                    questionNumber = uiState.currentQuestionIndex + 1,
-                    totalQuestions = uiState.questions.size,
-                    answer = uiState.currentAnswer,
-                    onAnswerChange = { viewModel.updateAnswer(it) },
-                    charCount = uiState.currentCharCount,
-                    minChars = uiState.config?.minCharsPerQuestion ?: 50,
-                    maxChars = uiState.config?.maxCharsPerQuestion ?: 1500,
-                    timeRemaining = uiState.totalTimeRemaining,
-                    canMoveNext = uiState.canMoveToNext,
-                    onNext = { viewModel.moveToNext() },
-                    onSkip = { viewModel.skipQuestion() },
-                    showExitDialog = showExitDialog,
-                    onShowExitDialog = { showExitDialog = true },
-                    onDismissExitDialog = { showExitDialog = false },
-                    onConfirmExit = onNavigateBack
-                )
-                SDTPhase.REVIEW -> ReviewScreen(
-                    questions = uiState.questions,
-                    responses = uiState.responses,
-                    onEdit = { index -> viewModel.editQuestion(index) },
-                    onSubmit = { showSubmitDialog = true }
-                )
-                SDTPhase.COMPLETED, SDTPhase.SUBMITTED -> Unit
-            }
-        }
+        else -> SDTPhaseContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            showExitDialog = showExitDialog,
+            onShowExitDialog = { showExitDialog = true },
+            onDismissExitDialog = { showExitDialog = false },
+            onShowSubmitDialog = { showSubmitDialog = true },
+            onNavigateBack = onNavigateBack
+        )
     }
 
     if (showSubmitDialog) {
-        AlertDialog(
-            onDismissRequest = { showSubmitDialog = false },
-            title = { Text(stringResource(R.string.sdt_submit_title)) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.sdt_submit_message, uiState.validResponseCount, uiState.questions.size))
-                    if (uiState.validResponseCount < 4) {
-                        Text(stringResource(R.string.sdt_submit_warning), style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    showSubmitDialog = false
-                    viewModel.submitTest()
-                }) { Text(stringResource(R.string.sdt_action_submit)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSubmitDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+        SDTSubmitDialog(
+            validResponseCount = uiState.validResponseCount,
+            totalQuestions = uiState.questions.size,
+            onDismiss = { showSubmitDialog = false },
+            onConfirm = {
+                showSubmitDialog = false
+                viewModel.submitTest()
             }
         )
     }
+}
+
+@Composable
+private fun SDTPhaseContent(
+    uiState: SDTTestUiState,
+    viewModel: SDTTestViewModel,
+    showExitDialog: Boolean,
+    onShowExitDialog: () -> Unit,
+    onDismissExitDialog: () -> Unit,
+    onShowSubmitDialog: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    when (uiState.phase) {
+        SDTPhase.INSTRUCTIONS -> InstructionsView(
+            onStart = { viewModel.startTest() },
+            onNavigateBack = onNavigateBack
+        )
+        SDTPhase.IN_PROGRESS -> QuestionInProgressView(
+            question = uiState.currentQuestion?.question ?: "",
+            questionNumber = uiState.currentQuestionIndex + 1,
+            totalQuestions = uiState.questions.size,
+            answer = uiState.currentAnswer,
+            onAnswerChange = { viewModel.updateAnswer(it) },
+            charCount = uiState.currentCharCount,
+            minChars = uiState.config?.minCharsPerQuestion ?: 50,
+            maxChars = uiState.config?.maxCharsPerQuestion ?: 1500,
+            timeRemaining = uiState.totalTimeRemaining,
+            canMoveNext = uiState.canMoveToNext,
+            onNext = { viewModel.moveToNext() },
+            onSkip = { viewModel.skipQuestion() },
+            showExitDialog = showExitDialog,
+            onShowExitDialog = onShowExitDialog,
+            onDismissExitDialog = onDismissExitDialog,
+            onConfirmExit = onNavigateBack
+        )
+        SDTPhase.REVIEW -> ReviewScreen(
+            questions = uiState.questions,
+            responses = uiState.responses,
+            onEdit = { index -> viewModel.editQuestion(index) },
+            onSubmit = onShowSubmitDialog
+        )
+        SDTPhase.COMPLETED, SDTPhase.SUBMITTED -> Unit
+    }
+}
+
+@Composable
+private fun SDTSubmitDialog(
+    validResponseCount: Int,
+    totalQuestions: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.sdt_submit_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.sdt_submit_message, validResponseCount, totalQuestions))
+                if (validResponseCount < 4) {
+                    Text(stringResource(R.string.sdt_submit_warning), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) { Text(stringResource(R.string.sdt_action_submit)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,44 +303,23 @@ private fun QuestionInProgressView(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(question, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            OutlinedTextField(
-                value = answer,
-                onValueChange = onAnswerChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 180.dp),
-                label = { Text(stringResource(R.string.sdt_answer_label)) },
-                supportingText = {
-                    val isError = charCount < minChars || charCount > maxChars
-                    val color = if (isError) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.primary
-                    Text("Characters: $charCount / $maxChars (Min: $minChars)", color = color)
-                },
-                isError = charCount < minChars || charCount > maxChars,
-                maxLines = Int.MAX_VALUE
+            QuestionAnswerCard(
+                question = question,
+                answer = answer,
+                onAnswerChange = onAnswerChange,
+                charCount = charCount,
+                minChars = minChars,
+                maxChars = maxChars
             )
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.sdt_action_skip))
-                }
-                Button(
-                    onClick = onNext,
-                    enabled = canMoveNext,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(if (questionNumber < totalQuestions) R.string.sdt_action_next else R.string.sdt_action_review))
-                }
-            }
-            
+            QuestionNavigationRow(
+                questionNumber = questionNumber,
+                totalQuestions = totalQuestions,
+                canMoveNext = canMoveNext,
+                onNext = onNext,
+                onSkip = onSkip
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
@@ -325,6 +338,63 @@ private fun QuestionInProgressView(
                 TextButton(onClick = onDismissExitDialog) { Text(stringResource(R.string.action_cancel)) }
             }
         )
+    }
+}
+
+@Composable
+private fun QuestionAnswerCard(
+    question: String,
+    answer: String,
+    onAnswerChange: (String) -> Unit,
+    charCount: Int,
+    minChars: Int,
+    maxChars: Int
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(question, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        }
+    }
+
+    OutlinedTextField(
+        value = answer,
+        onValueChange = onAnswerChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 180.dp),
+        label = { Text(stringResource(R.string.sdt_answer_label)) },
+        supportingText = {
+            val isError = charCount < minChars || charCount > maxChars
+            val color = if (isError) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.primary
+            Text("Characters: $charCount / $maxChars (Min: $minChars)", color = color)
+        },
+        isError = charCount < minChars || charCount > maxChars,
+        maxLines = Int.MAX_VALUE
+    )
+}
+
+@Composable
+private fun QuestionNavigationRow(
+    questionNumber: Int,
+    totalQuestions: Int,
+    canMoveNext: Boolean,
+    onNext: () -> Unit,
+    onSkip: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onSkip, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.sdt_action_skip))
+        }
+        Button(
+            onClick = onNext,
+            enabled = canMoveNext,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(stringResource(if (questionNumber < totalQuestions) R.string.sdt_action_next else R.string.sdt_action_review))
+        }
     }
 }
 

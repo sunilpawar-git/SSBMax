@@ -67,106 +67,124 @@ fun InstructionsPhase(
             )
         }
     ) { padding ->
-        Column(
+        InstructionsPhaseContent(
+            onStart = onStart,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        )
+    }
+}
+
+@Composable
+private fun InstructionsPhaseContent(onStart: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.Groups,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Group Discussion Test",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        GDInstructionsCard()
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        GDWhiteNoiseWarningCard()
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onStart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            Text("Start Test", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun GDInstructionsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            InstructionItem(
+                icon = Icons.Default.Topic,
+                title = "Topic",
+                description = "You'll be given a topic to discuss"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.Default.Timer,
+                title = "Time Limit",
+                description = "20 minutes to write your thoughts"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.Default.Edit,
+                title = "Character Count",
+                description = stringResource(R.string.common_character_limit_range, 50, 1500)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InstructionItem(
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
+                title = "White Noise",
+                description = "Background noise will play to simulate real GTO conditions"
+            )
+        }
+    }
+}
+
+@Composable
+private fun GDWhiteNoiseWarningCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Groups,
+                imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.error
             )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Group Discussion Test",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                text = "White noise will play during the test. Please ensure your volume is at a comfortable level.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    InstructionItem(
-                        icon = Icons.Default.Topic,
-                        title = "Topic",
-                        description = "You'll be given a topic to discuss"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.Default.Timer,
-                        title = "Time Limit",
-                        description = "20 minutes to write your thoughts"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.Default.Edit,
-                        title = "Character Count",
-                        description = stringResource(R.string.common_character_limit_range, 50, 1500)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    InstructionItem(
-                        icon = Icons.AutoMirrored.Filled.VolumeUp,
-                        title = "White Noise",
-                        description = "Background noise will play to simulate real GTO conditions"
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "White noise will play during the test. Please ensure your volume is at a comfortable level.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            Button(
-                onClick = onStart,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Start Test", style = MaterialTheme.typography.titleMedium)
-            }
         }
     }
 }
@@ -204,85 +222,105 @@ fun DiscussionPhase(
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Characters: $charCount",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = when {
-                                charCount < 50 -> MaterialTheme.colorScheme.error
-                                charCount > 1500 -> MaterialTheme.colorScheme.error
-                                else -> MaterialTheme.colorScheme.primary
-                            }
-                        )
-                        Text(
-                            text = "Min: 50 | Max: 1500",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Button(
-                        onClick = onProceedToReview,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = charCount >= 50 && charCount <= 1500
-                    ) {
-                        Text("Review Response")
-                    }
-                }
-            }
+            DiscussionBottomBar(charCount = charCount, onProceedToReview = onProceedToReview)
         }
     ) { padding ->
-        Column(
+        DiscussionContent(
+            topic = topic,
+            response = response,
+            onResponseChanged = onResponseChanged,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun DiscussionBottomBar(charCount: Int, onProceedToReview: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Topic",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = topic,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Text(
+                    text = "Characters: $charCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = when {
+                        charCount < 50 -> MaterialTheme.colorScheme.error
+                        charCount > 1500 -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
+                    }
+                )
+                Text(
+                    text = "Min: 50 | Max: 1500",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            
-            OutlinedTextField(
-                value = response,
-                onValueChange = onResponseChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 300.dp)
-                    .padding(horizontal = 16.dp),
-                placeholder = { Text("Write your thoughts on this topic...") },
-                textStyle = MaterialTheme.typography.bodyLarge,
-                maxLines = Int.MAX_VALUE
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onProceedToReview,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = charCount in 50..1500
+            ) {
+                Text("Review Response")
+            }
         }
+    }
+}
+
+@Composable
+private fun DiscussionContent(
+    topic: String,
+    response: String,
+    onResponseChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .imePadding()
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Topic",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = topic,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = response,
+            onValueChange = onResponseChanged,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 300.dp)
+                .padding(horizontal = 16.dp),
+            placeholder = { Text("Write your thoughts on this topic...") },
+            textStyle = MaterialTheme.typography.bodyLarge,
+            maxLines = Int.MAX_VALUE
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -308,73 +346,88 @@ fun ReviewPhase(
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Button(
-                        onClick = onSubmit,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSubmitting
-                    ) {
-                        if (isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text("Submit Test")
-                        }
-                    }
-                }
-            }
+            ReviewBottomBar(isSubmitting = isSubmitting, onSubmit = onSubmit)
         }
     ) { padding ->
-        Column(
+        ReviewContent(
+            topic = topic,
+            response = response,
+            charCount = charCount,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
+        )
+    }
+}
+
+@Composable
+private fun ReviewBottomBar(isSubmitting: Boolean, onSubmit: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 8.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Button(
+                onClick = onSubmit,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting
+            ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Submit Test")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewContent(topic: String, response: String, charCount: Int, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Topic",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = topic, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = "Topic",
+                        text = "Your Response",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = topic, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Your Response",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "$charCount characters",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = response,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = "$charCount characters",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = response,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

@@ -60,15 +60,7 @@ fun TATTestScreen(
     }
 
     // Handle navigation events (one-time events, consumed on collection)
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvents.collect { event ->
-            when (event) {
-                is com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult -> {
-                    onTestComplete(event.submissionId, event.subscriptionType)
-                }
-            }
-        }
-    }
+    TATNavigationEventHandler(viewModel, onTestComplete)
 
     // Show profile incomplete dialog (gender needed for image pool selection)
     if (uiState.isProfileIncomplete) {
@@ -94,31 +86,7 @@ fun TATTestScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.tat_test))
-                        if (uiState.currentQuestion != null) {
-                            Text(
-                                stringResource(
-                                    R.string.tat_picture_number,
-                                    uiState.currentQuestionIndex + 1,
-                                    uiState.questions.size
-                                ),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { showExitDialog = true }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
-                    }
-                },
-                actions = {
-                    // Actions removed as per user request to remove redundant counter
-                }
-            )
+            TATTopBar(uiState = uiState, onShowExitDialog = { showExitDialog = true })
         },
         bottomBar = {
             if (uiState.phase != TATPhase.INSTRUCTIONS && uiState.phase != TATPhase.SUBMITTED) {
@@ -132,73 +100,15 @@ fun TATTestScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        TATPhaseContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            testId = testId,
+            onShowSubmitDialog = { showSubmitDialog = true },
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        ) {
-            when (uiState.phase) {
-                TATPhase.INSTRUCTIONS -> {
-                    TATInstructionsPhase(
-                        onStart = { viewModel.startTest() }
-                    )
-                }
-                TATPhase.IMAGE_VIEWING -> {
-                    TATImageViewingPhase(
-                        imageUrl = uiState.currentQuestion?.imageUrl ?: "",
-                        timeRemaining = uiState.viewingTimeRemaining,
-                        sequenceNumber = uiState.currentQuestionIndex + 1
-                    )
-                }
-                TATPhase.WRITING -> {
-                    TATWritingPhase(
-                        story = uiState.currentStory,
-                        onStoryChange = { viewModel.updateStory(it) },
-                        timeRemaining = uiState.writingTimeRemaining,
-                        minCharacters = uiState.currentQuestion?.minCharacters ?: 150,
-                        maxCharacters = uiState.currentQuestion?.maxCharacters ?: 1500,
-                        charactersCount = uiState.currentStory.length,
-                        sequenceNumber = uiState.currentQuestionIndex + 1
-                    )
-                }
-                TATPhase.REVIEW -> {
-                    TATReviewPhase(
-                        story = uiState.currentStory,
-                        charactersCount = uiState.currentStory.length,
-                        sequenceNumber = uiState.currentQuestionIndex + 1,
-                        isLastQuestion = uiState.isLastQuestion,
-                        onEdit = { viewModel.editCurrentStory() },
-                        onConfirm = {
-                            if (uiState.isLastQuestion) {
-                                showSubmitDialog = true
-                            } else {
-                                viewModel.confirmCurrentStory()
-                            }
-                        }
-                    )
-                }
-                TATPhase.SUBMITTED -> {
-                    // Handled by navigation
-                }
-            }
-
-            // Loading overlay
-            if (uiState.isLoading) {
-                TestContentLoadingState(
-                    message = stringResource(R.string.tat_loading),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            // Error overlay
-            if (uiState.error != null) {
-                TestContentErrorState(
-                    error = uiState.error!!,
-                    onRetry = { viewModel.loadTest(testId) },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+        )
     }
 
     // Exit confirmation dialog
@@ -223,5 +133,124 @@ fun TATTestScreen(
                 viewModel.submitTest()
             }
         )
+    }
+}
+
+@Composable
+private fun TATNavigationEventHandler(
+    viewModel: TATTestViewModel,
+    onTestComplete: (String, com.ssbmax.core.domain.model.SubscriptionType) -> Unit
+) {
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is com.ssbmax.ui.tests.common.TestNavigationEvent.NavigateToResult -> {
+                    onTestComplete(event.submissionId, event.subscriptionType)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TATTopBar(uiState: TATTestUiState, onShowExitDialog: () -> Unit) {
+    TopAppBar(
+        title = {
+            Column {
+                Text(stringResource(R.string.tat_test))
+                if (uiState.currentQuestion != null) {
+                    Text(
+                        stringResource(
+                            R.string.tat_picture_number,
+                            uiState.currentQuestionIndex + 1,
+                            uiState.questions.size
+                        ),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = onShowExitDialog) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back))
+            }
+        },
+        actions = {
+            // Actions removed as per user request to remove redundant counter
+        }
+    )
+}
+
+@Composable
+private fun TATPhaseContent(
+    uiState: TATTestUiState,
+    viewModel: TATTestViewModel,
+    testId: String,
+    onShowSubmitDialog: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        when (uiState.phase) {
+            TATPhase.INSTRUCTIONS -> {
+                TATInstructionsPhase(
+                    onStart = { viewModel.startTest() }
+                )
+            }
+            TATPhase.IMAGE_VIEWING -> {
+                TATImageViewingPhase(
+                    imageUrl = uiState.currentQuestion?.imageUrl ?: "",
+                    timeRemaining = uiState.viewingTimeRemaining,
+                    sequenceNumber = uiState.currentQuestionIndex + 1
+                )
+            }
+            TATPhase.WRITING -> {
+                TATWritingPhase(
+                    story = uiState.currentStory,
+                    onStoryChange = { viewModel.updateStory(it) },
+                    timeRemaining = uiState.writingTimeRemaining,
+                    minCharacters = uiState.currentQuestion?.minCharacters ?: 150,
+                    maxCharacters = uiState.currentQuestion?.maxCharacters ?: 1500,
+                    charactersCount = uiState.currentStory.length,
+                    sequenceNumber = uiState.currentQuestionIndex + 1
+                )
+            }
+            TATPhase.REVIEW -> {
+                TATReviewPhase(
+                    story = uiState.currentStory,
+                    charactersCount = uiState.currentStory.length,
+                    sequenceNumber = uiState.currentQuestionIndex + 1,
+                    isLastQuestion = uiState.isLastQuestion,
+                    onEdit = { viewModel.editCurrentStory() },
+                    onConfirm = {
+                        if (uiState.isLastQuestion) {
+                            onShowSubmitDialog()
+                        } else {
+                            viewModel.confirmCurrentStory()
+                        }
+                    }
+                )
+            }
+            TATPhase.SUBMITTED -> {
+                // Handled by navigation
+            }
+        }
+
+        // Loading overlay
+        if (uiState.isLoading) {
+            TestContentLoadingState(
+                message = stringResource(R.string.tat_loading),
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Error overlay
+        if (uiState.error != null) {
+            TestContentErrorState(
+                error = uiState.error!!,
+                onRetry = { viewModel.loadTest(testId) },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

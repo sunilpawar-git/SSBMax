@@ -95,29 +95,53 @@ fun LecturetteTestScreen(
         }
     }
     
-    // Exit confirmation dialog
+    LecturetteTestDialogs(
+        showExitDialog = showExitDialog,
+        onDismissExitDialog = { showExitDialog = false },
+        onConfirmExit = {
+            whiteNoiseState.disable()
+            onNavigateBack()
+        },
+        uiState = uiState,
+        viewModel = viewModel,
+        onNavigateBack = onNavigateBack,
+        onNavigateToUpgrade = onNavigateToUpgrade
+    )
+
+    LecturetteTestContent(
+        uiState = uiState,
+        viewModel = viewModel,
+        whiteNoiseState = whiteNoiseState,
+        onNavigateBack = onNavigateBack,
+        onShowExitDialog = { showExitDialog = true },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun LecturetteTestDialogs(
+    showExitDialog: Boolean,
+    onDismissExitDialog: () -> Unit,
+    onConfirmExit: () -> Unit,
+    uiState: LecturetteTestUiState,
+    viewModel: LecturetteTestViewModel,
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit
+) {
     if (showExitDialog) {
         AlertDialog(
-            onDismissRequest = { showExitDialog = false },
+            onDismissRequest = onDismissExitDialog,
             title = { Text("Exit Test?") },
             text = { Text("Your progress will be lost. Are you sure you want to exit?") },
             confirmButton = {
-                TextButton(onClick = {
-                    whiteNoiseState.disable()
-                    onNavigateBack()
-                }) {
-                    Text("Exit")
-                }
+                TextButton(onClick = onConfirmExit) { Text("Exit") }
             },
             dismissButton = {
-                TextButton(onClick = { showExitDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = onDismissExitDialog) { Text("Cancel") }
             }
         )
     }
-    
-    // Limit reached dialog
+
     if (uiState.showLimitDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -144,8 +168,7 @@ fun LecturetteTestScreen(
             }
         )
     }
-    
-    // Upgrade required dialog
+
     if (uiState.showUpgradeDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissUpgradeDialog() },
@@ -169,69 +192,72 @@ fun LecturetteTestScreen(
             }
         )
     }
-    
-    // Error dialog
+
     if (uiState.error != null) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissError() },
             title = { Text("Error") },
             text = { Text(uiState.error!!) },
             confirmButton = {
-                TextButton(onClick = { viewModel.dismissError() }) {
-                    Text("OK")
-                }
+                TextButton(onClick = { viewModel.dismissError() }) { Text("OK") }
             }
         )
     }
-    
-    // Main content
+}
+
+@Composable
+private fun LecturetteTestContent(
+    uiState: LecturetteTestUiState,
+    viewModel: LecturetteTestViewModel,
+    whiteNoiseState: com.ssbmax.ui.tests.gto.common.WhiteNoiseState,
+    onNavigateBack: () -> Unit,
+    onShowExitDialog: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(modifier = modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                TestContentLoadingState(
-                    message = uiState.loadingMessage ?: "Loading test...",
-                    modifier = Modifier.fillMaxSize()
+        if (uiState.isLoading) {
+            TestContentLoadingState(
+                message = uiState.loadingMessage ?: "Loading test...",
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            when (uiState.phase) {
+                LecturettePhase.INSTRUCTIONS -> InstructionsPhase(
+                    onStart = { viewModel.proceedToTopicSelection() },
+                    onNavigateBack = onNavigateBack
                 )
-            }
-            else -> {
-                when (uiState.phase) {
-                    LecturettePhase.INSTRUCTIONS -> InstructionsPhase(
-                        onStart = { viewModel.proceedToTopicSelection() },
-                        onNavigateBack = onNavigateBack
+                LecturettePhase.TOPIC_SELECTION -> TopicSelectionPhase(
+                    topics = uiState.topicChoices,
+                    onTopicSelected = { viewModel.selectTopic(it) },
+                    onNavigateBack = onNavigateBack
+                )
+                LecturettePhase.SPEECH -> SpeechPhase(
+                    selectedTopic = uiState.selectedTopic,
+                    speechTranscript = uiState.speechTranscript,
+                    charCount = uiState.charCount,
+                    timeRemaining = uiState.formattedTime,
+                    isTimeLow = uiState.isTimeLow,
+                    onTranscriptChanged = viewModel::onTranscriptChanged,
+                    onProceedToReview = { viewModel.proceedToReview() },
+                    onNavigateBack = onShowExitDialog
+                )
+                LecturettePhase.REVIEW -> ReviewPhase(
+                    selectedTopic = uiState.selectedTopic,
+                    speechTranscript = uiState.speechTranscript,
+                    charCount = uiState.charCount,
+                    isSubmitting = uiState.isSubmitting,
+                    onBackToSpeech = { viewModel.backToSpeech() },
+                    onSubmit = { viewModel.submitTest() }
+                )
+                LecturettePhase.SUBMITTED -> {
+                    GTOSubmissionSuccessScreen(
+                        testName = "Lecturette",
+                        onNavigateHome = onNavigateBack
                     )
-                    LecturettePhase.TOPIC_SELECTION -> TopicSelectionPhase(
-                        topics = uiState.topicChoices,
-                        onTopicSelected = { viewModel.selectTopic(it) },
-                        onNavigateBack = onNavigateBack
-                    )
-                    LecturettePhase.SPEECH -> SpeechPhase(
-                        selectedTopic = uiState.selectedTopic,
-                        speechTranscript = uiState.speechTranscript,
-                        charCount = uiState.charCount,
-                        timeRemaining = uiState.formattedTime,
-                        isTimeLow = uiState.isTimeLow,
-                        onTranscriptChanged = viewModel::onTranscriptChanged,
-                        onProceedToReview = { viewModel.proceedToReview() },
-                        onNavigateBack = { showExitDialog = true }
-                    )
-                    LecturettePhase.REVIEW -> ReviewPhase(
-                        selectedTopic = uiState.selectedTopic,
-                        speechTranscript = uiState.speechTranscript,
-                        charCount = uiState.charCount,
-                        isSubmitting = uiState.isSubmitting,
-                        onBackToSpeech = { viewModel.backToSpeech() },
-                        onSubmit = { viewModel.submitTest() }
-                    )
-                    LecturettePhase.SUBMITTED -> {
-                        GTOSubmissionSuccessScreen(
-                            testName = "Lecturette",
-                            onNavigateHome = onNavigateBack
-                        )
-                    }
                 }
             }
         }
-        
+
         if (uiState.phase == LecturettePhase.SPEECH) {
             AnimatedWhiteNoiseOverlay(
                 baseAlpha = 0.08f,

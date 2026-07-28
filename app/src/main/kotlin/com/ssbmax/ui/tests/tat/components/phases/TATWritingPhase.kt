@@ -55,82 +55,16 @@ fun TATWritingPhase(
     ) {
         // Show blank slide reminder for 12th picture
         if (sequenceNumber == 12) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Lightbulb, contentDescription = null)
-                        Text(
-                            "Blank Slide (Picture 12/12)",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Text(
-                        "Use your imagination to create a story. There was no picture shown - write what you visualize in your mind.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
+            TATBlankSlideReminderCard()
         }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        if (sequenceNumber == 12) "Write Your Imagination" else "Write Your Story",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "$charactersCount / $maxCharacters characters",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = when {
-                            charactersCount < minCharacters -> MaterialTheme.colorScheme.error
-                            charactersCount > maxCharacters -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.onSecondaryContainer
-                        }
-                    )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Timer, null)
-                    Text(
-                        "${timeRemaining / 60}:${(timeRemaining % 60).toString().padStart(2, '0')}",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (timeRemaining <= 60) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    )
-                }
-            }
-        }
+        TATWritingHeaderCard(
+            sequenceNumber = sequenceNumber,
+            charactersCount = charactersCount,
+            minCharacters = minCharacters,
+            maxCharacters = maxCharacters,
+            timeRemaining = timeRemaining
+        )
 
         OutlinedTextField(
             value = story,
@@ -158,5 +92,93 @@ fun TATWritingPhase(
         )
         
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun TATBlankSlideReminderCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Lightbulb, contentDescription = null)
+                Text(
+                    "Blank Slide (Picture 12/12)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            Text(
+                "Use your imagination to create a story. There was no picture shown - write what you visualize in your mind.",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun TATWritingHeaderCard(
+    sequenceNumber: Int,
+    charactersCount: Int,
+    minCharacters: Int,
+    maxCharacters: Int,
+    timeRemaining: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    if (sequenceNumber == 12) "Write Your Imagination" else "Write Your Story",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "$charactersCount / $maxCharacters characters",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = when {
+                        charactersCount < minCharacters -> MaterialTheme.colorScheme.error
+                        charactersCount > maxCharacters -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSecondaryContainer
+                    }
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Timer, null)
+                Text(
+                    "${timeRemaining / 60}:${(timeRemaining % 60).toString().padStart(2, '0')}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (timeRemaining <= 60) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+            }
+        }
     }
 }

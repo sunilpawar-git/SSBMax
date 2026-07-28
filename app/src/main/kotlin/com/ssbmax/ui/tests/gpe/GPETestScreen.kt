@@ -88,61 +88,13 @@ fun GPETestScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        GPEPhaseContent(
+            uiState = uiState,
+            viewModel = viewModel,
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    TestContentLoadingState(
-                        message = stringResource(R.string.gpe_loading),
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                uiState.error != null -> {
-                    TestContentErrorState(
-                        error = uiState.error!!,
-                        onRetry = { viewModel.loadTest() },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                else -> {
-                    when (uiState.currentPhase) {
-                        GPEPhase.INSTRUCTIONS -> GPEInstructionsPhase(
-                            onStart = { viewModel.startTest() }
-                        )
-                        // Should not be reached with new flow, but required for exhaustive when
-                        GPEPhase.IMAGE_VIEWING -> {}
-                        
-                        GPEPhase.PLANNING -> GPEPlanningPhase(
-                            planningResponse = uiState.planningResponse,
-                            onPlanningResponseChange = { viewModel.updatePlanningResponse(it) },
-                            charactersCount = uiState.charactersCount,
-                            minCharacters = uiState.minCharacters,
-                            maxCharacters = uiState.maxCharacters,
-                            scenario = uiState.scenario,
-                            resources = uiState.resources,
-                            imageUrl = uiState.imageUrl
-                        )
-                        GPEPhase.REVIEW -> GPEReviewPhase(
-                            imageUrl = uiState.imageUrl,
-                            scenario = uiState.scenario,
-                            resources = uiState.resources,
-                            planningResponse = uiState.planningResponse,
-                            charactersCount = uiState.charactersCount,
-                            onEdit = { viewModel.returnToPlanning() }
-                        )
-                            GPEPhase.SUBMITTED -> {
-                            // Show loading/success state briefly before navigation kicks in
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        )
     }
 
     // Navigate to result screen when submission is complete
@@ -178,5 +130,64 @@ fun GPETestScreen(
                 viewModel.submitTest()
             }
         )
+    }
+}
+
+@Composable
+private fun GPEPhaseContent(
+    uiState: GPETestUiState,
+    viewModel: GPETestViewModel,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        when {
+            uiState.isLoading -> {
+                TestContentLoadingState(
+                    message = stringResource(R.string.gpe_loading),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            uiState.error != null -> {
+                TestContentErrorState(
+                    error = uiState.error!!,
+                    onRetry = { viewModel.loadTest() },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            else -> {
+                when (uiState.currentPhase) {
+                    GPEPhase.INSTRUCTIONS -> GPEInstructionsPhase(
+                        onStart = { viewModel.startTest() }
+                    )
+                    // Should not be reached with new flow, but required for exhaustive when
+                    GPEPhase.IMAGE_VIEWING -> {}
+
+                    GPEPhase.PLANNING -> GPEPlanningPhase(
+                        planningResponse = uiState.planningResponse,
+                        onPlanningResponseChange = { viewModel.updatePlanningResponse(it) },
+                        charactersCount = uiState.charactersCount,
+                        minCharacters = uiState.minCharacters,
+                        maxCharacters = uiState.maxCharacters,
+                        scenario = uiState.scenario,
+                        resources = uiState.resources,
+                        imageUrl = uiState.imageUrl
+                    )
+                    GPEPhase.REVIEW -> GPEReviewPhase(
+                        imageUrl = uiState.imageUrl,
+                        scenario = uiState.scenario,
+                        resources = uiState.resources,
+                        planningResponse = uiState.planningResponse,
+                        charactersCount = uiState.charactersCount,
+                        onEdit = { viewModel.returnToPlanning() }
+                    )
+                    GPEPhase.SUBMITTED -> {
+                        // Show loading/success state briefly before navigation kicks in
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+            }
+        }
     }
 }

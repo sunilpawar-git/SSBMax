@@ -90,29 +90,53 @@ fun GDTestScreen(
         }
     }
     
-    // Exit confirmation dialog
+    GDTestDialogs(
+        showExitDialog = showExitDialog,
+        onDismissExitDialog = { showExitDialog = false },
+        onConfirmExit = {
+            whiteNoiseState.disable()
+            onNavigateBack()
+        },
+        uiState = uiState,
+        viewModel = viewModel,
+        onNavigateBack = onNavigateBack,
+        onNavigateToUpgrade = onNavigateToUpgrade
+    )
+
+    GDTestContent(
+        uiState = uiState,
+        viewModel = viewModel,
+        whiteNoiseState = whiteNoiseState,
+        onNavigateBack = onNavigateBack,
+        onShowExitDialog = { showExitDialog = true },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun GDTestDialogs(
+    showExitDialog: Boolean,
+    onDismissExitDialog: () -> Unit,
+    onConfirmExit: () -> Unit,
+    uiState: GDTestUiState,
+    viewModel: GDTestViewModel,
+    onNavigateBack: () -> Unit,
+    onNavigateToUpgrade: () -> Unit
+) {
     if (showExitDialog) {
         AlertDialog(
-            onDismissRequest = { showExitDialog = false },
+            onDismissRequest = onDismissExitDialog,
             title = { Text("Exit Test?") },
             text = { Text("Your progress will be lost. Are you sure you want to exit?") },
             confirmButton = {
-                TextButton(onClick = {
-                    whiteNoiseState.disable()
-                    onNavigateBack()
-                }) {
-                    Text("Exit")
-                }
+                TextButton(onClick = onConfirmExit) { Text("Exit") }
             },
             dismissButton = {
-                TextButton(onClick = { showExitDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = onDismissExitDialog) { Text("Cancel") }
             }
         )
     }
-    
-    // Limit reached dialog
+
     if (uiState.showLimitDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -139,8 +163,7 @@ fun GDTestScreen(
             }
         )
     }
-    
-    // Upgrade required dialog
+
     if (uiState.showUpgradeDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissUpgradeDialog() },
@@ -164,64 +187,67 @@ fun GDTestScreen(
             }
         )
     }
-    
-    // Error dialog
+
     if (uiState.error != null) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissError() },
             title = { Text("Error") },
             text = { Text(uiState.error!!) },
             confirmButton = {
-                TextButton(onClick = { viewModel.dismissError() }) {
-                    Text("OK")
-                }
+                TextButton(onClick = { viewModel.dismissError() }) { Text("OK") }
             }
         )
     }
-    
-    // Main content
+}
+
+@Composable
+private fun GDTestContent(
+    uiState: GDTestUiState,
+    viewModel: GDTestViewModel,
+    whiteNoiseState: com.ssbmax.ui.tests.gto.common.WhiteNoiseState,
+    onNavigateBack: () -> Unit,
+    onShowExitDialog: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(modifier = modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                TestContentLoadingState(
-                    message = uiState.loadingMessage ?: "Loading test...",
-                    modifier = Modifier.fillMaxSize()
+        if (uiState.isLoading) {
+            TestContentLoadingState(
+                message = uiState.loadingMessage ?: "Loading test...",
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            when (uiState.phase) {
+                GDPhase.INSTRUCTIONS -> InstructionsPhase(
+                    onStart = { viewModel.startDiscussion() },
+                    onNavigateBack = onNavigateBack
                 )
-            }
-            else -> {
-                when (uiState.phase) {
-                    GDPhase.INSTRUCTIONS -> InstructionsPhase(
-                        onStart = { viewModel.startDiscussion() },
-                        onNavigateBack = onNavigateBack
+                GDPhase.DISCUSSION -> DiscussionPhase(
+                    topic = uiState.topic,
+                    response = uiState.response,
+                    charCount = uiState.charCount,
+                    timeRemaining = uiState.formattedTime,
+                    isTimeLow = uiState.isTimeLow,
+                    onResponseChanged = viewModel::onResponseChanged,
+                    onProceedToReview = { viewModel.proceedToReview() },
+                    onNavigateBack = onShowExitDialog
+                )
+                GDPhase.REVIEW -> ReviewPhase(
+                    topic = uiState.topic,
+                    response = uiState.response,
+                    charCount = uiState.charCount,
+                    isSubmitting = uiState.isSubmitting,
+                    onBackToDiscussion = { viewModel.backToDiscussion() },
+                    onSubmit = { viewModel.submitTest() }
+                )
+                GDPhase.SUBMITTED -> {
+                    GTOSubmissionSuccessScreen(
+                        testName = "Group Discussion",
+                        onNavigateHome = onNavigateBack
                     )
-                    GDPhase.DISCUSSION -> DiscussionPhase(
-                        topic = uiState.topic,
-                        response = uiState.response,
-                        charCount = uiState.charCount,
-                        timeRemaining = uiState.formattedTime,
-                        isTimeLow = uiState.isTimeLow,
-                        onResponseChanged = viewModel::onResponseChanged,
-                        onProceedToReview = { viewModel.proceedToReview() },
-                        onNavigateBack = { showExitDialog = true }
-                    )
-                    GDPhase.REVIEW -> ReviewPhase(
-                        topic = uiState.topic,
-                        response = uiState.response,
-                        charCount = uiState.charCount,
-                        isSubmitting = uiState.isSubmitting,
-                        onBackToDiscussion = { viewModel.backToDiscussion() },
-                        onSubmit = { viewModel.submitTest() }
-                    )
-                    GDPhase.SUBMITTED -> {
-                        GTOSubmissionSuccessScreen(
-                            testName = "Group Discussion",
-                            onNavigateHome = onNavigateBack
-                        )
-                    }
                 }
             }
         }
-        
+
         if (uiState.phase == GDPhase.DISCUSSION) {
             AnimatedWhiteNoiseOverlay(
                 baseAlpha = 0.08f,

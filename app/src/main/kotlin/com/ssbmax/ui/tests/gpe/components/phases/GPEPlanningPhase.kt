@@ -54,64 +54,10 @@ fun GPEPlanningPhase(
     ) {
         // Map Image Card
         if (imageUrl.isNotEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 200.dp), // Reduced height for better keyboard visibility
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                coil.compose.AsyncImage(
-                    model = coil.request.ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = stringResource(R.string.gpe_test_image),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.BrokenImage)
-                )
-            }
+            GPEPlanningMapImage(imageUrl, context)
         }
 
-        // Scenario reminder card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.gpe_scenario_label),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Text(
-                    text = scenario,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-
-                if (resources.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.gpe_resources_available),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    resources.forEach { resource ->
-                        Text(
-                            text = "• $resource",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
-            }
-        }
+        GPEScenarioReminderCard(scenario, resources)
 
         // Planning response text field - with proper keyboard handling
         OutlinedTextField(
@@ -143,38 +89,105 @@ fun GPEPlanningPhase(
             maxLines = Int.MAX_VALUE
         )
 
-        // Guidelines card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-            )
+        GPEPlanningGuidelinesCard()
+    }
+}
+
+@Composable
+private fun GPEPlanningMapImage(imageUrl: String, context: android.content.Context) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 200.dp), // Reduced height for better keyboard visibility
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        coil.compose.AsyncImage(
+            model = coil.request.ImageRequest.Builder(context)
+                .data(imageUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = stringResource(R.string.gpe_test_image),
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.BrokenImage)
+        )
+    }
+}
+
+@Composable
+private fun GPEScenarioReminderCard(scenario: String, resources: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Text(
+                text = stringResource(R.string.gpe_scenario_label),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                text = scenario,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            if (resources.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.gpe_planning_guidelines),
+                    text = stringResource(R.string.gpe_resources_available),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                Text(
-                    text = stringResource(R.string.gpe_guideline_1),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Text(
-                    text = stringResource(R.string.gpe_guideline_2),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Text(
-                    text = stringResource(R.string.gpe_guideline_3),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
+                resources.forEach { resource ->
+                    Text(
+                        text = "• $resource",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun GPEPlanningGuidelinesCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.gpe_planning_guidelines),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Text(
+                text = stringResource(R.string.gpe_guideline_1),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Text(
+                text = stringResource(R.string.gpe_guideline_2),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Text(
+                text = stringResource(R.string.gpe_guideline_3),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
         }
     }
 }

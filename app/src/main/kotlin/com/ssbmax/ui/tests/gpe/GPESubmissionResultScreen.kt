@@ -87,51 +87,15 @@ fun GPESubmissionResultScreen(
     ) { padding ->
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Loading results...")
-                    }
-                }
+                GPELoadingContent(modifier = Modifier.fillMaxSize().padding(padding))
             }
-            
             uiState.error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Error,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = uiState.error!!,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.retry(submissionId) }) {
-                            Text("Retry")
-                        }
-                    }
-                }
+                GPEErrorContent(
+                    error = uiState.error!!,
+                    onRetry = { viewModel.retry(submissionId) },
+                    modifier = Modifier.fillMaxSize().padding(padding)
+                )
             }
-            
             uiState.submission != null -> {
                 LazyColumn(
                     modifier = modifier
@@ -140,127 +104,178 @@ fun GPESubmissionResultScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item {
-                        GPESubmissionConfirmationCard(
-                            scenario = uiState.submission!!.scenario,
-                            plan = uiState.submission!!.plan,
-                            characterCount = uiState.submission!!.characterCount,
-                            timeSpent = uiState.formattedTimeSpent,
-                            status = uiState.submission!!.status
-                        )
-                    }
-                    
-                    item {
-                        when {
-                            uiState.isAnalyzing -> AnalyzingCard()
-                            uiState.isFailed -> AnalysisFailedCard()
-                            uiState.isCompleted && uiState.result != null -> {
-                                // Show results - handled by items below
-                            }
-                        }
-                    }
-                    
-                    if (uiState.isCompleted && uiState.result != null) {
-                        // SSB Recommendation Banner (above Overall Performance)
-                        uiState.ssbRecommendation?.let { recommendation ->
-                            item {
-                                SSBRecommendationBanner(model = recommendation)
-                            }
-                        }
-                        
-                        item {
-                            OverallScoreCard(
-                                overallScore = uiState.result!!.overallScore,
-                                overallRating = uiState.result!!.overallRating,
-                                aiConfidence = uiState.result!!.aiConfidence
-                            )
-                        }
-                        
-                        item {
-                            Text(
-                                text = "Top Strengths",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        
-                        items(uiState.result!!.topOLQs) { (olq, score) ->
-                            OLQScoreCard(olq = olq, score = score, isStrength = true)
-                        }
-                        
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Areas for Improvement",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        
-                        items(uiState.result!!.improvementOLQs) { (olq, score) ->
-                            OLQScoreCard(olq = olq, score = score, isStrength = false)
-                        }
-                        
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Detailed OLQ Analysis",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        
-                        OLQCategory.entries.forEach { category ->
-                            item {
-                                Text(
-                                    text = category.displayName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-                                )
-                            }
-                            
-                            val categoryOLQs = OLQ.getByCategory(category)
-                            items(categoryOLQs) { olq ->
-                                val score = uiState.result!!.olqScores[olq]
-                                if (score != null) {
-                                    OLQScoreCard(olq = olq, score = score, isStrength = null)
-                                }
-                            }
-                        }
-                        
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Your Planning Response",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        
-                        item {
-                            GPEResponsePreviewCard(
-                                scenario = uiState.submission!!.scenario,
-                                plan = uiState.submission!!.plan,
-                                characterCount = uiState.submission!!.characterCount
-                            )
-                        }
-                    }
-                    
-                    // Home button
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = onNavigateHome,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Back to Home")
-                        }
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
+                    gpeResultItems(uiState = uiState, onNavigateHome = onNavigateHome)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun GPELoadingContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Loading results...")
+        }
+    }
+}
+
+@Composable
+private fun GPEErrorContent(error: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onRetry) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.gpeResultItems(
+    uiState: GPESubmissionResultUiState,
+    onNavigateHome: () -> Unit
+) {
+    item {
+        GPESubmissionConfirmationCard(
+            scenario = uiState.submission!!.scenario,
+            plan = uiState.submission!!.plan,
+            characterCount = uiState.submission!!.characterCount,
+            timeSpent = uiState.formattedTimeSpent,
+            status = uiState.submission!!.status
+        )
+    }
+
+    item {
+        when {
+            uiState.isAnalyzing -> AnalyzingCard()
+            uiState.isFailed -> AnalysisFailedCard()
+            uiState.isCompleted && uiState.result != null -> {
+                // Show results - handled by items below
+            }
+        }
+    }
+
+    if (uiState.isCompleted && uiState.result != null) {
+        gpeAnalysisResultItems(uiState)
+    }
+
+    // Home button
+    item {
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onNavigateHome,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Back to Home")
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.gpeAnalysisResultItems(
+    uiState: GPESubmissionResultUiState
+) {
+    // SSB Recommendation Banner (above Overall Performance)
+    uiState.ssbRecommendation?.let { recommendation ->
+        item {
+            SSBRecommendationBanner(model = recommendation)
+        }
+    }
+
+    item {
+        OverallScoreCard(
+            overallScore = uiState.result!!.overallScore,
+            overallRating = uiState.result!!.overallRating,
+            aiConfidence = uiState.result!!.aiConfidence
+        )
+    }
+
+    item {
+        Text(
+            text = "Top Strengths",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    items(uiState.result!!.topOLQs) { (olq, score) ->
+        OLQScoreCard(olq = olq, score = score, isStrength = true)
+    }
+
+    item {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Areas for Improvement",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    items(uiState.result!!.improvementOLQs) { (olq, score) ->
+        OLQScoreCard(olq = olq, score = score, isStrength = false)
+    }
+
+    item {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Detailed OLQ Analysis",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    OLQCategory.entries.forEach { category ->
+        item {
+            Text(
+                text = category.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            )
+        }
+
+        val categoryOLQs = OLQ.getByCategory(category)
+        items(categoryOLQs) { olq ->
+            val score = uiState.result!!.olqScores[olq]
+            if (score != null) {
+                OLQScoreCard(olq = olq, score = score, isStrength = null)
+            }
+        }
+    }
+
+    item {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Your Planning Response",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+
+    item {
+        GPEResponsePreviewCard(
+            scenario = uiState.submission!!.scenario,
+            plan = uiState.submission!!.plan,
+            characterCount = uiState.submission!!.characterCount
+        )
     }
 }
 

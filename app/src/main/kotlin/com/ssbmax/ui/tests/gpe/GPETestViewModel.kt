@@ -114,112 +114,12 @@ class GPETestViewModel @Inject constructor(
                 error = null
             ) }
 
-            // Get current user - SECURITY: Require authentication
-            val user = observeCurrentUser().first()
-            val userId = user?.id ?: run {
-                ErrorLogger.logTestError(
-                    throwable = IllegalStateException("Unauthenticated GPE test access"),
-                    description = "GPE test access without authentication",
-                    testType = "GPE"
-                )
-
-                // SECURITY: Log unauthenticated access attempt to Firebase Analytics
-                securityLogger.logUnauthenticatedAccess(
-                    testType = TestType.GTO_GPE,
-                    context = "GPETestViewModel.loadTest"
-                )
-
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    loadingMessage = null,
-                    error = "Authentication required. Please login to continue."
-                ) }
-                return@launch
-            }
-
+            val userId = resolveAuthenticatedUserId() ?: return@launch
             android.util.Log.d("GPETestViewModel", "✅ User authenticated: $userId")
 
             try {
-                // Check subscription eligibility BEFORE loading test
-                val eligibility = checkTestEligibility(userId)
-
-                when (eligibility) {
-                    is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
-                        // Show limit reached state
-                        _uiState.update { it.copy(
-                            isLoading = false,
-                            loadingMessage = null,
-                            error = null,
-                            isLimitReached = true,
-                            subscriptionTier = eligibility.tier,
-                            testsLimit = eligibility.limit,
-                            testsUsed = eligibility.usedCount,
-                            resetsAt = eligibility.resetsAt
-                        ) }
-                        android.util.Log.d("GPETestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
-                        return@launch
-                    }
-                    is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
-                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
-                        return@launch
-                    }
-                    is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
-                        android.util.Log.d("GPETestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
-                        // Continue with test loading
-                    }
-                }
-
-                _uiState.update { it.copy(
-                    loadingMessage = "Fetching scenario from cloud..."
-                ) }
-
-                // Create test session
-                val sessionResult = testSessionRepository.createTestSession(
-                    userId = userId,
-                    testId = testId,
-                    testType = TestType.GTO_GPE
-                )
-
-                if (sessionResult.isFailure) {
-                    throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
-                }
-
-                // Fetch questions from cloud
-                val questionsResult = testContentRepository.getGPEQuestions(testId)
-
-                if (questionsResult.isFailure) {
-                    throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test scenario")
-                }
-
-                val questions = questionsResult.getOrNull() ?: emptyList()
-
-                if (questions.isEmpty()) {
-                    throw Exception("No scenarios found for this test")
-                }
-
-                val question = questions.first() // GPE typically has one scenario
-                android.util.Log.d("GPETestViewModel", "📸 Loaded scenario: ${question.id}")
-                android.util.Log.d("GPETestViewModel", "📸 Scenario imageUrl: ${question.imageUrl}")
-
-                val config = GPETestConfig()
-
-                val newSession = GPETestSession(
-                    sessionId = sessionResult.getOrNull()!!,
-                    userId = userId,
-                    questionId = question.id,
-                    question = question,
-                    startTime = System.currentTimeMillis(),
-                    imageViewingStartTime = null,
-                    planningStartTime = null,
-                    currentPhase = GPEPhase.INSTRUCTIONS,
-                    planningResponse = "",
-                    isCompleted = false,
-                    isPaused = false
-                )
-
-                _uiState.update { it.copy(session = newSession) }
-                updateUiFromSession()
-
+                if (!checkEligibilityAndUpdateState(userId)) return@launch
+                loadGPESession(userId, testId)
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,
@@ -228,6 +128,115 @@ class GPETestViewModel @Inject constructor(
                 ) }
             }
         }
+    }
+
+    private suspend fun resolveAuthenticatedUserId(): String? {
+        // Get current user - SECURITY: Require authentication
+        val user = observeCurrentUser().first()
+        val userId = user?.id
+        if (userId == null) {
+            ErrorLogger.logTestError(
+                throwable = IllegalStateException("Unauthenticated GPE test access"),
+                description = "GPE test access without authentication",
+                testType = "GPE"
+            )
+
+            // SECURITY: Log unauthenticated access attempt to Firebase Analytics
+            securityLogger.logUnauthenticatedAccess(
+                testType = TestType.GTO_GPE,
+                context = "GPETestViewModel.loadTest"
+            )
+
+            _uiState.update { it.copy(
+                isLoading = false,
+                loadingMessage = null,
+                error = "Authentication required. Please login to continue."
+            ) }
+        }
+        return userId
+    }
+
+    private suspend fun checkEligibilityAndUpdateState(userId: String): Boolean {
+        // Check subscription eligibility BEFORE loading test
+        val eligibility = checkTestEligibility(userId)
+
+        return when (eligibility) {
+            is com.ssbmax.core.data.repository.TestEligibility.LimitReached -> {
+                // Show limit reached state
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    loadingMessage = null,
+                    error = null,
+                    isLimitReached = true,
+                    subscriptionTier = eligibility.tier,
+                    testsLimit = eligibility.limit,
+                    testsUsed = eligibility.usedCount,
+                    resetsAt = eligibility.resetsAt
+                ) }
+                android.util.Log.d("GPETestViewModel", "❌ Test limit reached: ${eligibility.usedCount}/${eligibility.limit}")
+                false
+            }
+            is com.ssbmax.core.data.repository.TestEligibility.NetworkError -> {
+                _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                false
+            }
+            is com.ssbmax.core.data.repository.TestEligibility.Eligible -> {
+                android.util.Log.d("GPETestViewModel", "✅ Test eligible: ${eligibility.remainingTests} remaining")
+                true
+            }
+        }
+    }
+
+    private suspend fun loadGPESession(userId: String, testId: String) {
+        _uiState.update { it.copy(
+            loadingMessage = "Fetching scenario from cloud..."
+        ) }
+
+        val sessionId = createGPETestSession(userId, testId)
+        val question = fetchGPEQuestion(testId) // GPE typically has one scenario
+        android.util.Log.d("GPETestViewModel", "📸 Loaded scenario: ${question.id}")
+        android.util.Log.d("GPETestViewModel", "📸 Scenario imageUrl: ${question.imageUrl}")
+
+        val newSession = GPETestSession(
+            sessionId = sessionId,
+            userId = userId,
+            questionId = question.id,
+            question = question,
+            startTime = System.currentTimeMillis(),
+            imageViewingStartTime = null,
+            planningStartTime = null,
+            currentPhase = GPEPhase.INSTRUCTIONS,
+            planningResponse = "",
+            isCompleted = false,
+            isPaused = false
+        )
+
+        _uiState.update { it.copy(session = newSession) }
+        updateUiFromSession()
+    }
+
+    private suspend fun createGPETestSession(userId: String, testId: String): String {
+        val sessionResult = testSessionRepository.createTestSession(
+            userId = userId,
+            testId = testId,
+            testType = TestType.GTO_GPE
+        )
+        if (sessionResult.isFailure) {
+            throw sessionResult.exceptionOrNull() ?: Exception("Failed to create test session")
+        }
+        return sessionResult.getOrNull()!!
+    }
+
+    private suspend fun fetchGPEQuestion(testId: String): com.ssbmax.core.domain.model.GPEQuestion {
+        val questionsResult = testContentRepository.getGPEQuestions(testId)
+        if (questionsResult.isFailure) {
+            throw questionsResult.exceptionOrNull() ?: Exception("Failed to load test scenario")
+        }
+        val questions = questionsResult.getOrNull() ?: emptyList()
+        if (questions.isEmpty()) {
+            throw Exception("No scenarios found for this test")
+        }
+        return questions.first()
     }
 
     fun startTest() {
