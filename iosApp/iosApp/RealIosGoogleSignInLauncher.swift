@@ -49,8 +49,11 @@ final class RealIosGoogleSignInLauncher: GoogleSignInLauncher {
 
             // Matches AndroidGoogleSignInLauncher / GitLiveAuthRepository's convention:
             // ResultData.platformData wraps a Kotlin Pair<String, String?> of (idToken, accessToken).
+            // KotlinPair's generic params require class types, so Swift's value-type
+            // String must be cast to NSString explicitly (bridging alone isn't enough
+            // to satisfy the generic constraint).
             let accessToken = result?.user.accessToken.tokenString
-            let tokenPair = KotlinPair(first: idToken, second: accessToken)
+            let tokenPair = KotlinPair(first: idToken as NSString, second: accessToken as NSString?)
             completionHandler(GoogleSignInData.ResultData(platformData: tokenPair), nil)
         }
     }
