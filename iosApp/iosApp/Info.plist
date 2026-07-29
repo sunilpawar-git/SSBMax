@@ -2,48 +2,42 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>en</string>
-    <key>CFBundleExecutable</key>
-    <string>$(EXECUTABLE_NAME)</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.ssbmax</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundleName</key>
-    <string>$(PRODUCT_NAME)</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>UILaunchScreen</key>
-    <dict/>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-    </array>
-    <!-- Phase 6: real BGTaskScheduler identifiers, must exactly match the
-         constants in shared/src/iosMain/.../BGTaskSchedulerBackgroundTaskScheduler.kt
-         (CLEANUP_TASK_ID / ARCHIVAL_TASK_ID) -- registration in
-         AppDelegate.swift will silently no-op at the OS level if these
-         drift out of sync. -->
-    <key>BGTaskSchedulerPermittedIdentifiers</key>
-    <array>
-        <string>com.ssbmax.questioncachecleanup</string>
-        <string>com.ssbmax.submissionarchival</string>
-    </array>
-    <!-- "fetch"/"processing" let the two BGTaskScheduler jobs above actually
-         run in the background at all; "remote-notification" lets a
-         content-available APNs push wake the app for silent updates. -->
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>fetch</string>
-        <string>processing</string>
-        <string>remote-notification</string>
-    </array>
+	<!-- Required by Compose Multiplatform's iOS PlistSanityCheck -- without this,
+	     ComposeUIViewController throws at launch on ProMotion (120Hz) iPhones,
+	     since CADisplayLink would otherwise cap at a fixed low frame duration
+	     and cause visible stutter. -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.ssbmax.questioncachecleanup</string>
+		<string>com.ssbmax.submissionarchival</string>
+	</array>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>GeminiAPIKey</key>
+	<string>$(GEMINI_API_KEY)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>

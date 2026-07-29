@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
 	<!-- Phase 6 (KMP migration plan, item 4 -- push notifications via APNs).
-	     "development" is correct for CODE_SIGNING_ALLOWED=NO / simulator
-	     debug builds in this project today. A real App Store submission
-	     build needs this switched to "production" AND a real Apple
-	     Developer Program enrollment + push certificate/key -- neither
-	     exists in this environment (see docs/architecture/iOS_Store_Readiness.md,
-	     "Push notifications" row). Not fabricated here. -->
+	     "development" is correct for Debug device/simulator builds in this
+	     project today. A real App Store submission build needs this switched
+	     to "production" AND a real Apple Developer Program enrollment + push
+	     certificate/key -- neither exists in this environment (see
+	     docs/architecture/iOS_Store_Readiness.md, "Push notifications" row).
+	     Not fabricated here. -->
 	<key>aps-environment</key>
 	<string>development</string>
 </dict>

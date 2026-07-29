@@ -22,16 +22,12 @@ import kotlin.uuid.Uuid
  * depend on `app`. This is exactly the same shape as the PPDT/TAT/WAT/SRT/SDT/
  * GTO precedent already documented on [SubmissionAnalysisTrigger]'s own doc
  * comment: replaced here with `analysisTrigger.trigger(TestType.IO, sessionId)`.
- * The only binding registered in `shared`'s Koin module is
- * `LoggingSubmissionAnalysisTrigger` (logs, does not enqueue real work) --
- * same real consequence as every other Phase 5 vertical: a session completed
- * through this `shared` path is saved correctly (responses persisted,
- * session marked `PENDING_ANALYSIS`) but will NOT actually be analyzed until
- * a real Android-`app`-side trigger is wired in, exactly mirroring the gap
- * already open for PPDT/TAT/WAT/SRT/GTO. `app/.../ui/interview` itself is
- * untouched -- this vertical is reachable only via `SSBMaxNavHost`, same
- * "not swapped into the live Android app" precedent as every prior Phase 5
- * session.
+ * `shared`'s own binding (`KtorSubmissionAnalysisTrigger`) now dispatches this
+ * to a real `InterviewAnalysisOrchestrator` -- see [SubmissionAnalysisTrigger]'s
+ * own doc for the current per-platform binding shape. `app/.../ui/interview`
+ * itself is untouched -- this vertical is reachable only via `SSBMaxNavHost`,
+ * same "not swapped into the live Android app" precedent as every prior
+ * Phase 5 session.
  *
  * `UUID.randomUUID()` (JVM-only) -> `kotlin.uuid.Uuid.random()` (stdlib,
  * KMP-safe since Kotlin 1.9.20 behind `ExperimentalUuidApi`, already the

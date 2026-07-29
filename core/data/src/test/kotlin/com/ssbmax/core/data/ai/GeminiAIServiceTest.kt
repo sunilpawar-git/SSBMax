@@ -53,7 +53,7 @@ class GeminiAIServiceTest {
         coEvery { mockModel.generateContent(any<String>()) } throws IllegalStateException("boom")
 
         val service = GeminiAIService(apiKey = "key")
-        injectMockModel(service, mockModel)
+        injectMockLargeContextModel(service, mockModel)
 
         val result = service.generateAdaptiveQuestions(
             previousQuestions = emptyList(),
@@ -154,6 +154,17 @@ class GeminiAIServiceTest {
 
     private fun injectMockModel(service: GeminiAIService, mockModel: GenerativeModel) {
         GeminiAIService::class.java.getDeclaredField("model\$delegate").apply {
+            isAccessible = true
+            set(service, lazy { mockModel })
+        }
+    }
+
+    // generateAdaptiveQuestions/generatePIQBasedQuestions use the "largeContextModel" tier,
+    // a separate lazy property from "model" -- injecting into the wrong field left this
+    // test constructing a real GenerativeModel (Ktor OkHttp engine, no HttpTimeout on the
+    // JVM test classpath -> NoClassDefFoundError) instead of exercising the mock.
+    private fun injectMockLargeContextModel(service: GeminiAIService, mockModel: GenerativeModel) {
+        GeminiAIService::class.java.getDeclaredField("largeContextModel\$delegate").apply {
             isAccessible = true
             set(service, lazy { mockModel })
         }

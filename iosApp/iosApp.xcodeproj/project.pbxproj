@@ -7,28 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */; };
 		0A10BB2025684FE43AB60AAE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA4C4A74FBB745C68DA0941 /* ContentView.swift */; };
 		135B029D4A547E0911332BB1 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5BC58D6A473472F59BE040F5 /* FirebaseCore */; };
+		2B6E7F1C3A9D4568B1C2E9A4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */; };
 		45CC1BB1D6854EEAE3ECCA94 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7A53FD79FB80A85AE16311 /* FirebaseAuth */; };
 		4CEA61298A30E62686B8FD82 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D01E028B85E0E71E07326C0 /* Foundation.framework */; };
-		D3204FBF30256FC4DB314B67 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */; };
-		F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */; };
+		6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */; };
 		7C2E9A1B4F6D4082A3B5E7D1 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */; };
 		9F3D8C2A5E1B4076B4C6D8F2 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */; };
-		2B6E7F1C3A9D4568B1C2E9A4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */; };
+		D3204FBF30256FC4DB314B67 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */; };
+		F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		0CA4C4A74FBB745C68DA0941 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		8D01E028B85E0E71E07326C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		AA0EA979E474648E59EA28B7 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iosAppApp.swift; sourceTree = "<group>"; };
-		9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2B6E7F1C3A9D4568B1C2E9A5 /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
+		5EC5E75A1E9B4D9A99A85EC5 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		5EC5E75A1E9B4D9A99A85EC6 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
+		6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
+		8D01E028B85E0E71E07326C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		AA0EA979E474648E59EA28B7 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iosAppApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +67,8 @@
 				6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */,
 				2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */,
 				2B6E7F1C3A9D4568B1C2E9A5 /* GoogleService-Info.plist.example */,
+				5EC5E75A1E9B4D9A99A85EC5 /* Secrets.xcconfig */,
+				5EC5E75A1E9B4D9A99A85EC6 /* Secrets.xcconfig.example */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -102,6 +106,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4090D18620C3864C831DF811 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
+				7A1C9B3E5D2F4A6B8C9D0E1F /* Embed Compose Resources (Kotlin/Native) */,
 				B8C431142ABC21C52E814650 /* Sources */,
 				0A28B3FEF0680FA1BF3AF3E8 /* Frameworks */,
 				4D8A2C6E9F1B4573A0D3E8B6 /* Ensure GoogleService-Info.plist */,
@@ -165,6 +170,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		7A1C9B3E5D2F4A6B8C9D0E1F /* Embed Compose Resources (Kotlin/Native) */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Compose Resources (Kotlin/Native)";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This project links SharedKit.framework manually via FRAMEWORK_SEARCH_PATHS/\n# OTHER_LDFLAGS (a static framework, pre-built by `gradlew :shared:linkDebugFramework...`)\n# rather than through the standard JetBrains Xcode-integration template, which\n# normally runs this exact task from a Run Script phase. Skipping it meant Compose\n# Multiplatform's compose-resources bundle (strings, drawables, etc.) never made it\n# into the app bundle -- discovered via a real launch crash (MissingResourceException\n# on strings.commonMain.cvr) once a screen using stringResource() actually rendered.\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
+		};
 		4D8A2C6E9F1B4573A0D3E8B6 /* Ensure GoogleService-Info.plist */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -236,7 +256,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -301,7 +321,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -322,22 +342,23 @@
 		};
 		6CBA1FA131AB892F06DBCE3C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5EC5E75A1E9B4D9A99A85EC5 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CCVJR9P725;
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
-					"$(inherited)",
-					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosSimulatorArm64/debugFramework",
-				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
 					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosArm64/debugFramework",
+				);
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosSimulatorArm64/debugFramework",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -359,6 +380,7 @@
 		};
 		E03FEDDBE0BA7DE5D7A07F44 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5EC5E75A1E9B4D9A99A85EC5 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -368,13 +390,13 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = CCVJR9P725;
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
-					"$(inherited)",
-					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosSimulatorArm64/debugFramework",
-				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
 					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosArm64/debugFramework",
+				);
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"/Users/sunil/Downloads/SSBMax-kmp/shared/build/bin/iosSimulatorArm64/debugFramework",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -440,15 +462,15 @@
 			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
 		};
-		85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
 		7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

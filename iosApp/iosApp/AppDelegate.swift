@@ -1,6 +1,7 @@
 import UIKit
 import UserNotifications
 import SharedKit
+import FirebaseCore
 
 /// Real app-launch lifecycle hook (Phase 6 of the KMP migration plan).
 ///
@@ -25,6 +26,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Native Firebase iOS SDK bootstrap -- GitLive's Kotlin Firebase SDK is a thin
+        // wrapper over this, not a replacement for it. Must run before ensureKoinStarted(),
+        // since Koin's DI graph constructs GitLiveAuthRepository/GitLiveUserRepository
+        // (Firebase.auth / Firebase.firestore access) as part of module resolution.
+        // Discovered via a real launch crash ("The default FirebaseApp instance must be
+        // configured before the default Auth instance can be initialized") -- this call
+        // never existed anywhere in this codebase before now, Swift or Kotlin.
+        FirebaseApp.configure()
+
         // Starts Koin + registers both BGTaskScheduler identifiers + submits
         // their first requests. See BackgroundTaskRegistrar.kt's class doc
         // for what the launch handlers do (and, just as importantly, don't

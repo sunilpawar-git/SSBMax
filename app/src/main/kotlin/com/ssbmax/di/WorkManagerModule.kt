@@ -21,8 +21,8 @@ import org.koin.dsl.module
  * Also binds the real [SubmissionAnalysisTrigger] (Phase 5 KMP migration,
  * "Phase D" of the close-out plan) -- this module loads after `sharedModule`
  * in `appModules` (see `KoinModules.kt`), so Koin's default `allowOverride`
- * lets [WorkManagerSubmissionAnalysisTrigger] win over `sharedModule`'s
- * `LoggingSubmissionAnalysisTrigger`, same override pattern as
+ * lets [WorkManagerSubmissionAnalysisTrigger] win over `sharedModule`'s own
+ * `KtorSubmissionAnalysisTrigger` default, same override pattern as
  * `TestUsageRecorder`/`TestSessionRepository` in `core:data`'s
  * `repositoryModule`.
  */

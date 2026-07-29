@@ -10,23 +10,31 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.FirebaseUser
 import dev.gitlive.firebase.auth.GoogleAuthProvider
 import dev.gitlive.firebase.auth.auth
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.Clock
 
 /**
  * GitLive-Firebase-backed implementation, ported from the Android
  * AuthRepositoryImpl + FirestoreUserRepository pair (Phase 2).
  *
- * handleGoogleSignInResult now does the real load-or-create-profile merge via
+ * handleGoogleSignInResult does the real load-or-create-profile merge via
  * GitLiveUserRepository (users/{userId}) — closing the gap the Phase 0 report
  * flagged ("that's real business logic worth porting in Phase 2"). currentUser
- * is still a plain in-memory StateFlow rather than the Android original's
- * callbackFlow-over-Firebase-authState + Firestore join; that reactive-auth-state
- * wiring (observing role/profile changes pushed from another device) remains
- * out of scope for this slice and is not silently dropped — same "trimmed but
- * real" pattern Phase 0/2 used elsewhere.
+ * is now reactive over Firebase.auth.authStateChanged joined with
+ * GitLiveUserRepository.observeUser's Firestore snapshot listener — the same
+ * shape as the Android original's callbackFlow-over-authState + Firestore
+ * join, closing the gap Phase 0/2 previously left open. No app-wide
+ * CoroutineScope singleton exists in this module's Koin graph yet (see
+ * GitLiveOIRQuestionCacheManager's doc comment for the same precedent), so
+ * this repository owns its own background scope, matching that pattern.
  *
  * A real Google ID token exchange (Android Credential Manager / iOS
  * GoogleSignIn SDK) is NOT wired here — GoogleSignInData carries an
@@ -37,8 +45,19 @@ class GitLiveAuthRepository(
     private val userRepository: GitLiveUserRepository = GitLiveUserRepository()
 ) : AuthRepository {
 
-    private val _currentUser = MutableStateFlow<SSBMaxUser?>(null)
-    override val currentUser: StateFlow<SSBMaxUser?> = _currentUser.asStateFlow()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override val currentUser: StateFlow<SSBMaxUser?> = Firebase.auth.authStateChanged
+        .flatMapLatest { firebaseUser ->
+            if (firebaseUser == null) flowOf(null) else userRepository.observeUser(firebaseUser.uid)
+        }
+        .catch { emit(null) }
+        .stateIn(
+            scope = repositoryScope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000L),
+            initialValue = null
+        )
 
     // Email/password auth is not implemented in the Android app either (always
     // Result.failure there) — Google Sign-In is the only real flow. Matched here
@@ -60,14 +79,11 @@ class GitLiveAuthRepository(
     }
 
     override suspend fun updateUserRole(role: UserRole): Result<Unit> {
-        val current = _currentUser.value
+        val userId = Firebase.auth.currentUser?.uid
             ?: return Result.failure(IllegalStateException("No authenticated user"))
-        val userId = current.id
-        val result = userRepository.updateUserRole(userId, role)
-        if (result.isSuccess) {
-            _currentUser.value = current.copy(role = role)
-        }
-        return result
+        // No manual currentUser patch needed -- observeUser's Firestore snapshot
+        // listener picks up this write and pushes it through automatically.
+        return userRepository.updateUserRole(userId, role)
     }
 
     override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result<SSBMaxUser> {
@@ -84,9 +100,9 @@ class GitLiveAuthRepository(
             val firebaseUser = authResult.user
                 ?: return Result.failure(Exception("Firebase user is null after sign-in"))
 
-            val userResult = loadOrCreateUserProfile(firebaseUser)
-            userResult.onSuccess { _currentUser.value = it }
-            userResult
+            // No manual currentUser patch needed -- authStateChanged + observeUser
+            // pick this sign-in up and push the loaded/created profile through.
+            loadOrCreateUserProfile(firebaseUser)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -119,8 +135,9 @@ class GitLiveAuthRepository(
 
     override suspend fun signOut(): Result<Unit> {
         return try {
+            // No manual currentUser patch needed -- authStateChanged emits null
+            // as soon as Firebase's own sign-out completes.
             Firebase.auth.signOut()
-            _currentUser.value = null
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

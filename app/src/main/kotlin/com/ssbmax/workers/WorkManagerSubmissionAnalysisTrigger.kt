@@ -17,7 +17,8 @@ private const val TAG = "WorkManagerSubmissionAnalysisTrigger"
 
 /**
  * Real Android binding for [SubmissionAnalysisTrigger], overriding
- * `shared`'s [com.ssbmax.shared.domain.service.LoggingSubmissionAnalysisTrigger]
+ * `shared`'s own default binding (`com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger`,
+ * the real iOS-side implementation) on this platform
  * (see that interface's doc for why the override lives here rather than as
  * an `expect`/`actual` pair: `shared` cannot depend on `app`'s concrete
  * `CoroutineWorker` classes, so the real implementation can only live where

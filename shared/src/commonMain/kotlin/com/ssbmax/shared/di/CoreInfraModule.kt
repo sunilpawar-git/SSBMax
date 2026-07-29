@@ -4,17 +4,27 @@ import com.ssbmax.shared.ai.KtorAIService
 import com.ssbmax.shared.ai.KtorGeminiClient
 import com.ssbmax.shared.ai.KtorPPDTAnalyzer
 import com.ssbmax.shared.ai.KtorTATStoryAnalyzer
+import com.ssbmax.shared.analysis.GTOAnalysisOrchestrator
+import com.ssbmax.shared.analysis.InterviewAnalysisOrchestrator
+import com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger
+import com.ssbmax.shared.analysis.PPDTAnalysisOrchestrator
+import com.ssbmax.shared.analysis.SDAnalysisOrchestrator
+import com.ssbmax.shared.analysis.SRTAnalysisOrchestrator
+import com.ssbmax.shared.analysis.TATAnalysisOrchestrator
+import com.ssbmax.shared.analysis.WATAnalysisOrchestrator
 import com.ssbmax.shared.data.repository.OirResultCache
 import com.ssbmax.shared.db.DatabaseDriverFactory
 import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.shared.domain.service.LoggingSubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -62,5 +72,17 @@ val coreInfraModule = module {
     single { KtorTATStoryAnalyzer(client = get(), logger = get()) }
     factoryOf(::KtorAIService) bind AIService::class
 
-    singleOf(::LoggingSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
+    // No app-wide CoroutineScope singleton existed before this -- see
+    // GitLiveOIRQuestionCacheManager's doc comment for the same precedent this follows.
+    // Now shared by the fire-and-forget SubmissionAnalysisTrigger dispatch below.
+    single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+
+    singleOf(::PPDTAnalysisOrchestrator)
+    singleOf(::TATAnalysisOrchestrator)
+    singleOf(::WATAnalysisOrchestrator)
+    singleOf(::SRTAnalysisOrchestrator)
+    singleOf(::SDAnalysisOrchestrator)
+    singleOf(::GTOAnalysisOrchestrator)
+    singleOf(::InterviewAnalysisOrchestrator)
+    singleOf(::KtorSubmissionAnalysisTrigger) bind SubmissionAnalysisTrigger::class
 }

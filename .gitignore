@@ -95,6 +95,11 @@ core/**/google-services.json
 # GoogleService-Info.plist.example is a placeholder template, not this.
 iosApp/iosApp/GoogleService-Info.plist
 
+# iOS build secrets (GEMINI_API_KEY etc, via Xcode baseConfigurationReference)
+# -- same treatment, real file never committed. Secrets.xcconfig.example is
+# the checked-in placeholder template.
+iosApp/iosApp/Secrets.xcconfig
+
 # Freeline
 freeline.py
 freeline/

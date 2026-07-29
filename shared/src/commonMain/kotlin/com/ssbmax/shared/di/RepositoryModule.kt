@@ -32,6 +32,7 @@ import com.ssbmax.shared.data.repository.GitLiveTestSessionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestSubmissionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestUsageRecorder
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
+import com.ssbmax.shared.data.repository.GitLiveUserRepository
 import com.ssbmax.shared.data.repository.GitLiveWATWordCacheManager
 import com.ssbmax.shared.data.repository.InterviewQuestionGenerator
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
@@ -73,6 +74,15 @@ import org.koin.dsl.module
  * (Phase 5 sessions, pre-split) for the full per-repository rationale.
  */
 val repositoryModule = module {
+    // GitLiveAuthRepository's userRepository constructor param has a Kotlin default
+    // value (= GitLiveUserRepository()), but singleOf's reflection-based DSL ignores
+    // Kotlin default parameters and always resolves every constructor param through
+    // Koin -- so this binding is required, not optional, despite the default value
+    // suggesting otherwise. Discovered via a real iOS launch crash
+    // (NoDefinitionFoundException): Android never hit this because core:data's own
+    // AuthRepositoryImpl shadow-overrides AuthRepository there, so GitLiveAuthRepository
+    // itself is never actually constructed on that platform.
+    singleOf(::GitLiveUserRepository)
     singleOf(::GitLiveAuthRepository) bind AuthRepository::class
     singleOf(::GitLiveOirResultRepository) bind OirResultRepository::class
     singleOf(::GitLiveUserProfileRepository) bind UserProfileRepository::class
