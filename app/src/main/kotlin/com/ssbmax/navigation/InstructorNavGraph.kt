@@ -21,6 +21,11 @@ fun NavGraphBuilder.instructorNavGraph(
     navController: NavHostController,
     onOpenDrawer: () -> Unit
 ) {
+    instructorDashboardScreens(navController, onOpenDrawer)
+    instructorDetailScreens(navController)
+}
+
+private fun NavGraphBuilder.instructorDashboardScreens(navController: NavHostController, onOpenDrawer: () -> Unit) {
     // Instructor Home
     composable(SSBMaxDestinations.InstructorHome.route) {
         com.ssbmax.ui.home.instructor.InstructorHomeScreen(
@@ -67,6 +72,9 @@ fun NavGraphBuilder.instructorNavGraph(
         )
     }
     
+}
+
+private fun NavGraphBuilder.instructorDetailScreens(navController: NavHostController) {
     // Create Batch
     composable(SSBMaxDestinations.CreateBatch.route) {
         com.ssbmax.ui.instructor.CreateBatchScreen(

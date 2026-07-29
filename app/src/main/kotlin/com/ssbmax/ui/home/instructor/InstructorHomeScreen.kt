@@ -82,40 +82,12 @@ fun InstructorHomeScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            stringResource(R.string.instructor_dashboard),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            stringResource(R.string.instructor_stats_summary, uiState.totalStudents, uiState.activeBatches),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onOpenDrawer) {
-                        Icon(Icons.Default.Menu, stringResource(R.string.cd_menu))
-                    }
-                },
-                actions = {
-                    // Grading Queue Badge
-                    IconButton(onClick = onNavigateToGrading) {
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.error
-                        ) {
-                            Text("${uiState.pendingGradingCount}")
-                        }
-                        Icon(Icons.Default.AssignmentLate, stringResource(R.string.cd_pending_grading))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            InstructorHomeTopBar(
+                totalStudents = uiState.totalStudents,
+                activeBatches = uiState.activeBatches,
+                pendingGradingCount = uiState.pendingGradingCount,
+                onOpenDrawer = onOpenDrawer,
+                onNavigateToGrading = onNavigateToGrading
             )
         },
         floatingActionButton = {
@@ -131,42 +103,13 @@ fun InstructorHomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Stats Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
-                    title = stringResource(R.string.stat_tests_graded),
-                    value = "${uiState.testsGradedToday}",
-                    subtitle = stringResource(R.string.stat_today),
-                    icon = Icons.Default.Check,
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.weight(1f)
-                )
+            InstructorStatsRow(
+                testsGradedToday = uiState.testsGradedToday,
+                pendingGradingCount = uiState.pendingGradingCount,
+                avgResponseTime = uiState.avgResponseTime,
+                onNavigateToGrading = onNavigateToGrading
+            )
 
-                StatCard(
-                    title = stringResource(R.string.stat_pending),
-                    value = "${uiState.pendingGradingCount}",
-                    subtitle = stringResource(R.string.stat_to_grade),
-                    icon = Icons.Default.Schedule,
-                    color = Color(0xFFFFA726),
-                    onClick = onNavigateToGrading,
-                    modifier = Modifier.weight(1f)
-                )
-
-                StatCard(
-                    title = stringResource(R.string.stat_avg_response),
-                    value = "${uiState.avgResponseTime}h",
-                    subtitle = stringResource(R.string.stat_time),
-                    icon = Icons.Default.Speed,
-                    color = Color(0xFF2196F3),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
             // Tabs
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(
@@ -199,6 +142,95 @@ fun InstructorHomeScreen(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun InstructorHomeTopBar(
+    totalStudents: Int,
+    activeBatches: Int,
+    pendingGradingCount: Int,
+    onOpenDrawer: () -> Unit,
+    onNavigateToGrading: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Column {
+                Text(
+                    stringResource(R.string.instructor_dashboard),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.instructor_stats_summary, totalStudents, activeBatches),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(Icons.Default.Menu, stringResource(R.string.cd_menu))
+            }
+        },
+        actions = {
+            // Grading Queue Badge
+            IconButton(onClick = onNavigateToGrading) {
+                Badge(
+                    containerColor = MaterialTheme.colorScheme.error
+                ) {
+                    Text("$pendingGradingCount")
+                }
+                Icon(Icons.Default.AssignmentLate, stringResource(R.string.cd_pending_grading))
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
+private fun InstructorStatsRow(
+    testsGradedToday: Int,
+    pendingGradingCount: Int,
+    avgResponseTime: Int,
+    onNavigateToGrading: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatCard(
+            title = stringResource(R.string.stat_tests_graded),
+            value = "$testsGradedToday",
+            subtitle = stringResource(R.string.stat_today),
+            icon = Icons.Default.Check,
+            color = Color(0xFF4CAF50),
+            modifier = Modifier.weight(1f)
+        )
+
+        StatCard(
+            title = stringResource(R.string.stat_pending),
+            value = "$pendingGradingCount",
+            subtitle = stringResource(R.string.stat_to_grade),
+            icon = Icons.Default.Schedule,
+            color = Color(0xFFFFA726),
+            onClick = onNavigateToGrading,
+            modifier = Modifier.weight(1f)
+        )
+
+        StatCard(
+            title = stringResource(R.string.stat_avg_response),
+            value = "${avgResponseTime}h",
+            subtitle = stringResource(R.string.stat_time),
+            icon = Icons.Default.Speed,
+            color = Color(0xFF2196F3),
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 

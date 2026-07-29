@@ -19,7 +19,36 @@ fun NavGraphBuilder.studentNavGraph(
     navController: NavHostController,
     onOpenDrawer: () -> Unit
 ) {
-    // Student Home
+    studentHomeScreen(navController, onOpenDrawer)
+    studentSecondaryScreens(navController)
+}
+
+private fun resolveTestResultRoute(testType: com.ssbmax.core.domain.model.TestType, submissionId: String): String? {
+    return when (testType) {
+        // Phase 1
+        com.ssbmax.core.domain.model.TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId) // OIR uses sessionId as submissionId
+        com.ssbmax.core.domain.model.TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
+
+        // Phase 2 - Psychology
+        com.ssbmax.core.domain.model.TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
+
+        // GTO
+        com.ssbmax.core.domain.model.TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
+        com.ssbmax.core.domain.model.TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
+
+        // Interview
+        com.ssbmax.core.domain.model.TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(submissionId)
+
+        else -> null
+    }
+}
+
+private fun NavGraphBuilder.studentHomeScreen(navController: NavHostController, onOpenDrawer: () -> Unit) {
     composable(SSBMaxDestinations.StudentHome.route) {
         com.ssbmax.ui.home.student.StudentHomeScreen(
             onNavigateToTopic = { topicRoute ->
@@ -28,9 +57,9 @@ fun NavGraphBuilder.studentNavGraph(
             },
             onNavigateToPhaseDetail = { phase ->
                 when (phase) {
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_1 -> 
+                    com.ssbmax.core.domain.model.TestPhase.PHASE_1 ->
                         navController.navigate(SSBMaxDestinations.Phase1Detail.route)
-                    com.ssbmax.core.domain.model.TestPhase.PHASE_2 -> 
+                    com.ssbmax.core.domain.model.TestPhase.PHASE_2 ->
                         navController.navigate(SSBMaxDestinations.Phase2Detail.route)
                 }
             },
@@ -50,37 +79,16 @@ fun NavGraphBuilder.studentNavGraph(
                 navController.navigate(SSBMaxDestinations.Analytics.route)
             },
             onNavigateToResult = { testType, submissionId ->
-                val route = when (testType) {
-                    // Phase 1
-                    com.ssbmax.core.domain.model.TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId) // OIR uses sessionId as submissionId
-                    com.ssbmax.core.domain.model.TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
-                    
-                    // Phase 2 - Psychology
-                    com.ssbmax.core.domain.model.TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
-                    
-                    // GTO
-                    com.ssbmax.core.domain.model.TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
-                    com.ssbmax.core.domain.model.TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
-                    
-                    // Interview
-                    com.ssbmax.core.domain.model.TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(submissionId)
-                    
-                    else -> null
-                }
-                
-                if (route != null) {
+                resolveTestResultRoute(testType, submissionId)?.let { route ->
                     navController.navigate(route)
                 }
             },
             onOpenDrawer = onOpenDrawer
         )
     }
-    
+}
+
+private fun NavGraphBuilder.studentSecondaryScreens(navController: NavHostController) {
     // Student Tests
     composable(SSBMaxDestinations.StudentTests.route) {
         com.ssbmax.ui.tests.StudentTestsScreen(

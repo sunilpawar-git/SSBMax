@@ -704,26 +704,28 @@ private fun TestCard(
 }
 
 // Helper functions
+private val TEST_TYPE_COLORS: Map<TestType, Color> = mapOf(
+    TestType.OIR to Color(0xFF1976D2),
+    TestType.PPDT to Color(0xFF388E3C),
+    TestType.PIQ to Color(0xFF009688),
+    TestType.TAT to Color(0xFFD32F2F),
+    TestType.WAT to Color(0xFFF57C00),
+    TestType.SRT to Color(0xFF7B1FA2),
+    TestType.SD to Color(0xFF0097A7),
+    // GTO Tasks - vibrant colors consistent with app design
+    TestType.GTO_GD to Color(0xFF2196F3),      // Bright Blue
+    TestType.GTO_GPE to Color(0xFF4CAF50),     // Bright Green
+    TestType.GTO_PGT to Color(0xFFFF9800),     // Bright Orange
+    TestType.GTO_GOR to Color(0xFF9C27B0),     // Bright Purple
+    TestType.GTO_HGT to Color(0xFF00BCD4),     // Bright Cyan
+    TestType.GTO_LECTURETTE to Color(0xFF3F51B5), // Bright Indigo
+    TestType.GTO_IO to Color(0xFF8BC34A),      // Bright Light Green
+    TestType.GTO_CT to Color(0xFFFF5722),      // Bright Deep Orange
+    TestType.IO to Color(0xFF455A64)
+)
+
 private fun getTestColor(testType: TestType): Color {
-    return when (testType) {
-        TestType.OIR -> Color(0xFF1976D2)
-        TestType.PPDT -> Color(0xFF388E3C)
-        TestType.PIQ -> Color(0xFF009688)
-        TestType.TAT -> Color(0xFFD32F2F)
-        TestType.WAT -> Color(0xFFF57C00)
-        TestType.SRT -> Color(0xFF7B1FA2)
-        TestType.SD -> Color(0xFF0097A7)
-        // GTO Tasks - vibrant colors consistent with app design
-        TestType.GTO_GD -> Color(0xFF2196F3)      // Bright Blue
-        TestType.GTO_GPE -> Color(0xFF4CAF50)     // Bright Green
-        TestType.GTO_PGT -> Color(0xFFFF9800)     // Bright Orange
-        TestType.GTO_GOR -> Color(0xFF9C27B0)     // Bright Purple
-        TestType.GTO_HGT -> Color(0xFF00BCD4)     // Bright Cyan
-        TestType.GTO_LECTURETTE -> Color(0xFF3F51B5) // Bright Indigo
-        TestType.GTO_IO -> Color(0xFF8BC34A)      // Bright Light Green
-        TestType.GTO_CT -> Color(0xFFFF5722)      // Bright Deep Orange
-        TestType.IO -> Color(0xFF455A64)
-    }
+    return TEST_TYPE_COLORS.getValue(testType)
 }
 
 private fun getTestIcon(testType: TestType): androidx.compose.ui.graphics.vector.ImageVector {

@@ -59,22 +59,8 @@ fun TestScoreChip(
                 } else Modifier
             ),
         shape = RoundedCornerShape(8.dp),
-        color = when {
-            score == null -> MaterialTheme.colorScheme.surfaceVariant
-            score <= 5f -> Color(0xFF4CAF50).copy(alpha = 0.2f)  // Green
-            score <= 7f -> Color(0xFFFFC107).copy(alpha = 0.2f)  // Amber
-            else -> Color(0xFFF44336).copy(alpha = 0.2f)  // Red
-        },
-        border = if (score != null) {
-            BorderStroke(
-                1.dp,
-                when {
-                    score <= 5f -> Color(0xFF4CAF50)
-                    score <= 7f -> Color(0xFFFFC107)
-                    else -> Color(0xFFF44336)
-                }
-            )
-        } else null
+        color = if (score == null) MaterialTheme.colorScheme.surfaceVariant else scoreColor(score).copy(alpha = 0.2f),
+        border = score?.let { BorderStroke(1.dp, scoreColor(it)) }
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -92,11 +78,7 @@ fun TestScoreChip(
                     text = "%.1f".format(score),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = when {
-                        score <= 5f -> Color(0xFF4CAF50)
-                        score <= 7f -> Color(0xFFFFC107)
-                        else -> Color(0xFFF44336)
-                    }
+                    color = scoreColor(score)
                 )
             } else {
                 Text(
@@ -106,6 +88,14 @@ fun TestScoreChip(
                 )
             }
         }
+    }
+}
+
+private fun scoreColor(score: Float): Color {
+    return when {
+        score <= 5f -> Color(0xFF4CAF50) // Green
+        score <= 7f -> Color(0xFFFFC107) // Amber
+        else -> Color(0xFFF44336) // Red
     }
 }
 

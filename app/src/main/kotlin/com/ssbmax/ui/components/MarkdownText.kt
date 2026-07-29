@@ -37,149 +37,128 @@ fun MarkdownText(
     ) {
         // Split by double newlines to identify blocks, then process each line within blocks
         content.split("\n\n").forEach { block ->
-            val lines = block.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
-            
-            // Track if we're in a multi-line list
-            var inBulletList = false
-            var inNumberedList = false
-            val bulletItems = mutableListOf<String>()
-            val numberedItems = mutableListOf<String>()
-            
-            lines.forEach { line ->
-                when {
-                    // Main heading (#)
-                    line.startsWith("# ") -> {
-                        // Flush any pending lists
-                        if (inBulletList) {
-                            renderBulletList(bulletItems, textColor)
-                            bulletItems.clear()
-                            inBulletList = false
-                        }
-                        if (inNumberedList) {
-                            renderNumberedList(numberedItems, textColor)
-                            numberedItems.clear()
-                            inNumberedList = false
-                        }
-                        
-                        Text(
-                            text = line.removePrefix("# ").trim(),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = textColor,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                        )
-                    }
-                    
-                    // Subheading (##)
-                    line.startsWith("## ") -> {
-                        // Flush any pending lists
-                        if (inBulletList) {
-                            renderBulletList(bulletItems, textColor)
-                            bulletItems.clear()
-                            inBulletList = false
-                        }
-                        if (inNumberedList) {
-                            renderNumberedList(numberedItems, textColor)
-                            numberedItems.clear()
-                            inNumberedList = false
-                        }
-                        
-                        Text(
-                            text = line.removePrefix("## ").trim(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textColor,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                        )
-                    }
-                    
-                    // Small heading (###)
-                    line.startsWith("### ") -> {
-                        // Flush any pending lists
-                        if (inBulletList) {
-                            renderBulletList(bulletItems, textColor)
-                            bulletItems.clear()
-                            inBulletList = false
-                        }
-                        if (inNumberedList) {
-                            renderNumberedList(numberedItems, textColor)
-                            numberedItems.clear()
-                            inNumberedList = false
-                        }
-                        
-                        Text(
-                            text = line.removePrefix("### ").trim(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = textColor,
-                            modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
-                        )
-                    }
-                    
-                    // Bullet list item
-                    line.startsWith("- ") || line.startsWith("* ") || 
-                    line.startsWith("• ") || line.startsWith("✓ ") -> {
-                        // Flush numbered list if switching types
-                        if (inNumberedList) {
-                            renderNumberedList(numberedItems, textColor)
-                            numberedItems.clear()
-                            inNumberedList = false
-                        }
-                        
-                        inBulletList = true
-                        val cleanedItem = line.trim()
-                            .removePrefix("- ").removePrefix("* ")
-                            .removePrefix("• ").removePrefix("✓ ")
-                            .trim()
-                        bulletItems.add(cleanedItem)
-                    }
-                    
-                    // Numbered list item
-                    line.matches(Regex("^\\d+\\..*")) -> {
-                        // Flush bullet list if switching types
-                        if (inBulletList) {
-                            renderBulletList(bulletItems, textColor)
-                            bulletItems.clear()
-                            inBulletList = false
-                        }
-                        
-                        inNumberedList = true
-                        val cleanedItem = line.trim().replaceFirst(Regex("^\\d+\\.\\s*"), "")
-                        numberedItems.add(cleanedItem)
-                    }
-                    
-                    // Regular line with inline bold support
-                    else -> {
-                        // Flush any pending lists
-                        if (inBulletList) {
-                            renderBulletList(bulletItems, textColor)
-                            bulletItems.clear()
-                            inBulletList = false
-                        }
-                        if (inNumberedList) {
-                            renderNumberedList(numberedItems, textColor)
-                            numberedItems.clear()
-                            inNumberedList = false
-                        }
-                        
-                    Text(
-                        text = parseInlineBold(line),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = textColor
-                    )
-                    }
-                }
+            MarkdownBlock(block, textColor)
+        }
+    }
+}
+
+/**
+ * Tracks pending bullet/numbered list items within a block so they can be
+ * flushed as a single grouped list right before a heading or plain line.
+ */
+private class MarkdownListState(private val textColor: Color) {
+    private var inBulletList = false
+    private var inNumberedList = false
+    private val bulletItems = mutableListOf<String>()
+    private val numberedItems = mutableListOf<String>()
+
+    @Composable
+    fun flush() {
+        if (inBulletList) {
+            renderBulletList(bulletItems, textColor)
+            bulletItems.clear()
+            inBulletList = false
+        }
+        if (inNumberedList) {
+            renderNumberedList(numberedItems, textColor)
+            numberedItems.clear()
+            inNumberedList = false
+        }
+    }
+
+    @Composable
+    fun addBulletItem(item: String) {
+        if (inNumberedList) {
+            renderNumberedList(numberedItems, textColor)
+            numberedItems.clear()
+            inNumberedList = false
+        }
+        inBulletList = true
+        bulletItems.add(item)
+    }
+
+    @Composable
+    fun addNumberedItem(item: String) {
+        if (inBulletList) {
+            renderBulletList(bulletItems, textColor)
+            bulletItems.clear()
+            inBulletList = false
+        }
+        inNumberedList = true
+        numberedItems.add(item)
+    }
+}
+
+@Composable
+private fun MarkdownBlock(block: String, textColor: Color) {
+    val lines = block.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+    val listState = MarkdownListState(textColor)
+
+    lines.forEach { line ->
+        when {
+            line.startsWith("# ") -> {
+                listState.flush()
+                MarkdownHeading(
+                    line.removePrefix("# ").trim(), MaterialTheme.typography.headlineSmall,
+                    FontWeight.Bold, 8.dp, 4.dp, textColor
+                )
             }
-            
-            // Flush any remaining lists at end of block
-            if (inBulletList && bulletItems.isNotEmpty()) {
-                renderBulletList(bulletItems, textColor)
+            line.startsWith("## ") -> {
+                listState.flush()
+                MarkdownHeading(
+                    line.removePrefix("## ").trim(), MaterialTheme.typography.titleLarge,
+                    FontWeight.SemiBold, 8.dp, 4.dp, textColor
+                )
             }
-            if (inNumberedList && numberedItems.isNotEmpty()) {
-                renderNumberedList(numberedItems, textColor)
+            line.startsWith("### ") -> {
+                listState.flush()
+                MarkdownHeading(
+                    line.removePrefix("### ").trim(), MaterialTheme.typography.titleMedium,
+                    FontWeight.Medium, 6.dp, 2.dp, textColor
+                )
+            }
+            line.startsWith("- ") || line.startsWith("* ") ||
+                line.startsWith("• ") || line.startsWith("✓ ") -> {
+                val cleanedItem = line.trim()
+                    .removePrefix("- ").removePrefix("* ")
+                    .removePrefix("• ").removePrefix("✓ ")
+                    .trim()
+                listState.addBulletItem(cleanedItem)
+            }
+            line.matches(Regex("^\\d+\\..*")) -> {
+                val cleanedItem = line.trim().replaceFirst(Regex("^\\d+\\.\\s*"), "")
+                listState.addNumberedItem(cleanedItem)
+            }
+            else -> {
+                listState.flush()
+                Text(
+                    text = parseInlineBold(line),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textColor
+                )
             }
         }
     }
+
+    listState.flush()
+}
+
+@Composable
+private fun MarkdownHeading(
+    text: String,
+    style: androidx.compose.ui.text.TextStyle,
+    fontWeight: FontWeight,
+    topPadding: androidx.compose.ui.unit.Dp,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    textColor: Color
+) {
+    Text(
+        text = text,
+        style = style,
+        fontWeight = fontWeight,
+        color = textColor,
+        modifier = Modifier.padding(top = topPadding, bottom = bottomPadding)
+    )
 }
 
 /**

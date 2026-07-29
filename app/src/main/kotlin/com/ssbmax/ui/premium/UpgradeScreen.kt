@@ -256,166 +256,189 @@ private fun AnimatedPlanCard(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            // Header with gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = plan.gradient.map { parseColor(it) }
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Column {
-                            Text(
-                                plan.name,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                plan.tagline,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                        }
-                        
-                        if (plan.isRecommended) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color.White.copy(alpha = 0.3f)
-                            ) {
-                                Text(
-                                    stringResource(R.string.plan_badge_popular),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
+            PlanCardHeader(plan, currentTier, selectedBillingCycle)
 
-                        if (plan.tier == currentTier) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color.White.copy(alpha = 0.3f)
-                            ) {
-                                Text(
-                                    stringResource(R.string.plan_badge_current),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-                    
-                    Spacer(Modifier.height(16.dp))
-                    
-                    // Price
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        if (plan.tier == SubscriptionTier.FREE) {
-                            Text(
-                                stringResource(R.string.plan_price_free),
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        } else {
-                            Text(
-                                "₹${plan.getPriceForCycle(selectedBillingCycle).toInt()}",
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                stringResource(when(selectedBillingCycle) {
-                                    BillingCycle.MONTHLY -> R.string.plan_period_month
-                                    BillingCycle.QUARTERLY -> R.string.plan_period_quarter
-                                    BillingCycle.ANNUALLY -> R.string.plan_period_year
-                                }),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.8f),
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                        }
-                    }
-                    
-                    plan.getSavingsForCycle(selectedBillingCycle)?.let { savings ->
-                        Text(
-                            savings,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(alpha = 0.9f),
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            }
-            
             Spacer(Modifier.height(16.dp))
-            
-            // Features
-            plan.features.forEach { feature ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        if (feature.isIncluded) Icons.Default.CheckCircle else Icons.Default.Cancel,
-                        contentDescription = null,
-                        tint = if (feature.isIncluded) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        feature.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (feature.isIncluded)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                }
-            }
-            
+
+            PlanCardFeaturesList(plan)
+
             Spacer(Modifier.height(16.dp))
-            
-            // Action Button
-            Button(
-                onClick = onUpgradeClick,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = plan.tier != currentTier,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
+
+            PlanCardActionButton(plan, currentTier, onUpgradeClick)
+        }
+    }
+}
+
+@Composable
+private fun PlanCardHeader(
+    plan: SubscriptionPlan,
+    currentTier: SubscriptionTier,
+    selectedBillingCycle: BillingCycle
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = plan.gradient.map { parseColor(it) }
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Column {
+            PlanCardTitleRow(plan, currentTier)
+
+            Spacer(Modifier.height(16.dp))
+
+            PlanCardPriceRow(plan, selectedBillingCycle)
+
+            plan.getSavingsForCycle(selectedBillingCycle)?.let { savings ->
                 Text(
-                    stringResource(when {
-                        plan.tier == currentTier -> R.string.plan_action_current
-                        plan.tier < currentTier -> R.string.plan_action_downgrade
-                        else -> R.string.plan_action_upgrade
-                    }),
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    savings,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PlanCardTitleRow(plan: SubscriptionPlan, currentTier: SubscriptionTier) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Column {
+            Text(
+                plan.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                plan.tagline,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.9f)
+            )
+        }
+
+        if (plan.isRecommended) {
+            PlanCardBadge(stringResource(R.string.plan_badge_popular))
+        }
+
+        if (plan.tier == currentTier) {
+            PlanCardBadge(stringResource(R.string.plan_badge_current))
+        }
+    }
+}
+
+@Composable
+private fun PlanCardBadge(text: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White.copy(alpha = 0.3f)
+    ) {
+        Text(
+            text,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun PlanCardPriceRow(plan: SubscriptionPlan, selectedBillingCycle: BillingCycle) {
+    Row(
+        verticalAlignment = Alignment.Bottom
+    ) {
+        if (plan.tier == SubscriptionTier.FREE) {
+            Text(
+                stringResource(R.string.plan_price_free),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        } else {
+            Text(
+                "₹${plan.getPriceForCycle(selectedBillingCycle).toInt()}",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                stringResource(when (selectedBillingCycle) {
+                    BillingCycle.MONTHLY -> R.string.plan_period_month
+                    BillingCycle.QUARTERLY -> R.string.plan_period_quarter
+                    BillingCycle.ANNUALLY -> R.string.plan_period_year
+                }),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlanCardFeaturesList(plan: SubscriptionPlan) {
+    plan.features.forEach { feature ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                if (feature.isIncluded) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                contentDescription = null,
+                tint = if (feature.isIncluded)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                feature.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (feature.isIncluded)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlanCardActionButton(
+    plan: SubscriptionPlan,
+    currentTier: SubscriptionTier,
+    onUpgradeClick: () -> Unit
+) {
+    Button(
+        onClick = onUpgradeClick,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = plan.tier != currentTier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Text(
+            stringResource(when {
+                plan.tier == currentTier -> R.string.plan_action_current
+                plan.tier < currentTier -> R.string.plan_action_downgrade
+                else -> R.string.plan_action_upgrade
+            }),
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
     }
 }
 

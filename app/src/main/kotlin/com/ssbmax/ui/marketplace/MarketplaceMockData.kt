@@ -12,7 +12,21 @@ object MarketplaceMockData {
 
     fun getInstitutes(): List<CoachingInstitute> {
         return listOf(
-            CoachingInstitute(
+            majorKalshi(),
+            cavalierIndia(),
+            baalnoiAcademy(),
+            colonelsSSBAcademy(),
+            oliveGreensInstitute(),
+            warriorsSSBAcademy(),
+            centurionDefenceAcademy(),
+            vanguardSSBAcademy(),
+            aceTheSSB(),
+            brigadiersCoaching()
+        )
+    }
+
+    private fun majorKalshi(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "major_kalshi",
                 name = "Major Kalshi Classes",
                 description = "Premier SSB coaching institute with 30+ years of excellence. Specializes in comprehensive preparation for all SSB stages with experienced ex-defence personnel as mentors.",
@@ -42,8 +56,11 @@ object MarketplaceMockData {
                 establishedYear = 1990,
                 successRate = 85.5f,
                 totalStudents = 15000
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun cavalierIndia(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "cavalier",
                 name = "Cavalier India",
                 description = "Leading SSB coaching with focus on holistic personality development. Known for excellent GTO and psychology test preparation with modern teaching methodologies.",
@@ -73,8 +90,11 @@ object MarketplaceMockData {
                 establishedYear = 2005,
                 successRate = 82.3f,
                 totalStudents = 12000
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun baalnoiAcademy(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "baalnoi",
                 name = "Baalnoi Academy",
                 description = "Specialized in OLQ development and personality enhancement. Focus on building confidence and leadership qualities essential for SSB selection.",
@@ -104,8 +124,11 @@ object MarketplaceMockData {
                 establishedYear = 1998,
                 successRate = 78.9f,
                 totalStudents = 8500
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun colonelsSSBAcademy(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "colonels_ssb",
                 name = "Colonel's SSB Academy",
                 description = "Founded by retired defence officers. Offers practical, experience-based training with focus on real SSB scenarios and authentic test simulations.",
@@ -135,8 +158,11 @@ object MarketplaceMockData {
                 establishedYear = 2010,
                 successRate = 76.5f,
                 totalStudents = 6200
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun oliveGreensInstitute(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "olive_greens",
                 name = "Olive Greens Institute",
                 description = "Modern SSB coaching with digital learning tools and AI-powered performance analytics. Combines traditional methods with technology-driven insights.",
@@ -166,8 +192,11 @@ object MarketplaceMockData {
                 establishedYear = 2018,
                 successRate = 72.1f,
                 totalStudents = 5000
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun warriorsSSBAcademy(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "warriors_ssb",
                 name = "Warriors SSB Academy",
                 description = "Budget-friendly SSB coaching focusing on basics and fundamentals. Perfect for first-time aspirants looking for quality guidance at affordable prices.",
@@ -197,8 +226,11 @@ object MarketplaceMockData {
                 establishedYear = 2015,
                 successRate = 68.4f,
                 totalStudents = 4500
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun centurionDefenceAcademy(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "centurion_defence",
                 name = "Centurion Defence Academy",
                 description = "Comprehensive SSB preparation with focus on NDA, CDS, and AFCAT aspirants. Offers integrated coaching for written exams and SSB together.",
@@ -228,8 +260,11 @@ object MarketplaceMockData {
                 establishedYear = 2008,
                 successRate = 80.2f,
                 totalStudents = 9500
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun vanguardSSBAcademy(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "vanguard_academy",
                 name = "Vanguard SSB Academy",
                 description = "Specialized in crash courses and last-minute SSB preparation. Ideal for candidates with SSB dates approaching who need intensive training.",
@@ -259,8 +294,11 @@ object MarketplaceMockData {
                 establishedYear = 2012,
                 successRate = 70.8f,
                 totalStudents = 3800
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun aceTheSSB(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "ace_the_ssb",
                 name = "Ace The SSB",
                 description = "Premium online platform with live interactive sessions and personalized coaching plans. Features India's largest question bank and adaptive learning algorithms.",
@@ -290,8 +328,11 @@ object MarketplaceMockData {
                 establishedYear = 2019,
                 successRate = 75.6f,
                 totalStudents = 7200
-            ),
-            CoachingInstitute(
+            )
+    }
+
+    private fun brigadiersCoaching(): CoachingInstitute {
+        return CoachingInstitute(
                 id = "brigadiers_coaching",
                 name = "Brigadier's SSB Coaching",
                 description = "Elite coaching by retired Brigadiers and Colonels. Luxury segment with small batch sizes and personalized mentoring for serious aspirants.",
@@ -322,7 +363,6 @@ object MarketplaceMockData {
                 successRate = 92.3f,
                 totalStudents = 2500
             )
-        )
     }
 
     /**

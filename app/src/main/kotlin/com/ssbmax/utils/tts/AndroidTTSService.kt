@@ -198,59 +198,65 @@ class AndroidTTSService @Inject constructor(
     private fun selectBestVoice(tts: TextToSpeech) {
         try {
             val voices = tts.voices ?: return
-
-            // Prioritize Indian English voices for SSB interviews
-            val indianEnglishVoices = voices.filter { voice ->
-                voice.locale.language == "en" &&
-                voice.locale.country == "IN" &&
-                !voice.isNetworkConnectionRequired
-            }
-
-            // Fallback to other English voices if Indian English not available
-            val englishVoices = if (indianEnglishVoices.isNotEmpty()) {
-                indianEnglishVoices
-            } else {
-                voices.filter { voice ->
-                    voice.locale.language == "en" &&
-                    !voice.isNetworkConnectionRequired
-                }
-            }
-
+            val englishVoices = filterEnglishVoices(voices)
             if (englishVoices.isEmpty()) {
                 Log.d(TAG, "📢 No English voices available, using default")
                 return
             }
 
-            // Sort by quality: Indian English → High quality → Other English
-            val sortedVoices = englishVoices.sortedWith(
-                compareBy(
-                    { voice -> if (voice.locale.country == "IN") 0 else 1 }, // Prioritize IN locale
-                    { voice -> !voice.features.contains("legacySetLanguageVoice") },
-                    { voice -> voice.quality },
-                    { voice -> voice.name.contains("male", ignoreCase = true).let { if (it) 0 else 1 } } // Prefer male voices for SSB
-                )
-            )
+            val sortedVoices = sortVoicesByPreference(englishVoices)
+            val bestVoice = sortedVoices.firstOrNull { it.quality >= Voice.QUALITY_NORMAL }
+                ?: sortedVoices.firstOrNull()
 
-            val bestVoice = sortedVoices.firstOrNull { voice ->
-                voice.quality >= Voice.QUALITY_NORMAL
-            } ?: sortedVoices.firstOrNull()
-
-            bestVoice?.let { voice ->
-                val result = tts.setVoice(voice)
-                if (result == TextToSpeech.SUCCESS) {
-                    val voiceType = when {
-                        voice.locale.country == "IN" -> "Indian English"
-                        voice.name.contains("male", ignoreCase = true) -> "Male English"
-                        voice.name.contains("female", ignoreCase = true) -> "Female English"
-                        else -> "English"
-                    }
-                    Log.d(TAG, "📢 Selected $voiceType voice: ${voice.name} (${voice.locale}, quality=${voice.quality})")
-                } else {
-                    Log.w(TAG, "⚠️ Failed to set voice: ${voice.name}")
-                }
-            }
+            bestVoice?.let { applyVoice(tts, it) }
         } catch (e: Exception) {
             Log.w(TAG, "⚠️ Error selecting voice, using default: ${e.message}")
+        }
+    }
+
+    private fun filterEnglishVoices(voices: Set<Voice>): List<Voice> {
+        // Prioritize Indian English voices for SSB interviews
+        val indianEnglishVoices = voices.filter { voice ->
+            voice.locale.language == "en" &&
+            voice.locale.country == "IN" &&
+            !voice.isNetworkConnectionRequired
+        }
+
+        // Fallback to other English voices if Indian English not available
+        return if (indianEnglishVoices.isNotEmpty()) {
+            indianEnglishVoices
+        } else {
+            voices.filter { voice ->
+                voice.locale.language == "en" &&
+                !voice.isNetworkConnectionRequired
+            }
+        }
+    }
+
+    private fun sortVoicesByPreference(voices: List<Voice>): List<Voice> {
+        // Sort by quality: Indian English → High quality → Other English
+        return voices.sortedWith(
+            compareBy(
+                { voice -> if (voice.locale.country == "IN") 0 else 1 }, // Prioritize IN locale
+                { voice -> !voice.features.contains("legacySetLanguageVoice") },
+                { voice -> voice.quality },
+                { voice -> voice.name.contains("male", ignoreCase = true).let { if (it) 0 else 1 } } // Prefer male voices for SSB
+            )
+        )
+    }
+
+    private fun applyVoice(tts: TextToSpeech, voice: Voice) {
+        val result = tts.setVoice(voice)
+        if (result == TextToSpeech.SUCCESS) {
+            val voiceType = when {
+                voice.locale.country == "IN" -> "Indian English"
+                voice.name.contains("male", ignoreCase = true) -> "Male English"
+                voice.name.contains("female", ignoreCase = true) -> "Female English"
+                else -> "English"
+            }
+            Log.d(TAG, "📢 Selected $voiceType voice: ${voice.name} (${voice.locale}, quality=${voice.quality})")
+        } else {
+            Log.w(TAG, "⚠️ Failed to set voice: ${voice.name}")
         }
     }
 }

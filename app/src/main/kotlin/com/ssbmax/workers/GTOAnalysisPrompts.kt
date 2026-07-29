@@ -6,7 +6,90 @@ import com.ssbmax.core.domain.model.gto.GTOSubmission
  * Prompt generation for GTO test analysis
  */
 object GTOAnalysisPrompts {
-    
+
+    private const val SCORING_SCALE_BLOCK = """═══════════════════════════════════════════════════════════════════════════════
+SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
+═══════════════════════════════════════════════════════════════════════════════
+
+5: Very Good/Excellent (BEST possible score - rare)
+6: Good (Above average)
+7: Average (Typical performance)
+8: Poor (Needs improvement)
+9: Fail (Gibberish/Irrelevant/Blank)"""
+
+    private const val CRITICAL_VALIDATION_BLOCK = """═══════════════════════════════════════════════════════════════════════════════
+CRITICAL VALIDATION (MUST CHECK FIRST):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
+   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
+
+2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
+
+3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
+
+4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10."""
+
+    private const val CRITICAL_INSTRUCTIONS_BLOCK = """═══════════════════════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Return ONLY a single JSON object
+2. NO markdown code blocks (no ```json or ``` markers)
+3. NO explanatory text before or after the JSON
+4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
+5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
+6. Your entire response should START with { and END with }
+7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)"""
+
+    private const val GPE_OUTPUT_FORMAT_BLOCK = """═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
+
+{
+  "olqScores": {
+    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 85, "reasoning": "Clear tactical analysis, identified key challenges"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 80, "reasoning": "Logical sequence of actions"},
+    "ORGANIZING_ABILITY": {"score": 5, "confidence": 90, "reasoning": "Excellent resource allocation and team coordination"},
+    "POWER_OF_EXPRESSION": {"score": 6, "confidence": 75, "reasoning": "Clear communication of plan"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate team consideration"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative approach evident"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 5, "confidence": 85, "reasoning": "Strong accountability for mission"},
+    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Proactive leadership demonstrated"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive choices made"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick tactical assessment"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership approach shown"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Creative solutions proposed"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm execution plan"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Calculated risks considered"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Thorough throughout the plan"}
+  }
+}"""
+
+    private const val GD_OUTPUT_FORMAT_BLOCK = """═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (Your response must match this EXACTLY):
+═══════════════════════════════════════════════════════════════════════════════
+
+{
+  "olqScores": {
+    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "Clear analytical thinking demonstrated"},
+    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical arguments presented"},
+    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Well-structured response"},
+    "POWER_OF_EXPRESSION": {"score": 5, "confidence": 85, "reasoning": "Excellent articulation"},
+    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate respect for diverse views"},
+    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative tone evident"},
+    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Accountable in arguments"},
+    "INITIATIVE": {"score": 5, "confidence": 85, "reasoning": "Strong leadership potential"},
+    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Conviction in opinions shown"},
+    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Decisive stance taken"},
+    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Persuasive approach"},
+    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Moderate energy level"},
+    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm viewpoint maintained"},
+    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Willing to take bold positions"},
+    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained quality throughout"}
+  }
+}"""
+
     fun generateAnalysisPrompt(submission: GTOSubmission): String {
         return when (submission) {
             is GTOSubmission.GDSubmission -> generateGDPrompt(submission)
@@ -56,67 +139,16 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 14. COURAGE: Willingness to take bold positions
 15. STAMINA: Sustained quality throughout
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$SCORING_SCALE_BLOCK
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
+$CRITICAL_VALIDATION_BLOCK
 
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
+$CRITICAL_INSTRUCTIONS_BLOCK
 
-1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
-
-3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS - READ CAREFULLY:
-═══════════════════════════════════════════════════════════════════════════════
-
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
-7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
-
-═══════════════════════════════════════════════════════════════════════════════
-OUTPUT FORMAT (Your response must match this EXACTLY):
-═══════════════════════════════════════════════════════════════════════════════
-
-{
-  "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 80, "reasoning": "Clear analytical thinking demonstrated"},
-    "REASONING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Logical arguments presented"},
-    "ORGANIZING_ABILITY": {"score": 6, "confidence": 75, "reasoning": "Well-structured response"},
-    "POWER_OF_EXPRESSION": {"score": 5, "confidence": 85, "reasoning": "Excellent articulation"},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate respect for diverse views"},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative tone evident"},
-    "SENSE_OF_RESPONSIBILITY": {"score": 6, "confidence": 80, "reasoning": "Accountable in arguments"},
-    "INITIATIVE": {"score": 5, "confidence": 85, "reasoning": "Strong leadership potential"},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Conviction in opinions shown"},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Decisive stance taken"},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Persuasive approach"},
-    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Moderate energy level"},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm viewpoint maintained"},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Willing to take bold positions"},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Sustained quality throughout"}
-  }
-}
+$GD_OUTPUT_FORMAT_BLOCK
         """.trimIndent()
     }
-    
+
     private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String {
         val solutionSection = if (!submission.solution.isNullOrBlank()) {
             """
@@ -172,28 +204,9 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 14. COURAGE: Willingness to take calculated risks
 15. STAMINA: Sustained quality and thoroughness
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$SCORING_SCALE_BLOCK
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
-
-1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
-
-3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
+$CRITICAL_VALIDATION_BLOCK
 
 ═══════════════════════════════════════════════════════════════════════════════
 EVALUATION CHECKLIST:
@@ -206,44 +219,13 @@ EVALUATION CHECKLIST:
 - Is the plan practical and achievable?
 - Compare against the Ideal Solution provided (if any) for accuracy
 
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS - READ CAREFULLY:
-═══════════════════════════════════════════════════════════════════════════════
+$CRITICAL_INSTRUCTIONS_BLOCK
 
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
-7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
-
-═══════════════════════════════════════════════════════════════════════════════
-OUTPUT FORMAT (Your response must match this EXACTLY):
-═══════════════════════════════════════════════════════════════════════════════
-
-{
-  "olqScores": {
-    "EFFECTIVE_INTELLIGENCE": {"score": 5, "confidence": 85, "reasoning": "Clear tactical analysis, identified key challenges"},
-    "REASONING_ABILITY": {"score": 6, "confidence": 80, "reasoning": "Logical sequence of actions"},
-    "ORGANIZING_ABILITY": {"score": 5, "confidence": 90, "reasoning": "Excellent resource allocation and team coordination"},
-    "POWER_OF_EXPRESSION": {"score": 6, "confidence": 75, "reasoning": "Clear communication of plan"},
-    "SOCIAL_ADJUSTMENT": {"score": 7, "confidence": 70, "reasoning": "Adequate team consideration"},
-    "COOPERATION": {"score": 6, "confidence": 75, "reasoning": "Collaborative approach evident"},
-    "SENSE_OF_RESPONSIBILITY": {"score": 5, "confidence": 85, "reasoning": "Strong accountability for mission"},
-    "INITIATIVE": {"score": 5, "confidence": 90, "reasoning": "Proactive leadership demonstrated"},
-    "SELF_CONFIDENCE": {"score": 6, "confidence": 80, "reasoning": "Decisive choices made"},
-    "SPEED_OF_DECISION": {"score": 6, "confidence": 75, "reasoning": "Quick tactical assessment"},
-    "INFLUENCE_GROUP": {"score": 6, "confidence": 70, "reasoning": "Leadership approach shown"},
-    "LIVELINESS": {"score": 7, "confidence": 65, "reasoning": "Creative solutions proposed"},
-    "DETERMINATION": {"score": 6, "confidence": 80, "reasoning": "Firm execution plan"},
-    "COURAGE": {"score": 6, "confidence": 75, "reasoning": "Calculated risks considered"},
-    "STAMINA": {"score": 6, "confidence": 80, "reasoning": "Thorough throughout the plan"}
-  }
-}
+$GPE_OUTPUT_FORMAT_BLOCK
         """.trimIndent()
     }
-    
+
+
     private fun generateLecturettePrompt(submission: GTOSubmission.LecturetteSubmission): String {
         return """
 You are analyzing a Lecturette (3-minute speech) for SSB GTO assessment.
@@ -292,40 +274,11 @@ EVALUATION CRITERIA - ALL 15 OLQs (MANDATORY):
 14. COURAGE: Willingness to express bold/original views
 15. STAMINA: Sustained quality and energy throughout 3 minutes
 
-═══════════════════════════════════════════════════════════════════════════════
-SSB SCORING SCALE (UNIFIED - LOWER IS BETTER):
-═══════════════════════════════════════════════════════════════════════════════
+$SCORING_SCALE_BLOCK
 
-5: Very Good/Excellent (BEST possible score - rare)
-6: Good (Above average)
-7: Average (Typical performance)
-8: Poor (Needs improvement)
-9: Fail (Gibberish/Irrelevant/Blank)
+$CRITICAL_VALIDATION_BLOCK
 
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL VALIDATION (MUST CHECK FIRST):
-═══════════════════════════════════════════════════════════════════════════════
-
-1. **GARBAGE DETECTION**: If response is gibberish, random characters, or clearly irrelevant
-   → Assign score 9 for ALL OLQs, confidence 100, reasoning: "Response appears to be gibberish or irrelevant"
-
-2. **LENGTH CHECK**: If response is significantly shorter than expected → Score 8-9
-
-3. **CONSERVATIVE SCORING**: Bias towards the lower side (worse scores). Do NOT be lenient.
-
-4. **SCORE RANGE**: Use ONLY 5-9. Do NOT assign scores 1-4 or 10.
-
-═══════════════════════════════════════════════════════════════════════════════
-CRITICAL INSTRUCTIONS - READ CAREFULLY:
-═══════════════════════════════════════════════════════════════════════════════
-
-1. Return ONLY a single JSON object
-2. NO markdown code blocks (no ```json or ``` markers)
-3. NO explanatory text before or after the JSON
-4. ALL 15 OLQs MUST be present (failure to include all 15 will cause analysis to fail)
-5. Use EXACT enum names: EFFECTIVE_INTELLIGENCE, REASONING_ABILITY, etc.
-6. Your entire response should START with { and END with }
-7. Each OLQ must have: score (integer 1-10), confidence (integer 0-100), reasoning (string)
+$CRITICAL_INSTRUCTIONS_BLOCK
 
 ═══════════════════════════════════════════════════════════════════════════════
 OUTPUT FORMAT (Your response must match this EXACTLY):

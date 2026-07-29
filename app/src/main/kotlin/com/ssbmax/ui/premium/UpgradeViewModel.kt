@@ -116,87 +116,103 @@ class UpgradeViewModel @Inject constructor(
         // Note: Prices are now sourced from SubscriptionTier domain model (single source of truth)
         // TODO: Migrate to Google Play Billing Library for production - prices will be fetched from Play Console
         val plans = listOf(
-            SubscriptionPlan(
-                tier = SubscriptionTier.FREE,
-                name = "Basic",
-                tagline = "Get Started with SSB Prep",
-                priceMonthly = SubscriptionTier.FREE.monthlyPriceInt.toDouble(),
-                priceQuarterly = SubscriptionTier.FREE.quarterlyPriceInt?.toDouble() ?: 0.0,
-                priceAnnually = SubscriptionTier.FREE.yearlyPriceInt?.toDouble() ?: 0.0,
-                features = listOf(
-                    PlanFeature("Overview of SSB process", true),
-                    PlanFeature("Full access to all study materials", true),
-                    PlanFeature("Basic progress tracking", true),
-                    PlanFeature("Community access", true),
-                    PlanFeature("Practice tests", false),
-                    PlanFeature("AI-powered assessment", false),
-                    PlanFeature("SSB Marketplace access", false)
-                ),
-                isRecommended = false,
-                gradient = listOf("#6366f1", "#8b5cf6")
-            ),
-            SubscriptionPlan(
-                tier = SubscriptionTier.PRO,
-                name = "Pro",
-                tagline = "Accelerate Your Preparation",
-                priceMonthly = SubscriptionTier.PRO.monthlyPriceInt.toDouble(),
-                priceQuarterly = SubscriptionTier.PRO.quarterlyPriceInt?.toDouble() ?: 0.0,
-                priceAnnually = SubscriptionTier.PRO.yearlyPriceInt?.toDouble() ?: 0.0,
-                features = listOf(
-                    PlanFeature("Everything in Basic", true),
-                    PlanFeature("Unlimited practice tests", true),
-                    PlanFeature("Advanced analytics", true),
-                    PlanFeature("Test history & comparisons", true),
-                    PlanFeature("Priority support", true),
-                    PlanFeature("AI-powered assessment", false),
-                    PlanFeature("SSB Marketplace access", false)
-                ),
-                isRecommended = true,
-                gradient = listOf("#8b5cf6", "#a855f7")
-            ),
-            SubscriptionPlan(
-                tier = SubscriptionTier.PREMIUM,
-                name = "Premium (AI)",
-                tagline = "AI-Powered Excellence",
-                priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
-                priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
-                priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
-                features = listOf(
-                    PlanFeature("Everything in Pro", true),
-                    PlanFeature("AI-based test result analysis", true),
-                    PlanFeature("Personalized feedback & tips", true),
-                    PlanFeature("Predictive success scoring", true),
-                    PlanFeature("Custom study plans", true),
-                    PlanFeature("24/7 AI mentor support", true),
-                    PlanFeature("SSB Marketplace access", false)
-                ),
-                isRecommended = false,
-                gradient = listOf("#a855f7", "#c026d3")
-            ),
-            SubscriptionPlan(
-                tier = SubscriptionTier.PREMIUM,
-                name = "Premium",
-                tagline = "Complete SSB Solution",
-                priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
-                priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
-                priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
-                features = listOf(
-                    PlanFeature("Everything in Pro", true),
-                    PlanFeature("SSB Marketplace access", true),
-                    PlanFeature("Connect with verified assessors", true),
-                    PlanFeature("Online 1-on-1 sessions", true),
-                    PlanFeature("Enroll in physical classes", true),
-                    PlanFeature("Exclusive webinars & workshops", true),
-                    PlanFeature("Mock interview sessions", true)
-                ),
-                isRecommended = false,
-                gradient = listOf("#c026d3", "#db2777")
-            )
+            basicPlan(),
+            proPlan(),
+            premiumAiPlan(),
+            premiumPlan()
         )
-        
+
         _uiState.update {
             it.copy(availablePlans = plans)
         }
+    }
+
+    private fun basicPlan(): SubscriptionPlan {
+        return SubscriptionPlan(
+            tier = SubscriptionTier.FREE,
+            name = "Basic",
+            tagline = "Get Started with SSB Prep",
+            priceMonthly = SubscriptionTier.FREE.monthlyPriceInt.toDouble(),
+            priceQuarterly = SubscriptionTier.FREE.quarterlyPriceInt?.toDouble() ?: 0.0,
+            priceAnnually = SubscriptionTier.FREE.yearlyPriceInt?.toDouble() ?: 0.0,
+            features = listOf(
+                PlanFeature("Overview of SSB process", true),
+                PlanFeature("Full access to all study materials", true),
+                PlanFeature("Basic progress tracking", true),
+                PlanFeature("Community access", true),
+                PlanFeature("Practice tests", false),
+                PlanFeature("AI-powered assessment", false),
+                PlanFeature("SSB Marketplace access", false)
+            ),
+            isRecommended = false,
+            gradient = listOf("#6366f1", "#8b5cf6")
+        )
+    }
+
+    private fun proPlan(): SubscriptionPlan {
+        return SubscriptionPlan(
+            tier = SubscriptionTier.PRO,
+            name = "Pro",
+            tagline = "Accelerate Your Preparation",
+            priceMonthly = SubscriptionTier.PRO.monthlyPriceInt.toDouble(),
+            priceQuarterly = SubscriptionTier.PRO.quarterlyPriceInt?.toDouble() ?: 0.0,
+            priceAnnually = SubscriptionTier.PRO.yearlyPriceInt?.toDouble() ?: 0.0,
+            features = listOf(
+                PlanFeature("Everything in Basic", true),
+                PlanFeature("Unlimited practice tests", true),
+                PlanFeature("Advanced analytics", true),
+                PlanFeature("Test history & comparisons", true),
+                PlanFeature("Priority support", true),
+                PlanFeature("AI-powered assessment", false),
+                PlanFeature("SSB Marketplace access", false)
+            ),
+            isRecommended = true,
+            gradient = listOf("#8b5cf6", "#a855f7")
+        )
+    }
+
+    private fun premiumAiPlan(): SubscriptionPlan {
+        return SubscriptionPlan(
+            tier = SubscriptionTier.PREMIUM,
+            name = "Premium (AI)",
+            tagline = "AI-Powered Excellence",
+            priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
+            priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
+            priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
+            features = listOf(
+                PlanFeature("Everything in Pro", true),
+                PlanFeature("AI-based test result analysis", true),
+                PlanFeature("Personalized feedback & tips", true),
+                PlanFeature("Predictive success scoring", true),
+                PlanFeature("Custom study plans", true),
+                PlanFeature("24/7 AI mentor support", true),
+                PlanFeature("SSB Marketplace access", false)
+            ),
+            isRecommended = false,
+            gradient = listOf("#a855f7", "#c026d3")
+        )
+    }
+
+    private fun premiumPlan(): SubscriptionPlan {
+        return SubscriptionPlan(
+            tier = SubscriptionTier.PREMIUM,
+            name = "Premium",
+            tagline = "Complete SSB Solution",
+            priceMonthly = SubscriptionTier.PREMIUM.monthlyPriceInt.toDouble(),
+            priceQuarterly = SubscriptionTier.PREMIUM.quarterlyPriceInt?.toDouble() ?: 0.0,
+            priceAnnually = SubscriptionTier.PREMIUM.yearlyPriceInt?.toDouble() ?: 0.0,
+            features = listOf(
+                PlanFeature("Everything in Pro", true),
+                PlanFeature("SSB Marketplace access", true),
+                PlanFeature("Connect with verified assessors", true),
+                PlanFeature("Online 1-on-1 sessions", true),
+                PlanFeature("Enroll in physical classes", true),
+                PlanFeature("Exclusive webinars & workshops", true),
+                PlanFeature("Mock interview sessions", true)
+            ),
+            isRecommended = false,
+            gradient = listOf("#c026d3", "#db2777")
+        )
     }
     
     fun selectBillingCycle(cycle: BillingCycle) {

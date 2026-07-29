@@ -31,10 +31,23 @@ import androidx.navigation.navArgument
 fun NavGraphBuilder.sharedNavGraph(
     navController: NavHostController
 ) {
-    // ========================
-    // PHASE SCREENS
-    // ========================
-    
+    sharedPhaseScreens(navController)
+    sharedPsychTestScreens(navController)
+    sharedTatWatScreens(navController)
+    sharedSrtSdScreens(navController)
+    sharedPiqAndMiscTestScreens(navController)
+    sharedInterviewScreens(navController)
+    sharedGtoTestScreens(navController)
+    sharedGpeTestScreens(navController)
+    sharedStudyMaterialScreens(navController)
+    sharedAccountScreens(navController)
+    sharedProfileAndMiscScreens(navController)
+}
+
+/**
+ * PHASE SCREENS
+ */
+private fun NavGraphBuilder.sharedPhaseScreens(navController: NavHostController) {
     // Phase 1 Detail - Shows topic cards, navigates to Topic Screens
     composable(SSBMaxDestinations.Phase1Detail.route) {
         com.ssbmax.ui.phase.Phase1DetailScreen(
@@ -44,7 +57,7 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
+
     // Phase 2 Detail - Shows topic cards, navigates to Topic Screens
     composable(SSBMaxDestinations.Phase2Detail.route) {
         com.ssbmax.ui.phase.Phase2DetailScreen(
@@ -54,11 +67,12 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
-    // ========================
-    // TEST SCREENS
-    // ========================
-    
+}
+
+/**
+ * PSYCHOLOGY TEST SCREENS (OIR/PPDT/TAT/WAT/SRT/SD/PIQ)
+ */
+private fun NavGraphBuilder.sharedPsychTestScreens(navController: NavHostController) {
     // OIR Test
     composable(
         route = SSBMaxDestinations.OIRTest.route,
@@ -142,7 +156,9 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
+}
+
+private fun NavGraphBuilder.sharedTatWatScreens(navController: NavHostController) {
     // TAT Test
     composable(
         route = SSBMaxDestinations.TATTest.route,
@@ -220,7 +236,9 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
+}
+
+private fun NavGraphBuilder.sharedSrtSdScreens(navController: NavHostController) {
     // SRT Test
     composable(
         route = SSBMaxDestinations.SRTTest.route,
@@ -295,7 +313,9 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
+}
 
+private fun NavGraphBuilder.sharedPiqAndMiscTestScreens(navController: NavHostController) {
     // PIQ Result (Personal Information Questionnaire Result)
     composable(
         route = SSBMaxDestinations.PIQSubmissionResult.route,
@@ -360,11 +380,12 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
+}
 
-    // ========================
-    // INTERVIEW SCREENS (Stage 4)
-    // ========================
-
+/**
+ * INTERVIEW SCREENS (Stage 4)
+ */
+private fun NavGraphBuilder.sharedInterviewScreens(navController: NavHostController) {
     // Start Interview - Prerequisite check and session creation
     composable(SSBMaxDestinations.StartInterview.route) {
         com.ssbmax.ui.interview.start.StartInterviewScreen(
@@ -435,11 +456,12 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
+}
 
-    // ========================
-    // GTO TESTS (8 Tests)
-    // ========================
-    
+/**
+ * GTO TESTS (8 Tests)
+ */
+private fun NavGraphBuilder.sharedGtoTestScreens(navController: NavHostController) {
     // GTO - Group Discussion Test
     composable(
         route = SSBMaxDestinations.GTOGDTest.route,
@@ -517,7 +539,9 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
+}
 
+private fun NavGraphBuilder.sharedGpeTestScreens(navController: NavHostController) {
     // GTO - Group Planning Exercise Test
     composable(
         route = SSBMaxDestinations.GTOGPETest.route,
@@ -553,11 +577,12 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
+}
 
-    // ========================
-    // STUDY MATERIALS
-    // ========================
-    
+/**
+ * STUDY MATERIALS
+ */
+private fun NavGraphBuilder.sharedStudyMaterialScreens(navController: NavHostController) {
     // Study Materials List
     composable(SSBMaxDestinations.StudyMaterialsList.route) {
         com.ssbmax.ui.study.StudyMaterialsScreen(
@@ -609,11 +634,12 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
-    // ========================
-    // PREMIUM/SUBSCRIPTION
-    // ========================
-    
+}
+
+/**
+ * PREMIUM/SUBSCRIPTION, NOTIFICATIONS, SETTINGS & PROFILE
+ */
+private fun NavGraphBuilder.sharedAccountScreens(navController: NavHostController) {
     // Upgrade Screen
     composable(SSBMaxDestinations.UpgradeScreen.route) {
         com.ssbmax.ui.premium.UpgradeScreen(
@@ -671,11 +697,13 @@ fun NavGraphBuilder.sharedNavGraph(
             }
         )
     }
-    
-    // ========================
-    // ANALYTICS
-    // ========================
-    
+}
+
+/**
+ * ANALYTICS, USER PROFILE, MARKETPLACE, SSB OVERVIEW, SUBMISSION DETAILS
+ */
+private fun NavGraphBuilder.sharedProfileAndMiscScreens(navController: NavHostController) {
+
     // Analytics Dashboard (Student Performance)
     composable(SSBMaxDestinations.Analytics.route) {
         com.ssbmax.ui.analytics.AnalyticsScreen(
