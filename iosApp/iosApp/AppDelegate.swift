@@ -2,6 +2,7 @@ import UIKit
 import UserNotifications
 import SharedKit
 import FirebaseCore
+import GoogleSignIn
 
 /// Real app-launch lifecycle hook (Phase 6 of the KMP migration plan).
 ///
@@ -35,6 +36,17 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // never existed anywhere in this codebase before now, Swift or Kotlin.
         FirebaseApp.configure()
 
+        // GIDSignIn needs its own client ID (Google's OAuth client, distinct
+        // from Firebase's own config) before RealIosGoogleSignInLauncher's
+        // first signIn(withPresenting:) call -- read from the same
+        // GoogleService-Info.plist FirebaseApp.configure() just loaded,
+        // rather than hardcoding it a second time here.
+        if let clientID = FirebaseApp.app()?.options.clientID {
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+        } else {
+            NSLog("SSBMax: FirebaseApp.options.clientID missing -- Google Sign-In will fail to configure")
+        }
+
         // Starts Koin + registers both BGTaskScheduler identifiers + submits
         // their first requests. See BackgroundTaskRegistrar.kt's class doc
         // for what the launch handlers do (and, just as importantly, don't
@@ -51,6 +63,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
 
         return true
+    }
+
+    /// Routes the OAuth redirect (`com.googleusercontent.apps.<id>://` --
+    /// see Info.plist's `CFBundleURLTypes`) back into `GIDSignIn`, which
+    /// resolves the completion handler passed to
+    /// `GIDSignIn.sharedInstance.signIn(withPresenting:)` in
+    /// `RealIosGoogleSignInLauncher.swift`.
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
     }
 
     /// APNs device token arrived -- hand it to `shared` so it can be saved

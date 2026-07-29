@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.navigation.compose.rememberNavController
 import com.ssbmax.navigation.SSBMaxNavHost
+import com.ssbmax.shared.platform.auth.GoogleSignInLauncher
 import com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher
 import com.ssbmax.shared.platform.ensureKoinStarted
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
@@ -26,17 +27,24 @@ import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
  * here (not inside [SSBMaxNavHost]) so the scaffold and the nav graph share
  * the same controller instance, matching the Android original's
  * `SSBMaxApp.kt` -> `SSBMaxScaffold` -> `SSBMaxNavGraph` composition shape.
- * [IosGoogleSignInLauncher] (a STUB — see its class doc) is provided
- * directly here rather than via Koin, matching the Android side's
- * `MainActivity`-constructed, CompositionLocal-provided pattern; iOS has no
- * equivalent `ActivityResultLauncher` lifecycle constraint, so it's
- * constructed inline rather than needing an earlier registration hook.
+ * [googleSignInLauncher] is provided directly here rather than via Koin,
+ * matching the Android side's `MainActivity`-constructed,
+ * CompositionLocal-provided pattern; iOS has no equivalent
+ * `ActivityResultLauncher` lifecycle constraint. It defaults to
+ * [IosGoogleSignInLauncher] (a STUB — see its class doc) so this Composable
+ * still compiles/renders standalone, but `ContentView.swift` always passes
+ * a real `GIDSignIn`-backed implementation (see
+ * `RealIosGoogleSignInLauncher.swift`) since Swift, not Kotlin, owns the
+ * `GoogleSignIn-iOS` SPM dependency and the presenting `UIViewController`
+ * `GIDSignIn.sharedInstance.signIn(withPresenting:)` needs.
  */
-fun MainViewController() = ComposeUIViewController {
+fun MainViewController(
+    googleSignInLauncher: GoogleSignInLauncher = IosGoogleSignInLauncher()
+) = ComposeUIViewController {
     ensureKoinStarted()
     MaterialTheme {
         CompositionLocalProvider(
-            LocalGoogleSignInLauncher provides IosGoogleSignInLauncher()
+            LocalGoogleSignInLauncher provides googleSignInLauncher
         ) {
             val navController = rememberNavController()
             SSBMaxAppScaffold(navController = navController) { onOpenDrawer ->

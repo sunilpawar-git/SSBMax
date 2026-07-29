@@ -12,10 +12,12 @@
 		2B6E7F1C3A9D4568B1C2E9A4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */; };
 		45CC1BB1D6854EEAE3ECCA94 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7A53FD79FB80A85AE16311 /* FirebaseAuth */; };
 		4CEA61298A30E62686B8FD82 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D01E028B85E0E71E07326C0 /* Foundation.framework */; };
+		6778157347134A73AD0C3DBF /* RealIosGoogleSignInLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1758D9AA99C4AC59819BA58 /* RealIosGoogleSignInLauncher.swift */; };
 		6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */; };
 		7C2E9A1B4F6D4082A3B5E7D1 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */; };
 		9F3D8C2A5E1B4076B4C6D8F2 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */; };
 		D3204FBF30256FC4DB314B67 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */; };
+		EA83ADEE090A4B7FB7D22F85 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ACB0C2435E664075BBEBC550 /* GoogleSignIn */; };
 		F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +32,7 @@
 		8D01E028B85E0E71E07326C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		9F3D8C2A5E1B4076B4C6D8F1 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		AA0EA979E474648E59EA28B7 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1758D9AA99C4AC59819BA58 /* RealIosGoogleSignInLauncher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RealIosGoogleSignInLauncher.swift; sourceTree = "<group>"; };
 		F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iosAppApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -44,6 +47,7 @@
 				135B029D4A547E0911332BB1 /* FirebaseCore in Frameworks */,
 				7C2E9A1B4F6D4082A3B5E7D1 /* FirebaseStorage in Frameworks */,
 				9F3D8C2A5E1B4076B4C6D8F2 /* libsqlite3.tbd in Frameworks */,
+				EA83ADEE090A4B7FB7D22F85 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,6 +68,7 @@
 				F5B3131DB2F7D9D0FE97E358 /* iosAppApp.swift */,
 				6A1B4E0A1D2F4C8A9B3E5F70 /* AppDelegate.swift */,
 				0CA4C4A74FBB745C68DA0941 /* ContentView.swift */,
+				F1758D9AA99C4AC59819BA58 /* RealIosGoogleSignInLauncher.swift */,
 				6A1B4E0A1D2F4C8A9B3E5F72 /* iosApp.entitlements */,
 				2B6E7F1C3A9D4568B1C2E9A3 /* GoogleService-Info.plist */,
 				2B6E7F1C3A9D4568B1C2E9A5 /* GoogleService-Info.plist.example */,
@@ -122,6 +127,7 @@
 				85D61C478DE18A8C6A990ED1 /* FirebaseFirestore */,
 				5BC58D6A473472F59BE040F5 /* FirebaseCore */,
 				7C2E9A1B4F6D4082A3B5E7D0 /* FirebaseStorage */,
+				ACB0C2435E664075BBEBC550 /* GoogleSignIn */,
 			);
 			productName = iosApp;
 			productReference = AA0EA979E474648E59EA28B7 /* iosApp.app */;
@@ -148,6 +154,7 @@
 			mainGroup = 9201169A6E8129BB87D7830C;
 			packageReferences = (
 				F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				5125FA5E18AA42AFB0BB96CC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 4CF4550E0B4E1BEF513D6FDF /* Products */;
 			projectDirPath = "";
@@ -183,7 +190,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This project links SharedKit.framework manually via FRAMEWORK_SEARCH_PATHS/\n# OTHER_LDFLAGS (a static framework, pre-built by `gradlew :shared:linkDebugFramework...`)\n# rather than through the standard JetBrains Xcode-integration template, which\n# normally runs this exact task from a Run Script phase. Skipping it meant Compose\n# Multiplatform's compose-resources bundle (strings, drawables, etc.) never made it\n# into the app bundle -- discovered via a real launch crash (MissingResourceException\n# on strings.commonMain.cvr) once a screen using stringResource() actually rendered.\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "# This project links SharedKit.framework manually via FRAMEWORK_SEARCH_PATHS/\n# OTHER_LDFLAGS (a static framework, pre-built by `gradlew :shared:linkDebugFramework...`)\n# rather than through the standard JetBrains Xcode-integration template, which\n# normally runs this exact task from a Run Script phase. Skipping it meant Compose\n# Multiplatform's compose-resources bundle (strings, drawables, etc.) never made it\n# into the app bundle -- discovered via a real launch crash (MissingResourceException\n# on strings.commonMain.cvr) once a screen using stringResource() actually rendered.\n#\n# Xcode's Run Script phase does not source ~/.zshrc/.bash_profile, so JAVA_HOME\n# from the shell is invisible here and there is no JDK registered with\n# /usr/libexec/java_home either -- Gradle fails with \"Unable to locate a Java\n# Runtime\" unless JAVA_HOME is set explicitly right here.\nif [ -z \"$JAVA_HOME\" ]; then\n  export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\"\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
 		};
 		4D8A2C6E9F1B4573A0D3E8B6 /* Ensure GoogleService-Info.plist */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -211,6 +218,7 @@
 				F013A7834E92E67BBB6FEF0A /* iosAppApp.swift in Sources */,
 				6A1B4E0A1D2F4C8A9B3E5F71 /* AppDelegate.swift in Sources */,
 				0A10BB2025684FE43AB60AAE /* ContentView.swift in Sources */,
+				6778157347134A73AD0C3DBF /* RealIosGoogleSignInLauncher.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -449,6 +457,14 @@
 				minimumVersion = 11.0.0;
 			};
 		};
+		5125FA5E18AA42AFB0BB96CC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -456,6 +472,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F3B5A9FB73394D29FCB6E5CE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		ACB0C2435E664075BBEBC550 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5125FA5E18AA42AFB0BB96CC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 		5BC58D6A473472F59BE040F5 /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;

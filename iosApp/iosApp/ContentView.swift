@@ -5,7 +5,9 @@ import SharedKit
 // shared/commonMain/ui/SpikeApp.kt via MainViewController() (shared/iosMain).
 struct ContentView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        // Real GIDSignIn-backed launcher, not the Kotlin-side stub default --
+        // see RealIosGoogleSignInLauncher.swift's class doc.
+        MainViewControllerKt.MainViewController(googleSignInLauncher: RealIosGoogleSignInLauncher())
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}

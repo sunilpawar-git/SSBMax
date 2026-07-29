@@ -34,15 +34,16 @@ import com.ssbmax.shared.domain.model.GoogleSignInData
  *   expects, NOT an Android `Intent` (that was `AuthRepositoryImpl`'s old,
  *   now-unbound convention — see `RepositoryModule`'s doc comment for why
  *   the two are incompatible and only one can be wired at a time).
- * - iOS ([com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher]): STUB.
- *   GitLive's `firebase-auth` KMP SDK only *consumes* a Google ID token via
- *   `GoogleAuthProvider.credential(...)` once you already have one — it does
- *   not itself provide a Google Sign-In picker UI. Obtaining that token
- *   natively requires Google's own `GoogleSignIn-iOS` SDK (SPM/CocoaPods),
- *   which is not yet a dependency of this repo. Rather than fake a working
- *   flow, the iOS actual fails loudly (throws) until that native dependency
- *   is added — tracked as Phase 6 (iOS shell) follow-up, not silently
- *   stubbed to a fake success per this plan's "fail loud" rule.
+ * - iOS: implemented in Swift, not Kotlin —
+ *   `iosApp/iosApp/RealIosGoogleSignInLauncher.swift` conforms to this
+ *   interface directly (K/N exports Kotlin interfaces with suspend methods
+ *   as Objective-C protocols with a completion-handler method Swift classes
+ *   can implement) and calls `GIDSignIn.sharedInstance.signIn(withPresenting:)`
+ *   from the `GoogleSignIn-iOS` SPM package. `ContentView.swift` constructs
+ *   it and passes it into `MainViewController(googleSignInLauncher:)`.
+ *   [com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher] is only the
+ *   fallback default for that parameter (a STUB — see its class doc), not
+ *   what actually runs.
  */
 interface GoogleSignInLauncher {
     /**

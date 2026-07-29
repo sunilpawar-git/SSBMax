@@ -13,6 +13,17 @@
 		<string>com.ssbmax.questioncachecleanup</string>
 		<string>com.ssbmax.submissionarchival</string>
 	</array>
+	<!-- Google Sign-In's OAuth redirect back into the app -- must match
+	     GoogleService-Info.plist's REVERSED_CLIENT_ID exactly. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.836687498591-1a9av2teumkn6f99cv23u73f9oml9g5c</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
