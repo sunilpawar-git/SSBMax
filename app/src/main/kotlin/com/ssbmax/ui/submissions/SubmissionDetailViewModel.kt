@@ -65,8 +65,8 @@ class SubmissionDetailViewModel(
                         testType = testType,
                         status = status,
                         submittedAt = submittedAt,
-                        aiScore = parseAIScore(data, testType),
-                        instructorScore = parseInstructorScore(data, testType),
+                        aiScore = parseAIScore(data),
+                        instructorScore = parseInstructorScore(data),
                         error = null
                     ) }
                 }
@@ -79,7 +79,7 @@ class SubmissionDetailViewModel(
         }
     }
     
-    private fun parseAIScore(data: Map<*, *>?, testType: TestType): ScoreDetails? {
+    private fun parseAIScore(data: Map<*, *>?): ScoreDetails? {
         val aiScore = data?.get("aiPreliminaryScore") as? Map<*, *> ?: return null
         
         return ScoreDetails(
@@ -91,7 +91,7 @@ class SubmissionDetailViewModel(
         )
     }
     
-    private fun parseInstructorScore(data: Map<*, *>?, testType: TestType): ScoreDetails? {
+    private fun parseInstructorScore(data: Map<*, *>?): ScoreDetails? {
         val instructorScore = data?.get("instructorScore") as? Map<*, *> ?: return null
         
         return ScoreDetails(

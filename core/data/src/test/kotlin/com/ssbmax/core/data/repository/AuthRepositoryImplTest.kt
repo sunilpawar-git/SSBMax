@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.repository
 
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertTrue
 
 /**
  * Tests for AuthRepositoryImpl

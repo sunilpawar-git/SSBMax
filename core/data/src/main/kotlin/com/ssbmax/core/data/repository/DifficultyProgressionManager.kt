@@ -151,7 +151,7 @@ class DifficultyProgressionManager(
                 hardAccuracy = hardPerf?.accuracy ?: 0f,
                 totalTests = totalTests,
                 overallAccuracy = overallAccuracy,
-                recommendedDifficulty = determineRecommendedDifficulty(easyPerf, mediumPerf, hardPerf)
+                recommendedDifficulty = determineRecommendedDifficulty(easyPerf, mediumPerf)
             )
         }
     }
@@ -176,8 +176,7 @@ class DifficultyProgressionManager(
      */
     private fun determineRecommendedDifficulty(
         easyPerf: UserPerformanceEntity?,
-        mediumPerf: UserPerformanceEntity?,
-        hardPerf: UserPerformanceEntity?
+        mediumPerf: UserPerformanceEntity?
     ): String {
         return when {
             mediumPerf != null && mediumPerf.canProgressToNextLevel(ACCURACY_THRESHOLD) -> "HARD"

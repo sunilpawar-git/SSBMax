@@ -144,7 +144,6 @@ fun PPDTTestScreen(
                             maxCharacters = uiState.maxCharacters
                         )
                         PPDTPhase.REVIEW -> PPDTReviewPhase(
-                            imageUrl = uiState.imageUrl,
                             story = uiState.story,
                             charactersCount = uiState.charactersCount,
                             onEdit = { viewModel.returnToWriting() }

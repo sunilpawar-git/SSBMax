@@ -49,7 +49,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InterviewResultScreen(
-    resultId: String,
     onNavigateBack: () -> Unit,
     viewModel: InterviewResultViewModel = koinViewModel()
 ) {

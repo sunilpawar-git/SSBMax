@@ -47,7 +47,6 @@ import com.ssbmax.R
 fun BatchDetailScreen(
     batchId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToStudent: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(

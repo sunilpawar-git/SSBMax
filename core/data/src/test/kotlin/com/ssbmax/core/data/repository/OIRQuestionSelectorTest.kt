@@ -6,7 +6,11 @@ import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.shared.domain.model.OIRQuestionDistribution
 import com.ssbmax.shared.domain.model.OIRQuestionType
-import io.mockk.*
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals

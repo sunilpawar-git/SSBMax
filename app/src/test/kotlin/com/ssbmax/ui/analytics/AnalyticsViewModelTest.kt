@@ -1,6 +1,10 @@
 package com.ssbmax.ui.analytics
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.DifficultyStats
+import com.ssbmax.shared.domain.model.PerformanceOverview
+import com.ssbmax.shared.domain.model.ProgressionStatus
+import com.ssbmax.shared.domain.model.TestPerformancePoint
+import com.ssbmax.shared.domain.model.TestTypeStats
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
@@ -14,7 +18,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 /**
  * Comprehensive tests for AnalyticsViewModel

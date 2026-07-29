@@ -2,11 +2,23 @@ package com.ssbmax.core.data.remote
 
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.SetOptions
-import com.ssbmax.shared.domain.model.*
-import io.mockk.*
+import com.ssbmax.shared.domain.model.OIRSubmission
+import com.ssbmax.shared.domain.model.OIRTestResult
+import com.ssbmax.shared.domain.model.PPDTSubmission
+import com.ssbmax.shared.domain.model.SRTSituationResponse
+import com.ssbmax.shared.domain.model.SRTSubmission
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.WATSubmission
+import com.ssbmax.shared.domain.model.WATWordResponse
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 

@@ -22,7 +22,6 @@ class GTOTestLoader(
 ) {
     
     suspend fun loadTest(
-        testId: String,
         testType: TestType,
         gtoTestType: GTOTestType,
         loadContent: suspend (String) -> Result<*>

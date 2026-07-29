@@ -1,19 +1,20 @@
 package com.ssbmax
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.AppTheme
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.platform.settings.AppThemeSettings
 import com.ssbmax.testing.BaseViewModelTest
-import com.ssbmax.shared.domain.model.AppTheme
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModelTest : BaseViewModelTest() {

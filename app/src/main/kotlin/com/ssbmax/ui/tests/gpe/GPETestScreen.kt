@@ -126,7 +126,6 @@ fun GPETestScreen(
                             imageUrl = uiState.imageUrl
                         )
                         GPEPhase.REVIEW -> GPEReviewPhase(
-                            imageUrl = uiState.imageUrl,
                             scenario = uiState.scenario,
                             resources = uiState.resources,
                             planningResponse = uiState.planningResponse,

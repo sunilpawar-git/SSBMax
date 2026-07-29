@@ -50,10 +50,7 @@ fun NavGraphBuilder.instructorNavGraph(
     // Instructor Students
     composable(SSBMaxDestinations.InstructorStudents.route) {
         com.ssbmax.ui.instructor.InstructorStudentsScreen(
-            onNavigateBack = { navController.navigateUp() },
-            onStudentClick = { studentId ->
-                navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
-            }
+            onNavigateBack = { navController.navigateUp() }
         )
     }
     
@@ -77,12 +74,7 @@ fun NavGraphBuilder.instructorNavGraph(
     // Create Batch
     composable(SSBMaxDestinations.CreateBatch.route) {
         com.ssbmax.ui.instructor.CreateBatchScreen(
-            onNavigateBack = { navController.navigateUp() },
-            onBatchCreated = { batchId ->
-                navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId)) {
-                    popUpTo(SSBMaxDestinations.CreateBatch.route) { inclusive = true }
-                }
-            }
+            onNavigateBack = { navController.navigateUp() }
         )
     }
     
@@ -94,10 +86,7 @@ fun NavGraphBuilder.instructorNavGraph(
         val batchId = backStackEntry.arguments?.getString("batchId") ?: ""
         com.ssbmax.ui.instructor.BatchDetailScreen(
             batchId = batchId,
-            onNavigateBack = { navController.navigateUp() },
-            onNavigateToStudent = { studentId ->
-                navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
-            }
+            onNavigateBack = { navController.navigateUp() }
         )
     }
     

@@ -1,6 +1,14 @@
 package com.ssbmax.core.data.repository
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.PPDTQuestion
+import com.ssbmax.shared.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.WATWord
 
 /**
  * Provides mock test data for testing purposes only.

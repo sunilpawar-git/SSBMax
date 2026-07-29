@@ -3,7 +3,6 @@ package com.ssbmax.core.data.analytics
 import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.auth.FirebaseAuth
 
 /**
  * Analytics Manager for tracking user events and conversions
@@ -16,8 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
  * - User engagement metrics
  */
 class AnalyticsManager(
-    private val firebaseAnalytics: FirebaseAnalytics,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAnalytics: FirebaseAnalytics
 ) {
     
     companion object {

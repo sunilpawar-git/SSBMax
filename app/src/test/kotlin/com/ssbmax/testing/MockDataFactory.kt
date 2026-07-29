@@ -1,6 +1,26 @@
 package com.ssbmax.testing
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.PPDTQuestion
+import com.ssbmax.shared.domain.model.Phase1Progress
+import com.ssbmax.shared.domain.model.Phase2Progress
+import com.ssbmax.shared.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TATQuestion
+import com.ssbmax.shared.domain.model.TestProgress
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.model.WATWord
 
 /**
  * Factory for creating mock test data consistently across tests
@@ -144,9 +164,7 @@ object MockDataFactory {
     }
     
     fun createMockPhase2Progress(
-        tatStatus: TestStatus = TestStatus.NOT_ATTEMPTED,
-        watStatus: TestStatus = TestStatus.NOT_ATTEMPTED,
-        srtStatus: TestStatus = TestStatus.NOT_ATTEMPTED
+        tatStatus: TestStatus = TestStatus.NOT_ATTEMPTED
     ): Phase2Progress {
         return Phase2Progress(
             psychologyProgress = TestProgress(TestType.TAT, tatStatus),

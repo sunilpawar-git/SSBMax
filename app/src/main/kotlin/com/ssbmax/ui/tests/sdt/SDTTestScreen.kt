@@ -66,8 +66,7 @@ fun SDTTestScreen(
     testId: String,
     onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: SDTTestViewModel = koinViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: SDTTestViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }

@@ -47,7 +47,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PIQTestScreen(
-    testId: String,
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit = {},
     viewModel: PIQTestViewModel = koinViewModel()
@@ -101,7 +100,6 @@ fun PIQTestScreen(
             },
             bottomBar = {
                 PIQNavigationBar(
-                    currentPage = uiState.currentPage,
                     onPreviousPage = {
                         if (uiState.currentPage == PIQPage.PAGE_2) {
                             viewModel.navigateToPage(PIQPage.PAGE_1)

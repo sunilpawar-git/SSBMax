@@ -1,8 +1,12 @@
 package com.ssbmax.ui.tests
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.Phase1Progress
+import com.ssbmax.shared.domain.model.Phase2Progress
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.TestProgress
+import com.ssbmax.shared.domain.model.TestStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
@@ -17,7 +21,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 /**
  * Comprehensive tests for StudentTestsViewModel

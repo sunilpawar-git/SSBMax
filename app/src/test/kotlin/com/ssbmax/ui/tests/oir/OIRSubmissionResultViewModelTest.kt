@@ -1,7 +1,7 @@
 package com.ssbmax.ui.tests.oir
 
 import app.cash.turbine.test
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.testing.BaseViewModelTest
 import io.mockk.coEvery
@@ -9,7 +9,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 

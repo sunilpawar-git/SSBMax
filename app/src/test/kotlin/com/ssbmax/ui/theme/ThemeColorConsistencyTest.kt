@@ -3,7 +3,9 @@ package com.ssbmax.ui.theme
 import androidx.compose.ui.graphics.Color
 import com.ssbmax.core.designsystem.theme.SSBColors
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 
 /**
  * Tests to verify theme color consistency

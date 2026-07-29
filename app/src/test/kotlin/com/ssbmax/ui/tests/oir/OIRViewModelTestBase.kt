@@ -1,7 +1,16 @@
 package com.ssbmax.ui.tests.oir
 
 import android.util.Log
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.OIROption
+import com.ssbmax.shared.domain.model.OIRQuestion
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import com.ssbmax.shared.domain.model.QuestionDifficulty
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
@@ -10,7 +19,10 @@ import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.testing.BaseViewModelTest
 import com.ssbmax.time.FakeClock
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Before

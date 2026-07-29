@@ -137,10 +137,8 @@ fun GDResultScreen(
                 ) {
                     item {
                         SubmissionConfirmationCard(
-                            topic = uiState.submission!!.topic,
                             charCount = uiState.submission!!.charCount,
-                            timeSpent = uiState.formattedTimeSpent,
-                            status = uiState.submission!!.status
+                            timeSpent = uiState.formattedTimeSpent
                         )
                     }
                     

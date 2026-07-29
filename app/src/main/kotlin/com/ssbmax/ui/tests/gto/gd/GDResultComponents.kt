@@ -23,15 +23,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus
 import com.ssbmax.ui.components.result.InfoItem
 
 @Composable
 fun SubmissionConfirmationCard(
-    topic: String,
     charCount: Int,
-    timeSpent: String,
-    status: GTOSubmissionStatus
+    timeSpent: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

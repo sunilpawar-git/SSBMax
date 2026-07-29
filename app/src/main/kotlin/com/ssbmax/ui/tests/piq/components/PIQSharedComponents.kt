@@ -56,7 +56,6 @@ fun PIQTextField(
     multiline: Boolean = false,
     minLines: Int = 1,
     keyboardType: KeyboardType = KeyboardType.Text,
-    isRequired: Boolean = false,
     enabled: Boolean = true,
     supportingText: String? = null
 ) {

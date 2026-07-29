@@ -1,7 +1,6 @@
 package com.ssbmax.core.data.repository
 
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
@@ -12,7 +11,6 @@ import kotlinx.coroutines.tasks.await
  * Implementation of SubscriptionRepository using Firebase Firestore
  */
 class SubscriptionRepositoryImpl(
-    private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : SubscriptionRepository {
 

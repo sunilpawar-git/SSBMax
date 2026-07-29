@@ -84,6 +84,7 @@ fun SubscriptionManagementScreen(
     }
     
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Subscription & Billing") },

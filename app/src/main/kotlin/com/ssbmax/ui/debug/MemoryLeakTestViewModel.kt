@@ -43,7 +43,7 @@ class MemoryLeakTestViewModel : ViewModel() {
         android.util.Log.i("MemoryLeakTestViewModel", "🧪 Running leak test: $scenarioName")
         addLog("🧪 Starting test scenario: $scenarioName")
 
-        LeakVerificationHelper.createLeakTestScenario(this, scenarioName)
+        LeakVerificationHelper.createLeakTestScenario(scenarioName)
         updateMemoryStats()
     }
 

@@ -1,7 +1,8 @@
 package com.ssbmax.ui.tests.srt
 
 import app.cash.turbine.test
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SRTSubmission
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
@@ -14,7 +15,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 

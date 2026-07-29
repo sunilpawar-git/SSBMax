@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.ai.prompts
 
 import com.ssbmax.shared.domain.model.interview.OLQ
-import org.junit.Assert.*
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**

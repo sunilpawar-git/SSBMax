@@ -2,7 +2,16 @@ package com.ssbmax.ui.tests.srt
 
 import androidx.work.WorkManager
 import app.cash.turbine.test
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.EntryType
+import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SRTCategory
+import com.ssbmax.shared.domain.model.SRTPhase
+import com.ssbmax.shared.domain.model.SRTSituation
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
@@ -17,7 +26,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test

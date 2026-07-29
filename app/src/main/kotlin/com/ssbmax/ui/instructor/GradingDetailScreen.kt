@@ -44,14 +44,14 @@ import com.ssbmax.ui.submissions.SubmissionDetailScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GradingDetailScreen(
-    submissionId: String,
     onNavigateBack: () -> Unit = {},
     onSubmitGrade: (Float, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var showGradingDialog by remember { mutableStateOf(false) }
-    
+
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.grading_detail_title)) },
@@ -75,7 +75,6 @@ fun GradingDetailScreen(
     ) { padding ->
         // Show submission details
         SubmissionDetailScreen(
-            submissionId = submissionId,
             onNavigateHome = { /* Already handled by topBar */ },
             modifier = Modifier.padding(padding)
         )

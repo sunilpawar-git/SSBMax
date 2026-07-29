@@ -12,13 +12,24 @@ import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.QuestionDifficulty
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -83,7 +94,6 @@ class OIRCacheManagerIntegrationTest {
         cacheManager = OIRQuestionCacheManager(
             firestore = mockFirestore,
             cacheDao  = mockCacheDao,
-            gson      = gson,
             selector  = selector,
             backgroundScope = testScope
         )
@@ -415,7 +425,6 @@ class OIRCacheManagerIntegrationTest {
         val cacheManagerReal = OIRQuestionCacheManager(
             firestore = mockFirestore,
             cacheDao = mockCacheDao,
-            gson = gson,
             selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
             backgroundScope = testScope
         )
@@ -449,7 +458,6 @@ class OIRCacheManagerIntegrationTest {
         val cacheManagerReal = OIRQuestionCacheManager(
             firestore = mockFirestore,
             cacheDao = mockCacheDao,
-            gson = gson,
             selector = OIRQuestionSelector(cacheDao = mockCacheDao, gson = gson),
             backgroundScope = testScope
         )

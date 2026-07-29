@@ -1,7 +1,5 @@
 package com.ssbmax.core.data.repository
 
-import android.content.Context
-import android.provider.Settings
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.ssbmax.core.data.local.dao.NotificationDao
@@ -20,7 +18,6 @@ import kotlinx.coroutines.tasks.await
  * Manages FCM tokens and notifications using Firestore and Room
  */
 class NotificationRepositoryImpl(
-    private val context: Context,
     private val firestore: FirebaseFirestore,
     private val firebaseMessaging: FirebaseMessaging,
     private val notificationDao: NotificationDao
@@ -29,16 +26,6 @@ class NotificationRepositoryImpl(
     private val tokensCollection = firestore.collection("fcm_tokens")
     private val notificationsCollection = firestore.collection("notifications")
     private val preferencesCollection = firestore.collection("notification_preferences")
-    
-    /**
-     * Get unique device ID
-     */
-    private fun getDeviceId(): String {
-        return Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        ) ?: "unknown_device"
-    }
     
     override suspend fun saveFCMToken(token: FCMToken): Result<Unit> {
         return try {

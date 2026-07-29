@@ -2,7 +2,6 @@ package com.ssbmax.core.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
 import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
 import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
@@ -32,7 +31,6 @@ import kotlinx.coroutines.tasks.await
 class OIRQuestionCacheManager(
     private val firestore: FirebaseFirestore,
     private val cacheDao: OIRQuestionCacheDao,
-    private val gson: Gson,
     private val selector: OIRQuestionSelector,
     private val backgroundScope: CoroutineScope
 ) {

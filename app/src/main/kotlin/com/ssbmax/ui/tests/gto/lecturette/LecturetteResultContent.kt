@@ -43,7 +43,6 @@ fun LecturetteResultContent(
         item {
             LecturetteSubmissionCard(
                 selectedTopic = submission.selectedTopic,
-                allTopics = submission.topicChoices,
                 charCount = submission.charCount,
                 timeSpent = formattedTimeSpent
             )

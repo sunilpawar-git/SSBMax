@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun PPDTReviewPhase(
-    imageUrl: String,
     story: String,
     charactersCount: Int,
     onEdit: () -> Unit

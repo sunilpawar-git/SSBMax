@@ -95,6 +95,7 @@ fun TopicScreen(
     var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
     
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopicTopBar(
                 title = uiState.topicTitle,

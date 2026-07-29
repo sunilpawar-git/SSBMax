@@ -1,17 +1,22 @@
 package com.ssbmax.ui.instructor
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InstructorGradingViewModelTest : BaseViewModelTest() {

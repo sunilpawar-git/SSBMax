@@ -34,7 +34,6 @@ import com.ssbmax.R
  */
 @Composable
 fun GPEReviewPhase(
-    imageUrl: String,
     scenario: String,
     resources: List<String>,
     planningResponse: String,

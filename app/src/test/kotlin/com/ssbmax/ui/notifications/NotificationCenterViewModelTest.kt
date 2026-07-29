@@ -1,6 +1,10 @@
 package com.ssbmax.ui.notifications
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.NotificationType
+import com.ssbmax.shared.domain.model.SSBMaxNotification
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
@@ -16,7 +20,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 /**
  * Comprehensive tests for NotificationCenterViewModel

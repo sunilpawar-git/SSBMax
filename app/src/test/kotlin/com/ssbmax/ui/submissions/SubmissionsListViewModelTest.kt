@@ -1,6 +1,9 @@
 package com.ssbmax.ui.submissions
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.GetUserSubmissionsUseCase
 import com.ssbmax.testing.BaseViewModelTest
@@ -15,7 +18,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubmissionsListViewModelTest : BaseViewModelTest() {

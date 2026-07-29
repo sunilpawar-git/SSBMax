@@ -1,12 +1,13 @@
 package com.ssbmax.core.data.repository
 
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.repository.UsageInfo
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -18,21 +19,19 @@ import org.junit.Test
  */
 class SubscriptionRepositoryImplTest {
 
-    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private lateinit var repository: SubscriptionRepositoryImpl
 
     @Before
     fun setup() {
-        firebaseAuth = mockk(relaxed = true)
         firestore = mockk(relaxed = true)
-        repository = SubscriptionRepositoryImpl(firebaseAuth, firestore)
+        repository = SubscriptionRepositoryImpl(firestore)
     }
 
     @Test
     fun `repository initializes correctly`() {
         // Given/When
-        val repo = SubscriptionRepositoryImpl(firebaseAuth, firestore)
+        val repo = SubscriptionRepositoryImpl(firestore)
 
         // Then
         assertNotNull(repo)

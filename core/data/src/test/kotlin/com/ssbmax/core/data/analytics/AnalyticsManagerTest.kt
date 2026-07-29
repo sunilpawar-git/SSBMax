@@ -3,7 +3,6 @@ package com.ssbmax.core.data.analytics
 import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.auth.FirebaseAuth
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -18,7 +17,6 @@ import org.robolectric.RobolectricTestRunner
 class AnalyticsManagerTest {
 
     private val firebaseAnalytics: FirebaseAnalytics = mockk(relaxed = true)
-    private val firebaseAuth: FirebaseAuth = mockk(relaxed = true)
 
     @Test
     fun trackTestStarted_populatesExpectedParams() {
@@ -29,7 +27,7 @@ class AnalyticsManagerTest {
         val bundleSlot = slot<Bundle>()
         every { firebaseAnalytics.logEvent(eq("test_started"), capture(bundleSlot)) } answers { }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackTestStarted(testType = "WAT", testId = "wat-1")
 
@@ -53,7 +51,7 @@ class AnalyticsManagerTest {
             captured += b
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackUpgradeCompleted(fromTier = "FREE", toTier = "PRO", priceInRupees = 499)
 
@@ -77,7 +75,7 @@ class AnalyticsManagerTest {
             captured += secondArg<Bundle>()
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackUpgradeInitiated(fromTier = "FREE", toTier = "PRO", source = "banner")
 
@@ -100,7 +98,7 @@ class AnalyticsManagerTest {
             captured += secondArg<Bundle>()
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackTestCompleted(
             testType = "WAT",
@@ -132,7 +130,7 @@ class AnalyticsManagerTest {
             captured += secondArg<Bundle>()
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackTestLimitReached(testType = "WAT", currentTier = "FREE", currentUsage = 1, limit = 3)
 
@@ -156,7 +154,7 @@ class AnalyticsManagerTest {
             captured += secondArg<Bundle>()
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackSubscriptionView(source = "settings")
 
@@ -178,7 +176,7 @@ class AnalyticsManagerTest {
             captured += secondArg<Bundle>()
         }
 
-        val manager = AnalyticsManager(firebaseAnalytics, firebaseAuth)
+        val manager = AnalyticsManager(firebaseAnalytics)
 
         manager.trackFeatureUsed(featureName = "tts", parameters = mapOf("quality" to "hd"))
 

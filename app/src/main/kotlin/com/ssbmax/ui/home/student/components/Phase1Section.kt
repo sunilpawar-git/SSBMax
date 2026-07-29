@@ -25,7 +25,6 @@ fun Phase1Section(
             TestScoreChip(
                 testName = stringResource(R.string.dashboard_test_oir),
                 score = results.oirResult?.percentageScore,
-                isOLQBased = false,
                 isRefreshing = isRefreshing,
                 onClick = { 
                     results.oirResult?.let { onNavigateToResult(TestType.OIR, it.sessionId) }
@@ -34,7 +33,6 @@ fun Phase1Section(
             TestScoreChip(
                 testName = stringResource(R.string.dashboard_test_ppdt),
                 score = results.ppdtOLQResult?.overallScore ?: results.ppdtResult?.finalScore,
-                isOLQBased = true,
                 isRefreshing = isRefreshing,
                 onClick = results.ppdtResult?.let {
                     { onNavigateToResult(TestType.PPDT, it.submissionId) }

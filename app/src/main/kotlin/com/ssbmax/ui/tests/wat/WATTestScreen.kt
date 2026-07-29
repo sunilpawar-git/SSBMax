@@ -29,8 +29,7 @@ fun WATTestScreen(
     testId: String,
     onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: WATTestViewModel = koinViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: WATTestViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }

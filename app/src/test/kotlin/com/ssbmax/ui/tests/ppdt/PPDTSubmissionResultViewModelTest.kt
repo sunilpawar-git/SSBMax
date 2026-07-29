@@ -1,6 +1,9 @@
 package com.ssbmax.ui.tests.ppdt
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.PPDTSubmission
+import com.ssbmax.shared.domain.model.SubmissionStatus
+import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.model.UiState
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
@@ -16,7 +19,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 

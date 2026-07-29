@@ -1,10 +1,14 @@
 package com.ssbmax.ui.tests.sdt
 
-import com.ssbmax.shared.domain.model.*
+import com.ssbmax.shared.domain.model.SDTQuestion
+import com.ssbmax.shared.domain.model.SDTQuestionResponse
+import com.ssbmax.shared.domain.model.SDTTestConfig
 import com.ssbmax.testing.BaseViewModelTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**

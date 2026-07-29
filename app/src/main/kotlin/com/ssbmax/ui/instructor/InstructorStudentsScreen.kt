@@ -43,7 +43,6 @@ import com.ssbmax.R
 @Composable
 fun InstructorStudentsScreen(
     onNavigateBack: () -> Unit,
-    onStudentClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(

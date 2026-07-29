@@ -110,10 +110,8 @@ fun MarketplaceScreen(
                 FiltersSection(
                     filterType = uiState.filterType,
                     filterPriceRange = uiState.filterPriceRange,
-                    filterCity = uiState.filterCity,
                     onTypeChange = viewModel::onFilterTypeChange,
                     onPriceRangeChange = viewModel::onFilterPriceRangeChange,
-                    onCityChange = viewModel::onFilterCityChange,
                     onClearFilters = viewModel::clearFilters,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -222,10 +220,8 @@ fun SearchBar(
 fun FiltersSection(
     filterType: InstituteType?,
     filterPriceRange: PriceRange?,
-    filterCity: String?,
     onTypeChange: (InstituteType?) -> Unit,
     onPriceRangeChange: (PriceRange?) -> Unit,
-    onCityChange: (String?) -> Unit,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier
 ) {

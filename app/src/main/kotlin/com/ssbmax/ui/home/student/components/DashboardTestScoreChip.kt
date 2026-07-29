@@ -29,7 +29,6 @@ import com.ssbmax.R
  * 
  * @param testName Display name of the test (e.g., "TAT", "OIR")
  * @param score Test score (OLQ 1-10 or percentage for OIR)
- * @param isOLQBased Whether score follows OLQ scale (lower=better)
  * @param isRefreshing Whether data is being refreshed (shows subtle pulse animation)
  * @param onClick Click handler for navigation (null = not clickable)
  */
@@ -37,7 +36,6 @@ import com.ssbmax.R
 fun TestScoreChip(
     testName: String,
     score: Float?,
-    isOLQBased: Boolean = true,
     isRefreshing: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {

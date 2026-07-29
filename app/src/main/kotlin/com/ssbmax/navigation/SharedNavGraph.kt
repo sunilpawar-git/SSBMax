@@ -316,10 +316,8 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(
         route = SSBMaxDestinations.PIQTest.route,
         arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.getString("testId") ?: ""
+    ) {
         com.ssbmax.ui.tests.piq.PIQTestScreen(
-            testId = testId,
             onNavigateBack = {
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
@@ -424,10 +422,8 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(
         route = SSBMaxDestinations.InterviewResult.route,
         arguments = listOf(navArgument("resultId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val resultId = backStackEntry.arguments?.getString("resultId") ?: ""
+    ) {
         com.ssbmax.ui.interview.result.InterviewResultScreen(
-            resultId = resultId,
             onNavigateBack = {
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
@@ -760,10 +756,8 @@ fun NavGraphBuilder.sharedNavGraph(
     composable(
         route = SSBMaxDestinations.SubmissionDetail.route,
         arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.getString("submissionId") ?: ""
+    ) {
         com.ssbmax.ui.submissions.SubmissionDetailScreen(
-            submissionId = submissionId,
             onNavigateHome = {
                 navController.navigate(SSBMaxDestinations.StudentHome.route) {
                     popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }

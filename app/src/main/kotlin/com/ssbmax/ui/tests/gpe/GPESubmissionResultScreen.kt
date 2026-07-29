@@ -142,8 +142,6 @@ fun GPESubmissionResultScreen(
                 ) {
                     item {
                         GPESubmissionConfirmationCard(
-                            scenario = uiState.submission!!.scenario,
-                            plan = uiState.submission!!.plan,
                             characterCount = uiState.submission!!.characterCount,
                             timeSpent = uiState.formattedTimeSpent,
                             status = uiState.submission!!.status
@@ -266,8 +264,6 @@ fun GPESubmissionResultScreen(
 
 @Composable
 private fun GPESubmissionConfirmationCard(
-    scenario: String,
-    plan: String,
     characterCount: Int,
     timeSpent: String,
     status: com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus

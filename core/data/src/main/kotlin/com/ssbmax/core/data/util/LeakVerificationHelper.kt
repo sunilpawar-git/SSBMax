@@ -2,7 +2,6 @@ package com.ssbmax.core.data.util
 
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.ViewModel
 import com.ssbmax.core.data.BuildConfig
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -45,7 +44,7 @@ object LeakVerificationHelper {
      * Use with Android Profiler to verify leak prevention
      */
     @OptIn(DelicateCoroutinesApi::class)
-    fun createLeakTestScenario(viewModel: ViewModel, scenarioName: String) {
+    fun createLeakTestScenario(scenarioName: String) {
         when (scenarioName) {
             "tat-timer-leak" -> testTATTimerLeak()
             "wat-timer-leak" -> testWATTimerLeak()

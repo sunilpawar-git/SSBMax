@@ -44,7 +44,6 @@ import com.ssbmax.R
 @Composable
 fun CreateBatchScreen(
     onNavigateBack: () -> Unit,
-    onBatchCreated: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(

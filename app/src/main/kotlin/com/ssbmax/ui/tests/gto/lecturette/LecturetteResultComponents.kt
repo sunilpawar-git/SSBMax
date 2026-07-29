@@ -28,7 +28,6 @@ import com.ssbmax.ui.components.result.InfoItem
 @Composable
 fun LecturetteSubmissionCard(
     selectedTopic: String,
-    allTopics: List<String>,
     charCount: Int,
     timeSpent: String
 ) {

@@ -42,14 +42,14 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubmissionDetailScreen(
-    submissionId: String,
     onNavigateHome: () -> Unit = {},
     viewModel: SubmissionDetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Submission Details") }

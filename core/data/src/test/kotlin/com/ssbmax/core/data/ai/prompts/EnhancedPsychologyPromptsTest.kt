@@ -1,7 +1,7 @@
 package com.ssbmax.core.data.ai.prompts
 
 import com.ssbmax.shared.domain.prompts.SSBPromptCore
-import org.junit.Assert.*
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**

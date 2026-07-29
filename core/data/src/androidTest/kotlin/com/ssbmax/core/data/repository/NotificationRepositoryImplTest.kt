@@ -47,7 +47,6 @@ class NotificationRepositoryImplTest {
         val firestore = FirebaseTestHelper.getEmulatorFirestore()
         database = Room.inMemoryDatabaseBuilder(context, SSBDatabase::class.java).build()
         repository = NotificationRepositoryImpl(
-            context = context,
             firestore = firestore,
             firebaseMessaging = FirebaseMessaging.getInstance(),
             notificationDao = database.notificationDao()

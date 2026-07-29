@@ -1,18 +1,23 @@
 package com.ssbmax.ui.topic
 
 import androidx.lifecycle.SavedStateHandle
-import com.ssbmax.shared.domain.model.*
-import com.ssbmax.shared.domain.repository.*
+import com.ssbmax.shared.domain.model.SSBMaxUser
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.repository.InterviewRepository
+import com.ssbmax.shared.domain.repository.StudyContentRepository
+import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.testing.BaseViewModelTest
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TopicViewModelTest : BaseViewModelTest() {

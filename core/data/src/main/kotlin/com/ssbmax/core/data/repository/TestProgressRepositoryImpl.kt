@@ -87,8 +87,7 @@ class TestProgressRepositoryImpl(
                 val progress = Phase2Progress(
                     psychologyProgress = createTestProgress(
                         TestType.TAT, // Use TAT as representative
-                        mostRecentPsychology,
-                        isPsychologyGroup = true
+                        mostRecentPsychology
                     ),
                     gtoProgress = createTestProgress(TestType.GTO_GD, gtoSubmission),
                     interviewProgress = createTestProgress(TestType.IO, interviewSubmission)
@@ -102,8 +101,7 @@ class TestProgressRepositoryImpl(
     
     private fun createTestProgress(
         testType: TestType,
-        submission: SubmissionData?,
-        isPsychologyGroup: Boolean = false
+        submission: SubmissionData?
     ): TestProgress {
         if (submission == null) {
             return TestProgress(

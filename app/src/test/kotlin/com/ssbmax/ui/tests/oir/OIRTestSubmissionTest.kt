@@ -1,13 +1,19 @@
 package com.ssbmax.ui.tests.oir
 
 import app.cash.turbine.test
-import com.ssbmax.shared.domain.model.*
-import io.mockk.*
+import com.ssbmax.shared.domain.model.OIRQuestionType
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
