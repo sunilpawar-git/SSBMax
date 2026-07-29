@@ -8,8 +8,11 @@ import com.ssbmax.navigation.SSBMaxNavHost
 import com.ssbmax.shared.platform.auth.GoogleSignInLauncher
 import com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher
 import com.ssbmax.shared.platform.ensureKoinStarted
+import com.ssbmax.shared.platform.permissions.NotificationPermissionController
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
 import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
+import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
+import org.koin.compose.koinInject
 
 /**
  * iOS entry point. Koin is started via [ensureKoinStarted] -- as of Phase 6,
@@ -37,14 +40,27 @@ import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
  * `RealIosGoogleSignInLauncher.swift`) since Swift, not Kotlin, owns the
  * `GoogleSignIn-iOS` SPM dependency and the presenting `UIViewController`
  * `GIDSignIn.sharedInstance.signIn(withPresenting:)` needs.
+ *
+ * [NotificationPermissionController], unlike the Google Sign-In launcher, IS
+ * a plain Koin single on iOS (`PlatformModule.ios.kt` -- `UNUserNotificationCenter`
+ * has no `ActivityResultLauncher`-style registration constraint), so it's
+ * resolved via [koinInject] here rather than threaded through as a
+ * parameter. Missing this provider entirely (rather than the Google
+ * Sign-In stub's intentional throw) was a real gap: `StudentHomeScreen`/
+ * `StartInterviewScreen` read [LocalNotificationPermissionController]
+ * unconditionally, so any screen touching notification permissions crashed
+ * on iOS with "No NotificationPermissionController provided" the moment it
+ * composed -- discovered via a real launch crash reaching `StudentHomeScreen`.
  */
 fun MainViewController(
     googleSignInLauncher: GoogleSignInLauncher = IosGoogleSignInLauncher()
 ) = ComposeUIViewController {
     ensureKoinStarted()
     MaterialTheme {
+        val notificationPermissionController = koinInject<NotificationPermissionController>()
         CompositionLocalProvider(
-            LocalGoogleSignInLauncher provides googleSignInLauncher
+            LocalGoogleSignInLauncher provides googleSignInLauncher,
+            LocalNotificationPermissionController provides notificationPermissionController
         ) {
             val navController = rememberNavController()
             SSBMaxAppScaffold(navController = navController) { onOpenDrawer ->
