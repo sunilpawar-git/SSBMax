@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.ssbmax.navigation.BottomNavItem
 import com.ssbmax.navigation.SSBMaxDestinations
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
@@ -46,11 +45,13 @@ import org.koin.compose.koinInject
  *   directly instead -- one fewer indirection, same data, and consistent with
  *   this phase's existing pattern of injecting repositories/plain-class
  *   ViewModels straight into `commonMain` screens via `koinInject()`.
- * - `shouldShowBottomBar` in the Android original is hardcoded `return false`
- *   (confirmed by reading the source -- the Android bottom bar is wired but
- *   never actually shown). This port makes it real for the routes matching a
- *   registered [BottomNavItem], rather than porting forward the disabled
- *   state -- see [SSBMaxBottomBar]'s own class doc.
+ * - No app-level bottom navigation bar, matching the Android original: its
+ *   `shouldShowBottomBar` is hardcoded `return false`, and that is a product
+ *   decision, not an oversight -- the drawer is this app's primary navigation,
+ *   and the only bottom navigation that exists is `TopicScreen`'s own internal
+ *   tab row. An earlier revision of this port "made the bottom bar real" for
+ *   routes matching a registered `BottomNavItem`; that shipped chrome on iOS
+ *   the Android app has never shown, so it is reverted here.
  * - Sign-out navigates via `popUpTo(0) { inclusive = true }` to
  *   [SSBMaxDestinations.Login], matching the Android original's own
  *   `onSignOut` callback shape exactly.
@@ -89,8 +90,6 @@ fun SSBMaxAppScaffold(
 
     var phase1Expanded by remember { mutableStateOf(false) }
     var phase2Expanded by remember { mutableStateOf(false) }
-
-    val showBottomBar = currentRoute in BOTTOM_NAV_ROUTES
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -160,31 +159,7 @@ fun SSBMaxAppScaffold(
             }
         }
     ) {
-        Scaffold(
-            bottomBar = {
-                if (showBottomBar) {
-                    SSBMaxBottomBar(
-                        currentRoute = currentRoute,
-                        userRole = userRole,
-                        onNavigate = { route ->
-                            val home = if (userRole.isInstructor && !userRole.isStudent) {
-                                SSBMaxDestinations.InstructorHome.route
-                            } else {
-                                SSBMaxDestinations.StudentHome.route
-                            }
-                            navController.navigate(route) {
-                                // See onNavigateToHome above for why this
-                                // pops to the concrete home route rather
-                                // than `graph.startDestinationId`.
-                                popUpTo(home) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            }
-        ) { paddingValues ->
+        Scaffold { paddingValues ->
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 content({ scope.launch { drawerState.open() } })
             }
@@ -196,16 +171,4 @@ private val AUTH_ROUTES = setOf(
     SSBMaxDestinations.Splash.route,
     SSBMaxDestinations.Login.route,
     SSBMaxDestinations.RoleSelection.route
-)
-
-private val BOTTOM_NAV_ROUTES = setOf(
-    BottomNavItem.StudentHome.route,
-    BottomNavItem.StudentTests.route,
-    BottomNavItem.StudentSubmissions.route,
-    BottomNavItem.StudentStudy.route,
-    BottomNavItem.StudentProfile.route,
-    BottomNavItem.InstructorHome.route,
-    BottomNavItem.InstructorStudents.route,
-    BottomNavItem.InstructorGrading.route,
-    BottomNavItem.InstructorAnalytics.route
 )

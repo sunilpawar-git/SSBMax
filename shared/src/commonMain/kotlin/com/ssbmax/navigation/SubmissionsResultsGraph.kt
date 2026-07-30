@@ -72,11 +72,8 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
         )
     }
 
-    // Student "All Tests" overview, reachable both from
-    // SubmissionsListScreen's onNavigateToTests (wired above) and from the
-    // bottom nav bar's "Tests" tab
-    // ([com.ssbmax.shared.ui.components.SSBMaxAppScaffold] ->
-    // [com.ssbmax.shared.ui.components.SSBMaxBottomBar]). onNavigateToPhase
+    // Student "All Tests" overview, reachable from SubmissionsListScreen's
+    // onNavigateToTests (wired above). onNavigateToPhase
     // routes to the real Phase1Detail/Phase2Detail screens; onNavigateToTest
     // routes to the honest placeholder for every GTO sub-test type not yet
     // individually reachable from here (GD/Lecturette/GPE already have their
