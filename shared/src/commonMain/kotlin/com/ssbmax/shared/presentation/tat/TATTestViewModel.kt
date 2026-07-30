@@ -40,8 +40,12 @@ import kotlinx.datetime.Clock
  * [com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel] (see that file for
  * the fuller writeup of shared deviations: `WorkManager` -> here,
  * `TATAnalysisPipelineOrchestrator`'s bounded-batch graph, replaced by
- * [SubmissionAnalysisTrigger] -- a submission persists but is NOT
- * AI-analyzed until a real platform trigger exists; `SubscriptionManager` ->
+ * [SubmissionAnalysisTrigger] -- which IS backed by a real trigger on both
+ * platforms now (correcting this comment's stale claim that submissions
+ * persist un-analyzed): `WorkManagerSubmissionAnalysisTrigger` on Android,
+ * [com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger] ->
+ * [com.ssbmax.shared.analysis.TATAnalysisOrchestrator] on iOS;
+ * `SubscriptionManager` ->
  * [CheckTestEligibilityUseCase]; `DifficultyProgressionManager`/
  * `MemoryLeakTracker` dropped, no KMP port needed; `System.currentTimeMillis()`
  * -> `kotlinx.datetime.Clock.System`).

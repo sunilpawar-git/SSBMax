@@ -7,8 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Real cross-platform [SubmissionAnalysisTrigger] binding, replacing the
- * logging-only default (see that interface's own doc comment). On Android, `app`'s
+ * Real cross-platform [SubmissionAnalysisTrigger] binding, replacing the logging-only
+ * stub an earlier migration phase shipped. On Android, `app`'s
  * `workManagerModule` still loads after `sharedModule` and overrides this binding with
  * the real `WorkManagerSubmissionAnalysisTrigger` (unchanged Koin last-wins pattern) --
  * so this class is the trigger that actually runs on iOS, which never loads `app`'s Koin

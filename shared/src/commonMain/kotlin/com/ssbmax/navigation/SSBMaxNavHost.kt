@@ -57,11 +57,16 @@ import androidx.navigation.compose.rememberNavController
  * still has no "retake" callback of its own, matching the Android originals
  * exactly -- from a result screen, the only way back to a new test is via
  * Student Home -> Phase1/2Detail -> Topic again, not a missing feature of
- * this port. See
- * [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]'s doc comment
- * for a separate, still-open gap: a submission made via PPDT/TAT/WAT/SRT/SDT/
- * GTO today persists correctly but is not yet AI-analyzed through this path,
- * so its result screen will show "pending analysis" indefinitely. (Note the
+ * this port. (Async AI analysis of submissions is NOT a gap, correcting a
+ * stale claim this comment used to make: PPDT/TAT/WAT/SRT/SD/GTO/Interview
+ * submissions are analyzed on both platforms —
+ * [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger] is bound to
+ * `WorkManagerSubmissionAnalysisTrigger` on Android and
+ * [com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger] on iOS, the
+ * latter dispatching to real per-test-type orchestrators under
+ * `com.ssbmax.shared.analysis`. The one genuinely open sub-gap is that the
+ * iOS path sends no completion push; result screens surface the result via
+ * their reactive `analysisStatus` observation instead.) (Note the
  * SDT enum/route naming mismatch, reconciled here not introduced by this
  * port: the domain model calls this test type `SD`, `SSBMaxDestinations`
  * calls the routes `SDTest`/`SDSubmissionResult`, but the actual code
