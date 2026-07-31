@@ -16,18 +16,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.presentation.studenttests.StudentTestsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.student_tests_tab_phase1
 import ssbmax.shared.generated.resources.student_tests_tab_phase2
@@ -45,14 +44,10 @@ import ssbmax.shared.generated.resources.student_tests_title
 fun StudentTestsScreen(
     onNavigateToPhase: (TestPhase) -> Unit = {},
     onNavigateToTest: (TestType) -> Unit = {},
-    viewModel: StudentTestsViewModel = koinInject(),
+    viewModel: StudentTestsViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
-
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(

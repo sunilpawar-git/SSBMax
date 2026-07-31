@@ -30,9 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +38,10 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_result_cd_home
 import ssbmax.shared.generated.resources.oir_result_difficulty_breakdown
@@ -78,14 +77,10 @@ fun OIRTestResultScreen(
     onNavigateHome: () -> Unit = {},
     onRetakeTest: () -> Unit = {},
     onReviewAnswers: () -> Unit = {},
-    viewModel: OirResultViewModel = koinInject(),
+    viewModel: OirResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

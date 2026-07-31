@@ -12,9 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
@@ -36,7 +35,7 @@ import com.ssbmax.shared.ui.ppdt.components.phases.PPDTInstructionsPhase
 import com.ssbmax.shared.ui.ppdt.components.phases.PPDTReviewPhase
 import com.ssbmax.shared.ui.ppdt.components.phases.PPDTWritingPhase
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.ppdt_loading
 import ssbmax.shared.generated.resources.ppdt_retry_button
@@ -44,10 +43,9 @@ import ssbmax.shared.generated.resources.ppdt_retry_button
 /**
  * KMP port of `app/.../ui/tests/ppdt/PPDTTestScreen.kt`.
  *
- * Uses `koinInject<PPDTTestViewModel>()` (not `koinViewModel()`), matching
- * this phase's plain-class ViewModel pattern -- a [DisposableEffect] calls
- * [PPDTTestViewModel.close] on leaving the screen, same as
- * [com.ssbmax.shared.ui.oir.OIRTestScreen].
+ * Uses `koinViewModel<PPDTTestViewModel>()`, same as
+ * [com.ssbmax.shared.ui.oir.OIRTestScreen] -- `viewModelScope` is cancelled
+ * automatically on leaving the screen, no manual `DisposableEffect`/`close()`.
  *
  * Navigation on submit follows the OIR precedent too: rather than a
  * `Channel<TestNavigationEvent>` (the Android original's
@@ -66,16 +64,12 @@ fun PPDTTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: PPDTTestViewModel = koinInject(),
+    viewModel: PPDTTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSubmitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(testId) {
         viewModel.loadTest(testId)

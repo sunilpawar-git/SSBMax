@@ -9,11 +9,9 @@ import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,12 +25,11 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of `app/.../ui/tests/ppdt/PPDTTestViewModel.kt`.
  *
- * Follows this phase's plain-class + own-`CoroutineScope` ViewModel pattern
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`
  * ([com.ssbmax.shared.presentation.oir.OIRTestViewModel] is the closest
  * sibling — same shape: load -> phase state machine -> submit -> timer).
- * Screen uses `koinInject()`, not `koinViewModel()`; [close] must be called
- * from a `DisposableEffect` the way [com.ssbmax.shared.ui.oir.OIRTestScreen]
- * already does for OIR.
+ * Screen uses `koinViewModel()`; `viewModelScope` is cancelled automatically
+ * in [onCleared], no manual `DisposableEffect`/`close()` needed.
  *
  * Deviations from the Android original, all deliberate and documented:
  * - `androidx.work.WorkManager` (`BaseTestViewModel.enqueueAnalysisWork`,
@@ -51,9 +48,8 @@ import kotlinx.datetime.Clock
  *   needed it before this session); it only affects adaptive-difficulty
  *   recommendations, not correctness of the submission itself.
  * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only) dropped, same
- *   reasoning as `OIRTestViewModel`'s doc comment: this isn't an
- *   `androidx.lifecycle.ViewModel`, so the leak class it targeted doesn't
- *   apply; [close] cancels the scope instead.
+ *   reasoning as `OIRTestViewModel`'s doc comment: `viewModelScope` already
+ *   makes the leak class it targeted structurally impossible.
  * - `System.currentTimeMillis()` (JVM-only) replaced with
  *   `kotlinx.datetime.Clock.System`, matching every other ported ViewModel.
  */
@@ -64,8 +60,7 @@ class PPDTTestViewModel(
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "PPDTTestViewModel"
 
     private val _uiState = MutableStateFlow(PPDTTestUiState())
@@ -74,7 +69,7 @@ class PPDTTestViewModel(
     private var timerGeneration = 0L
 
     fun loadTest(testId: String = "ppdt_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...", error = null) }
 
             val userId = observeCurrentUser().first()?.id ?: run {
@@ -192,7 +187,7 @@ class PPDTTestViewModel(
     fun submitTest() {
         _uiState.update { it.copy(isTimerActive = false) }
         val session = _uiState.value.session ?: return
-        scope.launch {
+        viewModelScope.launch {
             submitPPDTTest(session)
                 .onSuccess { result ->
                     analysisTrigger.trigger(TestType.PPDT, result.submissionId)
@@ -220,7 +215,7 @@ class PPDTTestViewModel(
     private fun startTimer(seconds: Int) {
         val myGeneration = ++timerGeneration
         _uiState.update { it.copy(timeRemainingSeconds = seconds, isTimerActive = true, timerStartTime = myGeneration) }
-        scope.launch {
+        viewModelScope.launch {
             try {
                 while (isActive && _uiState.value.isTimerActive && _uiState.value.timeRemainingSeconds > 0) {
                     delay(1000)
@@ -259,7 +254,4 @@ class PPDTTestViewModel(
         }
     }
 
-    fun close() {
-        scope.cancel()
-    }
 }

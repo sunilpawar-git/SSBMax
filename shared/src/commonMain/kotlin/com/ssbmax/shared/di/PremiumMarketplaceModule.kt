@@ -2,7 +2,7 @@ package com.ssbmax.shared.di
 
 import com.ssbmax.shared.presentation.marketplace.MarketplaceViewModel
 import com.ssbmax.shared.presentation.premium.UpgradeViewModel
-import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -24,6 +24,6 @@ import org.koin.dsl.module
  * on either side).
  */
 val premiumMarketplaceModule = module {
-    factoryOf(::UpgradeViewModel)
-    factoryOf(::MarketplaceViewModel)
+    viewModelOf(::UpgradeViewModel)
+    viewModelOf(::MarketplaceViewModel)
 }

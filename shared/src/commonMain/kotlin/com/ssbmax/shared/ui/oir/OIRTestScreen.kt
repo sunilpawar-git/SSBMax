@@ -8,15 +8,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.presentation.oir.OIRErrorType
@@ -25,7 +24,7 @@ import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.oir.components.OIRQuestionView
 import com.ssbmax.shared.ui.oir.components.OIRTestBottomBar
 import com.ssbmax.shared.ui.oir.components.OIRTestTopBar
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_continue_test
 import ssbmax.shared.generated.resources.oir_error_auth_required
@@ -42,13 +41,11 @@ import ssbmax.shared.generated.resources.oir_loading
  * to [OIRTestTopBar]/[OIRQuestionView]/[OIRTestBottomBar], same as the
  * Android original.
  *
- * Uses `koinInject<OIRTestViewModel>()` (not `koinViewModel()`) — matches
- * this phase's established plain-class ViewModel pattern
- * ([com.ssbmax.shared.presentation.home.student.StudentHomeViewModel] etc.);
- * a [DisposableEffect] calls [OIRTestViewModel.close] on leaving the screen
- * so the countdown-timer coroutine and its `CoroutineScope` are cancelled —
- * the Android original relied on `androidx.lifecycle.ViewModel.onCleared()`
- * for this, which doesn't exist for a plain-class ViewModel.
+ * Uses `koinViewModel<OIRTestViewModel>()` — the countdown-timer coroutine
+ * runs on `viewModelScope` and is cancelled automatically in
+ * [OIRTestViewModel.onCleared], same as the Android original's
+ * `androidx.lifecycle.ViewModel.onCleared()`; no manual `DisposableEffect`
+ * teardown needed (Phase 1 of the KMP-convergence plan).
  *
  * `TestContentErrorState`/`TestContentLoadingState` (Android-only,
  * `app/.../ui/components/`) are not ported — this screen inlines the
@@ -60,15 +57,11 @@ import ssbmax.shared.generated.resources.oir_loading
 fun OIRTestScreen(
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: OIRTestViewModel = koinInject(),
+    viewModel: OIRTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(uiState.isCompleted) {
         if (uiState.isCompleted && uiState.sessionId != null && uiState.subscriptionType != null) {

@@ -6,10 +6,8 @@ import com.ssbmax.shared.domain.usecase.subscription.GetMonthlyUsageUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.ui.util.formatFullDate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,9 +19,11 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of the Android `app/.../ui/settings/SubscriptionManagementViewModel.kt`.
  *
- * Same plain-class + own-`CoroutineScope` pattern as every other Phase 5
- * ViewModel. `android.util.Log`/`ErrorLogger` calls replaced with
- * [DomainLogger].
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing ViewModel idiom and
+ * this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`. `android.util.Log`/`ErrorLogger`
+ * calls replaced with [DomainLogger].
  *
  * Kotlin/Native gotcha fixes (this port, not behavior changes):
  * - `java.util.Calendar`/`java.util.Locale` (JVM-only) replaced with
@@ -39,9 +39,7 @@ class SubscriptionManagementViewModel(
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val getMonthlyUsage: GetMonthlyUsageUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SubscriptionManagementUiState())
     val uiState: StateFlow<SubscriptionManagementUiState> = _uiState.asStateFlow()
 
@@ -50,12 +48,8 @@ class SubscriptionManagementViewModel(
         const val THIRTY_DAYS_MILLIS = 30L * 24 * 60 * 60 * 1000
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadSubscriptionData() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

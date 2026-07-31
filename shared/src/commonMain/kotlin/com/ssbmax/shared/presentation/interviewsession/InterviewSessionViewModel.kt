@@ -4,11 +4,9 @@ import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.platform.tts.TTSService
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,10 +25,11 @@ import kotlinx.datetime.Clock
  * finding).
  *
  * Deviations from the Android original, all deliberate and documented:
- * - `androidx.lifecycle.ViewModel` + `SavedStateHandle` -> plain class + own
- *   `CoroutineScope`, matching this phase's established pattern (see
- *   `PPDTTestViewModel`'s doc comment) -- `sessionId` is passed to [loadSession]
- *   directly instead of read from `SavedStateHandle`.
+ * - `SavedStateHandle` dropped -- `sessionId` is passed to [loadSession]
+ *   directly instead of read from `SavedStateHandle` (this phase's own
+ *   `androidx.lifecycle.ViewModel` + `viewModelScope` convergence, see
+ *   [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for
+ *   the precedent this mirrors).
  * - `androidx.work.WorkManager` -> [SubmissionAnalysisTrigger] (delegated to
  *   [InterviewCompleter]).
  * - **Real finding, not carried forward silently:** the Android original's
@@ -46,24 +45,24 @@ import kotlinx.datetime.Clock
  * - `Context.getString(R.string...)` -> plain hardcoded English strings,
  *   same documented convention as every other Phase 5 ViewModel.
  * - `System.currentTimeMillis()` -> `Clock.System.now().toEpochMilliseconds()`.
- * - `trackMemoryLeaks`/`MemoryLeakTracker` dropped -- not an
- *   `androidx.lifecycle.ViewModel`; [stopAll]/[close] handle cleanup instead.
+ * - `trackMemoryLeaks`/`MemoryLeakTracker` dropped -- `viewModelScope`
+ *   already cancels automatically in [onCleared]; [stopAll]/[onCleared]
+ *   handle the rest of cleanup.
  */
 class InterviewSessionViewModel(
     interviewRepository: InterviewRepository,
     ttsService: TTSService,
     analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger
-) {
+) : ViewModel() {
     private val tag = "InterviewSessionViewModel"
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _uiState = MutableStateFlow(InterviewSessionUiState())
     val uiState: StateFlow<InterviewSessionUiState> = _uiState.asStateFlow()
 
     private var isExiting: Boolean = false
 
-    private val ttsManager = TTSManager(ttsService = ttsService, scope = scope, logger = logger)
+    private val ttsManager = TTSManager(ttsService = ttsService, scope = viewModelScope, logger = logger)
     private val sessionManager = SessionManager(interviewRepository, logger)
     private val interviewCompleter = InterviewCompleter(interviewRepository, analysisTrigger, logger)
 
@@ -78,7 +77,7 @@ class InterviewSessionViewModel(
         observeTTSState()
         observeSessionState()
 
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Loading interview session...") }
 
             val result = sessionManager.loadSession(sessionId)
@@ -98,11 +97,11 @@ class InterviewSessionViewModel(
     }
 
     private fun initializeTTS() {
-        scope.launch { ttsManager.initialize() }
+        viewModelScope.launch { ttsManager.initialize() }
     }
 
     private fun observeTTSState() {
-        scope.launch {
+        viewModelScope.launch {
             ttsManager.isTTSReady.collect { ready ->
                 _uiState.update { it.copy(isTTSReady = ready) }
                 if (ready && !isExiting) {
@@ -110,24 +109,24 @@ class InterviewSessionViewModel(
                 }
             }
         }
-        scope.launch {
+        viewModelScope.launch {
             ttsManager.isTTSSpeaking.collect { speaking -> _uiState.update { it.copy(isTTSSpeaking = speaking) } }
         }
-        scope.launch {
+        viewModelScope.launch {
             ttsManager.isTTSMuted.collect { muted -> _uiState.update { it.copy(isTTSMuted = muted) } }
         }
     }
 
     private fun observeSessionState() {
-        scope.launch {
+        viewModelScope.launch {
             sessionManager.session.collect { session ->
                 _uiState.update { it.copy(session = session, totalQuestions = sessionManager.totalQuestions) }
             }
         }
-        scope.launch {
+        viewModelScope.launch {
             sessionManager.currentQuestion.collect { question -> _uiState.update { it.copy(currentQuestion = question) } }
         }
-        scope.launch {
+        viewModelScope.launch {
             sessionManager.currentIndex.collect { index -> _uiState.update { it.copy(currentQuestionIndex = index) } }
         }
     }
@@ -154,7 +153,7 @@ class InterviewSessionViewModel(
     fun submitResponse() {
         if (!_uiState.value.canSubmitResponse()) return
 
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isSubmittingResponse = true, error = null) }
 
             try {
@@ -234,9 +233,8 @@ class InterviewSessionViewModel(
         ttsManager.stop()
     }
 
-    fun close() {
+    override fun onCleared() {
         isExiting = true
         ttsManager.release()
-        scope.cancel()
     }
 }

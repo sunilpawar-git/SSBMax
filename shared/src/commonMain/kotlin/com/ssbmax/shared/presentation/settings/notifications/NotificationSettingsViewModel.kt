@@ -3,10 +3,8 @@ package com.ssbmax.shared.presentation.settings.notifications
 import com.ssbmax.shared.domain.model.NotificationPreferences
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,9 +15,12 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/settings/notifications/NotificationSettingsViewModel.kt`.
  *
- * Same plain-class + own-`CoroutineScope` pattern as every other Phase 5
- * ViewModel. Behavior (load preferences, optimistic-update-with-rollback
- * toggles) is unchanged from the Android original.
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing ViewModel idiom and
+ * this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`. Behavior (load
+ * preferences, optimistic-update-with-rollback toggles) is unchanged from the
+ * Android original.
  *
  * Deliberately NOT ported: the Android original's separate deprecated
  * parameterized `NotificationSettingsSection` overload (a Phase 3-era
@@ -30,9 +31,7 @@ import kotlinx.coroutines.launch
 class NotificationSettingsViewModel(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationSettingsUiState())
     val uiState: StateFlow<NotificationSettingsUiState> = _uiState.asStateFlow()
 
@@ -40,12 +39,8 @@ class NotificationSettingsViewModel(
         loadNotificationPreferences()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadNotificationPreferences() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
             observeCurrentUser().first()?.let { user ->
@@ -127,7 +122,7 @@ class NotificationSettingsViewModel(
     }
 
     private fun updatePreferences(update: (NotificationPreferences) -> NotificationPreferences) {
-        scope.launch {
+        viewModelScope.launch {
             val currentPreferences = _uiState.value.notificationPreferences ?: return@launch
             val updatedPreferences = update(currentPreferences)
 

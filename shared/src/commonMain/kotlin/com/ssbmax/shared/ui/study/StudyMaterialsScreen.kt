@@ -16,16 +16,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.study.StudyCategory
 import com.ssbmax.shared.presentation.study.StudyMaterialsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.study_browse_by_category
 import ssbmax.shared.generated.resources.study_materials_title
@@ -42,14 +41,10 @@ fun StudyMaterialsScreen(
     onNavigateToTopic: (String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToBookmarks: () -> Unit = {},
-    viewModel: StudyMaterialsViewModel = koinInject(),
+    viewModel: StudyMaterialsViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
-
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

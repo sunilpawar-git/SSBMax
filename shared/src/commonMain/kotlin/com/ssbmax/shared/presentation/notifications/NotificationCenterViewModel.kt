@@ -5,10 +5,8 @@ import com.ssbmax.shared.domain.model.SSBMaxNotification
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.ui.util.formatFullDate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +23,10 @@ import kotlinx.datetime.Clock
  * KMP port of the Android `app/.../ui/notifications/NotificationCenterViewModel.kt`.
  * Manages notification list, filtering, and actions.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors).
  * `System.currentTimeMillis()` (JVM-only) replaced with
  * `Clock.System.now().toEpochMilliseconds()`; `java.text.SimpleDateFormat`/
  * `java.util.Locale`/`java.util.Date` (JVM-only) replaced with
@@ -36,9 +36,7 @@ import kotlinx.datetime.Clock
 class NotificationCenterViewModel(
     private val notificationRepository: NotificationRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationCenterUiState())
     val uiState: StateFlow<NotificationCenterUiState> = _uiState.asStateFlow()
     private val _selectedFilter = MutableStateFlow(NotificationFilter.ALL)
@@ -49,12 +47,8 @@ class NotificationCenterViewModel(
         observeUnreadCount()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadNotifications() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val currentUser = observeCurrentUser().first()
@@ -85,7 +79,7 @@ class NotificationCenterViewModel(
                     }
                 }
                 .stateIn(
-                    scope = scope,
+                    scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
                     initialValue = emptyList()
                 )
@@ -102,13 +96,13 @@ class NotificationCenterViewModel(
     }
 
     private fun observeUnreadCount() {
-        scope.launch {
+        viewModelScope.launch {
             val currentUser = observeCurrentUser().first() ?: return@launch
 
             notificationRepository.getUnreadCount(currentUser.id)
                 .catch { /* Unread count is best-effort UI decoration; don't surface an error state for it. */ }
                 .stateIn(
-                    scope = scope,
+                    scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
                     initialValue = 0
                 )
@@ -139,7 +133,7 @@ class NotificationCenterViewModel(
     }
 
     fun markAsRead(notificationId: String) {
-        scope.launch {
+        viewModelScope.launch {
             notificationRepository.markAsRead(notificationId)
                 .onFailure { e: Throwable ->
                     _uiState.update { it.copy(error = e.message ?: "Failed to mark notification as read") }
@@ -148,7 +142,7 @@ class NotificationCenterViewModel(
     }
 
     fun deleteNotification(notificationId: String) {
-        scope.launch {
+        viewModelScope.launch {
             notificationRepository.deleteNotification(notificationId)
                 .onFailure { e: Throwable ->
                     _uiState.update { it.copy(error = e.message ?: "Failed to delete notification") }

@@ -24,18 +24,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.interviewresult.InterviewResultViewModel
 import com.ssbmax.shared.ui.components.SSBRecommendationBanner
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.interview_button_retry
 import ssbmax.shared.generated.resources.interview_cd_close
@@ -51,28 +50,25 @@ import ssbmax.shared.generated.resources.interview_results_pending_message
 /**
  * KMP port of `app/.../ui/interview/result/InterviewResultScreen.kt`.
  *
- * Uses `koinInject<InterviewResultViewModel>()` (not `koinViewModel()`);
- * [InterviewResultViewModel.loadResult] is called from `LaunchedEffect(resultId)`
- * and a [DisposableEffect] calls [InterviewResultViewModel.close] on leaving
- * the screen. Sub-components (`OverallSummaryCard`/`OLQListCard`/`OLQScoreRow`/
- * `FeedbackCard`) live in `InterviewResultComponents.kt`, same package, split
- * to keep both files under the 300-line Quality Limit.
+ * Uses `koinViewModel<InterviewResultViewModel>()` --
+ * [InterviewResultViewModel.loadResult] is called from `LaunchedEffect(resultId)`;
+ * `InterviewResultViewModel` is a real `androidx.lifecycle.ViewModel`,
+ * cancelled automatically in its own `onCleared` (Phase 1 of the
+ * KMP-convergence plan). Sub-components (`OverallSummaryCard`/`OLQListCard`/
+ * `OLQScoreRow`/`FeedbackCard`) live in `InterviewResultComponents.kt`, same
+ * package, split to keep both files under the 300-line Quality Limit.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InterviewResultScreen(
     resultId: String,
     onNavigateBack: () -> Unit,
-    viewModel: InterviewResultViewModel = koinInject(),
+    viewModel: InterviewResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(resultId) { viewModel.loadResult(resultId) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     Scaffold(
         modifier = modifier,

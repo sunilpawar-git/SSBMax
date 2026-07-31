@@ -26,10 +26,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
@@ -40,7 +40,7 @@ import com.ssbmax.shared.ui.home.student.components.SectionHeader
 import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
 import com.ssbmax.shared.ui.theme.Spacing
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.cd_menu
 import ssbmax.shared.generated.resources.cd_notifications
@@ -62,8 +62,6 @@ import ssbmax.shared.generated.resources.section_your_progress
  *
  * Deviations from the Android original, all deliberate (see
  * [StudentHomeViewModel]'s class doc for the ViewModel-side ones):
- * - `koinInject()`, not `koinViewModel()` — matches this phase's established
- *   plain-class-Koin-factory convention.
  * - [com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController],
  *   a `commonMain` twin of the `app`-side CompositionLocal of the same name
  *   (see its own class doc).
@@ -87,8 +85,8 @@ fun StudentHomeScreen(
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val viewModel = koinInject<StudentHomeViewModel>()
-    val uiState by viewModel.uiState.collectAsState()
+    val viewModel = koinViewModel<StudentHomeViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val notificationPermissionController = LocalNotificationPermissionController.current
 
     // Request notification permission once on home screen load. Covers TAT,

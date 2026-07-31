@@ -9,10 +9,8 @@ import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,9 +24,8 @@ import kotlin.random.Random
  * KMP port of the Android `app/.../ui/grading/TestDetailGradingViewModel.kt`
  * (Assessor grading flow).
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`; the screen uses
- * `koinInject()`, not `koinViewModel()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`; the screen
+ * uses `koinViewModel()`.
  *
  * Deviations from the Android original:
  * - `ObserveCurrentUserUseCase` (an extra layer) replaced with
@@ -49,21 +46,15 @@ class TestDetailGradingViewModel(
     private val notificationRepository: NotificationRepository,
     private val userProfileRepository: UserProfileRepository,
     private val authRepository: AuthRepository
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(GradingUiState())
     val uiState: StateFlow<GradingUiState> = _uiState.asStateFlow()
-
-    fun close() {
-        scope.cancel()
-    }
 
     /**
      * Load submission details for grading. Also loads student name from profile.
      */
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             testSubmissionRepository.getSubmissionById(submissionId)
@@ -119,7 +110,7 @@ class TestDetailGradingViewModel(
             return
         }
 
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, error = null) }
 
             val instructorId = authRepository.currentUser.value?.id ?: run {

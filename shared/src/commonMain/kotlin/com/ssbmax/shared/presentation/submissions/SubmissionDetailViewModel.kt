@@ -3,10 +3,8 @@ package com.ssbmax.shared.presentation.submissions
 import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.submission.ObserveSubmissionUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +17,7 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of the Android `app/.../ui/submissions/SubmissionDetailViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`, so the Android
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`. The Android
  * original's `SavedStateHandle`-sourced `submissionId` constructor parameter
  * is dropped; the screen passes `submissionId: String` directly and calls
  * `viewModel.loadSubmission(submissionId)` from a `LaunchedEffect(submissionId)`,
@@ -34,27 +31,21 @@ import kotlinx.datetime.Clock
  */
 class SubmissionDetailViewModel(
     private val observeSubmission: ObserveSubmissionUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SubmissionDetailUiState())
     val uiState: StateFlow<SubmissionDetailUiState> = _uiState.asStateFlow()
 
     private var currentSubmissionId: String = ""
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadSubmission(submissionId: String) {
         currentSubmissionId = submissionId
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
                 observeSubmission(submissionId)
                     .stateIn(
-                        scope = scope,
+                        scope = viewModelScope,
                         started = SharingStarted.WhileSubscribed(5000),
                         initialValue = null
                     )

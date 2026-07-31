@@ -10,7 +10,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ssbmax.navigation.SSBMaxDestinations
@@ -27,6 +27,7 @@ import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import com.ssbmax.shared.ui.components.drawer.SSBMaxDrawer
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * KMP port of the Android `app/.../ui/components/SSBMaxScaffold.kt` — the
@@ -75,14 +76,10 @@ fun SSBMaxAppScaffold(
     }
 
     val authRepository: AuthRepository = koinInject()
-    val profileViewModel: UserProfileViewModel = koinInject()
-
-    DisposableEffect(Unit) {
-        onDispose { profileViewModel.close() }
-    }
+    val profileViewModel: UserProfileViewModel = koinViewModel()
 
     val currentUser by authRepository.currentUser.collectAsState()
-    val profileUiState by profileViewModel.uiState.collectAsState()
+    val profileUiState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val userRole = currentUser?.role ?: UserRole.STUDENT
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)

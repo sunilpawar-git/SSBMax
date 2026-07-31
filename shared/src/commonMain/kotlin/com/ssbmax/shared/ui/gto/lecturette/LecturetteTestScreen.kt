@@ -6,13 +6,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.shared.presentation.lecturette.LecturettePhase
@@ -29,30 +29,32 @@ import com.ssbmax.shared.ui.gto.lecturette.components.LecturetteSpeechPhase
 import com.ssbmax.shared.ui.gto.lecturette.components.LecturetteTopicSelectionPhase
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.lecturette_title
 
 /**
  * KMP port of `app/.../ui/tests/gto/lecturette/LecturetteTestScreen.kt`.
- * Same koinInject/DisposableEffect pattern as [com.ssbmax.shared.ui.gto.gd.GDTestScreen].
+ * Same `koinViewModel`/`collectAsStateWithLifecycle` pattern as
+ * [com.ssbmax.shared.ui.gto.gd.GDTestScreen] (Phase 1 of the KMP-convergence
+ * plan).
  */
 @Composable
 fun LecturetteTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: LecturetteTestViewModel = koinInject(),
+    viewModel: LecturetteTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val whiteNoisePlayer = koinInject<WhiteNoisePlayer>()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val whiteNoiseState = rememberWhiteNoiseState(whiteNoisePlayer)
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
             whiteNoiseState.disable()
-            viewModel.close()
         }
     }
 

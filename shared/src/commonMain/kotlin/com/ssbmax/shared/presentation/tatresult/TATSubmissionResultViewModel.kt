@@ -9,10 +9,9 @@ import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.ui.components.result.UnifiedResultUiState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,21 +43,20 @@ import kotlinx.coroutines.launch
  * degradation doesn't apply to them the same way).
  *
  * `CancellationException` contract preserved verbatim from PPDT's port: a
- * navigate-away cancels [scope], which surfaces as `CancellationException`
+ * navigate-away cancels `viewModelScope`, which surfaces as `CancellationException`
  * inside `collect` -- must be re-thrown, not treated as a load failure.
  */
 class TATSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "TATSubmissionResultViewModel"
 
     private val _uiState = MutableStateFlow(TATSubmissionResultUiState())
     val uiState: StateFlow<TATSubmissionResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 submissionRepository.observeTATSubmission(submissionId).collect { submission ->
@@ -108,10 +106,6 @@ class TATSubmissionResultViewModel(
         } catch (e: Exception) {
             logger.e(tag, "Failed to load TAT OLQ result", e)
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

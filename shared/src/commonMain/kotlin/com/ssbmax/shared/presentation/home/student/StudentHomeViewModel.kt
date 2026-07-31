@@ -11,10 +11,8 @@ import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,11 +29,9 @@ import kotlinx.datetime.Clock
  * ViewModel for the Student Home Screen — Phase 5 KMP port of the Android
  * original (`app/.../ui/home/student/StudentHomeViewModel.kt`).
  *
- * Plain class + own `CoroutineScope`, matching the KMP-portable ViewModel
- * pattern established by [com.ssbmax.shared.presentation.auth.AuthViewModel] /
- * [com.ssbmax.shared.presentation.splash.SplashViewModel] (NOT
- * `androidx.lifecycle.ViewModel`) — the screen uses `koinInject()`, not
- * `koinViewModel()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan) — the screen uses `koinViewModel()`, not
+ * `koinInject()`.
  *
  * Deviations from the Android original, all deliberate and documented (none
  * silent):
@@ -69,8 +65,7 @@ class StudentHomeViewModel(
     private val getOLQDashboard: GetOLQDashboardUseCase,
     private val notificationRepository: NotificationRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "StudentHomeViewModel"
 
     private val _uiState = MutableStateFlow(StudentHomeUiState())
@@ -84,13 +79,13 @@ class StudentHomeViewModel(
     }
 
     private fun observeUserProfile() {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val currentUser = authRepository.currentUser.value
                 if (currentUser != null) {
                     userProfileRepository.getUserProfile(currentUser.id)
                         .stateIn(
-                            scope = scope,
+                            scope = viewModelScope,
                             started = SharingStarted.WhileSubscribed(5000),
                             initialValue = Result.success(null)
                         )
@@ -117,7 +112,7 @@ class StudentHomeViewModel(
     }
 
     private fun observeTestProgress() {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val userId = authRepository.currentUser.value?.id ?: return@launch
 
@@ -142,7 +137,7 @@ class StudentHomeViewModel(
                         emit(fallback)
                     }
                     .stateIn(
-                        scope = scope,
+                        scope = viewModelScope,
                         started = SharingStarted.WhileSubscribed(5000),
                         initialValue = fallback
                     )
@@ -178,7 +173,7 @@ class StudentHomeViewModel(
      * real-time unread notification count.
      */
     private fun observeNotifications() {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 authRepository.currentUser.collectLatest { user ->
                     if (user != null) {
@@ -214,7 +209,7 @@ class StudentHomeViewModel(
     }
 
     private fun loadDashboard(forceRefresh: Boolean = false) {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 if (forceRefresh) {
                     // Manual refresh: drive the rotate-icon animation only.
@@ -278,9 +273,5 @@ class StudentHomeViewModel(
                 }
             }
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }

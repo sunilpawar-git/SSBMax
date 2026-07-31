@@ -6,10 +6,8 @@ import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,12 +17,10 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/profile/UserProfileViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this
- * phase already established ([com.ssbmax.shared.presentation.oir.OIRTestViewModel],
- * [com.ssbmax.shared.presentation.home.student.StudentHomeViewModel]) — NOT
- * `androidx.lifecycle.ViewModel`; the screen uses `koinInject()`, not
- * `koinViewModel()`. `close()` cancels the scope, called from the screen's
- * `DisposableEffect`.
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing ViewModel idiom and
+ * this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`.
  *
  * Deviation from the Android original: `android.util.Log` calls replaced
  * with [DomainLogger], same seam every other ported ViewModel in this phase
@@ -35,9 +31,7 @@ class UserProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val authRepository: AuthRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
@@ -49,12 +43,8 @@ class UserProfileViewModel(
         observeAuthState()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun observeAuthState() {
-        scope.launch {
+        viewModelScope.launch {
             authRepository.currentUser.collect { currentUser ->
                 if (currentUser != null) {
                     loadProfileForUser(currentUser.id)
@@ -72,7 +62,7 @@ class UserProfileViewModel(
     }
 
     private fun loadProfileForUser(userId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             userProfileRepository.getUserProfile(userId)
@@ -128,7 +118,7 @@ class UserProfileViewModel(
     }
 
     fun saveProfile() {
-        scope.launch {
+        viewModelScope.launch {
             val state = _uiState.value
 
             val validationError = validateProfile(state)

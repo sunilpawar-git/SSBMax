@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.home.instructor.InstructorHomeViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.action_create_batch
 import ssbmax.shared.generated.resources.cd_create_batch
@@ -63,9 +63,8 @@ import ssbmax.shared.generated.resources.tab_students
  * `InstructorHomeParts.kt` (same package) — split out purely to stay under
  * this repo's 300-line Quality Limit, no behavior change.
  *
- * `koinInject()`, not `koinViewModel()` — matches this phase's established
- * plain-class-Koin-factory convention (see [InstructorHomeViewModel]'s
- * class doc).
+ * Uses `koinViewModel()` (Phase 1 of the KMP-convergence plan): a real
+ * `androidx.lifecycle.ViewModel`, no manual teardown needed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,8 +76,8 @@ fun InstructorHomeScreen(
     onOpenDrawer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val viewModel = koinInject<InstructorHomeViewModel>()
-    val uiState by viewModel.uiState.collectAsState()
+    val viewModel = koinViewModel<InstructorHomeViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(

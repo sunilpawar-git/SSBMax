@@ -14,6 +14,7 @@ import com.ssbmax.shared.presentation.study.StudyMaterialDetailViewModel
 import com.ssbmax.shared.presentation.study.StudyMaterialsViewModel
 import com.ssbmax.shared.presentation.topic.TopicViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -31,19 +32,19 @@ import org.koin.dsl.module
  * Materials session but were never bound in this Koin graph until then.
  */
 val studyContentModule = module {
-    factoryOf(::SSBOverviewViewModel)
-    factoryOf(::Phase1DetailViewModel)
-    factoryOf(::Phase2DetailViewModel)
-    factoryOf(::NotificationCenterViewModel)
-    factoryOf(::StudentTestsViewModel)
+    viewModelOf(::SSBOverviewViewModel)
+    viewModelOf(::Phase1DetailViewModel)
+    viewModelOf(::Phase2DetailViewModel)
+    viewModelOf(::NotificationCenterViewModel)
+    viewModelOf(::StudentTestsViewModel)
 
     factoryOf(::GetStudyMaterialsUseCase)
     factoryOf(::GetStudyMaterialDetailUseCase)
     factoryOf(::SaveStudyProgressUseCase)
     factoryOf(::TrackStudySessionUseCase)
     factoryOf(::GetStudyProgressUseCase)
-    factoryOf(::StudyMaterialsViewModel)
-    factoryOf(::StudyMaterialDetailViewModel)
+    viewModelOf(::StudyMaterialsViewModel)
+    viewModelOf(::StudyMaterialDetailViewModel)
 
-    factoryOf(::TopicViewModel)
+    viewModelOf(::TopicViewModel)
 }

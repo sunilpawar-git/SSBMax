@@ -9,9 +9,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -19,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SRTPhase
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
@@ -30,7 +29,7 @@ import com.ssbmax.shared.ui.srt.components.SRTReviewPhase
 import com.ssbmax.shared.ui.srt.components.SRTSubmitDialog
 import com.ssbmax.shared.ui.srt.components.SRTTimeUpDialog
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.srt_loading
 import ssbmax.shared.generated.resources.srt_retry_button
@@ -38,10 +37,10 @@ import ssbmax.shared.generated.resources.srt_retry_button
 /**
  * KMP port of `app/.../ui/tests/srt/SRTTestScreen.kt`.
  *
- * Uses `koinInject<SRTTestViewModel>()` (not `koinViewModel()`), matching
- * this phase's plain-class ViewModel pattern -- a [DisposableEffect] calls
- * [SRTTestViewModel.close] on leaving the screen, same as
- * [com.ssbmax.shared.ui.wat.WATTestScreen]/[com.ssbmax.shared.ui.tat.TATTestScreen].
+ * Uses `koinViewModel<SRTTestViewModel>()`, same as
+ * [com.ssbmax.shared.ui.wat.WATTestScreen]/[com.ssbmax.shared.ui.tat.TATTestScreen] --
+ * `viewModelScope` is cancelled automatically on leaving the screen, no
+ * manual `DisposableEffect`/`close()`.
  *
  * Navigation on submit follows the same precedent: a
  * `LaunchedEffect(uiState.isSubmitted)` watches the UiState field directly,
@@ -57,16 +56,12 @@ fun SRTTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: SRTTestViewModel = koinInject(),
+    viewModel: SRTTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSubmitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(testId) {
         viewModel.loadTest(testId)

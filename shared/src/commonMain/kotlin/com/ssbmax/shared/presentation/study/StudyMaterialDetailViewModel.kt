@@ -6,10 +6,8 @@ import com.ssbmax.shared.domain.usecase.study.GetStudyMaterialDetailUseCase
 import com.ssbmax.shared.domain.usecase.study.GetStudyProgressUseCase
 import com.ssbmax.shared.domain.usecase.study.SaveStudyProgressUseCase
 import com.ssbmax.shared.domain.usecase.study.TrackStudySessionUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,9 +32,27 @@ import kotlinx.datetime.Clock
  *   (Compose Multiplatform resource reading, KMP-safe on both platforms).
  * - `System.currentTimeMillis()` (JVM-only) replaced with
  *   `Clock.System.now().toEpochMilliseconds()`.
- * - Plain-class + own-`CoroutineScope` ViewModel pattern (NOT
- *   `androidx.lifecycle.ViewModel`) -- `close()` (called from the screen's
- *   `DisposableEffect`) replaces `onCleared()` for ending the study session.
+ * - Real `androidx.lifecycle.ViewModel` + `viewModelScope` (Phase 1 of the
+ *   KMP-convergence plan, see
+ *   [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for
+ *   the precedent this mirrors).
+ *
+ * **Real finding, deliberately NOT mechanically ported:** the Android
+ * original's `close()` called [endStudySession] (fire-and-forget
+ * `scope.launch` of [TrackStudySessionUseCase.endSession]) THEN cancelled its
+ * own manual scope. Naively renaming that to `override fun onCleared()` would
+ * make this *worse* than the original, not equivalent:
+ * `androidx.lifecycle.ViewModel.clear()` cancels `viewModelScope`'s Job
+ * *before* invoking `onCleared()`, so a `.launch{}` started from inside
+ * `onCleared()` never runs its body at all (the child coroutine is created
+ * against an already-cancelled parent) -- the end-of-session bookkeeping call
+ * would silently never fire, on every single exit. Instead, [endStudySession]
+ * stays public and is called explicitly by the screen's own
+ * `DisposableEffect(Unit) { onDispose { ... } }`, which (per Navigation
+ * Compose's own back-stack-entry lifecycle) always runs before the entry's
+ * `ViewModelStore` is cleared -- so `viewModelScope` is still alive when it
+ * fires, same as the Android original's best-effort semantics, without the
+ * `onCleared`-ordering trap above.
  */
 class StudyMaterialDetailViewModel(
     private val getStudyMaterialDetail: GetStudyMaterialDetailUseCase,
@@ -44,18 +60,11 @@ class StudyMaterialDetailViewModel(
     private val trackStudySession: TrackStudySessionUseCase,
     private val getStudyProgress: GetStudyProgressUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(StudyMaterialDetailUiState())
     val uiState: StateFlow<StudyMaterialDetailUiState> = _uiState.asStateFlow()
 
     private var materialId: String = ""
-
-    fun close() {
-        endStudySession()
-        scope.cancel()
-    }
 
     fun loadMaterial(materialId: String) {
         this.materialId = materialId
@@ -64,7 +73,7 @@ class StudyMaterialDetailViewModel(
     }
 
     private fun loadMaterialContent() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
             try {
@@ -127,7 +136,7 @@ class StudyMaterialDetailViewModel(
     }
 
     private fun startStudySession() {
-        scope.launch {
+        viewModelScope.launch {
             val currentUser = observeCurrentUser().first()
             if (currentUser != null) {
                 val sessionResult = trackStudySession.startSession(currentUser.id, materialId)
@@ -140,7 +149,7 @@ class StudyMaterialDetailViewModel(
         val coercedProgress = progress.coerceIn(0f, 100f)
         _uiState.update { it.copy(readingProgress = coercedProgress) }
 
-        scope.launch {
+        viewModelScope.launch {
             val currentUser = observeCurrentUser().first()
             if (currentUser != null) {
                 val studyProgress = StudyProgress(
@@ -156,8 +165,8 @@ class StudyMaterialDetailViewModel(
         }
     }
 
-    private fun endStudySession() {
-        scope.launch {
+    fun endStudySession() {
+        viewModelScope.launch {
             _uiState.value.activeSessionId?.let { id ->
                 val progressIncrement = _uiState.value.readingProgress
                 trackStudySession.endSession(id, progressIncrement)

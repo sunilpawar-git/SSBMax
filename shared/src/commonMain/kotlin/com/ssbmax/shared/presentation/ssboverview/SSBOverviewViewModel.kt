@@ -3,10 +3,8 @@ package com.ssbmax.shared.presentation.ssboverview
 import com.ssbmax.shared.domain.model.SSBInfoCard
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SSBContentProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,16 +17,16 @@ import kotlinx.coroutines.launch
  * [SSBContentProvider] -- no repository needed unless content becomes
  * dynamic/user-specific, same as the Android original's own note.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `ErrorLogger.log` (Android-only, Crashlytics-backed) replaced with
- * [DomainLogger], same seam every other ported ViewModel in this phase uses.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `ErrorLogger.log` (Android-only, Crashlytics-backed)
+ * replaced with [DomainLogger], same seam every other ported ViewModel in
+ * this phase uses.
  */
 class SSBOverviewViewModel(
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SSBOverviewUiState())
     val uiState: StateFlow<SSBOverviewUiState> = _uiState.asStateFlow()
 
@@ -40,12 +38,8 @@ class SSBOverviewViewModel(
         loadSSBContent()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadSSBContent() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

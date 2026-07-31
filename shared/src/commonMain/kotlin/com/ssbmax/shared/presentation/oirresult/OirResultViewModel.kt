@@ -2,10 +2,8 @@ package com.ssbmax.shared.presentation.oirresult
 
 import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.domain.usecase.GetOirResultUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,17 +16,19 @@ import kotlinx.coroutines.launch
  * sealed — matches the existing convention for this specific screen) and
  * public method names (loadSubmission/retry) so the eventual UI port in
  * Phase 5 is a near drop-in.
+ *
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan) — the screen uses `koinViewModel()`.
  */
 class OirResultViewModel(
     private val getOirResultUseCase: GetOirResultUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OirResultUiState())
     val uiState: StateFlow<OirResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             getOirResultUseCase(submissionId)
@@ -46,10 +46,6 @@ class OirResultViewModel(
     }
 
     fun retry(submissionId: String) = loadSubmission(submissionId)
-
-    fun close() {
-        scope.cancel()
-    }
 }
 
 data class OirResultUiState(

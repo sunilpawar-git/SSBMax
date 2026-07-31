@@ -12,6 +12,7 @@ import com.ssbmax.shared.presentation.home.student.StudentHomeViewModel
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -32,9 +33,9 @@ val authHomeModule = module {
     factoryOf(::GetOirResultUseCase)
     factoryOf(::GetOLQDashboardUseCase)
 
-    factoryOf(::AuthViewModel)
-    factoryOf(::OirResultViewModel)
-    factoryOf(::SplashViewModel)
-    factoryOf(::StudentHomeViewModel)
-    factoryOf(::InstructorHomeViewModel)
+    viewModelOf(::AuthViewModel)
+    viewModelOf(::OirResultViewModel)
+    viewModelOf(::SplashViewModel)
+    viewModelOf(::StudentHomeViewModel)
+    viewModelOf(::InstructorHomeViewModel)
 }

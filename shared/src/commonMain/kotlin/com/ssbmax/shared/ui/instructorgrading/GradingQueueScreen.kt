@@ -17,18 +17,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.presentation.instructorgrading.InstructorGradingViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.dashboard_test_srt
 import ssbmax.shared.generated.resources.dashboard_test_tat
@@ -51,14 +50,11 @@ import ssbmax.shared.generated.resources.grading_queue_title
 fun GradingQueueScreen(
     onSubmissionClick: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    viewModel: InstructorGradingViewModel = koinInject(),
+    viewModel: InstructorGradingViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedFilter by remember { mutableStateOf<TestType?>(null) }
 
     Scaffold(

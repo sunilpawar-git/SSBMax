@@ -26,20 +26,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.piqresult.PIQSubmissionResultViewModel
 import com.ssbmax.shared.ui.piq.components.PIQAIScoreCard
 import com.ssbmax.shared.ui.piq.components.PIQAreasForImprovementCard
 import com.ssbmax.shared.ui.piq.components.PIQStrengthsCard
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.piq_info_message
 import ssbmax.shared.generated.resources.piq_quality_assessment
@@ -58,14 +57,10 @@ import ssbmax.shared.generated.resources.piq_submitted_successfully
 fun PIQSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: PIQSubmissionResultViewModel = koinInject(),
+    viewModel: PIQSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

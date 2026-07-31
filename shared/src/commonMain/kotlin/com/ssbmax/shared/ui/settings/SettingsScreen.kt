@@ -16,17 +16,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.settings.SettingsViewModel
 import com.ssbmax.shared.ui.settings.components.NotificationSettingsSection
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.settings_cd_back
 import ssbmax.shared.generated.resources.settings_title
@@ -47,15 +46,11 @@ fun SettingsScreen(
     onNavigateToFAQ: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit = {},
     onNavigateToSubscriptionManagement: () -> Unit = {},
-    viewModel: SettingsViewModel = koinInject(),
+    viewModel: SettingsViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->

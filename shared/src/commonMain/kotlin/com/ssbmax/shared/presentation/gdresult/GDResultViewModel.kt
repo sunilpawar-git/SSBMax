@@ -14,10 +14,9 @@ import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.presentation.gto.common.toAnalysisStatus
 import com.ssbmax.shared.presentation.gto.common.toOLQAnalysisResult
 import com.ssbmax.shared.ui.components.result.UnifiedResultUiState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,15 +39,14 @@ import kotlinx.coroutines.launch
 class GDResultViewModel(
     private val gtoRepository: GTORepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "GDResultViewModel"
 
     private val _uiState = MutableStateFlow(GDResultUiState())
     val uiState: StateFlow<GDResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 gtoRepository.observeSubmission(submissionId).collect { submission ->
@@ -92,10 +90,6 @@ class GDResultViewModel(
     }
 
     fun retry(submissionId: String) = loadSubmission(submissionId)
-
-    fun close() {
-        scope.cancel()
-    }
 }
 
 data class GDResultUiState(

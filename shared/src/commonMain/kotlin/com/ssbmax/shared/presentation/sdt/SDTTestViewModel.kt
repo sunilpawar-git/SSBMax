@@ -17,12 +17,10 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,8 +32,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
 /**
- * KMP port of `app/.../ui/tests/sdt/SDTTestViewModel.kt`. Plain-class +
- * own-`CoroutineScope` pattern, same shape as
+ * KMP port of `app/.../ui/tests/sdt/SDTTestViewModel.kt`. A real
+ * `androidx.lifecycle.ViewModel` using `viewModelScope`, same shape as
  * [com.ssbmax.shared.presentation.srt.SRTTestViewModel] (see that file for
  * the fuller writeup of shared deviations: `WorkManager` -> [SubmissionAnalysisTrigger];
  * `SubscriptionManager` -> [CheckTestEligibilityUseCase]; other Android-only
@@ -71,8 +69,7 @@ class SDTTestViewModel(
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "SDTTestViewModel"
 
     private val _uiState = MutableStateFlow(SDTTestUiState())
@@ -83,7 +80,7 @@ class SDTTestViewModel(
     private var capturedUserId: String? = null
 
     fun loadTest(testId: String = "sdt_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...", error = null) }
 
             val userId = observeCurrentUser().first()?.id ?: run {
@@ -157,7 +154,7 @@ class SDTTestViewModel(
         _uiState.update { it.copy(totalTimeRemaining = totalTimeSeconds, isTimerActive = true, timerStartTime = myGeneration) }
         val endTime = Clock.System.now().toEpochMilliseconds() + (totalTimeSeconds * 1000L)
 
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             try {
                 while (isActive) {
                     val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
@@ -229,7 +226,7 @@ class SDTTestViewModel(
     fun submitTest() {
         _uiState.update { it.copy(isLoading = true) }
         val state = _uiState.value
-        scope.launch {
+        viewModelScope.launch {
             val userId = capturedUserId ?: observeCurrentUser().first()?.id
             if (userId == null) {
                 logger.e(tag, "Unauthenticated SDT submission blocked", null)
@@ -276,8 +273,7 @@ class SDTTestViewModel(
         }
     }
 
-    fun close() {
+    override fun onCleared() {
         timerJob?.cancel()
-        scope.cancel()
     }
 }

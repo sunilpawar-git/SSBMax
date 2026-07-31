@@ -10,6 +10,7 @@ import com.ssbmax.shared.presentation.results.HistoricResultsViewModel
 import com.ssbmax.shared.presentation.submissions.SubmissionDetailViewModel
 import com.ssbmax.shared.presentation.submissions.SubmissionsListViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -32,10 +33,10 @@ val resultsSubmissionsModule = module {
     factoryOf(::GetHistoricResultsUseCase)
     factoryOf(::GetUserSubmissionsUseCase)
     factoryOf(::ObserveSubmissionUseCase)
-    factoryOf(::HistoricResultsViewModel)
-    factoryOf(::SubmissionsListViewModel)
-    factoryOf(::SubmissionDetailViewModel)
-    factoryOf(::TestDetailGradingViewModel)
-    factoryOf(::AnalyticsViewModel)
-    factoryOf(::InstructorGradingViewModel)
+    viewModelOf(::HistoricResultsViewModel)
+    viewModelOf(::SubmissionsListViewModel)
+    viewModelOf(::SubmissionDetailViewModel)
+    viewModelOf(::TestDetailGradingViewModel)
+    viewModelOf(::AnalyticsViewModel)
+    viewModelOf(::InstructorGradingViewModel)
 }

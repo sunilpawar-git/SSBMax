@@ -23,19 +23,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.PerformanceOverview
 import com.ssbmax.shared.domain.model.TestTypeStats
 import com.ssbmax.shared.presentation.analytics.AnalyticsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.analytics_cd_back
 import ssbmax.shared.generated.resources.analytics_empty_description
@@ -61,13 +60,10 @@ import ssbmax.shared.generated.resources.analytics_test_performance
 @Composable
 fun AnalyticsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: AnalyticsViewModel = koinInject()
+    viewModel: AnalyticsViewModel = koinViewModel()
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.loadAllTestStats()

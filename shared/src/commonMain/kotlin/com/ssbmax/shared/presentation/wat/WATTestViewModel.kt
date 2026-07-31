@@ -17,12 +17,10 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +34,7 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of `app/.../ui/tests/wat/WATTestViewModel.kt`.
  *
- * Plain-class + own-`CoroutineScope` pattern, same shape as
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`, same shape as
  * [com.ssbmax.shared.presentation.tat.TATTestViewModel] (see that file for
  * the fuller writeup of shared deviations: `WorkManager` -> [SubmissionAnalysisTrigger]
  * -- a submission persists but is NOT AI-analyzed until a real platform
@@ -88,8 +86,7 @@ class WATTestViewModel(
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "WATTestViewModel"
 
     private val _uiState = MutableStateFlow(WATTestUiState())
@@ -100,7 +97,7 @@ class WATTestViewModel(
     private var capturedUserId: String? = null
 
     fun loadTest(testId: String = "wat_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...", error = null) }
 
             val userId = observeCurrentUser().first()?.id ?: run {
@@ -222,7 +219,7 @@ class WATTestViewModel(
     private fun submitTest() {
         _uiState.update { it.copy(isLoading = true) }
         val state = _uiState.value
-        scope.launch {
+        viewModelScope.launch {
             val userId = capturedUserId ?: observeCurrentUser().first()?.id
             if (userId == null) {
                 logger.e(tag, "Unauthenticated WAT submission blocked", null)
@@ -273,7 +270,7 @@ class WATTestViewModel(
         val timePerWord = _uiState.value.config?.timePerWordSeconds ?: 15
         _uiState.update { it.copy(timeRemaining = timePerWord, isTimerActive = true, timerStartTime = myGeneration) }
         val endTime = Clock.System.now().toEpochMilliseconds() + (timePerWord * 1000L)
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             try {
                 while (isActive) {
                     val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
@@ -290,8 +287,7 @@ class WATTestViewModel(
         }
     }
 
-    fun close() {
+    override fun onCleared() {
         timerJob?.cancel()
-        scope.cancel()
     }
 }

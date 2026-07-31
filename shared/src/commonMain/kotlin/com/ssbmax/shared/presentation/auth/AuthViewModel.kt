@@ -7,10 +7,8 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
 import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
 import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,14 +23,9 @@ import kotlinx.coroutines.launch
  * (role-selection detection, `setUserRole`, `signOut`), minus its
  * Android-`Intent`-specific plumbing.
  *
- * Not `androidx.lifecycle.ViewModel` (Android/JVM-only) — a plain class with
- * its own CoroutineScope, matching the KMP-portable ViewModel pattern this
- * codebase already established here in Phase 0 and reused by
- * [com.ssbmax.shared.presentation.splash.SplashViewModel]. Compose call
- * sites use `koinInject()`, not `koinViewModel()` (the KMP `lifecycle-viewmodel`
- * artifact is a commonMain dependency of `:shared`, but no screen in this
- * codebase uses it yet -- conforms to the established convention rather
- * than introducing a second ViewModel pattern; see this phase's exit report).
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan), converged with `app`'s existing 57-call-site
+ * idiom — Compose call sites use `koinViewModel()`, not `koinInject()`.
  *
  * [GoogleSignInLauncher] is deliberately NOT a constructor dependency (see
  * that interface's class doc) -- `LoginScreen` obtains the platform-specific
@@ -44,8 +37,7 @@ class AuthViewModel(
     private val updateUserRoleUseCase: UpdateUserRoleUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -63,7 +55,7 @@ class AuthViewModel(
             is GoogleSignInData.Error -> {
                 _uiState.update { AuthUiState.Error(data.message) }
             }
-            else -> scope.launch {
+            else -> viewModelScope.launch {
                 _uiState.update { AuthUiState.Loading }
                 signInWithGoogleUseCase(data)
                     .onSuccess { user ->
@@ -92,7 +84,7 @@ class AuthViewModel(
 
     /** Set user role after Google Sign-In (role-selection screen). */
     fun setUserRole(role: UserRole) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { AuthUiState.Loading }
             updateUserRoleUseCase(role)
                 .onSuccess {
@@ -113,7 +105,7 @@ class AuthViewModel(
 
     /** Sign out the current user. */
     fun signOut() {
-        scope.launch {
+        viewModelScope.launch {
             signOutUseCase()
             _uiState.update { AuthUiState.Initial }
         }
@@ -122,10 +114,6 @@ class AuthViewModel(
     /** Reset UI state (e.g. after showing an error). */
     fun resetState() {
         _uiState.update { AuthUiState.Initial }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

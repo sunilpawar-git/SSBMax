@@ -126,6 +126,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
             implementation(libs.koin.test)
+            // Turbine is pure Kotlin/coroutines (JVM+JS+Native) -- unlike MockK it has
+            // a real KMP artifact, so Phase 1's ViewModel characterization tests run
+            // it here to cover iOS too, not just androidUnitTest below.
+            implementation(libs.turbine)
         }
         // Phase 1 domain move: the 6 MockK-dependent unit tests from core:domain's
         // JVM-only test source set land here (androidUnitTest), not commonTest --
@@ -135,7 +139,6 @@ kotlin {
             dependencies {
                 implementation(libs.junit)
                 implementation(libs.mockk)
-                implementation(libs.turbine)
                 implementation(libs.kotlinx.coroutines.test)
                 // Phase 2: JVM SQLDelight driver to actually exercise CachedOirResult
                 // reads/writes against a real in-memory SQLite DB in unit tests --

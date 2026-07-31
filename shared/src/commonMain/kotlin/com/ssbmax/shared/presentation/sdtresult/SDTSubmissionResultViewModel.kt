@@ -9,10 +9,9 @@ import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.ui.components.result.UnifiedResultUiState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,22 +34,21 @@ import kotlinx.coroutines.launch
  * full result separately and stop observing.
  *
  * `CancellationException` contract preserved verbatim from TAT/WAT/SRT's
- * port: a navigate-away cancels [scope], which surfaces as
+ * port: a navigate-away cancels `viewModelScope`, which surfaces as
  * `CancellationException` inside `collect` -- must be re-thrown, not treated
  * as a load failure.
  */
 class SDTSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "SDTSubmissionResultViewModel"
 
     private val _uiState = MutableStateFlow(SDTSubmissionResultUiState())
     val uiState: StateFlow<SDTSubmissionResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 submissionRepository.observeSDTSubmission(submissionId).collect { submission ->
@@ -97,10 +95,6 @@ class SDTSubmissionResultViewModel(
         } catch (e: Exception) {
             logger.e(tag, "Failed to load SDT OLQ result", e)
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

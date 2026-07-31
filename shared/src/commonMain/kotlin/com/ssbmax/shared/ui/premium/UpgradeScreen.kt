@@ -29,9 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,10 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.BillingCycle
 import com.ssbmax.shared.presentation.premium.UpgradeViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.premium_billing_cycle_annually
 import ssbmax.shared.generated.resources.premium_billing_cycle_monthly
@@ -75,14 +74,10 @@ import ssbmax.shared.generated.resources.premium_upgrade_title
 @Composable
 fun UpgradeScreen(
     onNavigateBack: () -> Unit,
-    viewModel: UpgradeViewModel = koinInject(),
+    viewModel: UpgradeViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {

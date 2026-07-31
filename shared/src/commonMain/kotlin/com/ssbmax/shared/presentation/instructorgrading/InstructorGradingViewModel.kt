@@ -5,10 +5,8 @@ import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +22,8 @@ import kotlinx.coroutines.launch
  * KMP port of the Android `app/.../ui/instructor/InstructorGradingViewModel.kt`
  * (Grading Queue dashboard).
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established (see [com.ssbmax.shared.presentation.grading.TestDetailGradingViewModel])
- * -- NOT `androidx.lifecycle.ViewModel`; the screen uses `koinInject()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`; the screen
+ * uses `koinViewModel()`.
  *
  * Deviation from the Android original: `ObserveCurrentUserUseCase` (an extra
  * layer) replaced with [AuthRepository.currentUser]`.value` directly, matching
@@ -38,9 +35,7 @@ import kotlinx.coroutines.launch
 class InstructorGradingViewModel(
     private val gradingQueueRepository: GradingQueueRepository,
     private val authRepository: AuthRepository
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(InstructorGradingUiState())
     val uiState: StateFlow<InstructorGradingUiState> = _uiState.asStateFlow()
 
@@ -48,12 +43,8 @@ class InstructorGradingViewModel(
         loadPendingSubmissions()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadPendingSubmissions(filterType: TestType? = null) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val instructorId = authRepository.currentUser.value?.id ?: run {
@@ -76,7 +67,7 @@ class InstructorGradingViewModel(
                     }
                 }
                 .stateIn(
-                    scope = scope,
+                    scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
                     initialValue = emptyList()
                 )
@@ -90,7 +81,7 @@ class InstructorGradingViewModel(
                         )
                     }
                 }
-                .launchIn(scope)
+                .launchIn(viewModelScope)
         }
     }
 

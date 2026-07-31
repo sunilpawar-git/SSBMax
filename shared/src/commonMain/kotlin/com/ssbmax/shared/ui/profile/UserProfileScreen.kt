@@ -23,19 +23,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
 import com.ssbmax.shared.presentation.profile.UserProfileUiState
 import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.user_profile_age_label
 import ssbmax.shared.generated.resources.user_profile_age_placeholder
@@ -68,14 +67,10 @@ fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onProfileSaved: () -> Unit,
     isOnboarding: Boolean = false,
-    viewModel: UserProfileViewModel = koinInject(),
+    viewModel: UserProfileViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {

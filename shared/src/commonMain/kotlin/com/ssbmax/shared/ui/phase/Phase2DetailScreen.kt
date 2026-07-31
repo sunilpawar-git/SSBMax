@@ -28,16 +28,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.shared.presentation.phase2detail.Phase2DetailViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.phase2_assessment_title
 import ssbmax.shared.generated.resources.phase2_overview_title
@@ -55,14 +54,10 @@ import ssbmax.shared.generated.resources.phase2_overview_title
 fun Phase2DetailScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToTopic: (String) -> Unit = {},
-    viewModel: Phase2DetailViewModel = koinInject(),
+    viewModel: Phase2DetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
-
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

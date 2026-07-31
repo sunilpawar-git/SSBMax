@@ -24,6 +24,7 @@ import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
 import com.ssbmax.shared.presentation.watresult.WATSubmissionResultViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -53,17 +54,17 @@ val testTakingModule = module {
     factoryOf(::SubmitSRTTestUseCase)
     factoryOf(::SubmitSDTTestUseCase)
 
-    factoryOf(::OIRTestViewModel)
-    factoryOf(::PPDTTestViewModel)
-    factoryOf(::PPDTSubmissionResultViewModel)
-    factoryOf(::TATTestViewModel)
-    factoryOf(::TATSubmissionResultViewModel)
-    factoryOf(::WATTestViewModel)
-    factoryOf(::WATSubmissionResultViewModel)
-    factoryOf(::SRTTestViewModel)
-    factoryOf(::SRTSubmissionResultViewModel)
-    factoryOf(::SDTTestViewModel)
-    factoryOf(::SDTSubmissionResultViewModel)
-    factoryOf(::PIQTestViewModel)
-    factoryOf(::PIQSubmissionResultViewModel)
+    viewModelOf(::OIRTestViewModel)
+    viewModelOf(::PPDTTestViewModel)
+    viewModelOf(::PPDTSubmissionResultViewModel)
+    viewModelOf(::TATTestViewModel)
+    viewModelOf(::TATSubmissionResultViewModel)
+    viewModelOf(::WATTestViewModel)
+    viewModelOf(::WATSubmissionResultViewModel)
+    viewModelOf(::SRTTestViewModel)
+    viewModelOf(::SRTSubmissionResultViewModel)
+    viewModelOf(::SDTTestViewModel)
+    viewModelOf(::SDTSubmissionResultViewModel)
+    viewModelOf(::PIQTestViewModel)
+    viewModelOf(::PIQSubmissionResultViewModel)
 }

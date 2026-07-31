@@ -4,10 +4,8 @@ import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,9 +16,10 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/profile/StudentProfileViewModel.kt`.
  *
- * Same plain-class + own-`CoroutineScope` pattern as [UserProfileViewModel] /
- * [com.ssbmax.shared.presentation.home.student.StudentHomeViewModel] — NOT
- * `androidx.lifecycle.ViewModel`. `close()` cancels the scope.
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing ViewModel idiom and
+ * this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`.
  *
  * Deviation from the Android original: `android.util.Log` replaced with
  * [DomainLogger]. Achievements/recent-tests/study-hours/streak are still the
@@ -32,9 +31,7 @@ class StudentProfileViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(StudentProfileUiState())
     val uiState: StateFlow<StudentProfileUiState> = _uiState.asStateFlow()
 
@@ -46,12 +43,8 @@ class StudentProfileViewModel(
         loadUserProfile()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadUserProfile() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

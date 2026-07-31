@@ -11,14 +11,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.settings.notifications.NotificationSettingsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.notification_settings_description
 import ssbmax.shared.generated.resources.notification_settings_title
@@ -26,7 +26,8 @@ import ssbmax.shared.generated.resources.notification_settings_title
 /**
  * Notification Settings Section — KMP port of the Android
  * `app/.../ui/settings/components/NotificationSettingsSection.kt`. Each
- * section owns its own [NotificationSettingsViewModel] via `koinInject()`.
+ * section owns its own [NotificationSettingsViewModel] via `koinViewModel()`
+ * (Phase 1 of the KMP-convergence plan).
  *
  * Deliberately NOT ported: the Android original's parallel `@Deprecated`
  * parameterized overload (a Phase 3-era migration shim explicitly marked
@@ -40,8 +41,8 @@ import ssbmax.shared.generated.resources.notification_settings_title
  */
 @Composable
 fun NotificationSettingsSection(modifier: Modifier = Modifier) {
-    val viewModel: NotificationSettingsViewModel = koinInject()
-    val uiState by viewModel.uiState.collectAsState()
+    val viewModel: NotificationSettingsViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val preferences = uiState.notificationPreferences
 
     Card(

@@ -15,12 +15,10 @@ import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,10 +33,10 @@ import kotlin.random.Random
 /**
  * KMP port of the Android `app/.../ui/tests/oir/OIRTestViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this
- * phase already established ([com.ssbmax.shared.presentation.home.student.StudentHomeViewModel],
- * [com.ssbmax.shared.presentation.auth.AuthViewModel]) — NOT `androidx.lifecycle.ViewModel`;
- * the screen uses `koinInject()`, not `koinViewModel()`.
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing 57-call-site idiom
+ * and this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`.
  *
  * Deviations from the Android original, all deliberate and documented (none silent):
  * - `subscriptionManager.canTakeTest`/`TestUsageRecorder` (Android `core:data`
@@ -50,10 +48,10 @@ import kotlin.random.Random
  *   log line, same seam every other ported ViewModel in this phase uses.
  * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only, wraps
  *   `androidx.lifecycle.ViewModel` lifecycle + `java.lang.ref.WeakReference`)
- *   dropped entirely — there is no KMP equivalent and this ViewModel isn't
- *   an `androidx.lifecycle.ViewModel` in the first place, so the class of
- *   leak it targeted (ViewModel not garbage collected after `onCleared`)
- *   doesn't apply the same way; [close] cancels the scope instead.
+ *   dropped entirely — there is no KMP equivalent, and `viewModelScope`
+ *   already makes the leak class it targeted (timer coroutine outliving the
+ *   screen) structurally impossible: it is cancelled automatically in
+ *   [onCleared], with no manual bookkeeping needed.
  * - `coil.ImageLoader`/`android.content.Context`-based next-question image
  *   prefetch dropped — [com.ssbmax.shared.ui.oir.components.OIRQuestionView]
  *   uses Coil3's `AsyncImage` directly with its default (already-caching)
@@ -86,8 +84,7 @@ class OIRTestViewModel(
     private val scoreCalculator: OIRTestScoreCalculator,
     private val submitOIRTestUseCase: SubmitOIRTestUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "OIRTestViewModel"
 
     private val _uiState = MutableStateFlow(OIRTestUiState())
@@ -100,7 +97,7 @@ class OIRTestViewModel(
     }
 
     fun loadTest(testId: String = "oir_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorType = null) }
             val userId = observeCurrentUser().first()?.id ?: run {
                 logger.e(tag, "SECURITY: Unauthenticated OIR test access blocked", null)
@@ -226,7 +223,7 @@ class OIRTestViewModel(
             logger.e(tag, "OIR test session null during test submission", null)
             return
         }
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val subscriptionType = userProfileRepository.getUserProfile(session.userId).first()
                     .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
@@ -256,7 +253,7 @@ class OIRTestViewModel(
         val session = _uiState.value.session ?: return
         _uiState.update { it.copy(isTimerActive = false, session = session.copy(isPaused = true)) }
         timerJob?.cancel()
-        scope.launch {
+        viewModelScope.launch {
             testSessionRepository.endTestSession(session.sessionId)
         }
     }
@@ -264,7 +261,7 @@ class OIRTestViewModel(
     private fun startTimer() {
         _uiState.update { it.copy(isTimerActive = true, timerStartTime = Clock.System.now().toEpochMilliseconds()) }
         timerJob?.cancel()
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             try {
                 while (isActive && _uiState.value.isTimerActive &&
                     _uiState.value.timeRemainingSeconds > 0 && !_uiState.value.isCompleted
@@ -313,8 +310,7 @@ class OIRTestViewModel(
     private fun newSessionId(): String =
         "oir_${Clock.System.now().toEpochMilliseconds()}_${Random.nextInt(100000, 999999)}"
 
-    fun close() {
+    override fun onCleared() {
         timerJob?.cancel()
-        scope.cancel()
     }
 }

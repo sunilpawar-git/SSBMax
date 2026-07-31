@@ -1,0 +1,163 @@
+package com.ssbmax.shared.presentation.auth
+
+import com.ssbmax.shared.domain.model.GoogleSignInData
+import com.ssbmax.shared.domain.model.UserRole
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignInWithGoogleUseCase
+import com.ssbmax.shared.domain.usecase.auth.SignOutUseCase
+import com.ssbmax.shared.domain.usecase.auth.UpdateUserRoleUseCase
+import com.ssbmax.shared.presentation.testing.FakeAuthRepository
+import com.ssbmax.shared.presentation.testing.testUser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+
+/**
+ * Characterization test, written before converting [AuthViewModel] to
+ * `androidx.lifecycle.ViewModel` (Phase 1 of the KMP-convergence plan). Pins
+ * the current state-machine behaviour so the conversion is provably
+ * behaviour-preserving: this file must pass unmodified against both the
+ * pre- and post-conversion class.
+ */
+class AuthViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var authRepository: FakeAuthRepository
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+        authRepository = FakeAuthRepository()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    private fun buildViewModel() = AuthViewModel(
+        signInWithGoogleUseCase = SignInWithGoogleUseCase(authRepository),
+        updateUserRoleUseCase = UpdateUserRoleUseCase(authRepository),
+        signOutUseCase = SignOutUseCase(authRepository),
+        observeCurrentUserUseCase = ObserveCurrentUserUseCase(authRepository)
+    )
+
+    @Test
+    fun `initial state is Initial`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        assertIs<AuthUiState.Initial>(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `cancelled google sign-in resets to Initial`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+
+        viewModel.handleGoogleSignInResult(GoogleSignInData.Cancelled)
+
+        assertIs<AuthUiState.Initial>(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `google sign-in error surfaces the message`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+
+        viewModel.handleGoogleSignInResult(GoogleSignInData.Error("provider error"))
+
+        val state = assertIs<AuthUiState.Error>(viewModel.uiState.value)
+        assertEquals("provider error", state.message)
+    }
+
+    @Test
+    fun `successful sign-in of a returning user yields Success`() = runTest(testDispatcher) {
+        val user = testUser().copy(createdAt = 1000L, lastLoginAt = 5000L)
+        authRepository.handleGoogleSignInResultFn = { Result.success(user) }
+        val viewModel = buildViewModel()
+
+        viewModel.handleGoogleSignInResult(GoogleSignInData.ResultData(platformData = Unit))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = assertIs<AuthUiState.Success>(viewModel.uiState.value)
+        assertEquals(user, state.user)
+    }
+
+    @Test
+    fun `brand-new student user needs role selection`() = runTest(testDispatcher) {
+        val user = testUser().copy(role = UserRole.STUDENT, createdAt = 42L, lastLoginAt = 42L)
+        authRepository.handleGoogleSignInResultFn = { Result.success(user) }
+        val viewModel = buildViewModel()
+
+        viewModel.handleGoogleSignInResult(GoogleSignInData.ResultData(platformData = Unit))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = assertIs<AuthUiState.NeedsRoleSelection>(viewModel.uiState.value)
+        assertEquals(user, state.user)
+    }
+
+    @Test
+    fun `failed google sign-in surfaces error message`() = runTest(testDispatcher) {
+        authRepository.handleGoogleSignInResultFn = { Result.failure(Exception("network down")) }
+        val viewModel = buildViewModel()
+
+        viewModel.handleGoogleSignInResult(GoogleSignInData.ResultData(platformData = Unit))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = assertIs<AuthUiState.Error>(viewModel.uiState.value)
+        assertEquals("network down", state.message)
+    }
+
+    @Test
+    fun `setUserRole success reloads current user as Success`() = runTest(testDispatcher) {
+        val user = testUser().copy(role = UserRole.INSTRUCTOR)
+        val viewModel = buildViewModel()
+        authRepository.userFlow.value = user
+
+        viewModel.setUserRole(UserRole.INSTRUCTOR)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = assertIs<AuthUiState.Success>(viewModel.uiState.value)
+        assertEquals(user, state.user)
+    }
+
+    @Test
+    fun `setUserRole failure surfaces error`() = runTest(testDispatcher) {
+        authRepository.updateUserRoleResult = Result.failure(Exception("update failed"))
+        val viewModel = buildViewModel()
+
+        viewModel.setUserRole(UserRole.INSTRUCTOR)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = assertIs<AuthUiState.Error>(viewModel.uiState.value)
+        assertEquals("update failed", state.message)
+    }
+
+    @Test
+    fun `signOut resets to Initial`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.handleGoogleSignInResult(GoogleSignInData.Error("boom"))
+        assertTrue(viewModel.uiState.value is AuthUiState.Error)
+
+        viewModel.signOut()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertIs<AuthUiState.Initial>(viewModel.uiState.value)
+    }
+
+    @Test
+    fun `resetState resets to Initial`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.handleGoogleSignInResult(GoogleSignInData.Error("boom"))
+
+        viewModel.resetState()
+
+        assertIs<AuthUiState.Initial>(viewModel.uiState.value)
+    }
+}

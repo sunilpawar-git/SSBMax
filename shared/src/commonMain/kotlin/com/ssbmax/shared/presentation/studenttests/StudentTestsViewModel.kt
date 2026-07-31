@@ -19,10 +19,8 @@ import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,18 +33,18 @@ import kotlinx.coroutines.launch
  * Fetches Phase 1/2 test progress from [TestProgressRepository] and maps it
  * into the flat [TestOverviewItem] list the "All Tests" screen displays.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `ErrorLogger.log` (Android-only, Crashlytics-backed) replaced with
- * [DomainLogger], same seam every other ported ViewModel in this phase uses.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `ErrorLogger.log` (Android-only, Crashlytics-backed)
+ * replaced with [DomainLogger], same seam every other ported ViewModel in
+ * this phase uses.
  */
 class StudentTestsViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(StudentTestsUiState())
     val uiState: StateFlow<StudentTestsUiState> = _uiState.asStateFlow()
 
@@ -58,12 +56,8 @@ class StudentTestsViewModel(
         loadAllTests()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadAllTests() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

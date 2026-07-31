@@ -18,8 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,11 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.presentation.submissions.SubmissionsListViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.dashboard_test_srt
 import ssbmax.shared.generated.resources.dashboard_test_tat
@@ -48,9 +47,8 @@ import ssbmax.shared.generated.resources.submissions_list_title
 
 /**
  * KMP port of the Android `app/.../ui/submissions/SubmissionsListScreen.kt`.
- * Uses `koinInject()` + `collectAsState()` (no `androidx.lifecycle.compose.collectAsStateWithLifecycle()`
- * dependency, which isn't part of this migration's plain-class ViewModel contract),
- * matching every other Phase 5 screen. All string literals externalized to
+ * Uses `koinViewModel()` + `collectAsStateWithLifecycle()`, matching every
+ * other ported screen this phase. All string literals externalized to
  * `strings.xml` (unchanged Android original key names, reused verbatim from
  * `app/src/main/res/values/strings.xml`).
  *
@@ -64,14 +62,11 @@ fun SubmissionsListScreen(
     onSubmissionClick: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onNavigateToTests: () -> Unit = {},
-    viewModel: SubmissionsListViewModel = koinInject(),
+    viewModel: SubmissionsListViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var selectedFilter by remember { mutableStateOf<TestType?>(null) }
     var selectedStatus by remember { mutableStateOf<SubmissionStatus?>(null) }

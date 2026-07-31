@@ -13,19 +13,18 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.topic.TopicViewModel
 import com.ssbmax.shared.ui.common.TabSwipeableContent
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.topic_tab_overview
 import ssbmax.shared.generated.resources.topic_tab_study_material
@@ -45,18 +44,14 @@ fun TopicScreen(
     onNavigateToStudyMaterial: (String) -> Unit = {},
     onNavigateToTest: (String) -> Unit = {},
     onNavigateToInterviewResult: (String) -> Unit = {},
-    viewModel: TopicViewModel = koinInject(),
+    viewModel: TopicViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
-
     LaunchedEffect(topicId) {
         viewModel.loadTopic(topicId)
     }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
     Scaffold(

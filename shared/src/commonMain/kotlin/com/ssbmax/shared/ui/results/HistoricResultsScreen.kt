@@ -19,8 +19,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,10 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.presentation.results.HistoricResultsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.historic_results_cd_back
 import ssbmax.shared.generated.resources.historic_results_cd_filter
@@ -56,13 +55,10 @@ import ssbmax.shared.generated.resources.historic_results_title
 fun HistoricResultsScreen(
     onNavigateBack: () -> Unit,
     onResultClick: (String, TestType) -> Unit,
-    viewModel: HistoricResultsViewModel = koinInject()
+    viewModel: HistoricResultsViewModel = koinViewModel()
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showFilterDialog by remember { mutableStateOf(false) }
 
     Scaffold(

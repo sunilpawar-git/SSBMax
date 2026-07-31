@@ -9,10 +9,9 @@ import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.shared.ui.components.result.UnifiedResultUiState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,21 +37,20 @@ import kotlinx.coroutines.launch
  * observing.
  *
  * `CancellationException` contract preserved verbatim from TAT/PPDT's port: a
- * navigate-away cancels [scope], which surfaces as `CancellationException`
+ * navigate-away cancels `viewModelScope`, which surfaces as `CancellationException`
  * inside `collect` -- must be re-thrown, not treated as a load failure.
  */
 class WATSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "WATSubmissionResultViewModel"
 
     private val _uiState = MutableStateFlow(WATSubmissionResultUiState())
     val uiState: StateFlow<WATSubmissionResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 submissionRepository.observeWATSubmission(submissionId).collect { submission ->
@@ -102,10 +100,6 @@ class WATSubmissionResultViewModel(
         } catch (e: Exception) {
             logger.e(tag, "Failed to load WAT OLQ result", e)
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

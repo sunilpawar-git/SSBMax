@@ -3,11 +3,9 @@ package com.ssbmax.shared.presentation.piqresult
 import com.ssbmax.shared.domain.model.PIQSubmission
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,9 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * KMP port of `app/.../ui/tests/piq/PIQSubmissionResultViewModel.kt`. Plain-class +
- * own-`CoroutineScope` pattern, same shape as every other ported result ViewModel
- * this phase (e.g. [com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel]).
+ * KMP port of `app/.../ui/tests/piq/PIQSubmissionResultViewModel.kt`. A real
+ * `androidx.lifecycle.ViewModel` using `viewModelScope`, same shape as every other
+ * ported result ViewModel this phase (e.g. [com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel]).
  *
  * Fetches by `submissionId` via [SubmissionRepository.getSubmission] (ID-based
  * navigation, per this project's mandatory lint rule 7) and hand-parses the raw
@@ -27,15 +25,14 @@ import kotlinx.coroutines.launch
 class PIQSubmissionResultViewModel(
     private val submissionRepository: SubmissionRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "PIQSubmissionResultViewModel"
 
     private val _uiState = MutableStateFlow(PIQSubmissionResultUiState())
     val uiState: StateFlow<PIQSubmissionResultUiState> = _uiState.asStateFlow()
 
     fun loadSubmission(submissionId: String) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             submissionRepository.getSubmission(submissionId)
@@ -68,10 +65,6 @@ class PIQSubmissionResultViewModel(
                     _uiState.update { it.copy(isLoading = false, error = error.message ?: "Failed to load submission") }
                 }
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

@@ -17,12 +17,10 @@ import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +34,7 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of `app/.../ui/tests/tat/TATTestViewModel.kt`.
  *
- * Plain-class + own-`CoroutineScope` pattern, same shape as
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`, same shape as
  * [com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel] (see that file for
  * the fuller writeup of shared deviations: `WorkManager` -> here,
  * `TATAnalysisPipelineOrchestrator`'s bounded-batch graph, replaced by
@@ -74,8 +72,7 @@ class TATTestViewModel(
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "TATTestViewModel"
 
     private val _uiState = MutableStateFlow(TATTestUiState())
@@ -86,7 +83,7 @@ class TATTestViewModel(
     private var capturedUserId: String? = null
 
     fun loadTest(testId: String = "tat_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...", error = null) }
 
             val userId = observeCurrentUser().first()?.id ?: run {
@@ -202,7 +199,7 @@ class TATTestViewModel(
         saveCurrentStoryToResponses()
         _uiState.update { it.copy(isLoading = true, isTimerActive = false) }
         val state = _uiState.value
-        scope.launch {
+        viewModelScope.launch {
             val userId = capturedUserId ?: observeCurrentUser().first()?.id
             if (userId == null) {
                 logger.e(tag, "Unauthenticated TAT submission blocked", null)
@@ -253,7 +250,7 @@ class TATTestViewModel(
         val viewingTime = _uiState.value.config?.viewingTimePerPictureSeconds ?: 30
         _uiState.update { it.copy(viewingTimeRemaining = viewingTime, isTimerActive = true, timerStartTime = myGeneration) }
         val endTime = Clock.System.now().toEpochMilliseconds() + (viewingTime * 1000L)
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             try {
                 while (isActive) {
                     val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
@@ -277,7 +274,7 @@ class TATTestViewModel(
         val writingTimeSeconds = (_uiState.value.config?.writingTimePerPictureMinutes ?: 4) * 60
         _uiState.update { it.copy(writingTimeRemaining = writingTimeSeconds, isTimerActive = true, timerStartTime = myGeneration) }
         val endTime = Clock.System.now().toEpochMilliseconds() + (writingTimeSeconds * 1000L)
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             try {
                 while (isActive) {
                     val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
@@ -295,8 +292,7 @@ class TATTestViewModel(
         }
     }
 
-    fun close() {
+    override fun onCleared() {
         timerJob?.cancel()
-        scope.cancel()
     }
 }

@@ -7,10 +7,8 @@ import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,18 +23,18 @@ import kotlinx.coroutines.launch
  * KMP port of the Android `app/.../ui/phase/Phase1DetailViewModel.kt`.
  * Fetches Phase 1 (OIR/PPDT) progress from [TestProgressRepository].
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `ErrorLogger.log` (Android-only, Crashlytics-backed) replaced with
- * [DomainLogger], same seam every other ported ViewModel in this phase uses.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `ErrorLogger.log` (Android-only, Crashlytics-backed)
+ * replaced with [DomainLogger], same seam every other ported ViewModel in
+ * this phase uses.
  */
 class Phase1DetailViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(Phase1DetailUiState())
     val uiState: StateFlow<Phase1DetailUiState> = _uiState.asStateFlow()
 
@@ -48,12 +46,8 @@ class Phase1DetailViewModel(
         loadPhase1Tests()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadPhase1Tests() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
@@ -75,7 +69,7 @@ class Phase1DetailViewModel(
                         }
                     }
                     .stateIn(
-                        scope = scope,
+                        scope = viewModelScope,
                         started = SharingStarted.WhileSubscribed(5000),
                         initialValue = Phase1Progress(
                             oirProgress = TestProgress(TestType.OIR),

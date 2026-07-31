@@ -25,9 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,10 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.interviewstart.StartInterviewUiState
 import com.ssbmax.shared.presentation.interviewstart.StartInterviewViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.interview_action_retry
 import ssbmax.shared.generated.resources.interview_button_start
@@ -56,10 +55,10 @@ import ssbmax.shared.generated.resources.interview_start_title
 /**
  * KMP port of `app/.../ui/interview/start/StartInterviewScreen.kt`.
  *
- * Uses `koinInject<StartInterviewViewModel>()` (not `koinViewModel()`),
- * matching this phase's plain-class ViewModel pattern -- a
- * [DisposableEffect] calls [StartInterviewViewModel.close] on leaving the
- * screen.
+ * Uses `koinViewModel<StartInterviewViewModel>()` -- `StartInterviewViewModel`
+ * is a real `androidx.lifecycle.ViewModel`, cancelled automatically in its own
+ * `onCleared`; no manual `DisposableEffect` teardown needed (Phase 1 of the
+ * KMP-convergence plan).
  *
  * Documented deviation from the Android original: the notification-
  * permission request (`LocalNotificationPermissionController.current.request()`)
@@ -79,15 +78,11 @@ import ssbmax.shared.generated.resources.interview_start_title
 fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSession: (sessionId: String) -> Unit,
-    viewModel: StartInterviewViewModel = koinInject(),
+    viewModel: StartInterviewViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var consentGiven by remember { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(uiState.isSessionCreated) {
         if (uiState.isSessionCreated && uiState.sessionId != null) {

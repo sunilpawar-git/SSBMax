@@ -4,15 +4,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.GPEPhase
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.presentation.gpe.GPETestViewModel
@@ -24,7 +23,7 @@ import com.ssbmax.shared.ui.gto.gpe.components.GPEInstructionsPhase
 import com.ssbmax.shared.ui.gto.gpe.components.GPEPlanningPhase
 import com.ssbmax.shared.ui.gto.gpe.components.GPEReviewPhase
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.gpe_title
 
@@ -46,19 +45,22 @@ import ssbmax.shared.generated.resources.gpe_title
  * SUBMITTED), so this `when` is exhaustive over the phases actually reached,
  * with a no-op branch for the unreachable one (matching the Android
  * original's own empty `{}` block for that case).
+ *
+ * Uses `koinViewModel<GPETestViewModel>()` (Phase 1 of the KMP-convergence
+ * plan) -- the timer coroutine runs on `viewModelScope` and is cancelled
+ * automatically in `onCleared()`, no manual `DisposableEffect` teardown
+ * needed.
  */
 @Composable
 fun GPETestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: GPETestViewModel = koinInject(),
+    viewModel: GPETestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) { onDispose { viewModel.close() } }
 
     LaunchedEffect(testId) { viewModel.loadTest(testId) }
 

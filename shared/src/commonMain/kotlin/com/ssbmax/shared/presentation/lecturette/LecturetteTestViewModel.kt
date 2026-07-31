@@ -9,11 +9,9 @@ import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,8 +42,7 @@ class LecturetteTestViewModel(
     private val eligibilityChecker: GTOEligibilityChecker,
     private val submissionCoordinator: GTOSubmissionCoordinator,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "LecturetteTestViewModel"
 
     private val _uiState = MutableStateFlow(LecturetteTestUiState())
@@ -61,7 +58,7 @@ class LecturetteTestViewModel(
     }
 
     fun loadTest(testId: String = "gto_lecturette_standard") {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Checking eligibility...") }
             when (val result = eligibilityChecker.checkEligibility(TestType.GTO_LECTURETTE, GTOTestType.LECTURETTE)) {
                 is GTOEligibilityChecker.Result.Error -> {
@@ -104,7 +101,7 @@ class LecturetteTestViewModel(
 
     private fun startTimer() {
         timerJob?.cancel()
-        timerJob = scope.launch {
+        timerJob = viewModelScope.launch {
             while (isActive && _uiState.value.timeRemaining > 0 && _uiState.value.phase == LecturettePhase.SPEECH) {
                 delay(1000)
                 _uiState.update { it.copy(timeRemaining = (it.timeRemaining - 1).coerceAtLeast(0)) }
@@ -135,7 +132,7 @@ class LecturetteTestViewModel(
 
     @OptIn(ExperimentalUuidApi::class)
     fun submitTest() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, submitError = null) }
             val state = _uiState.value
             val timeSpent = ((Clock.System.now().toEpochMilliseconds() - state.speechStartTime) / 1000).toInt()
@@ -170,9 +167,8 @@ class LecturetteTestViewModel(
         _uiState.update { it.copy(showLimitDialog = false) }
     }
 
-    fun close() {
+    override fun onCleared() {
         timerJob?.cancel()
-        scope.cancel()
     }
 }
 

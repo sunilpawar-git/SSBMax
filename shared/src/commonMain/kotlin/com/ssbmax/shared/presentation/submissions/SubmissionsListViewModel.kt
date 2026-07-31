@@ -4,10 +4,8 @@ import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.usecase.submission.GetUserSubmissionsUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,9 +16,8 @@ import kotlinx.datetime.Clock
 /**
  * KMP port of the Android `app/.../ui/submissions/SubmissionsListViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`; the screen uses
- * `koinInject()`, not `koinViewModel()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`; the screen
+ * uses `koinViewModel()`.
  *
  * Deviation from the Android original: `observeCurrentUser().first()` (an
  * injected [com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase])
@@ -36,9 +33,7 @@ import kotlinx.datetime.Clock
 class SubmissionsListViewModel(
     private val getUserSubmissions: GetUserSubmissionsUseCase,
     private val authRepository: AuthRepository
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SubmissionsListUiState())
     val uiState: StateFlow<SubmissionsListUiState> = _uiState.asStateFlow()
 
@@ -46,12 +41,8 @@ class SubmissionsListViewModel(
         loadSubmissions()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadSubmissions(filterType: TestType? = null) {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

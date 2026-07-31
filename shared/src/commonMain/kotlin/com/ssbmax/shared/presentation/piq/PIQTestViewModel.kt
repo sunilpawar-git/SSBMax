@@ -8,13 +8,11 @@ import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,8 +26,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 
 /**
- * KMP port of `app/.../ui/tests/piq/PIQTestViewModel.kt`. Plain-class +
- * own-`CoroutineScope` pattern, same shape as
+ * KMP port of `app/.../ui/tests/piq/PIQTestViewModel.kt`. A real
+ * `androidx.lifecycle.ViewModel` using `viewModelScope`, same shape as
  * [com.ssbmax.shared.presentation.sdt.SDTTestViewModel] (see that file for the
  * fuller writeup of shared deviations: `SubscriptionManager` ->
  * [CheckTestEligibilityUseCase]; `System.currentTimeMillis()` ->
@@ -81,8 +79,7 @@ class PIQTestViewModel(
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "PIQTestViewModel"
 
     private val _uiState = MutableStateFlow(PIQTestUiState())
@@ -102,7 +99,7 @@ class PIQTestViewModel(
 
     private fun setupAutoSave() {
         autoSaveJob?.cancel()
-        autoSaveJob = scope.launch {
+        autoSaveJob = viewModelScope.launch {
             autoSaveChannel.receiveAsFlow()
                 .debounce(2000L)
                 .collect { saveDraft() }
@@ -113,7 +110,7 @@ class PIQTestViewModel(
      *  unauthenticated user does NOT block the form -- matches Android's
      *  original behavior of silently starting a blank form. */
     private fun loadDraft() {
-        scope.launch {
+        viewModelScope.launch {
             val userId = withTimeoutOrNull(3000L) { observeCurrentUser().first()?.id }
             if (userId == null) {
                 logger.w(tag, "No user logged in, skipping draft load")
@@ -163,7 +160,7 @@ class PIQTestViewModel(
     }
 
     private fun saveDraft() {
-        scope.launch {
+        viewModelScope.launch {
             val state = _uiState.value
             if (state.isSaving || state.answers.isEmpty()) return@launch
 
@@ -190,7 +187,7 @@ class PIQTestViewModel(
 
     fun submitTest() {
         _uiState.update { it.copy(isLoading = true) }
-        scope.launch {
+        viewModelScope.launch {
             val state = _uiState.value
             val userId = capturedUserId ?: withTimeoutOrNull(3000L) { observeCurrentUser().first()?.id }
             if (userId == null) {
@@ -240,8 +237,7 @@ class PIQTestViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
-    fun close() {
+    override fun onCleared() {
         autoSaveJob?.cancel()
-        scope.cancel()
     }
 }

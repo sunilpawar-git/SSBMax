@@ -3,10 +3,8 @@ package com.ssbmax.shared.presentation.settings
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,18 +15,17 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/settings/SettingsViewModel.kt`.
  *
- * Same plain-class + own-`CoroutineScope` pattern as every other Phase 5
- * ViewModel — NOT `androidx.lifecycle.ViewModel`; the screen uses
- * `koinInject()`. `close()` cancels the scope. `android.util.Log`-free
+ * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
+ * using `viewModelScope`, converged with `app`'s existing ViewModel idiom and
+ * this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
+ * conventions — no more manual `CoroutineScope` + `close()`. `android.util.Log`-free
  * `ErrorLogger` calls replaced with [DomainLogger], same seam every other
  * ported ViewModel in this phase uses.
  */
 class SettingsViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
@@ -40,12 +37,8 @@ class SettingsViewModel(
         observeSubscriptionTier()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun observeSubscriptionTier() {
-        scope.launch {
+        viewModelScope.launch {
             observeCurrentUser()
                 .catch { error ->
                     logger.e(TAG, "Failed to observe subscription tier", error)

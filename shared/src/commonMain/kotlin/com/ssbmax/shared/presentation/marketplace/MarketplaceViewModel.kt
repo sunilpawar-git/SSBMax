@@ -4,10 +4,8 @@ import com.ssbmax.shared.domain.model.CoachingInstitute
 import com.ssbmax.shared.domain.model.InstituteType
 import com.ssbmax.shared.domain.model.PriceRange
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,16 +18,16 @@ import kotlinx.coroutines.launch
  * [MarketplaceMockData] on both platforms (no `MarketplaceRepository`/backend
  * exists yet; same open TODO as the Android original).
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `ErrorLogger.log` (Android-only, Crashlytics-backed) replaced with
- * [DomainLogger], same seam every other ported ViewModel in this phase uses.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `ErrorLogger.log` (Android-only, Crashlytics-backed)
+ * replaced with [DomainLogger], same seam every other ported ViewModel in
+ * this phase uses.
  */
 class MarketplaceViewModel(
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(MarketplaceUiState())
     val uiState: StateFlow<MarketplaceUiState> = _uiState.asStateFlow()
 
@@ -45,12 +43,8 @@ class MarketplaceViewModel(
         loadInstitutes()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadInstitutes() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {

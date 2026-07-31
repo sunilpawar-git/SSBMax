@@ -1,18 +1,17 @@
 package com.ssbmax.shared.ui.srt
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.srtresult.SRTSubmissionResultUiState
 import com.ssbmax.shared.presentation.srtresult.SRTSubmissionResultViewModel
 import com.ssbmax.shared.ui.components.result.OLQResultContent
 import com.ssbmax.shared.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.shared.ui.components.result.UnifiedOLQResultTemplate
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.result_srt_situations_completed
 import ssbmax.shared.generated.resources.result_srt_title
@@ -24,22 +23,18 @@ import ssbmax.shared.generated.resources.result_srt_title
  * TAT/WAT), both already ported into `shared` during this phase's earlier
  * sessions, reused unchanged here.
  *
- * Uses `koinInject<SRTSubmissionResultViewModel>()` (not `koinViewModel()`);
- * a [DisposableEffect] calls [SRTSubmissionResultViewModel.close] on leaving
- * the screen, cancelling the still-open Firestore listener.
+ * Uses `koinViewModel<SRTSubmissionResultViewModel>()`; `viewModelScope` is
+ * cancelled automatically on leaving the screen, cancelling the still-open
+ * Firestore listener.
  */
 @Composable
 fun SRTSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: SRTSubmissionResultViewModel = koinInject(),
+    viewModel: SRTSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

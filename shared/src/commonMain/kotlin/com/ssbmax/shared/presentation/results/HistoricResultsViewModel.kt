@@ -5,10 +5,8 @@ import com.ssbmax.shared.domain.model.results.HistoricResult
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.usecase.results.GetHistoricResultsUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,10 +16,9 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/results/HistoricResultsViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established (see [com.ssbmax.shared.presentation.profile.UserProfileViewModel]) --
- * NOT `androidx.lifecycle.ViewModel`; the screen uses `koinInject()`, not `koinViewModel()`.
- * `close()` cancels the scope, called from the screen's `DisposableEffect`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`; the screen
+ * uses `koinViewModel()` -- `viewModelScope` is cancelled automatically, no
+ * manual `DisposableEffect`/`close()` needed.
  *
  * Deviation from the Android original: `ErrorLogger.log`/`logWithUser` (Android-only,
  * Crashlytics-backed) replaced with [DomainLogger], same seam every other ported
@@ -39,9 +36,7 @@ class HistoricResultsViewModel(
     private val authRepository: AuthRepository,
     private val getHistoricResults: GetHistoricResultsUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(HistoricResultsUiState())
     val uiState: StateFlow<HistoricResultsUiState> = _uiState.asStateFlow()
 
@@ -53,15 +48,11 @@ class HistoricResultsViewModel(
         loadResults()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     /**
      * Load historic results for current user
      */
     fun loadResults(testTypeFilter: TestType? = null) {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 

@@ -19,18 +19,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.presentation.submissions.SubmissionDetailUiState
 import com.ssbmax.shared.presentation.submissions.SubmissionDetailViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.submission_detail_action_back_home
 import ssbmax.shared.generated.resources.submission_detail_label_status
@@ -52,18 +51,15 @@ import ssbmax.shared.generated.resources.submission_detail_title
 fun SubmissionDetailScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: SubmissionDetailViewModel = koinInject(),
+    viewModel: SubmissionDetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)
     }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

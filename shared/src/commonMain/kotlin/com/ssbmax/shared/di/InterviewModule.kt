@@ -5,6 +5,7 @@ import com.ssbmax.shared.presentation.interviewresult.InterviewResultViewModel
 import com.ssbmax.shared.presentation.interviewsession.InterviewSessionViewModel
 import com.ssbmax.shared.presentation.interviewstart.StartInterviewViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -25,7 +26,7 @@ import org.koin.dsl.module
  */
 val interviewModule = module {
     factoryOf(::CheckInterviewPrerequisitesUseCase)
-    factoryOf(::StartInterviewViewModel)
-    factoryOf(::InterviewSessionViewModel)
-    factoryOf(::InterviewResultViewModel)
+    viewModelOf(::StartInterviewViewModel)
+    viewModelOf(::InterviewSessionViewModel)
+    viewModelOf(::InterviewResultViewModel)
 }

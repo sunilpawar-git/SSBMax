@@ -23,15 +23,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.study.StudyMaterialDetailViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.study_material_back
 import ssbmax.shared.generated.resources.study_material_breadcrumb_root
@@ -52,6 +52,14 @@ import ssbmax.shared.generated.resources.study_material_related
  * migration -- dropped rather than faked; a real cross-platform share sheet
  * is out of this screen-porting session's scope (would need its own
  * `expect`/`actual`, same class of work as Phase 4's platform shims).
+ *
+ * `StudyMaterialDetailViewModel` is a real `androidx.lifecycle.ViewModel`
+ * (Phase 1 of the KMP-convergence plan) via `koinViewModel()`, but this
+ * screen keeps one `DisposableEffect` that Phase 1's mechanical
+ * `close()` -> `onCleared()` conversion can't replace: see
+ * [StudyMaterialDetailViewModel]'s class doc for why
+ * [StudyMaterialDetailViewModel.endStudySession] must still be called
+ * explicitly on dispose rather than from `onCleared()`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,18 +67,18 @@ fun StudyMaterialDetailScreen(
     categoryId: String,
     onNavigateBack: () -> Unit,
     onNavigateToRelatedMaterial: (String) -> Unit = {},
-    viewModel: StudyMaterialDetailViewModel = koinInject(),
+    viewModel: StudyMaterialDetailViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
+        onDispose { viewModel.endStudySession() }
     }
 
     LaunchedEffect(categoryId) {
         viewModel.loadMaterial(categoryId)
     }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {

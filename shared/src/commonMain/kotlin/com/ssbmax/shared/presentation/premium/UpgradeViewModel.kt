@@ -5,10 +5,8 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,9 +27,10 @@ import kotlinx.coroutines.launch
  * migration commits. Deliberately NOT ported this session (would be porting
  * unreachable code -- see this plan's own "no speculative features" rule).
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `android.util.Log` replaced with [DomainLogger].
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `android.util.Log` replaced with [DomainLogger].
  *
  * Behavior difference from the Android original (deliberate, not a port bug):
  * the Android `UpgradeViewModel` reads `userProfileRepository.getUserProfile(userId)`
@@ -53,9 +52,7 @@ class UpgradeViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UpgradeUiState())
     val uiState: StateFlow<UpgradeUiState> = _uiState.asStateFlow()
 
@@ -68,12 +65,8 @@ class UpgradeViewModel(
         loadAvailablePlans()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadCurrentSubscription() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val currentUser = observeCurrentUser().first()

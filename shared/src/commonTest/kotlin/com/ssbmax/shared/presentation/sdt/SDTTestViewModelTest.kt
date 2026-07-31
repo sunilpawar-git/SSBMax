@@ -1,0 +1,189 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
+package com.ssbmax.shared.presentation.sdt
+
+import com.ssbmax.shared.domain.model.SDTPhase
+import com.ssbmax.shared.domain.model.SDTQuestion
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.repository.UsageInfo
+import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
+import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.testing.clearForTest
+import com.ssbmax.shared.presentation.testing.FakeAuthRepository
+import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
+import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
+import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
+import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
+import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
+import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
+import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.testUser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+/**
+ * Characterization test, written before converting [SDTTestViewModel] to
+ * `androidx.lifecycle.ViewModel` (Phase 1). Pins the current state machine:
+ * 4 fixed essay questions, one whole-test countdown, edit-before-submit
+ * REVIEW phase.
+ */
+class SDTTestViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var authRepository: FakeAuthRepository
+    private lateinit var subscriptionRepository: FakeSubscriptionRepository
+    private lateinit var testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository
+    private lateinit var testSessionRepository: FakeTestSessionRepository
+    private lateinit var userProfileRepository: FakeUserProfileRepository
+    private lateinit var submissionRepository: FakeSubmissionRepository
+    private lateinit var usageRecorder: FakeTestUsageRecorder
+    private lateinit var analysisTrigger: FakeSubmissionAnalysisTrigger
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+        authRepository = FakeAuthRepository(initialUser = testUser())
+        subscriptionRepository = FakeSubscriptionRepository()
+        val base = FakeTestContentRepository()
+        testContentRepository = object : com.ssbmax.shared.domain.repository.TestContentRepository by base {
+            override suspend fun getSDTQuestions(testId: String) = Result.success(questions())
+        }
+        testSessionRepository = FakeTestSessionRepository()
+        userProfileRepository = FakeUserProfileRepository()
+        submissionRepository = FakeSubmissionRepository()
+        usageRecorder = FakeTestUsageRecorder()
+        analysisTrigger = FakeSubmissionAnalysisTrigger()
+        // "Self Description" is limit 0 on FREE (SubscriptionLimits) -- default to PRO so
+        // tests are eligible unless a test explicitly overrides to exercise LimitReached.
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.PRO)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    private fun questions() = listOf(
+        SDTQuestion(id = "q1", question = "What do your friends think of you?", sequenceNumber = 1),
+        SDTQuestion(id = "q2", question = "What do you think of yourself?", sequenceNumber = 2)
+    )
+
+    private fun buildViewModel() = SDTTestViewModel(
+        testContentRepository = testContentRepository,
+        testSessionRepository = testSessionRepository,
+        submitSDTTest = SubmitSDTTestUseCase(submissionRepository),
+        observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
+        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
+        userProfileRepository = userProfileRepository,
+        usageRecorder = usageRecorder,
+        analysisTrigger = analysisTrigger,
+        logger = NoOpLogger()
+    )
+
+    @Test
+    fun `unauthenticated access is blocked`() = runTest(testDispatcher) {
+        authRepository.userFlow.value = null
+        val viewModel = buildViewModel()
+
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("Authentication required. Please login to continue.", viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun `limit reached surfaces subscription details`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult =
+            Result.success(mapOf("Self Description" to UsageInfo(used = 1, limit = 1)))
+        val viewModel = buildViewModel()
+
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isLimitReached)
+    }
+
+    @Test
+    fun `loads test into INSTRUCTIONS phase with questions`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(2, state.questions.size)
+        assertEquals(SDTPhase.INSTRUCTIONS, state.phase)
+    }
+
+    @Test
+    fun `startTest enters IN_PROGRESS and starts the countdown`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.startTest()
+        testDispatcher.scheduler.runCurrent()
+
+        val state = viewModel.uiState.value
+        assertEquals(SDTPhase.IN_PROGRESS, state.phase)
+        assertTrue(state.isTimerActive)
+        // SDT's countdown timer uses a real-wall-clock endTime (see SDTTestViewModel.startTimer),
+        // not a virtual-time-friendly counter -- its timerJob is still running (submitTest() never
+        // cancels it either). runTest()'s own end-of-test cleanup drains the shared test scheduler
+        // to idle regardless of what this test body calls explicitly, which would spin trying to
+        // catch that job up to real elapsed time. Now that SDTTestViewModel is a real
+        // androidx.lifecycle.ViewModel there's no public close() to cancel the scope with --
+        // clearForTest() (see ViewModelTestUtils.kt) forces onCleared() via a throwaway
+        // ViewModelStore so cleanup is instant.
+        viewModel.clearForTest()
+    }
+
+    @Test
+    fun `moveToNext on the last question enters REVIEW`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.startTest()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.updateAnswer("I am dependable and calm under pressure.")
+        viewModel.moveToNext()
+        viewModel.moveToNext()
+
+        val state = viewModel.uiState.value
+        assertEquals(SDTPhase.REVIEW, state.phase)
+        assertEquals(2, state.responses.size)
+        viewModel.clearForTest() // see the timer note in the previous test
+    }
+
+    @Test
+    fun `submitTest builds a submission and triggers analysis`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.startTest()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.submitTest()
+        testDispatcher.scheduler.runCurrent()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.isSubmitted)
+        assertNotNull(state.submissionId)
+        assertEquals(1, analysisTrigger.triggered.size)
+        viewModel.clearForTest() // see the timer note on the first startTest() test
+    }
+}

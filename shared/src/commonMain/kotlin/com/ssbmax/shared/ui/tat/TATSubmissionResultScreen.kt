@@ -8,13 +8,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultUiState
 import com.ssbmax.shared.presentation.tatresult.TATSubmissionResultViewModel
@@ -22,7 +21,7 @@ import com.ssbmax.shared.ui.components.result.OLQResultContent
 import com.ssbmax.shared.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.shared.ui.components.result.UnifiedOLQResultTemplate
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.result_tat_partial_assessment_message
 import ssbmax.shared.generated.resources.result_tat_partial_assessment_title
@@ -39,22 +38,18 @@ import ssbmax.shared.generated.resources.result_tat_title
  * `shared/.../ui/components/result/OLQResultContent.kt` before writing this
  * file rather than duplicating it.
  *
- * Uses `koinInject<TATSubmissionResultViewModel>()` (not `koinViewModel()`);
- * a [DisposableEffect] calls [TATSubmissionResultViewModel.close] on leaving
- * the screen, cancelling the still-open Firestore listener.
+ * Uses `koinViewModel<TATSubmissionResultViewModel>()`; `viewModelScope` is
+ * cancelled automatically on leaving the screen, cancelling the still-open
+ * Firestore listener.
  */
 @Composable
 fun TATSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: TATSubmissionResultViewModel = koinInject(),
+    viewModel: TATSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

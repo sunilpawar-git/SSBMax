@@ -12,10 +12,8 @@ import com.ssbmax.shared.domain.repository.StudyContentRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,8 +43,10 @@ import kotlinx.coroutines.launch
  *   equivalents already defined in `com.ssbmax.shared.data.repository`
  *   (added during this migration's Phase 2 `GitLiveStudyContentRepository`
  *   work) -- same shapes, no behavior change.
- * - Plain-class + own-`CoroutineScope` ViewModel pattern (NOT
- *   `androidx.lifecycle.ViewModel`).
+ * - Real `androidx.lifecycle.ViewModel` + `viewModelScope` (Phase 1 of the
+ *   KMP-convergence plan, see
+ *   [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for
+ *   the precedent this mirrors).
  */
 class TopicViewModel(
     private val testProgressRepository: TestProgressRepository,
@@ -54,9 +54,7 @@ class TopicViewModel(
     private val studyContentRepository: StudyContentRepository,
     private val interviewRepository: InterviewRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(TopicUiState())
     val uiState: StateFlow<TopicUiState> = _uiState.asStateFlow()
 
@@ -64,10 +62,6 @@ class TopicViewModel(
 
     private companion object {
         const val TAG = "TopicViewModel"
-    }
-
-    fun close() {
-        scope.cancel()
     }
 
     fun loadTopic(topicId: String) {
@@ -79,7 +73,7 @@ class TopicViewModel(
     }
 
     private fun loadInterviewHistory() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoadingInterviewHistory = true) }
 
             try {
@@ -107,7 +101,7 @@ class TopicViewModel(
     }
 
     private fun loadTopicContent() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
             try {
@@ -132,7 +126,7 @@ class TopicViewModel(
     private suspend fun loadFromCloud(userId: String?) {
         try {
             studyContentRepository.getTopicContent(testType)
-                .stateIn(scope = scope, started = SharingStarted.WhileSubscribed(5000), initialValue = Result.success(null))
+                .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = Result.success(null))
                 .collect { result ->
                     result.onSuccess { data ->
                         if (data is TopicContentData) {

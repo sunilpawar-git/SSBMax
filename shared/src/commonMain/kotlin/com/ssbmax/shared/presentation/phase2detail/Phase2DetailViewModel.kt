@@ -7,10 +7,8 @@ import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,18 +26,18 @@ import kotlinx.coroutines.launch
  * domain model groups TAT/WAT/SRT/SD under one `psychologyProgress`, but the
  * UI still lists them as four separate test cards sharing that same progress.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`.
- * `ErrorLogger.log` (Android-only, Crashlytics-backed) replaced with
- * [DomainLogger], same seam every other ported ViewModel in this phase uses.
+ * Uses a real `androidx.lifecycle.ViewModel` with `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan, see
+ * [com.ssbmax.shared.presentation.oir.OIRTestViewModel]'s doc comment for the
+ * precedent this mirrors). `ErrorLogger.log` (Android-only, Crashlytics-backed)
+ * replaced with [DomainLogger], same seam every other ported ViewModel in
+ * this phase uses.
  */
 class Phase2DetailViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(Phase2DetailUiState())
     val uiState: StateFlow<Phase2DetailUiState> = _uiState.asStateFlow()
 
@@ -51,12 +49,8 @@ class Phase2DetailViewModel(
         loadPhase2Tests()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     private fun loadPhase2Tests() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
@@ -78,7 +72,7 @@ class Phase2DetailViewModel(
                         }
                     }
                     .stateIn(
-                        scope = scope,
+                        scope = viewModelScope,
                         started = SharingStarted.WhileSubscribed(5000),
                         initialValue = Phase2Progress(
                             psychologyProgress = TestProgress(TestType.TAT),

@@ -9,6 +9,7 @@ import com.ssbmax.shared.presentation.settings.SubscriptionManagementViewModel
 import com.ssbmax.shared.presentation.settings.notifications.NotificationSettingsViewModel
 import com.ssbmax.shared.presentation.settings.theme.ThemeSettingsViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -27,13 +28,13 @@ import org.koin.dsl.module
  * their own review pass.
  */
 val profileSettingsModule = module {
-    factoryOf(::UserProfileViewModel)
-    factoryOf(::StudentProfileViewModel)
+    viewModelOf(::UserProfileViewModel)
+    viewModelOf(::StudentProfileViewModel)
 
     factoryOf(::GetSubscriptionTierUseCase)
     factoryOf(::GetMonthlyUsageUseCase)
-    factoryOf(::SettingsViewModel)
-    factoryOf(::ThemeSettingsViewModel)
-    factoryOf(::NotificationSettingsViewModel)
-    factoryOf(::SubscriptionManagementViewModel)
+    viewModelOf(::SettingsViewModel)
+    viewModelOf(::ThemeSettingsViewModel)
+    viewModelOf(::NotificationSettingsViewModel)
+    viewModelOf(::SubscriptionManagementViewModel)
 }

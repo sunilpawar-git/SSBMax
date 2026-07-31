@@ -20,17 +20,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.AppTheme
 import com.ssbmax.shared.presentation.settings.theme.ThemeSettingsViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.theme_dark_description
 import ssbmax.shared.generated.resources.theme_light_description
@@ -43,12 +43,10 @@ import ssbmax.shared.generated.resources.theme_system_description
  * `app/.../ui/settings/ThemeSection.kt`.
  *
  * Note on wiring: this composable owns [ThemeSettingsViewModel] via
- * `koinInject()` (not `koinViewModel()`, matching this phase's plain-class
- * ViewModel pattern) and does NOT itself `close()` the ViewModel on dispose
- * -- the composable is short-lived within [SettingsScreen]'s single
- * `koinInject()`-scoped instance for the screen's lifetime, same as
- * `NotificationSettingsSection` below; [SettingsScreen] closing its own
- * top-level `SettingsViewModel` is unrelated (separate instance).
+ * `koinViewModel()` (Phase 1 of the KMP-convergence plan) -- teardown is
+ * automatic via `onCleared()`/`viewModelScope`, same as
+ * `NotificationSettingsSection` below; [SettingsScreen]'s own top-level
+ * `SettingsViewModel` is a separate instance.
  *
  * Deviation from the Android original: the Android `ThemeSection` also
  * pushed the selected theme into `com.ssbmax.ui.theme.LocalThemeState` (an
@@ -65,8 +63,8 @@ import ssbmax.shared.generated.resources.theme_system_description
  */
 @Composable
 fun ThemeSection(modifier: Modifier = Modifier) {
-    val viewModel: ThemeSettingsViewModel = koinInject()
-    val uiState by viewModel.uiState.collectAsState()
+    val viewModel: ThemeSettingsViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Card(
         modifier = modifier.fillMaxWidth(),

@@ -25,19 +25,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SSBMaxNotification
 import com.ssbmax.shared.presentation.notifications.NotificationCenterViewModel
 import com.ssbmax.shared.presentation.notifications.NotificationFilter
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.notifications_empty_subtitle
 import ssbmax.shared.generated.resources.notifications_empty_title
@@ -55,14 +54,10 @@ import ssbmax.shared.generated.resources.notifications_screen_title
 fun NotificationCenterScreen(
     onNavigateBack: () -> Unit,
     onNotificationClick: (SSBMaxNotification) -> Unit = {},
-    viewModel: NotificationCenterViewModel = koinInject()
+    viewModel: NotificationCenterViewModel = koinViewModel()
 ) {
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
-
-    val uiState by viewModel.uiState.collectAsState()
-    val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {

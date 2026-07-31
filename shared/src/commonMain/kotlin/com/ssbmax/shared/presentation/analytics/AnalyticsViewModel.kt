@@ -5,10 +5,8 @@ import com.ssbmax.shared.domain.model.TestPerformancePoint
 import com.ssbmax.shared.domain.model.TestTypeStats
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,9 +16,8 @@ import kotlinx.coroutines.launch
 /**
  * KMP port of the Android `app/.../ui/analytics/AnalyticsViewModel.kt`.
  *
- * Follows the plain-class + own-`CoroutineScope` ViewModel pattern this phase
- * already established -- NOT `androidx.lifecycle.ViewModel`; the screen uses
- * `koinInject()`, not `koinViewModel()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope`; the screen
+ * uses `koinViewModel()`.
  *
  * [AnalyticsRepository] was already ported and bound in `sharedModule` (Phase 2's
  * 6th slice, `GitLiveAnalyticsRepository`) -- this session found no
@@ -35,9 +32,7 @@ import kotlinx.coroutines.launch
 class AnalyticsViewModel(
     private val analyticsRepository: AnalyticsRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-
+) : ViewModel() {
     private val _uiState = MutableStateFlow(AnalyticsUiState())
     val uiState: StateFlow<AnalyticsUiState> = _uiState.asStateFlow()
 
@@ -49,12 +44,8 @@ class AnalyticsViewModel(
         loadAnalytics()
     }
 
-    fun close() {
-        scope.cancel()
-    }
-
     fun loadAnalytics() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
@@ -78,7 +69,7 @@ class AnalyticsViewModel(
     }
 
     fun loadTestTypeDetails(testType: String) {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 analyticsRepository.getTestTypeStats(testType).collect { stats ->
                     _uiState.update { it.copy(selectedTestStats = stats) }
@@ -91,7 +82,7 @@ class AnalyticsViewModel(
     }
 
     fun loadAllTestStats() {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 analyticsRepository.getAllTestTypeStats().collect { allStats ->
                     _uiState.update { it.copy(allTestStats = allStats) }
@@ -104,7 +95,7 @@ class AnalyticsViewModel(
     }
 
     fun loadRecentProgress(limit: Int = 10) {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 analyticsRepository.getRecentProgress(limit).collect { progress ->
                     _uiState.update { it.copy(recentProgress = progress) }

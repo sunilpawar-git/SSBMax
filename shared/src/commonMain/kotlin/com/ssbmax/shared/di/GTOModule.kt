@@ -9,6 +9,7 @@ import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestViewModel
 import com.ssbmax.shared.presentation.lecturetteresult.LecturetteResultViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
@@ -31,10 +32,10 @@ import org.koin.dsl.module
 val gtoModule = module {
     factoryOf(::GTOEligibilityChecker)
     factoryOf(::GTOSubmissionCoordinator)
-    factoryOf(::GDTestViewModel)
-    factoryOf(::GDResultViewModel)
-    factoryOf(::LecturetteTestViewModel)
-    factoryOf(::LecturetteResultViewModel)
-    factoryOf(::GPETestViewModel)
-    factoryOf(::GPEResultViewModel)
+    viewModelOf(::GDTestViewModel)
+    viewModelOf(::GDResultViewModel)
+    viewModelOf(::LecturetteTestViewModel)
+    viewModelOf(::LecturetteResultViewModel)
+    viewModelOf(::GPETestViewModel)
+    viewModelOf(::GPEResultViewModel)
 }

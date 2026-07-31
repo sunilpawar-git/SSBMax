@@ -5,11 +5,9 @@ import com.ssbmax.shared.domain.scoring.EntryType
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.SSBRecommendationUIModel
 import com.ssbmax.shared.domain.validation.ValidationIntegration
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,17 +29,18 @@ import kotlinx.coroutines.launch
  * matching this plan's own "port pre-existing gaps rather than silently
  * resolve them" precedent).
  *
- * Deviations from the Android original: plain class + own `CoroutineScope`
- * instead of `androidx.lifecycle.ViewModel`/`SavedStateHandle` (this phase's
- * established pattern); `android.util.Log`/`ErrorLogger` -> [DomainLogger];
- * `trackMemoryLeaks` dropped (not a real `ViewModel`).
+ * Deviations from the Android original: real `androidx.lifecycle.ViewModel` +
+ * `viewModelScope` (this phase's established pattern, `SavedStateHandle`
+ * dropped -- `resultId` passed to [loadResult] directly, same as
+ * [com.ssbmax.shared.presentation.interviewsession.InterviewSessionViewModel]);
+ * `android.util.Log`/`ErrorLogger` -> [DomainLogger]; `trackMemoryLeaks`
+ * dropped (`viewModelScope` cancels automatically, no manual tracking needed).
  */
 class InterviewResultViewModel(
     private val interviewRepository: InterviewRepository,
     private val logger: DomainLogger
-) {
+) : ViewModel() {
     private val tag = "InterviewResultViewModel"
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _uiState = MutableStateFlow(InterviewResultUiState())
     val uiState: StateFlow<InterviewResultUiState> = _uiState.asStateFlow()
@@ -50,7 +49,7 @@ class InterviewResultViewModel(
 
     fun loadResult(resultId: String) {
         this.resultId = resultId
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadingMessage = "Loading results...") }
 
             try {
@@ -91,9 +90,5 @@ class InterviewResultViewModel(
     /** Reload result (pull to refresh). */
     fun refresh() {
         resultId?.let { loadResult(it) }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }

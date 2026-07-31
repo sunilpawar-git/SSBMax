@@ -23,7 +23,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -33,11 +32,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.auth.AuthUiState
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.login_cd_login
 import ssbmax.shared.generated.resources.login_continue_google
@@ -56,11 +56,6 @@ import ssbmax.shared.generated.resources.splash_tagline
  *   (Android-only Compose APIs). Instead uses [LocalGoogleSignInLauncher], the
  *   new cross-platform shim -- see that CompositionLocal's and
  *   `GoogleSignInLauncher`'s class docs for the full rationale.
- * - `koinInject()`, not `koinViewModel()` -- matches [AuthViewModel]'s own
- *   plain-class-Koin-factory pattern (see its class doc), same convention
- *   `SplashScreen` already established in this phase.
- * - `collectAsState()`, not `collectAsStateWithLifecycle()` -- same
- *   established-convention reason as `SplashScreen`.
  * - All strings moved from Android `R.string.*` resources to Compose
  *   Multiplatform `composeResources` (`login_*` entries in
  *   `shared/commonMain/composeResources/values/strings.xml`), reusing
@@ -73,10 +68,10 @@ fun LoginScreen(
     onNeedsRoleSelection: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val viewModel = koinInject<AuthViewModel>()
+    val viewModel = koinViewModel<AuthViewModel>()
     val launcher = LocalGoogleSignInLauncher.current
     val coroutineScope = rememberCoroutineScope()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
         when (uiState) {

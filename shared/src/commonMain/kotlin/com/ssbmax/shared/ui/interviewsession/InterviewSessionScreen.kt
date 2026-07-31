@@ -28,9 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,10 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.interviewsession.InterviewSessionUiState
 import com.ssbmax.shared.presentation.interviewsession.InterviewSessionViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.interview_button_cancel
 import ssbmax.shared.generated.resources.interview_button_ok
@@ -69,12 +68,14 @@ import ssbmax.shared.generated.resources.interview_results_pending_title
  * which is the key finding for this session's mic/audio-recording
  * investigation: nothing here needed a new platform `expect`/`actual` shim.
  *
- * Uses `koinInject<InterviewSessionViewModel>()` (not `koinViewModel()`);
+ * Uses `koinViewModel<InterviewSessionViewModel>()` --
  * [InterviewSessionViewModel.loadSession] is called once from
- * `LaunchedEffect(sessionId)` instead of reading `SavedStateHandle`, and a
- * [DisposableEffect] calls [InterviewSessionViewModel.close] on leaving the
- * screen (`stopAll()` on explicit exit paths, matching the Android
- * original's distinction between "already navigated" and "disposed").
+ * `LaunchedEffect(sessionId)` instead of reading `SavedStateHandle`;
+ * `InterviewSessionViewModel` is a real `androidx.lifecycle.ViewModel`,
+ * cancelled automatically in its own `onCleared` (Phase 1 of the
+ * KMP-convergence plan) -- `stopAll()` is still called explicitly on the
+ * exit paths below, matching the Android original's distinction between
+ * "already navigated" and "disposed".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +84,10 @@ fun InterviewSessionScreen(
     onNavigateBack: () -> Unit,
     onNavigateToResult: (String) -> Unit,
     onNavigateToHome: () -> Unit,
-    viewModel: InterviewSessionViewModel = koinInject(),
+    viewModel: InterviewSessionViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by remember { mutableStateOf(false) }
     var showPendingDialog by remember { mutableStateOf(false) }
     var hasNavigated by remember { mutableStateOf(false) }
@@ -99,10 +100,6 @@ fun InterviewSessionScreen(
     }
 
     LaunchedEffect(sessionId) { viewModel.loadSession(sessionId) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(uiState.isCompleted, uiState.isResultPending) {
         when {

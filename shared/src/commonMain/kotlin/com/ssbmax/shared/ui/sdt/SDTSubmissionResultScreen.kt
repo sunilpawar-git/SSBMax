@@ -8,20 +8,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultUiState
 import com.ssbmax.shared.presentation.sdtresult.SDTSubmissionResultViewModel
 import com.ssbmax.shared.ui.components.result.OLQResultContent
 import com.ssbmax.shared.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.shared.ui.components.result.UnifiedOLQResultTemplate
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.result_sdt_characters_label
 import ssbmax.shared.generated.resources.result_sdt_title
@@ -38,22 +37,18 @@ import ssbmax.shared.generated.resources.sdt_result_valid_responses
  * TAT/WAT/SRT), both already ported into `shared` during this phase's
  * earlier sessions, reused unchanged here.
  *
- * Uses `koinInject<SDTSubmissionResultViewModel>()` (not `koinViewModel()`);
- * a [DisposableEffect] calls [SDTSubmissionResultViewModel.close] on leaving
- * the screen, cancelling the still-open Firestore listener.
+ * Uses `koinViewModel<SDTSubmissionResultViewModel>()`; `viewModelScope` is
+ * cancelled automatically on leaving the screen, cancelling the still-open
+ * Firestore listener.
  */
 @Composable
 fun SDTSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: SDTSubmissionResultViewModel = koinInject(),
+    viewModel: SDTSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

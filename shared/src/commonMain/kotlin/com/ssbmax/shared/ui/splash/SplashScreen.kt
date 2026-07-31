@@ -21,17 +21,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.splash.SplashNavigationEvent
 import com.ssbmax.shared.presentation.splash.SplashViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.splash_app_name
 import ssbmax.shared.generated.resources.splash_tagline
@@ -45,16 +45,8 @@ import ssbmax.shared.generated.resources.splash_version
  * `LocalContext`, no `ActivityResultContracts`) unlike e.g. LoginScreen,
  * which needs a real Google Sign-In expect/actual shim not yet built.
  *
- * Two deliberate deviations from the Android original, both noted, not
- * silently different:
- * - `koinInject()`, not `koinViewModel()` / a default-arg constructor param —
- *   this codebase's KMP ViewModels are plain classes (see [SplashViewModel]
- *   doc), so they're resolved like any other Koin single/factory.
- * - `collectAsState()`, not `collectAsStateWithLifecycle()` — the Android
- *   original uses the latter, but this screen uses plain `collectAsState()`
- *   to sidestep needing a real `LifecycleOwner` on iOS; revisit if iOS's
- *   CMP `LifecycleOwner` support is confirmed sufficient in a later phase.
- * - Dropped two unused imports present in the Android original
+ * One deliberate deviation from the Android original, noted, not silently
+ * different: dropped two unused imports present in the Android original
  *   (`androidx.compose.foundation.Image`, `androidx.compose.ui.res.painterResource`)
  *   — grep-confirmed dead in the original (no `Image(...)` call in the body).
  */
@@ -65,8 +57,8 @@ fun SplashScreen(
     onNavigateToRoleSelection: () -> Unit,
     onNavigateToProfileOnboarding: () -> Unit
 ) {
-    val viewModel = koinInject<SplashViewModel>()
-    val navigationEvent by viewModel.navigationEvent.collectAsState()
+    val viewModel = koinViewModel<SplashViewModel>()
+    val navigationEvent by viewModel.navigationEvent.collectAsStateWithLifecycle()
 
     LaunchedEffect(navigationEvent) {
         when (navigationEvent) {

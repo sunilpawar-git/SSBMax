@@ -10,20 +10,19 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultUiState
 import com.ssbmax.shared.presentation.ppdtresult.PPDTSubmissionResultViewModel
 import com.ssbmax.shared.ui.components.result.SubmissionConfirmationCard
 import com.ssbmax.shared.ui.components.result.UnifiedOLQResultTemplate
 import com.ssbmax.shared.ui.ppdt.components.PPDTOLQReasoningCard
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.result_ppdt_character_count_label
 import ssbmax.shared.generated.resources.result_ppdt_characters_written
@@ -38,23 +37,19 @@ import ssbmax.shared.generated.resources.result_ppdt_your_story_title
  * [UnifiedOLQResultTemplate] (this session's shared port, see that file's
  * doc comment) exactly the way the Android original does.
  *
- * Uses `koinInject<PPDTSubmissionResultViewModel>()` (not `koinViewModel()`);
- * a [DisposableEffect] calls [PPDTSubmissionResultViewModel.close] on leaving
- * the screen, cancelling the still-open Firestore listener if the user
- * navigates away before `analysisStatus` reaches `COMPLETED`.
+ * Uses `koinViewModel<PPDTSubmissionResultViewModel>()`; `viewModelScope` is
+ * cancelled automatically on leaving the screen, cancelling the still-open
+ * Firestore listener if the user navigates away before `analysisStatus`
+ * reaches `COMPLETED`.
  */
 @Composable
 fun PPDTSubmissionResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    viewModel: PPDTSubmissionResultViewModel = koinInject(),
+    viewModel: PPDTSubmissionResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(submissionId) {
         viewModel.loadSubmission(submissionId)

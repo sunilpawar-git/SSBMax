@@ -10,15 +10,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
@@ -27,7 +26,7 @@ import com.ssbmax.shared.ui.wat.components.WATExitDialog
 import com.ssbmax.shared.ui.wat.components.WATInProgressPhase
 import com.ssbmax.shared.ui.wat.components.WATInstructionsPhase
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.wat_loading
 import ssbmax.shared.generated.resources.wat_retry_button
@@ -35,10 +34,10 @@ import ssbmax.shared.generated.resources.wat_retry_button
 /**
  * KMP port of `app/.../ui/tests/wat/WATTestScreen.kt`.
  *
- * Uses `koinInject<WATTestViewModel>()` (not `koinViewModel()`), matching
- * this phase's plain-class ViewModel pattern -- a [DisposableEffect] calls
- * [WATTestViewModel.close] on leaving the screen, same as
- * [com.ssbmax.shared.ui.tat.TATTestScreen]/[com.ssbmax.shared.ui.ppdt.PPDTTestScreen].
+ * Uses `koinViewModel<WATTestViewModel>()`, same as
+ * [com.ssbmax.shared.ui.tat.TATTestScreen]/[com.ssbmax.shared.ui.ppdt.PPDTTestScreen] --
+ * `viewModelScope` is cancelled automatically on leaving the screen, no
+ * manual `DisposableEffect`/`close()`.
  *
  * Navigation on submit follows the same precedent: a
  * `LaunchedEffect(uiState.isSubmitted)` watches the UiState field directly,
@@ -57,15 +56,11 @@ fun WATTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: WATTestViewModel = koinInject(),
+    viewModel: WATTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(testId) {
         viewModel.loadTest(testId)

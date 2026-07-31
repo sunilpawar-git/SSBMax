@@ -21,13 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.PIQPage
 import com.ssbmax.shared.presentation.piq.PIQTestViewModel
 import com.ssbmax.shared.presentation.piq.PIQ_SELECTION_BOARD_OPTIONS
@@ -39,7 +38,7 @@ import com.ssbmax.shared.ui.piq.components.PIQPage1PersonalFields
 import com.ssbmax.shared.ui.piq.components.PIQPage2Fields
 import com.ssbmax.shared.ui.piq.components.PIQPrivacyWarningBanner
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.piq_back
 import ssbmax.shared.generated.resources.piq_career_additional_title
@@ -53,9 +52,8 @@ import ssbmax.shared.generated.resources.piq_saved
 
 /**
  * KMP port of `app/.../ui/tests/piq/PIQTestScreen.kt`. Uses
- * `koinInject<PIQTestViewModel>()` (plain-class ViewModel pattern, same as
- * every other ported vertical this phase) with a [DisposableEffect] calling
- * [PIQTestViewModel.close] on leaving the screen.
+ * `koinViewModel<PIQTestViewModel>()` -- `viewModelScope` is cancelled
+ * automatically in `onCleared`, no manual `DisposableEffect`/`close()` needed.
  *
  * Untimed 2-page form with free navigation, not a phase state machine --
  * [PIQTestViewModel.initialize] loads the OIR-number autofill and starts
@@ -71,14 +69,10 @@ fun PIQTestScreen(
     testId: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToResult: (String) -> Unit = {},
-    viewModel: PIQTestViewModel = koinInject(),
+    viewModel: PIQTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(testId) {
         viewModel.initialize(testId)

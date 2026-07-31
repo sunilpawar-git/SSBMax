@@ -17,9 +17,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -27,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
@@ -40,7 +39,7 @@ import com.ssbmax.shared.ui.tat.components.phases.TATInstructionsPhase
 import com.ssbmax.shared.ui.tat.components.phases.TATReviewPhase
 import com.ssbmax.shared.ui.tat.components.phases.TATWritingPhase
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.tat_back_cd
 import ssbmax.shared.generated.resources.tat_loading
@@ -51,10 +50,9 @@ import ssbmax.shared.generated.resources.tat_test_title
 /**
  * KMP port of `app/.../ui/tests/tat/TATTestScreen.kt`.
  *
- * Uses `koinInject<TATTestViewModel>()` (not `koinViewModel()`), matching
- * this phase's plain-class ViewModel pattern -- a [DisposableEffect] calls
- * [TATTestViewModel.close] on leaving the screen, same as
- * [com.ssbmax.shared.ui.ppdt.PPDTTestScreen].
+ * Uses `koinViewModel<TATTestViewModel>()`, same as
+ * [com.ssbmax.shared.ui.ppdt.PPDTTestScreen] -- `viewModelScope` is cancelled
+ * automatically on leaving the screen, no manual `DisposableEffect`/`close()`.
  *
  * Navigation on submit follows the PPDT/OIR precedent: rather than a
  * `Channel<TestNavigationEvent>` (the Android original's
@@ -72,16 +70,12 @@ fun TATTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
-    viewModel: TATTestViewModel = koinInject(),
+    viewModel: TATTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExitDialog by rememberSaveable { mutableStateOf(false) }
     var showSubmitDialog by rememberSaveable { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.close() }
-    }
 
     LaunchedEffect(testId) {
         viewModel.loadTest(testId)

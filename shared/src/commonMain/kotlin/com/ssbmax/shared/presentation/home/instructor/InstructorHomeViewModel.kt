@@ -3,10 +3,8 @@ package com.ssbmax.shared.presentation.home.instructor
 import com.ssbmax.shared.domain.model.StudentPerformance
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,10 +17,9 @@ import kotlinx.datetime.Clock
  * ViewModel for the Instructor Home Screen — Phase 5 KMP port of the Android
  * original (`app/.../ui/home/instructor/InstructorHomeViewModel.kt`).
  *
- * Plain class + own `CoroutineScope`, same convention as
- * [com.ssbmax.shared.presentation.home.student.StudentHomeViewModel] (see
- * that class's doc for the full rationale). Only real change from the
- * Android original: `System.currentTimeMillis()` (JVM-only) ->
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan). Real change from the Android original:
+ * `System.currentTimeMillis()` (JVM-only) ->
  * `Clock.System.now().toEpochMilliseconds()`. The mock `students`/`batches`
  * data and the `// TODO: Load batches and students from BatchRepository`
  * comment are carried forward unchanged — `BatchRepository` doesn't exist in
@@ -32,8 +29,7 @@ import kotlinx.datetime.Clock
 class InstructorHomeViewModel(
     private val gradingQueueRepository: GradingQueueRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InstructorHomeUiState())
     val uiState: StateFlow<InstructorHomeUiState> = _uiState.asStateFlow()
@@ -43,7 +39,7 @@ class InstructorHomeViewModel(
     }
 
     private fun loadInstructorData() {
-        scope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val currentUser = observeCurrentUser().first()
             val instructorId = currentUser?.id ?: run {
@@ -144,10 +140,6 @@ class InstructorHomeViewModel(
 
     fun refreshData() {
         loadInstructorData()
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }
 

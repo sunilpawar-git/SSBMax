@@ -4,10 +4,8 @@ import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,10 +32,9 @@ sealed class SplashNavigationEvent {
 /**
  * Splash screen ViewModel — Phase 5 KMP port of the Android original.
  *
- * Plain class + own CoroutineScope, matching the KMP-portable ViewModel
- * pattern already established by [com.ssbmax.shared.presentation.auth.AuthViewModel]
- * in Phase 0 (NOT `androidx.lifecycle.ViewModel`), so Compose call sites use
- * `koinInject()`, not `koinViewModel()`.
+ * A real `androidx.lifecycle.ViewModel` using `viewModelScope` (Phase 1 of
+ * the KMP-convergence plan) — Compose call sites use `koinViewModel()`, not
+ * `koinInject()`.
  *
  * Two real Kotlin/Native-illegal APIs fixed during this port (both on this
  * plan's own "recurring compile gotchas" list):
@@ -51,8 +48,7 @@ class SplashViewModel(
     private val authRepository: AuthRepository,
     private val userProfileRepository: UserProfileRepository,
     private val logger: DomainLogger
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+) : ViewModel() {
     private val tag = "SplashViewModel"
 
     private val _navigationEvent = MutableStateFlow<SplashNavigationEvent?>(null)
@@ -63,7 +59,7 @@ class SplashViewModel(
     }
 
     private fun checkAuthenticationState() {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 logger.d(tag, "Starting authentication check...")
                 val startTime = Clock.System.now().toEpochMilliseconds()
@@ -133,9 +129,5 @@ class SplashViewModel(
                 _navigationEvent.value = SplashNavigationEvent.NavigateToLogin
             }
         }
-    }
-
-    fun close() {
-        scope.cancel()
     }
 }

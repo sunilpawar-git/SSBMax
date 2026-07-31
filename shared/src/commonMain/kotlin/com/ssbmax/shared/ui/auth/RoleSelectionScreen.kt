@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.presentation.auth.AuthViewModel
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.role_selection_both
 import ssbmax.shared.generated.resources.role_selection_continue
@@ -58,15 +58,13 @@ import ssbmax.shared.generated.resources.role_selection_title
  * that had gone unenforced. Ported here as real `composeResources` string
  * entries (`role_selection_*`) instead of carrying the violation forward.
  *
- * `koinInject()`, not `koinViewModel()` — matches [AuthViewModel]'s
- * plain-class-Koin-factory pattern, same convention as `LoginScreen`.
  */
 @Composable
 fun RoleSelectionScreen(
     onRoleSelected: (UserRole) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val viewModel = koinInject<AuthViewModel>()
+    val viewModel = koinViewModel<AuthViewModel>()
     var selectedRole by remember { mutableStateOf<UserRole?>(null) }
 
     Surface(
