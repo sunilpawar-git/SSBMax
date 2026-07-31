@@ -36,6 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.presentation.topic.StudyMaterialItem
 import com.ssbmax.shared.ui.common.MarkdownText
+import org.jetbrains.compose.resources.stringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.premium_badge_label
+import ssbmax.shared.generated.resources.topic_no_study_materials
+import ssbmax.shared.generated.resources.topic_tab_overview
 
 /**
  * Extracted composables for [TopicScreen]'s top bar / Overview tab / Study
@@ -96,7 +101,11 @@ internal fun IntroductionTab(introduction: String, isLoading: Boolean, modifier:
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(Res.string.topic_tab_overview),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     MarkdownText(content = introduction, textColor = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
@@ -119,7 +128,11 @@ internal fun StudyMaterialTab(
 
     if (materials.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No study materials available yet", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(Res.string.topic_no_study_materials),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         return
     }
@@ -154,7 +167,7 @@ private fun StudyMaterialCard(material: StudyMaterialItem, onClick: () -> Unit, 
             if (material.isPremium) {
                 AssistChip(
                     onClick = { },
-                    label = { Text("Premium", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text(stringResource(Res.string.premium_badge_label), style = MaterialTheme.typography.labelSmall) },
                     colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                 )
             }

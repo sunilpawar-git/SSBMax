@@ -45,17 +45,16 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 | Module | Purpose |
 |---|---|
 | `app` | Compose screens, ViewModels, navigation, Hilt DI |
-| `core:domain` | Use cases, models, repository/service interfaces (ZERO Android dependencies) |
-| `core:data` | Repository implementations, Room DB, Firebase, Gemini AI |
-| `core:designsystem` | Shared Compose components, theme |
-| `core:common` | Shared utilities |
+| `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it |
+| `core:data` | Repository implementations, Room DB, Firebase, Gemini AI (being dissolved into `shared` incrementally, see the KMP-convergence plan) |
 | `lint` | Custom lint rules (build fails if violated) |
+| `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks — AGP Lint doesn't analyze a KMP module's commonMain) |
 
-**Key paths (SSOT):** Navigation: `app/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `core:data/.../ai/` | Tests enum: `core:domain/.../SSBPhase.kt`
+**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `core:data/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
 
 ## Architecture Guidance Hierarchy (Phase 4)
 
-**Multi-tier guidance system** (13 CLAUDE.md files) enforces patterns at every layer:
+**Multi-tier guidance system** (12 CLAUDE.md files) enforces patterns at every layer:
 
 ```
 Root: claude.md (12 core rules, global patterns)
@@ -64,16 +63,12 @@ Root: claude.md (12 core rules, global patterns)
   │   ├── app/di/CLAUDE.md (Hilt dependency injection)
   │   └── app/navigation/CLAUDE.md (type-safe routing)
   │
-  ├── core/domain/CLAUDE.md (business logic, ZERO Android deps)
-  │
   ├── core/data/CLAUDE.md (data repositories, error handling)
   │   ├── core/data/ai/CLAUDE.md (Gemini AI integration)
   │   ├── core/data/local/CLAUDE.md (Room database patterns)
   │   └── core/data/remote/CLAUDE.md (Firebase/Firestore)
   │
-  ├── core/designsystem/CLAUDE.md (reusable components, Material3)
-  │
-  ├── lint/CLAUDE.md (custom lint detectors, 16+ rules)
+  ├── lint/CLAUDE.md (custom lint detectors)
   │
   ├── functions/CLAUDE.md (Cloud Functions backend)
   │
@@ -90,16 +85,16 @@ Root: claude.md (12 core rules, global patterns)
 
 ## Mandatory Lint Rules (enforced — build FAILS if violated)
 
-1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, msg)` always; exception: `core:domain` uses `Result<T>`
-2. **NO hardcoded strings** — all UI strings externalized to `strings.xml` via `stringResource(R.string.key)`. Zero exceptions (not even domain layer)
+1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, msg)` always; exception: `shared`'s domain layer uses `Result<T>`
+2. **NO hardcoded strings** — all UI strings externalized: `app` via `stringResource(R.string.key)`, `shared` via `stringResource(Res.string.key)` (Compose Resources — no `R.string` equivalent in commonMain). Zero exceptions (not even domain layer)
 3. **Thread-safe StateFlow updates** — `_uiState.update { it.copy(...) }`, never direct assignment
 4. **Expose StateFlow, not MutableStateFlow** — ViewModels expose `StateFlow<UiState>` via `.asStateFlow()`
 5. **No singleton mutable state** — never create `*Holder.kt` files
 6. **No Firebase in UI layer** — use repositories; no direct Firebase calls in Compose/ViewModels
 7. **ID-based navigation only** — pass string IDs between screens; result screens fetch data via their own ViewModel
-8. **No Android deps in core:domain** — `core:domain` is 100% pure Kotlin (Phase 4) — enables JVM testing, reusability
+8. **No Android deps in `shared`'s domain layer** — `shared/commonMain/.../domain` is 100% pure Kotlin — enables JVM/iOS testing, reusability
 9. **No Firebase imports in app layer** — except Firebase Auth (Phase 4) — use repositories; no direct Firestore/Database calls
-10. **Designsystem Composables need @Preview** — all reusable components require `@Preview` for visual validation (Phase 4)
+10. **Reusable Composables need @Preview** — required for visual validation. ⚠️ Currently **unenforced**: `ComponentMissingPreviewDetector` only ever targeted `core:designsystem`, deleted in the KMP-convergence plan's Phase 0f once its only two SSOT-worthy objects were confirmed duplicated in `shared`. No replacement detector scoped to `shared/ui`'s reusable components exists yet — a real gap, not a rewritten rule
 
 ## Quality Limits
 

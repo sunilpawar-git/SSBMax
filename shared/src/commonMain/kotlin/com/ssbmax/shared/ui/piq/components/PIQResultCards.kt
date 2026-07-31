@@ -34,6 +34,7 @@ import ssbmax.shared.generated.resources.piq_consistency
 import ssbmax.shared.generated.resources.piq_family_info
 import ssbmax.shared.generated.resources.piq_feedback
 import ssbmax.shared.generated.resources.piq_motivation_goals
+import ssbmax.shared.generated.resources.piq_bullet_separator
 import ssbmax.shared.generated.resources.piq_overall_score
 import ssbmax.shared.generated.resources.piq_personal_info
 import ssbmax.shared.generated.resources.piq_score_decimal_format
@@ -124,7 +125,7 @@ fun PIQAreasForImprovementCard(areas: List<String>) {
 @Composable
 private fun BulletRow(text: String) {
     Row(modifier = Modifier.padding(start = 32.dp), verticalAlignment = Alignment.Top) {
-        Text("• ", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(Res.string.piq_bullet_separator), style = MaterialTheme.typography.bodyMedium)
         Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }

@@ -36,7 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.shared.presentation.phase2detail.Phase2DetailViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.phase2_assessment_title
+import ssbmax.shared.generated.resources.phase2_overview_title
 
 /**
  * KMP port of the Android `app/.../ui/phase/Phase2DetailScreen.kt` -- Phase 2
@@ -63,7 +67,7 @@ fun Phase2DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Phase 2 - Assessment") },
+                title = { Text(stringResource(Res.string.phase2_assessment_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -151,7 +155,7 @@ private fun Phase2OverviewCard(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "Phase 2 - Assessment Tests",
+                text = stringResource(Res.string.phase2_overview_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onTertiaryContainer

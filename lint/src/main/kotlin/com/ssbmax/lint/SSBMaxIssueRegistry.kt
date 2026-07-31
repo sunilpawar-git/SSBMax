@@ -30,8 +30,6 @@ import com.android.tools.lint.detector.api.CURRENT_API
  *
  * Module-Specific Lint Rules (Phase 4):
  * 14. AppLayerFirebaseCallDetector - Prevents Firebase imports in app layer (UI/ViewModel)
- * 15. DomainLayerAndroidDepsDetector - Prevents Android imports in core:domain
- * 16. ComponentMissingPreviewDetector - Enforces @Preview on designsystem Composables
  */
 class SSBMaxIssueRegistry : IssueRegistry() {
 
@@ -53,9 +51,7 @@ class SSBMaxIssueRegistry : IssueRegistry() {
         UnsafeStringInputDetector.ISSUE,
         FirebaseRulesValidationDetector.ISSUE,
         // Module-Specific Lint Rules (Phase 4)
-        AppLayerFirebaseCallDetector.ISSUE,
-        DomainLayerAndroidDepsDetector.ISSUE,
-        ComponentMissingPreviewDetector.ISSUE
+        AppLayerFirebaseCallDetector.ISSUE
     )
 
     override val api: Int = CURRENT_API

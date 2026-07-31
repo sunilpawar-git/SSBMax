@@ -125,7 +125,7 @@ jobs:
           ./gradlew \
             :app:lintDebug \
             :core:data:lintDebug \
-            :core:designsystem:lintDebug \
+            :shared:lintDebug \
             --build-cache \
             --parallel \
             --stacktrace
@@ -164,9 +164,10 @@ jobs:
         run: |
           ./gradlew \
             :app:testDebugUnitTest \
-            :core:domain:test \
+            :shared:testDebugUnitTest \
             :core:data:testDebugUnitTest \
             :lint:test \
+            :detekt-rules:test \
             --build-cache \
             --parallel \
             --stacktrace
@@ -178,7 +179,6 @@ jobs:
           ./gradlew \
             :app:jacocoTestCoverageVerification \
             :core:data:jacocoTestCoverageVerification \
-            :core:domain:jacocoTestCoverageVerification \
             --build-cache \
             --parallel \
             --stacktrace
@@ -198,6 +198,96 @@ jobs:
         with:
           name: test-reports
           path: '**/build/reports/tests/'
+          retention-days: 7
+
+  # ── iOS (shared's Kotlin/Native tests + a real Xcode build) ───────────
+  # Phase 0b (KMP-convergence plan). Link before xcodebuild on purpose: a
+  # link failure is `shared`'s own problem and should fail fast under
+  # Gradle's clearer output, not surface later as an opaque Xcode error.
+  # assembleSharedKitXCFramework is deliberately NOT run here (release
+  # framework assembly is a release-pipeline concern, not a PR gate).
+  #
+  # Xcode version pinned: `shared`'s cocoapods integration (Firebase pods,
+  # needed because GitLive's Kotlin/Native Firebase artifacts are published
+  # as CocoaPods-shaped cinterops -- SPM's Firebase integration never
+  # produces the .framework bundles they link against) requires a Kotlin
+  # Native compiler whose bundled Clang can parse the target SDK's headers.
+  # Verified locally: Xcode 26.6 (iOS 26.5 SDK) is newer than Kotlin 2.1.0's
+  # Native compiler supports (fails with "module '_c_standard_library_
+  # obsolete' requires feature 'found_incompatible_headers__check_search_
+  # paths'" during cinterop). 16.0 is the newest version the Kotlin Gradle
+  # Plugin itself reports testing against.
+  ios-tests:
+    name: iOS (shared tests + Xcode build)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 16
+        uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
+        with:
+          xcode-version: '16.0'
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY || 'your_api_key_here' }}" >> local.properties
+
+      - name: Setup google-services.json
+        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+
+      - name: Setup iOS secrets
+        run: |
+          echo "GEMINI_API_KEY = ${{ secrets.GEMINI_API_KEY || 'your_api_key_here' }}" > iosApp/iosApp/Secrets.xcconfig
+          cp iosApp/iosApp/GoogleService-Info.plist.example iosApp/iosApp/GoogleService-Info.plist
+
+      - name: Setup real GoogleService-Info.plist
+        if: ${{ secrets.IOS_GOOGLE_SERVICES_PLIST != '' }}
+        env:
+          IOS_GOOGLE_SERVICES_PLIST: ${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}
+        run: printf '%s' "$IOS_GOOGLE_SERVICES_PLIST" > iosApp/iosApp/GoogleService-Info.plist
+
+      - name: Run shared's Kotlin/Native tests
+        run: |
+          ./gradlew :shared:iosSimulatorArm64Test \
+            --build-cache \
+            --stacktrace
+
+      - name: Link shared's debug framework
+        run: |
+          ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 \
+            --build-cache \
+            --stacktrace
+
+      - name: Build iosApp
+        run: |
+          xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' build
+
+      - name: Upload iOS test reports
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: ios-test-reports
+          path: shared/build/reports/tests/
           retention-days: 7
 
   # ── Build APK (only after lint + tests pass) ─────────────────────────
@@ -261,6 +351,16 @@ jobs:
   # ── Single required check for branch protection ──────────────────────
   # Make THIS the required status check in branch-protection rules; it stays
   # stable even as the jobs above are added or renamed.
+  #
+  # ios-tests deliberately isn't in `needs` yet: it's a brand-new pipeline
+  # (Phase 0b, KMP-convergence plan) that has never run in actual CI, and it
+  # could only be verified structurally here, not end-to-end -- this
+  # session's Kotlin Native compiler couldn't parse this machine's Xcode
+  # 26.6 SDK headers, a local-environment mismatch unrelated to whether the
+  # job itself is correct (CI pins Xcode 16.0 precisely to avoid that). Watch
+  # it run for real on the next few PRs, then add `ios-tests` to `needs`
+  # below once it's confirmed green -- don't block merges on an unverified
+  # gate.
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest

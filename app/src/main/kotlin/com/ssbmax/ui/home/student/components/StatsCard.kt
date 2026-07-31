@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.ssbmax.core.designsystem.theme.Spacing
+import com.ssbmax.shared.ui.theme.Spacing
 
 /**
  * Stats Card - Gradient background with icon and horizontal layout

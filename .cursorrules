@@ -15,11 +15,10 @@ Multi-module Android app — MVVM + Repository pattern, 100% Jetpack Compose (no
 | Module | Purpose |
 |---|---|
 | `app` | Compose UI screens, ViewModels, navigation, Hilt DI modules |
-| `core:domain` | Use cases, domain models, repository/service interfaces. **ZERO Android dependencies** |
-| `core:data` | Repository implementations, Room DB, Firebase data sources, Gemini AI integration |
-| `core:designsystem` | Shared Compose components, theme |
-| `core:common` | Shared utilities |
+| `shared` | KMP module: use cases, domain models, repository/service interfaces, Compose UI, Koin DI. **ZERO Android-only dependencies in commonMain** — SSOT target of the KMP-convergence plan; absorbed `core:domain` |
+| `core:data` | Repository implementations, Room DB, Firebase data sources, Gemini AI integration (being dissolved into `shared` incrementally) |
 | `lint` | Custom lint rules (build fails on violation) |
+| `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks) |
 
 Data flow: `Compose Screen → ViewModel → UseCase → Repository (interface in domain, impl in data) → Firebase/Room`
 

@@ -36,7 +36,12 @@ import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.SSBMaxNotification
 import com.ssbmax.shared.presentation.notifications.NotificationCenterViewModel
 import com.ssbmax.shared.presentation.notifications.NotificationFilter
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.notifications_empty_subtitle
+import ssbmax.shared.generated.resources.notifications_empty_title
+import ssbmax.shared.generated.resources.notifications_screen_title
 
 /**
  * KMP port of the Android `app/.../ui/notifications/NotificationCenterScreen.kt`
@@ -72,7 +77,7 @@ fun NotificationCenterScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Notifications", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(Res.string.notifications_screen_title), style = MaterialTheme.typography.titleLarge)
                         if (uiState.unreadCount > 0) {
                             Text(
                                 "${uiState.unreadCount} unread",
@@ -161,12 +166,12 @@ internal fun EmptyState() {
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                text = "No notifications yet",
+                text = stringResource(Res.string.notifications_empty_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "You'll see updates here when they arrive",
+                text = stringResource(Res.string.notifications_empty_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )

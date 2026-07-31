@@ -24,7 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.presentation.study.StudyCategory
 import com.ssbmax.shared.presentation.study.StudyMaterialsViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.study_browse_by_category
+import ssbmax.shared.generated.resources.study_materials_title
 
 /**
  * KMP port of the Android `app/.../ui/study/StudyMaterialsScreen.kt` -- browse
@@ -50,7 +54,7 @@ fun StudyMaterialsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Study Materials") },
+                title = { Text(stringResource(Res.string.study_materials_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToSearch) {
                         Icon(Icons.Default.Search, contentDescription = null)
@@ -68,7 +72,7 @@ fun StudyMaterialsScreen(
 
             item {
                 Text(
-                    text = "Browse by Category",
+                    text = stringResource(Res.string.study_browse_by_category),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 8.dp)

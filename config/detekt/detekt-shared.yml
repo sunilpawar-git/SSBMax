@@ -1,0 +1,9 @@
+# Extra detekt config layered on top of detekt.yml for :shared only (see its
+# build.gradle.kts `config.setFrom(...)` call). Kept out of the shared
+# detekt.yml because the "ssbmax" custom rule set is only on :shared's
+# `detektPlugins` classpath -- referencing it from the repo-wide config would
+# fail config validation ("Property 'ssbmax' is misspelled or does not
+# exist") for every other module.
+ssbmax:
+  HardcodedComposeText:
+    active: true

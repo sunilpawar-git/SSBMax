@@ -4,8 +4,6 @@ import com.ssbmax.MainViewModel
 import com.ssbmax.ui.AppViewModel
 import com.ssbmax.ui.analytics.AnalyticsViewModel
 import com.ssbmax.ui.auth.AuthViewModel
-import com.ssbmax.ui.debug.MemoryLeakTestViewModel
-import com.ssbmax.ui.faq.FAQViewModel
 import com.ssbmax.ui.grading.TestDetailGradingViewModel
 import com.ssbmax.ui.home.instructor.InstructorHomeViewModel
 import com.ssbmax.ui.home.student.StudentHomeViewModel
@@ -19,7 +17,6 @@ import com.ssbmax.ui.phase.Phase1DetailViewModel
 import com.ssbmax.ui.phase.Phase2DetailViewModel
 import com.ssbmax.ui.profile.StudentProfileViewModel
 import com.ssbmax.ui.profile.UserProfileViewModel
-import com.ssbmax.ui.results.HistoricResultsViewModel
 import com.ssbmax.ui.settings.SettingsViewModel
 import com.ssbmax.ui.settings.SubscriptionManagementViewModel
 import com.ssbmax.ui.settings.notifications.NotificationSettingsViewModel
@@ -37,7 +34,6 @@ import com.ssbmax.ui.tests.gto.gd.GDResultViewModel
 import com.ssbmax.ui.tests.gto.gd.GDTestViewModel
 import com.ssbmax.ui.tests.gto.lecturette.LecturetteResultViewModel
 import com.ssbmax.ui.tests.gto.lecturette.LecturetteTestViewModel
-import com.ssbmax.ui.tests.oir.OIRDebugViewModel
 import com.ssbmax.ui.tests.oir.OIRSubmissionResultViewModel
 import com.ssbmax.ui.tests.oir.OIRTestViewModel
 import com.ssbmax.ui.tests.piq.PIQSubmissionResultViewModel
@@ -56,10 +52,9 @@ import com.ssbmax.ui.topic.TopicViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import com.ssbmax.ui.premium.UpgradeViewModel as PremiumUpgradeViewModel
-import com.ssbmax.ui.upgrade.UpgradeViewModel as UpgradeUpgradeViewModel
 
 /**
- * Koin bindings for all 55 app ViewModels, converted from `@HiltViewModel`.
+ * Koin bindings for all 50 app ViewModels, converted from `@HiltViewModel`.
  * `viewModelOf` resolves each constructor via reflection against the Koin
  * graph (repositories/use cases from :shared and :core:data, plus this
  * package's own use-case/manager bindings) and integrates with
@@ -71,8 +66,6 @@ val viewModelModule = module {
     viewModelOf(::AppViewModel)
     viewModelOf(::AnalyticsViewModel)
     viewModelOf(::AuthViewModel)
-    viewModelOf(::MemoryLeakTestViewModel)
-    viewModelOf(::FAQViewModel)
     viewModelOf(::TestDetailGradingViewModel)
     viewModelOf(::InstructorHomeViewModel)
     viewModelOf(::StudentHomeViewModel)
@@ -87,7 +80,6 @@ val viewModelModule = module {
     viewModelOf(::PremiumUpgradeViewModel)
     viewModelOf(::StudentProfileViewModel)
     viewModelOf(::UserProfileViewModel)
-    viewModelOf(::HistoricResultsViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::SubscriptionManagementViewModel)
     viewModelOf(::NotificationSettingsViewModel)
@@ -105,7 +97,6 @@ val viewModelModule = module {
     viewModelOf(::GDTestViewModel)
     viewModelOf(::LecturetteResultViewModel)
     viewModelOf(::LecturetteTestViewModel)
-    viewModelOf(::OIRDebugViewModel)
     viewModelOf(::OIRSubmissionResultViewModel)
     viewModelOf(::OIRTestViewModel)
     viewModelOf(::PIQSubmissionResultViewModel)
@@ -121,5 +112,4 @@ val viewModelModule = module {
     viewModelOf(::WATSubmissionResultViewModel)
     viewModelOf(::WATTestViewModel)
     viewModelOf(::TopicViewModel)
-    viewModelOf(::UpgradeUpgradeViewModel)
 }

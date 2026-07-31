@@ -182,3 +182,11 @@ firestore.rules.old*
 # PR and CI files
 PR_SUMMARY.md
 ci_check.sh
+
+# ============================================
+# COCOAPODS (Kotlin/Native linking only)
+# ============================================
+# shared/build.gradle.kts's `cocoapods {}` block regenerates this on every
+# build (Firebase pod versions can shift); nothing outside Gradle reads it,
+# unlike a podspec meant for external Xcode/Podfile consumption.
+/shared/*.podspec

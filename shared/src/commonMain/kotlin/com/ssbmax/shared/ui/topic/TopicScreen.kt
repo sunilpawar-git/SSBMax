@@ -24,7 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.presentation.topic.TopicViewModel
 import com.ssbmax.shared.ui.common.TabSwipeableContent
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.topic_tab_overview
+import ssbmax.shared.generated.resources.topic_tab_study_material
 
 /**
  * KMP port of the Android `app/.../ui/topic/TopicScreen.kt` -- 3-tab topic
@@ -65,14 +69,14 @@ fun TopicScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.Info, contentDescription = null) },
-                    label = { Text("Overview") },
+                    label = { Text(stringResource(Res.string.topic_tab_overview)) },
                     alwaysShowLabel = true
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null) },
-                    label = { Text("Study Material") },
+                    label = { Text(stringResource(Res.string.topic_tab_study_material)) },
                     alwaysShowLabel = true
                 )
                 NavigationBarItem(

@@ -30,6 +30,9 @@ import com.ssbmax.shared.presentation.instructorgrading.InstructorGradingViewMod
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.dashboard_test_srt
+import ssbmax.shared.generated.resources.dashboard_test_tat
+import ssbmax.shared.generated.resources.dashboard_test_wat
 import ssbmax.shared.generated.resources.grading_queue_back
 import ssbmax.shared.generated.resources.grading_queue_filter_all
 import ssbmax.shared.generated.resources.grading_queue_pending_count
@@ -131,17 +134,17 @@ private fun FilterRow(
         FilterChip(
             selected = selectedType == TestType.TAT,
             onClick = { onTypeSelected(TestType.TAT) },
-            label = { Text("TAT") }
+            label = { Text(stringResource(Res.string.dashboard_test_tat)) }
         )
         FilterChip(
             selected = selectedType == TestType.WAT,
             onClick = { onTypeSelected(TestType.WAT) },
-            label = { Text("WAT") }
+            label = { Text(stringResource(Res.string.dashboard_test_wat)) }
         )
         FilterChip(
             selected = selectedType == TestType.SRT,
             onClick = { onTypeSelected(TestType.SRT) },
-            label = { Text("SRT") }
+            label = { Text(stringResource(Res.string.dashboard_test_srt)) }
         )
     }
 }

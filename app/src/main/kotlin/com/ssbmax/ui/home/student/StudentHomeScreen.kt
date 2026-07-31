@@ -40,8 +40,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.ssbmax.R
-import com.ssbmax.core.designsystem.theme.SSBColors
-import com.ssbmax.core.designsystem.theme.Spacing
+import com.ssbmax.shared.ui.theme.SSBColors
+import com.ssbmax.shared.ui.theme.Spacing
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData

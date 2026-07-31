@@ -1,11 +1,10 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Phase 0 KMP spike module.
-// Ports a single vertical slice (Google sign-in + OIR result fetch) through
-// Koin / GitLive-Firebase / SQLDelight / Compose Multiplatform to validate the
-// dependency stack before committing to the full migration (see the KMP
-// migration plan). Additive — does not replace core:domain/core:data/app.
+// SSOT target of the KMP-convergence plan: `shared` is where business logic,
+// data, and (eventually, post-Phase-5-cutover) UI converge. `app` and
+// `core:data` are being dissolved into this module incrementally, not the
+// reverse -- see the plan's phase list for the still-open items.
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
@@ -13,6 +12,7 @@ plugins {
     alias(libs.plugins.compose.compiler.kmp)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.cocoapods)
 }
 
 kotlin {
@@ -37,6 +37,35 @@ kotlin {
             baseName = xcfName
             isStatic = true
         }
+    }
+
+    // Phase 0d/0b (KMP-convergence plan): GitLive's Firebase Kotlin/Native
+    // artifacts are published as CocoaPods-shaped cinterops -- their klibs'
+    // own manifests declare `linkerOpts=-framework FirebaseAuth` etc. and
+    // `package=cocoapods.FirebaseAuth` (verified by unzipping and inspecting
+    // them directly). `iosApp`'s own Firebase integration uses Swift Package
+    // Manager, which compiles FirebaseCore/Auth/Storage straight into the app
+    // binary as object code -- it never produces the standalone .framework
+    // bundles Kotlin/Native needs to link against, which is exactly why
+    // `:shared:iosSimulatorArm64Test` couldn't link before this block existed
+    // (confirmed: it failed identically on the pre-existing suite, before any
+    // of this phase's tests were added). This block is scoped to `:shared`'s
+    // own Kotlin/Native compilation only -- it resolves these pods into a
+    // synthetic Xcode project purely to build real frameworks for the linker;
+    // `iosApp` keeps using SPM and is untouched by it.
+    cocoapods {
+        summary = "SSBMax shared KMP module"
+        homepage = "https://github.com/ssbmax/ssbmax"
+        version = "1.0"
+        ios.deploymentTarget = "15.0"
+        // No `podfile = ...` here on purpose: leaving it unset makes the
+        // plugin generate its own synthetic Podfile/Xcode project under
+        // build/cocoapods/synthetic/ to resolve these pods, rather than
+        // requiring (or writing into) a Podfile in `iosApp`.
+
+        pod("FirebaseAuth")
+        pod("FirebaseFirestore")
+        pod("FirebaseStorage")
     }
 
     applyDefaultHierarchyTemplate()
@@ -96,6 +125,7 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
+            implementation(libs.koin.test)
         }
         // Phase 1 domain move: the 6 MockK-dependent unit tests from core:domain's
         // JVM-only test source set land here (androidUnitTest), not commonTest --
@@ -136,6 +166,10 @@ kotlin {
     }
 }
 
+dependencies {
+    lintChecks(project(":lint"))
+}
+
 android {
     namespace = "com.ssbmax.shared"
     compileSdk = 35
@@ -165,4 +199,11 @@ sqldelight {
             packageName.set("com.ssbmax.shared.db")
         }
     }
+}
+
+// Layers config/detekt/detekt-shared.yml (the "ssbmax" custom rule set
+// activation) on top of the repo-wide config -- see that file's own doc for
+// why it can't just live in config/detekt/detekt.yml directly.
+detekt {
+    config.setFrom(rootProject.files("config/detekt/detekt.yml", "config/detekt/detekt-shared.yml"))
 }

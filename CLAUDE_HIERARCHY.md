@@ -21,12 +21,11 @@ SSBMax Project (Root)
 │       ├── [app/di/CLAUDE.md](app/di/CLAUDE.md) — Hilt dependency injection
 │       └── [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md) — Type-safe routing
 │
-├── 📚 Core Domain Module: [core/domain/CLAUDE.md](core/domain/CLAUDE.md)
-│   ├── Use Case Patterns
-│   ├── Repository Interfaces (SSOT)
-│   ├── Result<T> Error Handling
-│   ├── Data Models (Immutable)
-│   └── **Zero Android Dependencies**
+├── 🧬 Shared Module (KMP): no CLAUDE.md yet — SSOT target of the
+│   KMP-convergence plan; `core:domain`'s use-case/repository-interface/
+│   Result<T>/zero-Android-deps patterns below now live in
+│   `shared/commonMain/.../domain`, and `shared`'s UI (`.../ui`) is the
+│   convergence target `core:designsystem` used to cover before its deletion
 │
 ├── 🔌 Core Data Module: [core/data/CLAUDE.md](core/data/CLAUDE.md)
 │   ├── Repository Implementations
@@ -36,13 +35,6 @@ SSBMax Project (Root)
 │       ├── [core/data/ai/CLAUDE.md](core/data/ai/CLAUDE.md) — Gemini API integration
 │       ├── [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md) — Room database patterns
 │       └── [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md) — Firebase integration
-│
-├── 🎨 Core Design System: [core/designsystem/CLAUDE.md](core/designsystem/CLAUDE.md)
-│   ├── Reusable Components
-│   ├── Material3 Theming
-│   ├── Accessibility (WCAG)
-│   ├── Composable Size Limits
-│   └── **Requires @Preview on all components**
 │
 ├── 🛠 Lint Module: [lint/CLAUDE.md](lint/CLAUDE.md)
 │   ├── Custom Detector Development
@@ -105,7 +97,10 @@ SSBMax Project (Root)
 - Then read: [functions/CLAUDE.md](functions/CLAUDE.md) (backend scoring)
 
 ### "I'm building a reusable component"
-**Start here:** [core/designsystem/CLAUDE.md](core/designsystem/CLAUDE.md)
+**Start here:** `shared/src/commonMain/kotlin/com/ssbmax/shared/ui/` (no dedicated
+CLAUDE.md yet — `core:designsystem`, which used to cover this, was deleted
+once its only two SSOT-worthy objects, `SSBColors`/`Spacing`, were confirmed
+already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 - Component API design
 - Material3 theming
 - Accessibility (WCAG)
@@ -165,13 +160,12 @@ SSBMax Project (Root)
 |--------|-----------|------------|---------|
 | **Root** | 1 | 400+ | Global patterns & rules |
 | **app** | 4 | 1,200+ | UI layer (screens, DI, routing) |
-| **core:domain** | 1 | 267 | Business logic (SSOT) |
-| **core:data** | 4 | 1,400+ | Data layer (repositories, AI, DB, Firebase) |
-| **core:designsystem** | 1 | 258 | Component library & theming |
-| **lint** | 1 | 286 | Custom detectors (16+ rules) |
+| **shared** | 0 | — | KMP module: business logic, data, Compose UI, Koin DI (SSOT target; no dedicated CLAUDE.md yet, see above) |
+| **core:data** | 4 | 1,400+ | Data layer (repositories, AI, DB, Firebase) — being dissolved into `shared` |
+| **lint** | 1 | 286 | Custom detectors |
 | **functions** | 1 | 281 | Backend Cloud Functions |
 | **scripts** | 1 | 297 | Data ingestion & batch ops |
-| **TOTAL** | **13 CLAUDE.md files** | **~4,800 lines** | Full development guidance |
+| **TOTAL** | **12 CLAUDE.md files** | **~4,000 lines** | Full development guidance |
 
 ---
 

@@ -30,6 +30,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.presentation.study.StudyCategoryItem
+import org.jetbrains.compose.resources.stringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.premium_badge_label
+import ssbmax.shared.generated.resources.study_hero_subtitle
+import ssbmax.shared.generated.resources.study_hero_title
 
 /**
  * Extracted private composables for [StudyMaterialsScreen], split out purely
@@ -53,12 +58,12 @@ internal fun StudyMaterialsHeader(totalArticles: Int) {
                 )
                 Column {
                     Text(
-                        text = "Comprehensive SSB Preparation",
+                        text = stringResource(Res.string.study_hero_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Access study materials, guides, and tips",
+                        text = stringResource(Res.string.study_hero_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -132,7 +137,11 @@ internal fun CategoryCardVertical(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("Premium", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    stringResource(Res.string.premium_badge_label),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }

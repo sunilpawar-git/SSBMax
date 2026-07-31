@@ -27,9 +27,9 @@ The CLAUDE.md hierarchy is a **living documentation system** for development pat
 
 1. **Starting a task?** Open the relevant CLAUDE.md:
    - Building a feature screen → [app/ui/CLAUDE.md](app/ui/CLAUDE.md)
-   - Implementing a use case → [core/domain/CLAUDE.md](core/domain/CLAUDE.md)
+   - Implementing a use case → `shared/src/commonMain/.../domain` (no dedicated CLAUDE.md yet; `core:domain` was absorbed into `shared`)
    - Adding a database → [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md)
-   - Building a component → [core/designsystem/CLAUDE.md](core/designsystem/CLAUDE.md)
+   - Building a component → `shared/src/commonMain/.../ui` (no dedicated CLAUDE.md yet; `core:designsystem` was deleted once confirmed fully duplicated there — see the KMP-convergence plan's Phase 0f)
 
 2. **Stuck on a pattern?** Check the relevant file's code examples:
    ```kotlin
@@ -200,7 +200,8 @@ Mandatory Lint Rules:
 
 ✅ Automated checks:
 ```bash
-./gradlew :lint:test              # All 16 detectors pass
+./gradlew :lint:test               # All :lint detectors pass
+./gradlew :detekt-rules:test       # All :detekt-rules detectors pass (shared's commonMain)
 ./gradlew lintDebug               # No linter violations
 ./gradlew testDebugUnitTest       # Tests pass
 ```

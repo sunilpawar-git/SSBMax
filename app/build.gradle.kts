@@ -210,7 +210,6 @@ extensions.getByType<ApplicationExtension>().apply {
 
 dependencies {
     // Core modules
-    implementation(project(":core:designsystem"))
     implementation(project(":shared"))
     implementation(project(":core:data"))
 
@@ -287,6 +286,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.koin.test)
+    testImplementation(libs.koin.test.junit4)
     testImplementation("androidx.compose.ui:ui-test-junit4")
     testImplementation("org.robolectric:robolectric:4.11.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

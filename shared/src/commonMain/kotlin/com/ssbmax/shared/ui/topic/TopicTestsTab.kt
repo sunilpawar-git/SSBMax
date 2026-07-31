@@ -44,6 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.InterviewResult
+import org.jetbrains.compose.resources.stringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.topic_no_tests_available
 
 /**
  * The "Tests" tab for [TopicScreen] (GTO's day-1/day-2 split, Interview's
@@ -69,7 +72,11 @@ internal fun TestsTab(
 
     if (tests.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No tests available yet", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(Res.string.topic_no_tests_available),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         return
     }

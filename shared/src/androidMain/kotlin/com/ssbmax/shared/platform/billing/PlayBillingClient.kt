@@ -62,7 +62,18 @@ class PlayBillingClient(context: Context) : BillingClient {
 
     private val client: PlayBillingClientLib = PlayBillingClientLib.newBuilder(context)
         .setListener(purchasesUpdatedListener)
-        .enablePendingPurchases(PendingPurchasesParams.newBuilder().build())
+        .enablePendingPurchases(
+            // Play Billing Library 7+'s PendingPurchasesParams.Builder.build()
+            // throws IllegalArgumentException unless at least one pending-
+            // purchase-eligible product type is declared -- even for a
+            // subscriptions-only app with no one-time products, which is why
+            // this call exists (confirmed live: constructing this class
+            // without it crashes every real run, not just this phase's new
+            // Koin checkModules() test that first caught it).
+            PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build()
+        )
         .build()
 
     private var pendingPurchase: CompletableDeferred<Result<PurchaseResult>>? = null
@@ -131,6 +142,9 @@ class PlayBillingClient(context: Context) : BillingClient {
         }
     }
 
+    // Guard clauses are the safest, clearest shape for a billing flow; collapsing
+    // them to satisfy ReturnCount would only obscure the preconditions.
+    @Suppress("ReturnCount")
     override suspend fun purchase(productId: String): Result<PurchaseResult> {
         val activity = currentActivity
             ?: return Result.failure(IllegalStateException("No foreground Activity to launch the billing flow from"))
@@ -204,7 +218,7 @@ class PlayBillingClient(context: Context) : BillingClient {
 
     private fun ProductDetails.toBillingProduct(): BillingProduct {
         val offer = subscriptionOfferDetails?.firstOrNull()
-        val price = offer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: ""
+        val price = offer?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice.orEmpty()
         return BillingProduct(
             id = productId,
             title = title,

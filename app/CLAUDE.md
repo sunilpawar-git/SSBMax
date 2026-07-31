@@ -89,7 +89,7 @@ fun ContentView(data: MyData) {
 ```
 
 **When to extract:**
-- Reusable across multiple screens → `core/designsystem/components/`
+- Reusable across multiple screens → `shared/src/commonMain/kotlin/com/ssbmax/shared/ui/` (`core:designsystem` was deleted once confirmed fully duplicated there, see the KMP-convergence plan's Phase 0f)
 - Feature-specific sub-component → same file or `feature/components/`
 - Complex state management → consider promoting to ViewModel
 

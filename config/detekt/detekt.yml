@@ -35,6 +35,12 @@ naming:
     ignoreAnnotated: ['Composable']
   TopLevelPropertyNaming:
     active: true
+  MatchingDeclarationName:
+    # Kotlin Multiplatform's own actual-file convention is `Foo.android.kt` /
+    # `Foo.ios.kt` for a top-level declaration named `Foo` (see shared/src/
+    # androidMain, shared/src/iosMain) -- this rule doesn't know about that
+    # suffix and flags every one of them as a false positive.
+    active: false
 
 comments:
   active: true

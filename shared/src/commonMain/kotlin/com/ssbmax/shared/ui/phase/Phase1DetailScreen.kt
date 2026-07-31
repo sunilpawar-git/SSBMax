@@ -35,7 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.shared.presentation.phase1detail.Phase1DetailViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.phase1_overview_description
+import ssbmax.shared.generated.resources.phase1_overview_title
+import ssbmax.shared.generated.resources.phase1_screening_title
 
 /**
  * KMP port of the Android `app/.../ui/phase/Phase1DetailScreen.kt` -- Phase 1
@@ -61,7 +66,7 @@ fun Phase1DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Phase 1 - Screening") },
+                title = { Text(stringResource(Res.string.phase1_screening_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -137,13 +142,13 @@ private fun Phase1OverviewCard(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "Phase 1 - Screening Tests",
+                text = stringResource(Res.string.phase1_overview_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = "The screening tests consist of Officer Intelligence Rating (OIR) and Picture Perception & Description Test (PPDT). Candidates must clear this stage to proceed to Phase 2.",
+                text = stringResource(Res.string.phase1_overview_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )

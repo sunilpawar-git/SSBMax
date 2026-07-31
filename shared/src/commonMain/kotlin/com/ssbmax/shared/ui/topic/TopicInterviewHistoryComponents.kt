@@ -28,6 +28,7 @@ import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.interview_history_title
 import ssbmax.shared.generated.resources.interview_no_past_results
+import ssbmax.shared.generated.resources.topic_interview_score_suffix
 
 /**
  * Past-interview-results composables for [TopicScreen]'s Interview topic,
@@ -116,7 +117,11 @@ private fun InterviewResultCard(result: InterviewResult, onClick: () -> Unit, mo
                         fontWeight = FontWeight.Bold,
                         color = getInterviewScoreColor(result.overallRating)
                     )
-                    Text(text = "/10", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = stringResource(Res.string.topic_interview_score_suffix),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

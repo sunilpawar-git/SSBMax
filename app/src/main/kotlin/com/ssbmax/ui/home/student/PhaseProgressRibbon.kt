@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.R
-import com.ssbmax.core.designsystem.theme.SSBColors
-import com.ssbmax.core.designsystem.theme.Spacing
+import com.ssbmax.shared.ui.theme.SSBColors
+import com.ssbmax.shared.ui.theme.Spacing
 import com.ssbmax.shared.domain.model.Phase1Progress
 import com.ssbmax.shared.domain.model.Phase2Progress
 import com.ssbmax.shared.domain.model.TestPhase

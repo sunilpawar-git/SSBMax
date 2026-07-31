@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.cocoapods) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.sqldelight) apply false
     jacoco
@@ -42,8 +43,31 @@ subprojects {
         baseline = file("detekt-baseline.xml")
     }
 
+    // :detekt-rules houses the "ssbmax" custom rule set's sole rule today,
+    // HardcodedComposeText -- the commonMain-reaching equivalent of :lint's
+    // ComposeHardcodedText (AGP's Android Lint does not analyze a KMP
+    // module's commonMain, verified empirically against `shared` during
+    // Phase 0c/0h). Scoped to :shared only: `app` already has its own
+    // ComposeHardcodedText coverage via AGP Lint (with its own long-standing
+    // `lint-baseline.xml`), so applying this there too would just demand a
+    // second, redundant baseline for the exact same pre-existing findings.
+    if (path == ":shared") {
+        dependencies {
+            add("detektPlugins", project(":detekt-rules"))
+        }
+    }
+
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
         jvmTarget = "21"
+        // KMP modules (shared) register generated dirs (Compose Resources
+        // accessors, SQLDelight query classes) as their own commonMain source
+        // roots, so a glob like "**/build/**" never matches -- it's checked
+        // relative to each root, and the root itself IS already inside
+        // build/. Matching on the absolute path is the only way that reaches
+        // every one of them. Without this, every rule fires on hand-written-
+        // looking but fully generated code, and findings churn every time a
+        // resource is added or removed (the generated file count shifts).
+        exclude { it.file.absolutePath.contains("${File.separator}build${File.separator}") }
         reports {
             sarif.required.set(true)
             html.required.set(true)
@@ -54,5 +78,20 @@ subprojects {
     }
     tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
         jvmTarget = "21"
+    }
+
+    // `shared` is a Kotlin Multiplatform module: its plain `detekt` task has
+    // no `commonMain`/`androidMain`/`iosMain` source configured at all (that
+    // lives on the per-target tasks below) and is silently NO-SOURCE, so
+    // `./gradlew detekt` -- what CI runs -- was never actually analyzing a
+    // single line of `shared` (verified empirically during the Phase 0
+    // KMP-convergence plan's 0c/0h work: adding lintChecks/a real rule here
+    // found nothing until these were wired in directly). Route `detekt`
+    // through the tasks that really have source instead of leaving it to
+    // silently report success over zero files.
+    if (path == ":shared") {
+        tasks.named("detekt") {
+            dependsOn("detektMetadataCommonMain", "detektAndroidDebug", "detektIosSimulatorArm64Main")
+        }
     }
 }

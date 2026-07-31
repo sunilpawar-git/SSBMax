@@ -33,6 +33,9 @@ import com.ssbmax.shared.presentation.submissions.SubmissionsListViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.dashboard_test_srt
+import ssbmax.shared.generated.resources.dashboard_test_tat
+import ssbmax.shared.generated.resources.dashboard_test_wat
 import ssbmax.shared.generated.resources.submissions_list_action_refresh
 import ssbmax.shared.generated.resources.submissions_list_cd_back
 import ssbmax.shared.generated.resources.submissions_list_filter_all
@@ -175,17 +178,17 @@ private fun FilterSection(
             FilterChip(
                 selected = selectedTestType == TestType.TAT,
                 onClick = { onTestTypeSelected(TestType.TAT) },
-                label = { Text("TAT") }
+                label = { Text(stringResource(Res.string.dashboard_test_tat)) }
             )
             FilterChip(
                 selected = selectedTestType == TestType.WAT,
                 onClick = { onTestTypeSelected(TestType.WAT) },
-                label = { Text("WAT") }
+                label = { Text(stringResource(Res.string.dashboard_test_wat)) }
             )
             FilterChip(
                 selected = selectedTestType == TestType.SRT,
                 onClick = { onTestTypeSelected(TestType.SRT) },
-                label = { Text("SRT") }
+                label = { Text(stringResource(Res.string.dashboard_test_srt)) }
             )
         }
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.core.designsystem.theme.Spacing
+import com.ssbmax.shared.ui.theme.Spacing
 
 /**
  * Quick Action Card - Clickable card for navigation shortcuts

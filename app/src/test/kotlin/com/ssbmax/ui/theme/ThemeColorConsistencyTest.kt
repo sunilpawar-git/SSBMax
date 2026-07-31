@@ -1,7 +1,7 @@
 package com.ssbmax.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import com.ssbmax.core.designsystem.theme.SSBColors
+import com.ssbmax.shared.ui.theme.SSBColors
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals

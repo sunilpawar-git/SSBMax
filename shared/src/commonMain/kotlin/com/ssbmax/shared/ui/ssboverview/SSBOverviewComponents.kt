@@ -39,6 +39,11 @@ import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.SSBInfoCard
 import com.ssbmax.shared.domain.model.SSBInfoIcon
 import com.ssbmax.shared.ui.common.MarkdownText
+import org.jetbrains.compose.resources.stringResource
+import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.ssb_overview_watch_video
+import ssbmax.shared.generated.resources.ssb_overview_welcome_description
+import ssbmax.shared.generated.resources.ssb_overview_welcome_title
 
 /**
  * Extracted private composables for [SSBOverviewScreen], split out purely to
@@ -59,13 +64,13 @@ internal fun WelcomeCard(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                "Welcome to SSB Preparation",
+                stringResource(Res.string.ssb_overview_welcome_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                "Learn everything about the Services Selection Board process, from Day 1 screening to final recommendation.",
+                stringResource(Res.string.ssb_overview_welcome_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -137,7 +142,7 @@ internal fun SSBInfoCardItem(
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Watch Video")
+                            Text(stringResource(Res.string.ssb_overview_watch_video))
                         }
                     }
                 }

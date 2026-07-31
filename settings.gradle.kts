@@ -25,10 +25,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "SSBMax"
 include(":app")
-include(":core:common")
-include(":core:designsystem")
 include(":core:data")
 include(":lint")
+include(":detekt-rules")
 
 // Phase 1 KMP migration (see docs/architecture/ or CLAUDE plan for context):
 // core:domain was fully moved into shared/commonMain/domain and the old
