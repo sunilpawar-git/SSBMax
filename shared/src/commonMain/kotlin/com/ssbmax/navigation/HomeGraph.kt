@@ -44,19 +44,8 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
                 navController.navigate(SSBMaxDestinations.Analytics.route)
             },
             onNavigateToResult = { testType: TestType, sessionId: String ->
-                // OIR, PPDT, TAT, WAT, SRT, SDT, and IO (Interview) are the test-type
-                // result screens ported into commonMain/ui so far -- every other test
-                // type's result screen still routes to the honest placeholder.
-                when (testType) {
-                    TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(sessionId))
-                    TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId))
-                    TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId))
-                    TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId))
-                    TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId))
-                    TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(sessionId))
-                    TestType.IO -> navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(sessionId))
-                    else -> notYetPorted("TestResultScreen")
-                }
+                val route = homeResultRoute(testType, sessionId)
+                if (route != null) navController.navigate(route) else notYetPorted("TestResultScreen")
             },
             onOpenDrawer = onOpenDrawer
         )
@@ -85,4 +74,31 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
             onOpenDrawer = onOpenDrawer
         )
     }
+}
+
+/**
+ * Maps a completed test's [TestType] to its result screen's route.
+ *
+ * KMP-convergence Phase 3a, row #1: PIQ/GTO_GD/GTO_LECTURETTE/GTO_GPE were
+ * missing from this switch even though all four result destinations are
+ * already registered (`WrittenTestsGraph`/`GTOGraph`) -- `StudentHomeScreen`'s
+ * OLQ dashboard tiles for those test types silently fell through to the
+ * honest placeholder instead. Extracted to a pure function (rather than
+ * inline in the composable lambda) so this mapping is unit-testable without
+ * standing up Compose/Koin. Returns `null` for test types with no ported
+ * result screen yet.
+ */
+internal fun homeResultRoute(testType: TestType, sessionId: String): String? = when (testType) {
+    TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(sessionId)
+    TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId)
+    TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId)
+    TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId)
+    TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId)
+    TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(sessionId)
+    TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(sessionId)
+    TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(sessionId)
+    TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(sessionId)
+    TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(sessionId)
+    TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(sessionId)
+    else -> null
 }

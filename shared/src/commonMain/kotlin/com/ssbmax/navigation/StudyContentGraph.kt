@@ -29,6 +29,20 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
         )
     }
 
+    // Student Study (KMP-convergence Phase 3a, row #9) -- a declared
+    // `BottomNavItem` (`student/study`) that, before this fix, was
+    // Android-only: `StudentNavGraph.kt`'s own registration renders the same
+    // `StudyMaterialsScreen` as `StudyMaterialsList` above, just reached from
+    // the bottom nav bar rather than Student Home's "Study" quick action.
+    // Same no-op rationale for onNavigateToSearch/onNavigateToBookmarks.
+    composable(SSBMaxDestinations.StudentStudy.route) {
+        StudyMaterialsScreen(
+            onNavigateToTopic = { topicId ->
+                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+            }
+        )
+    }
+
     composable(
         route = SSBMaxDestinations.StudyMaterialDetail.route,
         arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
@@ -52,13 +66,27 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // and PPDT (no testId-keyed route registered under that exact prefix)
     // fall through to the honest placeholder. onNavigateToInterviewResult
     // routes to the real InterviewResult screen.
+    //
+    // `?selectedTab={selectedTab}` (KMP-convergence Phase 3a, row #2): mirrors
+    // the Android original's own route registration (`SharedNavGraph.kt:576-590`).
+    // `StudentHomeScreen`'s onTopicClick emits e.g. "OIR?selectedTab=2" (Tests
+    // tab preselected) -- without this arg declared, that string had no
+    // matching destination and silently failed to navigate.
     composable(
-        route = SSBMaxDestinations.TopicScreen.route,
-        arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+        route = SSBMaxDestinations.TopicScreen.route + "?selectedTab={selectedTab}",
+        arguments = listOf(
+            navArgument("topicId") { type = NavType.StringType },
+            navArgument("selectedTab") {
+                type = NavType.IntType
+                defaultValue = 0
+            }
+        )
     ) { backStackEntry ->
         val topicId = backStackEntry.arguments?.read { getStringOrNull("topicId") } ?: "OIR"
+        val selectedTab = backStackEntry.arguments?.read { getIntOrNull("selectedTab") } ?: 0
         TopicScreen(
             topicId = topicId,
+            initialTab = selectedTab,
             onNavigateBack = { navController.navigateUp() },
             onNavigateToStudyMaterial = { materialId ->
                 navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))

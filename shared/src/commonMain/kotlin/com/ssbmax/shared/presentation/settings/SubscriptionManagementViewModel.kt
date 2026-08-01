@@ -15,6 +15,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 
 /**
  * KMP port of the Android `app/.../ui/settings/SubscriptionManagementViewModel.kt`.
@@ -29,10 +33,16 @@ import kotlinx.datetime.Clock
  * - `java.util.Calendar`/`java.util.Locale` (JVM-only) replaced with
  *   `kotlinx.datetime.Clock` + [formatFullDate] (the same KMP-safe date
  *   formatter [com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator]'s
- *   sibling verticals already use) -- the "add one month" `Calendar.add`
- *   call becomes a flat +30-day offset in epoch millis, which matches the
- *   Android original's own doc comment marking this expiry date as "mock for
- *   now" (not a real billing-cycle calculation either way).
+ *   sibling verticals already use).
+ *
+ * KMP-convergence Phase 3a, row #20: the Android original's `Calendar.add(MONTH, 1)`
+ * was ported here as a flat +30-day offset, which is wrong in February (28/29
+ * days) and any 31-day month -- not the same value "add one calendar month"
+ * produces. Fixed to use `kotlinx.datetime`'s `DatePeriod(months = 1)` against
+ * the device's current time zone, matching the Android original's actual
+ * "add one calendar month" semantics (the "mock for now" doc comment on this
+ * expiry date, i.e. not a real billing-cycle calculation, still applies either
+ * way).
  */
 class SubscriptionManagementViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
@@ -45,7 +55,6 @@ class SubscriptionManagementViewModel(
 
     private companion object {
         const val TAG = "SubscriptionMgmtViewModel"
-        const val THIRTY_DAYS_MILLIS = 30L * 24 * 60 * 60 * 1000
     }
 
     fun loadSubscriptionData() {
@@ -71,7 +80,7 @@ class SubscriptionManagementViewModel(
                 val uiUsage = domainUsage.mapValues { (_, value) -> UsageInfo.from(value) }
 
                 val expiresAt = if (tier != SubscriptionTier.FREE) {
-                    formatFullDate(Clock.System.now().toEpochMilliseconds() + THIRTY_DAYS_MILLIS)
+                    formatFullDate(nextBillingCycleExpiry(Clock.System.now()).toEpochMilliseconds())
                 } else {
                     null
                 }
@@ -94,6 +103,16 @@ class SubscriptionManagementViewModel(
         }
     }
 }
+
+/**
+ * One calendar month after [now], in the device's current time zone.
+ *
+ * Extracted as a pure function (KMP-convergence Phase 3a, row #20) so the
+ * February/31-day-month fix is unit-testable without a `ViewModel` + Koin
+ * use-case graph -- see `SubscriptionManagementViewModelTest`.
+ */
+internal fun nextBillingCycleExpiry(now: Instant): Instant =
+    now.plus(DatePeriod(months = 1), TimeZone.currentSystemDefault())
 
 /**
  * UI State for Subscription Management
