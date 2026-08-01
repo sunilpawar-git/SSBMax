@@ -2,7 +2,6 @@ package com.ssbmax.di
 
 import android.app.Application
 import android.content.Context
-import android.net.ConnectivityManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
@@ -38,7 +37,7 @@ import org.koin.test.check.checkModules
  *
  * Two things can't run for real in a JVM unit test, so they're substituted:
  * - `Context` (needed by `androidContext()` in `platformModule`,
- *   `workManagerModule`, `imageModule`, `FirebaseModule`'s analytics single)
+ *   `workManagerModule`, `FirebaseModule`'s analytics single)
  *   → `withInstance<Context>()`, per this file's own Koin-test contract.
  * - The real Firebase Android SDK would throw ("Default FirebaseApp is not
  *   initialized") outside a real Android process. Robolectric is the normal
@@ -64,8 +63,6 @@ import org.koin.test.check.checkModules
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlatformModuleCheckTest : KoinTest {
 
-    private var tempCacheDir: java.io.File? = null
-
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -75,7 +72,6 @@ class PlatformModuleCheckTest : KoinTest {
     fun tearDown() {
         Dispatchers.resetMain()
         unmockkAll()
-        tempCacheDir?.deleteRecursively()
     }
 
     @Test
@@ -104,16 +100,8 @@ class PlatformModuleCheckTest : KoinTest {
         mockkStatic(WorkManager::class)
         every { WorkManager.getInstance(any<Context>()) } returns mockk(relaxed = true)
 
-        // A bare `mockk(relaxed = true)` Context returns a generic Object for
-        // `getSystemService()`, which coil's ImageLoader (imageModule) then
-        // fails to cast to ConnectivityManager -- confirmed by running this
-        // test and reading the real ClassCastException it produced.
         val fakeContext = mockk<Application>(relaxed = true)
         every { fakeContext.applicationContext } returns fakeContext
-        every { fakeContext.getSystemService(Context.CONNECTIVITY_SERVICE) } returns
-            mockk<ConnectivityManager>(relaxed = true)
-        every { fakeContext.cacheDir } returns java.nio.file.Files.createTempDirectory("checkModulesCache").toFile()
-            .also { tempCacheDir = it }
 
         // A bare relaxed mock's generic `get<T>(key)` returns a proxy that
         // fails to cast to the caller's expected type (e.g. TopicViewModel's

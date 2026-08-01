@@ -12,20 +12,20 @@ SSBMax Project (Root)
 ├── 🌱 Root: [claude.md](claude.md)
 │   └── Purpose: 12 core rules, architecture overview, global patterns
 │
-├── 📦 App Module: [app/CLAUDE.md](app/CLAUDE.md)
-│   ├── UI/Composable Patterns
-│   ├── ViewModel Architecture
-│   ├── Memory Leak Prevention
-│   └── Sub-Modules:
-│       ├── [app/ui/CLAUDE.md](app/ui/CLAUDE.md) — Feature screens + state management
-│       ├── [app/di/CLAUDE.md](app/di/CLAUDE.md) — Hilt dependency injection
-│       └── [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md) — Type-safe routing
+├── 📦 App Module: [app/CLAUDE.md](app/CLAUDE.md) — Android platform glue only
+│   │   (MainActivity, Application, notifications, WorkManager workers) since
+│   │   KMP-convergence Phase 5/6a moved all UI/ViewModel/navigation into
+│   │   `shared`; `app/ui`, `app/navigation`, and their CLAUDE.md files no
+│   │   longer exist
+│   └── Sub-Module:
+│       └── [app/di/CLAUDE.md](app/di/CLAUDE.md) — Koin dependency injection (not Hilt)
 │
-├── 🧬 Shared Module (KMP): no CLAUDE.md yet — SSOT target of the
-│   KMP-convergence plan; `core:domain`'s use-case/repository-interface/
-│   Result<T>/zero-Android-deps patterns below now live in
-│   `shared/commonMain/.../domain`, and `shared`'s UI (`.../ui`) is the
-│   convergence target `core:designsystem` used to cover before its deletion
+├── 🧬 Shared Module (KMP): no CLAUDE.md yet — SSOT for UI, ViewModels,
+│   navigation, and DI on both Android and iOS (KMP-convergence plan).
+│   `core:domain`'s use-case/repository-interface/Result<T>/zero-Android-deps
+│   patterns now live in `shared/commonMain/.../domain`, and `shared`'s UI
+│   (`.../ui`) is the convergence target `core:designsystem` used to cover
+│   before its deletion
 │
 ├── 🔌 Core Data Module: [core/data/CLAUDE.md](core/data/CLAUDE.md)
 │   ├── Repository Implementations
@@ -62,12 +62,14 @@ SSBMax Project (Root)
 ## 🎯 Quick Lookup by Scenario
 
 ### "I'm building a new feature screen"
-**Start here:** [app/ui/CLAUDE.md](app/ui/CLAUDE.md)
+**Start here:** `shared/src/commonMain/kotlin/com/ssbmax/shared/` — `ui/` (screens),
+`presentation/` (ViewModels), `navigation/` (routes). This is the only place
+new screens go post-convergence; there is no `app/ui` anymore.
 - Feature state definition (sealed class UiState)
-- ViewModel + repository injection pattern
-- StateFlow<UiState> management
+- ViewModel + repository injection pattern (Koin `viewModelOf`)
+- StateFlow<UiState> management via `viewModelScope`
 - UI composable decomposition
-- Then read: [app/CLAUDE.md](app/CLAUDE.md) (ViewModel basics), [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md) (routing)
+- Then read: [app/CLAUDE.md](app/CLAUDE.md) for what (little) still lives in `app`
 
 ### "I'm implementing a new use case"
 **Start here:** [core/domain/CLAUDE.md](core/domain/CLAUDE.md)
@@ -109,21 +111,18 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 - Then read: [app/CLAUDE.md](app/CLAUDE.md) (Composable limits in screens)
 
 ### "I'm setting up dependency injection"
-**Start here:** [app/di/CLAUDE.md](app/di/CLAUDE.md)
-- Hilt module structure (@Module, @Provides)
-- @HiltViewModel pattern
-- Scopes (Singleton, Activity, NavGraph)
-- Testing with @HiltAndroidTest
-- Multi-binding
+**Start here:** [app/di/CLAUDE.md](app/di/CLAUDE.md) — this project uses **Koin, not Hilt**
+- `module { }` / `singleOf` / `factoryOf` / `viewModelOf` bindings
+- ViewModel bindings live in `shared/*Module.kt`, not `app`
+- Testing via `checkModules()` (`PlatformModuleCheckTest`)
 
 ### "I'm setting up routing/navigation"
-**Start here:** [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md)
-- SSBMaxDestinations (SSOT for routes)
-- Type-safe routing
-- Route parameters
+**Start here:** `shared/src/commonMain/kotlin/com/ssbmax/shared/navigation/SSBMaxDestinations.kt`
+- `SSBMaxDestinations` (SSOT for routes) — `@Serializable` type-safe routes, not string routes
+- `composable<T>()` / `toRoute<T>()` / `navigate(T)`
 - Navigation events (Channel-based)
-- Backstack management
-- Testing navigation flows
+- Deep links via `DeepLinkGateway`
+- Testing navigation flows (`shared/src/androidUnitTest/.../navigation/`)
 
 ### "I'm writing a custom lint detector"
 **Start here:** [lint/CLAUDE.md](lint/CLAUDE.md)
@@ -159,8 +158,8 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 | Module | File Count | Total Lines | Purpose |
 |--------|-----------|------------|---------|
 | **Root** | 1 | 400+ | Global patterns & rules |
-| **app** | 4 | 1,200+ | UI layer (screens, DI, routing) |
-| **shared** | 0 | — | KMP module: business logic, data, Compose UI, Koin DI (SSOT target; no dedicated CLAUDE.md yet, see above) |
+| **app** | 2 | ~200 | Android platform glue (MainActivity, notifications, workers, Koin bootstrap) |
+| **shared** | 0 | — | KMP module: UI, ViewModels, navigation, business logic, data, Koin DI (SSOT; no dedicated CLAUDE.md yet, see above) |
 | **core:data** | 4 | 1,400+ | Data layer (repositories, AI, DB, Firebase) — being dissolved into `shared` |
 | **lint** | 1 | 286 | Custom detectors |
 | **functions** | 1 | 281 | Backend Cloud Functions |
@@ -176,11 +175,11 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 | Pattern | Location | Used By |
 |---------|----------|---------|
 | Result<T> (error handling) | [core/domain/CLAUDE.md](core/domain/CLAUDE.md#result--sealed-class) | All data/use case code |
-| @HiltViewModel | [app/di/CLAUDE.md](app/di/CLAUDE.md) | All feature screens |
-| StateFlow<UiState> | [app/CLAUDE.md](app/CLAUDE.md) | All ViewModels |
+| Koin `viewModelOf` | [app/di/CLAUDE.md](app/di/CLAUDE.md) | All feature screens (bindings live in `shared`) |
+| StateFlow<UiState> | `shared`'s `presentation/` ViewModels | All ViewModels |
 | Repository Pattern | [core/data/CLAUDE.md](core/data/CLAUDE.md) | Repositories, use cases |
 | Firestore Security Rules | [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md#security-rules-ssot) | Firebase backend |
-| SSBMaxDestinations | [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md) | All routing |
+| SSBMaxDestinations | `shared/src/commonMain/.../navigation/SSBMaxDestinations.kt` | All routing |
 | Gemini Prompts | [core/data/ai/CLAUDE.md](core/data/ai/CLAUDE.md) | Evaluation features |
 
 ---

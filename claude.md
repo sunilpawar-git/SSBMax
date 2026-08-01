@@ -44,7 +44,7 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 
 | Module | Purpose |
 |---|---|
-| `app` | Compose screens, ViewModels, navigation, Hilt DI |
+| `app` | Android platform glue only: `MainActivity`, `Application`, notifications, WorkManager workers, Koin bootstrap (`app/ui`/`app/navigation`/app-module ViewModels deleted in the KMP-convergence plan's Phase 6a — `shared` is the UI/ViewModel/nav SSOT on both platforms) |
 | `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it |
 | `core:data` | Repository implementations, Room DB, Firebase, Gemini AI (being dissolved into `shared` incrementally, see the KMP-convergence plan) |
 | `lint` | Custom lint rules (build fails if violated) |
@@ -58,10 +58,9 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 
 ```
 Root: claude.md (12 core rules, global patterns)
-  ├── app/CLAUDE.md (UI/ViewModel layer)
-  │   ├── app/ui/CLAUDE.md (feature screens)
-  │   ├── app/di/CLAUDE.md (Hilt dependency injection)
-  │   └── app/navigation/CLAUDE.md (type-safe routing)
+  ├── app/CLAUDE.md (Android platform glue only — UI/ViewModel/navigation
+  │   │  moved to `shared` in the KMP-convergence plan's Phase 5/6a)
+  │   └── app/di/CLAUDE.md (Koin dependency injection, not Hilt)
   │
   ├── core/data/CLAUDE.md (data repositories, error handling)
   │   ├── core/data/ai/CLAUDE.md (Gemini AI integration)
@@ -101,7 +100,7 @@ Root: claude.md (12 core rules, global patterns)
 - **Max 300 lines per file** (split if exceeded)
 - **Max 50 lines per Composable** (extract sub-components)
 - No hardcoded colors/dimensions (use `MaterialTheme.*`, `dp`, `sp`)
-- Dependencies injected via Hilt (never manual construction)
+- Dependencies injected via Koin (never manual construction) — Hilt was removed; `app`/`shared` both use `module { }`/`singleOf`/`viewModelOf`
 - If ViewModel/Repository logic changes → update/add tests; `./gradlew check` must pass
 
 ## Content-Ingestion Principle (PDFs → Firestore)

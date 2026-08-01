@@ -1,402 +1,50 @@
-# app/di/CLAUDE.md — Dependency Injection Setup
+# app/di/CLAUDE.md — Koin Dependency Injection
 
-**Scope:** Hilt modules, @Inject constructors, scopes (Singleton, Activity, Fragment). Inherits [app/CLAUDE.md](../CLAUDE.md). This file adds DI-specific patterns for the app module.
+**Scope:** `app`'s Koin modules. Inherits [app/CLAUDE.md](../CLAUDE.md).
 
-**Key Addition:** Hilt setup + common scopes + mocking patterns for testing.
-
----
-
-## Hilt Module Structure (SSBMaxApp Setup)
-
-**Application Setup:**
-```kotlin
-// In app/src/main/kotlin/com/ssbmax/SSBMaxApp.kt
-@HiltAndroidApp
-class SSBMaxApp : Application() {
-  override fun onCreate() {
-    super.onCreate()
-    // Hilt auto-initializes all modules
-  }
-}
-
-// In AndroidManifest.xml
-<application android:name=".SSBMaxApp" ... />
-```
-
-**Global Modules (Application-scoped):**
-```kotlin
-// In app/src/main/kotlin/com/ssbmax/di/AppModule.kt
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-  
-  @Provides
-  @Singleton
-  fun provideErrorLogger(context: Context): ErrorLogger {
-    return ErrorLogger(context)
-  }
-  
-  @Provides
-  @Singleton
-  fun provideSubscriptionManager(
-    firestore: FirebaseFirestore
-  ): SubscriptionManager {
-    return SubscriptionManager(firestore)
-  }
-}
-
-// ✅ Singleton scope (one instance app-wide)
-// ✅ Auto-injected into ViewModels, Repositories
-// ✅ Thread-safe (Hilt handles)
-```
-
-**Repository Module (provide interfaces, not implementations):**
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object RepositoryModule {
-  
-  @Provides
-  @Singleton
-  fun provideTATRepository(
-    firestore: FirebaseFirestore,
-    tatDao: TATDAO
-  ): TATRepository {
-    return TATRepositoryImpl(firestore, tatDao)
-  }
-  
-  @Provides
-  @Singleton
-  fun provideOIRRepository(
-    firestore: FirebaseFirestore,
-    oirDao: OIRDAO
-  ): OIRRepository {
-    return OIRRepositoryImpl(firestore, oirDao)
-  }
-}
-
-// ✅ Provides interface (TATRepository), not implementation
-// ✅ ViewModels inject interface, not implementation
-// ✅ Easy to swap implementations for testing
-```
-
-**Use Case Module:**
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object UseCaseModule {
-  
-  @Provides
-  fun provideGetTATQuestionsUseCase(
-    repository: TATRepository
-  ): GetTATQuestionsUseCase {
-    return GetTATQuestionsUseCase(repository)
-  }
-  
-  @Provides
-  fun provideSubmitTATResponseUseCase(
-    repository: TATRepository,
-    errorLogger: ErrorLogger
-  ): SubmitTATResponseUseCase {
-    return SubmitTATResponseUseCase(repository, errorLogger)
-  }
-  
-  @Provides
-  fun provideCheckSubscriptionUseCase(
-    subscriptionManager: SubscriptionManager
-  ): CheckSubscriptionUseCase {
-    return CheckSubscriptionUseCase(subscriptionManager)
-  }
-}
-
-// ✅ Create use case instances with dependencies
-// ✅ Keep use cases stateless (Singleton safe)
-```
+**This project uses Koin, not Hilt.** `shared`'s modules (`shared/src/commonMain/.../di/*Module.kt`) are the SSOT for ViewModel and use-case bindings — everything reachable from a Compose screen lives there. `app`'s own modules exist only to bind the handful of classes `app/workers` and `app/notifications` need that `shared`/`core:data` don't already provide.
 
 ---
 
-## @HiltViewModel Pattern
+## Structure
 
-**ViewModel Injection (in Composables):**
+`SSBMaxApplication.onCreate()` calls `startKoin { modules(appModules) }`, where `appModules` (`KoinModules.kt`) is `sharedModule` + `core:data`'s repository/Firebase/Room modules + `app`'s own small set:
+
 ```kotlin
-@Composable
-fun TATScreen(
-  viewModel: TATTestViewModel = hiltViewModel()
-) {
-  // ✅ Hilt automatically creates ViewModel with dependencies
-  val uiState by viewModel.uiState.collectAsState()
-  // ...
-}
-
-// ✅ Never do: MyViewModel(useCase) — use @HiltViewModel + hiltViewModel()
-// ✅ Hilt scopes ViewModel to Compose NavGraph lifetime
-```
-
-**ViewModel Definition:**
-```kotlin
-@HiltViewModel
-class TATTestViewModel @Inject constructor(
-  private val getTATQuestionsUseCase: GetTATQuestionsUseCase,
-  private val submitTATResponseUseCase: SubmitTATResponseUseCase,
-  private val subscriptionManager: SubscriptionManager,
-  private val errorLogger: ErrorLogger
-) : ViewModel() {
-  // Implementation
-}
-
-// ✅ @Inject on constructor (not on properties)
-// ✅ All dependencies declared as constructor parameters
-// ✅ Hilt provides dependencies automatically
-```
-
----
-
-## Scopes Explained (Singleton, Activity, Fragment)
-
-**Singleton (App-wide, one instance):**
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object SingletonModule {
-  @Provides
-  @Singleton
-  fun provideErrorLogger(): ErrorLogger = ErrorLogger()
-  
-  // One instance for entire app lifetime
-  // ✅ Use for: stateless utilities, database, network client
-  // ❌ Never store mutable state here
-}
-```
-
-**Activity (Activity-scoped, one per Activity):**
-```kotlin
-@Module
-@InstallIn(ActivityComponent::class)
-object ActivityModule {
-  @Provides
-  fun provideActivityTracker(activity: Activity): ActivityTracker {
-    return ActivityTracker(activity)
-  }
-  
-  // One instance per Activity
-  // Destroyed when Activity is destroyed
-  // ✅ Use for: Activity-specific services
-  // ✅ Inject Activity directly if needed
-}
-```
-
-**Fragment (Fragment-scoped, one per Fragment):**
-```kotlin
-@Module
-@InstallIn(FragmentComponent::class)
-object FragmentModule {
-  @Provides
-  fun provideFragmentAnalytics(fragment: Fragment): FragmentAnalytics {
-    return FragmentAnalytics(fragment)
-  }
-}
-```
-
-**NavGraph (for Compose Navigation):**
-```kotlin
-// Modern approach: use MultiBindingMap for navigation scopes
-@Module
-@InstallIn(SingletonComponent::class)
-object AppNavModule {
-  @Provides
-  @Singleton
-  fun provideNavController(): NavController = NavController()
-}
-```
-
----
-
-## Testing with Hilt (@HiltAndroidTest)
-
-**Test Setup (Unit + Android Tests):**
-```kotlin
-@HiltAndroidTest
-class TATTestViewModelTest {
-  @get:Rule
-  val hiltRule = HiltAndroidRule(this)
-  
-  @get:Rule
-  val instantExecutorRule = InstantTaskExecutorRule()
-  
-  @Inject
-  lateinit var tatRepository: TATRepository
-  
-  @Inject
-  lateinit var getTATQuestionsUseCase: GetTATQuestionsUseCase
-  
-  private lateinit var viewModel: TATTestViewModel
-  
-  @Before
-  fun setup() {
-    hiltRule.inject()
-    viewModel = TATTestViewModel(
-      getTATQuestionsUseCase,
-      mockk(),
-      mockk(),
-      mockk(relaxed = true)
-    )
-  }
-  
-  @Test
-  fun testViewModelLoadsQuestions() {
-    // Hilt auto-provides real TATRepository
-  }
-}
-```
-
-**Mocking Dependencies (TestModule Override):**
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object TestRepositoryModule {
-  @Provides
-  @Singleton
-  fun provideMockTATRepository(): TATRepository {
-    return mockk<TATRepository>().apply {
-      coEvery { getTATQuestions() } returns listOf(mockk())
-    }
-  }
-}
-
-// Run with: ./gradlew :app:connectedAndroidTest
-// Hilt uses TestRepositoryModule instead of RepositoryModule
-```
-
-**ViewModel Factory for Unit Tests (without Android context):**
-```kotlin
-// For pure JUnit tests (no Android)
-class TATTestViewModelUnitTest {
-  @Test
-  fun testViewModelWithMockDependencies() {
-    val mockRepository = mockk<TATRepository>()
-    val mockErrorLogger = mockk<ErrorLogger>(relaxed = true)
-    
-    val useCase = GetTATQuestionsUseCase(mockRepository)
-    val viewModel = TATTestViewModel(
-      useCase,
-      mockk(),
-      mockk(),
-      mockErrorLogger
-    )
-    
-    // Test without Hilt
-  }
-}
-```
-
----
-
-## Multi-Binding (Advanced: when you have multiple implementations)
-
-**Example: Multiple Repository Implementations**
-```kotlin
-interface TestEvaluator {
-  suspend fun evaluate(response: TestResponse): Result<Score>
-}
-
-class GeminiEvaluator : TestEvaluator { /* ... */ }
-class LLamaEvaluator : TestEvaluator { /* ... */ }
-
-// Provide multiple bindings
-@Module
-@InstallIn(SingletonComponent::class)
-interface EvaluatorModule {
-  
-  @Binds
-  @Singleton
-  fun bindGeminiEvaluator(impl: GeminiEvaluator): TestEvaluator
-}
-
-// Or for multiple:
-@Module
-@InstallIn(SingletonComponent::class)
-object MultiEvaluatorModule {
-  
-  @Provides
-  @Singleton
-  @Named("gemini")
-  fun provideGeminiEvaluator(): TestEvaluator = GeminiEvaluator()
-  
-  @Provides
-  @Singleton
-  @Named("llama")
-  fun provideLLamaEvaluator(): TestEvaluator = LLamaEvaluator()
-}
-
-// Inject specific one:
-class MyUseCase @Inject constructor(
-  @Named("gemini") private val evaluator: TestEvaluator
+val appModules = listOf(
+    sharedModule,                 // :shared's full Koin graph (screens, ViewModels, use cases)
+    databaseModule, repositoryModule, contentRepositoryModule,
+    firebaseModule, loggerModule, coroutineScopeModule, aiModule,
+    coreDataInjectablesModule,    // :core:data
+    testUseCaseModule, debugModule, workManagerModule, appInjectablesModule  // :app
 )
 ```
 
----
+**Before adding a module here**, check whether it belongs in `shared` instead — if the class it binds is reachable from a Compose screen, it almost certainly does. `app`'s modules should only ever bind things `app/workers`/`app/notifications`/`MainActivity`/`SSBMaxApplication` need directly.
 
-## Common Issues & Solutions
+## Binding pattern
 
-**Issue 1: Circular Dependencies**
 ```kotlin
-// ❌ BAD: Circular dependency
-class RepositoryA(private val repositoryB: RepositoryB)
-class RepositoryB(private val repositoryA: RepositoryA)
-
-// ✅ SOLUTION: Extract common interface
-interface DataSource
-class RepositoryA(private val dataSource: DataSource)
-class RepositoryB(private val dataSource: DataSource)
-```
-
-**Issue 2: Module Not Installed**
-```
-Error: Hilt dependency not found: RepositoryModule not installed
-
-// Check:
-// 1. @Module present on class/object?
-// 2. @InstallIn(SingletonComponent::class) present?
-// 3. Module in app/ module (not in library)?
-
-// Solution: Ensure all @Modules have @InstallIn
-```
-
-**Issue 3: ViewModel Not Injected**
-```kotlin
-// ❌ BAD
-@Composable
-fun MyScreen() {
-  val viewModel = TATTestViewModel(useCase, logger) // Manual creation
+val appInjectablesModule = module {
+    singleOf(::NotificationHelper)
+    singleOf(::TATAnalysisPipelineOrchestrator)
 }
-
-// ✅ GOOD
-@Composable
-fun MyScreen(
-  viewModel: TATTestViewModel = hiltViewModel() // Hilt injection
-)
 ```
 
----
+`singleOf(::Ctor)` resolves constructor params from the graph via reflection — no `@Inject`/`@Provides` annotations needed. Use `factoryOf` for non-singleton use cases. There are no ViewModels bound in `app` — `viewModelOf` bindings live entirely in `shared/*Module.kt`.
 
-## Best Practices
+## Testing
 
-1. **Provide interfaces, not implementations** — enables testing/swapping
-2. **Use @Singleton for stateless utilities** — shared across app
-3. **Use @Inject on constructor** — clearer dependency declaration
-4. **Avoid circular dependencies** — extract common abstraction
-5. **Test with HiltAndroidTest** — verifies DI setup
-6. **Keep modules focused** — one module per concern (Repos, UseCases, etc.)
-7. **Never create ViewModels manually** — always use `hiltViewModel()`
+`PlatformModuleCheckTest` (`app/src/test/kotlin/com/ssbmax/di/PlatformModuleCheckTest.kt`) constructs `appModules` for real via `koinApplication { modules(appModules) }.checkModules { ... }` — this is the safety net against a dangling dependency after adding or removing a binding. It mocks the Android statics (`FirebaseApp`/`WorkManager`/etc.) that can't run in a plain JVM test; read its class doc before adding a new binding that needs another Android singleton, so you extend the same pattern rather than reaching for Robolectric (every Robolectric test in this module is currently `@Ignore`d for an SDK 35 shadow mismatch).
 
----
+**Only stub what a real binding actually reads.** A stub kept "just in case" after its consumer is deleted is dead weight the next person has to re-investigate — trim it when you remove the module that needed it (see git history around the KMP-convergence Phase 6a `app/ui` deletion for the shape of this: an `imageModule`-only `ConnectivityManager`/`cacheDir` stub was left behind for a while after `imageModule` itself was deleted).
 
-## References
+## Anti-patterns
 
-- **Parent:** [app/CLAUDE.md](../CLAUDE.md) (ViewModel structure)
-- **Hilt Docs:** https://dagger.dev/hilt/
-- **Testing:** [docs/testing/](../../docs/testing/)
+- ❌ `@Module`/`@InstallIn`/`@Provides`/`@HiltViewModel` — this is Koin, not Hilt; none of these annotations exist in this codebase
+- ❌ Binding a ViewModel here — `app` has no ViewModels; they live in `shared`
+- ❌ A module that duplicates a binding `sharedModule` or `core:data`'s modules already provide
 
 ---
 
-**Last Updated:** June 2026 | **Maintainer:** Sunil Pawar
+**Last Updated:** 2026-08-01 | **Maintainer:** Sunil Pawar
