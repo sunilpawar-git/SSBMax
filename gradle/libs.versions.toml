@@ -84,6 +84,13 @@ coil3-network-ktor3 = { group = "io.coil-kt.coil3", name = "coil-network-ktor3",
 androidx-lifecycle-runtime-compose-kmp = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleKmp" }
 androidx-lifecycle-viewmodel-compose-kmp = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleKmp" }
 
+# Phase 3c (#12): commonMain `BackHandler` -- already resolved transitively via
+# compose.foundation's own `implementation` dependency, but that scope isn't
+# exposed to consumers, so it needs a direct declaration to be on `shared`'s
+# compile classpath. Version pinned to composeMultiplatform so it always
+# matches the rest of the Compose Multiplatform artifact set.
+compose-ui-backhandler = { group = "org.jetbrains.compose.ui", name = "ui-backhandler", version.ref = "composeMultiplatform" }
+
 # Compose BOM
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }

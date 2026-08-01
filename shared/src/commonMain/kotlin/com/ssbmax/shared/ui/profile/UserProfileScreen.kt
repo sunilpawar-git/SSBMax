@@ -26,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.EntryType
@@ -51,17 +53,14 @@ import ssbmax.shared.generated.resources.user_profile_title_onboarding
  * KMP port of the Android `app/.../ui/profile/UserProfileScreen.kt` — the
  * profile create/edit form (used both standalone and during onboarding).
  *
- * Deliberate deviation from the Android original: the
- * `androidx.activity.compose.BackHandler`-based "block back press while
- * onboarding and profile incomplete" behavior is dropped. That API isn't
- * part of the `androidx.navigation`/`androidx.compose` common-target surface
- * this graph otherwise relies on, and re-adding it would require a new
- * platform expect/actual shim for a single UX nicety (not a correctness
- * requirement — the caller-supplied `onNavigateBack` is still gated the same
- * way visually via the missing back button below). Named here, not silently
- * dropped.
+ * Phase 3c (#12): the Android original's `androidx.activity.compose.BackHandler`
+ * "block back press while onboarding and profile incomplete" guard is restored
+ * here using Compose Multiplatform's own commonMain
+ * `androidx.compose.ui.backhandler.BackHandler` (ships since 1.7.0; androidMain
+ * delegates to the platform back dispatcher, iosMain to the predictive-back
+ * gesture) — no custom expect/actual shim needed.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun UserProfileScreen(
     onNavigateBack: () -> Unit,
@@ -71,6 +70,10 @@ fun UserProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BackHandler(enabled = isOnboarding && uiState.profile == null) {
+        // Do nothing -- prevent back press during onboarding until profile is complete.
+    }
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {

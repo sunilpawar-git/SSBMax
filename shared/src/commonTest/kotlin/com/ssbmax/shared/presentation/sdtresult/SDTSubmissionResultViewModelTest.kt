@@ -10,6 +10,8 @@ import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
+import com.ssbmax.shared.presentation.testing.RecordingLogger
+import com.ssbmax.shared.presentation.testing.sequentialFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Characterization test, written before converting [SDTSubmissionResultViewModel]
@@ -94,6 +97,22 @@ class SDTSubmissionResultViewModelTest {
         val state = viewModel.uiState.value
         assertEquals(olq, state.submission?.olqResult)
         assertNotNull(state.ssbRecommendation)
+    }
+
+    @Test
+    fun `regression from COMPLETED to an earlier status is logged, not blocked`() = runTest(testDispatcher) {
+        repository.observeFlow = sequentialFlow(
+            submission(AnalysisStatus.COMPLETED),
+            submission(AnalysisStatus.PENDING_ANALYSIS)
+        )
+        val logger = RecordingLogger()
+        val viewModel = SDTSubmissionResultViewModel(repository, logger)
+
+        viewModel.loadSubmission("sub-1")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(logger.entries.any { it.level == "w" && it.message.contains("regressed") })
+        assertEquals(AnalysisStatus.PENDING_ANALYSIS, viewModel.uiState.value.analysisStatus)
     }
 }
 

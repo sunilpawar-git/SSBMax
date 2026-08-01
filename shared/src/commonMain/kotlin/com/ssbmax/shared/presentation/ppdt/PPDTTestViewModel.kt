@@ -3,6 +3,7 @@ package com.ssbmax.shared.presentation.ppdt
 import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.domain.repository.DifficultyProgressionRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
@@ -44,9 +45,9 @@ import kotlinx.datetime.Clock
  *   (debug bypass, Room usage mirror, `SecurityEventLogger` all dropped) as
  *   already documented on that use case and on `OIRTestViewModel`.
  * - `DifficultyProgressionManager.recordPerformance()` (Android `core:data`)
- *   dropped — no KMP port of that class exists yet (nothing in `shared`
- *   needed it before this session); it only affects adaptive-difficulty
- *   recommendations, not correctness of the submission itself.
+ *   is restored via [DifficultyProgressionRepository] (Phase 3c, #17) — backed
+ *   by [com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager],
+ *   a SQLDelight-backed KMP port of the same algorithm.
  * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only) dropped, same
  *   reasoning as `OIRTestViewModel`'s doc comment: `viewModelScope` already
  *   makes the leak class it targeted structurally impossible.
@@ -59,6 +60,7 @@ class PPDTTestViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val analysisTrigger: SubmissionAnalysisTrigger,
+    private val difficultyProgression: DifficultyProgressionRepository,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val tag = "PPDTTestViewModel"
@@ -191,6 +193,14 @@ class PPDTTestViewModel(
             submitPPDTTest(session)
                 .onSuccess { result ->
                     analysisTrigger.trigger(TestType.PPDT, result.submissionId)
+                    val isValid = session.story.length >= session.question.minCharacters
+                    val difficulty = difficultyProgression.getRecommendedDifficulty("PPDT")
+                    difficultyProgression.recordPerformance(
+                        testType = "PPDT", difficulty = difficulty,
+                        score = if (isValid) 100f else 0f,
+                        correctAnswers = if (isValid) 1 else 0, totalQuestions = 1,
+                        timeSeconds = (4 * 60).toFloat()
+                    )
                     _uiState.update {
                         it.copy(
                             session = session.copy(currentPhase = PPDTPhase.SUBMITTED, isCompleted = true),

@@ -38,6 +38,7 @@ import com.ssbmax.shared.data.repository.InterviewQuestionGenerator
 import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.repository.DifficultyProgressionRepository
 import com.ssbmax.shared.domain.repository.GradingQueueRepository
 import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.shared.domain.repository.InterviewRepository
@@ -94,7 +95,7 @@ val repositoryModule = module {
     singleOf(::GitLiveTestRepository) bind TestRepository::class
     singleOf(::GitLiveAnalyticsRepository) bind AnalyticsRepository::class
     singleOf(::GitLiveStudyContentRepository) bind StudyContentRepository::class
-    single { GitLiveDifficultyProgressionManager(get()) }
+    singleOf(::GitLiveDifficultyProgressionManager) bind DifficultyProgressionRepository::class
     single { GitLiveGTOTaskCacheManager(get()) }
     single { GitLiveWATWordCacheManager(get()) }
     single { GitLiveGPEImageCacheManager(get()) }

@@ -15,6 +15,7 @@ import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
+import com.ssbmax.shared.presentation.testing.FakeDifficultyProgressionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
@@ -52,6 +53,7 @@ class PPDTTestViewModelTest {
     private lateinit var userProfileRepository: FakeUserProfileRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
     private lateinit var analysisTrigger: FakeSubmissionAnalysisTrigger
+    private lateinit var difficultyProgression: FakeDifficultyProgressionRepository
 
     @BeforeTest
     fun setUp() {
@@ -65,6 +67,7 @@ class PPDTTestViewModelTest {
         userProfileRepository = FakeUserProfileRepository(initialProfile = profile())
         submissionRepository = FakeSubmissionRepository()
         analysisTrigger = FakeSubmissionAnalysisTrigger()
+        difficultyProgression = FakeDifficultyProgressionRepository()
     }
 
     @AfterTest
@@ -92,6 +95,7 @@ class PPDTTestViewModelTest {
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
         checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
         analysisTrigger = analysisTrigger,
+        difficultyProgression = difficultyProgression,
         logger = NoOpLogger()
     )
 
@@ -187,6 +191,25 @@ class PPDTTestViewModelTest {
         assertTrue(state.isSubmitted)
         assertNotNull(state.submissionId)
         assertEquals(1, analysisTrigger.triggered.size)
+    }
+
+    @Test
+    fun `submitTest records difficulty performance for a valid story`() = runTest(testDispatcher) {
+        difficultyProgression.recommendedDifficulty = "MEDIUM"
+        val viewModel = buildViewModel()
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateStory("A long enough story ".repeat(20))
+
+        viewModel.submitTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, difficultyProgression.recorded.size)
+        val recorded = difficultyProgression.recorded.single()
+        assertEquals("PPDT", recorded.testType)
+        assertEquals("MEDIUM", recorded.difficulty)
+        assertEquals(100f, recorded.score)
+        assertEquals(1, recorded.correctAnswers)
     }
 
     @Test

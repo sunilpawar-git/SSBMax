@@ -139,6 +139,29 @@ class FakeTestUsageRecorder : TestUsageRecorder {
     }
 }
 
+class FakeDifficultyProgressionRepository(
+    var recommendedDifficulty: String = "EASY"
+) : com.ssbmax.shared.domain.repository.DifficultyProgressionRepository {
+    data class RecordedPerformance(
+        val testType: String, val difficulty: String, val score: Float,
+        val correctAnswers: Int, val totalQuestions: Int, val timeSeconds: Float
+    )
+
+    val recorded = mutableListOf<RecordedPerformance>()
+
+    override suspend fun getRecommendedDifficulty(testType: String) = recommendedDifficulty
+
+    override suspend fun recordPerformance(
+        testType: String, difficulty: String, score: Float,
+        correctAnswers: Int, totalQuestions: Int, timeSeconds: Float
+    ) {
+        recorded += RecordedPerformance(testType, difficulty, score, correctAnswers, totalQuestions, timeSeconds)
+    }
+
+    override fun getPerformanceSummary(testType: String) = flowOf<com.ssbmax.shared.domain.model.TestPerformanceSummary?>(null)
+    override suspend fun resetPerformance(testType: String) = Unit
+}
+
 class FakeSubmissionAnalysisTrigger : com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger {
     val triggered = mutableListOf<Pair<TestType, String>>()
     /** Alias -- some call sites read `triggeredCalls`, others `triggered`; both refer to the same list. */
@@ -359,6 +382,21 @@ class RecordingLogger : DomainLogger {
     override fun w(tag: String, message: String) { entries += Entry("w", tag, message, null) }
     override fun i(tag: String, message: String) { entries += Entry("i", tag, message, null) }
     override fun v(tag: String, message: String) { entries += Entry("v", tag, message, null) }
+}
+
+/**
+ * Emits [values] back-to-back with no suspension between them, so a collector
+ * that cancels its own coroutine after the first value (the GTO-pattern
+ * "observe -> COMPLETED -> stop observing" ViewModels) still receives the
+ * rest synchronously -- `Job.cancel()` doesn't take effect until the next
+ * cancellable suspension point. Used by the Phase 3c (#16) regression-monitor
+ * tests to deterministically reproduce the conflicting-snapshot race the
+ * Android original guarded against.
+ */
+fun <T> sequentialFlow(vararg values: T): Flow<T> = object : Flow<T> {
+    override suspend fun collect(collector: kotlinx.coroutines.flow.FlowCollector<T>) {
+        for (value in values) collector.emit(value)
+    }
 }
 
 fun testUser(

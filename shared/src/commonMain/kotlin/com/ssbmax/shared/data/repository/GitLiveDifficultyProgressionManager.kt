@@ -2,6 +2,8 @@ package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.db.UserPerformance as UserPerformanceRow
+import com.ssbmax.shared.domain.model.TestPerformanceSummary
+import com.ssbmax.shared.domain.repository.DifficultyProgressionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
@@ -11,10 +13,14 @@ import kotlinx.datetime.Clock
  * UserPerformance local store that GitLiveAnalyticsRepository reads. Ported
  * in the same slice specifically so the read side isn't left pointing at a
  * table nothing ever populates on the KMP side.
+ *
+ * Phase 3c (#17): implements [DifficultyProgressionRepository] so
+ * [com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel] can depend on the
+ * domain interface rather than this concrete data-layer class.
  */
 class GitLiveDifficultyProgressionManager(
     private val database: SharedDatabase
-) {
+) : DifficultyProgressionRepository {
     private val queries get() = database.sharedDatabaseQueries
 
     companion object {
@@ -22,7 +28,7 @@ class GitLiveDifficultyProgressionManager(
         private const val ACCURACY_THRESHOLD = 80f
     }
 
-    suspend fun getRecommendedDifficulty(testType: String): String {
+    override suspend fun getRecommendedDifficulty(testType: String): String {
         val easyPerf = queries.selectPerformance(testType, "EASY").executeAsOneOrNull()
         val mediumPerf = queries.selectPerformance(testType, "MEDIUM").executeAsOneOrNull()
 
@@ -34,7 +40,7 @@ class GitLiveDifficultyProgressionManager(
         }
     }
 
-    suspend fun recordPerformance(
+    override suspend fun recordPerformance(
         testType: String,
         difficulty: String,
         score: Float,
@@ -88,7 +94,7 @@ class GitLiveDifficultyProgressionManager(
         )
     }
 
-    fun getPerformanceSummary(testType: String): Flow<TestPerformanceSummary?> = flow {
+    override fun getPerformanceSummary(testType: String): Flow<TestPerformanceSummary?> = flow {
         val performances = queries.selectPerformanceByTestType(testType).executeAsList()
         if (performances.isEmpty()) {
             emit(null)
@@ -120,7 +126,7 @@ class GitLiveDifficultyProgressionManager(
         )
     }
 
-    suspend fun resetPerformance(testType: String) {
+    override suspend fun resetPerformance(testType: String) {
         queries.deletePerformanceByTestType(testType)
     }
 
@@ -140,20 +146,3 @@ class GitLiveDifficultyProgressionManager(
         }
     }
 }
-
-/**
- * Performance summary for displaying to user -- same shape as the Android
- * original's TestPerformanceSummary (defined twice in the Android codebase,
- * once in UserPerformanceEntity.kt and once in DifficultyProgressionManager.kt;
- * this port only needs the one this manager actually returns).
- */
-data class TestPerformanceSummary(
-    val testType: String,
-    val currentDifficulty: String,
-    val easyAccuracy: Float,
-    val mediumAccuracy: Float,
-    val hardAccuracy: Float,
-    val totalTests: Int,
-    val overallAccuracy: Float,
-    val recommendedDifficulty: String
-)

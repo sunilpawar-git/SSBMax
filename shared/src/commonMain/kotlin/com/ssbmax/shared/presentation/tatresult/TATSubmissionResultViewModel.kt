@@ -25,7 +25,9 @@ import kotlinx.coroutines.launch
  *
  * Unlike the Android original (which parses a raw Firestore `Map<String,
  * Any>` snapshot by hand -- `parseTATSubmission`/`parseOLQResult`, ~120 lines
- * of manual `as?` casts), this port uses [SubmissionRepository.observeTATSubmission]
+ * of manual `as?` casts, plus a "prevent regression from COMPLETED+OLQ to
+ * incomplete state" guard against conflicting snapshots), this port uses
+ * [SubmissionRepository.observeTATSubmission]
  * / [SubmissionRepository.getTATResult], which already return typed
  * [TATSubmission]/[OLQAnalysisResult] domain models (the GitLive repository
  * impl does the Firestore decode internally -- see `GitLiveSubmissionRepository`,
@@ -55,6 +57,14 @@ class TATSubmissionResultViewModel(
     private val _uiState = MutableStateFlow(TATSubmissionResultUiState())
     val uiState: StateFlow<TATSubmissionResultUiState> = _uiState.asStateFlow()
 
+    // Phase 3c (#16): the Android original hard-guarded against a later snapshot
+    // regressing from COMPLETED back to an earlier status. This port's typed,
+    // single-writer GitLive repository (see class doc comment above) shouldn't
+    // be able to produce that sequence, so instead of re-porting the guard,
+    // this flag turns the assumption into a monitored one -- if the warning
+    // below never fires, the by-construction argument held.
+    private var hasSeenCompleted = false
+
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -64,6 +74,11 @@ class TATSubmissionResultViewModel(
                         _uiState.update { it.copy(isLoading = false, error = "Submission not found") }
                         return@collect
                     }
+                    if (hasSeenCompleted && submission.analysisStatus != AnalysisStatus.COMPLETED) {
+                        logger.w(tag, "Submission $submissionId regressed from COMPLETED to " +
+                            "${submission.analysisStatus} after result was already loaded")
+                    }
+                    if (submission.analysisStatus == AnalysisStatus.COMPLETED) hasSeenCompleted = true
                     _uiState.update { it.copy(isLoading = false, submission = submission) }
 
                     if (submission.analysisStatus == AnalysisStatus.COMPLETED) {

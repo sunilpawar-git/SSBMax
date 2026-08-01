@@ -46,6 +46,12 @@ class SRTSubmissionResultViewModel(
     private val _uiState = MutableStateFlow(SRTSubmissionResultUiState())
     val uiState: StateFlow<SRTSubmissionResultUiState> = _uiState.asStateFlow()
 
+    // Phase 3c (#16): turns this class's "cannot produce a conflicting
+    // snapshot" claim (doc comment above) into a monitored one instead of
+    // re-porting Android's guard -- if the warning below never fires, the
+    // by-construction argument held.
+    private var hasSeenCompleted = false
+
     fun loadSubmission(submissionId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -55,6 +61,11 @@ class SRTSubmissionResultViewModel(
                         _uiState.update { it.copy(isLoading = false, error = "Submission not found") }
                         return@collect
                     }
+                    if (hasSeenCompleted && submission.analysisStatus != AnalysisStatus.COMPLETED) {
+                        logger.w(tag, "Submission $submissionId regressed from COMPLETED to " +
+                            "${submission.analysisStatus} after result was already loaded")
+                    }
+                    if (submission.analysisStatus == AnalysisStatus.COMPLETED) hasSeenCompleted = true
                     _uiState.update { it.copy(isLoading = false, submission = submission) }
 
                     if (submission.analysisStatus == AnalysisStatus.COMPLETED) {

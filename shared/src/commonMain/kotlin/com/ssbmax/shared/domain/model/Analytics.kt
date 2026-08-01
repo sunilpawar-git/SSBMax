@@ -69,6 +69,21 @@ data class ProgressionStatus(
 )
 
 /**
+ * Difficulty-progression summary for a single test type, as returned by
+ * [com.ssbmax.shared.domain.repository.DifficultyProgressionRepository.getPerformanceSummary].
+ */
+data class TestPerformanceSummary(
+    val testType: String,
+    val currentDifficulty: String,
+    val easyAccuracy: Float,
+    val mediumAccuracy: Float,
+    val hardAccuracy: Float,
+    val totalTests: Int,
+    val overallAccuracy: Float,
+    val recommendedDifficulty: String
+)
+
+/**
  * Category-wise performance breakdown
  */
 data class CategoryPerformance(

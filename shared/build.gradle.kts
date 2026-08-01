@@ -78,6 +78,10 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            // Phase 3c (#12): commonMain `BackHandler` -- see the version
+            // catalog entry's own comment for why this needs a direct
+            // declaration.
+            implementation(libs.compose.ui.backhandler)
             // Phase 5: Login/RoleSelection need Icons.AutoMirrored.Filled.Login /
             // Icons.Default.{School,Groups}, which aren't in the small default
             // icon set bundled with compose.material3 -- this is the JetBrains
