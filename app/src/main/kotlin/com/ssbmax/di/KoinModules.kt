@@ -22,6 +22,22 @@ import com.ssbmax.shared.di.sharedModule
  * too — per this phase's scope, `app` still depends on both `:shared` and
  * `:core:data` side by side (not yet rewired to consume only `:shared`,
  * that's Phase 5 territory), so both graphs must be live at once.
+ *
+ * KMP-convergence Phase 6a: `viewModelModule` removed (its file, and every
+ * ViewModel it bound, deleted along with `app/ui` — nothing reaches them at
+ * runtime post-cutover). `authUseCaseModule`/`studyUseCaseModule`/
+ * `submissionUseCaseModule`/`subscriptionUseCaseModule`/`clockModule`/
+ * `gtoTestModule`/`imageModule` removed too — each bound only classes that
+ * were, in turn, only ever consumed by the deleted `app/ui` ViewModels
+ * (confirmed by grep against the surviving `app/workers`/`app/notifications`/
+ * `MainActivity`/`SSBMaxApplication` before removing each one; none matched).
+ * `testUseCaseModule`/`debugModule`/`workManagerModule`/`appInjectablesModule`
+ * stay — each binds at least one class `app/workers` genuinely still needs
+ * (`GetOLQDashboardUseCase`, `DebugConfig` transitively via
+ * `SubscriptionManager`, `SubmissionAnalysisTrigger`/`BackgroundTaskScheduler`,
+ * and `TATAnalysisPipelineOrchestrator`/`TATAnalysisWorkPlanner`/
+ * `NotificationHelper` respectively — `appInjectablesModule` itself was
+ * trimmed of its other, now-dead bindings, see its own file).
  */
 val appModules = listOf(
     // :shared (KMP)
@@ -38,16 +54,8 @@ val appModules = listOf(
     coreDataInjectablesModule,
 
     // :app
-    authUseCaseModule,
-    studyUseCaseModule,
-    submissionUseCaseModule,
-    subscriptionUseCaseModule,
     testUseCaseModule,
-    clockModule,
     debugModule,
-    gtoTestModule,
-    imageModule,
     workManagerModule,
-    appInjectablesModule,
-    viewModelModule
+    appInjectablesModule
 )
