@@ -57,22 +57,22 @@ object TestResultHandler {
         testType: TestType,
         navController: NavController
     ) {
-        val route = when (testType) {
-            TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(submissionId)
-            TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)
-            TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)
-            TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)
-            TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)
-            TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)
-            TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)
-            TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(submissionId)
-            TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)
-            TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)
-            else -> SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)
+        val destination = when (testType) {
+            TestType.OIR -> SSBMaxDestinations.OIRTestResult(submissionId)
+            TestType.TAT -> SSBMaxDestinations.TATSubmissionResult(submissionId)
+            TestType.WAT -> SSBMaxDestinations.WATSubmissionResult(submissionId)
+            TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult(submissionId)
+            TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult(submissionId)
+            TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult(submissionId)
+            TestType.SD -> SSBMaxDestinations.SDSubmissionResult(submissionId)
+            TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult(submissionId)
+            TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult(submissionId)
+            TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult(submissionId)
+            else -> SSBMaxDestinations.SubmissionDetail(submissionId)
         }
 
-        navController.navigate(route) {
-            popUpTo(SSBMaxDestinations.StudentHome.route) { saveState = false }
+        navController.navigate(destination) {
+            popUpTo<SSBMaxDestinations.StudentHome> { saveState = false }
         }
     }
 
@@ -80,8 +80,8 @@ object TestResultHandler {
         submissionId: String,
         navController: NavController
     ) {
-        navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId)) {
-            popUpTo(SSBMaxDestinations.StudentHome.route) { saveState = false }
+        navController.navigate(SSBMaxDestinations.SubmissionDetail(submissionId)) {
+            popUpTo<SSBMaxDestinations.StudentHome> { saveState = false }
         }
     }
 }

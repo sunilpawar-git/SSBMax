@@ -1,12 +1,14 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.createGraph
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -19,6 +21,11 @@ import org.robolectric.RuntimeEnvironment
  * hold their content lambda uninvoked until actually rendered, so this only
  * exercises route *registration and matching*, exactly what these rows are
  * about.
+ *
+ * Phase 3d: rewritten against the type-safe `composable<T>()`/`navigate<T>()`
+ * API -- `navController.currentDestination?.route` no longer holds the old
+ * "topic/{topicId}"-shaped string (it holds a pattern generated from the
+ * destination's KClass instead), so assertions use `hasRoute<T>()`/`toRoute<T>()`.
  *
  * Lives in `androidUnitTest`, not `commonTest` (same precedent as
  * [com.ssbmax.shared.ui.theme.SSBMaxThemeUiTest]): on the Android target,
@@ -46,57 +53,51 @@ class Phase3aNavigationTest {
     @Test
     fun topicScreen_withSelectedTab_resolvesAndCarriesTheArg() {
         val navController = buildController()
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             studyContentGraph(navController)
         }
         navController.graph = graph
 
-        navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("OIR") + "?selectedTab=2")
+        navController.navigate(SSBMaxDestinations.TopicScreen("OIR", selectedTab = 2))
 
-        assertEquals(
-            SSBMaxDestinations.TopicScreen.route + "?selectedTab={selectedTab}",
-            navController.currentDestination?.route
-        )
-        val selectedTab = navController.currentBackStackEntry?.arguments?.read { getIntOrNull("selectedTab") }
-        assertEquals(2, selectedTab)
+        assertTrue(navController.currentDestination?.hasRoute<SSBMaxDestinations.TopicScreen>() == true)
+        val route = navController.currentBackStackEntry?.toRoute<SSBMaxDestinations.TopicScreen>()
+        assertEquals(2, route?.selectedTab)
     }
 
     // Same destination must still resolve with no query param at all (every
-    // other caller of TopicScreen.createRoute doesn't pass one), defaulting
+    // other caller of TopicScreen(...) doesn't pass one), defaulting
     // selectedTab to the Overview tab (0).
     @Test
     fun topicScreen_withoutSelectedTab_defaultsToOverviewTab() {
         val navController = buildController()
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             studyContentGraph(navController)
         }
         navController.graph = graph
 
-        navController.navigate(SSBMaxDestinations.TopicScreen.createRoute("OIR"))
+        navController.navigate(SSBMaxDestinations.TopicScreen("OIR"))
 
-        assertEquals(
-            SSBMaxDestinations.TopicScreen.route + "?selectedTab={selectedTab}",
-            navController.currentDestination?.route
-        )
-        val selectedTab = navController.currentBackStackEntry?.arguments?.read { getIntOrNull("selectedTab") }
-        assertEquals(0, selectedTab)
+        assertTrue(navController.currentDestination?.hasRoute<SSBMaxDestinations.TopicScreen>() == true)
+        val route = navController.currentBackStackEntry?.toRoute<SSBMaxDestinations.TopicScreen>()
+        assertEquals(0, route?.selectedTab)
     }
 
     // Row #9: `student/study` (the BottomNavItem) was never registered.
     @Test
     fun studentStudy_bottomNavRoute_resolves() {
         val navController = buildController()
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             studyContentGraph(navController)
         }
         navController.graph = graph
 
-        navController.navigate(SSBMaxDestinations.StudentStudy.route)
+        navController.navigate(SSBMaxDestinations.StudentStudy)
 
-        assertEquals(SSBMaxDestinations.StudentStudy.route, navController.currentDestination?.route)
+        assertTrue(navController.currentDestination?.hasRoute<SSBMaxDestinations.StudentStudy>() == true)
     }
 
     // Row #11: `batch/join` was unregistered in both graphs, yet both drawers
@@ -104,15 +105,15 @@ class Phase3aNavigationTest {
     @Test
     fun joinBatch_route_resolvesInsteadOfCrashing() {
         val navController = buildController()
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             submissionsResultsGraph(navController)
         }
         navController.graph = graph
 
-        navController.navigate(SSBMaxDestinations.JoinBatch.route)
+        navController.navigate(SSBMaxDestinations.JoinBatch)
 
-        assertEquals(SSBMaxDestinations.JoinBatch.route, navController.currentDestination?.route)
+        assertTrue(navController.currentDestination?.hasRoute<SSBMaxDestinations.JoinBatch>() == true)
     }
 
     // Characterizes the pre-fix state for row #11: navigating to an
@@ -122,14 +123,14 @@ class Phase3aNavigationTest {
     @Test
     fun joinBatch_withoutRegistration_wouldHaveThrown() {
         val navController = buildController()
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             // submissionsResultsGraph deliberately omitted here
         }
         navController.graph = graph
 
         assertFailsWith<IllegalArgumentException> {
-            navController.navigate(SSBMaxDestinations.JoinBatch.route)
+            navController.navigate(SSBMaxDestinations.JoinBatch)
         }
     }
 }

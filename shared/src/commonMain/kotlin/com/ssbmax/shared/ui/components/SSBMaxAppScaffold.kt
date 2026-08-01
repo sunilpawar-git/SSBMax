@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ssbmax.navigation.SSBMaxDestinations
 import com.ssbmax.shared.domain.model.UserRole
@@ -64,9 +65,26 @@ fun SSBMaxAppScaffold(
     content: @Composable (onOpenDrawer: () -> Unit) -> Unit
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route ?: ""
+    val currentDestination = currentBackStackEntry?.destination
 
-    val showChrome = currentRoute !in AUTH_ROUTES
+    // Type-safe routes (KMP-convergence Phase 3d) no longer expose the old
+    // "student/home"-shaped strings via `destination.route` -- that now holds
+    // the pattern generated from the destination's KClass. `currentRoute`
+    // here is reconstructed from the legacy `SSBMaxDestinations.*.route`
+    // constants purely for `SSBMaxDrawer`/`DrawerContent`'s existing
+    // `.contains(...)` highlighting checks, which don't touch the nav graph.
+    val currentRoute = when {
+        currentDestination?.hasRoute<SSBMaxDestinations.StudentHome>() == true -> SSBMaxDestinations.StudentHome.route
+        currentDestination?.hasRoute<SSBMaxDestinations.InstructorHome>() == true -> SSBMaxDestinations.InstructorHome.route
+        currentDestination?.hasRoute<SSBMaxDestinations.Settings>() == true -> SSBMaxDestinations.Settings.route
+        else -> ""
+    }
+
+    val showChrome = currentDestination?.let {
+        !it.hasRoute<SSBMaxDestinations.Splash>() &&
+            !it.hasRoute<SSBMaxDestinations.Login>() &&
+            !it.hasRoute<SSBMaxDestinations.RoleSelection>()
+    } ?: false
 
     if (!showChrome) {
         // Splash/Login/RoleSelection render full-bleed, no drawer/bottom bar --
@@ -101,9 +119,9 @@ fun SSBMaxAppScaffold(
                     onNavigateToHome = {
                         scope.launch { drawerState.close() }
                         val home = if (userRole.isInstructor && !userRole.isStudent) {
-                            SSBMaxDestinations.InstructorHome.route
+                            SSBMaxDestinations.InstructorHome
                         } else {
-                            SSBMaxDestinations.StudentHome.route
+                            SSBMaxDestinations.StudentHome
                         }
                         navController.navigate(home) {
                             // popUpTo the concrete home route, not
@@ -123,23 +141,23 @@ fun SSBMaxAppScaffold(
                     },
                     onNavigateToTopic = { topicId ->
                         scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                        navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
                     },
                     onNavigateToSSBOverview = {
                         scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.SSBOverview.route)
+                        navController.navigate(SSBMaxDestinations.SSBOverview)
                     },
                     onNavigateToMyBatches = {
                         scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.JoinBatch.route)
+                        navController.navigate(SSBMaxDestinations.JoinBatch)
                     },
                     onNavigateToSettings = {
                         scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.Settings.route)
+                        navController.navigate(SSBMaxDestinations.Settings)
                     },
                     onEditProfile = {
                         scope.launch { drawerState.close() }
-                        navController.navigate(SSBMaxDestinations.UserProfile.route)
+                        navController.navigate(SSBMaxDestinations.UserProfile())
                     },
                     onTogglePhase1 = { phase1Expanded = !phase1Expanded },
                     onTogglePhase2 = { phase2Expanded = !phase2Expanded },
@@ -147,7 +165,7 @@ fun SSBMaxAppScaffold(
                         scope.launch {
                             drawerState.close()
                             authRepository.signOut()
-                            navController.navigate(SSBMaxDestinations.Login.route) {
+                            navController.navigate(SSBMaxDestinations.Login) {
                                 popUpTo(0) { inclusive = true }
                             }
                         }
@@ -163,9 +181,3 @@ fun SSBMaxAppScaffold(
         }
     }
 }
-
-private val AUTH_ROUTES = setOf(
-    SSBMaxDestinations.Splash.route,
-    SSBMaxDestinations.Login.route,
-    SSBMaxDestinations.RoleSelection.route
-)

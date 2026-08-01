@@ -9,61 +9,61 @@ import com.ssbmax.shared.ui.auth.RoleSelectionScreen
 import com.ssbmax.shared.ui.splash.SplashScreen
 
 fun NavGraphBuilder.authGraph(navController: NavHostController) {
-    composable(SSBMaxDestinations.Splash.route) {
+    composable<SSBMaxDestinations.Splash> {
         SplashScreen(
             onNavigateToLogin = {
-                navController.navigate(SSBMaxDestinations.Login.route) {
-                    popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.Login) {
+                    popUpTo<SSBMaxDestinations.Splash> { inclusive = true }
                 }
             },
             onNavigateToHome = { isStudent ->
                 val destination = if (isStudent) {
-                    SSBMaxDestinations.StudentHome.route
+                    SSBMaxDestinations.StudentHome
                 } else {
-                    SSBMaxDestinations.InstructorHome.route
+                    SSBMaxDestinations.InstructorHome
                 }
                 navController.navigate(destination) {
-                    popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                    popUpTo<SSBMaxDestinations.Splash> { inclusive = true }
                 }
             },
             onNavigateToRoleSelection = {
-                navController.navigate(SSBMaxDestinations.RoleSelection.route) {
-                    popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.RoleSelection) {
+                    popUpTo<SSBMaxDestinations.Splash> { inclusive = true }
                 }
             },
             onNavigateToProfileOnboarding = {
                 // UserProfileScreen isn't ported yet (Phase 5 continuation) --
                 // land on the honest placeholder rather than silently dropping
                 // the onboarding step.
-                navController.navigate(SSBMaxDestinations.UserProfile.route) {
-                    popUpTo(SSBMaxDestinations.Splash.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.UserProfile()) {
+                    popUpTo<SSBMaxDestinations.Splash> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(SSBMaxDestinations.Login.route) {
+    composable<SSBMaxDestinations.Login> {
         LoginScreen(
             onLoginSuccess = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.Login.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.Login> { inclusive = true }
                 }
             },
             onNeedsRoleSelection = {
-                navController.navigate(SSBMaxDestinations.RoleSelection.route)
+                navController.navigate(SSBMaxDestinations.RoleSelection)
             }
         )
     }
 
-    composable(SSBMaxDestinations.RoleSelection.route) {
+    composable<SSBMaxDestinations.RoleSelection> {
         RoleSelectionScreen(
             onRoleSelected = { role ->
                 val destination = when {
-                    role == UserRole.INSTRUCTOR -> SSBMaxDestinations.InstructorHome.route
-                    else -> SSBMaxDestinations.StudentHome.route
+                    role == UserRole.INSTRUCTOR -> SSBMaxDestinations.InstructorHome
+                    else -> SSBMaxDestinations.StudentHome
                 }
                 navController.navigate(destination) {
-                    popUpTo(SSBMaxDestinations.RoleSelection.route) { inclusive = true }
+                    popUpTo<SSBMaxDestinations.RoleSelection> { inclusive = true }
                 }
             }
         )

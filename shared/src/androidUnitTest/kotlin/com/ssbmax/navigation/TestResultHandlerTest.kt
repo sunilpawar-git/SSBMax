@@ -1,12 +1,14 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.createGraph
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TestType
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -16,8 +18,14 @@ import org.robolectric.RuntimeEnvironment
  * test-type routing decision, the exact thing `app/.../TestResultHandler.kt`
  * did for FREE/PRO users on SRT/SD (pending manual grading) vs every other
  * test type (immediate AI/no-grading result, regardless of tier). Same
- * Robolectric/androidUnitTest precedent as [Phase3aNavigationTest]:
- * `NavHostController` needs a real `Context` on the Android target.
+ * Robolectric/androidUnitTest precedent as [Phase3aNavigationTest].
+ *
+ * Phase 3d: assertions moved from comparing `currentDestination?.route`
+ * strings to `hasRoute<T>()` -- type-safe routes generate that string from
+ * the destination's KClass now, not from `SSBMaxDestinations`'s legacy
+ * pattern constants. Each matrix row pairs a description with an inline
+ * `hasRoute<T>()` check (reified, so it can't be looked up dynamically by a
+ * shared KClass value the way the old string comparison could).
  */
 @RunWith(RobolectricTestRunner::class)
 class TestResultHandlerTest {
@@ -25,7 +33,7 @@ class TestResultHandlerTest {
     private fun buildController(): NavHostController {
         val navController = NavHostController(RuntimeEnvironment.getApplication())
         navController.navigatorProvider.addNavigator(ComposeNavigator())
-        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome.route) {
+        val graph = navController.createGraph(startDestination = SSBMaxDestinations.StudentHome) {
             homeGraph(navController, onOpenDrawer = {})
             psychTestsGraph(navController)
             writtenTestsGraph(navController)
@@ -38,18 +46,18 @@ class TestResultHandlerTest {
 
     // SRT/SD are the only two test types actually gated by subscriptionType --
     // FREE/PRO wait for manual grading, PREMIUM gets the immediate result.
-    private val gatedMatrix = listOf(
-        Triple(SubscriptionType.FREE, TestType.SRT, SSBMaxDestinations.SubmissionDetail.route),
-        Triple(SubscriptionType.PRO, TestType.SRT, SSBMaxDestinations.SubmissionDetail.route),
-        Triple(SubscriptionType.PREMIUM, TestType.SRT, SSBMaxDestinations.SRTSubmissionResult.route),
-        Triple(SubscriptionType.FREE, TestType.SD, SSBMaxDestinations.SubmissionDetail.route),
-        Triple(SubscriptionType.PRO, TestType.SD, SSBMaxDestinations.SubmissionDetail.route),
-        Triple(SubscriptionType.PREMIUM, TestType.SD, SSBMaxDestinations.SDSubmissionResult.route)
+    private val gatedMatrix: List<Triple<SubscriptionType, TestType, (NavDestination?) -> Boolean>> = listOf(
+        Triple(SubscriptionType.FREE, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionType.PRO, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionType.PREMIUM, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SRTSubmissionResult>() == true },
+        Triple(SubscriptionType.FREE, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionType.PRO, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionType.PREMIUM, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SDSubmissionResult>() == true }
     )
 
     @Test
     fun srtAndSd_routeBySubscriptionTier() {
-        gatedMatrix.forEach { (subscriptionType, testType, expectedRoute) ->
+        gatedMatrix.forEach { (subscriptionType, testType, landedOnExpected) ->
             val navController = buildController()
             TestResultHandler.handleTestSubmission(
                 submissionId = "sub-1",
@@ -57,10 +65,9 @@ class TestResultHandlerTest {
                 testType = testType,
                 navController = navController
             )
-            assertEquals(
-                expectedRoute,
-                navController.currentDestination?.route,
-                "expected $subscriptionType/$testType to land on $expectedRoute"
+            assertTrue(
+                landedOnExpected(navController.currentDestination),
+                "expected $subscriptionType/$testType to land on the gated destination, was on ${navController.currentDestination?.route}"
             )
         }
     }
@@ -68,20 +75,20 @@ class TestResultHandlerTest {
     // The remaining 8 test types bypass the subscription check entirely --
     // spot-checked at FREE tier (the tier where SRT/SD above diverge) to prove
     // the special case short-circuits before the subscription `when`.
-    private val alwaysDirectMatrix = listOf(
-        TestType.OIR to SSBMaxDestinations.OIRTestResult.route,
-        TestType.PPDT to SSBMaxDestinations.PPDTSubmissionResult.route,
-        TestType.TAT to SSBMaxDestinations.TATSubmissionResult.route,
-        TestType.WAT to SSBMaxDestinations.WATSubmissionResult.route,
-        TestType.PIQ to SSBMaxDestinations.PIQSubmissionResult.route,
-        TestType.GTO_GD to SSBMaxDestinations.GTOGDResult.route,
-        TestType.GTO_LECTURETTE to SSBMaxDestinations.GTOLecturetteResult.route,
-        TestType.GTO_GPE to SSBMaxDestinations.GTOGPEResult.route
+    private val alwaysDirectMatrix: List<Pair<TestType, (NavDestination?) -> Boolean>> = listOf(
+        TestType.OIR to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.OIRTestResult>() == true },
+        TestType.PPDT to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.PPDTSubmissionResult>() == true },
+        TestType.TAT to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.TATSubmissionResult>() == true },
+        TestType.WAT to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.WATSubmissionResult>() == true },
+        TestType.PIQ to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.PIQSubmissionResult>() == true },
+        TestType.GTO_GD to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.GTOGDResult>() == true },
+        TestType.GTO_LECTURETTE to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.GTOLecturetteResult>() == true },
+        TestType.GTO_GPE to { d: NavDestination? -> d?.hasRoute<SSBMaxDestinations.GTOGPEResult>() == true }
     )
 
     @Test
     fun everyOtherTestType_ignoresSubscriptionTier_evenOnFree() {
-        alwaysDirectMatrix.forEach { (testType, expectedRoute) ->
+        alwaysDirectMatrix.forEach { (testType, landedOnExpected) ->
             val navController = buildController()
             TestResultHandler.handleTestSubmission(
                 submissionId = "sub-2",
@@ -89,10 +96,9 @@ class TestResultHandlerTest {
                 testType = testType,
                 navController = navController
             )
-            assertEquals(
-                expectedRoute,
-                navController.currentDestination?.route,
-                "expected FREE/$testType to bypass gating and land on $expectedRoute"
+            assertTrue(
+                landedOnExpected(navController.currentDestination),
+                "expected FREE/$testType to bypass gating, was on ${navController.currentDestination?.route}"
             )
         }
     }
@@ -109,6 +115,6 @@ class TestResultHandlerTest {
             testType = TestType.IO,
             navController = navController
         )
-        assertEquals(SSBMaxDestinations.SubmissionDetail.route, navController.currentDestination?.route)
+        assertTrue(navController.currentDestination?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true)
     }
 }

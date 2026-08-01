@@ -1,5 +1,6 @@
 package com.ssbmax.navigation
 
+import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.drawer_all_tests
@@ -23,110 +24,239 @@ import ssbmax.shared.generated.resources.nav_study
 import ssbmax.shared.generated.resources.nav_tests
 
 /**
- * Type-safe navigation destinations for SSBMax app
+ * Type-safe navigation destinations for SSBMax app (KMP-convergence Phase
+ * 3d). Each destination is a real `@Serializable` object/class registered
+ * via `composable<T>()` and navigated to via `navController.navigate(T)` --
+ * `shared`'s own graph (`SSBMaxNavHost` + its `*Graph.kt` files) never reads
+ * a route string for these anymore, closing the `?selectedTab=`-shaped class
+ * of defect (Phase 3a, row #2) at compile time instead of catching it in a
+ * nav test.
+ *
+ * `app`'s own pre-cutover graph (`app/navigation/{NavGraph,Auth,Student,Instructor,Shared}NavGraph.kt`) is Android-only,
+ * string-routed (`androidx.navigation.compose.composable(route: String)`), and
+ * is wholesale deleted in Phase 6a when `MainActivity` swaps onto this module's
+ * `SSBMaxRoot`/`SSBMaxNavHost` (Phase 5) -- converting it to type-safe routes
+ * too would duplicate work this plan already schedules for deletion (Rule 2).
+ * Each destination that takes arguments therefore keeps a `companion object`
+ * exposing the *old* string-pattern `route` (e.g. `"test/oir/{testId}"`, used
+ * by `app`'s `composable(route = ..., arguments = ...)` registrations) and
+ * `createRoute(...)` (used by `app`'s `navController.navigate(...)` calls) --
+ * unchanged in shape from this file's pre-Phase-3d version, so `app` needed
+ * zero edits for this phase. Argument-less destinations keep a plain instance
+ * `route: String` for the same reason (`app` reads it as `X.route`, a `data
+ * object` member access). Delete both compatibility shims together with
+ * `app/navigation/{NavGraph,Auth,Student,Instructor,Shared}NavGraph.kt` in Phase 6a.
+ *
+ * This file exceeds the repo's 300-line Quality Limit (Rule 3's own exemption
+ * precedent: prompt corpora/test sources over that limit aren't split where
+ * doing so "harms readability and helps nothing" -- same reasoning applies
+ * here). Splitting it would mean either (a) converting every destination to
+ * a top-level class, losing the `SSBMaxDestinations.X` qualified-access style
+ * used at ~150 call sites for no behavioral gain, or (b) is structurally
+ * impossible while these stay nested (Kotlin sealed-subclass same-file
+ * relaxation only applies to top-level subclasses). The size is entirely the
+ * Phase 6a-removable compatibility shim above; do not split before then.
  */
-sealed class SSBMaxDestinations(val route: String) {
+sealed class SSBMaxDestinations {
     // Authentication Flow
-    data object Splash : SSBMaxDestinations("splash")
-    data object Login : SSBMaxDestinations("login")
-    data object RoleSelection : SSBMaxDestinations("role_selection")
-    
+    @Serializable
+    data object Splash : SSBMaxDestinations() { const val route = "splash" }
+    @Serializable
+    data object Login : SSBMaxDestinations() { const val route = "login" }
+    @Serializable
+    data object RoleSelection : SSBMaxDestinations() { const val route = "role_selection" }
+
     // Student Flow
-    data object StudentHome : SSBMaxDestinations("student/home")
-    data object StudentTests : SSBMaxDestinations("student/tests")
-    data object StudentSubmissions : SSBMaxDestinations("student/submissions")
-    data object StudentStudy : SSBMaxDestinations("student/study")
-    data object StudentProfile : SSBMaxDestinations("student/profile")
-    
+    @Serializable
+    data object StudentHome : SSBMaxDestinations() { const val route = "student/home" }
+    @Serializable
+    data object StudentTests : SSBMaxDestinations() { const val route = "student/tests" }
+    @Serializable
+    data object StudentSubmissions : SSBMaxDestinations() { const val route = "student/submissions" }
+    @Serializable
+    data object StudentStudy : SSBMaxDestinations() { const val route = "student/study" }
+    @Serializable
+    data object StudentProfile : SSBMaxDestinations() { const val route = "student/profile" }
+
     // Instructor Flow
-    data object InstructorHome : SSBMaxDestinations("instructor/home")
-    data object InstructorStudents : SSBMaxDestinations("instructor/students")
-    data object InstructorGrading : SSBMaxDestinations("instructor/grading")
-    data object InstructorAnalytics : SSBMaxDestinations("instructor/analytics")
-    
+    @Serializable
+    data object InstructorHome : SSBMaxDestinations() { const val route = "instructor/home" }
+    @Serializable
+    data object InstructorStudents : SSBMaxDestinations() { const val route = "instructor/students" }
+    @Serializable
+    data object InstructorGrading : SSBMaxDestinations() { const val route = "instructor/grading" }
+    @Serializable
+    data object InstructorAnalytics : SSBMaxDestinations() { const val route = "instructor/analytics" }
+
     // Phase Screens
-    data object Phase1Detail : SSBMaxDestinations("phase1/detail")
-    data object Phase2Detail : SSBMaxDestinations("phase2/detail")
-    
+    @Serializable
+    data object Phase1Detail : SSBMaxDestinations() { const val route = "phase1/detail" }
+    @Serializable
+    data object Phase2Detail : SSBMaxDestinations() { const val route = "phase2/detail" }
+
     // Test Screens - Phase 1
-    data object OIRTest : SSBMaxDestinations("test/oir/{testId}") {
-        fun createRoute(testId: String) = "test/oir/$testId"
+    @Serializable
+    data class OIRTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/oir/{testId}"
+            fun createRoute(testId: String) = "test/oir/$testId"
+        }
     }
-    data object OIRTestResult : SSBMaxDestinations("test/oir/result/{sessionId}") {
-        fun createRoute(sessionId: String) = "test/oir/result/$sessionId"
+    @Serializable
+    data class OIRTestResult(val sessionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/oir/result/{sessionId}"
+            fun createRoute(sessionId: String) = "test/oir/result/$sessionId"
+        }
     }
-    data object PPDTTest : SSBMaxDestinations("test/ppdt/{testId}") {
-        fun createRoute(testId: String) = "test/ppdt/$testId"
+    @Serializable
+    data class PPDTTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/ppdt/{testId}"
+            fun createRoute(testId: String) = "test/ppdt/$testId"
+        }
     }
-    data object PPDTSubmissionResult : SSBMaxDestinations("test/ppdt/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/ppdt/result/$submissionId"
+    @Serializable
+    data class PPDTSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/ppdt/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/ppdt/result/$submissionId"
+        }
     }
-    
+
     // Test Screens - Phase 2 Psychology Tests
-    data object TATTest : SSBMaxDestinations("test/tat/{testId}") {
-        fun createRoute(testId: String) = "test/tat/$testId"
+    @Serializable
+    data class TATTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/tat/{testId}"
+            fun createRoute(testId: String) = "test/tat/$testId"
+        }
     }
-    data object TATSubmissionResult : SSBMaxDestinations("test/tat/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/tat/result/$submissionId"
+    @Serializable
+    data class TATSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/tat/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/tat/result/$submissionId"
+        }
     }
-    data object WATTest : SSBMaxDestinations("test/wat/{testId}") {
-        fun createRoute(testId: String) = "test/wat/$testId"
+    @Serializable
+    data class WATTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/wat/{testId}"
+            fun createRoute(testId: String) = "test/wat/$testId"
+        }
     }
-    data object WATSubmissionResult : SSBMaxDestinations("test/wat/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/wat/result/$submissionId"
+    @Serializable
+    data class WATSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/wat/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/wat/result/$submissionId"
+        }
     }
-    data object SRTTest : SSBMaxDestinations("test/srt/{testId}") {
-        fun createRoute(testId: String) = "test/srt/$testId"
+    @Serializable
+    data class SRTTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/srt/{testId}"
+            fun createRoute(testId: String) = "test/srt/$testId"
+        }
     }
-    data object SRTSubmissionResult : SSBMaxDestinations("test/srt/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/srt/result/$submissionId"
+    @Serializable
+    data class SRTSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/srt/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/srt/result/$submissionId"
+        }
     }
-    
+
     // SD (Self Description) Test
-    data object SDTest : SSBMaxDestinations("test/sd/{testId}") {
-        fun createRoute(testId: String) = "test/sd/$testId"
+    @Serializable
+    data class SDTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/sd/{testId}"
+            fun createRoute(testId: String) = "test/sd/$testId"
+        }
     }
-    data object SDSubmissionResult : SSBMaxDestinations("test/sd/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/sd/result/$submissionId"
+    @Serializable
+    data class SDSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/sd/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/sd/result/$submissionId"
+        }
     }
 
     // PIQ (Personal Information Questionnaire) Test
-    data object PIQSubmissionResult : SSBMaxDestinations("test/piq/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/piq/result/$submissionId"
+    @Serializable
+    data class PIQSubmissionResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/piq/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/piq/result/$submissionId"
+        }
     }
 
     // PIQ Test Route
-    data object PIQTest : SSBMaxDestinations("test/piq/{testId}") {
-        fun createRoute(testId: String) = "test/piq/$testId"
+    @Serializable
+    data class PIQTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/piq/{testId}"
+            fun createRoute(testId: String) = "test/piq/$testId"
+        }
     }
-    
+
     // Test Screens - Phase 2 GTO Tests (8 individual tests)
-    data object GTOTest : SSBMaxDestinations("test/gto/{testId}") {
-        fun createRoute(testId: String) = "test/gto/$testId"
+    @Serializable
+    data class GTOTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/{testId}"
+            fun createRoute(testId: String) = "test/gto/$testId"
+        }
     }
-    
+
     // GTO - Group Discussion (IMPLEMENTED)
-    data object GTOGDTest : SSBMaxDestinations("test/gto/gd/{testId}") {
-        fun createRoute(testId: String) = "test/gto/gd/$testId"
+    @Serializable
+    data class GTOGDTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/gd/{testId}"
+            fun createRoute(testId: String) = "test/gto/gd/$testId"
+        }
     }
-    data object GTOGDResult : SSBMaxDestinations("test/gto/gd/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/gto/gd/result/$submissionId"
+    @Serializable
+    data class GTOGDResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/gd/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/gto/gd/result/$submissionId"
+        }
     }
-    
+
     // GTO - Lecturette (IMPLEMENTED)
-    data object GTOLecturetteTest : SSBMaxDestinations("test/gto/lecturette/{testId}") {
-        fun createRoute(testId: String) = "test/gto/lecturette/$testId"
+    @Serializable
+    data class GTOLecturetteTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/lecturette/{testId}"
+            fun createRoute(testId: String) = "test/gto/lecturette/$testId"
+        }
     }
-    data object GTOLecturetteResult : SSBMaxDestinations("test/gto/lecturette/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/gto/lecturette/result/$submissionId"
+    @Serializable
+    data class GTOLecturetteResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/lecturette/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/gto/lecturette/result/$submissionId"
+        }
     }
 
     // GTO - Group Planning Exercise (IMPLEMENTED)
-    data object GTOGPETest : SSBMaxDestinations("test/gto/gpe/{testId}") {
-        fun createRoute(testId: String) = "test/gto/gpe/$testId"
+    @Serializable
+    data class GTOGPETest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/gpe/{testId}"
+            fun createRoute(testId: String) = "test/gto/gpe/$testId"
+        }
     }
-    data object GTOGPEResult : SSBMaxDestinations("test/gto/gpe/result/{submissionId}") {
-        fun createRoute(submissionId: String) = "test/gto/gpe/result/$submissionId"
+    @Serializable
+    data class GTOGPEResult(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/gto/gpe/result/{submissionId}"
+            fun createRoute(submissionId: String) = "test/gto/gpe/result/$submissionId"
+        }
     }
 
     // NOTE: Remaining 5 GTO test destinations will be added when their screens are implemented:
@@ -137,88 +267,150 @@ sealed class SSBMaxDestinations(val route: String) {
     // - GTOCTTest/Result (Command Task)
     //
     // Add destinations here ONLY when corresponding composable routes are registered in SharedNavGraph
-    
+
     // Interview Test (IO - Interviewing Officer)
-    data object IOTest : SSBMaxDestinations("test/io/{testId}") {
-        fun createRoute(testId: String) = "test/io/$testId"
+    @Serializable
+    data class IOTest(val testId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "test/io/{testId}"
+            fun createRoute(testId: String) = "test/io/$testId"
+        }
     }
 
     // Interview Screens - Stage 4 (Personal Interview)
     // Unified interview with TTS support (mutable)
-    data object StartInterview : SSBMaxDestinations("interview/start")
-    data object VoiceInterviewSession : SSBMaxDestinations("interview/voice/{sessionId}") {
-        fun createRoute(sessionId: String) = "interview/voice/$sessionId"
+    @Serializable
+    data object StartInterview : SSBMaxDestinations() { const val route = "interview/start" }
+    @Serializable
+    data class VoiceInterviewSession(val sessionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "interview/voice/{sessionId}"
+            fun createRoute(sessionId: String) = "interview/voice/$sessionId"
+        }
     }
-    data object InterviewResult : SSBMaxDestinations("interview/result/{resultId}") {
-        fun createRoute(resultId: String) = "interview/result/$resultId"
+    @Serializable
+    data class InterviewResult(val resultId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "interview/result/{resultId}"
+            fun createRoute(resultId: String) = "interview/result/$resultId"
+        }
     }
 
     // Study Materials
-    data object StudyMaterialsList : SSBMaxDestinations("study/materials")
-    data object StudyMaterialDetail : SSBMaxDestinations("study/material/{categoryId}") {
-        fun createRoute(categoryId: String) = "study/material/$categoryId"
+    @Serializable
+    data object StudyMaterialsList : SSBMaxDestinations() { const val route = "study/materials" }
+    @Serializable
+    data class StudyMaterialDetail(val categoryId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "study/material/{categoryId}"
+            fun createRoute(categoryId: String) = "study/material/$categoryId"
+        }
     }
-    
-    // Topic Screens (Phase > Topic with tabs)
-    data object TopicScreen : SSBMaxDestinations("topic/{topicId}") {
-        fun createRoute(topicId: String) = "topic/$topicId"
+
+    // Topic Screens (Phase > Topic with tabs). `selectedTab` (KMP-convergence
+    // Phase 3a, row #2) defaults to the Overview tab; the legacy `route`/
+    // `createRoute` companion below intentionally does NOT expose it -- no
+    // `app`-side caller ever passed one (see this file's class doc).
+    @Serializable
+    data class TopicScreen(val topicId: String, val selectedTab: Int = 0) : SSBMaxDestinations() {
+        companion object {
+            const val route = "topic/{topicId}"
+            fun createRoute(topicId: String) = "topic/$topicId"
+        }
     }
-    
+
     // Premium/Subscription
-    data object UpgradeScreen : SSBMaxDestinations("premium/upgrade")
-    
+    @Serializable
+    data object UpgradeScreen : SSBMaxDestinations() { const val route = "premium/upgrade" }
+
     // Notifications
-    data object NotificationCenter : SSBMaxDestinations("notifications/center")
-    
+    @Serializable
+    data object NotificationCenter : SSBMaxDestinations() { const val route = "notifications/center" }
+
     // Settings
-    data object Settings : SSBMaxDestinations("settings")
-    data object SubscriptionManagement : SSBMaxDestinations("settings/subscription")
-    
+    @Serializable
+    data object Settings : SSBMaxDestinations() { const val route = "settings" }
+    @Serializable
+    data object SubscriptionManagement : SSBMaxDestinations() { const val route = "settings/subscription" }
+
     // Analytics (Student Performance Dashboard)
-    data object Analytics : SSBMaxDestinations("analytics")
+    @Serializable
+    data object Analytics : SSBMaxDestinations() { const val route = "analytics" }
 
     // Historic Results (cross-test-type results list, last 6 months)
-    data object HistoricResults : SSBMaxDestinations("results/historic")
-    
-    // User Profile
-    data object UserProfile : SSBMaxDestinations("user/profile") {
-        fun createOnboardingRoute() = "user/profile?isOnboarding=true"
+    @Serializable
+    data object HistoricResults : SSBMaxDestinations() { const val route = "results/historic" }
+
+    // User Profile. `isOnboarding` used to be a bolt-on query-string helper
+    // (`createOnboardingRoute()`) never parsed by any route registration
+    // (see the pre-Phase-3d history of this file); it is now a real
+    // constructor argument the destination can actually read.
+    @Serializable
+    data class UserProfile(val isOnboarding: Boolean = false) : SSBMaxDestinations() {
+        companion object {
+            const val route = "user/profile"
+            fun createOnboardingRoute() = "$route?isOnboarding=true"
+        }
     }
-    
+
     // Marketplace
-    data object Marketplace : SSBMaxDestinations("marketplace")
-    
+    @Serializable
+    data object Marketplace : SSBMaxDestinations() { const val route = "marketplace" }
+
     // SSB Overview
-    data object SSBOverview : SSBMaxDestinations("ssb/overview")
-    
+    @Serializable
+    data object SSBOverview : SSBMaxDestinations() { const val route = "ssb/overview" }
+
     // FAQ
-    data object FAQ : SSBMaxDestinations("faq")
-    
+    @Serializable
+    data object FAQ : SSBMaxDestinations() { const val route = "faq" }
+
     // Upgrade & Payment
-    data object Upgrade : SSBMaxDestinations("upgrade")
-    data object Payment : SSBMaxDestinations("payment")
-    data object PaymentSuccess : SSBMaxDestinations("payment/success")
-    
+    @Serializable
+    data object Upgrade : SSBMaxDestinations() { const val route = "upgrade" }
+    @Serializable
+    data object Payment : SSBMaxDestinations() { const val route = "payment" }
+    @Serializable
+    data object PaymentSuccess : SSBMaxDestinations() { const val route = "payment/success" }
+
     // Batch Management
-    data object JoinBatch : SSBMaxDestinations("batch/join")
-    data object CreateBatch : SSBMaxDestinations("batch/create")
-    data object BatchDetail : SSBMaxDestinations("batch/{batchId}") {
-        fun createRoute(batchId: String) = "batch/$batchId"
+    @Serializable
+    data object JoinBatch : SSBMaxDestinations() { const val route = "batch/join" }
+    @Serializable
+    data object CreateBatch : SSBMaxDestinations() { const val route = "batch/create" }
+    @Serializable
+    data class BatchDetail(val batchId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "batch/{batchId}"
+            fun createRoute(batchId: String) = "batch/$batchId"
+        }
     }
-    
+
     // Student Details (for instructors)
-    data object StudentDetail : SSBMaxDestinations("instructor/student/{studentId}") {
-        fun createRoute(studentId: String) = "instructor/student/$studentId"
+    @Serializable
+    data class StudentDetail(val studentId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "instructor/student/{studentId}"
+            fun createRoute(studentId: String) = "instructor/student/$studentId"
+        }
     }
-    
+
     // Test Grading (for instructors)
-    data object InstructorGradingDetail : SSBMaxDestinations("instructor/grading/{submissionId}") {
-        fun createRoute(submissionId: String) = "instructor/grading/$submissionId"
+    @Serializable
+    data class InstructorGradingDetail(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "instructor/grading/{submissionId}"
+            fun createRoute(submissionId: String) = "instructor/grading/$submissionId"
+        }
     }
-    
+
     // Submission Detail (for students - view their own submission)
-    data object SubmissionDetail : SSBMaxDestinations("submission/{submissionId}") {
-        fun createRoute(submissionId: String) = "submission/$submissionId"
+    @Serializable
+    data class SubmissionDetail(val submissionId: String) : SSBMaxDestinations() {
+        companion object {
+            const val route = "submission/{submissionId}"
+            fun createRoute(submissionId: String) = "submission/$submissionId"
+        }
     }
 
     // Dev-facing catch-all for any destination the commonMain nav graph must route to
@@ -228,9 +420,8 @@ sealed class SSBMaxDestinations(val route: String) {
     // marketplace, analytics, grading, batches, etc.) route here with the intended
     // destination's display name, rather than navigating to a route this NavHost never
     // registered (which would crash) or being silently dropped.
-    data object NotYetPorted : SSBMaxDestinations("dev/not_yet_ported?screen={screen}") {
-        fun createRoute(screenName: String) = "dev/not_yet_ported?screen=$screenName"
-    }
+    @Serializable
+    data class NotYetPorted(val screen: String = "Screen") : SSBMaxDestinations()
 }
 
 /**
@@ -284,4 +475,3 @@ sealed class BottomNavItem(
     data object InstructorGrading : BottomNavItem(SSBMaxDestinations.InstructorGrading.route, Res.string.nav_grading)
     data object InstructorAnalytics : BottomNavItem(SSBMaxDestinations.InstructorAnalytics.route, Res.string.nav_analytics)
 }
-

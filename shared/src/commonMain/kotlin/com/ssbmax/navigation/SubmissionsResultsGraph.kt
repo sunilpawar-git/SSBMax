@@ -1,11 +1,9 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.analytics.AnalyticsScreen
@@ -23,7 +21,7 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // on both platforms today. No `JoinBatchScreen` exists yet on either
     // platform (this is a real feature gap, not a KMP-port regression), so
     // this registers the honest placeholder rather than inventing new scope.
-    composable(SSBMaxDestinations.JoinBatch.route) {
+    composable<SSBMaxDestinations.JoinBatch> {
         NotYetPortedScreen("Join Batch")
     }
 
@@ -32,11 +30,11 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // there is no ported institute-detail screen yet (the Android original's
     // own `onInstituteClick` callback is also just a `// TODO: Navigate to
     // institute detail` no-op).
-    composable(SSBMaxDestinations.Marketplace.route) {
+    composable<SSBMaxDestinations.Marketplace> {
         MarketplaceScreen(
             onNavigateBack = { navController.navigateUp() },
             onInstituteClick = { instituteId ->
-                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("InstituteDetail($instituteId)"))
+                navController.navigate(SSBMaxDestinations.NotYetPorted("InstituteDetail($instituteId)"))
             }
         )
     }
@@ -47,21 +45,21 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // commonMain/ui so far -- every other test type still routes to the
     // honest placeholder. Reachable from `StudentProfileScreen`'s "history"
     // tile (wired in ProfileSettingsGraph).
-    composable(SSBMaxDestinations.HistoricResults.route) {
+    composable<SSBMaxDestinations.HistoricResults> {
         val notYetPorted: (String) -> Unit = { screen ->
-            navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            navController.navigate(SSBMaxDestinations.NotYetPorted(screen))
         }
         HistoricResultsScreen(
             onNavigateBack = { navController.navigateUp() },
             onResultClick = { submissionId, testType ->
                 when (testType) {
-                    TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(submissionId))
-                    TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId))
-                    TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId))
-                    TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId))
-                    TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId))
-                    TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId))
-                    TestType.IO -> navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(submissionId))
+                    TestType.OIR -> navController.navigate(SSBMaxDestinations.OIRTestResult(submissionId))
+                    TestType.PPDT -> navController.navigate(SSBMaxDestinations.PPDTSubmissionResult(submissionId))
+                    TestType.TAT -> navController.navigate(SSBMaxDestinations.TATSubmissionResult(submissionId))
+                    TestType.WAT -> navController.navigate(SSBMaxDestinations.WATSubmissionResult(submissionId))
+                    TestType.SRT -> navController.navigate(SSBMaxDestinations.SRTSubmissionResult(submissionId))
+                    TestType.SD -> navController.navigate(SSBMaxDestinations.SDSubmissionResult(submissionId))
+                    TestType.IO -> navController.navigate(SSBMaxDestinations.InterviewResult(submissionId))
                     else -> notYetPorted("TestResultScreen")
                 }
             }
@@ -71,14 +69,14 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // Submissions list, reachable from `StudentHomeScreen`'s
     // `onNavigateToSubmissions` (wired in HomeGraph). `onNavigateToTests` now
     // routes to the real "All Tests" overview screen.
-    composable(SSBMaxDestinations.StudentSubmissions.route) {
+    composable<SSBMaxDestinations.StudentSubmissions> {
         SubmissionsListScreen(
             onSubmissionClick = { submissionId ->
-                navController.navigate(SSBMaxDestinations.SubmissionDetail.createRoute(submissionId))
+                navController.navigate(SSBMaxDestinations.SubmissionDetail(submissionId))
             },
             onNavigateBack = { navController.navigateUp() },
             onNavigateToTests = {
-                navController.navigate(SSBMaxDestinations.StudentTests.route)
+                navController.navigate(SSBMaxDestinations.StudentTests)
             }
         )
     }
@@ -93,34 +91,31 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // Android original's own nav graph makes, since
     // `StudentTestsScreen`'s `onNavigateToTest` isn't wired to anything in
     // `SharedNavGraph.kt` either).
-    composable(SSBMaxDestinations.StudentTests.route) {
+    composable<SSBMaxDestinations.StudentTests> {
         StudentTestsScreen(
             onNavigateToPhase = { phase ->
-                val route = if (phase == TestPhase.PHASE_1) {
-                    SSBMaxDestinations.Phase1Detail.route
+                val destination = if (phase == TestPhase.PHASE_1) {
+                    SSBMaxDestinations.Phase1Detail
                 } else {
-                    SSBMaxDestinations.Phase2Detail.route
+                    SSBMaxDestinations.Phase2Detail
                 }
-                navController.navigate(route)
+                navController.navigate(destination)
             },
             onNavigateToTest = { testType ->
-                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("Test($testType)"))
+                navController.navigate(SSBMaxDestinations.NotYetPorted("Test($testType)"))
             }
         )
     }
 
     // Submission detail (student's own view of a single submission),
     // reachable from `SubmissionsListScreen` above.
-    composable(
-        route = SSBMaxDestinations.SubmissionDetail.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.SubmissionDetail> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.SubmissionDetail>().submissionId
         SubmissionDetailScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
@@ -128,7 +123,7 @@ fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
 
     // Student performance analytics dashboard, reachable from
     // `StudentHomeScreen`'s `onNavigateToAnalytics` (wired in HomeGraph).
-    composable(SSBMaxDestinations.Analytics.route) {
+    composable<SSBMaxDestinations.Analytics> {
         AnalyticsScreen(
             onNavigateBack = { navController.navigateUp() }
         )

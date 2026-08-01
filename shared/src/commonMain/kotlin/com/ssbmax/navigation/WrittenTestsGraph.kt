@@ -1,11 +1,9 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
 import com.ssbmax.shared.ui.piq.PIQTestScreen
@@ -15,11 +13,8 @@ import com.ssbmax.shared.ui.srt.SRTSubmissionResultScreen
 import com.ssbmax.shared.ui.srt.SRTTestScreen
 
 fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
-    composable(
-        route = SSBMaxDestinations.SRTTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "srt_standard"
+    composable<SSBMaxDestinations.SRTTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.SRTTest>().testId
         SRTTestScreen(
             testId = testId,
             onTestComplete = { submissionId, subscriptionType ->
@@ -45,26 +40,20 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
     // route is still registered here (not omitted) so a future direct-navigation
     // caller or deep link has somewhere real to land, consistent with this
     // graph's own "no crash on unregistered destination" principle.
-    composable(
-        route = SSBMaxDestinations.SRTSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.SRTSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.SRTSubmissionResult>().submissionId
         SRTSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.SDTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "sdt_standard"
+    composable<SSBMaxDestinations.SDTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.SDTest>().testId
         SDTTestScreen(
             testId = testId,
             onTestComplete = { submissionId, subscriptionType ->
@@ -89,16 +78,13 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
     // route is still registered here (not omitted) so a future direct-navigation
     // caller or deep link has somewhere real to land, consistent with this
     // graph's own "no crash on unregistered destination" principle.
-    composable(
-        route = SSBMaxDestinations.SDSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.SDSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.SDSubmissionResult>().submissionId
         SDTSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
@@ -112,32 +98,26 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
     // comment). Same reachability gap as SRT/SDT above: no in-graph path
     // back to `PIQTest` from `PIQSubmissionResult` (no retake callback in
     // the Android original either) -- both routes registered regardless.
-    composable(
-        route = SSBMaxDestinations.PIQTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "piq_standard"
+    composable<SSBMaxDestinations.PIQTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.PIQTest>().testId
         PIQTestScreen(
             testId = testId,
             onNavigateBack = { navController.navigateUp() },
             onNavigateToResult = { submissionId ->
-                navController.navigate(SSBMaxDestinations.PIQSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.PIQTest.createRoute(testId)) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.PIQSubmissionResult(submissionId)) {
+                    popUpTo<SSBMaxDestinations.PIQTest> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.PIQSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.PIQSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.PIQSubmissionResult>().submissionId
         PIQSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )

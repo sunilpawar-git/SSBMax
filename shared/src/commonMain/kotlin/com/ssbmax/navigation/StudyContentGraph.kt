@@ -1,11 +1,9 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import com.ssbmax.shared.ui.notifications.NotificationCenterScreen
 import com.ssbmax.shared.ui.phase.Phase1DetailScreen
 import com.ssbmax.shared.ui.phase.Phase2DetailScreen
@@ -21,10 +19,10 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // real Topic screen. onNavigateToSearch/onNavigateToBookmarks have no
     // ported destination -- both are bare no-op default parameters in the
     // Android original too.
-    composable(SSBMaxDestinations.StudyMaterialsList.route) {
+    composable<SSBMaxDestinations.StudyMaterialsList> {
         StudyMaterialsScreen(
             onNavigateToTopic = { topicName ->
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicName))
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicName))
             }
         )
     }
@@ -35,24 +33,21 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // `StudyMaterialsScreen` as `StudyMaterialsList` above, just reached from
     // the bottom nav bar rather than Student Home's "Study" quick action.
     // Same no-op rationale for onNavigateToSearch/onNavigateToBookmarks.
-    composable(SSBMaxDestinations.StudentStudy.route) {
+    composable<SSBMaxDestinations.StudentStudy> {
         StudyMaterialsScreen(
             onNavigateToTopic = { topicId ->
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.StudyMaterialDetail.route,
-        arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val categoryId = backStackEntry.arguments?.read { getStringOrNull("categoryId") } ?: ""
+    composable<SSBMaxDestinations.StudyMaterialDetail> { backStackEntry ->
+        val categoryId = backStackEntry.toRoute<SSBMaxDestinations.StudyMaterialDetail>().categoryId
         StudyMaterialDetailScreen(
             categoryId = categoryId,
             onNavigateBack = { navController.navigateUp() },
             onNavigateToRelatedMaterial = { relatedId ->
-                navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(relatedId))
+                navController.navigate(SSBMaxDestinations.StudyMaterialDetail(relatedId))
             }
         )
     }
@@ -67,49 +62,39 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // fall through to the honest placeholder. onNavigateToInterviewResult
     // routes to the real InterviewResult screen.
     //
-    // `?selectedTab={selectedTab}` (KMP-convergence Phase 3a, row #2): mirrors
-    // the Android original's own route registration (`SharedNavGraph.kt:576-590`).
-    // `StudentHomeScreen`'s onTopicClick emits e.g. "OIR?selectedTab=2" (Tests
-    // tab preselected) -- without this arg declared, that string had no
-    // matching destination and silently failed to navigate.
-    composable(
-        route = SSBMaxDestinations.TopicScreen.route + "?selectedTab={selectedTab}",
-        arguments = listOf(
-            navArgument("topicId") { type = NavType.StringType },
-            navArgument("selectedTab") {
-                type = NavType.IntType
-                defaultValue = 0
-            }
-        )
-    ) { backStackEntry ->
-        val topicId = backStackEntry.arguments?.read { getStringOrNull("topicId") } ?: "OIR"
-        val selectedTab = backStackEntry.arguments?.read { getIntOrNull("selectedTab") } ?: 0
+    // `selectedTab` (KMP-convergence Phase 3a, row #2): mirrors the Android
+    // original's own route registration (`SharedNavGraph.kt:576-590`).
+    // `StudentHomeScreen`'s onTopicClick used to emit e.g. "OIR?selectedTab=2"
+    // (Tests tab preselected) as a hand-built string; it is now a real
+    // constructor argument with a type-checked default (0, Overview tab).
+    composable<SSBMaxDestinations.TopicScreen> { backStackEntry ->
+        val route = backStackEntry.toRoute<SSBMaxDestinations.TopicScreen>()
         TopicScreen(
-            topicId = topicId,
-            initialTab = selectedTab,
+            topicId = route.topicId,
+            initialTab = route.selectedTab,
             onNavigateBack = { navController.navigateUp() },
             onNavigateToStudyMaterial = { materialId ->
-                navController.navigate(SSBMaxDestinations.StudyMaterialDetail.createRoute(materialId))
+                navController.navigate(SSBMaxDestinations.StudyMaterialDetail(materialId))
             },
             onNavigateToTest = { testId ->
-                val route = when {
-                    testId.startsWith("oir") -> SSBMaxDestinations.OIRTest.createRoute(testId)
-                    testId.startsWith("ppdt") -> SSBMaxDestinations.PPDTTest.createRoute(testId)
-                    testId.startsWith("tat") -> SSBMaxDestinations.TATTest.createRoute(testId)
-                    testId.startsWith("wat") -> SSBMaxDestinations.WATTest.createRoute(testId)
-                    testId.startsWith("srt") -> SSBMaxDestinations.SRTTest.createRoute(testId)
-                    testId.startsWith("sd") -> SSBMaxDestinations.SDTest.createRoute(testId)
-                    testId.startsWith("piq") -> SSBMaxDestinations.PIQTest.createRoute(testId)
-                    testId.startsWith("gto_gd") -> SSBMaxDestinations.GTOGDTest.createRoute(testId)
-                    testId.startsWith("gto_lecturette") -> SSBMaxDestinations.GTOLecturetteTest.createRoute(testId)
-                    testId.startsWith("gto_gpe") -> SSBMaxDestinations.GTOGPETest.createRoute(testId)
-                    testId.startsWith("io") -> SSBMaxDestinations.StartInterview.route
-                    else -> SSBMaxDestinations.NotYetPorted.createRoute("Test($testId)")
+                val destination = when {
+                    testId.startsWith("oir") -> SSBMaxDestinations.OIRTest(testId)
+                    testId.startsWith("ppdt") -> SSBMaxDestinations.PPDTTest(testId)
+                    testId.startsWith("tat") -> SSBMaxDestinations.TATTest(testId)
+                    testId.startsWith("wat") -> SSBMaxDestinations.WATTest(testId)
+                    testId.startsWith("srt") -> SSBMaxDestinations.SRTTest(testId)
+                    testId.startsWith("sd") -> SSBMaxDestinations.SDTest(testId)
+                    testId.startsWith("piq") -> SSBMaxDestinations.PIQTest(testId)
+                    testId.startsWith("gto_gd") -> SSBMaxDestinations.GTOGDTest(testId)
+                    testId.startsWith("gto_lecturette") -> SSBMaxDestinations.GTOLecturetteTest(testId)
+                    testId.startsWith("gto_gpe") -> SSBMaxDestinations.GTOGPETest(testId)
+                    testId.startsWith("io") -> SSBMaxDestinations.StartInterview
+                    else -> SSBMaxDestinations.NotYetPorted("Test($testId)")
                 }
-                navController.navigate(route)
+                navController.navigate(destination)
             },
             onNavigateToInterviewResult = { resultId ->
-                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId))
+                navController.navigate(SSBMaxDestinations.InterviewResult(resultId))
             }
         )
     }
@@ -120,11 +105,11 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // honest placeholder, same as the Android original's own bare
     // `onNotificationClick = {}` default parameter (no real caller wires it
     // to anything either).
-    composable(SSBMaxDestinations.NotificationCenter.route) {
+    composable<SSBMaxDestinations.NotificationCenter> {
         NotificationCenterScreen(
             onNavigateBack = { navController.navigateUp() },
             onNotificationClick = { notification ->
-                navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute("NotificationDeepLink(${notification.actionUrl})"))
+                navController.navigate(SSBMaxDestinations.NotYetPorted("NotificationDeepLink(${notification.actionUrl})"))
             }
         )
     }
@@ -139,20 +124,20 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // none of the individual test screens are wired from here by testId
     // string yet -- see Topic's own registration above for exactly which
     // test types ARE reachable that way).
-    composable(SSBMaxDestinations.Phase1Detail.route) {
+    composable<SSBMaxDestinations.Phase1Detail> {
         Phase1DetailScreen(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToTopic = { topicId ->
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
             }
         )
     }
 
-    composable(SSBMaxDestinations.Phase2Detail.route) {
+    composable<SSBMaxDestinations.Phase2Detail> {
         Phase2DetailScreen(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToTopic = { topicId ->
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
             }
         )
     }
@@ -164,26 +149,14 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
     // [com.ssbmax.shared.ui.components.SSBMaxAppScaffold]) -- previously
     // registered but reachable only by direct navigation/deep link, since the
     // drawer wasn't ported yet.
-    composable(SSBMaxDestinations.SSBOverview.route) {
+    composable<SSBMaxDestinations.SSBOverview> {
         SSBOverviewScreen(
             onNavigateBack = { navController.navigateUp() }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.NotYetPorted.route,
-        arguments = listOf(
-            navArgument("screen") {
-                type = NavType.StringType
-                defaultValue = "Screen"
-            }
-        )
-    ) { backStackEntry ->
-        // `NavBackStackEntry.arguments` is a multiplatform `SavedState` (androidx.savedstate),
-        // not the Android-only `Bundle.getString(...)` API -- read via the `SavedStateReader`
-        // extension, which is the actual common-target-safe accessor (verified against
-        // androidx.savedstate 1.3.0-beta01 sources; `Bundle.getString` doesn't compile for iOS).
-        val screen = backStackEntry.arguments?.read { getStringOrNull("screen") } ?: "Screen"
+    composable<SSBMaxDestinations.NotYetPorted> { backStackEntry ->
+        val screen = backStackEntry.toRoute<SSBMaxDestinations.NotYetPorted>().screen
         NotYetPortedScreen(screen)
     }
 }

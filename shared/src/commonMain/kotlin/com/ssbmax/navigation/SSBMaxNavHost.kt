@@ -104,7 +104,7 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun SSBMaxNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = SSBMaxDestinations.Splash.route,
+    startDestination: Any = SSBMaxDestinations.Splash,
     onOpenDrawer: () -> Unit = {}
 ) {
     NavHost(

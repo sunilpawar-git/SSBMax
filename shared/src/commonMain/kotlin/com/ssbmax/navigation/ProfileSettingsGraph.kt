@@ -1,8 +1,8 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import com.ssbmax.shared.ui.premium.UpgradeScreen
 import com.ssbmax.shared.ui.profile.StudentProfileScreen
 import com.ssbmax.shared.ui.profile.UserProfileScreen
@@ -13,17 +13,15 @@ fun NavGraphBuilder.profileSettingsGraph(navController: NavHostController) {
     // Profile vertical. UserProfileScreen (create/edit form)
     // replaces the earlier NotYetPortedScreen placeholder -- Splash's
     // onNavigateToProfileOnboarding still lands here (isOnboarding defaults
-    // false; the onboarding query-string variant `createOnboardingRoute()`
-    // is not parsed by this route registration, a named gap: Nav Compose
-    // needs the query param declared in the route pattern itself to bind
-    // it, and nothing in this graph currently calls that variant anyway --
-    // Splash navigates to the plain `UserProfile.route`).
-    composable(SSBMaxDestinations.UserProfile.route) {
+    // false; `SSBMaxDestinations.UserProfile(isOnboarding = true)` is a real,
+    // constructible instance now, but nothing in this graph navigates to it
+    // yet -- Splash always navigates to the plain default-arg instance).
+    composable<SSBMaxDestinations.UserProfile> {
         UserProfileScreen(
             onNavigateBack = { navController.navigateUp() },
             onProfileSaved = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.UserProfile.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.UserProfile> { inclusive = true }
                 }
             }
         )
@@ -33,15 +31,15 @@ fun NavGraphBuilder.profileSettingsGraph(navController: NavHostController) {
     // create/edit form above). Settings/achievements/history callbacks
     // route to Settings (ported) and the honest placeholder respectively --
     // there is no ported AchievementsScreen/TestHistoryScreen yet.
-    composable(SSBMaxDestinations.StudentProfile.route) {
+    composable<SSBMaxDestinations.StudentProfile> {
         val notYetPorted: (String) -> Unit = { screen ->
-            navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            navController.navigate(SSBMaxDestinations.NotYetPorted(screen))
         }
         StudentProfileScreen(
-            onNavigateToSettings = { navController.navigate(SSBMaxDestinations.Settings.route) },
+            onNavigateToSettings = { navController.navigate(SSBMaxDestinations.Settings) },
             onNavigateToAchievements = { notYetPorted("AchievementsScreen") },
             onNavigateToHistory = {
-                navController.navigate(SSBMaxDestinations.HistoricResults.route)
+                navController.navigate(SSBMaxDestinations.HistoricResults)
             }
         )
     }
@@ -50,18 +48,18 @@ fun NavGraphBuilder.profileSettingsGraph(navController: NavHostController) {
     // there is no ported FAQScreen yet. onNavigateToUpgrade/
     // onNavigateToSubscriptionManagement route to the real UpgradeScreen/
     // SubscriptionManagementScreen registered below.
-    composable(SSBMaxDestinations.Settings.route) {
+    composable<SSBMaxDestinations.Settings> {
         val notYetPorted: (String) -> Unit = { screen ->
-            navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            navController.navigate(SSBMaxDestinations.NotYetPorted(screen))
         }
         SettingsScreen(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToFAQ = { notYetPorted("FAQScreen") },
             onNavigateToUpgrade = {
-                navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+                navController.navigate(SSBMaxDestinations.UpgradeScreen)
             },
             onNavigateToSubscriptionManagement = {
-                navController.navigate(SSBMaxDestinations.SubscriptionManagement.route)
+                navController.navigate(SSBMaxDestinations.SubscriptionManagement)
             }
         )
     }
@@ -76,11 +74,11 @@ fun NavGraphBuilder.profileSettingsGraph(navController: NavHostController) {
     // are NOT wired into SubscriptionManager -- a known, separately-tracked
     // gap that matches the Android original having no working purchase
     // flow either (its own upgrade button just shows a "Coming Soon" dialog).
-    composable(SSBMaxDestinations.SubscriptionManagement.route) {
+    composable<SSBMaxDestinations.SubscriptionManagement> {
         SubscriptionManagementScreen(
             onNavigateBack = { navController.navigateUp() },
             onUpgrade = { _ ->
-                navController.navigate(SSBMaxDestinations.UpgradeScreen.route)
+                navController.navigate(SSBMaxDestinations.UpgradeScreen)
             }
         )
     }
@@ -90,7 +88,7 @@ fun NavGraphBuilder.profileSettingsGraph(navController: NavHostController) {
     // [UpgradeScreen]'s own class doc for why the sibling Android
     // `com.ssbmax.ui.upgrade`/`com.ssbmax.ui.payment` packages (dead code,
     // unreachable from any Android nav graph) were NOT ported.
-    composable(SSBMaxDestinations.UpgradeScreen.route) {
+    composable<SSBMaxDestinations.UpgradeScreen> {
         UpgradeScreen(
             onNavigateBack = { navController.navigateUp() }
         )

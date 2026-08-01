@@ -1,11 +1,9 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
 import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
 import com.ssbmax.shared.ui.interviewstart.StartInterviewScreen
@@ -26,48 +24,42 @@ fun NavGraphBuilder.interviewGraph(navController: NavHostController) {
     // investigation found no audio recording anywhere in the Android original (plain
     // text input + platform keyboard voice-to-text), so no new platform shim was
     // needed here at all.
-    composable(SSBMaxDestinations.StartInterview.route) {
+    composable<SSBMaxDestinations.StartInterview> {
         StartInterviewScreen(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToSession = { sessionId ->
-                navController.navigate(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)) {
-                    popUpTo(SSBMaxDestinations.StartInterview.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.VoiceInterviewSession(sessionId)) {
+                    popUpTo<SSBMaxDestinations.StartInterview> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.VoiceInterviewSession.route,
-        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val sessionId = backStackEntry.arguments?.read { getStringOrNull("sessionId") } ?: ""
+    composable<SSBMaxDestinations.VoiceInterviewSession> { backStackEntry ->
+        val route = backStackEntry.toRoute<SSBMaxDestinations.VoiceInterviewSession>()
         InterviewSessionScreen(
-            sessionId = sessionId,
+            sessionId = route.sessionId,
             onNavigateBack = { navController.navigateUp() },
             onNavigateToResult = { resultId ->
-                navController.navigate(SSBMaxDestinations.InterviewResult.createRoute(resultId)) {
-                    popUpTo(SSBMaxDestinations.VoiceInterviewSession.createRoute(sessionId)) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.InterviewResult(resultId)) {
+                    popUpTo<SSBMaxDestinations.VoiceInterviewSession> { inclusive = true }
                 }
             },
             onNavigateToHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.InterviewResult.route,
-        arguments = listOf(navArgument("resultId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val resultId = backStackEntry.arguments?.read { getStringOrNull("resultId") } ?: ""
+    composable<SSBMaxDestinations.InterviewResult> { backStackEntry ->
+        val resultId = backStackEntry.toRoute<SSBMaxDestinations.InterviewResult>().resultId
         InterviewResultScreen(
             resultId = resultId,
             onNavigateBack = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )

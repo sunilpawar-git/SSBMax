@@ -12,38 +12,41 @@ import kotlin.test.assertNull
  * GTOGraph) -- their OLQ dashboard result tiles silently fell through to the
  * "not yet ported" placeholder. [homeResultRoute] is the extracted, pure
  * version of that switch.
+ *
+ * Phase 3d: [homeResultRoute] returns a real [SSBMaxDestinations] instance
+ * now (data-class equality), not a route string.
  */
 class HomeGraphResultRouteTest {
 
     @Test
     fun previouslyMissingTestTypes_nowResolveToTheirRegisteredResultRoute() {
         assertEquals(
-            SSBMaxDestinations.PIQSubmissionResult.createRoute("sub-1"),
+            SSBMaxDestinations.PIQSubmissionResult("sub-1"),
             homeResultRoute(TestType.PIQ, "sub-1")
         )
         assertEquals(
-            SSBMaxDestinations.GTOGDResult.createRoute("sub-2"),
+            SSBMaxDestinations.GTOGDResult("sub-2"),
             homeResultRoute(TestType.GTO_GD, "sub-2")
         )
         assertEquals(
-            SSBMaxDestinations.GTOLecturetteResult.createRoute("sub-3"),
+            SSBMaxDestinations.GTOLecturetteResult("sub-3"),
             homeResultRoute(TestType.GTO_LECTURETTE, "sub-3")
         )
         assertEquals(
-            SSBMaxDestinations.GTOGPEResult.createRoute("sub-4"),
+            SSBMaxDestinations.GTOGPEResult("sub-4"),
             homeResultRoute(TestType.GTO_GPE, "sub-4")
         )
     }
 
     @Test
     fun previouslySupportedTestTypes_areUnaffected() {
-        assertEquals(SSBMaxDestinations.OIRTestResult.createRoute("s"), homeResultRoute(TestType.OIR, "s"))
-        assertEquals(SSBMaxDestinations.PPDTSubmissionResult.createRoute("s"), homeResultRoute(TestType.PPDT, "s"))
-        assertEquals(SSBMaxDestinations.TATSubmissionResult.createRoute("s"), homeResultRoute(TestType.TAT, "s"))
-        assertEquals(SSBMaxDestinations.WATSubmissionResult.createRoute("s"), homeResultRoute(TestType.WAT, "s"))
-        assertEquals(SSBMaxDestinations.SRTSubmissionResult.createRoute("s"), homeResultRoute(TestType.SRT, "s"))
-        assertEquals(SSBMaxDestinations.SDSubmissionResult.createRoute("s"), homeResultRoute(TestType.SD, "s"))
-        assertEquals(SSBMaxDestinations.InterviewResult.createRoute("s"), homeResultRoute(TestType.IO, "s"))
+        assertEquals(SSBMaxDestinations.OIRTestResult("s"), homeResultRoute(TestType.OIR, "s"))
+        assertEquals(SSBMaxDestinations.PPDTSubmissionResult("s"), homeResultRoute(TestType.PPDT, "s"))
+        assertEquals(SSBMaxDestinations.TATSubmissionResult("s"), homeResultRoute(TestType.TAT, "s"))
+        assertEquals(SSBMaxDestinations.WATSubmissionResult("s"), homeResultRoute(TestType.WAT, "s"))
+        assertEquals(SSBMaxDestinations.SRTSubmissionResult("s"), homeResultRoute(TestType.SRT, "s"))
+        assertEquals(SSBMaxDestinations.SDSubmissionResult("s"), homeResultRoute(TestType.SD, "s"))
+        assertEquals(SSBMaxDestinations.InterviewResult("s"), homeResultRoute(TestType.IO, "s"))
     }
 
     @Test

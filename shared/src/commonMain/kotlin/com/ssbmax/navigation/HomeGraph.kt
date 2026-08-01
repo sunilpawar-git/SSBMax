@@ -9,13 +9,13 @@ import com.ssbmax.shared.ui.home.instructor.InstructorHomeScreen
 import com.ssbmax.shared.ui.home.student.StudentHomeScreen
 
 fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: () -> Unit) {
-    composable(SSBMaxDestinations.StudentHome.route) {
+    composable<SSBMaxDestinations.StudentHome> {
         val notYetPorted: (String) -> Unit = { screen ->
-            navController.navigate(SSBMaxDestinations.NotYetPorted.createRoute(screen))
+            navController.navigate(SSBMaxDestinations.NotYetPorted(screen))
         }
         StudentHomeScreen(
             onNavigateToTopic = { topicId ->
-                navController.navigate(SSBMaxDestinations.TopicScreen.createRoute(topicId))
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
             },
             onNavigateToPhaseDetail = { phase ->
                 // Phase1Detail/Phase2Detail are real ported screens (this session) --
@@ -23,25 +23,25 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
                 // "start a new test" path still ends at the honest placeholder one
                 // level deeper than before, not at this callback.
                 if (phase == TestPhase.PHASE_1) {
-                    navController.navigate(SSBMaxDestinations.Phase1Detail.route)
+                    navController.navigate(SSBMaxDestinations.Phase1Detail)
                 } else {
-                    navController.navigate(SSBMaxDestinations.Phase2Detail.route)
+                    navController.navigate(SSBMaxDestinations.Phase2Detail)
                 }
             },
             onNavigateToStudy = {
-                navController.navigate(SSBMaxDestinations.StudyMaterialsList.route)
+                navController.navigate(SSBMaxDestinations.StudyMaterialsList)
             },
             onNavigateToSubmissions = {
-                navController.navigate(SSBMaxDestinations.StudentSubmissions.route)
+                navController.navigate(SSBMaxDestinations.StudentSubmissions)
             },
             onNavigateToNotifications = {
-                navController.navigate(SSBMaxDestinations.NotificationCenter.route)
+                navController.navigate(SSBMaxDestinations.NotificationCenter)
             },
             onNavigateToMarketplace = {
-                navController.navigate(SSBMaxDestinations.Marketplace.route)
+                navController.navigate(SSBMaxDestinations.Marketplace)
             },
             onNavigateToAnalytics = {
-                navController.navigate(SSBMaxDestinations.Analytics.route)
+                navController.navigate(SSBMaxDestinations.Analytics)
             },
             onNavigateToResult = { testType: TestType, sessionId: String ->
                 val route = homeResultRoute(testType, sessionId)
@@ -57,19 +57,19 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
     // `onOpenDrawer` now opens the real ported drawer (this session's nav-chrome
     // work, see [SSBMaxNavHost]'s own `onOpenDrawer` parameter and
     // [com.ssbmax.shared.ui.components.SSBMaxAppScaffold]).
-    composable(SSBMaxDestinations.InstructorHome.route) {
+    composable<SSBMaxDestinations.InstructorHome> {
         InstructorHomeScreen(
             onNavigateToStudent = { studentId ->
-                navController.navigate(SSBMaxDestinations.StudentDetail.createRoute(studentId))
+                navController.navigate(SSBMaxDestinations.StudentDetail(studentId))
             },
             onNavigateToGrading = {
-                navController.navigate(SSBMaxDestinations.InstructorGrading.route)
+                navController.navigate(SSBMaxDestinations.InstructorGrading)
             },
             onNavigateToBatchDetail = { batchId ->
-                navController.navigate(SSBMaxDestinations.BatchDetail.createRoute(batchId))
+                navController.navigate(SSBMaxDestinations.BatchDetail(batchId))
             },
             onNavigateToCreateBatch = {
-                navController.navigate(SSBMaxDestinations.CreateBatch.route)
+                navController.navigate(SSBMaxDestinations.CreateBatch)
             },
             onOpenDrawer = onOpenDrawer
         )
@@ -77,7 +77,7 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
 }
 
 /**
- * Maps a completed test's [TestType] to its result screen's route.
+ * Maps a completed test's [TestType] to its result screen's destination.
  *
  * KMP-convergence Phase 3a, row #1: PIQ/GTO_GD/GTO_LECTURETTE/GTO_GPE were
  * missing from this switch even though all four result destinations are
@@ -88,17 +88,17 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
  * standing up Compose/Koin. Returns `null` for test types with no ported
  * result screen yet.
  */
-internal fun homeResultRoute(testType: TestType, sessionId: String): String? = when (testType) {
-    TestType.OIR -> SSBMaxDestinations.OIRTestResult.createRoute(sessionId)
-    TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult.createRoute(sessionId)
-    TestType.TAT -> SSBMaxDestinations.TATSubmissionResult.createRoute(sessionId)
-    TestType.WAT -> SSBMaxDestinations.WATSubmissionResult.createRoute(sessionId)
-    TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult.createRoute(sessionId)
-    TestType.SD -> SSBMaxDestinations.SDSubmissionResult.createRoute(sessionId)
-    TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult.createRoute(sessionId)
-    TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult.createRoute(sessionId)
-    TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult.createRoute(sessionId)
-    TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult.createRoute(sessionId)
-    TestType.IO -> SSBMaxDestinations.InterviewResult.createRoute(sessionId)
+internal fun homeResultRoute(testType: TestType, sessionId: String): SSBMaxDestinations? = when (testType) {
+    TestType.OIR -> SSBMaxDestinations.OIRTestResult(sessionId)
+    TestType.PPDT -> SSBMaxDestinations.PPDTSubmissionResult(sessionId)
+    TestType.TAT -> SSBMaxDestinations.TATSubmissionResult(sessionId)
+    TestType.WAT -> SSBMaxDestinations.WATSubmissionResult(sessionId)
+    TestType.SRT -> SSBMaxDestinations.SRTSubmissionResult(sessionId)
+    TestType.SD -> SSBMaxDestinations.SDSubmissionResult(sessionId)
+    TestType.PIQ -> SSBMaxDestinations.PIQSubmissionResult(sessionId)
+    TestType.GTO_GD -> SSBMaxDestinations.GTOGDResult(sessionId)
+    TestType.GTO_LECTURETTE -> SSBMaxDestinations.GTOLecturetteResult(sessionId)
+    TestType.GTO_GPE -> SSBMaxDestinations.GTOGPEResult(sessionId)
+    TestType.IO -> SSBMaxDestinations.InterviewResult(sessionId)
     else -> null
 }

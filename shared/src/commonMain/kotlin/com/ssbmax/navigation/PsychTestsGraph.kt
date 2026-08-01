@@ -1,11 +1,9 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.read
+import androidx.navigation.toRoute
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
@@ -17,11 +15,8 @@ import com.ssbmax.shared.ui.wat.WATSubmissionResultScreen
 import com.ssbmax.shared.ui.wat.WATTestScreen
 
 fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
-    composable(
-        route = SSBMaxDestinations.OIRTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "oir_standard"
+    composable<SSBMaxDestinations.OIRTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.OIRTest>().testId
         OIRTestScreen(
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
@@ -35,21 +30,18 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.OIRTestResult.route,
-        arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("sessionId") } ?: ""
+    composable<SSBMaxDestinations.OIRTestResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.OIRTestResult>().sessionId
         OIRTestResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             },
             onRetakeTest = {
-                navController.navigate(SSBMaxDestinations.OIRTest.createRoute("oir_standard")) {
-                    popUpTo(SSBMaxDestinations.OIRTestResult.createRoute(submissionId)) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.OIRTest("oir_standard")) {
+                    popUpTo<SSBMaxDestinations.OIRTestResult> { inclusive = true }
                 }
             },
             onReviewAnswers = {
@@ -60,11 +52,8 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.PPDTTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "ppdt_standard"
+    composable<SSBMaxDestinations.PPDTTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.PPDTTest>().testId
         PPDTTestScreen(
             testId = testId,
             onTestComplete = { submissionId, subscriptionType ->
@@ -89,26 +78,20 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
     // here (not omitted) so a future direct-navigation caller or deep link has
     // somewhere real to land, consistent with this graph's own "no crash on
     // unregistered destination" principle.
-    composable(
-        route = SSBMaxDestinations.PPDTSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.PPDTSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.PPDTSubmissionResult>().submissionId
         PPDTSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.TATTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "tat_standard"
+    composable<SSBMaxDestinations.TATTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.TATTest>().testId
         TATTestScreen(
             testId = testId,
             onTestComplete = { submissionId, subscriptionType ->
@@ -132,26 +115,20 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
     // route is still registered here (not omitted) so a future direct-navigation
     // caller or deep link has somewhere real to land, consistent with this
     // graph's own "no crash on unregistered destination" principle.
-    composable(
-        route = SSBMaxDestinations.TATSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.TATSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.TATSubmissionResult>().submissionId
         TATSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
     }
 
-    composable(
-        route = SSBMaxDestinations.WATTest.route,
-        arguments = listOf(navArgument("testId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "wat_standard"
+    composable<SSBMaxDestinations.WATTest> { backStackEntry ->
+        val testId = backStackEntry.toRoute<SSBMaxDestinations.WATTest>().testId
         WATTestScreen(
             testId = testId,
             onTestComplete = { submissionId, subscriptionType ->
@@ -175,16 +152,13 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
     // route is still registered here (not omitted) so a future direct-navigation
     // caller or deep link has somewhere real to land, consistent with this
     // graph's own "no crash on unregistered destination" principle.
-    composable(
-        route = SSBMaxDestinations.WATSubmissionResult.route,
-        arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val submissionId = backStackEntry.arguments?.read { getStringOrNull("submissionId") } ?: ""
+    composable<SSBMaxDestinations.WATSubmissionResult> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.WATSubmissionResult>().submissionId
         WATSubmissionResultScreen(
             submissionId = submissionId,
             onNavigateHome = {
-                navController.navigate(SSBMaxDestinations.StudentHome.route) {
-                    popUpTo(SSBMaxDestinations.StudentHome.route) { inclusive = true }
+                navController.navigate(SSBMaxDestinations.StudentHome) {
+                    popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             }
         )
