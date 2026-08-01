@@ -44,10 +44,11 @@ import org.koin.test.check.checkModules
  *   initialized") outside a real Android process. Robolectric is the normal
  *   escape hatch, but every existing Robolectric test in this module is
  *   `@Ignore`d for an SDK 35 shadow mismatch (see e.g.
- *   [com.ssbmax.notifications.NotificationHelperTest]) — so this follows this
- *   module's own established alternative instead
- *   ([com.ssbmax.testing.BaseViewModelTest]'s `mockkStatic` pattern for
- *   `android.util.Log`). Mocked at the `FirebaseAuth`/`FirebaseFirestore`/
+ *   [com.ssbmax.notifications.NotificationHelperTest]) — so this follows the
+ *   same `mockkStatic` pattern for `android.util.Log`-adjacent Android
+ *   statics that `com.ssbmax.testing.BaseViewModelTest` used before it (and
+ *   the `app/ui` ViewModel tests that were its only callers) were deleted in
+ *   KMP-convergence Phase 6a. Mocked at the `FirebaseAuth`/`FirebaseFirestore`/
  *   `FirebaseStorage`/`FirebaseMessaging` static `getInstance()` level, not
  *   the `Firebase.auth`-style KTX extension property level: GitLive's Android
  *   actuals (e.g. `GitLiveAuthRepository` → `dev.gitlive.firebase.auth.android
