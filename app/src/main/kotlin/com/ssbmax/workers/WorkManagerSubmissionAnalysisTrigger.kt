@@ -9,7 +9,6 @@ import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.util.DomainLogger
-import com.ssbmax.ui.tests.tat.TATAnalysisPipelineOrchestrator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -47,9 +46,10 @@ private const val TAG = "WorkManagerSubmissionAnalysisTrigger"
  * GTO (GD/Lecturette/GPE) needs no `TestType` -> `GTOTestType` mapping:
  * [GTOAnalysisWorker] fetches its own submission via `GTORepository.
  * getSubmission`, which already carries the real `GTOSubmission.testType` --
- * confirmed by reading both the worker and its only existing caller
- * ([com.ssbmax.ui.tests.gto.common.GTOTestSubmissionHelper], which only ever
- * passes `KEY_SUBMISSION_ID`).
+ * confirmed by reading both the worker and its only caller when this was
+ * written (`GTOTestSubmissionHelper`, formerly `app/ui/tests/gto/common/`,
+ * deleted in KMP-convergence Phase 6a along with the rest of `app/ui`; it
+ * only ever passed `KEY_SUBMISSION_ID`, so nothing here depended on it).
  */
 class WorkManagerSubmissionAnalysisTrigger(
     private val workManager: WorkManager,
