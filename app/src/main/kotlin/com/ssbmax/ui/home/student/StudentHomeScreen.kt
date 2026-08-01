@@ -45,12 +45,12 @@ import com.ssbmax.shared.ui.theme.Spacing
 import com.ssbmax.shared.domain.model.TestPhase
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.usecase.dashboard.ProcessedDashboardData
+import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
 import com.ssbmax.ui.home.student.components.OLQDashboardCard
 import com.ssbmax.ui.home.student.components.QuickActionCard
 import com.ssbmax.ui.home.student.components.SectionDivider
 import com.ssbmax.ui.home.student.components.SectionHeader
 import com.ssbmax.ui.home.student.components.StatsCard
-import com.ssbmax.ui.permissions.LocalNotificationPermissionController
 import org.koin.compose.viewmodel.koinViewModel
 
 /**

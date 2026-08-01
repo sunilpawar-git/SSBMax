@@ -13,10 +13,9 @@ import kotlinx.coroutines.launch
 
 /**
  * Root-level ViewModel shared by every platform entry point that renders
- * [com.ssbmax.shared.ui.SSBMaxRoot] (`CanaryActivity`, iOS's
- * `MainViewController`) plus Android's still-separate `MainActivity`
- * (pre-Phase-5 cutover, same theme bug applied there too). KMP port of
- * `app/MainViewModel.kt`, moved with two fixes:
+ * [com.ssbmax.shared.ui.SSBMaxRoot] (Android's `MainActivity`, iOS's
+ * `MainViewController`). KMP port of `app/MainViewModel.kt`, moved with two
+ * fixes:
  *
  * - Exposes [AppThemeSettings.themeFlow] directly instead of the original's
  *   `appThemeSettings.themeFlow.value` one-time read in `init`. That

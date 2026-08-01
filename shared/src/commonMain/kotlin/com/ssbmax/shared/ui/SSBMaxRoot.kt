@@ -19,13 +19,11 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * The Phase 5 cutover target: `shared`'s full themed, chrome-wrapped,
- * nav-graphed root. As of Phase 2 of the KMP-convergence plan this renders
- * behind `app`'s debug-only `CanaryActivity` and iOS's `MainViewController`
- * only — Android's production `MainActivity` still
- * renders `app`'s own `SSBMaxApp`/nav graph until Phase 5's atomic swap, so
- * canary and the real cutover target are, by construction, literally the
- * same code being validated ahead of time.
+ * `shared`'s full themed, chrome-wrapped, nav-graphed root — the single
+ * Compose entry point for both platforms since Phase 5's cutover. Android's
+ * `MainActivity` and iOS's `MainViewController` both render this directly;
+ * `app`'s own pre-cutover `SSBMaxApp`/nav graph is no longer reachable from
+ * either.
  *
  * The current [com.ssbmax.shared.domain.model.AppTheme] is collected live
  * from [AppRootViewModel.themeFlow] (`collectAsStateWithLifecycle`, not a

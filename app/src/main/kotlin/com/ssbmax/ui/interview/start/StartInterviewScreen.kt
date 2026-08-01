@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
-import com.ssbmax.ui.permissions.LocalNotificationPermissionController
+import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Start Interview Screen - Mode selection, prerequisites check, and session creation */

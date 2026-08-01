@@ -19,13 +19,10 @@ private val AUTH_SCREENS = setOf("splash", "login", "role_selection")
  * Main app composable
  * Manages global app state and navigation
  *
- * Deep-link handling (KMP-convergence Phase 4) moved off this composable
- * entirely -- it now lives in `shared`'s `DeepLinkGateway`/`DeepLinkEffect`,
- * consumed by [com.ssbmax.shared.ui.SSBMaxRoot]. This graph (still
- * `MainActivity`'s production graph pre-Phase-5-cutover) does not read that
- * gateway, so a real notification tap is a no-op here until the cutover --
- * see `MainActivity.deepLinkGateway`'s doc comment for why that's an
- * accepted, not silent, gap.
+ * Dead code since Phase 5's cutover: `MainActivity` now renders
+ * [com.ssbmax.shared.ui.SSBMaxRoot] directly, so this composable (and its
+ * deep-link-blind graph) is unreached. Kept until Phase 6a deletes it and
+ * the rest of `app/ui`/`app/navigation` wholesale.
  */
 @Composable
 fun SSBMaxApp(

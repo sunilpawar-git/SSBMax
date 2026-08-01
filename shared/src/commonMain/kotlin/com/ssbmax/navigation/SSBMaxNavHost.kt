@@ -73,14 +73,13 @@ import androidx.navigation.compose.rememberNavController
  * package/screens are `sdt`/`SDT*`, matching the Android original's own
  * naming.)
  *
- * Used directly by the iOS entry point ([com.ssbmax.shared.ui.MainViewController]),
- * which has no other nav graph. On Android, this graph is NOT yet the
- * `app` module's production entry point (`SSBMaxApp`/`MainActivity` still
- * use the old Android-only graph, which now calls into these same ported
- * `shared` composables for Splash/Login/RoleSelection/Student+InstructorHome
- * — see `app/.../navigation/{AuthNavGraph,Student/InstructorNavGraph}.kt`)
- * — swapping the whole app over to this graph is gated on porting the
- * remaining screens, not this phase.
+ * Used directly by both platforms' entry points since the KMP-convergence
+ * plan's Phase 5 cutover: iOS's [com.ssbmax.shared.ui.MainViewController]
+ * (which has no other nav graph) and Android's `MainActivity` (via
+ * [com.ssbmax.shared.ui.SSBMaxRoot], replacing the old Android-only
+ * `SSBMaxApp`/`NavGraph.kt` graph as the reachable production graph). The old
+ * `app`-only graph's source files are unreached but not yet deleted — that's
+ * Phase 6a's job.
  *
  * Nav chrome (drawer + bottom nav bar): this `NavHost` itself stays
  * chrome-agnostic (exactly the composable destination graph, as before) --
@@ -91,10 +90,10 @@ import androidx.navigation.compose.rememberNavController
  * [onOpenDrawer] callback down into the two home screens' `onOpenDrawer`
  * parameter (previously both routed to the honest [NotYetPortedScreen]
  * placeholder -- now they open the real drawer). See [MainViewController]
- * for how the two compose together on iOS; `app` is unaffected (still
- * Android-only `SSBMaxScaffold`/`SSBMaxNavGraph`, per this migration's
- * standing judgment not to swap `shared` screens into the live Android app
- * yet).
+ * for how the two compose together on iOS; on Android, [SSBMaxRoot] wraps
+ * this same `SSBMaxAppScaffold`/`SSBMaxNavHost` pair since Phase 5's
+ * cutover -- `app`'s own `SSBMaxScaffold`/`SSBMaxNavGraph` are dead code,
+ * pending Phase 6a's deletion.
  *
  * Split into per-vertical `*Graph.kt` `NavGraphBuilder` extensions (this
  * session) to bring this file back under the repo's 300-line Quality Limit

@@ -34,11 +34,12 @@ import ssbmax.shared.generated.resources.nav_tests
  * of defect (Phase 3a, row #2) at compile time instead of catching it in a
  * nav test.
  *
- * `app`'s own pre-cutover graph (`app/navigation/{NavGraph,Auth,Student,Instructor,Shared}NavGraph.kt`) is Android-only,
+ * `app`'s own graph (`app/navigation/{NavGraph,Auth,Student,Instructor,Shared}NavGraph.kt`) is Android-only,
  * string-routed (`androidx.navigation.compose.composable(route: String)`), and
- * is wholesale deleted in Phase 6a when `MainActivity` swaps onto this module's
- * `SSBMaxRoot`/`SSBMaxNavHost` (Phase 5) -- converting it to type-safe routes
- * too would duplicate work this plan already schedules for deletion (Rule 2).
+ * unreached since Phase 5 swapped `MainActivity` onto this module's
+ * `SSBMaxRoot`/`SSBMaxNavHost` -- it is wholesale deleted in Phase 6a;
+ * converting it to type-safe routes too would have duplicated work this plan
+ * already scheduled for deletion (Rule 2).
  * Each destination that takes arguments therefore keeps a `companion object`
  * exposing the *old* string-pattern `route` (e.g. `"test/oir/{testId}"`, used
  * by `app`'s `composable(route = ..., arguments = ...)` registrations) and

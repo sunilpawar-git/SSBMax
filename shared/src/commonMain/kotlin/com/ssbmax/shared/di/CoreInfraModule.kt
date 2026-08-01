@@ -55,8 +55,8 @@ val coreInfraModule = module {
 
     single<DomainLogger> { NoOpLogger() }
 
-    // Root ViewModel for every entry point rendering SSBMaxRoot (CanaryActivity,
-    // iOS MainViewController) plus Android's MainActivity pre-Phase-5-cutover.
+    // Root ViewModel for every entry point rendering SSBMaxRoot (Android's
+    // MainActivity, iOS's MainViewController).
     viewModelOf(::AppRootViewModel)
 
     // Deep-link seam (Phase 4): one Koin singleton both platforms' entry

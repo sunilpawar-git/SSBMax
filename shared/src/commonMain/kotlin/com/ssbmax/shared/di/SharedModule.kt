@@ -18,10 +18,8 @@ import org.koin.dsl.module
  * (shadow-bound repositories, "existed but unbound" use cases, async-analysis
  * seam consequences) previously carried in this file's single class doc.
  *
- * None of these verticals is swapped into the live Android app's production
- * nav graph except Auth/Home — reachable only via `SSBMaxNavHost` (iOS entry
- * point and the debug-only `CanaryActivity` on Android). See the KMP
- * migration plan's open-items table for the production-cutover decision.
+ * `SSBMaxNavHost` (built from these verticals) is the production nav graph on
+ * both platforms since the KMP-convergence plan's Phase 5 cutover.
  */
 val sharedModule = module {
     includes(
