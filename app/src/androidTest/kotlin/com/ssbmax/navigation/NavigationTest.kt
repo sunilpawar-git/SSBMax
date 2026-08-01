@@ -185,8 +185,8 @@ class NavigationTest : BaseComposeTest() {
         val resultId = "test-result-123"
 
         // Use DeepLinkParser to build and parse (tests round-trip)
-        val deepLink = com.ssbmax.utils.DeepLinkParser.buildInterviewResultDeepLink(resultId)
-        val processedRoute = com.ssbmax.utils.DeepLinkParser.parseToRoute(deepLink)
+        val deepLink = com.ssbmax.navigation.DeepLinkParser.buildInterviewResultDeepLink(resultId)
+        val processedRoute = com.ssbmax.navigation.DeepLinkParser.parseToRoute(deepLink)
 
         // Verify it matches the route we'd navigate to
         val expectedRoute = SSBMaxDestinations.InterviewResult.createRoute(resultId)
@@ -200,7 +200,7 @@ class NavigationTest : BaseComposeTest() {
     @Test
     fun deepLinkParser_usesCorrectScheme() {
         // Verify the scheme constant is what we expect
-        assert(com.ssbmax.utils.DeepLinkParser.SCHEME == "ssbmax://") {
+        assert(com.ssbmax.navigation.DeepLinkParser.SCHEME == "ssbmax://") {
             "DeepLinkParser should use ssbmax:// scheme"
         }
     }

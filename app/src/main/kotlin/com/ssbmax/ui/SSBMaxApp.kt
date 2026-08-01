@@ -1,8 +1,6 @@
 package com.ssbmax.ui
 
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -12,23 +10,26 @@ import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.ui.components.SSBMaxScaffold
-import com.ssbmax.utils.ErrorLogger
 import org.koin.compose.viewmodel.koinViewModel
 
-private const val TAG = "SSBMaxApp"
-
-/** Auth screens that don't show scaffold and must be passed before deep link navigation */
+/** Auth screens that don't show scaffold */
 private val AUTH_SCREENS = setOf("splash", "login", "role_selection")
 
 /**
  * Main app composable
  * Manages global app state and navigation
+ *
+ * Deep-link handling (KMP-convergence Phase 4) moved off this composable
+ * entirely -- it now lives in `shared`'s `DeepLinkGateway`/`DeepLinkEffect`,
+ * consumed by [com.ssbmax.shared.ui.SSBMaxRoot]. This graph (still
+ * `MainActivity`'s production graph pre-Phase-5-cutover) does not read that
+ * gateway, so a real notification tap is a no-op here until the cutover --
+ * see `MainActivity.deepLinkGateway`'s doc comment for why that's an
+ * accepted, not silent, gap.
  */
 @Composable
 fun SSBMaxApp(
-    viewModel: AppViewModel = koinViewModel(),
-    pendingDeepLink: String? = null,
-    onDeepLinkHandled: () -> Unit = {}
+    viewModel: AppViewModel = koinViewModel()
 ) {
     val navController = rememberNavController()
 
@@ -44,53 +45,13 @@ fun SSBMaxApp(
         subscriptionTier = SubscriptionTier.FREE,
         subscription = null
     )
-    
+
     // Check if we're on a route that needs the scaffold
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
-    // Handle deep link navigation after user is authenticated and past auth screens
-    LaunchedEffect(pendingDeepLink, currentRoute, currentUser) {
-        Log.d(TAG, "Deep link check - pendingDeepLink: $pendingDeepLink, " +
-                "currentRoute: $currentRoute, currentUser: ${currentUser?.email}")
-        
-        if (pendingDeepLink != null && currentUser != null && currentRoute != null) {
-            // Only navigate if we're past the auth screens
-            val isOnAuthScreen = currentRoute in AUTH_SCREENS
-            
-            if (!isOnAuthScreen) {
-                // CRITICAL FIX: Don't navigate if we're already on the target route
-                // This prevents duplicate screen creation and ViewModel cancellation
-                // Extract route pattern from current route (e.g., "test/ppdt/result/{submissionId}" from "test/ppdt/result/abc123")
-                val currentRoutePattern = currentRoute.substringBeforeLast("/")
-                val pendingRoutePattern = pendingDeepLink.substringBeforeLast("/")
-                
-                if (currentRoutePattern == pendingRoutePattern) {
-                    Log.d(TAG, "⏭️ Already on target route ($currentRoute), skipping duplicate navigation")
-                    onDeepLinkHandled()
-                    return@LaunchedEffect
-                }
-                
-                Log.d(TAG, "✅ Navigating to deep link: $pendingDeepLink (from route: $currentRoute)")
-                try {
-                    navController.navigate(pendingDeepLink) {
-                        // Don't pop the home screen, just add on top
-                        launchSingleTop = true
-                    }
-                    Log.d(TAG, "✅ Deep link navigation successful!")
-                    onDeepLinkHandled()
-                } catch (e: Exception) {
-                    ErrorLogger.log(e, "Failed to navigate to deep link: $pendingDeepLink")
-                    onDeepLinkHandled()
-                }
-            } else {
-                Log.d(TAG, "⏳ Waiting to pass auth screen (current: $currentRoute)")
-            }
-        }
-    }
-    
+
     val needsScaffold = currentRoute !in AUTH_SCREENS
-    
+
     if (needsScaffold) {
         SSBMaxScaffold(
             navController = navController,

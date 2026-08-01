@@ -1,14 +1,16 @@
-package com.ssbmax.utils
+package com.ssbmax.navigation
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
- * Unit tests for DeepLinkParser
- * Tests deep link parsing and building logic used for notification navigation
+ * Unit tests for [DeepLinkParser] -- ported verbatim (KMP-convergence
+ * Phase 4) from `app/src/test/kotlin/com/ssbmax/utils/DeepLinkParserTest.kt`
+ * into `commonTest` so both platforms run it, matching the class's own move
+ * into `shared`.
  */
 class DeepLinkParserTest {
 
@@ -83,7 +85,7 @@ class DeepLinkParserTest {
     fun `parseToRoute returns null for blank input`() {
         val result = DeepLinkParser.parseToRoute("")
         assertNull(result)
-        
+
         val result2 = DeepLinkParser.parseToRoute("   ")
         assertNull(result2)
     }
@@ -102,13 +104,13 @@ class DeepLinkParserTest {
             "interview/result/xyz789",
             DeepLinkParser.parseToRoute("ssbmax://interview/result/xyz789")
         )
-        
+
         // Interview history
         assertEquals(
             "interview/history",
             DeepLinkParser.parseToRoute("ssbmax://interview/history")
         )
-        
+
         // Student home
         assertEquals(
             "student/home",
@@ -126,7 +128,7 @@ class DeepLinkParserTest {
         val deepLink = DeepLinkParser.buildInterviewResultDeepLink(resultId)
         val parsedRoute = DeepLinkParser.parseToRoute(deepLink)
         val extractedId = DeepLinkParser.extractInterviewResultId(deepLink)
-        
+
         assertEquals("interview/result/$resultId", parsedRoute)
         assertEquals(resultId, extractedId)
     }
@@ -135,7 +137,7 @@ class DeepLinkParserTest {
     fun `round trip interview history deep link works correctly`() {
         val deepLink = DeepLinkParser.buildInterviewHistoryDeepLink()
         val parsedRoute = DeepLinkParser.parseToRoute(deepLink)
-        
+
         assertEquals("interview/history", parsedRoute)
     }
 
@@ -208,4 +210,3 @@ class DeepLinkParserTest {
         assertEquals("interview/result/$firebaseId", result)
     }
 }
-

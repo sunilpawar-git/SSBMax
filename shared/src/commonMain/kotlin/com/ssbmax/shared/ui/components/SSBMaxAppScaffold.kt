@@ -22,6 +22,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ssbmax.navigation.SSBMaxDestinations
+import com.ssbmax.navigation.isAuthScreen
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.presentation.profile.UserProfileViewModel
@@ -80,13 +81,7 @@ fun SSBMaxAppScaffold(
         else -> ""
     }
 
-    val showChrome = currentDestination?.let {
-        !it.hasRoute<SSBMaxDestinations.Splash>() &&
-            !it.hasRoute<SSBMaxDestinations.Login>() &&
-            !it.hasRoute<SSBMaxDestinations.RoleSelection>()
-    } ?: false
-
-    if (!showChrome) {
+    if (currentDestination.isAuthScreen()) {
         // Splash/Login/RoleSelection render full-bleed, no drawer/bottom bar --
         // matches the Android original's `shouldShowDrawer` exclusion list.
         content({})

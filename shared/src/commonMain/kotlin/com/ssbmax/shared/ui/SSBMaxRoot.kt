@@ -6,12 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.ssbmax.navigation.DeepLinkGateway
 import com.ssbmax.navigation.SSBMaxNavHost
+import com.ssbmax.shared.domain.repository.AuthRepository
+import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.presentation.root.AppRootViewModel
 import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
 import com.ssbmax.shared.ui.theme.LocalThemeState
 import com.ssbmax.shared.ui.theme.SSBMaxTheme
 import com.ssbmax.shared.ui.theme.ThemeState
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -37,6 +41,11 @@ import org.koin.compose.viewmodel.koinViewModel
  * before this, matching `MainActivity`'s existing pattern — those depend on
  * `ActivityResultLauncher`/`UNUserNotificationCenter` registration that must
  * happen before this composable's first composition.
+ *
+ * [DeepLinkEffect] (Phase 4) closes iOS's total deep-link gap here: both
+ * platforms' entry points submit a raw notification payload into the
+ * [DeepLinkGateway] Koin singleton, and this composable is the one place
+ * that drains it once the user is authenticated and past the auth screens.
  */
 @Composable
 fun SSBMaxRoot() {
@@ -44,9 +53,24 @@ fun SSBMaxRoot() {
     val currentTheme by viewModel.themeFlow.collectAsStateWithLifecycle()
     val themeState = remember(currentTheme) { ThemeState(currentTheme) }
 
+    val deepLinkGateway: DeepLinkGateway = koinInject()
+    val authRepository: AuthRepository = koinInject()
+    val logger: DomainLogger = koinInject()
+
     CompositionLocalProvider(LocalThemeState provides themeState) {
         SSBMaxTheme(appTheme = currentTheme) {
             val navController = rememberNavController()
+            val pendingRoute by deepLinkGateway.pendingRoute.collectAsStateWithLifecycle()
+            val currentUser by authRepository.currentUser.collectAsStateWithLifecycle()
+
+            DeepLinkEffect(
+                navController = navController,
+                pendingRoute = pendingRoute,
+                isAuthenticated = currentUser != null,
+                onConsume = deepLinkGateway::consume,
+                logger = logger
+            )
+
             SSBMaxAppScaffold(navController = navController) { onOpenDrawer ->
                 SSBMaxNavHost(navController = navController, onOpenDrawer = onOpenDrawer)
             }

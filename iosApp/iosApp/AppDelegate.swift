@@ -113,13 +113,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
 
     /// User tapped a notification (background or terminated-state launch).
-    /// Deep-link/navigation handling is left for whichever phase wires real
-    /// push payload routing -- out of Phase 6's registration-plumbing scope.
+    /// Hands the payload's `deepLink` string off to `shared`'s
+    /// `DeepLinkGateway` (KMP-convergence Phase 4) -- iOS's total prior gap,
+    /// closed the same way Android's `MainActivity` feeds the same gateway.
+    /// Delivery covers both cold start and background: `UNUserNotificationCenter`
+    /// defers calling this until the delegate below is set, which
+    /// `application(_:didFinishLaunchingWithOptions:)` does synchronously
+    /// before returning, so a terminated-state tap still reaches here.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        let deepLink = response.notification.request.content.userInfo["deepLink"] as? String
+        IosDeepLinkBridgeKt.onDeepLinkNotificationReceived(rawDeepLink: deepLink)
         completionHandler()
     }
 }

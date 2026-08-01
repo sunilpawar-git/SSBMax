@@ -1,5 +1,7 @@
 package com.ssbmax.navigation
 
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource
 import ssbmax.shared.generated.resources.Res
@@ -475,3 +477,16 @@ sealed class BottomNavItem(
     data object InstructorGrading : BottomNavItem(SSBMaxDestinations.InstructorGrading.route, Res.string.nav_grading)
     data object InstructorAnalytics : BottomNavItem(SSBMaxDestinations.InstructorAnalytics.route, Res.string.nav_analytics)
 }
+
+/**
+ * Screens that render full-bleed with no drawer/bottom-nav chrome
+ * ([com.ssbmax.shared.ui.components.SSBMaxAppScaffold]'s `showChrome`
+ * exclusion list) and that a cold-start deep link must wait to pass before
+ * navigating ([com.ssbmax.shared.ui.DeepLinkEffect]'s auth deferral) --
+ * one definition shared by both rather than two hand-kept lists agreeing by
+ * convention (KMP-convergence Phase 4).
+ */
+fun NavDestination?.isAuthScreen(): Boolean = this != null &&
+    (hasRoute<SSBMaxDestinations.Splash>() ||
+        hasRoute<SSBMaxDestinations.Login>() ||
+        hasRoute<SSBMaxDestinations.RoleSelection>())

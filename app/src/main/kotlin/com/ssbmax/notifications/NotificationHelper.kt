@@ -10,7 +10,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.ssbmax.MainActivity
 import com.ssbmax.R
-import com.ssbmax.utils.DeepLinkParser
+import com.ssbmax.navigation.DeepLinkParser
 import com.ssbmax.utils.ErrorLogger
 
 /**

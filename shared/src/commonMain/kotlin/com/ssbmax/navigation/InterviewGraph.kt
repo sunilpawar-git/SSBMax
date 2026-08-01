@@ -3,6 +3,7 @@ package com.ssbmax.navigation
 import androidx.navigation.compose.composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.ssbmax.shared.ui.interviewresult.InterviewResultScreen
 import com.ssbmax.shared.ui.interviewsession.InterviewSessionScreen
@@ -53,7 +54,24 @@ fun NavGraphBuilder.interviewGraph(navController: NavHostController) {
         )
     }
 
-    composable<SSBMaxDestinations.InterviewResult> { backStackEntry ->
+    composable<SSBMaxDestinations.InterviewResult>(
+        // Phase 4's deep-link seam: `DeepLinkParser.buildInterviewResultDeepLink`
+        // produces "ssbmax://interview/result/{id}"; this registers the exact
+        // same shape (SCHEME + ROUTE_INTERVIEW_RESULT, trailing slash trimmed
+        // since navDeepLink appends "/{resultId}" itself) as an alternate,
+        // externally-reachable URI for this destination -- not a second place
+        // that shape is defined, just the one existing constant reused as a
+        // basePath. `NavController.navigate(route: String)` (used by every
+        // in-graph `navigate(SSBMaxDestinations.InterviewResult(...))` call
+        // above and elsewhere) never consults this list -- only
+        // `navigate(NavUri)`/`navigate(NavDeepLinkRequest)` do, which is what
+        // `DeepLinkEffect` calls.
+        deepLinks = listOf(
+            navDeepLink<SSBMaxDestinations.InterviewResult>(
+                basePath = DeepLinkParser.SCHEME + DeepLinkParser.ROUTE_INTERVIEW_RESULT.removeSuffix("/")
+            )
+        )
+    ) { backStackEntry ->
         val resultId = backStackEntry.toRoute<SSBMaxDestinations.InterviewResult>().resultId
         InterviewResultScreen(
             resultId = resultId,

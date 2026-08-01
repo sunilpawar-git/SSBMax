@@ -12,6 +12,7 @@ import com.ssbmax.shared.analysis.SDAnalysisOrchestrator
 import com.ssbmax.shared.analysis.SRTAnalysisOrchestrator
 import com.ssbmax.shared.analysis.TATAnalysisOrchestrator
 import com.ssbmax.shared.analysis.WATAnalysisOrchestrator
+import com.ssbmax.navigation.DeepLinkGateway
 import com.ssbmax.shared.data.repository.OirResultCache
 import com.ssbmax.shared.db.DatabaseDriverFactory
 import com.ssbmax.shared.db.SharedDatabase
@@ -57,6 +58,10 @@ val coreInfraModule = module {
     // Root ViewModel for every entry point rendering SSBMaxRoot (CanaryActivity,
     // iOS MainViewController) plus Android's MainActivity pre-Phase-5-cutover.
     viewModelOf(::AppRootViewModel)
+
+    // Deep-link seam (Phase 4): one Koin singleton both platforms' entry
+    // points submit into, and SSBMaxRoot's DeepLinkEffect drains.
+    single { DeepLinkGateway() }
 
     single { SharedDatabase(get<DatabaseDriverFactory>().createDriver()) }
     single { OirResultCache(get()) }
