@@ -1,8 +1,6 @@
 package com.ssbmax.shared.ui.components.drawer
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.UserProfile
+import com.ssbmax.shared.ui.components.ProfileAvatarWithBadge
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.drawer_header_age_gender_format
@@ -40,15 +38,11 @@ import ssbmax.shared.generated.resources.drawer_header_loading
 
 /**
  * KMP port of the Android `app/.../ui/components/drawer/DrawerHeader.kt` —
- * user profile summary card at the top of [SSBMaxDrawer].
- *
- * Deviation from the Android original: no `ProfileAvatarWithBadge` component
- * exists in `shared` yet (that composable lives only in `app`, un-ported) --
- * a plain initials-in-circle avatar is used instead, matching the pattern
- * already established by [com.ssbmax.shared.ui.profile.ProfileHeader]
- * (`StudentProfileHeader.kt`) rather than introducing a new shim for a
- * single subscription-badge visual. All text externalized to
- * `composeResources` strings (the Android original hardcoded these too --
+ * user profile summary card at the top of [SSBMaxDrawer]. Uses
+ * [ProfileAvatarWithBadge] for the tier-badged avatar (ported in
+ * KMP-convergence Phase 3b -- previously a plain initials circle, since
+ * `ProfileAvatarWithBadge` hadn't been ported yet). All text externalized to
+ * `composeResources` strings (the Android original hardcoded these --
  * pre-existing debt not carried forward here).
  */
 @Composable
@@ -82,7 +76,11 @@ fun DrawerHeader(
                     )
                 }
                 userProfile != null && userProfile.fullName.isNotBlank() -> {
-                    DrawerAvatar(initials = userProfile.getInitials())
+                    ProfileAvatarWithBadge(
+                        initials = userProfile.getInitials(),
+                        subscriptionType = userProfile.subscriptionType,
+                        modifier = Modifier.size(72.dp)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = userProfile.fullName,
@@ -114,7 +112,11 @@ fun DrawerHeader(
                     }
                 }
                 else -> {
-                    DrawerAvatar(initials = "?")
+                    ProfileAvatarWithBadge(
+                        initials = "?",
+                        subscriptionType = null,
+                        modifier = Modifier.size(72.dp)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = stringResource(Res.string.drawer_header_complete_profile_title),
@@ -164,24 +166,5 @@ fun DrawerHeader(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun DrawerAvatar(initials: String) {
-    Column(
-        modifier = Modifier
-            .size(72.dp)
-            .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-            .border(width = 2.dp, color = MaterialTheme.colorScheme.onPrimaryContainer, shape = CircleShape),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = initials,
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onPrimary,
-            textAlign = TextAlign.Center
-        )
     }
 }

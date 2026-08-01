@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.savedstate.read
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.gto.gd.GDResultScreen
 import com.ssbmax.shared.ui.gto.gd.GDTestScreen
 import com.ssbmax.shared.ui.gto.gpe.GPEResultScreen
@@ -18,11 +19,9 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
     // `onNavigateToPhaseDetail` isn't ported, so there is no in-graph path to
     // *start* a new `GTOGDTest`, and the Android original's `GDResultScreen`
     // has no "retake" callback either. Both routes registered regardless, same
-    // "no crash on unregistered destination" principle. Unlike OIR/PPDT/TAT/
-    // WAT/SRT/SDT, `StudentHomeScreen.onNavigateToResult` doesn't switch on
-    // TestType.GTO_GD yet (that switch is a StudentHomeScreen change, out of
-    // this session's scope) -- so GDResult is reachable only via direct
-    // navigation/deep link, not from Student Home, until that's wired.
+    // "no crash on unregistered destination" principle. (`HomeGraph`'s
+    // `onNavigateToResult` switch on TestType.GTO_GD/LECTURETTE/GPE was the
+    // gap noted here previously -- Phase 3a's row #1 closed it.)
     composable(
         route = SSBMaxDestinations.GTOGDTest.route,
         arguments = listOf(navArgument("testId") { type = NavType.StringType })
@@ -30,12 +29,16 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "gto_gd_standard"
         GDTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.GTOGDResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.GTOGDTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.GTO_GD,
+                    navController = navController
+                )
             },
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToUpgrade = { navController.navigate(SSBMaxDestinations.UpgradeScreen.route) }
         )
     }
 
@@ -62,12 +65,16 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "gto_lecturette_standard"
         LecturetteTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.GTOLecturetteResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.GTOLecturetteTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.GTO_LECTURETTE,
+                    navController = navController
+                )
             },
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToUpgrade = { navController.navigate(SSBMaxDestinations.UpgradeScreen.route) }
         )
     }
 
@@ -94,10 +101,13 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "gpe_standard"
         GPETestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.GTOGPEResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.GTOGPETest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.GTO_GPE,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )

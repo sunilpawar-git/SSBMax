@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.savedstate.read
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
@@ -22,10 +23,13 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
     ) { backStackEntry ->
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "oir_standard"
         OIRTestScreen(
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.OIRTestResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.OIRTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.OIR,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )
@@ -63,10 +67,13 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "ppdt_standard"
         PPDTTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.PPDTSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.PPDTTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.PPDT,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )
@@ -104,10 +111,13 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "tat_standard"
         TATTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.TATSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.TATTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.TAT,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )
@@ -144,10 +154,13 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "wat_standard"
         WATTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.WATSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.WATTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.WAT,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )

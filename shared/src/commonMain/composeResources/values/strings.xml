@@ -1123,6 +1123,9 @@
     <string name="drawer_header_complete_profile_subtitle">Tap the edit button below to get started</string>
     <string name="drawer_header_edit_profile">Edit Profile</string>
     <string name="drawer_header_create_profile">Create Profile</string>
+    <string name="subscription_badge_free">Free</string>
+    <string name="subscription_badge_pro">Pro</string>
+    <string name="subscription_badge_premium">Premium</string>
 
     <!-- Phase 0c (KMP-convergence plan): commonMain has no AGP-Lint-enforced
          ComposeHardcodedText check, so these were only caught once the

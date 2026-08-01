@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.savedstate.read
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.ui.piq.PIQSubmissionResultScreen
 import com.ssbmax.shared.ui.piq.PIQTestScreen
 import com.ssbmax.shared.ui.sdt.SDTSubmissionResultScreen
@@ -21,10 +22,15 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "srt_standard"
         SRTTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.SRTSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.SRTTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                // SRT is one of two test types (with SD) actually gated by
+                // subscriptionType -- FREE/PRO wait for manual grading.
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.SRT,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )
@@ -61,10 +67,14 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
         val testId = backStackEntry.arguments?.read { getStringOrNull("testId") } ?: "sdt_standard"
         SDTTestScreen(
             testId = testId,
-            onTestComplete = { submissionId, _ ->
-                navController.navigate(SSBMaxDestinations.SDSubmissionResult.createRoute(submissionId)) {
-                    popUpTo(SSBMaxDestinations.SDTest.createRoute(testId)) { inclusive = true }
-                }
+            onTestComplete = { submissionId, subscriptionType ->
+                // SD is the other test type gated by subscriptionType.
+                TestResultHandler.handleTestSubmission(
+                    submissionId = submissionId,
+                    subscriptionType = subscriptionType,
+                    testType = TestType.SD,
+                    navController = navController
+                )
             },
             onNavigateBack = { navController.navigateUp() }
         )

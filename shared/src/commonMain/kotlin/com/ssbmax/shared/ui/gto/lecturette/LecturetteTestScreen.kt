@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.shared.presentation.lecturette.LecturettePhase
+import com.ssbmax.shared.presentation.lecturette.LecturetteTestUiState
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestViewModel
 import com.ssbmax.shared.ui.gto.common.AnimatedWhiteNoiseOverlay
 import com.ssbmax.shared.ui.gto.common.GTOErrorDialog
@@ -44,6 +45,7 @@ fun LecturetteTestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: LecturetteTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -74,21 +76,15 @@ fun LecturetteTestScreen(
         }
     }
 
-    if (showExitDialog) {
-        GTOExitDialog(onDismiss = { showExitDialog = false }, onExit = { whiteNoiseState.disable(); onNavigateBack() })
-    }
-
-    if (uiState.showLimitDialog) {
-        GTOLimitDialog(
-            message = uiState.limitMessage,
-            onUpgrade = { viewModel.dismissLimitDialog(); onNavigateBack() },
-            onDismiss = { viewModel.dismissLimitDialog(); onNavigateBack() }
-        )
-    }
-
-    if (uiState.error != null) {
-        GTOErrorDialog(message = uiState.error!!, onDismiss = { viewModel.dismissError() })
-    }
+    LecturetteDialogs(
+        uiState = uiState,
+        showExitDialog = showExitDialog,
+        onDismissExit = { showExitDialog = false },
+        onExit = { whiteNoiseState.disable(); onNavigateBack() },
+        onUpgrade = { viewModel.dismissLimitDialog(); onNavigateToUpgrade() },
+        onDismissLimit = { viewModel.dismissLimitDialog(); onNavigateBack() },
+        onDismissError = { viewModel.dismissError() }
+    )
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
@@ -133,5 +129,26 @@ fun LecturetteTestScreen(
         if (uiState.phase == LecturettePhase.SPEECH) {
             AnimatedWhiteNoiseOverlay(baseAlpha = 0.08f, intensityRange = 0.03f, isEnabled = whiteNoiseState.isEnabled.value)
         }
+    }
+}
+
+@Composable
+private fun LecturetteDialogs(
+    uiState: LecturetteTestUiState,
+    showExitDialog: Boolean,
+    onDismissExit: () -> Unit,
+    onExit: () -> Unit,
+    onUpgrade: () -> Unit,
+    onDismissLimit: () -> Unit,
+    onDismissError: () -> Unit
+) {
+    if (showExitDialog) {
+        GTOExitDialog(onDismiss = onDismissExit, onExit = onExit)
+    }
+    if (uiState.showLimitDialog) {
+        GTOLimitDialog(message = uiState.limitMessage, onUpgrade = onUpgrade, onDismiss = onDismissLimit)
+    }
+    if (uiState.error != null) {
+        GTOErrorDialog(message = uiState.error, onDismiss = onDismissError)
     }
 }
