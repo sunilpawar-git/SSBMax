@@ -1,3 +1,4 @@
+import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -130,6 +131,14 @@ kotlin {
             // a real KMP artifact, so Phase 1's ViewModel characterization tests run
             // it here to cover iOS too, not just androidUnitTest below.
             implementation(libs.turbine)
+            // Compose Multiplatform's own commonTest UI-test artifact (real KMP target,
+            // unlike androidx.compose.ui:ui-test-junit4 which is Android-only) -- declared
+            // here so it's available to every target's runComposeUiTest, including iOS's
+            // Native test harness later. Phase 2's own SSBMaxThemeUiTest currently lives in
+            // androidUnitTest only (needs Robolectric, see that source set below); full
+            // cross-platform UI-test porting is Phase 6a's larger undertaking.
+            @OptIn(ExperimentalComposeLibrary::class)
+            implementation(compose.uiTest)
         }
         // Phase 1 domain move: the 6 MockK-dependent unit tests from core:domain's
         // JVM-only test source set land here (androidUnitTest), not commonTest --
@@ -145,6 +154,15 @@ kotlin {
                 // closes the Phase 0 exit report's "SQLDelight unexercised at
                 // runtime" gap without needing an emulator/simulator.
                 implementation(libs.sqldelight.sqlite.driver)
+                // Phase 2: `androidx.compose.ui.test.runComposeUiTest`'s Android host-side
+                // implementation reads `android.os.Build.FINGERPRINT`, which is null without
+                // Robolectric's shadow classes -- same dependency `app` already uses for its
+                // own Robolectric-backed unit tests. `@RunWith(RobolectricTestRunner::class)`
+                // is JUnit4-only (no Kotlin/Native equivalent), so the one CMP UI test this
+                // phase adds (SSBMaxThemeUiTest) lives in this androidUnitTest source set,
+                // not commonTest -- porting the rest of the suite to run on iOS too is
+                // Phase 6a's larger undertaking.
+                implementation(libs.robolectric)
             }
         }
         androidMain.dependencies {
@@ -179,6 +197,18 @@ android {
 
     defaultConfig {
         minSdk = 26
+    }
+
+    // Robolectric-only launcher Activity for SSBMaxThemeUiTest's
+    // runComposeUiTest -- see shared/src/androidUnitTest/AndroidManifest.xml's
+    // own doc comment. Merged only into the JVM unit test manifest.
+    // includeAndroidResources is required for AGP to actually merge/honor a
+    // per-test-sourceSet manifest for a library module's unit tests --
+    // confirmed empirically: no processDebugUnitTestManifest task exists,
+    // and the override is silently ignored, without it.
+    testOptions.unitTests.isIncludeAndroidResources = true
+    sourceSets.getByName("test") {
+        manifest.srcFile("src/androidUnitTest/AndroidManifest.xml")
     }
 
     compileOptions {

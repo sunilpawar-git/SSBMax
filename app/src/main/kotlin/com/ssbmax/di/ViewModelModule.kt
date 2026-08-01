@@ -1,6 +1,5 @@
 package com.ssbmax.di
 
-import com.ssbmax.MainViewModel
 import com.ssbmax.ui.AppViewModel
 import com.ssbmax.ui.analytics.AnalyticsViewModel
 import com.ssbmax.ui.auth.AuthViewModel
@@ -62,7 +61,6 @@ import com.ssbmax.ui.premium.UpgradeViewModel as PremiumUpgradeViewModel
  * injection where a ViewModel takes one.
  */
 val viewModelModule = module {
-    viewModelOf(::MainViewModel)
     viewModelOf(::AppViewModel)
     viewModelOf(::AnalyticsViewModel)
     viewModelOf(::AuthViewModel)

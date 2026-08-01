@@ -1,4 +1,4 @@
-package com.ssbmax.ui.theme
+package com.ssbmax.shared.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -11,11 +11,11 @@ object SSBScoreColors {
     val Excellent = Color(0xFF4CAF50)  // Green - scores ≤ 5
     val Average = Color(0xFFFFC107)   // Amber - scores 6-7
     val NeedsWork = Color(0xFFF44336) // Red - scores ≥ 8
-    
+
     // Score thresholds (SSB scale)
     const val EXCELLENT_THRESHOLD = 5f
     const val AVERAGE_THRESHOLD = 7f
-    
+
     /**
      * Get appropriate color for a score
      * @param score SSB scale score (1-10, lower is better)
@@ -26,7 +26,7 @@ object SSBScoreColors {
         score <= AVERAGE_THRESHOLD -> Average
         else -> NeedsWork
     }
-    
+
     /**
      * Get transparent variant of score color for backgrounds
      * @param score SSB scale score

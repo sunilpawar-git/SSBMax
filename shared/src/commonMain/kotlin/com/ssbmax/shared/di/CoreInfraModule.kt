@@ -19,6 +19,7 @@ import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.root.AppRootViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -28,6 +29,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -51,6 +53,10 @@ val coreInfraModule = module {
     includes(platformModule)
 
     single<DomainLogger> { NoOpLogger() }
+
+    // Root ViewModel for every entry point rendering SSBMaxRoot (CanaryActivity,
+    // iOS MainViewController) plus Android's MainActivity pre-Phase-5-cutover.
+    viewModelOf(::AppRootViewModel)
 
     single { SharedDatabase(get<DatabaseDriverFactory>().createDriver()) }
     single { OirResultCache(get()) }

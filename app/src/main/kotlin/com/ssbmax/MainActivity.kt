@@ -10,14 +10,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.platform.auth.AndroidGoogleSignInLauncher
 import com.ssbmax.shared.platform.permissions.AndroidNotificationPermissionController
+import com.ssbmax.shared.presentation.root.AppRootViewModel
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
+import com.ssbmax.shared.ui.theme.LocalThemeState
+import com.ssbmax.shared.ui.theme.SSBMaxTheme
+import com.ssbmax.shared.ui.theme.ThemeState
 import com.ssbmax.ui.SSBMaxApp
 import com.ssbmax.ui.permissions.LocalNotificationPermissionController
-import com.ssbmax.ui.theme.LocalThemeState
-import com.ssbmax.ui.theme.SSBMaxTheme
 import com.ssbmax.utils.DeepLinkParser
 import org.koin.compose.viewmodel.koinViewModel
 import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController as SharedLocalNotificationPermissionController
@@ -58,8 +62,9 @@ class MainActivity : ComponentActivity() {
         pendingDeepLink = extractDeepLinkFromIntent(intent)
 
         setContent {
-            val mainViewModel: MainViewModel = koinViewModel()
-            val themeState = mainViewModel.themeState
+            val rootViewModel: AppRootViewModel = koinViewModel()
+            val currentTheme by rootViewModel.themeFlow.collectAsStateWithLifecycle()
+            val themeState = remember(currentTheme) { ThemeState(currentTheme) }
 
             CompositionLocalProvider(
                 LocalThemeState provides themeState,
@@ -71,7 +76,7 @@ class MainActivity : ComponentActivity() {
                 SharedLocalNotificationPermissionController provides notificationPermissionController,
                 LocalGoogleSignInLauncher provides googleSignInLauncher
             ) {
-                SSBMaxTheme(appTheme = themeState.currentTheme) {
+                SSBMaxTheme(appTheme = currentTheme) {
                     SSBMaxApp(
                         pendingDeepLink = pendingDeepLink,
                         onDeepLinkHandled = { pendingDeepLink = null }

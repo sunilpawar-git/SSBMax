@@ -1,4 +1,4 @@
-package com.ssbmax.ui.theme
+package com.ssbmax.shared.ui.theme
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -17,7 +17,7 @@ class ThemeState(
 ) {
     var currentTheme by mutableStateOf(initialTheme)
         private set
-    
+
     fun updateTheme(theme: AppTheme) {
         currentTheme = theme
     }
@@ -29,4 +29,3 @@ class ThemeState(
 val LocalThemeState = staticCompositionLocalOf<ThemeState> {
     error("No ThemeState provided")
 }
-

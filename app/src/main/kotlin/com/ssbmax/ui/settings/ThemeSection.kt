@@ -31,11 +31,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.R
 import com.ssbmax.shared.domain.model.AppTheme
 import com.ssbmax.ui.settings.theme.ThemeSettingsViewModel
-import com.ssbmax.ui.theme.LocalThemeState
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Theme selector section for Settings
+ * Theme selector section for Settings.
+ *
+ * Phase 2 of the KMP-convergence plan removed this screen's optimistic
+ * `LocalThemeState.current.updateTheme(theme)` push: that was a workaround
+ * for `MainActivity`/`MainViewModel` reading `AppThemeSettings.themeFlow`
+ * once at `init` instead of collecting it, so nothing but this direct nudge
+ * ever re-themed the running app. Now that the root ViewModel
+ * (`AppRootViewModel`) collects the flow live, `viewModel.updateTheme(theme)`
+ * below (which calls `AppThemeSettings.setTheme`) is the only write needed —
+ * a second write path into `LocalThemeState` would just be a duplicate
+ * source of truth for the same fact.
  */
 @Composable
 fun ThemeSection(
@@ -43,8 +52,7 @@ fun ThemeSection(
     viewModel: ThemeSettingsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val themeState = LocalThemeState.current
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -87,10 +95,7 @@ fun ThemeSection(
                     ThemeOption(
                         theme = theme,
                         isSelected = uiState.appTheme == theme,
-                        onSelected = {
-                            viewModel.updateTheme(theme)
-                            themeState.updateTheme(theme) // Immediate UI update
-                        }
+                        onSelected = { viewModel.updateTheme(theme) }
                     )
                 }
             }

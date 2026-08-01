@@ -48,18 +48,15 @@ import ssbmax.shared.generated.resources.theme_system_description
  * `NotificationSettingsSection` below; [SettingsScreen]'s own top-level
  * `SettingsViewModel` is a separate instance.
  *
- * Deviation from the Android original: the Android `ThemeSection` also
- * pushed the selected theme into `com.ssbmax.ui.theme.LocalThemeState` (an
- * Android-only `CompositionLocal` the app's root `Activity`-level theme
- * wrapper reads to recompose immediately). No `shared/commonMain` equivalent
- * exists yet -- there is no commonMain root theme composable subscribing to
- * [com.ssbmax.shared.platform.settings.AppThemeSettings] at all today, on
- * either platform. The preference IS persisted correctly via
- * `appThemeSettings.setTheme(...)` (this screen's own state updates
- * immediately), but nothing in `shared`/iOS/this Android-KMP path yet
- * re-themes the actual running app in response -- a real, named gap, not
- * silently dropped, and out of this session's scope (wiring a shared root
- * theme composable is a separate, larger change).
+ * Deviation from the Android original: the Android `ThemeSection` used to
+ * also push the selected theme into `com.ssbmax.ui.theme.LocalThemeState`,
+ * an optimistic-update workaround for `MainViewModel` reading
+ * `AppThemeSettings.themeFlow` once at `init` instead of collecting it. As
+ * of Phase 2 of the KMP-convergence plan, `AppRootViewModel` (via
+ * `SSBMaxRoot`/`MainActivity`) collects that flow live on both platforms, so
+ * `appThemeSettings.setTheme(...)` below is now the single write that
+ * re-themes the running app on its own -- the workaround was removed from
+ * the Android screen rather than ported here.
  */
 @Composable
 fun ThemeSection(modifier: Modifier = Modifier) {

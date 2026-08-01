@@ -4,23 +4,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.navigation.compose.rememberNavController
 import com.ssbmax.shared.platform.auth.AndroidGoogleSignInLauncher
 import com.ssbmax.shared.platform.permissions.AndroidNotificationPermissionController
+import com.ssbmax.shared.ui.SSBMaxRoot
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
-import com.ssbmax.shared.ui.components.SSBMaxAppScaffold
 import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
-import com.ssbmax.navigation.SSBMaxNavHost
 
 /**
  * Phase 5 canary validation harness (debug builds only). Renders `shared`'s
- * real, full [SSBMaxNavHost] (all 54 ported destinations, wrapped in
- * [SSBMaxAppScaffold]'s drawer/bottom-nav chrome) so the ported screens are
+ * real, full [SSBMaxRoot] (all 54 ported destinations, wrapped in its
+ * drawer/bottom-nav chrome and real branded theme) so the ported screens are
  * reachable/testable end-to-end without wiring them into the production
  * app's own nav graph (`NavGraph.kt`/`AuthNavGraph.kt`/`StudentNavGraph.kt`/
  * `InstructorNavGraph.kt`/`SharedNavGraph.kt` are untouched by this class).
+ *
+ * Phase 2 of the KMP-convergence plan pointed this at [SSBMaxRoot] directly
+ * (previously a bare `MaterialTheme { }` + hand-assembled scaffold/nav-host
+ * pair) so canary and the real Phase 5 cutover target are literally the
+ * same code, validated ahead of time.
+ *
  * Launch via:
  *   adb shell am start -n com.ssbmax.debug/com.ssbmax.spike.CanaryActivity
  *
@@ -64,12 +67,7 @@ class CanaryActivity : ComponentActivity() {
                 LocalNotificationPermissionController provides notificationPermissionController,
                 LocalGoogleSignInLauncher provides googleSignInLauncher
             ) {
-                MaterialTheme {
-                    val navController = rememberNavController()
-                    SSBMaxAppScaffold(navController = navController) { onOpenDrawer ->
-                        SSBMaxNavHost(navController = navController, onOpenDrawer = onOpenDrawer)
-                    }
-                }
+                SSBMaxRoot()
             }
         }
     }

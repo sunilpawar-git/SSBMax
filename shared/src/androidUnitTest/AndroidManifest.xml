@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Robolectric-only manifest for shared's androidUnitTest source set.
+  androidx.compose.ui.test.runComposeUiTest's Android host implementation
+  launches androidx.activity.ComponentActivity via ActivityScenario, which
+  needs a resolvable MAIN/LAUNCHER intent. The real shared/build.gradle.kts
+  android block declares no activities at all (this is a library module),
+  so Robolectric can't resolve one without this. Wired in via
+  android.sourceSets["test"].manifest in shared/build.gradle.kts; merged only
+  for JVM unit tests, never into the real app's manifest.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
