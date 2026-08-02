@@ -1,6 +1,6 @@
 [versions]
 agp = "8.7.3"
-kotlin = "2.1.0"
+kotlin = "2.4.10"
 detekt = "1.23.7"
 
 # AndroidX Core
@@ -23,7 +23,7 @@ room = "2.6.1"
 ktor = "3.0.2"
 
 # Coroutines
-coroutines = "1.9.0"
+coroutines = "1.11.0"
 
 # DataStore
 datastore = "1.1.1"
@@ -110,7 +110,7 @@ firebase-functions = { group = "com.google.firebase", name = "firebase-functions
 
 # Play Services for Google Sign-In
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.2.0" }
-kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "1.9.0" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version = "1.11.0" }
 
 # Gemini AI (Google Generative AI SDK)
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
@@ -137,7 +137,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.10" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.2" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
