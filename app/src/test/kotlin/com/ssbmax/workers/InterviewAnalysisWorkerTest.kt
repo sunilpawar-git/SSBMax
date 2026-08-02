@@ -5,8 +5,9 @@ import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.ssbmax.notifications.NotificationHelper
+import com.ssbmax.shared.analysis.InterviewAnalysisOrchestrator
 import com.ssbmax.shared.domain.model.interview.InterviewMode
-import com.ssbmax.shared.domain.model.interview.InterviewResponse
 import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.model.interview.InterviewSession
 import com.ssbmax.shared.domain.model.interview.InterviewStatus
@@ -14,18 +15,14 @@ import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQCategory
 import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.repository.InterviewRepository
-import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.shared.domain.service.ResponseAnalysis
-import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.notifications.NotificationHelper
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -33,11 +30,15 @@ import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
-import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Unit tests for InterviewAnalysisWorker
+ * Phase 8 (KMP-convergence plan): rewritten for the worker's shell conversion.
+ * `InterviewAnalysisWorker` no longer analyzes responses or aggregates scores itself --
+ * that flow now lives in [InterviewAnalysisOrchestrator], covered by
+ * `shared/commonTest/.../analysis/InterviewAnalysisOrchestratorTest.kt`. This file now
+ * covers only the shell's own job: delegate, then map the session's persisted before/after
+ * status to a WorkManager [ListenableWorker.Result] and notification.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class InterviewAnalysisWorkerTest {
@@ -45,44 +46,26 @@ class InterviewAnalysisWorkerTest {
     private lateinit var context: Context
     private lateinit var workerParams: WorkerParameters
     private lateinit var interviewRepository: InterviewRepository
-    private lateinit var aiService: AIService
+    private lateinit var orchestrator: InterviewAnalysisOrchestrator
     private lateinit var notificationHelper: NotificationHelper
-    private lateinit var getOLQDashboard: GetOLQDashboardUseCase
 
     private val testSessionId = "test-session-123"
     private val testUserId = "user-123"
     private val testResultId = "result-123"
 
-    private val testSession = InterviewSession(
+    private fun session(status: InterviewStatus) = InterviewSession(
         id = testSessionId,
         userId = testUserId,
         mode = InterviewMode.TEXT_BASED,
-        status = InterviewStatus.PENDING_ANALYSIS,
+        status = status,
         startedAt = Clock.System.now() - 1800.seconds,
-        completedAt = null,
+        completedAt = if (status == InterviewStatus.COMPLETED) Clock.System.now() else null,
         piqSnapshotId = "piq-123",
         consentGiven = true,
         questionIds = listOf("q1", "q2"),
         currentQuestionIndex = 2,
         estimatedDuration = 30
     )
-
-    private val testResponses = listOf(
-        InterviewResponse(
-            id = "resp-1",
-            sessionId = testSessionId,
-            questionId = "q1",
-            responseText = "My answer 1",
-            responseMode = InterviewMode.TEXT_BASED,
-            respondedAt = Clock.System.now() - 1200.seconds,
-            thinkingTimeSec = 30,
-            audioUrl = null,
-            olqScores = emptyMap(),
-            confidenceScore = 0
-        )
-    )
-
-    private val testAnalysisResult: ResponseAnalysis = mockk(relaxed = true)
 
     private val testInterviewResult = InterviewResult(
         id = testResultId,
@@ -93,14 +76,8 @@ class InterviewAnalysisWorkerTest {
         durationSec = 1800,
         totalQuestions = 2,
         totalResponses = 2,
-        overallOLQScores = mapOf(
-            OLQ.EFFECTIVE_INTELLIGENCE to OLQScore(5, 80, "Aggregated"),
-            OLQ.DETERMINATION to OLQScore(4, 75, "Aggregated")
-        ),
-        categoryScores = mapOf(
-            OLQCategory.INTELLECTUAL to 5f,
-            OLQCategory.SOCIAL to 5f
-        ),
+        overallOLQScores = mapOf(OLQ.EFFECTIVE_INTELLIGENCE to OLQScore(5, 80, "Aggregated")),
+        categoryScores = mapOf(OLQCategory.INTELLECTUAL to 5f),
         overallConfidence = 78,
         strengths = listOf(OLQ.DETERMINATION),
         weaknesses = listOf(OLQ.POWER_OF_EXPRESSION),
@@ -120,24 +97,19 @@ class InterviewAnalysisWorkerTest {
         context = mockk(relaxed = true)
         workerParams = mockk(relaxed = true)
         interviewRepository = mockk(relaxed = true)
-        aiService = mockk(relaxed = true)
+        orchestrator = mockk(relaxed = true)
         notificationHelper = mockk(relaxed = true)
-        getOLQDashboard = mockk(relaxed = true)
 
         every { workerParams.inputData } returns workDataOf(
             InterviewAnalysisWorker.KEY_SESSION_ID to testSessionId
         )
         every { workerParams.runAttemptCount } returns 0
 
-        // InterviewAnalysisWorker resolves its dependencies via KoinComponent/inject()
-        // (converted from Hilt's @HiltWorker/@AssistedInject) — start a Koin instance
-        // with the mocks above bound so `by inject()` resolves them in the worker.
         startKoin {
             modules(module {
                 single { interviewRepository }
-                single { aiService }
+                single { orchestrator }
                 single { notificationHelper }
-                single { getOLQDashboard }
             })
         }
     }
@@ -147,64 +119,65 @@ class InterviewAnalysisWorkerTest {
         stopKoin()
     }
 
-    private fun createWorker(): InterviewAnalysisWorker {
-        return InterviewAnalysisWorker(context, workerParams)
-    }
+    private fun createWorker() = InterviewAnalysisWorker(context, workerParams)
 
     @Test
-    fun `worker fetches session and responses`() = runTest {
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getResponses(testSessionId) } returns Result.success(testResponses)
-        coEvery { interviewRepository.getResponse(any()) } returns Result.success(testResponses[0])
-        coEvery { aiService.analyzeResponse(any(), any(), any()) } returns Result.success(testAnalysisResult)
-        coEvery { interviewRepository.updateResponse(any()) } returns Result.success(mockk())
-        coEvery { interviewRepository.completeInterview(testSessionId) } returns Result.success(testInterviewResult)
-        coEvery { interviewRepository.updateSession(any()) } returns Result.success(Unit)
-        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
+    fun `doWork delegates to the orchestrator and returns success with a notification when it completes`() = runTest {
+        coEvery { interviewRepository.getSession(testSessionId) } returnsMany listOf(
+            Result.success(session(InterviewStatus.PENDING_ANALYSIS)),
+            Result.success(session(InterviewStatus.COMPLETED))
+        )
+        coEvery { orchestrator.analyze(testSessionId) } returns Unit
+        coEvery { interviewRepository.getLatestResult(testUserId) } returns Result.success(testInterviewResult)
 
-        val worker = createWorker()
-        val result = worker.doWork()
+        val result = createWorker().doWork()
 
-        coVerify { interviewRepository.getSession(testSessionId) }
-        coVerify { interviewRepository.getResponses(testSessionId) }
+        coVerify(exactly = 1) { orchestrator.analyze(testSessionId) }
+        coVerify(exactly = 1) { notificationHelper.showInterviewResultsReadyNotification(testSessionId, testResultId) }
         assertEquals(ListenableWorker.Result.success(), result)
     }
 
     @Test
-    fun `worker sends success notification`() = runTest {
-        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(testSession)
-        coEvery { interviewRepository.getResponses(testSessionId) } returns Result.success(testResponses)
-        coEvery { interviewRepository.getResponse(any()) } returns Result.success(testResponses[0])
-        coEvery { aiService.analyzeResponse(any(), any(), any()) } returns Result.success(testAnalysisResult)
-        coEvery { interviewRepository.updateResponse(any()) } returns Result.success(mockk())
-        coEvery { interviewRepository.completeInterview(testSessionId) } returns Result.success(testInterviewResult)
-        coEvery { interviewRepository.updateSession(any()) } returns Result.success(Unit)
-        coEvery { getOLQDashboard.invalidateCache(any()) } returns Unit
+    fun `doWork returns failure with a failure notification when the orchestrator leaves the session non-COMPLETED`() = runTest {
+        coEvery { interviewRepository.getSession(testSessionId) } returnsMany listOf(
+            Result.success(session(InterviewStatus.PENDING_ANALYSIS)),
+            Result.success(session(InterviewStatus.FAILED))
+        )
+        coEvery { orchestrator.analyze(testSessionId) } returns Unit
 
-        val worker = createWorker()
-        worker.doWork()
+        val result = createWorker().doWork()
 
-        verify { notificationHelper.showInterviewResultsReadyNotification(testSessionId, testResultId) }
+        coVerify(exactly = 1) { notificationHelper.showInterviewAnalysisFailedNotification(testSessionId) }
+        assertEquals(ListenableWorker.Result.failure(), result)
     }
 
     @Test
-    fun `worker returns failure when sessionId missing`() = runTest {
+    fun `doWork skips delegating to the orchestrator when status is not PENDING_ANALYSIS`() = runTest {
+        coEvery { interviewRepository.getSession(testSessionId) } returns Result.success(session(InterviewStatus.COMPLETED))
+
+        val result = createWorker().doWork()
+
+        coVerify(exactly = 0) { orchestrator.analyze(any()) }
+        assertEquals(ListenableWorker.Result.success(), result)
+    }
+
+    @Test
+    fun `doWork returns failure when sessionId missing`() = runTest {
         every { workerParams.inputData } returns workDataOf()
 
-        val worker = createWorker()
-        val result = worker.doWork()
+        val result = createWorker().doWork()
 
         assertEquals(ListenableWorker.Result.failure(), result)
     }
 
     @Test
-    fun `worker returns failure when session not found`() = runTest {
+    fun `doWork returns failure when session not found`() = runTest {
         coEvery { interviewRepository.getSession(testSessionId) } returns Result.failure(Exception("Not found"))
         every { workerParams.runAttemptCount } returns 3
 
-        val worker = createWorker()
-        val result = worker.doWork()
+        val result = createWorker().doWork()
 
         assertEquals(ListenableWorker.Result.failure(), result)
+        coVerify(exactly = 0) { orchestrator.analyze(any()) }
     }
 }

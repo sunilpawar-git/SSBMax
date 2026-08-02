@@ -100,7 +100,6 @@
     <ID>ImplicitDefaultLocale:OIRTestTopBar.kt$String.format("%02d:%02d", minutes, seconds)</ID>
     <ID>ImplicitDefaultLocale:PPDTComponents.kt$String.format("%02d:%02d", minutes, seconds)</ID>
     <ID>ImplicitDefaultLocale:TopicScreen.kt$String.format("%.1f", result.getAverageOLQScore())</ID>
-    <ID>LargeClass:GTOAnalysisPrompts.kt$GTOAnalysisPrompts</ID>
     <ID>LargeClass:SRTTestViewModelTest.kt$SRTTestViewModelTest : BaseViewModelTest</ID>
     <ID>LongMethod:DrawerContent.kt$@Composable fun DrawerContent( currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:DrawerHeader.kt$@Composable fun DrawerHeader( userProfile: UserProfile?, isLoading: Boolean = false, onEditProfile: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
@@ -115,10 +114,6 @@
     <ID>LongMethod:GPESubmissionResultScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPESubmissionResultScreen( submissionId: String, onNavigateHome: () -&gt; Unit, viewModel: GPESubmissionResultViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GPETestScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPETestScreen( testId: String, onTestComplete: (String, com.ssbmax.shared.domain.model.SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GPETestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GPETestViewModel.kt$GPETestViewModel$fun loadTest(testId: String = "gpe_standard")</ID>
-    <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGDPrompt(submission: GTOSubmission.GDSubmission): String</ID>
-    <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateGPEPrompt(submission: GTOSubmission.GPESubmission): String</ID>
-    <ID>LongMethod:GTOAnalysisPrompts.kt$GTOAnalysisPrompts$private fun generateLecturettePrompt(submission: GTOSubmission.LecturetteSubmission): String</ID>
-    <ID>LongMethod:GTOAnalysisWorker.kt$GTOAnalysisWorker$override suspend fun doWork(): Result</ID>
     <ID>LongMethod:InstructorHomeScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InstructorHomeScreen( viewModel: InstructorHomeViewModel = koinViewModel(), onNavigateToStudent: (String) -&gt; Unit, onNavigateToGrading: () -&gt; Unit, onNavigateToBatchDetail: (String) -&gt; Unit, onNavigateToCreateBatch: () -&gt; Unit, onOpenDrawer: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:InstructorHomeViewModel.kt$InstructorHomeViewModel$private fun loadInstructorData()</ID>
     <ID>LongMethod:InterviewAnalysisWorker.kt$InterviewAnalysisWorker$override suspend fun doWork(): Result</ID>

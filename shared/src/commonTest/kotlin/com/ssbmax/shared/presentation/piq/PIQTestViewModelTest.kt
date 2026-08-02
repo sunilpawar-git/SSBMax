@@ -8,6 +8,7 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
+import com.ssbmax.shared.presentation.testing.FakeBackgroundTaskScheduler
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
@@ -39,6 +40,7 @@ class PIQTestViewModelTest {
     private lateinit var subscriptionRepository: FakeSubscriptionRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
     private lateinit var usageRecorder: FakeTestUsageRecorder
+    private lateinit var backgroundTaskScheduler: FakeBackgroundTaskScheduler
 
     @BeforeTest
     fun setUp() {
@@ -47,6 +49,7 @@ class PIQTestViewModelTest {
         subscriptionRepository = FakeSubscriptionRepository()
         submissionRepository = FakeSubmissionRepository()
         usageRecorder = FakeTestUsageRecorder()
+        backgroundTaskScheduler = FakeBackgroundTaskScheduler()
     }
 
     @AfterTest
@@ -60,7 +63,8 @@ class PIQTestViewModelTest {
         checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
         usageRecorder = usageRecorder,
         logger = NoOpLogger(),
-        analyticsTracker = RecordingAnalyticsTracker()
+        analyticsTracker = RecordingAnalyticsTracker(),
+        backgroundTaskScheduler = backgroundTaskScheduler
     )
 
     @Test
@@ -148,6 +152,9 @@ class PIQTestViewModelTest {
         assertTrue(state.submissionComplete)
         assertNotNull(state.submissionId)
         assertEquals(1, usageRecorder.recorded.size)
+        // Gap #14 (Phase 8, KMP-convergence plan): a successful PIQ submission pre-warms
+        // Interview-module questions so the interview starts instantly.
+        assertEquals(listOf(state.submissionId), backgroundTaskScheduler.questionGenerationRequests)
     }
 
     @Test

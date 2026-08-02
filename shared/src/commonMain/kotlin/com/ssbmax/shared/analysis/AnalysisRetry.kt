@@ -9,11 +9,19 @@ import kotlinx.coroutines.delay
  * Shared retry/fill-missing-OLQs logic factored out of the near-identical blocks
  * repeated across every Android `*AnalysisWorker` (`analyzeSubmissionWithRetry` +
  * `fillMissingOLQs`, ~40 duplicated lines each in PPDT/WAT/SRT/SDT/TAT-story/TAT-synthesis).
- * Same retry count/backoff/score-range/acceptance-threshold as those originals.
+ * Same retry count/score-range/acceptance-threshold as those originals; backoff is
+ * [RetryBackoffPolicy]'s jittered exponential delay (Phase 8, KMP-convergence plan) rather
+ * than a plain linear one, promoted here from being TAT-story-worker-only on Android so
+ * every orchestrator's retries spread apart under a Gemini overload, on both platforms.
+ *
+ * Public (not `internal`): `app`'s `TATStoryAnalysisWorker`/`TATSynthesisWorker` call this
+ * directly too (Phase 8) -- their WorkManager-chained, Room-cached execution shape is kept
+ * (real platform value: process-death resilience + rate-limit batching that a single
+ * collapsed coroutine can't offer), but the retry/clamp/fill-missing *behavior* now comes
+ * from here instead of being re-implemented a third time.
  */
-internal object AnalysisRetry {
+object AnalysisRetry {
     private const val MAX_AI_RETRIES = 3
-    private const val RETRY_DELAY_MS = 2000L
     private const val MIN_ACCEPTABLE_OLQS = 14
 
     suspend fun withRetry(
@@ -41,7 +49,7 @@ internal object AnalysisRetry {
                 // all attempts are exhausted, matching the Android originals' behavior.
             }
             if (attempt < MAX_AI_RETRIES - 1) {
-                delay(RETRY_DELAY_MS * (attempt + 1))
+                delay(RetryBackoffPolicy.nextDelayMillis(attempt))
             }
         }
         return null

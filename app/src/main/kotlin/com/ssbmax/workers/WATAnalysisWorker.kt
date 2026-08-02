@@ -1,172 +1,70 @@
 package com.ssbmax.workers
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.data.ai.prompts.PsychologyTestPrompts
 import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.shared.domain.model.TestType
-import com.ssbmax.shared.domain.model.interview.OLQ
-import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.analysis.WATAnalysisOrchestrator
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
-import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
-import com.ssbmax.shared.domain.repository.UserProfileRepository
-import com.ssbmax.shared.domain.scoring.ScoringUtils
-import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+/**
+ * Background worker for analyzing WAT test submissions using Gemini AI.
+ *
+ * Phase 8 (KMP-convergence plan): the AI-analysis flow itself moved to
+ * [WATAnalysisOrchestrator], `shared`'s single-sourced implementation of the exact
+ * fetch -> ANALYZING -> Gemini call with retry -> SSB-validate -> write OLQ result flow
+ * this class used to re-implement. This worker is now a thin WorkManager shell: it
+ * checks PENDING_ANALYSIS itself (so a "skip, already processed" run fires no
+ * notification, matching the original), delegates the flow to the orchestrator, then
+ * re-reads the submission's persisted status to decide the WorkManager [Result] and
+ * notification -- that persisted state can't drift from what the orchestrator did.
+ */
 class WATAnalysisWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
 
     private val submissionRepository: SubmissionRepository by inject()
-    private val userProfileRepository: UserProfileRepository by inject()
-    private val aiService: AIService by inject()
+    private val orchestrator: WATAnalysisOrchestrator by inject()
     private val notificationHelper: NotificationHelper by inject()
-    private val getOLQDashboard: GetOLQDashboardUseCase by inject()
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"
-        private const val TAG = "WATAnalysisWorker"
-        private const val MAX_AI_RETRIES = 3
-        private const val RETRY_DELAY_MS = 2000L
+        private const val MAX_WORKER_RETRIES = 3
     }
 
     override suspend fun doWork(): Result {
         val submissionId = inputData.getString(KEY_SUBMISSION_ID) ?: return Result.failure()
-        val startTime = System.currentTimeMillis()
-        Log.d(TAG, "🔄 Starting WAT analysis for submission: $submissionId")
 
         return try {
-            val submission = submissionRepository.getWATSubmission(submissionId).getOrNull()
-                ?: return Result.failure()
+            val before = submissionRepository.getWATSubmission(submissionId).getOrNull() ?: return Result.failure()
+            if (before.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) return Result.success()
 
-            if (submission.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) {
-                return Result.success()
+            orchestrator.analyze(submissionId)
+
+            val after = submissionRepository.getWATSubmission(submissionId).getOrNull()
+            if (after?.analysisStatus == AnalysisStatus.COMPLETED) {
+                notificationHelper.showWATResultsReadyNotification(submissionId)
+                Result.success()
+            } else {
+                notificationHelper.showWATAnalysisFailedNotification(submissionId)
+                Result.failure()
             }
-
-            submissionRepository.updateWATAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
-            val prompt = PsychologyTestPrompts.generateWATAnalysisPrompt(submission)
-            val olqScores = analyzeSubmissionWithRetry(prompt) ?: return handleAnalysisFailure(submissionId)
-
-            val userProfile = try {
-                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to fetch user profile for WAT analysis — defaulting to NDA")
-                null
-            }
-            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
-            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
-            Log.d(TAG, "   SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                Log.w(TAG, "⚠️ SSB alert: ${validationResult.summary}")
-            }
-
-            val olqResult = createOLQResult(submissionId, olqScores)
-            // Note: updateWATOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
-            submissionRepository.updateWATOLQResult(submissionId, olqResult)
-
-            // Invalidate dashboard cache AFTER result is saved
-            // CRITICAL: Must happen after result is in Firestore, not at submission time
-            try {
-                getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Dashboard cache invalidated for user: ${submission.userId}")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-            }
-
-            notificationHelper.showWATResultsReadyNotification(submissionId)
-            Log.d(TAG, "🎉 WAT analysis completed in ${System.currentTimeMillis() - startTime}ms")
-            Result.success()
         } catch (e: Exception) {
             ErrorLogger.log(e, "WAT analysis worker failed")
-            if (runAttemptCount < MAX_AI_RETRIES) Result.retry() else {
-                handleAnalysisFailure(submissionId)
+            if (runAttemptCount < MAX_WORKER_RETRIES) {
+                Result.retry()
+            } else {
+                try {
+                    submissionRepository.updateWATAnalysisStatus(submissionId, AnalysisStatus.FAILED)
+                    notificationHelper.showWATAnalysisFailedNotification(submissionId)
+                } catch (updateError: Exception) {
+                    ErrorLogger.log(updateError, "Failed to update WAT submission status to FAILED")
+                }
                 Result.failure()
             }
         }
-    }
-
-    private suspend fun analyzeSubmissionWithRetry(prompt: String): Map<OLQ, OLQScore>? {
-        repeat(MAX_AI_RETRIES) { attempt ->
-            try {
-                val analysisResult = aiService.analyzeWATResponse(prompt)
-                if (analysisResult.isSuccess) {
-                    val analysis = analysisResult.getOrNull()!!
-                    val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
-                        OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
-                            confidence = analysis.overallConfidence,
-                            reasoning = scoreWithReasoning.reasoning
-                        )
-                    }
-                    if (olqScores.size >= 14) {
-                        return if (olqScores.size == 15) olqScores else fillMissingOLQs(olqScores)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Analysis attempt ${attempt + 1} failed: ${e.message}")
-            }
-            if (attempt < MAX_AI_RETRIES - 1) delay(RETRY_DELAY_MS * (attempt + 1) * 2)
-        }
-        return null
-    }
-
-    private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
-        val mutable = scores.toMutableMap()
-        OLQ.entries.forEach { olq ->
-            if (olq !in mutable) {
-                mutable[olq] = OLQScore(score = 6, confidence = 30, reasoning = "AI did not assess this OLQ - neutral score assigned")
-            }
-        }
-        return mutable
-    }
-
-    private fun createOLQResult(submissionId: String, olqScores: Map<OLQ, OLQScore>): OLQAnalysisResult {
-        val overallScore = olqScores.values.map { it.score }.average().toFloat()
-        val overallRating = when {
-            overallScore <= 5.5f -> "Exceptional"
-            overallScore <= 6.5f -> "Good"
-            overallScore <= 7.5f -> "Average"
-            else -> "Needs Improvement"
-        }
-        val strengths = olqScores.entries.sortedBy { it.value.score }.take(3)
-            .map { "${it.key.displayName} (${it.value.score})" }
-        val weaknesses = olqScores.entries.sortedByDescending { it.value.score }.take(3)
-            .map { "${it.key.displayName} (${it.value.score})" }
-
-        return OLQAnalysisResult(
-            submissionId = submissionId,
-            testType = TestType.WAT,
-            olqScores = olqScores,
-            overallScore = overallScore,
-            overallRating = overallRating,
-            strengths = strengths,
-            weaknesses = weaknesses,
-            recommendations = listOf(
-                "Continue practicing WAT with diverse word associations",
-                "Focus on improving identified weak areas",
-                "Maintain quick and positive responses"
-            ),
-            analyzedAt = System.currentTimeMillis(),
-            aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
-        )
-    }
-
-    private suspend fun handleAnalysisFailure(submissionId: String): Result {
-        try {
-            submissionRepository.updateWATAnalysisStatus(submissionId, AnalysisStatus.FAILED)
-            notificationHelper.showWATAnalysisFailedNotification(submissionId)
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update WAT submission status to FAILED")
-        }
-        return Result.failure()
     }
 }

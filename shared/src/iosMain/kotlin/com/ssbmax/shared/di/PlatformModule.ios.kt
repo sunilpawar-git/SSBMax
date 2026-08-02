@@ -30,7 +30,7 @@ actual val platformModule = module {
     // UNUserNotificationCenter has no Activity-registration lifecycle
     // constraint, so it can be a plain Application-scoped Koin single.
     single<NotificationPermissionController> { IosNotificationPermissionController() }
-    single<BackgroundTaskScheduler> { BGTaskSchedulerBackgroundTaskScheduler(get()) }
+    single<BackgroundTaskScheduler> { BGTaskSchedulerBackgroundTaskScheduler(get(), get(), get()) }
     single<BillingClient> { StoreKitBillingClient() }
     // Phase 7a: real observability seams -- closes "iOS has zero logging"/
     // "iOS ships blind to crashes" (this plan's opening complaint for iOS).

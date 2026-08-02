@@ -13,7 +13,7 @@
 | Entry point | `MainActivity.kt` | Registers `ActivityResultLauncher`s (must happen before STARTED), submits deep links to `DeepLinkGateway`, renders `SSBMaxRoot()` |
 | DI bootstrap | `SSBMaxApplication.kt`, `di/KoinModules.kt` | Starts Koin with `appModules` (`sharedModule` + `core:data` modules + the handful of `app`-local modules `app/workers`/`app/notifications` still need); schedules background tasks via `BackgroundTaskScheduler` |
 | Push | `notifications/{SSBMaxFirebaseMessagingService,NotificationHelper}.kt` | FCM token handling, notification channel/display |
-| Background analysis | `workers/` (13 files) | WorkManager workers for AI grading (GTO/Interview/PPDT/TAT/SRT/WAT/SDT). **Known duplication, not yet closed:** these re-implement analysis logic that `shared/analysis/*Orchestrator.kt` also implements — Phase 8 of the KMP-convergence plan makes the orchestrators the SSOT and reduces workers to thin shells |
+| Background analysis | `workers/` (13 files) | WorkManager workers for AI grading (GTO/Interview/PPDT/TAT/SRT/WAT/SDT). **Duplication closed (KMP-convergence Phase 8):** GTO/WAT/SRT/SD/PPDT/Interview workers are thin shells delegating to `shared/analysis/*Orchestrator.kt`; TAT's per-story/synthesis workers keep their WorkManager-chain topology (real process-death resilience the orchestrator's single-coroutine design doesn't need) but converge onto the same `shared/analysis/AnalysisRetry` retry/prompt logic. `InterviewQuestionGenerationWorker` is a shell over `shared`'s `InterviewQuestionGenerator` |
 | DI modules | `di/{AppInjectablesModule,DebugModule,TestUseCaseModule,WorkManagerModule}.kt` | Koin bindings for the above — **not Hilt**; see [app/di/CLAUDE.md](di/CLAUDE.md) |
 
 ## Anti-patterns (still enforced here)

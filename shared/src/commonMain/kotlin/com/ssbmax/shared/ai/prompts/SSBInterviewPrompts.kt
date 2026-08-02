@@ -14,6 +14,11 @@ import com.ssbmax.shared.domain.model.interview.OLQ
  *
  * These prompts are designed to elicit high-quality, personalized
  * SSB interview questions that assess Officer-Like Qualities.
+ *
+ * Exceeds the repo's 300-line Quality Limit -- exempted per Rule 3's own precedent
+ * (prompt corpora aren't split where doing so "harms readability and helps nothing";
+ * same reasoning as `SSBMaxDestinations.kt`'s exemption). Phase 8 (KMP-convergence
+ * plan) is where this exemption was formally recorded, not where the size originated.
  */
 object SSBInterviewPrompts {
 

@@ -6,16 +6,13 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
+import com.ssbmax.shared.analysis.AnalysisRetry
 import com.ssbmax.shared.domain.model.TATImageContext
-import com.ssbmax.shared.domain.model.interview.OLQ
-import com.ssbmax.shared.domain.model.interview.OLQScore
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.utils.ErrorLogger
-import com.ssbmax.workers.retry.RetryBackoffPolicy
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -32,7 +29,19 @@ import java.util.UUID
  * Downloads the TAT image bytes and calls Gemini multimodal with the per-picture
  * rubric from imageContextJson — mirrors PPDTAnalysisWorker but scoped to one story.
  *
- * Results are cached in tat_story_assessments (Room) for immediate display.
+ * Results are cached in tat_story_assessments (Room) for immediate display, and for
+ * [TATSynthesisWorker] to read back once every story in the chain completes.
+ *
+ * Phase 8 (KMP-convergence plan): the retry/clamp/fill-missing-OLQ logic (previously
+ * hand-rolled here, `analyzeStoryWithRetry`) now comes from [AnalysisRetry.withRetry],
+ * the same helper every `shared/analysis` Orchestrator uses -- closes a real divergence
+ * this phase's audit found: this worker used to accept a bare 14/15-OLQ result as-is,
+ * while [com.ssbmax.shared.analysis.TATAnalysisOrchestrator]'s per-story path always fills
+ * the 15th with a neutral score, so an Android-graded TAT could show 12 stories at 14 OLQs
+ * each feeding synthesis, while iOS always saw 15. Both now always see 15. The WorkManager
+ * chain topology itself (this worker + [TATSynthesisWorker] + [TATAnalysisWorkPlanner]'s
+ * batching) is unchanged -- real process-death resilience the orchestrator's single-coroutine
+ * design doesn't need to offer, not duplicate business logic.
  */
 class TATStoryAnalysisWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
@@ -100,15 +109,17 @@ class TATStoryAnalysisWorker(context: Context, params: WorkerParameters) :
         val candidateGender = fetchCandidateGender(submission.userId)
         Log.d(TAG, "   Step 1: Image bytes prepared (${imageBytes.size} bytes)")
 
-        val olqScores = analyzeStoryWithRetry(
-            imageBytes = imageBytes,
-            story = storyResponse.story,
-            imageContext = imageContext,
-            candidateGender = candidateGender,
-            storyIndex = storyIndex,
-            totalStories = submission.stories.size,
-            imageGenderTag = imageGenderTag
-        )
+        val olqScores = AnalysisRetry.withRetry {
+            aiService.analyzeTATStoryMultimodal(
+                imageBytes = imageBytes,
+                story = storyResponse.story,
+                imageContext = imageContext,
+                candidateGender = candidateGender,
+                storyIndex = storyIndex,
+                totalStories = submission.stories.size,
+                imageGenderTag = imageGenderTag
+            )
+        }
         if (olqScores == null) {
             // AI analysis exhausted retries. Save placeholder so synthesis can still run.
             Log.e(TAG, "❌ Per-story AI analysis failed after $MAX_AI_RETRIES retries — saving placeholder, not blocking chain")
@@ -208,10 +219,10 @@ class TATStoryAnalysisWorker(context: Context, params: WorkerParameters) :
         storyIndex: Int,
         story: String,
         imageUrl: String,
-        olqScores: Map<OLQ, OLQScore>
+        olqScores: Map<com.ssbmax.shared.domain.model.interview.OLQ, com.ssbmax.shared.domain.model.interview.OLQScore>
     ) {
         val overallScore = olqScores.values.map { it.score }.average().toFloat()
-        val overallRating = ratingFromScore(overallScore)
+        val overallRating = AnalysisRetry.ratingFromScore(overallScore)
         val aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
         val olqScoresJson = JSONArray().also { arr ->
             olqScores.forEach { (olq, score) ->
@@ -238,60 +249,5 @@ class TATStoryAnalysisWorker(context: Context, params: WorkerParameters) :
                 analyzedAt = System.currentTimeMillis()
             )
         )
-    }
-
-    private fun ratingFromScore(score: Float): String = when {
-        score <= 5.5f -> "Exceptional"
-        score <= 6.5f -> "Good"
-        score <= 7.5f -> "Average"
-        else -> "Needs Improvement"
-    }
-
-    private suspend fun analyzeStoryWithRetry(
-        imageBytes: ByteArray,
-        story: String,
-        imageContext: TATImageContext,
-        candidateGender: String,
-        storyIndex: Int,
-        totalStories: Int,
-        imageGenderTag: String = "MIXED"
-    ): Map<OLQ, OLQScore>? {
-        repeat(MAX_AI_RETRIES) { attempt ->
-            try {
-                Log.d(TAG, "   Attempt ${attempt + 1}/$MAX_AI_RETRIES: Calling Gemini AI (multimodal)...")
-                val result = aiService.analyzeTATStoryMultimodal(
-                    imageBytes = imageBytes,
-                    story = story,
-                    imageContext = imageContext,
-                    candidateGender = candidateGender,
-                    storyIndex = storyIndex,
-                    totalStories = totalStories,
-                    imageGenderTag = imageGenderTag
-                )
-                if (result.isSuccess) {
-                    val analysis = result.getOrNull()!!
-                    val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
-                        OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
-                            confidence = analysis.overallConfidence,
-                            reasoning = scoreWithReasoning.reasoning
-                        )
-                    }
-                    if (olqScores.size >= 14) {
-                        Log.d(TAG, "   ✅ AI returned ${olqScores.size}/15 OLQs")
-                        return olqScores
-                    } else {
-                        Log.w(TAG, "   ⚠️ AI returned ${olqScores.size}/15 OLQs, retrying...")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "   ❌ AI call failed: ${e.message}")
-            }
-
-            if (attempt < MAX_AI_RETRIES - 1) {
-                delay(RetryBackoffPolicy.nextDelayMillis(attempt))
-            }
-        }
-        return null
     }
 }

@@ -18,7 +18,7 @@ import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.AIService
 import com.ssbmax.shared.domain.service.OLQScoreWithReasoning
 import com.ssbmax.shared.domain.service.ResponseAnalysis
-import com.ssbmax.workers.retry.RetryBackoffPolicy
+import com.ssbmax.shared.analysis.RetryBackoffPolicy
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

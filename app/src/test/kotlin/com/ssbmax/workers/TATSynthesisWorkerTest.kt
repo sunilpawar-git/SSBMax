@@ -21,7 +21,7 @@ import com.ssbmax.shared.domain.service.OLQScoreWithReasoning
 import com.ssbmax.shared.domain.service.ResponseAnalysis
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.workers.retry.RetryBackoffPolicy
+import com.ssbmax.shared.analysis.RetryBackoffPolicy
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -351,7 +351,7 @@ class TATSynthesisWorkerTest {
         storyIndex = index,
         story = if (valid) "candidate-story-$index" else "placeholder-story-$index",
         imageUrl = "https://example.com/tat_$index.jpg",
-        olqScoresJson = "[{\"olq\":\"EFFECTIVE_INTELLIGENCE\",\"score\":6}]",
+        olqScoresJson = "[{\"olq\":\"EFFECTIVE_INTELLIGENCE\",\"score\":6,\"confidence\":80,\"reasoning\":\"Consistent evidence\"}]",
         overallScore = if (valid) 6.0f else 0f,
         overallRating = if (valid) "Good" else TATStoryAnalysisWorker.FAILED_MARKER,
         aiConfidence = if (valid) 80 else 0,

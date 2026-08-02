@@ -1,276 +1,64 @@
 package com.ssbmax.workers
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.data.ai.prompts.PsychologyTestPrompts
 import com.ssbmax.notifications.NotificationHelper
-import com.ssbmax.shared.domain.model.TestType
-import com.ssbmax.shared.domain.model.interview.OLQ
-import com.ssbmax.shared.domain.model.interview.OLQScore
+import com.ssbmax.shared.analysis.SDAnalysisOrchestrator
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
-import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import com.ssbmax.shared.domain.repository.SubmissionRepository
-import com.ssbmax.shared.domain.repository.UserProfileRepository
-import com.ssbmax.shared.domain.scoring.ScoringUtils
-import com.ssbmax.shared.domain.service.AIService
-import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
-import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+/**
+ * Background worker for analyzing SD (Self Description) test submissions using Gemini AI.
+ *
+ * Phase 8 (KMP-convergence plan): see [WATAnalysisWorker]'s doc -- same shell shape,
+ * delegating the AI-analysis flow to [SDAnalysisOrchestrator].
+ */
 class SDTAnalysisWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
 
     private val submissionRepository: SubmissionRepository by inject()
-    private val userProfileRepository: UserProfileRepository by inject()
-    private val aiService: AIService by inject()
+    private val orchestrator: SDAnalysisOrchestrator by inject()
     private val notificationHelper: NotificationHelper by inject()
-    private val getOLQDashboard: GetOLQDashboardUseCase by inject()
 
     companion object {
         const val KEY_SUBMISSION_ID = "submission_id"
-        private const val TAG = "SDTAnalysisWorker"
-        private const val MAX_AI_RETRIES = 3
-        private const val RETRY_DELAY_MS = 2000L
+        private const val MAX_WORKER_RETRIES = 3
     }
 
     override suspend fun doWork(): Result {
-        val submissionId = inputData.getString(KEY_SUBMISSION_ID)
-        if (submissionId.isNullOrBlank()) {
-            Log.e(TAG, "❌ No submission ID provided")
-            ErrorLogger.log(
-                "SDT analysis worker started without submission ID",
-                emptyMap(),
-                ErrorLogger.Severity.ERROR
-            )
-            return Result.failure()
-        }
-
-        val startTime = System.currentTimeMillis()
-        Log.d(TAG, "🔄 Starting SDT analysis for submission: $submissionId")
+        val submissionId = inputData.getString(KEY_SUBMISSION_ID) ?: return Result.failure()
 
         return try {
-            // 1. Get submission from repository
-            val submissionResult = submissionRepository.getSDTSubmission(submissionId)
-            val submission = submissionResult.getOrNull()
-            if (submission == null) {
-                Log.e(TAG, "❌ SDT submission not found: $submissionId")
-                return Result.failure()
-            }
+            val before = submissionRepository.getSDTSubmission(submissionId).getOrNull() ?: return Result.failure()
+            if (before.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) return Result.success()
 
-            Log.d(TAG, "   Step 1: SDT submission found with ${submission.responses.size} responses")
+            orchestrator.analyze(submissionId)
 
-            // 2. Verify PENDING_ANALYSIS status (don't process if already done)
-            if (submission.analysisStatus != AnalysisStatus.PENDING_ANALYSIS) {
-                Log.w(TAG, "⚠️ SDT submission not in PENDING_ANALYSIS state: ${submission.analysisStatus}")
-                return Result.success()  // Already processed, skip
-            }
-
-            // 3. Update status to ANALYZING
-            submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.ANALYZING)
-            Log.d(TAG, "   Step 2: Status updated to ANALYZING")
-
-            // 4. Generate SDT analysis prompt
-            val prompt = PsychologyTestPrompts.generateSDAnalysisPrompt(submission)
-            Log.d(TAG, "   Step 3: Generated SDT analysis prompt")
-
-            // 5. Analyze with Gemini AI (with retry logic)
-            val olqScores = analyzeSubmissionWithRetry(prompt)
-            if (olqScores == null) {
-                Log.e(TAG, "❌ AI analysis failed after $MAX_AI_RETRIES retries")
-                handleAnalysisFailure(submissionId)
-                return Result.failure()
-            }
-
-            Log.d(TAG, "   Step 4: AI analysis complete - received ${olqScores.size}/15 OLQ scores")
-
-            val userProfile = try {
-                userProfileRepository.getUserProfile(submission.userId).first().getOrNull()
-            } catch (e: Exception) {
-                ErrorLogger.log(e, "Failed to fetch user profile for SDT analysis — defaulting to NDA")
-                null
-            }
-            val entryType = ScoringUtils.toScoringEntryType(userProfile?.entryType)
-            val validationResult = ValidationIntegration.validateScores(olqScores, entryType)
-            Log.d(TAG, "   Step 5: SSB Validation - ${validationResult.recommendation}, limitations: ${validationResult.limitationCount}")
-            if (!validationResult.isValid || validationResult.hasCriticalWeakness) {
-                Log.w(TAG, "⚠️ SSB Validation alert: ${validationResult.summary}")
-            }
-
-            // 6. Create OLQAnalysisResult
-            val overallScore = olqScores.values.map { it.score }.average().toFloat()
-            val overallRating = when {
-                overallScore <= 5.5f -> "Exceptional"
-                overallScore <= 6.5f -> "Good"
-                overallScore <= 7.5f -> "Average"
-                else -> "Needs Improvement"
-            }
-
-            // Extract top 3 strengths (lowest scores)
-            val strengths = olqScores.entries
-                .sortedBy { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            // Extract top 3 weaknesses (highest scores)
-            val weaknesses = olqScores.entries
-                .sortedByDescending { it.value.score }
-                .take(3)
-                .map { "${it.key.displayName} (${it.value.score})" }
-
-            val recommendations = listOf(
-                "Continue developing self-awareness and goal orientation",
-                "Focus on strengthening: ${weaknesses.joinToString(", ")}",
-                "Reflect on your actions and their impact on others"
-            )
-
-            val olqResult = OLQAnalysisResult(
-                submissionId = submissionId,
-                testType = TestType.SD,
-                olqScores = olqScores,
-                overallScore = overallScore,
-                overallRating = overallRating,
-                strengths = strengths,
-                weaknesses = weaknesses,
-                recommendations = recommendations,
-                analyzedAt = System.currentTimeMillis(),
-                aiConfidence = olqScores.values.firstOrNull()?.confidence ?: 50
-            )
-
-            // 7. Update submission with OLQ result
-            // Note: updateSDTOLQResult atomically sets BOTH olqResult AND analysisStatus=COMPLETED
-            submissionRepository.updateSDTOLQResult(submissionId, olqResult)
-            Log.d(TAG, "   Step 5: Submission updated with OLQ result")
-
-            // 8. Invalidate dashboard cache AFTER result is saved
-            // CRITICAL: Must happen after result is in Firestore, not at submission time
-            try {
-                getOLQDashboard.invalidateCache(submission.userId)
-                Log.d(TAG, "   Step 6: Dashboard cache invalidated for user: ${submission.userId}")
-            } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Failed to invalidate cache: ${e.message}")
-            }
-
-            // 9. Send notification
-            try {
+            val after = submissionRepository.getSDTSubmission(submissionId).getOrNull()
+            if (after?.analysisStatus == AnalysisStatus.COMPLETED) {
                 notificationHelper.showSDTResultsReadyNotification(submissionId)
-                Log.d(TAG, "✅ Push notification sent successfully!")
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Failed to send notification", e)
-                ErrorLogger.log(e, "Failed to send SDT result notification")
-            }
-
-            val durationMs = System.currentTimeMillis() - startTime
-            Log.d(TAG, "🎉 SDT analysis completed successfully in ${durationMs}ms")
-            ErrorLogger.log(
-                "SDT analysis worker completed successfully",
-                mapOf(
-                    "submissionId" to submissionId,
-                    "overallScore" to overallScore.toString(),
-                    "durationMs" to durationMs.toString()
-                ),
-                ErrorLogger.Severity.INFO
-            )
-            Result.success()
-
-        } catch (e: Exception) {
-            val durationMs = System.currentTimeMillis() - startTime
-            ErrorLogger.log(e, "SDT analysis worker failed for submission: $submissionId")
-
-            if (runAttemptCount < MAX_AI_RETRIES) {
-                Log.w(TAG, "⚠️ Retry attempt ${runAttemptCount + 1}/$MAX_AI_RETRIES")
-                Result.retry()
+                Result.success()
             } else {
-                Log.e(TAG, "❌ Max retries reached, marking submission as failed")
-                handleAnalysisFailure(submissionId)
+                notificationHelper.showSDTAnalysisFailedNotification(submissionId)
                 Result.failure()
             }
-        }
-    }
-
-    /**
-     * Analyze SDT submission with retry logic
-     *
-     * Retries up to MAX_AI_RETRIES times with exponential backoff.
-     * Accepts if 14-15 OLQs are present (fills missing with neutral score).
-     */
-    private suspend fun analyzeSubmissionWithRetry(prompt: String): Map<OLQ, OLQScore>? {
-        repeat(MAX_AI_RETRIES) { attempt ->
-            try {
-                Log.d(TAG, "   AI analysis attempt ${attempt + 1}/$MAX_AI_RETRIES")
-
-                val analysisResult = aiService.analyzeSDResponse(prompt)
-
-                if (analysisResult.isSuccess) {
-                    val analysis = analysisResult.getOrNull()!!
-
-                    // Convert ResponseAnalysis to OLQScore map
-                    val olqScores = analysis.olqScores.mapValues { (_, scoreWithReasoning) ->
-                        OLQScore(
-                            score = scoreWithReasoning.score.toInt().coerceIn(5, 9),
-                            confidence = analysis.overallConfidence,
-                            reasoning = scoreWithReasoning.reasoning
-                        )
-                    }
-
-                    Log.d(TAG, "   Received ${olqScores.size}/15 OLQs")
-
-                    // Accept if we have 14-15 OLQs (allow 1 missing)
-                    if (olqScores.size >= 14) {
-                        return if (olqScores.size == 15) {
-                            olqScores
-                        } else {
-                            fillMissingOLQs(olqScores)
-                        }
-                    } else {
-                        Log.w(TAG, "   Only ${olqScores.size}/15 OLQs - retrying")
-                    }
-                }
-
-            } catch (e: Exception) {
-                Log.w(TAG, "   Analysis attempt ${attempt + 1} failed: ${e.message}")
-            }
-
-            // Exponential backoff before retry
-            if (attempt < MAX_AI_RETRIES - 1) {
-                val delayMs = RETRY_DELAY_MS * (attempt + 1) * 2
-                delay(delayMs)
-            }
-        }
-        return null
-    }
-
-    /**
-     * Fill missing OLQs with neutral scores
-     */
-    private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
-        val mutable = scores.toMutableMap()
-        OLQ.entries.forEach { olq ->
-            if (olq !in mutable) {
-                mutable[olq] = OLQScore(
-                    score = 6,  // Neutral score
-                    confidence = 30,
-                    reasoning = "AI did not assess this OLQ - neutral score assigned"
-                )
-            }
-        }
-        return mutable
-    }
-
-    /**
-     * Handle analysis failure - update status to FAILED
-     */
-    private suspend fun handleAnalysisFailure(submissionId: String) {
-        try {
-            submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.FAILED)
-            notificationHelper.showSDTAnalysisFailedNotification(submissionId)
         } catch (e: Exception) {
-            ErrorLogger.log(e, "Failed to update SDT submission status to FAILED")
+            ErrorLogger.log(e, "SD analysis worker failed")
+            if (runAttemptCount < MAX_WORKER_RETRIES) {
+                Result.retry()
+            } else {
+                try {
+                    submissionRepository.updateSDTAnalysisStatus(submissionId, AnalysisStatus.FAILED)
+                    notificationHelper.showSDTAnalysisFailedNotification(submissionId)
+                } catch (updateError: Exception) {
+                    ErrorLogger.log(updateError, "Failed to update SD submission status to FAILED")
+                }
+                Result.failure()
+            }
         }
     }
 }

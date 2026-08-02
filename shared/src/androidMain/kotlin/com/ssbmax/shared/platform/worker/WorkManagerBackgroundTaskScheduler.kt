@@ -5,9 +5,11 @@ import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import androidx.work.workDataOf
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
@@ -22,11 +24,14 @@ import kotlin.reflect.KClass
  * `shared` can't depend on `app` in the other direction, so this class is
  * parameterized by [KClass] reference instead of hardcoding them, and
  * `app`'s Koin module supplies the concrete classes when constructing this.
+ * Same reason [questionGenerationWorker] (Phase 8) is a third [KClass] param
+ * rather than a hardcoded `InterviewQuestionGenerationWorker` reference.
  */
 class WorkManagerBackgroundTaskScheduler(
     private val workManager: WorkManager,
     private val cleanupWorker: KClass<out ListenableWorker>,
-    private val archivalWorker: KClass<out ListenableWorker>
+    private val archivalWorker: KClass<out ListenableWorker>,
+    private val questionGenerationWorker: KClass<out ListenableWorker>
 ) : BackgroundTaskScheduler {
 
     override fun scheduleQuestionCacheCleanup() {
@@ -77,6 +82,14 @@ class WorkManagerBackgroundTaskScheduler(
             ExistingPeriodicWorkPolicy.KEEP,
             request
         )
+    }
+
+    override fun scheduleInterviewQuestionGeneration(piqSubmissionId: String) {
+        val request = OneTimeWorkRequest.Builder(questionGenerationWorker.java)
+            .setInputData(workDataOf(BackgroundTaskScheduler.KEY_PIQ_SUBMISSION_ID to piqSubmissionId))
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+        workManager.enqueue(request)
     }
 
     private companion object {

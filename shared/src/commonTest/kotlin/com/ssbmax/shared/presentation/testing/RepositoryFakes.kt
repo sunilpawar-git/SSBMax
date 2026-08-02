@@ -222,30 +222,43 @@ class FakeSubmissionRepository : SubmissionRepository {
     override suspend fun finalizeTATAnalysisResult(submissionId: String, olqResult: OLQAnalysisResult) = unused("finalizeTATAnalysisResult")
     override fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> = unused("observeTATSubmission")
 
-    override suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> = unused("getWATSubmission")
+    var watSubmissionResult: Result<WATSubmission?> = Result.failure(UnsupportedOperationException("not stubbed"))
+    var updateWATAnalysisStatusResult: Result<Unit> = Result.success(Unit)
+    var updateWATOLQResultResult: Result<Unit> = Result.success(Unit)
+    var srtSubmissionResult: Result<SRTSubmission?> = Result.failure(UnsupportedOperationException("not stubbed"))
+    var updateSRTAnalysisStatusResult: Result<Unit> = Result.success(Unit)
+    var updateSRTOLQResultResult: Result<Unit> = Result.success(Unit)
+    var sdtSubmissionResult: Result<SDTSubmission?> = Result.failure(UnsupportedOperationException("not stubbed"))
+    var updateSDTAnalysisStatusResult: Result<Unit> = Result.success(Unit)
+    var updateSDTOLQResultResult: Result<Unit> = Result.success(Unit)
+    var ppdtSubmissionResult: Result<PPDTSubmission?> = Result.failure(UnsupportedOperationException("not stubbed"))
+    var updatePPDTAnalysisStatusResult: Result<Unit> = Result.success(Unit)
+    var updatePPDTOLQResultResult: Result<Unit> = Result.success(Unit)
+
+    override suspend fun getWATSubmission(submissionId: String): Result<WATSubmission?> = watSubmissionResult
     override suspend fun getLatestWATSubmission(userId: String): Result<WATSubmission?> = Result.success(null)
     override suspend fun getWATResult(submissionId: String): Result<OLQAnalysisResult?> = unused("getWATResult")
-    override suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus) = unused("updateWATAnalysisStatus")
-    override suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = unused("updateWATOLQResult")
+    override suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus) = updateWATAnalysisStatusResult
+    override suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = updateWATOLQResultResult
     override fun observeWATSubmission(submissionId: String): Flow<WATSubmission?> = unused("observeWATSubmission")
 
-    override suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> = unused("getSRTSubmission")
+    override suspend fun getSRTSubmission(submissionId: String): Result<SRTSubmission?> = srtSubmissionResult
     override suspend fun getLatestSRTSubmission(userId: String): Result<SRTSubmission?> = Result.success(null)
     override suspend fun getSRTResult(submissionId: String): Result<OLQAnalysisResult?> = unused("getSRTResult")
-    override suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus) = unused("updateSRTAnalysisStatus")
-    override suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = unused("updateSRTOLQResult")
+    override suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus) = updateSRTAnalysisStatusResult
+    override suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = updateSRTOLQResultResult
     override fun observeSRTSubmission(submissionId: String): Flow<SRTSubmission?> = unused("observeSRTSubmission")
 
-    override suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> = unused("getSDTSubmission")
+    override suspend fun getSDTSubmission(submissionId: String): Result<SDTSubmission?> = sdtSubmissionResult
     override suspend fun getLatestSDTSubmission(userId: String): Result<SDTSubmission?> = Result.success(null)
     override suspend fun getSDTResult(submissionId: String): Result<OLQAnalysisResult?> = unused("getSDTResult")
-    override suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus) = unused("updateSDTAnalysisStatus")
-    override suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = unused("updateSDTOLQResult")
+    override suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus) = updateSDTAnalysisStatusResult
+    override suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = updateSDTOLQResultResult
     override fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> = unused("observeSDTSubmission")
 
-    override suspend fun getPPDTSubmission(submissionId: String): Result<PPDTSubmission?> = unused("getPPDTSubmission")
-    override suspend fun updatePPDTAnalysisStatus(submissionId: String, status: AnalysisStatus) = unused("updatePPDTAnalysisStatus")
-    override suspend fun updatePPDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = unused("updatePPDTOLQResult")
+    override suspend fun getPPDTSubmission(submissionId: String): Result<PPDTSubmission?> = ppdtSubmissionResult
+    override suspend fun updatePPDTAnalysisStatus(submissionId: String, status: AnalysisStatus) = updatePPDTAnalysisStatusResult
+    override suspend fun updatePPDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult) = updatePPDTOLQResultResult
     override fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?> = unused("observePPDTSubmission")
     override suspend fun getPPDTResult(submissionId: String): Result<OLQAnalysisResult?> = Result.success(null)
 
@@ -278,10 +291,21 @@ class FakeGTORepository : com.ssbmax.shared.domain.repository.GTORepository {
     override suspend fun getTestById(testId: String) = unused("getTestById")
     override suspend fun getRandomGPEScenario() = unused("getRandomGPEScenario")
     override suspend fun getObstaclesForTest(testType: com.ssbmax.shared.domain.model.gto.GTOTestType) = unused("getObstaclesForTest")
+    var updateSubmissionStatusResult: Result<Unit> = Result.success(Unit)
+    var updateSubmissionOLQScoresResult: Result<Unit> = Result.success(Unit)
+    val recordedStatusUpdates = mutableListOf<com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus>()
+    val recordedOLQScores = mutableListOf<Map<com.ssbmax.shared.domain.model.interview.OLQ, com.ssbmax.shared.domain.model.interview.OLQScore>>()
+
     override suspend fun getSubmission(submissionId: String) = submissionResult
     override fun observeSubmission(submissionId: String) = observeSubmissionFlow
-    override suspend fun updateSubmissionStatus(submissionId: String, status: com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus) = unused("updateSubmissionStatus")
-    override suspend fun updateSubmissionOLQScores(submissionId: String, olqScores: Map<com.ssbmax.shared.domain.model.interview.OLQ, com.ssbmax.shared.domain.model.interview.OLQScore>) = unused("updateSubmissionOLQScores")
+    override suspend fun updateSubmissionStatus(submissionId: String, status: com.ssbmax.shared.domain.model.gto.GTOSubmissionStatus): Result<Unit> {
+        recordedStatusUpdates += status
+        return updateSubmissionStatusResult
+    }
+    override suspend fun updateSubmissionOLQScores(submissionId: String, olqScores: Map<com.ssbmax.shared.domain.model.interview.OLQ, com.ssbmax.shared.domain.model.interview.OLQScore>): Result<Unit> {
+        recordedOLQScores += olqScores
+        return updateSubmissionOLQScoresResult
+    }
     override suspend fun getUserSubmissions(userId: String, testType: com.ssbmax.shared.domain.model.gto.GTOTestType?) = unused("getUserSubmissions")
     override suspend fun getPendingSubmissions(limit: Int) = unused("getPendingSubmissions")
     override suspend fun getUserProgress(userId: String) = unused("getUserProgress")
@@ -358,10 +382,21 @@ class FakeInterviewRepository : com.ssbmax.shared.domain.repository.InterviewRep
         submittedResponses += response
         return submitResponseResult.let { if (it.isFailure) Result.success(response) else it }
     }
-    override suspend fun getResponses(sessionId: String) = unused("getResponses")
-    override suspend fun getResponse(responseId: String) = unused("getResponse")
-    override suspend fun updateResponse(response: com.ssbmax.shared.domain.model.interview.InterviewResponse) = unused("updateResponse")
-    override suspend fun completeInterview(sessionId: String) = unused("completeInterview")
+    var getResponsesResult: Result<List<com.ssbmax.shared.domain.model.interview.InterviewResponse>> =
+        Result.failure(UnsupportedOperationException("not stubbed"))
+    var getResponseResult: Result<com.ssbmax.shared.domain.model.interview.InterviewResponse> =
+        Result.failure(UnsupportedOperationException("not stubbed"))
+    var completeInterviewResult: Result<com.ssbmax.shared.domain.model.interview.InterviewResult> =
+        Result.failure(UnsupportedOperationException("not stubbed"))
+    val updatedResponses = mutableListOf<com.ssbmax.shared.domain.model.interview.InterviewResponse>()
+
+    override suspend fun getResponses(sessionId: String) = getResponsesResult
+    override suspend fun getResponse(responseId: String) = getResponseResult
+    override suspend fun updateResponse(response: com.ssbmax.shared.domain.model.interview.InterviewResponse): Result<com.ssbmax.shared.domain.model.interview.InterviewResponse> {
+        updatedResponses += response
+        return Result.success(response)
+    }
+    override suspend fun completeInterview(sessionId: String) = completeInterviewResult
     override suspend fun getResult(sessionId: String) = unused("getResult")
     override suspend fun getResultById(resultId: String) = getResultByIdResult
     override fun getUserResults(userId: String) = userResultsFlow
@@ -703,9 +738,114 @@ class FakeSettings : com.russhwolf.settings.Settings {
     override fun getBooleanOrNull(key: String) = map[key] as? Boolean
 }
 
+/**
+ * Fake for [com.ssbmax.shared.platform.worker.BackgroundTaskScheduler], used by
+ * [com.ssbmax.shared.presentation.piq.PIQTestViewModel] (Phase 8, KMP-convergence plan).
+ */
+class FakeBackgroundTaskScheduler : com.ssbmax.shared.platform.worker.BackgroundTaskScheduler {
+    var cleanupScheduled = false
+    var archivalScheduled = false
+    val questionGenerationRequests = mutableListOf<String>()
+
+    override fun scheduleQuestionCacheCleanup() { cleanupScheduled = true }
+    override fun scheduleSubmissionArchival() { archivalScheduled = true }
+    override fun scheduleInterviewQuestionGeneration(piqSubmissionId: String) {
+        questionGenerationRequests += piqSubmissionId
+    }
+}
+
 /** Fake for [com.ssbmax.shared.domain.repository.OirResultRepository], used by [com.ssbmax.shared.presentation.oirresult.OirResultViewModel] via `GetOirResultUseCase`. */
 class FakeOirResultRepository : com.ssbmax.shared.domain.repository.OirResultRepository {
     var oirResult: Result<com.ssbmax.shared.domain.model.OIRTestResult?> = Result.success(null)
 
     override suspend fun getOirResult(submissionId: String) = oirResult
+}
+
+/**
+ * Fake for [com.ssbmax.shared.domain.service.AIService], used by Phase 8 (KMP-convergence plan)
+ * `shared/analysis`'s Orchestrator characterization tests. Every `analyze*` method shares one
+ * [responseAnalysisResult] by default (all return the same [ResponseAnalysis] shape) since the
+ * orchestrators under test don't care which Gemini endpoint answered -- override the specific
+ * `var` a test needs to fail one call while others succeed.
+ */
+class FakeAIService : com.ssbmax.shared.domain.service.AIService {
+    var responseAnalysisResult: Result<com.ssbmax.shared.domain.service.ResponseAnalysis> =
+        Result.failure(UnsupportedOperationException("not stubbed"))
+    var piqQuestionsResult: Result<List<com.ssbmax.shared.domain.model.interview.InterviewQuestion>> =
+        Result.failure(UnsupportedOperationException("not stubbed"))
+    var isAvailableResult: Boolean = true
+    val recordedPrompts = mutableListOf<String>()
+
+    override suspend fun generatePIQBasedQuestions(
+        piqData: String,
+        targetOLQs: List<com.ssbmax.shared.domain.model.interview.OLQ>?,
+        count: Int,
+        difficulty: Int
+    ) = piqQuestionsResult
+
+    override suspend fun generateAdaptiveQuestions(
+        previousQuestions: List<com.ssbmax.shared.domain.model.interview.InterviewQuestion>,
+        previousResponses: List<String>,
+        weakOLQs: List<com.ssbmax.shared.domain.model.interview.OLQ>,
+        count: Int
+    ) = Result.failure<List<com.ssbmax.shared.domain.model.interview.InterviewQuestion>>(UnsupportedOperationException("not stubbed"))
+
+    override suspend fun analyzeResponse(
+        question: com.ssbmax.shared.domain.model.interview.InterviewQuestion,
+        response: String,
+        responseMode: String
+    ) = responseAnalysisResult
+
+    override suspend fun generateFeedback(
+        questions: List<com.ssbmax.shared.domain.model.interview.InterviewQuestion>,
+        responses: List<String>,
+        olqScores: Map<com.ssbmax.shared.domain.model.interview.OLQ, Float>
+    ) = Result.failure<String>(UnsupportedOperationException("not stubbed"))
+
+    override suspend fun analyzeGTOResponse(
+        prompt: String,
+        testType: com.ssbmax.shared.domain.model.gto.GTOTestType
+    ): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
+        recordedPrompts += prompt
+        return responseAnalysisResult
+    }
+
+    override suspend fun analyzeTATResponse(prompt: String): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
+        recordedPrompts += prompt
+        return responseAnalysisResult
+    }
+
+    override suspend fun analyzeWATResponse(prompt: String): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
+        recordedPrompts += prompt
+        return responseAnalysisResult
+    }
+
+    override suspend fun analyzeSRTResponse(prompt: String): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
+        recordedPrompts += prompt
+        return responseAnalysisResult
+    }
+
+    override suspend fun analyzeSDResponse(prompt: String): Result<com.ssbmax.shared.domain.service.ResponseAnalysis> {
+        recordedPrompts += prompt
+        return responseAnalysisResult
+    }
+
+    override suspend fun analyzePPDTMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: com.ssbmax.shared.domain.model.PPDTImageContext,
+        candidateGender: String
+    ) = responseAnalysisResult
+
+    override suspend fun analyzeTATStoryMultimodal(
+        imageBytes: ByteArray,
+        story: String,
+        imageContext: com.ssbmax.shared.domain.model.TATImageContext,
+        candidateGender: String,
+        storyIndex: Int,
+        totalStories: Int,
+        imageGenderTag: String
+    ) = responseAnalysisResult
+
+    override suspend fun isAvailable() = isAvailableResult
 }

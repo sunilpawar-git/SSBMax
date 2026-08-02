@@ -16,12 +16,13 @@ package com.ssbmax.shared.platform.worker
  *
  * Per the KMP migration plan's own caution (Phase 4 scope, "Risks a Senior
  * App Developer Should Push Back On" #2): the TAT/PPDT async AI-analysis
- * flow is a *separate*, more UX-sensitive background-execution concern
- * (currently a one-off `WorkManager` job per submission, not a periodic
- * job) that is explicitly OUT of this shim's scope — redesigning that flow
- * for iOS's execution-guarantee gap is a product decision, not a Phase 4
- * platform-shim task. Those workers keep using `androidx.work.WorkManager`
- * directly in `app` (Android-only, unchanged by this phase).
+ * flow (grading a just-submitted test) is a *separate*, more UX-sensitive
+ * background-execution concern that is explicitly OUT of this shim's scope
+ * -- that flow goes through [com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger]
+ * instead, unchanged by this interface. [scheduleInterviewQuestionGeneration]
+ * (Phase 8, KMP-convergence plan) is a lower-stakes, best-effort cache-warm
+ * -- closer in spirit to the two periodic jobs below than to real-time
+ * grading -- so it belongs here, not on that seam.
  */
 interface BackgroundTaskScheduler {
     /**
@@ -37,4 +38,25 @@ interface BackgroundTaskScheduler {
      * on Android; best-effort on iOS (see class doc).
      */
     fun scheduleSubmissionArchival()
+
+    /**
+     * Pre-generates Interview-module questions from a just-submitted PIQ, so the
+     * candidate's interview can start instantly instead of waiting on a Gemini
+     * call at start time. One-off, not periodic -- Android runs it as a real
+     * `WorkManager` one-time job (survives process death); iOS dispatches it
+     * immediately in-process rather than deferring to `BGTaskScheduler` (same
+     * reasoning as [com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger]: no
+     * execution-time guarantee makes an immediate run strictly more reliable for
+     * something the candidate wants ready soon).
+     */
+    fun scheduleInterviewQuestionGeneration(piqSubmissionId: String)
+
+    companion object {
+        /**
+         * `WorkManager` input-data key for [scheduleInterviewQuestionGeneration]'s Android
+         * `WorkRequest` -- shared so `app`'s worker (which reads it) and this interface's
+         * Android actual (which writes it) can't drift apart on the literal.
+         */
+        const val KEY_PIQ_SUBMISSION_ID = "piq_submission_id"
+    }
 }

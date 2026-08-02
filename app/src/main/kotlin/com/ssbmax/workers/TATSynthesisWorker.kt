@@ -4,9 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.data.ai.prompts.TATSynthesisPrompts
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
+import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.notifications.NotificationHelper
+import com.ssbmax.shared.analysis.AnalysisRetry
+import com.ssbmax.shared.ai.prompts.TATSynthesisPrompts
+import com.ssbmax.shared.domain.model.TATStoryAssessment
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore
@@ -20,9 +23,8 @@ import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import com.ssbmax.utils.ErrorLogger
 import com.ssbmax.workers.TATStoryAnalysisWorker.Companion.FAILED_MARKER
-import com.ssbmax.workers.retry.RetryBackoffPolicy
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import org.json.JSONArray
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -32,6 +34,14 @@ import org.koin.core.component.inject
  * Runs after all per-story TATStoryAnalysisWorker instances complete (WorkManager chain).
  * Reads their Room assessments, sends a cross-story prompt to Gemini, and writes the
  * final OLQAnalysisResult to Firestore.
+ *
+ * Phase 8 (KMP-convergence plan): prompt-building and retry/clamp/fill-missing now come
+ * from `shared`'s [TATSynthesisPrompts]/[AnalysisRetry] -- the same ones
+ * [com.ssbmax.shared.analysis.TATAnalysisOrchestrator] uses -- instead of `core:data`'s
+ * now-deleted duplicate. The only local code left is [TATStoryAssessmentEntity.toDomain],
+ * mapping the Room-cached (`olqScoresJson: String`) shape to `shared`'s in-memory
+ * (`olqScores: Map<OLQ, OLQScore>`) one; `shared`'s own per-submission run never needs this
+ * mapping since it holds assessments in memory, never round-tripping through Room.
  */
 class TATSynthesisWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
@@ -73,7 +83,7 @@ class TATSynthesisWorker(context: Context, params: WorkerParameters) :
         Log.d(TAG, "🔄 Starting TAT synthesis: $submissionId")
 
         val assessments = tatStoryAssessmentDao.getBySubmissionId(submissionId)
-        val validAssessments = assessments.filter { it.overallRating != FAILED_MARKER }
+        val validAssessments = assessments.filter { it.overallRating != FAILED_MARKER }.map { it.toDomain() }
         Log.d(
             TAG,
             "   ${assessments.size} total assessments, ${validAssessments.size} valid " +
@@ -89,7 +99,7 @@ class TATSynthesisWorker(context: Context, params: WorkerParameters) :
         // ANALYZING status is now set by TATAnalysisPipelineOrchestrator before workers start.
         val prompt = TATSynthesisPrompts.buildPrompt(validAssessments)
         Log.d(TAG, "   Synthesis prompt length: ${prompt.length} chars")
-        val olqScores = analyzeWithRetry(prompt) ?: run {
+        val olqScores = AnalysisRetry.withRetry { aiService.analyzeTATResponse(prompt) } ?: run {
             Log.e(TAG, "❌ AI synthesis failed after $MAX_AI_RETRIES retries")
             handleFailure(submissionId)
             return Result.failure()
@@ -151,45 +161,33 @@ class TATSynthesisWorker(context: Context, params: WorkerParameters) :
         return Result.success()
     }
 
-    private suspend fun analyzeWithRetry(prompt: String): Map<OLQ, OLQScore>? {
-        repeat(MAX_AI_RETRIES) { attempt ->
-            try {
-                Log.d(TAG, "   Synthesis AI attempt ${attempt + 1}/$MAX_AI_RETRIES")
-                val result = aiService.analyzeTATResponse(prompt)
-                if (result.isSuccess) {
-                    val analysis = result.getOrNull()!!
-                    val olqScores = analysis.olqScores.mapValues { (_, s) ->
-                        OLQScore(
-                            score = s.score.toInt().coerceIn(5, 9),
-                            confidence = analysis.overallConfidence,
-                            reasoning = s.reasoning
-                        )
-                    }
-                    if (olqScores.size >= 14) {
-                        Log.d(TAG, "   ✅ AI returned ${olqScores.size}/15 OLQs")
-                        return if (olqScores.size == 15) olqScores else fillMissingOLQs(olqScores)
-                    } else {
-                        Log.w(TAG, "   ⚠️ AI returned only ${olqScores.size}/15 OLQs — retrying")
-                    }
-                } else {
-                    Log.e(TAG, "   ❌ AI returned failure: ${result.exceptionOrNull()?.message}")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "   ❌ AI call threw exception: ${e.message}")
-            }
-            if (attempt < MAX_AI_RETRIES - 1) delay(RetryBackoffPolicy.nextDelayMillis(attempt))
-        }
-        return null
-    }
+    private fun TATStoryAssessmentEntity.toDomain(): TATStoryAssessment = TATStoryAssessment(
+        id = id,
+        submissionId = submissionId,
+        questionId = questionId,
+        storyIndex = storyIndex,
+        story = story,
+        imageUrl = imageUrl,
+        olqScores = parseOlqScoresJson(olqScoresJson),
+        overallScore = overallScore,
+        overallRating = overallRating,
+        aiConfidence = aiConfidence,
+        analyzedAt = analyzedAt
+    )
 
-    private fun fillMissingOLQs(scores: Map<OLQ, OLQScore>): Map<OLQ, OLQScore> {
-        val mutable = scores.toMutableMap()
-        OLQ.entries.forEach { olq ->
-            if (olq !in mutable) {
-                mutable[olq] = OLQScore(score = 6, confidence = 30, reasoning = "Not assessed — neutral score assigned")
-            }
+    private fun parseOlqScoresJson(olqScoresJson: String): Map<OLQ, OLQScore> = try {
+        val arr = JSONArray(olqScoresJson)
+        (0 until arr.length()).associate { i ->
+            val obj = arr.getJSONObject(i)
+            OLQ.valueOf(obj.getString("olq")) to OLQScore(
+                score = obj.getInt("score"),
+                confidence = obj.getInt("confidence"),
+                reasoning = obj.getString("reasoning")
+            )
         }
-        return mutable
+    } catch (e: Exception) {
+        ErrorLogger.log(e, "Failed to parse cached TAT story OLQ scores")
+        emptyMap()
     }
 
     private fun buildOlqResult(
@@ -208,7 +206,7 @@ class TATSynthesisWorker(context: Context, params: WorkerParameters) :
             testType = TestType.TAT,
             olqScores = olqScores,
             overallScore = overallScore,
-            overallRating = ratingFromScore(overallScore),
+            overallRating = AnalysisRetry.ratingFromScore(overallScore),
             strengths = strengths,
             weaknesses = weaknesses,
             recommendations = listOf(
@@ -222,13 +220,6 @@ class TATSynthesisWorker(context: Context, params: WorkerParameters) :
             failedStoriesCount = failedStoriesCount,
             usedPartialAssessment = failedStoriesCount > 0
         )
-    }
-
-    private fun ratingFromScore(score: Float): String = when {
-        score <= 5.5f -> "Exceptional"
-        score <= 6.5f -> "Good"
-        score <= 7.5f -> "Average"
-        else -> "Needs Improvement"
     }
 
     private suspend fun handleFailure(submissionId: String) {

@@ -1,7 +1,11 @@
 package com.ssbmax.shared.platform.worker
 
+import com.ssbmax.shared.data.repository.InterviewQuestionGenerator
+import com.ssbmax.shared.domain.constants.InterviewConstants
 import com.ssbmax.shared.domain.util.DomainLogger
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import platform.BackgroundTasks.BGAppRefreshTaskRequest
 import platform.BackgroundTasks.BGProcessingTaskRequest
 import platform.BackgroundTasks.BGTaskScheduler
@@ -35,10 +39,17 @@ import platform.Foundation.dateByAddingTimeInterval
  * case above) is logged via [DomainLogger] rather than silently swallowed —
  * still non-fatal (a missed background job isn't worth crashing the app
  * over), but now visible instead of invisible.
+ *
+ * Phase 8: [scheduleInterviewQuestionGeneration] deliberately does **not** go through
+ * `BGTaskScheduler` at all -- see its own doc and [BackgroundTaskScheduler]'s class doc.
+ * It dispatches [InterviewQuestionGenerator] immediately on [scope], the same
+ * immediate-dispatch precedent `KtorSubmissionAnalysisTrigger` already set.
  */
 @OptIn(ExperimentalForeignApi::class)
 class BGTaskSchedulerBackgroundTaskScheduler(
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val questionGenerator: InterviewQuestionGenerator,
+    private val scope: CoroutineScope
 ) : BackgroundTaskScheduler {
 
     override fun scheduleQuestionCacheCleanup() {
@@ -60,6 +71,13 @@ class BGTaskSchedulerBackgroundTaskScheduler(
             BGTaskScheduler.sharedScheduler.submitTaskRequest(request, null)
         } catch (e: Exception) {
             logger.e(TAG, "submitTaskRequest failed for $ARCHIVAL_TASK_ID", e)
+        }
+    }
+
+    override fun scheduleInterviewQuestionGeneration(piqSubmissionId: String) {
+        scope.launch {
+            questionGenerator.generateQuestions(piqSubmissionId, InterviewConstants.TARGET_PIQ_QUESTION_COUNT)
+                .onFailure { logger.e(TAG, "Interview question pre-generation failed for $piqSubmissionId", it) }
         }
     }
 

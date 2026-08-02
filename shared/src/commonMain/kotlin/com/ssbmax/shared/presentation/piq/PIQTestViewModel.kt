@@ -10,6 +10,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.platform.worker.BackgroundTaskScheduler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -43,16 +44,13 @@ import kotlinx.datetime.Clock
  * synchronous, purely local mock computation, not a real Gemini call and not
  * enqueued via any background worker.
  *
- * **Deliberately dropped, confirmed by reading the real Android
- * `PIQTestViewModel.submitTest()`:** `triggerBackgroundQuestionGeneration()`,
- * which enqueues `InterviewQuestionGenerationWorker` via `WorkManager` to
- * pre-generate Interview-module questions from the submitted PIQ data. This is
- * a genuine WorkManager background job (plan's blocker #4 -- needs its own
- * `expect`/`actual` shim) but it belongs to the not-yet-ported Interview
- * vertical's infrastructure, not to PIQ's own submission contract; dropping it
- * here means a freshly-submitted PIQ won't have pre-warmed interview questions
- * on this KMP build until the Interview vertical is ported with its own
- * background-task shim. `getOLQDashboard.invalidateCache()` is also dropped,
+ * **Restored (Phase 8, KMP-convergence plan; was dropped pending this exact
+ * seam):** `triggerBackgroundQuestionGeneration()` -- pre-generates Interview-module
+ * questions from the submitted PIQ data so the interview starts instantly. Now a call
+ * to [BackgroundTaskScheduler.scheduleInterviewQuestionGeneration], the cross-platform
+ * seam Phase 7b built for exactly this ("plan's blocker #4"): Android enqueues a real
+ * `WorkManager` one-time job (`InterviewQuestionGenerationWorker`), iOS dispatches
+ * immediately in-process (see that class's own doc for why). `getOLQDashboard.invalidateCache()` is also dropped,
  * same precedent as WAT/SRT/SDT (none of those invalidate the dashboard cache
  * on submit either). `DifficultyProgressionManager.recordPerformance` is
  * still dropped (local analytics, not part of the submission contract);
@@ -81,7 +79,8 @@ class PIQTestViewModel(
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val logger: DomainLogger,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val backgroundTaskScheduler: BackgroundTaskScheduler
 ) : ViewModel() {
     private val tag = "PIQTestViewModel"
 
@@ -225,6 +224,7 @@ class PIQTestViewModel(
             submissionRepository.submitPIQ(submissionWithAI, batchId = null)
                 .onSuccess { submissionId ->
                     usageRecorder.recordTestUsage(TestType.PIQ, userId, submissionId)
+                    backgroundTaskScheduler.scheduleInterviewQuestionGeneration(submissionId)
                     _uiState.update {
                         it.copy(isLoading = false, submissionComplete = true, submissionId = submissionId)
                     }

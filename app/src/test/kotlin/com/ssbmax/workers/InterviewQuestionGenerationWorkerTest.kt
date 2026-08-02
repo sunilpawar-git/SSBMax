@@ -3,70 +3,56 @@ package com.ssbmax.workers
 import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
-import androidx.work.testing.TestListenableWorkerBuilder
+import androidx.work.workDataOf
+import com.ssbmax.shared.data.repository.InterviewQuestionGenerator
+import com.ssbmax.shared.domain.constants.InterviewConstants
 import com.ssbmax.shared.domain.model.interview.InterviewQuestion
 import com.ssbmax.shared.domain.model.interview.OLQ
-import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.model.interview.QuestionSource
-import com.ssbmax.shared.domain.repository.SubmissionRepository
-import com.ssbmax.shared.domain.service.AIService
+import com.ssbmax.shared.platform.worker.BackgroundTaskScheduler
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.annotation.Config
 
 /**
- * Unit tests for InterviewQuestionGenerationWorker
- *
- * Tests:
- * - Successful question generation and caching
- * - Retry on AI service failure
- * - Retry on cache failure
- * - Failure after max retries
- * - Invalid PIQ submission handling
- * 
- * @Ignore - Temporarily ignored due to Robolectric SDK version mismatch
- * TODO: Re-enable when Robolectric supports SDK 35
+ * Phase 8 (KMP-convergence plan): rewritten for the worker's shell conversion (it no longer
+ * builds its own PIQ context or calls `AIService` directly -- both now come from
+ * [InterviewQuestionGenerator], `shared`'s own cache-then-AI-fill question source, covered by
+ * its own commonTest suite). Also un-ignores this file: it was previously
+ * `@Ignore`d for a Robolectric/SDK-35 mismatch, which no longer applies now that the
+ * worker needs no Robolectric context (same plain-mockk shape as `PPDTAnalysisWorkerTest`).
  */
-@Ignore("Robolectric SDK version mismatch - SDK 35 not yet supported")
-@RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class InterviewQuestionGenerationWorkerTest {
 
     private lateinit var context: Context
-    private lateinit var aiService: AIService
-    private lateinit var submissionRepository: SubmissionRepository
-    private lateinit var questionCacheRepository: QuestionCacheRepository
-    private lateinit var piqDataMapper: com.ssbmax.core.data.repository.interview.PIQDataMapper
+    private lateinit var workerParams: WorkerParameters
+    private lateinit var questionGenerator: InterviewQuestionGenerator
+
+    private val piqSubmissionId = "test-piq-123"
 
     @Before
-    fun setup() {
-        context = RuntimeEnvironment.getApplication()
-        aiService = mockk()
-        submissionRepository = mockk()
-        questionCacheRepository = mockk()
-        piqDataMapper = mockk()
+    fun setUp() {
+        context = mockk(relaxed = true)
+        workerParams = mockk(relaxed = true)
+        questionGenerator = mockk(relaxed = true)
 
-        // InterviewQuestionGenerationWorker resolves its dependencies via
-        // KoinComponent/inject() (converted from Hilt's @HiltWorker/@AssistedInject).
+        every { workerParams.inputData } returns workDataOf(
+            BackgroundTaskScheduler.KEY_PIQ_SUBMISSION_ID to piqSubmissionId
+        )
+        every { workerParams.runAttemptCount } returns 0
+
         startKoin {
             modules(module {
-                single { aiService }
-                single { submissionRepository }
-                single { questionCacheRepository }
-                single { piqDataMapper }
+                single { questionGenerator }
             })
         }
     }
@@ -76,308 +62,63 @@ class InterviewQuestionGenerationWorkerTest {
         stopKoin()
     }
 
-    @Test
-    fun `worker uses comprehensive PIQ context with all 60+ fields`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-comprehensive"
-        val mockPIQData = mapOf(
-            "id" to piqSubmissionId,
-            "data" to mapOf(
-                "fullName" to "Comprehensive Test",
-                "age" to "25",
-                "state" to "Maharashtra",
-                "fatherOccupation" to "Army Officer",
-                "education12th" to mapOf("institution" to "Test School"),
-                "hobbies" to "Reading",
-                "nccTraining" to mapOf("hasTraining" to true),
-                "whyDefenseForces" to "Serve nation"
-            )
-        )
-
-        // This comprehensive context should include all major sections
-        val comprehensiveContext = """
-            CANDIDATE PROFILE
-            =================
-
-            PERSONAL BACKGROUND:
-            - Name: Comprehensive Test
-            - Age: 25
-            - State: Maharashtra
-
-            FAMILY ENVIRONMENT:
-            - Father Occupation: Army Officer
-
-            EDUCATION JOURNEY:
-            - 12th: Test School
-
-            ACTIVITIES & INTERESTS:
-            - Hobbies: Reading
-
-            LEADERSHIP EXPOSURE:
-            - NCC Training: Yes
-
-            SELF-ASSESSMENT:
-            - Why Defense Forces: Serve nation
-        """.trimIndent()
-
-        val mockQuestions = List(18) { InterviewQuestion(
-            id = "q-$it",
-            questionText = "Question $it",
+    private fun mockQuestions() = List(18) { index ->
+        InterviewQuestion(
+            id = "q-$index",
+            questionText = "Question $index",
             expectedOLQs = listOf(OLQ.EFFECTIVE_INTELLIGENCE),
             context = null,
             source = QuestionSource.PIQ_BASED
-        )}
+        )
+    }
 
-        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
-        coEvery { piqDataMapper.buildComprehensivePIQContext(mockPIQData) } returns comprehensiveContext
-        coEvery { aiService.generatePIQBasedQuestions(comprehensiveContext, null, 18, 3) } returns Result.success(mockQuestions)
-        coEvery { questionCacheRepository.cachePIQQuestions(any(), any(), any()) } returns Result.success(Unit)
+    private fun createWorker() = InterviewQuestionGenerationWorker(context, workerParams)
 
-        // When
-        val worker = createWorker(piqSubmissionId)
-        val result = worker.doWork()
+    @Test
+    fun `doWork delegates to InterviewQuestionGenerator and succeeds`() = runTest {
+        coEvery {
+            questionGenerator.generateQuestions(piqSubmissionId, InterviewConstants.TARGET_PIQ_QUESTION_COUNT)
+        } returns Result.success(mockQuestions())
 
-        // Then
+        val result = createWorker().doWork()
+
         assertEquals(ListenableWorker.Result.success(), result)
-
-        // Verify PIQDataMapper was called to build comprehensive context
-        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
-
-        // Verify AI service received the comprehensive context (not custom minimal context)
         coVerify(exactly = 1) {
-            aiService.generatePIQBasedQuestions(
-                piqData = match { it.contains("CANDIDATE PROFILE") && it.contains("FAMILY ENVIRONMENT") },
-                targetOLQs = null,
-                count = 18,
-                difficulty = 3
-            )
+            questionGenerator.generateQuestions(piqSubmissionId, InterviewConstants.TARGET_PIQ_QUESTION_COUNT)
         }
     }
 
     @Test
-    fun `worker generates 18 questions and caches them successfully`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-123"
-        val mockPIQData = mapOf(
-            "id" to piqSubmissionId,
-            "data" to mapOf(
-                "fullName" to "Test Candidate",
-                "hobbies" to "Reading, Sports",
-                "whyDefenseForces" to "Serve the nation"
-            )
-        )
+    fun `doWork returns failure when PIQ submission ID is missing`() = runTest {
+        every { workerParams.inputData } returns workDataOf()
 
-        val comprehensiveContext = """
-            CANDIDATE PROFILE
-            =================
+        val result = createWorker().doWork()
 
-            PERSONAL BACKGROUND:
-            - Name: Test Candidate
-            - Hobbies: Reading, Sports
-
-            SELF-ASSESSMENT:
-            - Why Defense Forces: Serve the nation
-        """.trimIndent()
-
-        val mockQuestions = List(18) { index ->
-            InterviewQuestion(
-                id = "q-$index",
-                questionText = "Test question $index",
-                expectedOLQs = listOf(OLQ.EFFECTIVE_INTELLIGENCE),
-                context = null,
-                source = QuestionSource.PIQ_BASED
-            )
-        }
-
-        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
-        coEvery { piqDataMapper.buildComprehensivePIQContext(mockPIQData) } returns comprehensiveContext
-        coEvery {
-            aiService.generatePIQBasedQuestions(
-                piqData = comprehensiveContext,
-                targetOLQs = null,
-                count = 18,
-                difficulty = 3
-            )
-        } returns Result.success(mockQuestions)
-        coEvery {
-            questionCacheRepository.cachePIQQuestions(
-                piqSnapshotId = piqSubmissionId,
-                questions = mockQuestions,
-                expirationDays = 30
-            )
-        } returns Result.success(Unit)
-
-        // When
-        val worker = createWorker(piqSubmissionId)
-        val result = worker.doWork()
-
-        // Then
-        assertEquals(ListenableWorker.Result.success(), result)
-        coVerify(exactly = 1) { submissionRepository.getSubmission(piqSubmissionId) }
-        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
-        coVerify(exactly = 1) { aiService.generatePIQBasedQuestions(comprehensiveContext, null, 18, 3) }
-        coVerify(exactly = 1) { questionCacheRepository.cachePIQQuestions(piqSubmissionId, mockQuestions, 30) }
+        assertEquals(ListenableWorker.Result.failure(), result)
+        coVerify(exactly = 0) { questionGenerator.generateQuestions(any(), any()) }
     }
 
     @Test
-    fun `worker retries on AI service failure`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-456"
-        val mockPIQData = mapOf(
-            "id" to piqSubmissionId,
-            "data" to mapOf("fullName" to "Test")
-        )
-
-        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
-        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
+    fun `doWork retries when generation fails and attempts remain`() = runTest {
         coEvery {
-            aiService.generatePIQBasedQuestions(any(), any(), any(), any())
-        } returns Result.failure(Exception("AI service unavailable"))
+            questionGenerator.generateQuestions(any(), any())
+        } returns Result.failure(Exception("Gemini unavailable"))
+        every { workerParams.runAttemptCount } returns 0
 
-        // When
-        val worker = createWorker(piqSubmissionId, runAttemptCount = 0)
-        val result = worker.doWork()
+        val result = createWorker().doWork()
 
-        // Then
         assertEquals(ListenableWorker.Result.retry(), result)
-        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
-        coVerify(exactly = 1) { aiService.generatePIQBasedQuestions(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `worker retries on cache failure`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-789"
-        val mockPIQData = mapOf(
-            "id" to piqSubmissionId,
-            "data" to mapOf("fullName" to "Test")
-        )
-        val mockQuestions = List(18) { index ->
-            InterviewQuestion(
-                id = "q-$index",
-                questionText = "Question $index",
-                expectedOLQs = listOf(OLQ.INITIATIVE),
-                context = null,
-                source = QuestionSource.PIQ_BASED
-            )
-        }
-
-        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
-        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
-        coEvery { aiService.generatePIQBasedQuestions(any(), any(), any(), any()) } returns Result.success(mockQuestions)
+    fun `doWork fails after max retries`() = runTest {
         coEvery {
-            questionCacheRepository.cachePIQQuestions(any(), any(), any())
-        } returns Result.failure(Exception("Cache write failed"))
-
-        // When
-        val worker = createWorker(piqSubmissionId, runAttemptCount = 1)
-        val result = worker.doWork()
-
-        // Then
-        assertEquals(ListenableWorker.Result.retry(), result)
-        coVerify(exactly = 1) { piqDataMapper.buildComprehensivePIQContext(mockPIQData) }
-        coVerify(exactly = 1) { questionCacheRepository.cachePIQQuestions(any(), any(), any()) }
-    }
-
-    @Test
-    fun `worker fails after max retries`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-max-retry"
-        val mockPIQData = mapOf(
-            "id" to piqSubmissionId,
-            "data" to mapOf("fullName" to "Test")
-        )
-
-        coEvery { submissionRepository.getSubmission(piqSubmissionId) } returns Result.success(mockPIQData)
-        coEvery { piqDataMapper.buildComprehensivePIQContext(any()) } returns "Test context"
-        coEvery {
-            aiService.generatePIQBasedQuestions(any(), any(), any(), any())
+            questionGenerator.generateQuestions(any(), any())
         } returns Result.failure(Exception("Persistent failure"))
+        every { workerParams.runAttemptCount } returns InterviewConstants.MAX_WORKER_RETRY_ATTEMPTS
 
-        // When
-        val worker = createWorker(piqSubmissionId, runAttemptCount = 3)
-        val result = worker.doWork()
+        val result = createWorker().doWork()
 
-        // Then
         assertEquals(ListenableWorker.Result.failure(), result)
-    }
-
-    @Test
-    fun `worker fails when PIQ submission not found`() = runTest {
-        // Given
-        val piqSubmissionId = "non-existent-piq"
-
-        coEvery {
-            submissionRepository.getSubmission(piqSubmissionId)
-        } returns Result.failure(Exception("Not found"))
-
-        // When
-        val worker = createWorker(piqSubmissionId)
-        val result = worker.doWork()
-
-        // Then
-        assertEquals(ListenableWorker.Result.failure(), result)
-        coVerify(exactly = 1) { submissionRepository.getSubmission(piqSubmissionId) }
-        coVerify(exactly = 0) { aiService.generatePIQBasedQuestions(any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `worker handles unexpected exceptions and retries`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-exception"
-
-        coEvery {
-            submissionRepository.getSubmission(piqSubmissionId)
-        } throws RuntimeException("Unexpected error")
-
-        // When
-        val worker = createWorker(piqSubmissionId, runAttemptCount = 0)
-        val result = worker.doWork()
-
-        // Then
-        assertEquals(ListenableWorker.Result.retry(), result)
-    }
-
-    @Test
-    fun `worker fails on unexpected exception after max retries`() = runTest {
-        // Given
-        val piqSubmissionId = "test-piq-exception-max"
-
-        coEvery {
-            submissionRepository.getSubmission(piqSubmissionId)
-        } throws RuntimeException("Persistent unexpected error")
-
-        // When
-        val worker = createWorker(piqSubmissionId, runAttemptCount = 3)
-        val result = worker.doWork()
-
-        // Then
-        assertEquals(ListenableWorker.Result.failure(), result)
-    }
-
-    /**
-     * Helper to create worker instance with mocked dependencies.
-     *
-     * InterviewQuestionGenerationWorker resolves its dependencies via
-     * KoinComponent/inject() now (converted from Hilt's
-     * @HiltWorker/@AssistedInject) — the mocks are bound in [setup] via
-     * startKoin, so a plain [TestListenableWorkerBuilder] (default
-     * reflection-based factory, matching the worker's now-plain
-     * (Context, WorkerParameters) constructor) is enough; no custom
-     * WorkerFactory override is needed anymore.
-     */
-    private fun createWorker(
-        piqSubmissionId: String,
-        runAttemptCount: Int = 0
-    ): InterviewQuestionGenerationWorker {
-        return TestListenableWorkerBuilder<InterviewQuestionGenerationWorker>(context)
-            .setInputData(
-                androidx.work.workDataOf(
-                    InterviewQuestionGenerationWorker.KEY_PIQ_SUBMISSION_ID to piqSubmissionId,
-                    InterviewQuestionGenerationWorker.KEY_NOTIFY_ON_COMPLETE to false
-                )
-            )
-            .setRunAttemptCount(runAttemptCount)
-            .build()
     }
 }
