@@ -242,8 +242,8 @@ dependencies {
 
     // WorkManager (background jobs for question pre-generation)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation("androidx.hilt:hilt-work:1.2.0")
-    kapt("androidx.hilt:hilt-compiler:1.2.0")  // AndroidX Hilt compiler for @HiltWorker
+    implementation("androidx.hilt:hilt-work:1.4.0")
+    kapt("androidx.hilt:hilt-compiler:1.4.0")  // AndroidX Hilt compiler for @HiltWorker
 
     // Firebase
     implementation(platform(libs.firebase.bom))
