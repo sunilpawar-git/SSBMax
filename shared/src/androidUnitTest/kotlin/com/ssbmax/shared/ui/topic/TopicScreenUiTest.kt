@@ -11,6 +11,7 @@ import com.ssbmax.shared.presentation.topic.TopicViewModel
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Test
@@ -28,12 +29,11 @@ import org.robolectric.annotation.Config
  * - The Android original was a single scrollable page; this port is a
  *   3-tab screen (Overview / Study Material / Tests, see [TopicScreen]'s
  *   `selectedTab`) -- study-material assertions now need `initialTab = 1`.
- * - `topicScreen_showsErrorState` is **dropped, not silently**:
- *   [TopicUiState.error] still exists but nothing in [TopicScreen]/
- *   `IntroductionTab`/`StudyMaterialTab` ever reads it -- a real dead field
- *   (a load failure sets `error` but the UI shows nothing), flagged as a
- *   genuine finding in the 6a-2 phase summary rather than fixed here
- *   (out of scope for a test-porting phase).
+ * - `topicScreen_showsErrorState`: [TopicUiState.error] was dead when this
+ *   phase's test-porting pass first found it (a load failure set `error`
+ *   but the UI showed nothing) -- flagged as a finding, then fixed the same
+ *   phase (not left as tracked debt): [TopicScreen] now renders a
+ *   `TopicErrorState` in place of the tabs with a retry button.
  * - `topicScreen_studyMaterialsAreClickable`'s old assertion ("materials
  *   render or *some* clickable element exists") is replaced with a precise
  *   click -> callback assertion, a stronger test than the one it replaces.
@@ -115,5 +115,18 @@ class TopicScreenUiTest {
         setContent { TopicScreen(topicId = "TAT", initialTab = 1, onNavigateBack = {}, viewModel = mockViewModel) }
 
         onNodeWithText("Introduction to TAT").assertDoesNotExist()
+    }
+
+    @Test
+    fun topicScreen_showsErrorStateWithRetry() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(error = "Failed to load topic content")
+        setContent { TopicScreen(topicId = "TAT", onNavigateBack = {}, viewModel = mockViewModel) }
+
+        onNodeWithText("Failed to load topic content", substring = true).assertIsDisplayed()
+
+        onNodeWithText("Retry").performClick()
+
+        // Called once by the screen's initial LaunchedEffect(topicId), again by retry.
+        verify(exactly = 2) { mockViewModel.loadTopic("TAT") }
     }
 }

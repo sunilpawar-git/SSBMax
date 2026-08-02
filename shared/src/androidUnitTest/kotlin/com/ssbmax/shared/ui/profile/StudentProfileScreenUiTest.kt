@@ -24,18 +24,20 @@ import org.robolectric.annotation.Config
  *
  * Real structural drift from the pre-cutover test this replaces, verified by
  * reading [StudentProfileScreen]/[StudentProfileHeader]/[StudentProfileSections]
- * rather than assumed -- two pre-cutover tests are dropped, not silently:
- * - `profileScreen_showsLoadingState`: [StudentProfileUiState.isLoading]
- *   still exists but this screen never reads it -- no loading indicator, no
- *   conditional branch on it anywhere in [StudentProfileScreen]. A real dead
- *   field, not a porting gap; see the 6a-2 phase summary.
+ * rather than assumed:
+ * - `profileScreen_showsLoadingState` originally asserted on a "Loading" text
+ *   node that never existed here -- [StudentProfileUiState.isLoading] was
+ *   dead (no conditional branch anywhere) until this same phase's follow-up
+ *   fix wired a `CircularProgressIndicator` into [StudentProfileScreen].
+ *   Since that indicator has no text, `profileScreen_loadingState_hidesContent`
+ *   asserts the loaded content is absent instead of asserting the spinner
+ *   directly.
  * - `profileScreen_logoutButton_isVisible`: no "Logout" string or composable
  *   exists anywhere under `shared/ui/profile` -- the Android original's
  *   logout action isn't reachable from this screen in the port (likely
  *   moved behind `onNavigateToSettings`, out of this screen's scope).
- * `profileScreen_displaysPremiumBadge` is added in their place to keep the
- * file's coverage at five cases, asserting a real conditional branch
- * ([ProfileHeader]'s `isPremium` chip) instead of two now-nonexistent ones.
+ *   `profileScreen_displaysPremiumBadge` covers a real conditional branch
+ *   ([ProfileHeader]'s `isPremium` chip) in its place.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -84,5 +86,13 @@ class StudentProfileScreenUiTest {
         setContent { StudentProfileScreen(viewModel = mockViewModel) }
 
         onNodeWithText("Premium Member", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun profileScreen_loadingState_hidesContent() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(isLoading = true)
+        setContent { StudentProfileScreen(viewModel = mockViewModel) }
+
+        onNodeWithText("John Doe").assertDoesNotExist()
     }
 }

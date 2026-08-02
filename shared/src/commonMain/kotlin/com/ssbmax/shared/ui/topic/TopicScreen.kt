@@ -1,11 +1,15 @@
 package com.ssbmax.shared.ui.topic
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -18,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +31,7 @@ import com.ssbmax.shared.ui.common.TabSwipeableContent
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
+import ssbmax.shared.generated.resources.topic_retry_button
 import ssbmax.shared.generated.resources.topic_tab_overview
 import ssbmax.shared.generated.resources.topic_tab_study_material
 
@@ -92,29 +98,53 @@ fun TopicScreen(
             }
         }
     ) { paddingValues ->
-        TabSwipeableContent(
-            currentIndex = selectedTab,
-            totalTabs = 3,
-            onTabChange = { newTab -> selectedTab = newTab },
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
-        ) {
-            when (selectedTab) {
-                0 -> IntroductionTab(introduction = uiState.introduction, isLoading = uiState.isLoading)
-                1 -> StudyMaterialTab(
-                    materials = uiState.studyMaterials,
-                    isLoading = uiState.isLoading,
-                    onMaterialClick = onNavigateToStudyMaterial
-                )
-                2 -> TestsTab(
-                    tests = uiState.availableTests,
-                    topicId = topicId,
-                    isLoading = uiState.isLoading,
-                    pastInterviewResults = uiState.pastInterviewResults,
-                    isLoadingInterviewHistory = uiState.isLoadingInterviewHistory,
-                    onTestClick = { testType -> onNavigateToTest("${testType.name.lowercase()}_standard") },
-                    onInterviewResultClick = onNavigateToInterviewResult
-                )
+        if (uiState.error != null) {
+            TopicErrorState(
+                error = uiState.error!!,
+                onRetry = { viewModel.loadTopic(topicId) },
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+            )
+        } else {
+            TabSwipeableContent(
+                currentIndex = selectedTab,
+                totalTabs = 3,
+                onTabChange = { newTab -> selectedTab = newTab },
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+            ) {
+                when (selectedTab) {
+                    0 -> IntroductionTab(introduction = uiState.introduction, isLoading = uiState.isLoading)
+                    1 -> StudyMaterialTab(
+                        materials = uiState.studyMaterials,
+                        isLoading = uiState.isLoading,
+                        onMaterialClick = onNavigateToStudyMaterial
+                    )
+                    2 -> TestsTab(
+                        tests = uiState.availableTests,
+                        topicId = topicId,
+                        isLoading = uiState.isLoading,
+                        pastInterviewResults = uiState.pastInterviewResults,
+                        isLoadingInterviewHistory = uiState.isLoadingInterviewHistory,
+                        onTestClick = { testType -> onNavigateToTest("${testType.name.lowercase()}_standard") },
+                        onInterviewResultClick = onNavigateToInterviewResult
+                    )
+                }
             }
+        }
+    }
+}
+
+/**
+ * Full-tab-content error state for a failed topic load. `TopicUiState.error`
+ * existed since the port but was never read by any tab -- a real load
+ * failure was silently invisible (found during Phase 6a-2's UI-test port,
+ * fixed here rather than left as tracked debt).
+ */
+@Composable
+private fun TopicErrorState(error: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(text = error, style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = onRetry) { Text(stringResource(Res.string.topic_retry_button)) }
         }
     }
 }

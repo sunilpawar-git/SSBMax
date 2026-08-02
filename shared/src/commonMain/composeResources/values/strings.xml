@@ -1148,6 +1148,7 @@
     <string name="topic_interview_score_suffix">/10</string>
     <string name="topic_no_study_materials">No study materials available yet</string>
     <string name="topic_no_tests_available">No tests available yet</string>
+    <string name="topic_retry_button">Retry</string>
     <string name="piq_bullet_separator">• </string>
     <string name="notifications_screen_title">Notifications</string>
     <string name="notifications_empty_title">No notifications yet</string>
