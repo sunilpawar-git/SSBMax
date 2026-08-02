@@ -384,6 +384,13 @@ class RecordingLogger : DomainLogger {
     override fun v(tag: String, message: String) { entries += Entry("v", tag, message, null) }
 }
 
+/** Records what was tracked, for tests asserting a specific analytics event fired (Phase 7a). */
+class RecordingAnalyticsTracker : com.ssbmax.shared.domain.util.AnalyticsTracker {
+    data class Entry(val name: String, val params: Map<String, Any?>)
+    val events = mutableListOf<Entry>()
+    override fun trackEvent(name: String, params: Map<String, Any?>) { events += Entry(name, params) }
+}
+
 /**
  * Emits [values] back-to-back with no suspension between them, so a collector
  * that cancels its own coroutine after the first value (the GTO-pattern

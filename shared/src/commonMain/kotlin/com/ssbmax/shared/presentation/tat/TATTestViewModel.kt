@@ -16,7 +16,9 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -71,7 +73,8 @@ class TATTestViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val tag = "TATTestViewModel"
 
@@ -88,6 +91,7 @@ class TATTestViewModel(
 
             val userId = observeCurrentUser().first()?.id ?: run {
                 logger.e(tag, "SECURITY: Unauthenticated TAT test access blocked", null)
+                analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "TAT"))
                 _uiState.update {
                     it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
                 }
@@ -203,6 +207,10 @@ class TATTestViewModel(
             val userId = capturedUserId ?: observeCurrentUser().first()?.id
             if (userId == null) {
                 logger.e(tag, "Unauthenticated TAT submission blocked", null)
+                analyticsTracker.trackEvent(
+                    SecurityEvents.UNAUTHENTICATED_ACCESS,
+                    mapOf("test_type" to "TAT", "phase" to "submission")
+                )
                 _uiState.update { it.copy(isLoading = false, error = "Please login to submit test") }
                 return@launch
             }

@@ -14,7 +14,7 @@
 val appModules = listOf(
     sharedModule,                 // :shared's full Koin graph (screens, ViewModels, use cases)
     databaseModule, repositoryModule, contentRepositoryModule,
-    firebaseModule, loggerModule, coroutineScopeModule, aiModule,
+    firebaseModule, coroutineScopeModule, aiModule,
     coreDataInjectablesModule,    // :core:data
     testUseCaseModule, debugModule, workManagerModule, appInjectablesModule  // :app
 )

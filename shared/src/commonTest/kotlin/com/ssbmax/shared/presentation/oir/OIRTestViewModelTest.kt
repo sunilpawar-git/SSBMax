@@ -24,6 +24,7 @@ import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -111,10 +112,11 @@ class OIRTestViewModelTest {
             testSessionRepository = testSessionRepository,
             observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
             userProfileRepository = userProfileRepository,
-            checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
+            checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
             scoreCalculator = scoreCalculator,
             submitOIRTestUseCase = submitOIRTestUseCase,
-            logger = logger
+            logger = logger,
+            analyticsTracker = RecordingAnalyticsTracker()
         )
     }
 

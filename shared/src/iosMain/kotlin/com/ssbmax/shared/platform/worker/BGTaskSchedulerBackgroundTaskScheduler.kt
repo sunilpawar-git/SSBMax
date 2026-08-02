@@ -1,5 +1,6 @@
 package com.ssbmax.shared.platform.worker
 
+import com.ssbmax.shared.domain.util.DomainLogger
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.BackgroundTasks.BGAppRefreshTaskRequest
 import platform.BackgroundTasks.BGProcessingTaskRequest
@@ -29,9 +30,16 @@ import platform.Foundation.dateByAddingTimeInterval
  * task silently never registers). This class implements the real
  * `BGTaskScheduler` submit calls now so the Phase 6 shell work only needs
  * to add registration + Info.plist entries, not new Kotlin.
+ *
+ * Phase 7b: `submitTaskRequest`'s failure (the exact "not registered yet"
+ * case above) is logged via [DomainLogger] rather than silently swallowed —
+ * still non-fatal (a missed background job isn't worth crashing the app
+ * over), but now visible instead of invisible.
  */
 @OptIn(ExperimentalForeignApi::class)
-class BGTaskSchedulerBackgroundTaskScheduler : BackgroundTaskScheduler {
+class BGTaskSchedulerBackgroundTaskScheduler(
+    private val logger: DomainLogger
+) : BackgroundTaskScheduler {
 
     override fun scheduleQuestionCacheCleanup() {
         val request = BGAppRefreshTaskRequest(CLEANUP_TASK_ID)
@@ -39,9 +47,7 @@ class BGTaskSchedulerBackgroundTaskScheduler : BackgroundTaskScheduler {
         try {
             BGTaskScheduler.sharedScheduler.submitTaskRequest(request, null)
         } catch (e: Exception) {
-            // BGTaskScheduler throws if the identifier wasn't registered at
-            // launch (see class doc) -- swallow rather than crash the app;
-            // the job simply won't run until Phase 6 wires registration.
+            logger.e(TAG, "submitTaskRequest failed for $CLEANUP_TASK_ID", e)
         }
     }
 
@@ -53,7 +59,7 @@ class BGTaskSchedulerBackgroundTaskScheduler : BackgroundTaskScheduler {
         try {
             BGTaskScheduler.sharedScheduler.submitTaskRequest(request, null)
         } catch (e: Exception) {
-            // See scheduleQuestionCacheCleanup's comment.
+            logger.e(TAG, "submitTaskRequest failed for $ARCHIVAL_TASK_ID", e)
         }
     }
 
@@ -66,5 +72,6 @@ class BGTaskSchedulerBackgroundTaskScheduler : BackgroundTaskScheduler {
 
         private const val CLEANUP_INTERVAL_SECONDS = 24.0 * 60.0 * 60.0 // 24 hours, matches Android actual
         private const val ARCHIVAL_INITIAL_DELAY_SECONDS = 60.0 * 60.0 // 1 hour, matches Android actual
+        private const val TAG = "BGTaskSchedulerBackgroundTaskScheduler"
     }
 }

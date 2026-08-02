@@ -8,7 +8,9 @@ import com.ssbmax.shared.domain.repository.GTORepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.SecurityEvents
 import kotlinx.coroutines.flow.first
 
 /**
@@ -20,16 +22,17 @@ import kotlinx.coroutines.flow.first
  * enforced by [GTORepository.canUserTakeTest]) that's identical across every
  * GTO test type, so a shared class earns its keep here.
  *
- * `core:data`'s `SecurityEventLogger` (Android-only, Firebase Analytics +
- * `android.util.Log`) is NOT ported -- same precedent as every other Phase 5
- * vertical, logs via [DomainLogger] instead.
+ * `core:data`'s `SecurityEventLogger` is not ported wholesale, but its
+ * unauthenticated-access event is restored (Phase 7a) via the injected
+ * [AnalyticsTracker] — [DomainLogger] still gets the same log line it always did.
  */
 class GTOEligibilityChecker(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val gtoRepository: GTORepository,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) {
     private val tag = "GTOEligibilityChecker"
 
@@ -42,6 +45,7 @@ class GTOEligibilityChecker(
     suspend fun checkEligibility(testType: TestType, gtoTestType: GTOTestType): Result {
         val userId = observeCurrentUser().first()?.id ?: run {
             logger.e(tag, "SECURITY: Unauthenticated GTO test access blocked", null)
+            analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to testType.name))
             return Result.Error("Authentication required. Please login to continue.")
         }
 

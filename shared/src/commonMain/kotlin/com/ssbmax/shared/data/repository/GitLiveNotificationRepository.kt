@@ -12,8 +12,10 @@ import kotlinx.serialization.Serializable
 
 /**
  * GitLive-Firebase-backed port of the Android `NotificationRepositoryImpl`.
- * Same three Firestore collections (fcm_tokens, notifications,
- * notification_preferences) plus the local Room->SQLDelight cache
+ * Same three Firestore collections (fcmTokens, notifications,
+ * notificationPreferences -- both non-"notifications" names camelCase per
+ * firestore.rules, fixed from a snake_case mismatch in Phase 7c) plus the
+ * local Room->SQLDelight cache
  * ([GitLiveNotificationCacheManager]) for [getNotifications]/[getUnreadCount]
  * (read from cache only, matching the Android original -- these two never
  * read Firestore directly there either).
@@ -30,9 +32,10 @@ import kotlinx.serialization.Serializable
  * 2. `getCurrentFCMToken`/`subscribeToTopic`/`unsubscribeFromTopic` (the
  *    Android impl's extra, non-interface public methods backed by
  *    `FirebaseMessaging`) have zero callers anywhere in app/ or core/ --
- *    `SSBMaxFirebaseMessagingService` carries three unresolved marker
- *    comments (each naming `NotificationRepository`) confirming the wiring
- *    was never done.
+ *    confirmed by grep, still true as of Phase 7c even though
+ *    `SSBMaxFirebaseMessagingService.onNewToken` itself does call
+ *    `saveFCMToken` for real now (not the TODO stub earlier session notes
+ *    described).
  *    `dev.gitlive:firebase-messaging` is also not a dependency of this
  *    module (only auth/firestore/common/storage are, per
  *    shared/build.gradle.kts) -- adding it to reach zero real callers would
@@ -142,9 +145,12 @@ class GitLiveNotificationRepository(
     }
 
     private companion object {
-        const val TOKENS_COLLECTION = "fcm_tokens"
+        // Phase 7c (KMP-convergence plan): must match firestore.rules exactly -- the previous
+        // snake_case names fell through to the rules file's default-deny catch-all, so every
+        // save/read/delete here was silently PERMISSION_DENIED on this platform too.
+        const val TOKENS_COLLECTION = "fcmTokens"
         const val NOTIFICATIONS_COLLECTION = "notifications"
-        const val PREFERENCES_COLLECTION = "notification_preferences"
+        const val PREFERENCES_COLLECTION = "notificationPreferences"
         const val FIELD_IS_READ = "isRead"
         const val FIELD_USER_ID = "userId"
     }

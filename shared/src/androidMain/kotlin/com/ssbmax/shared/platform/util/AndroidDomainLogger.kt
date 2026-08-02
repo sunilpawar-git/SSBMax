@@ -1,16 +1,9 @@
-package com.ssbmax.core.data.util
+package com.ssbmax.shared.platform.util
 
 import android.util.Log
 import com.ssbmax.shared.domain.util.DomainLogger
 
-/**
- * Android implementation of DomainLogger using android.util.Log
- * 
- * This implementation bridges the domain layer's platform-independent logging
- * to Android's logging system.
- * 
- * Injected into domain layer use cases via Hilt dependency injection.
- */
+/** Android actual: thin wrapper over `android.util.Log`. */
 class AndroidDomainLogger : DomainLogger {
     override fun d(tag: String, message: String) {
         Log.d(tag, message)
@@ -36,4 +29,3 @@ class AndroidDomainLogger : DomainLogger {
         Log.v(tag, message)
     }
 }
-

@@ -10,6 +10,7 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.presentation.testing.clearForTest
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
@@ -19,6 +20,7 @@ import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -50,6 +52,7 @@ class SDTTestViewModelTest {
     private lateinit var submissionRepository: FakeSubmissionRepository
     private lateinit var usageRecorder: FakeTestUsageRecorder
     private lateinit var analysisTrigger: FakeSubmissionAnalysisTrigger
+    private lateinit var analyticsTracker: RecordingAnalyticsTracker
 
     @BeforeTest
     fun setUp() {
@@ -65,6 +68,7 @@ class SDTTestViewModelTest {
         submissionRepository = FakeSubmissionRepository()
         usageRecorder = FakeTestUsageRecorder()
         analysisTrigger = FakeSubmissionAnalysisTrigger()
+        analyticsTracker = RecordingAnalyticsTracker()
         // "Self Description" is limit 0 on FREE (SubscriptionLimits) -- default to PRO so
         // tests are eligible unless a test explicitly overrides to exercise LimitReached.
         subscriptionRepository.tierResult = Result.success(SubscriptionTier.PRO)
@@ -85,11 +89,11 @@ class SDTTestViewModelTest {
         testSessionRepository = testSessionRepository,
         submitSDTTest = SubmitSDTTestUseCase(submissionRepository),
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
-        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
+        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
         userProfileRepository = userProfileRepository,
         usageRecorder = usageRecorder,
         analysisTrigger = analysisTrigger,
-        logger = NoOpLogger()
+        observability = ObservabilitySeam(NoOpLogger(), analyticsTracker)
     )
 
     @Test
@@ -101,6 +105,7 @@ class SDTTestViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals("Authentication required. Please login to continue.", viewModel.uiState.value.error)
+        assertEquals(listOf(com.ssbmax.shared.domain.util.SecurityEvents.UNAUTHENTICATED_ACCESS), analyticsTracker.events.map { it.name })
     }
 
     @Test

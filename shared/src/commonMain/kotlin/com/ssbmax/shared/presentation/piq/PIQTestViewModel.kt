@@ -7,7 +7,9 @@ import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -52,10 +54,10 @@ import kotlinx.datetime.Clock
  * on this KMP build until the Interview vertical is ported with its own
  * background-task shim. `getOLQDashboard.invalidateCache()` is also dropped,
  * same precedent as WAT/SRT/SDT (none of those invalidate the dashboard cache
- * on submit either). `DifficultyProgressionManager.recordPerformance` and
- * `SecurityEventLogger` are dropped, same precedent as every other ported
- * vertical (local analytics / Android-only security telemetry, not part of
- * the submission contract).
+ * on submit either). `DifficultyProgressionManager.recordPerformance` is
+ * still dropped (local analytics, not part of the submission contract);
+ * `SecurityEventLogger`'s unauthenticated-submission event is restored
+ * (Phase 7a) via the injected [AnalyticsTracker].
  *
  * Structurally distinct from every timed test ported so far: two freely
  * navigable pages (no forward-only phase machine), continuous 2-second-debounce
@@ -78,7 +80,8 @@ class PIQTestViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val usageRecorder: TestUsageRecorder,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val tag = "PIQTestViewModel"
 
@@ -192,6 +195,7 @@ class PIQTestViewModel(
             val userId = capturedUserId ?: withTimeoutOrNull(3000L) { observeCurrentUser().first()?.id }
             if (userId == null) {
                 logger.e(tag, "Unauthenticated PIQ submission blocked", null)
+                analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "PIQ"))
                 _uiState.update { it.copy(isLoading = false, error = "Please login to submit PIQ") }
                 return@launch
             }

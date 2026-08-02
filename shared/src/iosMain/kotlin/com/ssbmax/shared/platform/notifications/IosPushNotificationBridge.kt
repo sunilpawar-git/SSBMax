@@ -22,22 +22,25 @@ import platform.UIKit.UIDevice
  * (the raw APNs device token) into the same repository Android's FCM path
  * uses.
  *
- * **Important, read before assuming this mirrors a working Android flow:**
- * Android's `SSBMaxFirebaseMessagingService.onNewToken` (in `app`) is
- * itself only a TODO stub -- it logs the token but never calls
- * `NotificationRepository.saveFCMToken`. This iOS bridge is therefore the
- * *first* real implementation of "persist the push token" in this
- * codebase, not a port of a working Android original.
+ * Android's `SSBMaxFirebaseMessagingService.onNewToken` (in `app`) already
+ * calls `NotificationRepository.saveFCMToken` for real (fixed pre-Phase-7c,
+ * not a stub) -- this bridge writes into the same repository/collection,
+ * not a first-of-its-kind path.
  *
- * **Also important:** the token saved here is the raw APNs device token,
- * not an FCM registration token. GitLive's Firebase Kotlin SDK has no
- * Messaging module (confirmed absent -- see the plan's Risk #1 on thin
- * GitLive coverage for Messaging/Analytics/Crashlytics), so there is no
- * KMP-portable way to run this token through Firebase Cloud Messaging's
- * token-exchange. A server that wants to push to `platform == "ios"` rows
- * in this collection must call Apple's APNs HTTP/2 API directly with the
- * raw token, not FCM's send API -- flagging this for whoever wires server
- * push, not silently implying FCM send would work for these rows.
+ * **Read before assuming an iOS token round-trips through FCM send:** the
+ * token saved here is the raw APNs device token, not an FCM registration
+ * token. GitLive's Firebase Kotlin SDK has no Messaging module (confirmed
+ * absent -- see the plan's Risk #1 on thin GitLive coverage for
+ * Messaging/Analytics/Crashlytics), so there is no KMP-portable way to run
+ * this token through Firebase Cloud Messaging's token-exchange short of
+ * linking `FirebaseMessaging` as a new iOS SPM product (an Xcode-project
+ * change, not reachable from Gradle/Kotlin -- deliberately not attempted in
+ * Phase 7c, same call as the Crashlytics/Analytics SPM gap Phase 7a named).
+ * A server that wants to push to `platform == "ios"` rows in this
+ * collection must call Apple's APNs HTTP/2 API directly with the raw
+ * token, not FCM's send API -- flagging this for whoever wires server push
+ * (nothing in `functions/` sends pushes yet either way), not silently
+ * implying FCM send would work for these rows.
  */
 private val bridgeScope = CoroutineScope(Dispatchers.Main)
 

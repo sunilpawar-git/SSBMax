@@ -66,13 +66,13 @@ class NotificationRepositoryImplTest {
         }
         seededTokenKeys.forEach { key ->
             try {
-                firestore.collection("fcm_tokens").document(key).delete().await()
+                firestore.collection("fcmTokens").document(key).delete().await()
             } catch (e: Exception) {
                 // Ignore cleanup errors
             }
         }
         try {
-            firestore.collection("notification_preferences").document(testUserId).delete().await()
+            firestore.collection("notificationPreferences").document(testUserId).delete().await()
         } catch (e: Exception) {
             // Ignore cleanup errors
         }

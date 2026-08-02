@@ -11,6 +11,7 @@ import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -56,9 +57,10 @@ class PIQTestViewModelTest {
     private fun buildViewModel() = PIQTestViewModel(
         submissionRepository = submissionRepository,
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
-        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
+        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
         usageRecorder = usageRecorder,
-        logger = NoOpLogger()
+        logger = NoOpLogger(),
+        analyticsTracker = RecordingAnalyticsTracker()
     )
 
     @Test

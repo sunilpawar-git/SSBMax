@@ -6,7 +6,6 @@ import com.ssbmax.core.data.di.coreDataInjectablesModule
 import com.ssbmax.core.data.di.coroutineScopeModule
 import com.ssbmax.core.data.di.databaseModule
 import com.ssbmax.core.data.di.firebaseModule
-import com.ssbmax.core.data.di.loggerModule
 import com.ssbmax.core.data.di.repositoryModule
 import com.ssbmax.shared.di.sharedModule
 
@@ -48,7 +47,6 @@ val appModules = listOf(
     repositoryModule,
     contentRepositoryModule,
     firebaseModule,
-    loggerModule,
     coroutineScopeModule,
     aiModule,
     coreDataInjectablesModule,

@@ -13,7 +13,9 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -43,9 +45,10 @@ import kotlin.random.Random
  *   `SubscriptionManager`) replaced by [CheckTestEligibilityUseCase] — see
  *   that use case's own doc comment for what it does and doesn't carry
  *   forward (debug bypass, Room mirror, security-event logging).
- * - `SecurityEventLogger` (Android-only: Firebase Analytics) dropped;
- *   [DomainLogger] used for the equivalent "blocked unauthenticated access"
- *   log line, same seam every other ported ViewModel in this phase uses.
+ * - `SecurityEventLogger`'s unauthenticated-access event is restored (Phase
+ *   7a) via the injected [AnalyticsTracker]; [DomainLogger] still gets the
+ *   same "blocked unauthenticated access" log line every other ported
+ *   ViewModel in this phase uses.
  * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only, wraps
  *   `androidx.lifecycle.ViewModel` lifecycle + `java.lang.ref.WeakReference`)
  *   dropped entirely — there is no KMP equivalent, and `viewModelScope`
@@ -83,7 +86,8 @@ class OIRTestViewModel(
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val scoreCalculator: OIRTestScoreCalculator,
     private val submitOIRTestUseCase: SubmitOIRTestUseCase,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val tag = "OIRTestViewModel"
 
@@ -101,6 +105,7 @@ class OIRTestViewModel(
             _uiState.update { it.copy(isLoading = true, errorType = null) }
             val userId = observeCurrentUser().first()?.id ?: run {
                 logger.e(tag, "SECURITY: Unauthenticated OIR test access blocked", null)
+                analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "OIR"))
                 _uiState.update { it.copy(isLoading = false, errorType = OIRErrorType.AUTH_REQUIRED) }
                 return@launch
             }

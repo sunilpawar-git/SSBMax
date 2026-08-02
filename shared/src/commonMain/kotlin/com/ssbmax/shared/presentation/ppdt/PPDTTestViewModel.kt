@@ -9,7 +9,9 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -42,8 +44,10 @@ import kotlinx.datetime.Clock
  *   be analyzed until a real platform trigger is wired in from `app`).
  * - `SubscriptionManager`/`TestEligibility` (Android `core:data`) replaced by
  *   [CheckTestEligibilityUseCase] — same substitution and same caveats
- *   (debug bypass, Room usage mirror, `SecurityEventLogger` all dropped) as
- *   already documented on that use case and on `OIRTestViewModel`.
+ *   (debug bypass, Room usage mirror still dropped) as already documented
+ *   on that use case. `SecurityEventLogger`'s unauthenticated-access event
+ *   is restored (Phase 7a) via the injected [AnalyticsTracker], same as
+ *   `OIRTestViewModel`.
  * - `DifficultyProgressionManager.recordPerformance()` (Android `core:data`)
  *   is restored via [DifficultyProgressionRepository] (Phase 3c, #17) — backed
  *   by [com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager],
@@ -61,7 +65,8 @@ class PPDTTestViewModel(
     private val checkTestEligibility: CheckTestEligibilityUseCase,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val difficultyProgression: DifficultyProgressionRepository,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val tag = "PPDTTestViewModel"
 
@@ -76,6 +81,7 @@ class PPDTTestViewModel(
 
             val userId = observeCurrentUser().first()?.id ?: run {
                 logger.e(tag, "SECURITY: Unauthenticated PPDT test access blocked", null)
+                analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "PPDT"))
                 _uiState.update {
                     it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
                 }

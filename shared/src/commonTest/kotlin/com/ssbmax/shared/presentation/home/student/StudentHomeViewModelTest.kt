@@ -10,6 +10,7 @@ import com.ssbmax.shared.presentation.testing.FakeNotificationRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestProgressRepository
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,7 @@ class StudentHomeViewModelTest {
     private lateinit var testProgressRepository: FakeTestProgressRepository
     private lateinit var notificationRepository: FakeNotificationRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
+    private lateinit var analyticsTracker: RecordingAnalyticsTracker
 
     @BeforeTest
     fun setUp() {
@@ -46,6 +48,7 @@ class StudentHomeViewModelTest {
         testProgressRepository = FakeTestProgressRepository()
         notificationRepository = FakeNotificationRepository()
         submissionRepository = FakeSubmissionRepository()
+        analyticsTracker = RecordingAnalyticsTracker()
     }
 
     @AfterTest
@@ -64,7 +67,8 @@ class StudentHomeViewModelTest {
             logger = NoOpLogger()
         ),
         notificationRepository = notificationRepository,
-        logger = NoOpLogger()
+        logger = NoOpLogger(),
+        analyticsTracker = analyticsTracker
     )
 
     @Test
@@ -119,6 +123,27 @@ class StudentHomeViewModelTest {
         assertNotNull(state.dashboard)
         assertEquals(false, state.isDashboardLoading)
         assertEquals(null, state.dashboardError)
+    }
+
+    @Test
+    fun `dashboard cache miss on first load fires dashboard_cache_miss (Phase 7a telemetry restore)`() = runTest(testDispatcher) {
+        buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // First-ever load for a user id always misses GetOLQDashboardUseCase's
+        // in-memory cache -- this pins the exact restored event, not just "some event fired".
+        assertEquals(listOf("dashboard_cache_miss"), analyticsTracker.events.map { it.name })
+    }
+
+    @Test
+    fun `forced dashboard refresh fires dashboard_cache_miss again (forceRefresh always bypasses cache)`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.refreshDashboard()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("dashboard_cache_miss", "dashboard_cache_miss"), analyticsTracker.events.map { it.name })
     }
 
     @Test

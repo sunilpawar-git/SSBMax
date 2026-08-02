@@ -23,9 +23,13 @@ class NotificationRepositoryImpl(
     private val notificationDao: NotificationDao
 ) : NotificationRepository {
     
-    private val tokensCollection = firestore.collection("fcm_tokens")
+    // Phase 7c (KMP-convergence plan): collection names must match firestore.rules exactly --
+    // "fcm_tokens"/"notification_preferences" (snake_case) fell through to the rules file's
+    // default-deny catch-all, so every save/read/delete here was silently PERMISSION_DENIED.
+    // firestore.rules is this repo's declared access-control SSOT (root CLAUDE.md); fixed to match it.
+    private val tokensCollection = firestore.collection("fcmTokens")
     private val notificationsCollection = firestore.collection("notifications")
-    private val preferencesCollection = firestore.collection("notification_preferences")
+    private val preferencesCollection = firestore.collection("notificationPreferences")
     
     override suspend fun saveFCMToken(token: FCMToken): Result<Unit> {
         return try {

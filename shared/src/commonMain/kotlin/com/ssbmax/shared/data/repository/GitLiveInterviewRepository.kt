@@ -2,6 +2,7 @@ package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.constants.InterviewConstants
 import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.InterviewLimits
 import com.ssbmax.shared.domain.model.interview.InterviewMode
 import com.ssbmax.shared.domain.model.interview.InterviewQuestion
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * GitLive-Firebase-backed port of the Android `FirestoreInterviewRepository`. Same collections
@@ -29,12 +32,18 @@ import kotlinx.datetime.Clock
  * helper — both extracted (like [GitLiveGTORepository]'s own DTO/helper split) to keep this file
  * under this repo's 300-line limit.
  *
- * [checkPrerequisites]/[checkInterviewLimits] are kept as unconditional
- * `UnsupportedOperationException` stubs, identical to the Android original: [checkPrerequisites]'s
- * real check lives in `CheckInterviewPrerequisitesUseCase` (use-case layer, out of this phase's
- * repository-only scope); [checkInterviewLimits] has no such use-case anymore (its would-be
- * use-case was confirmed dead code and deleted in the Phase 5 exit sweep) -- both stubs stay
- * since the domain interface still declares them.
+ * [checkPrerequisites] stays an unconditional `UnsupportedOperationException` stub, identical to
+ * the Android original: its real check lives in `CheckInterviewPrerequisitesUseCase` (use-case
+ * layer, out of this repository's scope).
+ *
+ * [checkInterviewLimits] was the same kind of stub until Phase 7b -- it had no caller anywhere
+ * (its would-be use-case was confirmed dead code and deleted in the Phase 5 exit sweep), so it
+ * stayed unimplemented rather than silently wrong. It's now real, following the exact
+ * tier + monthly-usage pattern [com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase]
+ * uses for every other test type, keyed on the same `"Interview"` [SubscriptionLimits] entry
+ * [com.ssbmax.shared.domain.model.TestType.IO] already maps to. `mode` is accepted (interface
+ * contract) but unused -- [SubscriptionLimits]/[dev.gitlive.firebase.firestore] usage tracking
+ * doesn't differentiate by interview mode, same as [getRemainingInterviews] below.
  */
 class GitLiveInterviewRepository(
     private val questionCacheRepository: QuestionCacheRepository,
@@ -51,8 +60,17 @@ class GitLiveInterviewRepository(
     override suspend fun checkPrerequisites(userId: String): Result<PrerequisiteCheckResult> =
         Result.failure(UnsupportedOperationException("Use CheckInterviewPrerequisitesUseCase"))
 
-    override suspend fun checkInterviewLimits(userId: String, mode: InterviewMode): Result<Boolean> =
-        Result.failure(UnsupportedOperationException("checkInterviewLimits not implemented"))
+    override suspend fun checkInterviewLimits(userId: String, mode: InterviewMode): Result<Boolean> {
+        val tier = subscriptionRepository.getSubscriptionTier(userId).getOrElse { return Result.failure(it) }
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val month = "${now.year}-${now.monthNumber.toString().padStart(2, '0')}"
+        val usage = subscriptionRepository.getMonthlyUsage(userId, month).getOrElse { return Result.failure(it) }
+        val key = SubscriptionLimits.keyFor(TestType.IO)
+        val info = usage[key]
+        val limit = info?.limit ?: SubscriptionLimits.limitFor(key, tier)
+        val used = info?.used ?: 0
+        return Result.success(limit == -1 || used < limit)
+    }
 
     // ==================== Session Management ====================
 

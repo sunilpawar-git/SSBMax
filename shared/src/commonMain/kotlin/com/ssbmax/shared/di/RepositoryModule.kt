@@ -31,6 +31,7 @@ import com.ssbmax.shared.data.repository.GitLiveTestRepository
 import com.ssbmax.shared.data.repository.GitLiveTestSessionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestSubmissionRepository
 import com.ssbmax.shared.data.repository.GitLiveTestUsageRecorder
+import com.ssbmax.shared.data.repository.GitLiveUnifiedResultRepository
 import com.ssbmax.shared.data.repository.GitLiveUserProfileRepository
 import com.ssbmax.shared.data.repository.GitLiveUserRepository
 import com.ssbmax.shared.data.repository.GitLiveWATWordCacheManager
@@ -54,6 +55,7 @@ import com.ssbmax.shared.domain.repository.TestRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
+import com.ssbmax.shared.domain.repository.UnifiedResultRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -111,6 +113,11 @@ val repositoryModule = module {
     single { GitLiveGTOProgressDelegate(get()) }
     single { GitLiveGTOResultsDelegate(get(), get()) }
     singleOf(::GitLiveGTORepository) bind GTORepository::class
+    // Phase 7b (KMP-convergence plan): implemented and interface-complete
+    // since Phase 5, but never bound here -- unresolvable via Koin on iOS
+    // (no core:data shadow binding exists there). Both constructor deps
+    // (InterviewRepository/GTORepository) are already bound above.
+    singleOf(::GitLiveUnifiedResultRepository) bind UnifiedResultRepository::class
     singleOf(::GitLiveNotificationRepository) bind NotificationRepository::class
     single { GitLiveSubmissionRepository() } bind SubmissionRepository::class
     single { InterviewQuestionGenerator(get(), get(), get()) }

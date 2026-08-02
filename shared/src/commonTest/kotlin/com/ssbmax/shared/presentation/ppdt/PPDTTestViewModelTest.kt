@@ -22,6 +22,7 @@ import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -93,10 +94,11 @@ class PPDTTestViewModelTest {
         loadPPDTTest = LoadPPDTTestUseCase(testContentRepository, testSessionRepository, userProfileRepository),
         submitPPDTTest = SubmitPPDTTestUseCase(submissionRepository, userProfileRepository, com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder()),
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
-        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
+        checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
         analysisTrigger = analysisTrigger,
         difficultyProgression = difficultyProgression,
-        logger = NoOpLogger()
+        logger = NoOpLogger(),
+        analyticsTracker = RecordingAnalyticsTracker()
     )
 
     @Test

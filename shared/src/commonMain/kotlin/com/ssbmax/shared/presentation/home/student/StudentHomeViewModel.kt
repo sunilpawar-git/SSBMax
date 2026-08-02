@@ -10,6 +10,7 @@ import com.ssbmax.shared.domain.repository.NotificationRepository
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
+import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,22 +41,17 @@ import kotlinx.datetime.Clock
  *   dead code, not carried forward (matches this plan's own "don't
  *   manufacture new dead code" precedent from Phase 2).
  * - `analyticsManager: com.ssbmax.core.data.analytics.AnalyticsManager`
- *   dropped entirely, not shimmed. `core:data`'s `AnalyticsManager` wraps
- *   Android's Firebase Analytics SDK directly, which has no KMP artifact
- *   (Firebase Analytics/Crashlytics/FCM Messaging are the specific gap this
- *   plan's Risk #1 already flags as needing hand-rolled platform-specific
- *   work, not a mechanical port). Building a new expect/actual analytics
- *   shim is out of this session's scope (home-screen vertical only); the
- *   three `trackFeatureUsed` calls this port would have made
- *   (`dashboard_cache_hit`/`dashboard_cache_miss`/`dashboard_cache_error`)
- *   are simply not made from `shared` yet — a real, named gap, not a silent
- *   drop.
+ *   replaced with the injected [AnalyticsTracker] (Phase 7a of the
+ *   KMP-convergence plan) — the three `trackFeatureUsed` calls this port
+ *   would have made (`dashboard_cache_hit`/`dashboard_cache_miss`/
+ *   `dashboard_cache_error`) are restored in [loadDashboard], reading
+ *   [com.ssbmax.shared.domain.usecase.dashboard.CacheMetadata.cacheHit] off
+ *   [GetOLQDashboardUseCase]'s own result rather than re-deriving it.
  * - `ErrorLogger` (Android-only: `android.util.Log` + Firebase Crashlytics)
  *   replaced with the injected [DomainLogger], the same cross-platform
  *   logging seam [GetOLQDashboardUseCase] and every other ported
- *   ViewModel in this phase already uses (currently bound to a no-op impl —
- *   see [com.ssbmax.shared.di.SharedModule]'s doc, a pre-existing gap, not
- *   introduced here).
+ *   ViewModel in this phase already uses (bound to a real platform impl as
+ *   of Phase 7a, not a no-op).
  * - `System.currentTimeMillis()` (JVM-only) -> `Clock.System.now().toEpochMilliseconds()`.
  */
 class StudentHomeViewModel(
@@ -64,7 +60,8 @@ class StudentHomeViewModel(
     private val testProgressRepository: TestProgressRepository,
     private val getOLQDashboard: GetOLQDashboardUseCase,
     private val notificationRepository: NotificationRepository,
-    private val logger: DomainLogger
+    private val logger: DomainLogger,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val tag = "StudentHomeViewModel"
 
@@ -242,6 +239,9 @@ class StudentHomeViewModel(
                 // unavailableTypes populated) rather than failing wholesale.
                 getOLQDashboard(userId, forceRefresh)
                     .onSuccess { processedData ->
+                        analyticsTracker.trackEvent(
+                            if (processedData.cacheMetadata.cacheHit) "dashboard_cache_hit" else "dashboard_cache_miss"
+                        )
                         _uiState.update {
                             it.copy(
                                 isDashboardLoading = false,
@@ -254,6 +254,7 @@ class StudentHomeViewModel(
                     }
                     .onFailure { error ->
                         logger.e(tag, "Failed to load dashboard for user $userId", error)
+                        analyticsTracker.trackEvent("dashboard_cache_error")
                         _uiState.update {
                             it.copy(
                                 isDashboardLoading = false,

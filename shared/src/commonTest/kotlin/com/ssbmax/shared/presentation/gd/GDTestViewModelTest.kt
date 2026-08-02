@@ -14,6 +14,7 @@ import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
+import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -73,8 +74,9 @@ class GDTestViewModelTest {
             observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
             userProfileRepository = userProfileRepository,
             gtoRepository = gtoRepository,
-            checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository),
-            logger = logger
+            checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
+            logger = logger,
+            analyticsTracker = RecordingAnalyticsTracker()
         )
         val submissionCoordinator = GTOSubmissionCoordinator(
             gtoRepository = gtoRepository,

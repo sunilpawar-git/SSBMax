@@ -4,6 +4,8 @@ import com.ssbmax.shared.data.repository.SubscriptionLimits
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
+import com.ssbmax.shared.domain.util.AnalyticsTracker
+import com.ssbmax.shared.domain.util.SecurityEvents
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -29,13 +31,14 @@ import kotlinx.datetime.toLocalDateTime
  *   Firestore is read directly every time, matching this repo's own
  *   "SECURITY: reads from Firestore server-side to prevent bypass" comment
  *   (the Room sync was a read-path optimization, not a security requirement).
- * - No dedicated `SecurityEventLogger` call on limit-reached/failure (that
- *   class is Android-only: `android.util.Log` + Firebase Analytics). A real
- *   cross-platform security-event logging seam doesn't exist in `shared` yet;
- *   flagged here rather than silently dropped.
+ * - `SecurityEventLogger`'s limit-reached event is restored (Phase 7a) via
+ *   the injected [AnalyticsTracker] — [SecurityEvents.LIMIT_REACHED], the one
+ *   call `core:data`'s Android-only `SecurityEventLogger` made from this
+ *   exact decision point.
  */
 class CheckTestEligibilityUseCase(
-    private val subscriptionRepository: SubscriptionRepository
+    private val subscriptionRepository: SubscriptionRepository,
+    private val analyticsTracker: AnalyticsTracker
 ) {
     suspend operator fun invoke(testType: TestType, userId: String): TestEligibility {
         val tier = subscriptionRepository.getSubscriptionTier(userId).getOrElse {
@@ -53,6 +56,10 @@ class CheckTestEligibilityUseCase(
         return if (limit == -1 || used < limit) {
             TestEligibility.Eligible(remainingTests = if (limit == -1) Int.MAX_VALUE else limit - used)
         } else {
+            analyticsTracker.trackEvent(
+                SecurityEvents.LIMIT_REACHED,
+                mapOf("test_type" to testType.name, "tier" to tier.name)
+            )
             TestEligibility.LimitReached(
                 tier = tier,
                 limit = limit,

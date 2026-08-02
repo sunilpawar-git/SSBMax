@@ -67,6 +67,16 @@ kotlin {
         pod("FirebaseAuth")
         pod("FirebaseFirestore")
         pod("FirebaseStorage")
+        // Phase 7a (KMP-convergence plan): CrashReporter/AnalyticsTracker
+        // seams -- see IosCrashReporter.kt/IosAnalyticsTracker.kt. Linking
+        // these into `SharedKit.framework` here is necessary but not
+        // sufficient: `iosApp.xcodeproj`'s own SPM product list must also
+        // add FirebaseCrashlytics/FirebaseAnalytics for the shipped app to
+        // actually carry them (a manual Xcode step, not reachable from
+        // Gradle -- see the Phase 7a summary for why this is named rather
+        // than done here).
+        pod("FirebaseCrashlytics")
+        pod("FirebaseAnalytics")
     }
 
     applyDefaultHierarchyTemplate()
@@ -183,6 +193,9 @@ kotlin {
             // BOM) -- confirmed via a real build failure ("Could not find
             // com.google.firebase:firebase-auth-ktx:") before this was added.
             implementation(project.dependencies.platform(libs.firebase.bom))
+            // Phase 7a: AndroidCrashReporter/AndroidAnalyticsTracker actuals.
+            implementation(libs.firebase.crashlytics)
+            implementation(libs.firebase.analytics)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native.driver)
