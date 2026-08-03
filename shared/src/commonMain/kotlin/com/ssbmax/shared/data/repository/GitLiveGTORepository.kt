@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.Flow
  *    port uses the same proven `DocumentReference.get()` + `DocumentReference.set()` pattern as
  *    every other port here, accepting a small non-atomic race window under concurrent writes to
  *    the same user's progress doc (same category of documented simplification as
- *    `GitLiveUserProfileRepository`'s UTC-vs-local-timezone gap).
+ *    `GitLiveUserProfileRepository`'s original UTC-vs-local-timezone gap, since fixed).
  *
  * A second finding, not a deviation but a correction: the Android original's private
  * `mapToSubmission` only recognizes GD/LECTURETTE/GPE test-type strings — it throws
@@ -50,6 +50,23 @@ import kotlinx.coroutines.flow.Flow
  * slice left here. Same behavior as the Android original: GPE and the animation-obstacle test
  * types remain no-op placeholders (that was true in the Android original too, not a gap this port
  * introduced).
+ *
+ * **Phase 9c pre-deletion review (2026-08-03):** diffed in full against the Android original before
+ * its binding/impl were deleted. One real bug found and fixed: [GitLiveGTOSubmissionDelegate.observeSubmission]
+ * had a `.catch { emit(null) }` swallowing Firestore listener errors into a fake "not found" state --
+ * removed, matching the same fix already applied to 7 other repositories in Phases 9a/9b (every
+ * caller -- `GDResultViewModel`/`LecturetteResultViewModel`/`GPEResultViewModel` -- already has its
+ * own `.catch` expecting the real error). `GTOResultDto.toDomain()`'s in-range OLQ/overallScore
+ * defaults (`GitLiveGTOSharedDtos.kt`) were re-verified as an intentional, safer divergence from the
+ * Android original's out-of-range `0`/`0f` defaults (which violate `OLQScore`/`GTOResult`'s own
+ * `init` invariants and throw for any partially-analyzed `gto_results` doc) -- not "fixed" to match,
+ * regression-tested instead (`GTODtoTest`). Two risks reviewed and deliberately left as-is, both
+ * pre-existing and self-documented above/nearby rather than introduced by this review: the
+ * `updateProgress`/`recordTestUsage` non-atomicity (item 1 above), and `getRandomGPEScenario`/
+ * `getObstaclesForTest`'s whole-batch-document decode (one malformed scenario/obstacle field could
+ * fail the entire batch, vs. the Android original's per-field graceful defaults) -- the latter
+ * couldn't be verified against real Firestore content without an emulator, so it's flagged rather
+ * than "fixed" blind.
  */
 class GitLiveGTORepository internal constructor(
     private val testContentRepository: TestContentRepository,

@@ -212,10 +212,12 @@ class TestProgressTrackingContractTest {
 
     @Test
     fun `interview completion must create submission record`() {
-        // Given - Interview uses different repository
-        val interviewRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/FirestoreInterviewRepository.kt"
+        // Given - Interview uses different repository. KMP-convergence Phase 9c:
+        // FirestoreInterviewRepository (core:data) deleted, GitLiveInterviewRepository
+        // (shared) is the sole implementation now.
+        val interviewRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
         val interviewRepoFile = findProjectFile(interviewRepoPath)
-        assertTrue("FirestoreInterviewRepository.kt should exist", interviewRepoFile.exists())
+        assertTrue("GitLiveInterviewRepository.kt should exist", interviewRepoFile.exists())
         
         val content = interviewRepoFile.readText()
         

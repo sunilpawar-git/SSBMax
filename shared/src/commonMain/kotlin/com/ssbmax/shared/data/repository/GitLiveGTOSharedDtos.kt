@@ -44,7 +44,11 @@ internal fun GTOResultDto.toDomain(): GTOResult {
     val parsedScores = olqScores.mapNotNull { (key, dto) ->
         runCatching { OLQ.valueOf(key) }.getOrNull()?.let { it to dto.toDomain() }
     }.toMap()
-    // Fill missing OLQs with default zero values, same as the Android original.
+    // Fill missing OLQs with an in-range placeholder. The Android original filled with score=0,
+    // which is out of OLQScore's own 1..10 invariant and throws IllegalArgumentException on
+    // construction for any partially-analyzed/legacy gto_results doc -- deliberately not ported;
+    // score=1 (lowest valid) keeps this read path from crashing on exactly the malformed-data
+    // case it exists to tolerate.
     val filledScores = OLQ.entries.associateWith { olq ->
         parsedScores[olq] ?: OLQScore(score = 1, confidence = 0, reasoning = "Not analyzed")
     }

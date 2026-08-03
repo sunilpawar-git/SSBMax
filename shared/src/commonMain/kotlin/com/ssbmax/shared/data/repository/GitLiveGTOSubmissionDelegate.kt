@@ -10,7 +10,6 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.Query
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -48,7 +47,6 @@ internal class GitLiveGTOSubmissionDelegate(private val collections: GitLiveGTOC
                     null
                 }
             }
-            .catch { emit(null) }
 
     suspend fun updateSubmissionStatus(
         submissionId: String,

@@ -18,7 +18,6 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -230,7 +229,6 @@ class GitLiveInterviewRepository(
             .orderBy(FIELD_COMPLETED_AT, Direction.DESCENDING)
             .snapshots
             .map { snapshot -> snapshot.documents.map { it.data(InterviewResultDto.serializer()).toDomain() } }
-            .catch { emit(emptyList()) }
 
     override suspend fun getLatestResult(userId: String): Result<InterviewResult?> = try {
         val snapshot = resultsCollection

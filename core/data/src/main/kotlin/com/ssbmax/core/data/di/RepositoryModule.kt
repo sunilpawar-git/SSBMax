@@ -1,21 +1,15 @@
 package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.remote.FirestoreSubmissionRepository
-import com.ssbmax.core.data.repository.FirestoreGTORepository
-import com.ssbmax.core.data.repository.FirestoreInterviewRepository
 import com.ssbmax.core.data.repository.SubscriptionManager
 import com.ssbmax.core.data.repository.SubscriptionRepositoryImpl
 import com.ssbmax.core.data.repository.TestSessionManagerImpl
 import com.ssbmax.core.data.repository.TestSubmissionRepositoryImpl
-import com.ssbmax.core.data.repository.UserProfileRepositoryImpl
-import com.ssbmax.shared.domain.repository.GTORepository
-import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -44,21 +38,17 @@ import org.koin.dsl.module
  * `FirebaseAuthService` (this module) are left in place, unbound and
  * untouched — a separate class-level cleanup, not forced here (see this
  * phase's exit report).
- * Every *other* repository in this module still has the same kind of
- * shadow-bound `GitLive*` equivalent in `sharedModule` (Phase 2 ported all
- * 16) — that whole-module "consume only :shared" rewire remains explicitly
- * out of scope for this session (Phase 5 continuation work), same as
- * before; only `AuthRepository` was fixed because this session's ported
- * vertical directly depends on its behavior being correct, not just
- * compiling.
+ * Every repository still bound here (5, as of Phase 9c) has the same kind of
+ * shadow-bound `GitLive*` equivalent in `sharedModule`, ready for the same
+ * "delete this binding + impl" treatment the KMP-convergence plan's Phase 9
+ * already applied to the other 13 — `SubmissionRepository`/`TestUsageRecorder`
+ * (9d, revenue-sensitive) and `TestSubmissionRepository`/`TestSessionRepository`
+ * (9e, write-heavy submissions/session state) are what remain.
  */
 val repositoryModule = module {
     singleOf(::FirestoreSubmissionRepository) bind SubmissionRepository::class
     singleOf(::TestSubmissionRepositoryImpl) bind TestSubmissionRepository::class
-    singleOf(::UserProfileRepositoryImpl) bind UserProfileRepository::class
     singleOf(::SubscriptionRepositoryImpl) bind SubscriptionRepository::class
-    singleOf(::FirestoreInterviewRepository) bind InterviewRepository::class
-    singleOf(::FirestoreGTORepository) bind GTORepository::class
     singleOf(::SubscriptionManager) bind TestUsageRecorder::class
     singleOf(::TestSessionManagerImpl) bind TestSessionRepository::class
 }

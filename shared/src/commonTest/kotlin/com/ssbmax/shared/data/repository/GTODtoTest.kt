@@ -139,6 +139,30 @@ class GTODtoTest {
     }
 
     @Test
+    fun `GTOResultDto toDomain never throws on out-of-range legacy scores`() {
+        // OLQScore/GTOResult both require their score in 1..10 (1f..10f for overallScore) --
+        // the Android original filled missing/corrupt values with 0/0f, which violates that
+        // invariant and throws IllegalArgumentException for any partially-analyzed or malformed
+        // gto_results doc. This pins that toDomain() instead coerces into range so the read path
+        // degrades to a placeholder result rather than crashing on exactly the data it must tolerate.
+        val dto = GTOResultDto(
+            submissionId = "sub-1",
+            userId = "user-1",
+            testType = "GROUP_DISCUSSION",
+            olqScores = mapOf("COURAGE" to OLQScoreDto(score = 0, confidence = 150, reasoning = "corrupt")),
+            overallScore = 0f,
+            overallRating = "Unknown",
+            aiConfidence = -5
+        )
+
+        val result = dto.toDomain()
+        assertEquals(1, result.olqScores[com.ssbmax.shared.domain.model.interview.OLQ.COURAGE]?.score)
+        assertEquals(100, result.olqScores[com.ssbmax.shared.domain.model.interview.OLQ.COURAGE]?.confidence)
+        assertEquals(1f, result.overallScore)
+        assertEquals(0, result.aiConfidence)
+    }
+
+    @Test
     fun `GTOProgressDto round-trips and drops unparseable test type names instead of throwing`() {
         val dto = GTOProgressDto(
             completedTests = listOf("GROUP_DISCUSSION", "NOT_A_REAL_TYPE"),

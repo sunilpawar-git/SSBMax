@@ -17,11 +17,6 @@ import com.ssbmax.core.data.remote.SubmissionArchiveRepository
 import com.ssbmax.core.data.remote.TATSubmissionRepository
 import com.ssbmax.core.data.remote.WATSubmissionRepository
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
-import com.ssbmax.core.data.repository.GPEImageCacheManager
-import com.ssbmax.core.data.repository.GTOTaskCacheManager
-import com.ssbmax.core.data.repository.InterviewQuestionCacheManager
-import com.ssbmax.core.data.repository.interview.InterviewQuestionGenerator
-import com.ssbmax.core.data.repository.interview.PIQDataMapper
 import com.ssbmax.core.data.security.SecurityEventLogger
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -42,13 +37,8 @@ val coreDataInjectablesModule = module {
     singleOf(::FirebaseAuthService)
     singleOf(::FirebaseInitializer)
     singleOf(::FirestoreUserRepository)
-    singleOf(::GPEImageCacheManager)
     singleOf(::GTOSubmissionRepository)
-    singleOf(::GTOTaskCacheManager)
-    singleOf(::InterviewQuestionCacheManager)
-    singleOf(::InterviewQuestionGenerator)
     singleOf(::OIRPersonalSubmissionDataSource)
-    singleOf(::PIQDataMapper)
     singleOf(::PIQPersonalSubmissionDataSource)
     singleOf(::PPDTPersonalSubmissionDataSource)
     singleOf(::PersonalTestSubmissionRepository)

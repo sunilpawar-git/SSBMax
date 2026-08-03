@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * GitLive-Firebase-backed port of the Android UserProfileRepositoryImpl.
@@ -97,9 +101,14 @@ class GitLiveUserProfileRepository : UserProfileRepository {
         }
     }
 
-    private fun todayStartMillis(nowEpochMillis: Long): Long {
-        val dayRemainder = nowEpochMillis % DAY_MILLIS
-        return nowEpochMillis - dayRemainder
+    // Local-timezone midnight, matching the Android impl's Calendar.getInstance()
+    // (device-default timezone) -- NOT UTC epoch-day midnight. A pure `now % DAY_MILLIS`
+    // calculation would shift the streak's day boundary by the device's UTC offset,
+    // e.g. counting a just-after-midnight IST login as still "yesterday" until 5:30am UTC.
+    internal fun todayStartMillis(nowEpochMillis: Long): Long {
+        val tz = TimeZone.currentSystemDefault()
+        val today = Instant.fromEpochMilliseconds(nowEpochMillis).toLocalDateTime(tz).date
+        return today.atStartOfDayIn(tz).toEpochMilliseconds()
     }
 
     private companion object {

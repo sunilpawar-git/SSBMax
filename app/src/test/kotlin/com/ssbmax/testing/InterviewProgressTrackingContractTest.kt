@@ -26,7 +26,10 @@ import org.junit.Ignore
 class InterviewProgressTrackingContractTest {
 
 
-    private val firestoreInterviewRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/FirestoreInterviewRepository.kt"
+    // KMP-convergence Phase 9c: FirestoreInterviewRepository (core:data) deleted,
+    // GitLiveInterviewRepository (shared) is the sole implementation now —
+    // repointed rather than left referencing a file that no longer exists.
+    private val firestoreInterviewRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
     // KMP-convergence Phase 9a: TestProgressRepositoryImpl (core:data) deleted,
     // GitLiveTestProgressRepository (shared) is the sole implementation now —
     // repointed rather than left referencing a file that no longer exists.
@@ -34,9 +37,9 @@ class InterviewProgressTrackingContractTest {
 
     @Test
     fun `completeInterview must write to submissions collection for progress tracking`() {
-        // Given - The FirestoreInterviewRepository implementation
+        // Given - The GitLiveInterviewRepository implementation
         val repoFile = findProjectFile(firestoreInterviewRepoPath)
-        assertTrue("FirestoreInterviewRepository.kt should exist", repoFile.exists())
+        assertTrue("GitLiveInterviewRepository.kt should exist", repoFile.exists())
         
         val content = repoFile.readText()
         
@@ -84,11 +87,13 @@ class InterviewProgressTrackingContractTest {
         val repoFile = findProjectFile(firestoreInterviewRepoPath)
         val content = repoFile.readText()
         
-        // Then - Required constants for submission creation
+        // Then - Required fields for submission creation. GitLiveInterviewRepository writes a
+        // typed InterviewProgressSubmissionDto (testType/submittedAt as DTO properties) rather
+        // than the Android original's FIELD_TEST_TYPE/FIELD_SUBMITTED_AT map-key constants.
         val requiredPatterns = listOf(
             "COLLECTION_SUBMISSIONS" to "submissions collection constant",
-            "FIELD_TEST_TYPE" to "testType field constant",
-            "FIELD_SUBMITTED_AT" to "submittedAt field constant"
+            "testType" to "testType DTO field",
+            "submittedAt" to "submittedAt DTO field"
         )
         
         requiredPatterns.forEach { (pattern, description) ->
