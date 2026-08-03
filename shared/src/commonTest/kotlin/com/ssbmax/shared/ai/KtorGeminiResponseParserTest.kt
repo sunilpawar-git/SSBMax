@@ -71,4 +71,50 @@ class KtorGeminiResponseParserTest {
         val result = KtorGeminiResponseParser.parseAnalysisResponse("not json at all { [")
         assertTrue(result.isFailure)
     }
+
+    // ---- parseGTOAnalysisResponse: ported from core:data's GeminiResponseParserTest
+    // (Phase 9.0, when this became the only parser). These three guard behaviours the
+    // commonTest suite never asserted directly before the port.
+
+    @Test
+    fun `parseGTOAnalysisResponse handles the flat array shape Gemini sometimes returns`() {
+        // WHY: Gemini emits `[{olq,score,confidence,reasoning}]` instead of the canonical
+        // olqScores object often enough that a TAT synthesis run once failed on it. The
+        // array branch must stay wired, not just exist.
+        val text = """
+            [
+              {"olq": "COURAGE", "score": 7.0, "confidence": 90, "reasoning": "Held the line"},
+              {"olq": "INFLUENCE_GROUP", "score": 5.0, "confidence": 70, "reasoning": "Directed peers"}
+            ]
+        """.trimIndent()
+
+        val result = KtorGeminiResponseParser.parseGTOAnalysisResponse(text).getOrThrow()
+
+        assertEquals(2, result.olqScores.size)
+        assertEquals(80, result.overallConfidence)
+    }
+
+    @Test
+    fun `parseGTOAnalysisResponse surfaces notRecommended when the model sets it`() {
+        // WHY: notRecommended is the R14 hard-stop signal downstream validation acts on.
+        // Dropping it silently turns a "not recommended" grade into an ordinary one.
+        val text = """
+            {"olqScores": {"COURAGE": {"score": 8.5, "confidence": 90, "reasoning": "n/a"}}, "notRecommended": true}
+        """.trimIndent()
+
+        val result = KtorGeminiResponseParser.parseGTOAnalysisResponse(text).getOrThrow()
+
+        assertTrue(result.notRecommended)
+    }
+
+    @Test
+    fun `parseGTOAnalysisResponse defaults notRecommended to false when the field is absent`() {
+        // WHY: Most responses omit the field entirely; absence must mean "recommended",
+        // never an exception or a true default.
+        val text = """{"olqScores": {"COURAGE": {"score": 6.0, "confidence": 70, "reasoning": "n/a"}}}"""
+
+        val result = KtorGeminiResponseParser.parseGTOAnalysisResponse(text).getOrThrow()
+
+        assertEquals(false, result.notRecommended)
+    }
 }

@@ -333,7 +333,7 @@ The synthesis worker still runs only after every batch completes — but story w
 | 4 | Download image bytes from `imageUrl` (best-effort, 10 s connect / 20 s read); on failure proceeds with `ByteArray(0)` |
 | 5 | Parse `TATImageContext` from `imageContextJson` (JSON → domain model) |
 | 6 | Resolve `candidateGender` from `UserProfileRepository` |
-| 7 | Call `aiService.analyzeTATStoryMultimodal(imageBytes, story, imageContext, candidateGender, storyIndex, totalStories)` → `GeminiTATStoryAnalyzer` → `gemini-2.5-flash`, **60 s timeout, `model` (Tier 1, 8192 output tokens)** |
+| 7 | Call `aiService.analyzeTATStoryMultimodal(imageBytes, story, imageContext, candidateGender, storyIndex, totalStories)` → `KtorTATStoryAnalyzer` → `gemini-2.5-flash`, **60 s timeout, `model` (Tier 1, 8192 output tokens)** |
 | 8 | If AI returns < 14 OLQs → retry up to 3 times with `RetryBackoffPolicy` (exponential backoff + jitter, see §9a) |
 | 9 | If all retries exhausted → save `FAILED` placeholder to Room, return `Result.success()` (does NOT break synthesis chain) |
 | 10 | Parse `olqScores: Map<OLQ, OLQScore>` — each `OLQScore(score coerceIn(5,9), confidence, reasoning)` |
@@ -343,8 +343,8 @@ The synthesis worker still runs only after every batch completes — but story w
 
 **Key implementation files:**
 - `TATStoryAnalysisWorker.kt` — orchestration, image download, gender resolution
-- `GeminiTATStoryAnalyzer.kt` (`core/data/.../ai/`) — multimodal Gemini call + response parsing
-- `TATStoryAnalysisPrompts.kt` (`core/data/.../ai/prompts/`) — `generateTATStoryMultimodalPrompt()`
+- `KtorTATStoryAnalyzer.kt` (`shared/.../shared/ai/`) — multimodal Gemini call + response parsing
+- `TATStoryAnalysisPrompts.kt` (`shared/.../shared/ai/prompts/`) — `generateTATStoryMultimodalPrompt()`
 
 ---
 
@@ -457,7 +457,7 @@ Key: olqScores containing all 15 OLQ keys.
 | Average | ≤ 7.5 |
 | Needs Improvement | > 7.5 |
 
-**Determinism:** `TEMPERATURE = 0.0f` in `GeminiAIService.kt` — identical story → identical score.
+**Determinism:** `temperature = 0.0` default parameter of `KtorGeminiClient.generateContent` — identical story → identical score.
 
 ### Synthesis prompt (`TATSynthesisPrompts.buildPrompt`)
 
@@ -474,16 +474,16 @@ Text-only. Sends summaries of all valid per-story assessments, asking Gemini to:
 - `=== REJECTION FLAG ===` (R14): if any synthesised OLQ score ≥ 8, Gemini sets `"notRecommended": true` in response.
 - Format updated: `{"notRecommended": false, "olqScores": {...}, "overallConfidence": 78}`.
 
-**`notRecommended` is an advisory field:** `GeminiResponseParser.parseGTOAnalysisResponse()` extracts it via `json.optBoolean("notRecommended", false)` and propagates it as `ResponseAnalysis.notRecommended`. `ValidationIntegration.validateScores()` is the SSOT for `RecommendationOutcome` — its R14 rule (any `limitationCount > 0` → `NOT_RECOMMENDED`) fires before `SSBScoreValidator` is consulted and is authoritative. Gemini's flag is a signal, not a decision.
+**`notRecommended` is an advisory field:** `KtorGeminiResponseParser.parseGTOAnalysisResponse()` (was `GeminiResponseParser`, now kotlinx.serialization-based instead of org.json) decodes it as a `notRecommended: Boolean = false` field on the `GTOAnalysisResponseDto` object shape and propagates it as `ResponseAnalysis.notRecommended`. `ValidationIntegration.validateScores()` is the SSOT for `RecommendationOutcome` — its R14 rule (any `limitationCount > 0` → `NOT_RECOMMENDED`) fires before `SSBScoreValidator` is consulted and is authoritative. Gemini's flag is a signal, not a decision.
 
 **Prompt schema hardening (commit `230ffb1`):** Synthesis prompt now includes an explicit critical instructions section and a full JSON skeleton example. Key constraints enforced in the prompt:
 - `olqScores` MUST be a JSON object keyed by OLQ name — NOT an array
 - All 15 OLQs are mandatory keys
 - Response MUST start with `{` and end with `}`
 
-**Response format fallback (commit `d39bfab`):** Gemini occasionally returns a flat array `[{"olq":"EFFECTIVE_INTELLIGENCE","score":7,...}]` despite the prompt, instead of the canonical `{"olqScores":{...}}` object. `GeminiResponseParser.parseGTOAnalysisResponse()` now detects this (`cleanJson.trimStart().startsWith("[")`) and dispatches to `parseGTOArrayFormat()` (`GeminiResponseParser.kt:69–107`). A secondary bug in `extractJsonFromResponse()` was also fixed: it previously found the first `{` and last `}`, stripping the `[` and `]` from array responses before the array check could fire. Fixed by checking `indexOf('[') < indexOf('{')` first. Two regression tests in `core/data/src/test/.../GeminiResponseParserTest.kt` guard both parsing paths.
+**Response format fallback (commit `d39bfab`):** Gemini occasionally returns a flat array `[{"olq":"EFFECTIVE_INTELLIGENCE","score":7,...}]` despite the prompt, instead of the canonical `{"olqScores":{...}}` object. `GeminiResponseParser.parseGTOAnalysisResponse()` (now `KtorGeminiResponseParser.parseGTOAnalysisResponse()`) now detects this (`cleanJson.trimStart().startsWith("[")`) and dispatches to `parseGTOArrayFormat()` (now `KtorGeminiResponseParser.kt:146–164`). A secondary bug in `extractJsonFromResponse()` was also fixed: it previously found the first `{` and last `}`, stripping the `[` and `]` from array responses before the array check could fire. Fixed by checking `indexOf('[') < indexOf('{')` first. Two regression tests in `core/data/src/test/.../GeminiResponseParserTest.kt` (now `shared/src/commonTest/.../KtorGeminiResponseParserTest.kt`) guard both parsing paths.
 
-**Token budget — Gemini model tiers** (`GeminiAIService.kt`):
+**Token budget — Gemini model tiers** (`KtorAIService.kt`, was `GeminiAIService.kt`):
 
 | Tier | Model instance | `maxOutputTokens` | Timeout | Used for |
 |------|---------------|-------------------|---------|----------|
@@ -715,7 +715,7 @@ Run all TAT-relevant tests:
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "*TAT*"
 ./gradlew :core:data:testDebugUnitTest --tests "*TAT*"
-./gradlew :core:domain:testDebugUnitTest --tests "*TAT*"
+./gradlew :shared:testDebugUnitTest --tests "*TAT*"
 ```
 
 ---
@@ -801,7 +801,7 @@ Run all TAT-relevant tests:
      │                        ├─ Read imageUrl + imageContextJson from inputData (bundled by planner at enqueue)
      │                        ├─ Download image bytes (best-effort)
      │                        ├─ generateTATStoryMultimodalPrompt(story, imageContext, gender, index)
-     │                        ├─ GeminiAIService.analyzeTATStoryMultimodal → gemini-2.5-flash (model, Tier 1, 8192 tokens, 60s)
+     │                        ├─ KtorAIService.analyzeTATStoryMultimodal → gemini-2.5-flash (model, Tier 1, 8192 tokens, 60s)
      │                        ├─ Retries use RetryBackoffPolicy (exponential + jitter, §9a)
      │                        ├─ On AI success: insert TATStoryAssessmentEntity into Room
      │                        └─ On AI failure: insert FAILED placeholder → return Result.success()
@@ -812,7 +812,7 @@ Run all TAT-relevant tests:
      │                        ├─ Filter out FAILED placeholders → validAssessments; track failedCount
      │                        ├─ If validAssessments < 6 → FAILED
      │                        ├─ TATSynthesisPrompts.buildPrompt(validAssessments)  ← compact format, ~8.4K chars
-     │                        ├─ GeminiAIService.analyzeTATResponse(prompt)  ← synthesisModel, Tier 3, 16384 tokens, 120s
+     │                        ├─ KtorAIService.analyzeTATResponse(prompt)  ← synthesisModel, Tier 3, 16384 tokens, 120s
      │                        │     (retries use RetryBackoffPolicy, §9a)
      │                        ├─ ValidationIntegration.validateScores(olqScores, entryType)
      │                        ├─ Build OLQAnalysisResult incl. validStoriesCount/failedStoriesCount/usedPartialAssessment (§10a)
@@ -871,9 +871,9 @@ Run all TAT-relevant tests:
 |-----|------|--------|
 | Synthesis chain never ran | `TATStoryAnalysisWorker` returned `Result.failure()` on AI failure → `WorkContinuation.combine()` blocked synthesis. Fix: save FAILED placeholder (`overallRating="FAILED"`) to Room, return `Result.success()`. `TATSynthesisWorker` filters placeholders before synthesis. | ✅ Fixed June 2026 |
 | Synthesis always failed (`MAX_TOKENS`) | `TATSynthesisPrompts.buildPrompt()` embedded full `olqScoresJson` per story (~3000 chars/story × 12 = ~36K chars). `gemini-2.5-flash` uses 5–8K thinking tokens before writing the response; combined output exceeded `MAX_TOKENS=8192`. Fix: (1) `compactOlqScores()` strips reasoning, sends `OLQ:score` pairs only (~180 chars/story); (2) story text capped at 200 chars. Total prompt: ~8.4K chars. (3) `synthesisModel` uses `maxOutputTokens=16384`, 120s timeout (Tier 3). | ✅ Fixed June 2026 |
-| Token budget — all Gemini calls | Added three-tier model config in `GeminiAIService`: Tier 1 (8192), Tier 2 (12288), Tier 3 (16384). Prevents `MAX_TOKENS` failures for SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript), and Interview feedback (full transcript). | ✅ Fixed June 2026 |
+| Token budget — all Gemini calls | Added three-tier model config in `GeminiAIService` (now constants in `KtorAIService`): Tier 1 (8192), Tier 2 (12288), Tier 3 (16384). Prevents `MAX_TOKENS` failures for SRT (60 situations), Interview Q-gen (large PIQ), Adaptive Q-gen (growing transcript), and Interview feedback (full transcript). | ✅ Fixed June 2026 |
 | imageBytes=0 — all 12 stories got text-only analysis | `TATStoryAnalysisWorker` called `TestContentRepository.getTATQuestions()` to recover `imageUrl`. That method ignores `testId` and returns a fresh random 12, so `questions.find { it.id == questionId }` always returned `null` → `imageUrl=""` → `ByteArray(0)`. Fix: `TATTestViewModel.enqueueSynthesisChain()` now bundles `KEY_IMAGE_URL` + `KEY_IMAGE_CONTEXT_JSON` per worker from `state.questions` (the exact set the user saw). Worker removed `TestContentRepository` dependency entirely. | ✅ Fixed June 2026 |
-| Synthesis failed all 3 retries — `JSONException: Value [...] cannot be converted to JSONObject` | `GeminiResponseParser.parseGTOAnalysisResponse()` called `JSONObject(cleanJson)` and only handled the `{"olqScores":{...}}` object format. Gemini returned a flat array `[{olq, score, confidence, reasoning}]`. Fix: (1) prompt hardened with explicit JSON schema example and "NO arrays" constraint; (2) parser now detects array format and dispatches to `parseGTOArrayFormat()`; (3) `extractJsonFromResponse()` fixed to preserve `[` `]` brackets when array starts before `{`. | ✅ Fixed June 17, 2026 (`230ffb1`, `d39bfab`) |
+| Synthesis failed all 3 retries — `JSONException: Value [...] cannot be converted to JSONObject` | `GeminiResponseParser.parseGTOAnalysisResponse()` (now `KtorGeminiResponseParser.parseGTOAnalysisResponse()`) called `JSONObject(cleanJson)` and only handled the `{"olqScores":{...}}` object format. Gemini returned a flat array `[{olq, score, confidence, reasoning}]`. Fix: (1) prompt hardened with explicit JSON schema example and "NO arrays" constraint; (2) parser now detects array format and dispatches to `parseGTOArrayFormat()`; (3) `extractJsonFromResponse()` fixed to preserve `[` `]` brackets when array starts before `{`. | ✅ Fixed June 17, 2026 (`230ffb1`, `d39bfab`) |
 | `POST_NOTIFICATIONS` permission not requested for psychology tests | Permission was only requested in `StartInterviewScreen`. TAT/WAT/SRT/SDT/PPDT workers post local notifications on completion, but Android 13+ silently drops them without the runtime permission. Users who never visited Interview setup never got prompted. Fix: centralized permission request in `StudentHomeScreen` `LaunchedEffect(Unit)` — fires once on home load, covers all test types. | ✅ Fixed June 17, 2026 (`cf785a2`) |
 
 ---
@@ -930,11 +930,12 @@ core/data/src/main/kotlin/com/ssbmax/core/data/
 │   └── dao/
 │       ├── TATImageCacheDao.kt
 │       └── TATStoryAssessmentDao.kt
-└── ai/
-    ├── GeminiTATStoryAnalyzer.kt
-    └── prompts/
-        ├── TATStoryAnalysisPrompts.kt
-        └── TATSynthesisPrompts.kt
+
+shared/src/commonMain/kotlin/com/ssbmax/shared/ai/
+├── KtorTATStoryAnalyzer.kt          ← was core/data/.../ai/GeminiTATStoryAnalyzer.kt
+└── prompts/
+    ├── TATStoryAnalysisPrompts.kt
+    └── TATSynthesisPrompts.kt
 
 scripts/tat-picture-pipeline/
 ├── step0_generate_context.py        ← Gemini Vision extraction (generates tat_image_contexts.json)
@@ -1201,17 +1202,17 @@ All AI parameters are in source code. No Firebase writes needed. Requires code c
 | `MAX_AI_RETRIES` (per-story) | `app/.../workers/TATStoryAnalysisWorker.kt` | companion object | `3` | Retries per per-story worker |
 | `BASE_DELAY_MS` / `MAX_EXPONENTIAL_DELAY_MS` / `JITTER_FRACTION` | `app/.../workers/retry/RetryBackoffPolicy.kt` | top of file | `1000L` / `8000L` / `0.2` | Shared exponential-backoff-with-jitter policy (§9a) — applies to both workers |
 | `TATAnalysisWorkPlanner.BATCH_SIZE` | `app/.../ui/tests/tat/TATAnalysisWorkPlanner.kt` | companion object | `3` | Story workers per batch — raise cautiously, this is the Gemini-load throttle (§8) |
-| Per-story model tier | `core/data/.../ai/GeminiAIService.kt` | Tier 1 | `model` (8192 tokens, 60 s) | Upgrade to `largeContextModel` if stories are very long |
+| Per-story model tier | `shared/.../shared/ai/KtorAIService.kt` (was `core/data/.../ai/GeminiAIService.kt`) | Tier 1 | `model` (8192 tokens, 60 s) | Upgrade to `largeContextModel` if stories are very long |
 | Synthesis model tier | same | Tier 3 | `synthesisModel` (16384 tokens, 120 s) | Do not downgrade — 8192 consistently hits MAX_TOKENS |
-| Story prompt structure | `core/data/.../ai/prompts/TATStoryAnalysisPrompts.kt` | full file | — | Edit `generateTATStoryMultimodalPrompt()` |
-| Synthesis prompt structure | `core/data/.../ai/prompts/TATSynthesisPrompts.kt` | full file | — | Edit `buildPrompt()` |
+| Story prompt structure | `shared/.../shared/ai/prompts/TATStoryAnalysisPrompts.kt` (was `core/data/.../ai/prompts/TATStoryAnalysisPrompts.kt`) | full file | — | Edit `generateTATStoryMultimodalPrompt()` |
+| Synthesis prompt structure | `shared/.../shared/ai/prompts/TATSynthesisPrompts.kt` (was `core/data/.../ai/prompts/TATSynthesisPrompts.kt`) | full file | — | Edit `buildPrompt()` |
 
 **After any prompt change:** Run the full prompt test suite to verify parsers and rubric contract:
 ```bash
-./gradlew :core:data:testDebugUnitTest --tests "*TATStoryPromptRules*"
-./gradlew :core:data:testDebugUnitTest --tests "*TATSynthesisPromptRules*"
-./gradlew :core:data:testDebugUnitTest --tests "*GeminiResponseParser*"
-./gradlew :core:domain:testDebugUnitTest --tests "*ValidationIntegration*"
+./gradlew :shared:testDebugUnitTest --tests "*TATStoryPromptRules*"
+./gradlew :shared:testDebugUnitTest --tests "*TATSynthesisPromptRules*"
+./gradlew :shared:testDebugUnitTest --tests "*KtorGeminiResponseParser*"
+./gradlew :shared:testDebugUnitTest --tests "*ValidationIntegration*"
 ```
 
 ---

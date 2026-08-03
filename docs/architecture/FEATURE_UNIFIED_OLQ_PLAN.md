@@ -3,6 +3,8 @@
 **Status:** ✅ Phase 6 Complete → Awaiting Approval for Phase 7  
 **Principles:** MVVM, SOLID, SSOT, Zero Tech Debt, TDD, No Regressions
 
+> **Post-completion note (KMP-convergence plan, Phase 9.0):** `EnhancedPsychologyPrompts`, `EnhancedGTOPrompts`, and `EnhancedInterviewPrompts` — produced by this plan — were later found to have no production callers and were deleted outright. The live prompt corpus is `shared/src/commonMain/kotlin/com/ssbmax/shared/ai/prompts/`. The checklist below is left as a historical record and is not updated to reflect this.
+
 ---
 
 ## Phase 1: Enhance Existing Domain Models ✅ COMPLETE

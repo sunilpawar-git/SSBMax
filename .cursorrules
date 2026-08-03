@@ -24,7 +24,7 @@ Data flow: `Compose Screen → ViewModel → UseCase → Repository (interface i
 
 ## Mandatory Rules (lint-enforced)
 
-1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, "context")` instead of `e.printStackTrace()`. Exception: `core:domain` must NOT use ErrorLogger (Android dependency); use `Result<T>` instead.
+1. **ErrorLogger, not printStackTrace** — `ErrorLogger.log(e, "context")` instead of `e.printStackTrace()`. Exception: `shared`'s domain layer must NOT use ErrorLogger (Android dependency); use `Result<T>` instead.
 2. **String resources for all user-facing text** — `stringResource(R.string.key)`, never hardcoded strings. Exception: domain layer business logic messages.
 3. **Thread-safe StateFlow updates** — `_uiState.update { it.copy(...) }`, never `_uiState.value = _uiState.value.copy(...)`.
 4. **Expose StateFlow, not MutableStateFlow** — ViewModels expose `StateFlow<UiState>` via `.asStateFlow()`.
@@ -50,7 +50,7 @@ Always use `./gradlew`, never bare `gradle`.
 ./gradlew check                          # Run lint + tests
 ./gradlew lintDebug                      # Lint only
 ./gradlew :app:testDebugUnitTest         # Tests for app module only
-./gradlew :core:domain:test              # Tests for domain module only
+./gradlew :shared:testDebugUnitTest      # Tests for shared module (domain + UI + VMs)
 ./gradlew :core:data:testDebugUnitTest   # Tests for data module only
 ./gradlew :lint:test                     # Tests for custom lint rules
 ```
@@ -58,7 +58,7 @@ Always use `./gradlew`, never bare `gradle`.
 Single test class:
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "com.ssbmax.ui.profile.UserProfileViewModelTest"
-./gradlew :core:domain:test --tests "*.GetOLQDashboardUseCaseTest"
+./gradlew :shared:testDebugUnitTest --tests "*.GetOLQDashboardUseCaseTest"
 ```
 
 ## Testing Protocol
@@ -72,7 +72,7 @@ Single test class:
 
 - Navigation routes: `app/src/main/kotlin/com/ssbmax/navigation/SSBMaxDestinations.kt`
 - Subscription limits: `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubscriptionManager.kt`
-- AI prompts & Gemini: `core/data/src/main/kotlin/com/ssbmax/core/data/ai/`
+- AI prompts & Gemini: `shared/src/commonMain/kotlin/com/ssbmax/shared/ai/`
 - TestType enum: `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/SSBPhase.kt`
 - Version catalog: `gradle/libs.versions.toml`
 

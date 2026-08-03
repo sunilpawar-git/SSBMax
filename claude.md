@@ -50,7 +50,7 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 | `lint` | Custom lint rules (build fails if violated) |
 | `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks — AGP Lint doesn't analyze a KMP module's commonMain) |
 
-**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `core:data/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
+**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `shared/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
 
 ## Architecture Guidance Hierarchy (Phase 4)
 
@@ -62,8 +62,10 @@ Root: claude.md (12 core rules, global patterns)
   │   │  moved to `shared` in the KMP-convergence plan's Phase 5/6a)
   │   └── app/di/CLAUDE.md (Koin dependency injection, not Hilt)
   │
+  ├── shared/ai/CLAUDE.md (Gemini AI integration — the only AI path,
+  │      both platforms; core/data/ai was deleted in Phase 9.0)
+  │
   ├── core/data/CLAUDE.md (data repositories, error handling)
-  │   ├── core/data/ai/CLAUDE.md (Gemini AI integration)
   │   ├── core/data/local/CLAUDE.md (Room database patterns)
   │   └── core/data/remote/CLAUDE.md (Firebase/Firestore)
   │

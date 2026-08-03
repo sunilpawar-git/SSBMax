@@ -178,41 +178,13 @@ when (val result = repository.fetchData()) {
 
 ---
 
-### 5. AI Service Integration (Gemini)
+### 5. AI Service Integration (Gemini) — moved out of this module
 
-```kotlin
-@Singleton
-class GeminiService @Inject constructor(
-    private val client: GenerativeModel,
-    private val config: ConfigProvider
-) {
-    suspend fun evaluateResponse(prompt: String, userResponse: String): Result<String> {
-        return try {
-            val result = client.generateContent(buildString {
-                append(prompt)
-                append("\n\nUser response: $userResponse")
-            })
-            Result.Success(result.text ?: "")
-        } catch (e: Exception) {
-            ErrorLogger.log(e, "Gemini eval failed for prompt length=${prompt.length}")
-            Result.Failure(e)
-        }
-    }
-}
+There is no AI code in `core:data` any more. The KMP-convergence plan's Phase 9.0 deleted `core/data/.../ai/` (`GeminiAIService`, `CloudGeminiAIService`, their analyzers, parser and prompt corpus) along with the `com.google.ai.client.generativeai` and `firebase-functions` dependencies.
 
-// Hilt: Provide GenerativeModel
-@Provides
-@Singleton
-fun provideGenerativeModel(@ApplicationContext context: Context): GenerativeModel {
-    val apiKey = BuildConfig.GEMINI_API_KEY  // or remote config
-    return GenerativeModel(
-        modelName = "gemini-1.5-flash",
-        apiKey = apiKey
-    )
-}
-```
+`shared`'s `KtorAIService` is the single `AIService` implementation on both platforms, and the Gemini key reaches it as a Koin **property**, not via `core:data`'s `BuildConfig`.
 
-**Key Rule:** Never pass API keys as parameters; inject them. Use DI + Hilt.
+**Read:** [shared/ai/CLAUDE.md](../../shared/ai/CLAUDE.md). Do not add a second AI client here.
 
 ---
 
@@ -284,7 +256,6 @@ service cloud.firestore {
 
 ```
 core/data/src/main/kotlin/com/ssbmax/core/data/
-├── ai/                    # Gemini, embedding services
 ├── local/                 # Room database
 │   ├── dao/               # Database access objects
 │   ├── entity/            # @Entity data classes

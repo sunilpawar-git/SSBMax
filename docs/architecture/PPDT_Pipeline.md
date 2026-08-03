@@ -264,7 +264,7 @@ Steps in sequence:
 | 4 | Fetch `PPDTQuestion` via `TestContentRepository.getPPDTQuestion(questionId)` — Room cache → Firestore fallback; includes `imageUrl` and structured `imageContext` |
 | 5 | Download image bytes from `imageUrl` (best-effort, `Dispatchers.IO`); on failure logs error and proceeds with `ByteArray(0)` |
 | 6 | Build multimodal Gemini prompt: `PPDTPrompts.generatePPDTMultimodalPrompt(story, imageContext, candidateGender)` — injects per-picture rubric (coreElements, penalizedThemes, primaryOLQs, deviationTolerance) |
-| 7 | Call Gemini AI: `GeminiAIService.analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)` — delegated to `GeminiPPDTAnalyzer`; model `gemini-2.5-flash`, 60 s timeout, max 3 retries with exponential backoff |
+| 7 | Call Gemini AI: `KtorAIService.analyzePPDTMultimodal(imageBytes, story, imageContext, candidateGender)` — delegated to `KtorPPDTAnalyzer`; model `gemini-2.5-flash`, 60 s timeout, max 3 retries with exponential backoff |
 | 8 | Parse JSON response → 15 `OLQScore` objects (each with `score`, `confidence`, `reasoning`) |
 | 9 | SSB validation: `ValidationIntegration.validateScores(olqScores, EntryType.NDA)` — checks Factor II critical rules |
 | 10 | Build `OLQAnalysisResult`: overallScore (avg of 15), overallRating, top 3 strengths, bottom 3 weaknesses |
@@ -275,14 +275,14 @@ Steps in sequence:
 
 **Key implementation files:**
 - `PPDTAnalysisWorker.kt` — orchestration, image download, gender resolution
-- `GeminiPPDTAnalyzer.kt` (`core/data/.../ai/`) — multimodal Gemini call + response parsing
-- `PPDTPrompts.kt` (`core/data/.../ai/prompts/`) — `generatePPDTMultimodalPrompt()`
+- `KtorPPDTAnalyzer.kt` (`shared/.../shared/ai/`) — multimodal Gemini call + response parsing
+- `PPDTPrompts.kt` (`shared/.../shared/ai/prompts/`) — `generatePPDTMultimodalPrompt()`
 
 ---
 
 ## 10. Gemini AI Prompt Design
 
-**Prompt builder:** `core/data/.../ai/prompts/PPDTPrompts.kt` → `generatePPDTMultimodalPrompt(story, imageContext, candidateGender)`
+**Prompt builder:** `shared/.../shared/ai/prompts/PPDTPrompts.kt` → `generatePPDTMultimodalPrompt(story, imageContext, candidateGender)`
 
 The prompt sends **both image bytes and a per-picture rubric** to Gemini (multimodal). Gemini directly verifies scene accuracy from the image; the rubric controls what to reward and penalize.
 
@@ -320,7 +320,7 @@ Gender: {candidateGender}
 | Average | ≤ 7 |
 | Needs Improvement | > 7 |
 
-**Determinism:** `TEMPERATURE = 0.0f` in `GeminiAIService.kt` — identical story → identical score always.
+**Determinism:** `temperature = 0.0` default parameter of `KtorGeminiClient.generateContent` — identical story → identical score always.
 
 ---
 
@@ -482,14 +482,14 @@ The result screen polls by observing the Flow — no manual refresh required.
 | `PPDTProfileGateTest.kt` | `app` | Profile gate (6 tests): isProfileIncomplete when profile missing, proceeds when gender set, no gate on network error, MALE/FEMALE/OTHER gender routing |
 | `PPDTAnalysisWorkerTest.kt` | `app` | Worker (7 tests): MALE/FEMALE/Unknown gender resolution, failure on missing submission, skip on non-PENDING status, multimodal call verified |
 | `PPDTSubmissionResultViewModelTest.kt` | `app` | Result screen (7 tests): OLQ reasoning in state, empty reasoning safe default, loading/completed flow; + `CancellationException` must not set `error` (navigate-away safety); + `loadResult` called exactly once on COMPLETED (no duplicate Firestore reads) |
-| `GeminiAIServiceTest.kt` | `core:data` | AI service (6 tests): analyzePPDTMultimodal success/failure, Content vs String call, empty-bytes edge case, temperature=0 |
-| `PPDTPromptTest.kt` | `core:data` | Prompt (4 tests): coreElements present, penalizedThemes present, candidateGender present, no `{placeholder}` or `null` in output |
-| `PPDTImageContextTest.kt` | `core:domain` | Domain model (3 tests): empty coreElements detectable, DeviationTolerance has exactly 3 values, PPDTQuestion defaults to empty context |
+| `KtorAIServiceTest.kt` (was `GeminiAIServiceTest.kt`) | `shared` | AI service (6 tests): analyzePPDTMultimodal success/failure, Content vs String call, empty-bytes edge case, temperature=0 |
+| `PPDTPromptsTest.kt` (was `PPDTPromptTest.kt`) | `shared` | Prompt (4 tests): coreElements present, penalizedThemes present, candidateGender present, no `{placeholder}` or `null` in output |
+| `PPDTImageContextTest.kt` | `shared` | Domain model (3 tests): empty coreElements detectable, DeviationTolerance has exactly 3 values, PPDTQuestion defaults to empty context |
 | `PPDTImageContextMappingTest.kt` | `core:data` | JSON (2 tests): PPDTImageContext serializes/deserializes losslessly, CachedPPDTImageEntity defaults genderTag to MIXED |
-| `PPDTQuestionDefaultsTest.kt` | `core:domain` | Model defaults (2 tests): minCharacters=200 matches UI, maxCharacters=1000 |
+| `PPDTQuestionDefaultsTest.kt` | `shared` | Model defaults (2 tests): minCharacters=200 matches UI, maxCharacters=1000 |
 | `PPDTImageCacheManagerTest.kt` | `core:data` | Cache sync, eviction, status tracking; + 24h TTL gate (skips Firestore within 24h; calls Firestore after TTL expires); + gender SQL filter verified at DAO level (no in-memory filter) |
 | `PPDTImageCacheDaoTest.kt` | `core:data` | Room DAO queries |
-| `GetOLQDashboardUseCaseTest.kt` | `core:domain` | Dashboard aggregation logic, timeout/cache behaviour |
+| `GetOLQDashboardUseCaseTest.kt` | `shared` | Dashboard aggregation logic, timeout/cache behaviour |
 
 **Total PPDT-specific tests (Phases 1–8 + bug-fix pass): 58**
 
@@ -498,7 +498,7 @@ Run all PPDT-relevant tests:
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "*PPDT*"
 ./gradlew :core:data:testDebugUnitTest --tests "*PPDT*"
-./gradlew :core:domain:testDebugUnitTest --tests "*PPDT*"
+./gradlew :shared:testDebugUnitTest --tests "*PPDT*"
 ```
 
 ---
@@ -542,7 +542,7 @@ _Update this section as bugs are found and improvements are made._
 | 2 | `PPDTTestViewModel` file size | File is ~620 lines (300-line limit). Pre-existing tech debt; not introduced in Phases 1–8. Requires split into `PPDTTestViewModel.kt` + `PPDTSubmitViewModel.kt` or similar. | Deferred |
 | 3 | OLQ Reasoning in other tests | `PPDTOLQReasoningCard` is PPDT-only (Phase 4). TAT/WAT/SRT result screens do not yet show per-OLQ reasoning. When those screens need it, move the card into `UnifiedOLQResultTemplate` as an optional slot. | Deferred to future phase |
 | 4 | Profile gate condition | Gate triggers only when `profile == null` (server confirms no profile). If profile exists but gender field is null, the user is NOT gated — they get the full image pool. This is intentional (lenient). If stricter gating is required, update `resolveGenderTag()` condition. | Intentional design choice |
-| 5 | `analyzePPDTResponse` legacy | Text-only method fully removed from `AIService` interface and `GeminiAIService`. No callers remain. | ✅ Cleaned up in Phase 8 |
+| 5 | `analyzePPDTResponse` legacy | Text-only method fully removed from `AIService` interface and `KtorAIService` (formerly `GeminiAIService`). No callers remain. | ✅ Cleaned up in Phase 8 |
 | 6 | **Cache staleness after batch update** | `initialSync()` used a count-only guard (`if cachedImages >= 15 → skip`). After Phase 5 replaced all 64 images in Firestore, the app kept serving the old placeholder sketches indefinitely because the guard never checked the batch version. **Root cause:** no version comparison in `initialSync()`. **Fix:** `isCacheStale()` now fetches the Firestore `version` field and triggers `clearAllImages()` + re-download when local version differs. On network failure, stale cache is preserved (fail-safe). | ✅ Fixed June 2026 |
 | 7 | **Room migration schema mismatch** | `MIGRATION_21_22` created `cached_ppdt_images` with `maxCharacters DEFAULT 1000`, but `CachedPPDTImageEntity` had `maxCharacters = 1500`. Also, the entity lacked the 6 `@Index` annotations the migration created, and used `Boolean` for `imageDownloaded` instead of `Int`. Room validates entity schema against the live DB on every open and throws `IllegalStateException: Migration didn't properly handle cached_ppdt_images` when they diverge. **Fix:** entity defaults aligned to match migration SQL exactly; `@Index` annotations added; `imageDownloaded` changed to `Int`. | ✅ Fixed June 2026 |
 | 8 | **`loadTest()` called twice on startup** | `PPDTTestViewModel.init {}` called `loadTest()` directly AND `PPDTTestScreen`'s `LaunchedEffect(testId)` called it again. Result: two Firestore reads on every test open, double subscription-eligibility check, potential double-decrement of `ppdtTestsUsed`. **Fix:** removed `loadTest()` from `init {}`; `LaunchedEffect` is now the single call site (SSOT). | ✅ Fixed June 2026 |
@@ -665,8 +665,8 @@ When adding a new column: always add a `MIGRATION_N_(N+1)` **and** update the en
      │                             ├─ [3] Fetch PPDTQuestion (imageUrl + imageContext)
      │                             ├─ [4] Download image bytes (best-effort)
      │                             ├─ [5] generatePPDTMultimodalPrompt(story, imageContext, gender)
-     │                             ├─ [6] GeminiAIService.analyzePPDTMultimodal(imageBytes, story, context, gender)
-     │                             │       └─ GeminiPPDTAnalyzer → gemini-2.5-flash, temp=0, 60s, 3 retries
+     │                             ├─ [6] KtorAIService.analyzePPDTMultimodal(imageBytes, story, context, gender)
+     │                             │       └─ KtorPPDTAnalyzer → gemini-2.5-flash, temp=0, 60s, 3 retries
      │                             ├─ [7] Validate 15 OLQ scores (SSB Factor II rules)
      │                             ├─ [8] Firestore batch write:
      │                             │       ppdt_results/{id}   ← full OLQAnalysisResult (with reasoning)
@@ -698,7 +698,7 @@ All gaps listed below were confirmed by code analysis before the improvement pha
 | 1 | `PPDTQuestion.context` was empty string; no per-picture rubric | Replaced with structured `PPDTImageContext`; 64 images uploaded with full context | 5 + 6 |
 | 2 | Generic prompt — no per-picture rubric | `PPDTPrompts.generatePPDTMultimodalPrompt()` injects coreElements, penalizedThemes, primaryOLQs, deviationTolerance | 8 |
 | 3 | `candidateGender` hardcoded to `"male"` | `PPDTAnalysisWorker` resolves from `UserProfileRepository.getUserProfile(userId).gender` | 2 |
-| 4 | Gemini temperature not set (default ~0.7–1.0) → score drift | `TEMPERATURE = 0.0f` in `GeminiAIService` | 1 |
+| 4 | Gemini temperature not set (default ~0.7–1.0) → score drift | `temperature = 0.0` default in `KtorGeminiClient.generateContent` (was `TEMPERATURE = 0.0f` in `GeminiAIService`) | 1 |
 | 5 | `batch_001` used 57 placeholder images | 64 Gemini-generated images extracted, gender-classified, context-enriched, and uploaded | 5 |
 | 6 | `minCharacters` inconsistency (domain=50, UI=200) | `PPDTQuestion.minCharacters` updated to 200 | 1 |
 | 7 | `OLQScore.reasoning` never shown in UI | `PPDTOLQReasoningCard` renders per-OLQ reasoning in result screen | 4 |
@@ -718,7 +718,7 @@ All gaps listed below were confirmed by code analysis before the improvement pha
 | 4 | OLQ reasoning in result screen (PPDTOLQReasoningCard) | `e9fc1e6` | ✅ Done |
 | 5 | Image replacement pipeline (Python: extract → context → upload) | `768c3d6` | ✅ Done |
 | 6 | PPDTImageContext + GenderTag domain model + Room migration 21→22 | `2abf352` | ✅ Done |
-| 7 | Multimodal GeminiAIService (analyzePPDTMultimodal + GeminiPPDTAnalyzer) | `1f49069` | ✅ Done |
+| 7 | Multimodal GeminiAIService (analyzePPDTMultimodal + GeminiPPDTAnalyzer) (now `KtorAIService` + `KtorPPDTAnalyzer`) | `1f49069` | ✅ Done |
 | 8 | Multimodal prompt rubric + worker image-aware analysis | `68c18f1` | ✅ Done |
 
 **Bug-fix + cache improvement pass (June 2026)** — surfaced from logcat analysis after Phase 8:

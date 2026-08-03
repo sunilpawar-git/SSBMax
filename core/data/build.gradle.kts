@@ -1,4 +1,3 @@
-import java.util.Properties
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import java.math.BigDecimal
@@ -21,18 +20,6 @@ extensions.getByType<LibraryExtension>().apply {
         testInstrumentationRunner = "com.ssbmax.core.data.FirebaseTestRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        // Gemini API Key for AI Interview Feature
-        // Read from local.properties (fallback to project property, then empty string)
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { localProperties.load(it) }
-        }
-        val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY")
-            ?: project.findProperty("GEMINI_API_KEY") as? String
-            ?: ""
-        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
-
         // Room schema export configuration
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -43,14 +30,10 @@ extensions.getByType<LibraryExtension>().apply {
         debug {
             // Enable BuildConfig for DEBUG flag checks
             buildConfigField("boolean", "DEBUG", "true")
-            // Development: Use direct Gemini API calls (faster iteration)
-            buildConfigField("boolean", "USE_CLOUD_AI", "false")
         }
         release {
             isMinifyEnabled = false
             buildConfigField("boolean", "DEBUG", "false")
-            // Production: Use Firebase Cloud Functions (secure, no exposed API key)
-            buildConfigField("boolean", "USE_CLOUD_AI", "true")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -120,14 +103,10 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
-    implementation(libs.firebase.functions)
-    
+
     // Google Sign-In
     implementation(libs.play.services.auth)
     implementation(libs.kotlinx.coroutines.play.services)
-
-    // Gemini AI
-    implementation(libs.generativeai)
 
     // Koin dependency injection (replaces Hilt as of Phase 3 of the KMP migration)
     implementation(libs.koin.core)

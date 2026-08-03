@@ -1,6 +1,5 @@
 package com.ssbmax.di
 
-import com.ssbmax.core.data.di.aiModule
 import com.ssbmax.core.data.di.contentRepositoryModule
 import com.ssbmax.core.data.di.coreDataInjectablesModule
 import com.ssbmax.core.data.di.coroutineScopeModule
@@ -37,6 +36,13 @@ import com.ssbmax.shared.di.sharedModule
  * and `TATAnalysisPipelineOrchestrator`/`TATAnalysisWorkPlanner`/
  * `NotificationHelper` respectively — `appInjectablesModule` itself was
  * trimmed of its other, now-dead bindings, see its own file).
+ *
+ * KMP-convergence Phase 9.0: `aiModule` removed — `AIService` was the last
+ * binding `core:data` shadowed on the AI path, and `shared`'s `KtorAIService`
+ * (bound in `coreInfraModule`) is now the only implementation on both
+ * platforms. The Gemini key it needs arrives as a Koin *property* supplied by
+ * [com.ssbmax.SSBMaxApplication], not by reading `core:data`'s `BuildConfig`
+ * inside the module.
  */
 val appModules = listOf(
     // :shared (KMP)
@@ -48,7 +54,6 @@ val appModules = listOf(
     contentRepositoryModule,
     firebaseModule,
     coroutineScopeModule,
-    aiModule,
     coreDataInjectablesModule,
 
     // :app

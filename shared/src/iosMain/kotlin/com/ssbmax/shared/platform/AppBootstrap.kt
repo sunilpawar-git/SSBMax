@@ -22,13 +22,13 @@ private var koinInstance: Koin? = null
 fun ensureKoinStarted() {
     if (koinInstance != null) return
     // GEMINI_API_KEY reaches iOS via the GEMINI_API_KEY Xcode build setting -> Info.plist's
-    // "GeminiAPIKey" -> here, mirroring Android's local.properties -> BuildConfig path. Android's
-    // own production AIService binding (core:data's GeminiAIService) never goes through this
-    // property (it reads BuildConfig directly), so this wiring only matters for iOS, which is
-    // the platform that actually resolves KtorAIService/KtorGeminiClient from coreInfraModule.
+    // "GeminiAPIKey" -> here, mirroring Android's local.properties -> BuildConfig path.
+    // Phase 9.0: Android's SSBMaxApplication now supplies the same property the same way
+    // (core:data's BuildConfig-reading aiModule is gone), so both platforms resolve the one
+    // KtorAIService/KtorGeminiClient binding coreInfraModule declares.
     val geminiApiKey = NSBundle.mainBundle.objectForInfoDictionaryKey("GeminiAPIKey") as? String ?: ""
     koinInstance = startKoin {
-        properties(mapOf("GEMINI_API_KEY" to geminiApiKey))
+        properties(mapOf(com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY to geminiApiKey))
         modules(com.ssbmax.shared.di.sharedModule)
     }.koin
 }

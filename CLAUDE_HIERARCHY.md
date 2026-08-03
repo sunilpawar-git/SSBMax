@@ -32,7 +32,6 @@ SSBMax Project (Root)
 │   ├── Secret Management
 │   ├── Error Wrapping (Result<T>)
 │   └── Sub-Modules:
-│       ├── [core/data/ai/CLAUDE.md](core/data/ai/CLAUDE.md) — Gemini API integration
 │       ├── [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md) — Room database patterns
 │       └── [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md) — Firebase integration
 │
@@ -89,11 +88,11 @@ new screens go post-convergence; there is no `app/ui` anymore.
 - Then read: [core/data/CLAUDE.md](core/data/CLAUDE.md) (error handling)
 
 ### "I'm integrating AI (Gemini evaluation)"
-**Start here:** [core/data/ai/CLAUDE.md](core/data/ai/CLAUDE.md)
-- Gemini service setup (Hilt provider)
+**Start here:** [shared/ai/CLAUDE.md](shared/ai/CLAUDE.md)
+- KtorAIService / KtorGeminiClient setup (Koin property for the API key)
 - Structured prompt engineering
 - Response parsing & validation
-- Rate limiting
+- Token tiers and determinism
 - Error handling
 - Testing with mocks
 - Then read: [functions/CLAUDE.md](functions/CLAUDE.md) (backend scoring)
@@ -180,7 +179,7 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 | Repository Pattern | [core/data/CLAUDE.md](core/data/CLAUDE.md) | Repositories, use cases |
 | Firestore Security Rules | [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md#security-rules-ssot) | Firebase backend |
 | SSBMaxDestinations | `shared/src/commonMain/.../navigation/SSBMaxDestinations.kt` | All routing |
-| Gemini Prompts | [core/data/ai/CLAUDE.md](core/data/ai/CLAUDE.md) | Evaluation features |
+| Gemini Prompts | [shared/ai/CLAUDE.md](shared/ai/CLAUDE.md) | Evaluation features |
 
 ---
 

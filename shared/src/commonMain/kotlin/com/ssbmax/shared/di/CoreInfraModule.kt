@@ -34,6 +34,16 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /**
+ * Koin property key carrying the Gemini API key into [coreInfraModule].
+ *
+ * SSOT for the literal: both entry points that supply it (Android's
+ * `SSBMaxApplication.onCreate`, from `BuildConfig`; iOS's `ensureKoinStarted`,
+ * from `Info.plist`) and the [KtorGeminiClient] binding that reads it use this
+ * constant, so a typo can't silently degrade to an empty key on one platform.
+ */
+const val GEMINI_API_KEY_PROPERTY = "GEMINI_API_KEY"
+
+/**
  * Cross-cutting infrastructure: platform shims, local DB, HTTP/Gemini client,
  * and the one [SubmissionAnalysisTrigger] binding shared by every async-analyzed
  * test vertical (PPDT/TAT/WAT/SRT/SDT/GTO/Interview) — see that interface's own
@@ -46,10 +56,12 @@ import org.koin.dsl.module
  * exists as a test double (see `RepositoryFakes.kt`), just no longer as the
  * production binding here.
  *
- * The Gemini API key is read from Koin's property store (`getProperty`, empty
- * default) rather than hardcoded, per this repo's "never hardcode secrets"
- * rule — the app's `startKoin()` call must supply it via `properties()`/
- * `androidFileProperties()` before this module resolves [KtorGeminiClient].
+ * The Gemini API key is read from Koin's property store
+ * ([GEMINI_API_KEY_PROPERTY], empty default) rather than hardcoded, per this
+ * repo's "never hardcode secrets" rule — the app's `startKoin()` call must
+ * supply it via `properties()` before this module resolves [KtorGeminiClient].
+ * Both platforms do (Phase 9.0); this is now the only `AIService` binding in
+ * the app, so an empty key here means AI evaluation fails everywhere.
  */
 val coreInfraModule = module {
     includes(platformModule)
@@ -79,7 +91,7 @@ val coreInfraModule = module {
     single {
         KtorGeminiClient(
             httpClient = get(),
-            apiKey = getProperty("GEMINI_API_KEY", "")
+            apiKey = getProperty(GEMINI_API_KEY_PROPERTY, "")
         )
     }
     single { KtorPPDTAnalyzer(client = get(), logger = get()) }

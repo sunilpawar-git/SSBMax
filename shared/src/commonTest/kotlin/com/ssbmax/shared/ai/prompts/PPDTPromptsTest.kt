@@ -1,12 +1,17 @@
-package com.ssbmax.core.data.ai.prompts
+package com.ssbmax.shared.ai.prompts
 
 import com.ssbmax.shared.domain.model.DeviationTolerance
 import com.ssbmax.shared.domain.model.PPDTImageContext
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-class PPDTPromptTest {
+/**
+ * Ported from core:data's `PPDTPromptTest` (Phase 9.0, when `shared`'s
+ * `PPDTPrompts` became the only copy) — the assertions are unchanged, they
+ * now just run on both platforms instead of Android only.
+ */
+class PPDTPromptsTest {
 
     private fun buildFakeImageContext(
         sceneDescription: String = "Officers planning by a map",
@@ -37,8 +42,8 @@ class PPDTPromptTest {
         val prompt = PPDTPrompts.generatePPDTMultimodalPrompt(
             story = "test story", imageContext = context, candidateGender = "Male"
         )
-        assertTrue("Core element 'water body' must appear in prompt", prompt.contains("water body"))
-        assertTrue("Core element 'drowning figure' must appear in prompt", prompt.contains("drowning figure"))
+        assertTrue(prompt.contains("water body"), "Core element 'water body' must appear in prompt")
+        assertTrue(prompt.contains("drowning figure"), "Core element 'drowning figure' must appear in prompt")
     }
 
     @Test
@@ -46,7 +51,7 @@ class PPDTPromptTest {
         // WHY: Penalized themes tell Gemini what to score down — omitting them means incorrect scoring guidance
         val context = buildFakeImageContext(penalizedThemes = listOf("story unrelated to rescue"))
         val prompt = PPDTPrompts.generatePPDTMultimodalPrompt("test", context, "Female")
-        assertTrue("Penalized theme must appear in prompt", prompt.contains("story unrelated to rescue"))
+        assertTrue(prompt.contains("story unrelated to rescue"), "Penalized theme must appear in prompt")
     }
 
     @Test
@@ -55,7 +60,7 @@ class PPDTPromptTest {
         val prompt = PPDTPrompts.generatePPDTMultimodalPrompt(
             story = "test", imageContext = PPDTImageContext(), candidateGender = "Female"
         )
-        assertTrue("Candidate gender 'Female' must appear in prompt", prompt.contains("Female"))
+        assertTrue(prompt.contains("Female"), "Candidate gender 'Female' must appear in prompt")
     }
 
     @Test
@@ -64,9 +69,9 @@ class PPDTPromptTest {
         val emptyContext = PPDTImageContext()
         val prompt = PPDTPrompts.generatePPDTMultimodalPrompt("story", emptyContext, "Male")
         assertFalse(
-            "Prompt must not contain unfilled template placeholders",
-            prompt.contains("{coreElement") || prompt.contains("{scene") || prompt.contains("{primaryOLQ")
+            prompt.contains("{coreElement") || prompt.contains("{scene") || prompt.contains("{primaryOLQ"),
+            "Prompt must not contain unfilled template placeholders"
         )
-        assertFalse("Prompt must not contain literal null string", prompt.contains("null"))
+        assertFalse(prompt.contains("null"), "Prompt must not contain literal null string")
     }
 }

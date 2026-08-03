@@ -14,8 +14,6 @@
     <ID>ForbiddenComment:AnalyticsRepositoryImpl.kt$AnalyticsRepositoryImpl$// TODO: Implement achievements system</ID>
     <ID>ForbiddenComment:AnalyticsRepositoryImpl.kt$AnalyticsRepositoryImpl$// TODO: Implement goals system</ID>
     <ID>ForbiddenComment:AnalyticsRepositoryImpl.kt$AnalyticsRepositoryImpl$// TODO: Implement study pattern tracking</ID>
-    <ID>ForbiddenComment:CloudGeminiAIService.kt$CloudGeminiAIService$// TODO: Implement cloud function for adaptive questions</ID>
-    <ID>ForbiddenComment:CloudGeminiAIService.kt$CloudGeminiAIService$// TODO: Implement cloud function for comprehensive feedback</ID>
     <ID>ForbiddenComment:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$// TODO: Calculate from timestamps</ID>
     <ID>ForbiddenComment:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$// TODO: Fetch student name from a user cache or separate query</ID>
     <ID>ForbiddenComment:MockTestDataProvider.kt$MockTestDataProvider$* TEMPORARY: Provides mock test data for development and fallback when Firestore is unavailable. * * This ensures seamless UX while Firestore integration is being set up. * When Firestore has real data, these mocks automatically stop being used. * * TODO: Remove this file once all test questions are uploaded to Firestore in production.</ID>
@@ -29,8 +27,6 @@
     <ID>ImplicitDefaultLocale:ContentMetrics.kt$ContentMetrics.MetricsSnapshot$String.format("%.1f", cacheHitRate * 100)</ID>
     <ID>ImplicitDefaultLocale:ContentMetrics.kt$ContentMetrics.MetricsSnapshot$String.format("%.2f", estimatedMonthlyCost.totalCost)</ID>
     <ID>ImplicitDefaultLocale:ContentMetrics.kt$ContentMetrics.MetricsSnapshot$String.format("%.2f", estimatedMonthlyStorageGB)</ID>
-    <ID>ImplicitDefaultLocale:EnhancedPsychologyPrompts.kt$EnhancedPsychologyPrompts$String.format("%.1f", averageResponseTime)</ID>
-    <ID>ImplicitDefaultLocale:EnhancedPsychologyPrompts.kt$EnhancedPsychologyPrompts$String.format("%.1f", writingTimeMinutes)</ID>
     <ID>ImplicitDefaultLocale:SubscriptionManagerEdgeCasesTest.kt$SubscriptionManagerEdgeCasesTest$String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1)</ID>
     <ID>LargeClass:FirestoreGTORepository.kt$FirestoreGTORepository : GTORepository</ID>
     <ID>LoopWithTooManyJumpStatements:OIRQuestionSelector.kt$OIRQuestionSelector$for</ID>
@@ -51,7 +47,6 @@
     <ID>NestedBlockDepth:OIRQuestionSelector.kt$OIRQuestionSelector$suspend fun selectQuestions( count: Int = 50, difficulty: String? = null ): Result&lt;List&lt;OIRQuestion&gt;&gt;</ID>
     <ID>NestedBlockDepth:SubmissionArchiveRepository.kt$SubmissionArchiveRepository$suspend fun archiveOldSubmissions(beforeTimestamp: Long): Result&lt;Int&gt;</ID>
     <ID>ReturnCount:AuthRepositoryImpl.kt$AuthRepositoryImpl$override suspend fun handleGoogleSignInResult(data: GoogleSignInData): Result&lt;SSBMaxUser&gt;</ID>
-    <ID>ReturnCount:CloudGeminiAIService.kt$CloudGeminiAIService$private fun parseAnalysisResult(data: Any): Result&lt;ResponseAnalysis&gt;</ID>
     <ID>ReturnCount:GradingQueueRepositoryImpl.kt$GradingQueueRepositoryImpl$private fun documentToGradingQueueItem(data: Map&lt;String, Any&gt;): GradingQueueItem?</ID>
     <ID>ReturnCount:InterviewQuestionGenerator.kt$InterviewQuestionGenerator$private suspend fun generateAIQuestions( piqSnapshotId: String, count: Int ): List&lt;InterviewQuestion&gt;</ID>
     <ID>ReturnCount:QuestionCacheMappers.kt$QuestionCacheMappers$fun mapToCacheEntry(data: Map&lt;String, Any&gt;): QuestionCacheEntry?</ID>
@@ -114,9 +109,6 @@
     <ID>WildcardImport:AnalyticsRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:AuthRepositoryImplTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:CoreDataTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:EnhancedGTOPromptsTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:EnhancedInterviewPromptsTest.kt$import org.junit.Assert.*</ID>
-    <ID>WildcardImport:EnhancedPsychologyPromptsTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirebaseRulesValidationTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:FirestoreSubmissionRepositoryTest.kt$import io.mockk.*</ID>

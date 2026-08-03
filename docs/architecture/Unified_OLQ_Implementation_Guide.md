@@ -205,7 +205,7 @@ OLQDashboardCard: Display results
 | **OLQ Definitions** | `core/domain/model/interview/OLQ.kt` | 15 OLQ enum |
 | **Dashboard Model** | `core/domain/model/dashboard/OLQDashboard.kt` | Dashboard structure |
 | **Dashboard Use Case** | `core/domain/usecase/dashboard/GetOLQDashboardUseCase.kt` | Fetch & aggregate |
-| **AI Prompts** | `core/data/ai/prompts/PsychologyTestPrompts.kt` | Gemini prompts |
+| **AI Prompts** | `shared/src/commonMain/kotlin/com/ssbmax/shared/ai/prompts/PsychologyTestPrompts.kt` | Gemini prompts |
 | **GTO Prompts** | `app/workers/GTOAnalysisPrompts.kt` | GTO Gemini prompts |
 | **TAT Worker** | `app/workers/TATAnalysisWorker.kt` | TAT analysis |
 | **Dashboard UI** | `app/ui/home/student/components/OLQDashboardCard.kt` | Dashboard card |

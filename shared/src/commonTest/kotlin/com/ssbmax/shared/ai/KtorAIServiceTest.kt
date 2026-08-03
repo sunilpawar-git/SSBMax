@@ -215,4 +215,77 @@ class KtorAIServiceTest {
         val service = serviceWith { respond("boom", HttpStatusCode.InternalServerError) }
         assertEquals(false, service.isAvailable())
     }
+
+    // ---- Ported from core:data's GeminiAIServiceTest (Phase 9.0, when KtorAIService
+    // became the only AIService). Not ported: `analyzePPDTMultimodal falls back
+    // gracefully when image bytes are empty`, which guarded an Android
+    // GenerativeModel/Bitmap NPE on zero-length arrays -- this implementation
+    // base64-encodes the raw ByteArray with no Bitmap step, and the empty-bytes
+    // request shape is already asserted above.
+
+    @Test
+    fun `every request is temperature zero so identical submissions score identically`() =
+        runTest(testDispatcher) {
+            // WHY: SSB grading must be reproducible -- a candidate re-submitting the same
+            // story must not get a different OLQ profile. Temperature drift is invisible
+            // in output but breaks that guarantee.
+            var capturedBody = ""
+            val service = serviceWith { request ->
+                capturedBody = bodyTextOf(request)
+                okResponse("""{"olqScores": {"COURAGE": {"score": 6.0, "confidence": 80, "reasoning": "ok"}}}""")
+            }
+            service.analyzeWATResponse("prompt").getOrThrow()
+            assertTrue(capturedBody.contains("\"temperature\":0.0"), capturedBody)
+        }
+
+    @Test
+    fun `generateAdaptiveQuestions returns a failure Result when the call fails`() = runTest(testDispatcher) {
+        // WHY: this runs mid-interview; an escaping exception would kill the session
+        // rather than let the caller fall back to the generic question pool.
+        val service = serviceWith { respond("boom", HttpStatusCode.InternalServerError) }
+
+        val result = service.generateAdaptiveQuestions(
+            previousQuestions = listOf(question),
+            previousResponses = listOf("I led the team."),
+            weakOLQs = listOf(OLQ.COURAGE),
+            count = 2
+        )
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `analyzePPDTMultimodal parses all 15 OLQ scores from a full response`() = runTest(testDispatcher) {
+        // WHY: PPDT grading is only valid on the complete OLQ set -- a parser that
+        // silently returns a subset produces a plausible-looking but wrong assessment.
+        val fullOlqJson = OLQ.entries.joinToString(",") { olq ->
+            """"${olq.name}": {"score": 6.0, "confidence": 80, "reasoning": "n/a"}"""
+        }
+        val service = serviceWith { _ -> okResponse("""{"olqScores": {$fullOlqJson}}""") }
+
+        val result = service.analyzePPDTMultimodal(
+            imageBytes = byteArrayOf(1, 2, 3),
+            story = "A story",
+            imageContext = PPDTImageContext(),
+            candidateGender = "male"
+        ).getOrThrow()
+
+        assertEquals(OLQ.entries.size, result.olqScores.size)
+    }
+
+    @Test
+    fun `analyzePPDTMultimodal returns a failure Result when the call fails`() = runTest(testDispatcher) {
+        // WHY: PPDT analysis runs in a background worker whose retry/error handling
+        // depends on a failed Result; an escaping exception would crash the worker.
+        val service = serviceWith { respond("boom", HttpStatusCode.InternalServerError) }
+
+        val result = service.analyzePPDTMultimodal(
+            imageBytes = byteArrayOf(1, 2, 3),
+            story = "A story",
+            imageContext = PPDTImageContext(),
+            candidateGender = "male"
+        )
+
+        assertTrue(result.isFailure)
+    }
 }

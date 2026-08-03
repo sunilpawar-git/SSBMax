@@ -395,7 +395,7 @@ console.log(result.data);
 
 - **Root guidance:** [claude.md](../claude.md) (security principles)
 - **Firestore patterns:** [core/data/remote/CLAUDE.md](../core/data/remote/CLAUDE.md)
-- **AI integration:** [core/data/ai/CLAUDE.md](../core/data/ai/CLAUDE.md)
+- **AI integration:** [shared/ai/CLAUDE.md](../shared/ai/CLAUDE.md)
 - **Firebase Admin SDK:** https://firebase.google.com/docs/reference/admin
 
 ---
