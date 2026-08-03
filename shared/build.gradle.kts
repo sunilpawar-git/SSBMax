@@ -66,9 +66,23 @@ kotlin {
         // build/cocoapods/synthetic/ to resolve these pods, rather than
         // requiring (or writing into) a Podfile in `iosApp`.
 
-        pod("FirebaseAuth")
-        pod("FirebaseFirestore")
-        pod("FirebaseStorage")
+        // linkOnly = true on the Firebase pods this module only consumes via
+        // GitLive's precompiled Kotlin bindings (no raw cinterop of our own):
+        // `iosApp` links its OWN copy of Firebase via SPM (see iosApp.xcodeproj),
+        // separate from this cocoapods block, which otherwise exists purely to
+        // give Kotlin/Native's cinterop something to compile GitLive's bindings
+        // against. Without linkOnly, these pods' real .framework binaries get
+        // compiled into SharedKit.framework (static) AND iosApp separately links
+        // its own SPM Firebase copy into the same app binary -- two copies of
+        // Firebase's ObjC classes/symbols in one process, a known duplicate-symbol
+        // dyld crash risk GitLive's own docs warn about for exactly this
+        // CocoaPods+SPM split. linkOnly=true makes this block satisfy the
+        // Kotlin/Native linker at `shared`'s build time without embedding a
+        // second copy -- iosApp's SPM-linked Firebase remains the single real
+        // copy at runtime.
+        pod("FirebaseAuth") { linkOnly = true }
+        pod("FirebaseFirestore") { linkOnly = true }
+        pod("FirebaseStorage") { linkOnly = true }
         // Phase 7a (KMP-convergence plan): CrashReporter/AnalyticsTracker
         // seams -- see IosCrashReporter.kt/IosAnalyticsTracker.kt. Linking
         // these into `SharedKit.framework` here is necessary but not
@@ -77,6 +91,18 @@ kotlin {
         // actually carry them (a manual Xcode step, not reachable from
         // Gradle -- see the Phase 7a summary for why this is named rather
         // than done here).
+        //
+        // NOT linkOnly, unlike the three above: IosCrashReporter.kt/
+        // IosAnalyticsTracker.kt cinterop directly against these pods' raw
+        // Obj-C APIs (FIRCrashlytics, FIRAnalytics) rather than going through
+        // GitLive -- linkOnly suppresses Kotlin binding generation entirely,
+        // which broke those two files ("Unresolved reference 'FIRCrashlytics'"
+        // etc). The double-link risk these two theoretically carry is
+        // unconfirmed (unlike Auth/Firestore/Storage, no GitLive Kotlin API
+        // consumes them, and iosApp's own SPM product list doesn't currently
+        // declare FirebaseCrashlytics/FirebaseAnalytics per the comment above)
+        // -- revisit if/when Crashlytics/Analytics are wired into iosApp's SPM
+        // list.
         pod("FirebaseCrashlytics")
         pod("FirebaseAnalytics")
     }
