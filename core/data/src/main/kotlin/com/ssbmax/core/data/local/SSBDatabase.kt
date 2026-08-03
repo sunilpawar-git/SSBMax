@@ -4,10 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
-import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
-import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
 
 /**
@@ -16,34 +14,24 @@ import com.ssbmax.core.data.local.entity.UserPerformanceEntity
  */
 @Database(
     entities = [
-        TestUsageEntity::class,
         UserPerformanceEntity::class,
         TATStoryAssessmentEntity::class
     ],
-    // v28 (Phase 9c): dropped the GPE-image, GTO-task, and interview-question
-    // cache tables. GTOTaskCacheManager/FirestoreGTORepository were this
-    // phase's own deletions (shared's GitLiveGTOTaskCacheManager/
-    // GitLiveGTORepository are the sole implementation now); GPEImageCacheManager
-    // and InterviewQuestionCacheManager turned out to already have zero real
-    // callers (the "live callers" note on GPEImageCacheManager in the v27
-    // migration comment was incorrect — grep-confirmed neither FirestoreGTORepository
-    // nor DifficultyProgressionManager ever actually constructed it), so both
-    // were swept in the same version bump rather than left as newly-discovered
-    // dead code for a future phase. No explicit migration:
-    // fallbackToDestructiveMigration() (below) recreates the DB, acceptable
-    // since these are re-downloadable/re-derivable caches, not unrecoverable
-    // user data, and there are no production users (KMP-convergence plan
-    // decision).
-    version = 28,
+    // v29 (Phase 9d): dropped the test-usage mirror table. TestUsageDao was
+    // written by SubscriptionManager.canTakeTest/recordTestUsage, both now
+    // deleted (shared's CheckTestEligibilityUseCase/GitLiveTestUsageRecorder
+    // are the sole implementation now, Firestore-only, no local mirror) — and
+    // grep-confirmed to have had zero readers even before deletion, since
+    // canTakeTest's only production callers had already migrated away in an
+    // earlier phase and its own getTotalTestsUsedThisMonth() had zero callers
+    // of its own. No explicit migration: fallbackToDestructiveMigration()
+    // (below) recreates the DB, same precedent as v27/v28 — re-downloadable
+    // cache data, no production users (KMP-convergence plan decision).
+    version = 29,
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)
 abstract class SSBDatabase : RoomDatabase() {
-
-    /**
-     * Test usage DAO
-     */
-    abstract fun testUsageDao(): TestUsageDao
 
     /**
      * User performance DAO for adaptive difficulty

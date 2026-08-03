@@ -62,4 +62,36 @@ class CheckTestEligibilityUseCaseTest {
         assertTrue(result is TestEligibility.NetworkError)
         assertTrue(analyticsTracker.events.isEmpty())
     }
+
+    @Test
+    fun `bypass enabled returns eligible without touching the repository`() = runTest {
+        val bypassingUseCase = CheckTestEligibilityUseCase(
+            subscriptionRepository = subscriptionRepository,
+            analyticsTracker = analyticsTracker,
+            bypassSubscriptionLimits = true
+        )
+        // subscriptionRepository is left at its default (FREE tier, no usage) —
+        // a real lookup would return Eligible(remainingTests = 1), not 999, so
+        // asserting 999 below proves the bypass short-circuits before any
+        // repository read, matching the Android original's `canTakeTest`
+        // debug-bypass early return (`999 remaining tests`).
+
+        val result = bypassingUseCase(TestType.OIR, "user-1")
+
+        assertTrue(result is TestEligibility.Eligible)
+        assertEquals(999, (result as TestEligibility.Eligible).remainingTests)
+        assertTrue(analyticsTracker.events.isEmpty())
+    }
+
+    @Test
+    fun `bypass disabled by default enforces real limits`() = runTest {
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult = Result.success(
+            mapOf("OIR Tests" to UsageInfo(used = 1, limit = 1))
+        )
+
+        val result = useCase(TestType.OIR, "user-1")
+
+        assertTrue(result is TestEligibility.LimitReached)
+    }
 }

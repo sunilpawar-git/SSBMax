@@ -14,7 +14,7 @@
 | DI bootstrap | `SSBMaxApplication.kt`, `di/KoinModules.kt` | Starts Koin with `appModules` (`sharedModule` + `core:data` modules + the handful of `app`-local modules `app/workers`/`app/notifications` still need); schedules background tasks via `BackgroundTaskScheduler` |
 | Push | `notifications/{SSBMaxFirebaseMessagingService,NotificationHelper}.kt` | FCM token handling, notification channel/display |
 | Background analysis | `workers/` (13 files) | WorkManager workers for AI grading (GTO/Interview/PPDT/TAT/SRT/WAT/SDT). **Duplication closed (KMP-convergence Phase 8):** GTO/WAT/SRT/SD/PPDT/Interview workers are thin shells delegating to `shared/analysis/*Orchestrator.kt`; TAT's per-story/synthesis workers keep their WorkManager-chain topology (real process-death resilience the orchestrator's single-coroutine design doesn't need) but converge onto the same `shared/analysis/AnalysisRetry` retry/prompt logic. `InterviewQuestionGenerationWorker` is a shell over `shared`'s `InterviewQuestionGenerator` |
-| DI modules | `di/{AppInjectablesModule,DebugModule,TestUseCaseModule,WorkManagerModule}.kt` | Koin bindings for the above — **not Hilt**; see [app/di/CLAUDE.md](di/CLAUDE.md) |
+| DI modules | `di/{AppInjectablesModule,TestUseCaseModule,WorkManagerModule}.kt` | Koin bindings for the above — **not Hilt**; see [app/di/CLAUDE.md](di/CLAUDE.md) (`DebugModule` deleted in the KMP-convergence plan's Phase 9d — its `DebugConfig`/`BYPASS_SUBSCRIPTION_LIMITS` bypass is now a Koin property `SSBMaxApplication` supplies into `shared`'s `CheckTestEligibilityUseCase`) |
 
 ## Anti-patterns (still enforced here)
 

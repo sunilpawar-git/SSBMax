@@ -28,6 +28,17 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
+ * Koin property key carrying the debug-only subscription-limit bypass into
+ * [CheckTestEligibilityUseCase]. Same shape as
+ * [com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY]: Android's
+ * `SSBMaxApplication` supplies `BuildConfig.DEBUG && BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`;
+ * iOS supplies nothing, so [CheckTestEligibilityUseCase]'s `false` default
+ * applies (this bypass was always Android-`BuildConfig`-only, see that
+ * class's own doc comment).
+ */
+const val BYPASS_SUBSCRIPTION_LIMITS_PROPERTY = "BYPASS_SUBSCRIPTION_LIMITS"
+
+/**
  * OIR/PPDT/TAT/WAT/SRT/SDT/PIQ test-taking vertical. Repository dependencies
  * come from [repositoryModule]; async-analysis dispatch uses
  * [coreInfraModule]'s single `SubmissionAnalysisTrigger` binding. Split out of
@@ -38,12 +49,19 @@ import org.koin.dsl.module
  * `WATAnalysisWorker`/`SRTAnalysisWorker`/`SDTAnalysisWorker` via WorkManager
  * after submission) — not synchronous/rule-based scoring; a submission
  * through this vertical persists but is not yet AI-analyzed through this
- * `shared` path (see `SubmissionAnalysisTrigger`'s own doc comment). None of
- * these verticals is swapped into the live Android app's nav graph
- * (`app/.../ui/tests/` is untouched) — reachable only via `SSBMaxNavHost`.
+ * `shared` path (see `SubmissionAnalysisTrigger`'s own doc comment). This
+ * vertical is now the live one on both platforms (`MainActivity` has rendered
+ * `SSBMaxRoot()`/`SSBMaxNavHost` directly since the KMP-convergence plan's
+ * Phase 5 cutover; `app/.../ui/tests/` no longer exists, deleted in Phase 6a).
  */
 val testTakingModule = module {
-    factoryOf(::CheckTestEligibilityUseCase)
+    factory {
+        CheckTestEligibilityUseCase(
+            subscriptionRepository = get(),
+            analyticsTracker = get(),
+            bypassSubscriptionLimits = getProperty(BYPASS_SUBSCRIPTION_LIMITS_PROPERTY, false)
+        )
+    }
     factoryOf(::OIRTestScoreCalculator)
     factoryOf(::SubmitOIRTestUseCase)
     factoryOf(::LoadPPDTTestUseCase)

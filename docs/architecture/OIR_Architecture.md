@@ -198,7 +198,7 @@ markQuestionsUsed()      → Room (7-day suppression)
 | `core/data/.../local/entity/OIRSyncMetadataEntity.kt` (deleted, see note above) | Single-row local content-version mirror (DB v20) |
 | `core/domain/.../validation/OIRQuestionValidator.kt` | Validity SSOT — enforced at ingestion (gate), selection (selector), and runtime (assertion) |
 | `scripts/oir-extraction/upload-oir-batch.js` (`validateBatch`) | Write-time enforcement of the validator's rules |
-| `core/data/.../SubscriptionManager.kt` | Monthly limits — single source of truth |
+| `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) | Monthly limits — single source of truth (`core/data`'s `SubscriptionManager.kt` deleted, KMP-convergence Phase 9d) |
 | `core/domain/.../usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → usage → submit → end session |
 
 ---
@@ -209,7 +209,7 @@ markQuestionsUsed()      → Room (7-day suppression)
 2. **Firestore path:** `test_content/{testType}/batches/{batchId}`
 3. **Cache:** Follow two-phase pattern in a new `{TestType}QuestionCacheManager`
 4. **Selector:** Implement type-distribution ratios appropriate for the new test
-5. **Subscription limits:** Add `TestType.{NEW}` case to `SubscriptionManager.getTestLimitForTier()`
+5. **Subscription limits:** Add `TestType.{NEW}` case to `SubscriptionLimits.keyFor()` and its limits table (`shared/.../data/repository/SubscriptionDtos.kt`)
 
 ---
 

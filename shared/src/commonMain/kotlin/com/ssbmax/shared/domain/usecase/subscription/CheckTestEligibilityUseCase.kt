@@ -20,27 +20,44 @@ import kotlinx.datetime.toLocalDateTime
  *
  * Known, deliberate deviations from the Android original (both documented,
  * not silent):
- * - The debug-only `BYPASS_SUBSCRIPTION_LIMITS` escape hatch
- *   (`core:data`'s `DebugConfig`) is Android-`BuildConfig`-only and is NOT
- *   ported — this use case always enforces real limits. Fails safe (more
- *   restrictive, not less), but removes the local-dev convenience described
- *   in CLAUDE.local.md's debug-flags section for any screen that switches to
- *   this shared eligibility path.
  * - No local Room mirror of usage (the Android original also synced
  *   `TestUsageDao`) — `shared` has no equivalent cache table for this data;
  *   Firestore is read directly every time, matching this repo's own
  *   "SECURITY: reads from Firestore server-side to prevent bypass" comment
  *   (the Room sync was a read-path optimization, not a security requirement).
+ *   Confirmed safe to drop outright (KMP-convergence Phase 9d): `core:data`'s
+ *   `TestUsageDao` was written by `canTakeTest`/`recordTestUsage` but had zero
+ *   readers anywhere except `SubscriptionManager`'s own dead
+ *   `getTotalTestsUsedThisMonth` (itself grep-confirmed to have zero callers)
+ *   — the mirror was already load-bearing for nothing.
  * - `SecurityEventLogger`'s limit-reached event is restored (Phase 7a) via
  *   the injected [AnalyticsTracker] — [SecurityEvents.LIMIT_REACHED], the one
  *   call `core:data`'s Android-only `SecurityEventLogger` made from this
  *   exact decision point.
+ *
+ * `bypassSubscriptionLimits` (KMP-convergence Phase 9d): the debug-only
+ * `BYPASS_SUBSCRIPTION_LIMITS` escape hatch, restored. It had silently gone
+ * dead the moment every test ViewModel migrated to this use case (still
+ * documented as working in `CLAUDE.local.md`'s debug-flags section, but
+ * `core:data`'s `SubscriptionManager.canTakeTest` — the only place that ever
+ * read it — had zero production callers left, grep-confirmed). Supplied as a
+ * Koin property ([com.ssbmax.shared.di.BYPASS_SUBSCRIPTION_LIMITS_PROPERTY],
+ * same shape as [com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY]) rather than
+ * ported as a `DebugConfig` interface — Android's `SSBMaxApplication` supplies
+ * `BuildConfig.DEBUG && BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`; iOS supplies
+ * nothing, so the property's `false` default applies (the bypass was always
+ * an Android-`BuildConfig`-only local-dev convenience, never an iOS one — this
+ * restores that exact scope, not a new one).
  */
 class CheckTestEligibilityUseCase(
     private val subscriptionRepository: SubscriptionRepository,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val bypassSubscriptionLimits: Boolean = false
 ) {
     suspend operator fun invoke(testType: TestType, userId: String): TestEligibility {
+        if (bypassSubscriptionLimits) {
+            return TestEligibility.Eligible(remainingTests = BYPASS_REMAINING_TESTS)
+        }
         val tier = subscriptionRepository.getSubscriptionTier(userId).getOrElse {
             return TestEligibility.NetworkError
         }
@@ -87,6 +104,7 @@ class CheckTestEligibilityUseCase(
     }
 
     private companion object {
+        const val BYPASS_REMAINING_TESTS = 999
         val MONTH_NAMES = listOf(
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"

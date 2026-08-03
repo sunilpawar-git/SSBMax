@@ -1,8 +1,10 @@
 package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestType
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Pins the FREE/PRO/PREMIUM per-test-type limit table extracted from the
@@ -42,5 +44,30 @@ class SubscriptionLimitsTest {
     @Test
     fun `unknown test type key defaults to zero not unlimited`() {
         assertEquals(0, SubscriptionLimits.limitFor("Nonexistent Test", SubscriptionTier.PREMIUM))
+    }
+
+    /**
+     * Ported from the deleted `core:data` `SubscriptionManagerEdgeCasesTest`
+     * (KMP-convergence Phase 9d) — every [TestType.keyFor] result must be a
+     * real key in this table; a mapping to a typo'd or missing key would
+     * silently fall through [limitFor]'s `?: 0` default, blocking every user
+     * (including paid tiers) from a test type with no visible error.
+     */
+    @Test
+    fun `keyFor maps every TestType to a key present in the limits table`() {
+        TestType.entries.forEach { testType ->
+            val key = SubscriptionLimits.keyFor(testType)
+            assertTrue(key in SubscriptionLimits.testTypeKeys, "TestType.$testType mapped to unknown key '$key'")
+        }
+    }
+
+    /** All 8 GTO sub-tests share one counter/limit — same grouping as the Android original. */
+    @Test
+    fun `all GTO sub-tests share the same limits-table key`() {
+        val gtoTypes = listOf(
+            TestType.GTO_GD, TestType.GTO_GPE, TestType.GTO_PGT, TestType.GTO_GOR,
+            TestType.GTO_HGT, TestType.GTO_LECTURETTE, TestType.GTO_IO, TestType.GTO_CT
+        )
+        gtoTypes.forEach { assertEquals("GTO Tests", SubscriptionLimits.keyFor(it)) }
     }
 }

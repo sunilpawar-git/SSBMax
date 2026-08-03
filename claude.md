@@ -24,7 +24,7 @@ Android app for SSB (Services Selection Board) preparation — India's military 
 ## Guiding Principles (MVVM + DRY + SOLID + SSOT)
 
 **Single Source of Truth for every domain:**
-- `SubscriptionManager` → subscription limits (only place to define/fetch)
+- `SubscriptionLimits`/`CheckTestEligibilityUseCase` → subscription limits (only place to define/fetch; `core:data`'s `SubscriptionManager` was deleted in the KMP-convergence plan's Phase 9d)
 - `SSBMaxDestinations` → navigation routes (only place for route definitions)
 - `SSBPhase` → test type enum (only place to define test types)
 
@@ -50,7 +50,7 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 | `lint` | Custom lint rules (build fails if violated) |
 | `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks — AGP Lint doesn't analyze a KMP module's commonMain) |
 
-**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `core:data/.../SubscriptionManager.kt` | AI: `shared/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
+**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) + `shared/.../domain/usecase/subscription/CheckTestEligibilityUseCase.kt` | AI: `shared/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
 
 ## Architecture Guidance Hierarchy (Phase 4)
 

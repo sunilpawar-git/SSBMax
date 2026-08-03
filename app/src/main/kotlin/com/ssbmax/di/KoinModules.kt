@@ -28,13 +28,13 @@ import com.ssbmax.shared.di.sharedModule
  * were, in turn, only ever consumed by the deleted `app/ui` ViewModels
  * (confirmed by grep against the surviving `app/workers`/`app/notifications`/
  * `MainActivity`/`SSBMaxApplication` before removing each one; none matched).
- * `testUseCaseModule`/`debugModule`/`workManagerModule`/`appInjectablesModule`
- * stay — each binds at least one class `app/workers` genuinely still needs
- * (`GetOLQDashboardUseCase`, `DebugConfig` transitively via
- * `SubscriptionManager`, `SubmissionAnalysisTrigger`/`BackgroundTaskScheduler`,
- * and `TATAnalysisPipelineOrchestrator`/`TATAnalysisWorkPlanner`/
- * `NotificationHelper` respectively — `appInjectablesModule` itself was
- * trimmed of its other, now-dead bindings, see its own file).
+ * `testUseCaseModule`/`workManagerModule`/`appInjectablesModule` stay — each
+ * binds at least one class `app/workers` genuinely still needs
+ * (`GetOLQDashboardUseCase`, `SubmissionAnalysisTrigger`/
+ * `BackgroundTaskScheduler`, and `TATAnalysisPipelineOrchestrator`/
+ * `TATAnalysisWorkPlanner`/`NotificationHelper` respectively —
+ * `appInjectablesModule` itself was trimmed of its other, now-dead bindings,
+ * see its own file).
  *
  * KMP-convergence Phase 9.0: `aiModule` removed — `AIService` was the last
  * binding `core:data` shadowed on the AI path, and `shared`'s `KtorAIService`
@@ -42,6 +42,14 @@ import com.ssbmax.shared.di.sharedModule
  * platforms. The Gemini key it needs arrives as a Koin *property* supplied by
  * [com.ssbmax.SSBMaxApplication], not by reading `core:data`'s `BuildConfig`
  * inside the module.
+ *
+ * KMP-convergence Phase 9d: `debugModule` removed — its sole binding,
+ * `DebugConfig`, existed only for `core:data`'s `SubscriptionManager` (now
+ * deleted, along with `DebugConfig` itself). The `BYPASS_SUBSCRIPTION_LIMITS`
+ * local-dev convenience it gated is restored, but as a Koin *property*
+ * supplied by [com.ssbmax.SSBMaxApplication] into `shared`'s
+ * `CheckTestEligibilityUseCase` — same shape as the Gemini key above, not a
+ * ported `DebugConfig` interface.
  */
 val appModules = listOf(
     // :shared (KMP)
@@ -56,7 +64,6 @@ val appModules = listOf(
 
     // :app
     testUseCaseModule,
-    debugModule,
     workManagerModule,
     appInjectablesModule
 )

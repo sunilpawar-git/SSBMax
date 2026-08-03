@@ -50,7 +50,6 @@ val databaseModule = module {
             .build()
     }
 
-    single { get<SSBDatabase>().testUsageDao() }
     single { get<SSBDatabase>().userPerformanceDao() }
     single { get<SSBDatabase>().tatStoryAssessmentDao() }
 

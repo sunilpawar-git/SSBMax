@@ -2,6 +2,16 @@
 
 > **Last Updated**: Nov 6, 2025  
 > **Purpose**: Track security implementation status across all test types to ensure no ViewModels are left unprotected
+>
+> **Historical, pre-KMP-convergence:** written for the Hilt-era `app/ui/tests/*ViewModel` pattern
+> (`@HiltViewModel`, `app/src/main/kotlin/com/ssbmax/ui/tests/`, `core/domain`), all deleted/absorbed
+> by the KMP-convergence plan's Phases 5/6a/9.0/9d. Live equivalents: ViewModels are in
+> `shared/src/commonMain/.../presentation/`, `SecurityEventLogger`/`SubscriptionManager` are deleted
+> — security-event logging is `shared`'s `AnalyticsTracker`/`SecurityEvents`, subscription gating is
+> `shared`'s `CheckTestEligibilityUseCase`/`SubscriptionLimits`. Not rewritten wholesale (out of
+> proportion to the phase that found it); the checklist's underlying security requirements (auth
+> guard, limit enforcement, security-event logging on unauthenticated/limit-reached) still apply,
+> just against the current classes.
 
 ---
 
