@@ -5,6 +5,12 @@
 **Status**: ✅ Audited & Hardened  
 **Related**: [Unified OLQ Implementation Guide](Unified_OLQ_Implementation_Guide.md)
 
+> **Historical note (KMP-convergence Phase 9e):** `FirestoreSubmissionRepository.kt` and the
+> other `core:data` classes named below were deleted; the same responsibilities now live in
+> `shared/data/repository/GitLive{Psych,WAT,SRT,SDT}*.kt`. This report's findings describe the
+> Android-only architecture as it stood in December 2025 — kept as-is for historical record, not
+> updated in place.
+
 ---
 
 ## 1. Executive Summary

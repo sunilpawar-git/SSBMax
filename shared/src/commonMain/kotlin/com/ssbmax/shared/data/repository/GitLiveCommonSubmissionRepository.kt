@@ -7,8 +7,8 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.Query
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.datetime.Clock
 
 /**
@@ -107,22 +107,30 @@ class GitLiveCommonSubmissionRepository {
     /**
      * Same OLQ-regression protection as the Android original: a nested `data.analysisStatus`/
      * `data.olqResult` pair is inspected on every emission so a stale cache-only snapshot can
-     * never regress a caller-visible submission back from COMPLETED to PENDING.
+     * never regress a caller-visible submission back from COMPLETED to PENDING. A filtered
+     * snapshot is skipped entirely (via `transform`, not mapped to `null`) — the Android
+     * original's `addSnapshotListener` callback returns without a `trySend` in that case, and a
+     * bare `null` here would incorrectly read as "not found" to callers like
+     * `SubmissionDetailViewModel`. A real Firestore listener error is NOT swallowed either — the
+     * Android original calls `close(error)`, propagating it to the collector's own `catch`.
      */
     fun observeSubmission(submissionId: String): Flow<Map<String, Any>?> =
         submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
+            .transform { snapshot ->
+                if (!snapshot.exists) {
+                    emit(null)
+                    return@transform
+                }
                 val raw = snapshot.data(FirestoreRawMapSerializer)
                 val nested = raw[FIELD_DATA] as? Map<*, *>
                 val analysisStatus = nested?.get(FIELD_ANALYSIS_STATUS) as? String
                 val hasOlqResult = nested?.get(FIELD_OLQ_RESULT) != null
                 val filter = regressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(analysisStatus, hasOlqResult, snapshot.metadata)) return@map null
-                raw
+                if (filter.shouldFilterSnapshot(analysisStatus, hasOlqResult, snapshot.metadata)) return@transform
+                emit(raw)
             }
-            .catch { emit(null) }
 
+    /** Errors propagate uncaught — matches the Android original's `close(error)`. */
     fun observeUserSubmissions(userId: String, limit: Int): Flow<List<Map<String, Any>>> =
         submissionsCollection
             .where { FIELD_USER_ID equalTo userId }
@@ -130,7 +138,6 @@ class GitLiveCommonSubmissionRepository {
             .limit(limit)
             .snapshots
             .map { snapshot -> snapshot.documents.map { it.data(FirestoreRawMapSerializer) } }
-            .catch { emit(emptyList()) }
 
     private companion object {
         const val SUBMISSIONS_COLLECTION = "submissions"

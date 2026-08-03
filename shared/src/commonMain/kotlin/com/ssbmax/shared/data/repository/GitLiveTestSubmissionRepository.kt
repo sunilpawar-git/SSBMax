@@ -10,7 +10,6 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
@@ -50,6 +49,7 @@ class GitLiveTestSubmissionRepository : TestSubmissionRepository {
         Result.failure(e)
     }
 
+    /** Errors propagate uncaught — matches the Android original's `close(error)` on a listener error. */
     override fun getSubmissionsForStudent(studentId: String): Flow<List<TestSubmission>> =
         submissionsCollection
             .where { FIELD_STUDENT_ID equalTo studentId }
@@ -60,8 +60,8 @@ class GitLiveTestSubmissionRepository : TestSubmissionRepository {
                     runCatching { doc.data(TestSubmissionDto.serializer()) }.getOrNull()?.toDomain()
                 }
             }
-            .catch { emit(emptyList()) }
 
+    /** Errors propagate uncaught — matches the Android original's `close(error)` on a listener error. */
     override fun getPendingSubmissions(assessorId: String): Flow<List<TestSubmission>> =
         submissionsCollection
             .where { FIELD_GRADING_STATUS equalTo GradingStatus.PENDING.name }
@@ -72,7 +72,6 @@ class GitLiveTestSubmissionRepository : TestSubmissionRepository {
                     runCatching { doc.data(TestSubmissionDto.serializer()) }.getOrNull()?.toDomain()
                 }
             }
-            .catch { emit(emptyList()) }
 
     override suspend fun submitTest(submission: TestSubmission): Result<Unit> = try {
         submissionsCollection.document(submission.id).set(submission.toDto())
@@ -130,8 +129,19 @@ internal data class TestResponseDto(
     val type: String? = null
 )
 
-/** Returns null (dropped, not defaulted) when testType/phase/gradingStatus don't parse. */
+/**
+ * Returns null (dropped, not defaulted) when testType/phase don't parse, or when id/testId/userId/
+ * submittedAt are blank/zero — every field on [TestSubmissionDto] has a Kotlin default so GitLive's
+ * decoder never throws on a document missing them (unlike the Android original's hard-required
+ * `getX(...) ?: return null` for each), so this guard is what makes a structurally incomplete
+ * document fail loudly instead of silently becoming a submission with `id=""` — writing that back
+ * via `updateSubmission` would target an empty-path document reference, exactly the "lost candidate
+ * work" failure mode this phase's own risk register calls out. `gradingStatus` is deliberately left
+ * lenient (defaults to `PENDING` rather than dropping the record) — matches the domain model's own
+ * default and the Android original's crash-prone `"PENDING"` fallback was strictly worse.
+ */
 internal fun TestSubmissionDto.toDomain(): TestSubmission? {
+    if (isStructurallyIncomplete()) return null
     val testTypeEnum = runCatching { TestType.valueOf(testType) }.getOrNull() ?: return null
     val phaseEnum = runCatching { TestPhase.valueOf(phase) }.getOrNull() ?: return null
     val gradingStatusEnum = runCatching { GradingStatus.valueOf(gradingStatus) }.getOrNull() ?: GradingStatus.PENDING
@@ -143,7 +153,7 @@ internal fun TestSubmissionDto.toDomain(): TestSubmission? {
         testType = testTypeEnum,
         phase = phaseEnum,
         submittedAt = submittedAt,
-        responses = responses.map { it.toDomain() },
+        responses = responses.filter { it.questionId.isNotBlank() }.map { it.toDomain() },
         aiPreliminaryScore = aiPreliminaryScore,
         instructorScore = instructorScore,
         finalScore = finalScore,
@@ -154,6 +164,11 @@ internal fun TestSubmissionDto.toDomain(): TestSubmission? {
         timeSpent = timeSpent,
         batchId = batchId
     )
+}
+
+private fun TestSubmissionDto.isStructurallyIncomplete(): Boolean {
+    val hasBlankRequiredField = id.isBlank() || testId.isBlank() || userId.isBlank()
+    return hasBlankRequiredField || submittedAt <= 0L
 }
 
 /**

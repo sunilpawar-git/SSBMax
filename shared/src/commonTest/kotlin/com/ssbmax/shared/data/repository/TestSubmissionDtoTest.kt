@@ -69,4 +69,62 @@ class TestSubmissionDtoTest {
         assertTrue(restored != null)
         assertEquals(GradingStatus.PENDING, restored?.gradingStatus)
     }
+
+    @Test
+    fun toDomain_returnsNull_whenIdBlank() {
+        val dto = sampleSubmission().toDto().copy(id = "")
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun toDomain_returnsNull_whenTestIdBlank() {
+        val dto = sampleSubmission().toDto().copy(testId = "")
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun toDomain_returnsNull_whenUserIdBlank() {
+        val dto = sampleSubmission().toDto().copy(userId = "")
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun toDomain_returnsNull_whenSubmittedAtNotPositive() {
+        val dto = sampleSubmission().toDto().copy(submittedAt = 0L)
+        assertNull(dto.toDomain())
+    }
+
+    @Test
+    fun toDomain_dropsResponse_whenQuestionIdBlank() {
+        val dto = sampleSubmission().toDto().copy(
+            responses = listOf(
+                TestResponseDto(questionId = "", timestamp = 100L, type = "MultipleChoice"),
+                TestResponseDto(questionId = "q1", timestamp = 200L, type = "MultipleChoice")
+            )
+        )
+        val restored = dto.toDomain()
+        assertEquals(1, restored?.responses?.size)
+        assertEquals("q1", restored?.responses?.single()?.questionId)
+    }
+
+    @Test
+    fun toDomain_roundTripsEveryGradingStatus() {
+        GradingStatus.entries.forEach { status ->
+            val dto = sampleSubmission().toDto().copy(gradingStatus = status.name)
+            assertEquals(status, dto.toDomain()?.gradingStatus, "expected $status to round-trip")
+        }
+    }
+
+    @Test
+    fun toDomain_roundTripsNullScores() {
+        val dto = sampleSubmission().copy(
+            aiPreliminaryScore = null,
+            instructorScore = null,
+            finalScore = null
+        ).toDto()
+        val restored = dto.toDomain()
+        assertNull(restored?.aiPreliminaryScore)
+        assertNull(restored?.instructorScore)
+        assertNull(restored?.finalScore)
+    }
 }

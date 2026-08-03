@@ -13,7 +13,7 @@ import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import dev.gitlive.firebase.firestore.Direction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
@@ -150,16 +150,25 @@ class GitLivePsychTestSubmissionRepository internal constructor(
 
     private val tatRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
 
+    /**
+     * A regression-filtered snapshot is skipped (via `transform`, not mapped to `null`) — matches
+     * the Android original, which returns from its `addSnapshotListener` callback without a
+     * `trySend` in that case; emitting `null` here would incorrectly flip a shown result to
+     * "Submission not found" for a merely-stale cache replay.
+     */
     fun observeTATSubmission(submissionId: String): Flow<TATSubmission?> =
         submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
+            .transform { snapshot ->
+                if (!snapshot.exists) {
+                    emit(null)
+                    return@transform
+                }
                 val dto = snapshot.data(SubmissionDocDto.serializer(TATDataDto.serializer()))
                 val regressionFilters = tatRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
                 if (regressionFilters.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) {
-                    return@map null
+                    return@transform
                 }
-                dto.data.toDomain()
+                emit(dto.data.toDomain())
             }
             .catch { emit(null) }
 

@@ -1,21 +1,9 @@
 package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.analytics.AnalyticsManager
-import com.ssbmax.core.data.remote.CommonSubmissionRepository
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirebaseInitializer
 import com.ssbmax.core.data.remote.FirestoreUserRepository
-import com.ssbmax.core.data.remote.GTOSubmissionRepository
-import com.ssbmax.core.data.remote.OIRPersonalSubmissionDataSource
-import com.ssbmax.core.data.remote.PIQPersonalSubmissionDataSource
-import com.ssbmax.core.data.remote.PPDTPersonalSubmissionDataSource
-import com.ssbmax.core.data.remote.PersonalTestSubmissionRepository
-import com.ssbmax.core.data.remote.PsychTestSubmissionRepository
-import com.ssbmax.core.data.remote.SDTSubmissionRepository
-import com.ssbmax.core.data.remote.SRTSubmissionRepository
-import com.ssbmax.core.data.remote.SubmissionArchiveRepository
-import com.ssbmax.core.data.remote.TATSubmissionRepository
-import com.ssbmax.core.data.remote.WATSubmissionRepository
 import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -28,23 +16,17 @@ import org.koin.dsl.module
  * constructor scanning, so each needs one explicit binding here instead.
  * All were `@Singleton`-scoped in Hilt (either directly or via the
  * `@Binds`/`@Provides` call site that consumed them).
+ *
+ * The submission-cluster classes (`FirestoreSubmissionRepository` and its
+ * `CommonSubmissionRepository`/`SubmissionArchiveRepository`/`GTOSubmissionRepository`/
+ * `PersonalTestSubmissionRepository`/`PsychTestSubmissionRepository` delegates, and their own
+ * further delegates) were removed in the KMP-convergence plan's Phase 9e — `shared`'s
+ * `GitLiveSubmissionRepository` is now the sole `SubmissionRepository` binding.
  */
 val coreDataInjectablesModule = module {
     singleOf(::AnalyticsManager)
-    singleOf(::CommonSubmissionRepository)
     singleOf(::DifficultyProgressionManager)
     singleOf(::FirebaseAuthService)
     singleOf(::FirebaseInitializer)
     singleOf(::FirestoreUserRepository)
-    singleOf(::GTOSubmissionRepository)
-    singleOf(::OIRPersonalSubmissionDataSource)
-    singleOf(::PIQPersonalSubmissionDataSource)
-    singleOf(::PPDTPersonalSubmissionDataSource)
-    singleOf(::PersonalTestSubmissionRepository)
-    singleOf(::PsychTestSubmissionRepository)
-    singleOf(::SDTSubmissionRepository)
-    singleOf(::SRTSubmissionRepository)
-    singleOf(::SubmissionArchiveRepository)
-    singleOf(::TATSubmissionRepository)
-    singleOf(::WATSubmissionRepository)
 }

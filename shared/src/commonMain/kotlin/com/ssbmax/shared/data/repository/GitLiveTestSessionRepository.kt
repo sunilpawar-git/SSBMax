@@ -6,6 +6,8 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * GitLive-Firebase-backed port of the Android `core:data`
@@ -17,7 +19,17 @@ import kotlinx.serialization.Serializable
  * calls `createTestSession`/`endTestSession` once per session, never
  * `hasActiveTestSession` in a hot loop — so the Firestore round trip isn't
  * a regression in practice).
+ *
+ * `createTestSession` preserves the Android original's other real behavior: session IDs are
+ * opaque/collision-free (`Uuid.random()`, the KMP-safe equivalent of the original's
+ * `UUID.randomUUID()` — NOT a `"$userId-$testId-$timestamp"` composite key, which could collide
+ * and silently overwrite an in-flight session on a double-tap/retry), and a Firestore write
+ * failure does not fail the whole call — it still returns `Result.success` so a candidate on a
+ * flaky connection isn't blocked from starting OIR/TAT/PPDT/SDT/SRT/WAT (every caller either
+ * `.getOrThrow()`s or shows a blocking "cloud connection required" error on failure). This mirrors
+ * the Android original's own try/catch-and-log-warning fallback around its Firestore `.set()` call.
  */
+@OptIn(ExperimentalUuidApi::class)
 class GitLiveTestSessionRepository : TestSessionRepository {
 
     private val sessionsCollection = Firebase.firestore.collection(COLLECTION)
@@ -33,9 +45,9 @@ class GitLiveTestSessionRepository : TestSessionRepository {
         Result.failure(e)
     }
 
-    override suspend fun createTestSession(userId: String, testId: String, testType: TestType): Result<String> = try {
+    override suspend fun createTestSession(userId: String, testId: String, testType: TestType): Result<String> {
         val now = Clock.System.now().toEpochMilliseconds()
-        val sessionId = "${userId}_${testId}_$now"
+        val sessionId = Uuid.random().toString()
         val dto = TestSessionDto(
             id = sessionId,
             userId = userId,
@@ -45,10 +57,17 @@ class GitLiveTestSessionRepository : TestSessionRepository {
             expiryTime = now + TWO_HOURS_MS,
             isActive = true
         )
-        sessionsCollection.document(sessionId).set(dto)
-        Result.success(sessionId)
-    } catch (e: Exception) {
-        Result.failure(e)
+        return try {
+            sessionsCollection.document(sessionId).set(dto)
+            Result.success(sessionId)
+        } catch (e: Exception) {
+            // Best-effort fallback, matching the Android original: a transient Firestore failure
+            // must not block a candidate from starting their test. The session then only exists
+            // client-side for this process's lifetime (same durability the original's dropped
+            // in-memory map had) — endTestSession for it will fail (no doc to update), same as
+            // the Android original's identical gap for a session that took this same fallback path.
+            Result.success(sessionId)
+        }
     }
 
     override suspend fun endTestSession(sessionId: String): Result<Unit> = try {

@@ -24,6 +24,16 @@ internal object SubmissionConstants {
  *
  * `userId` is populated only when writing to `psych_results`/`ppdt_results` (required by Firestore
  * security rules there, same as the Android original) — it's not part of the domain [OLQAnalysisResult].
+ *
+ * **`overallScore`'s default is `5f`, deliberately not `0f`, matching the Android original for
+ * TAT/WAT/SRT/SDT specifically:** the Android original is internally inconsistent between test
+ * types — `PsychTestMapper.parseOLQResult` (TAT/WAT/SRT/SDT's actual code path) delegates to
+ * `OLQResultMapper.parseSharedOLQResult`, which defaults to `5f`, while `SubmissionMappers.parseOLQResult`
+ * (PPDT's separate code path, via `PPDTSubmissionMappers`) defaults to `0f`. A single shared DTO
+ * can't reproduce both; `5f` was chosen because it's what 4 of the 5 OLQ-scored test types actually
+ * used. Named here rather than silently resolved either way — a missing/malformed `overallScore`
+ * field is an edge case with no real production reports either direction, not a claim that `5f` is
+ * objectively more correct than `0f`.
  */
 @Serializable
 internal data class OLQAnalysisResultDto(

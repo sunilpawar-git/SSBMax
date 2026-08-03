@@ -226,7 +226,13 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
                 // deletion this plan's whole purpose is to make. Expected to keep
                 // ratcheting down through 9e/9f (see this repo's CI gold-standard
                 // pipeline design).
-                minimum = BigDecimal("0.02")
+                // Phase 9e: ratcheted 0.02 -> 0.01. Deleting the entire submission-cluster
+                // (FirestoreSubmissionRepository + its 12 delegates, TestSubmissionRepositoryImpl,
+                // TestSessionManagerImpl -- the last core:data repository bindings) removed the
+                // module's remaining branch-tested surface faster than its untested surface, same
+                // "moved to shared/commonTest, not lost" reasoning as 9d. 9f (module retirement)
+                // deletes core:data outright, so this floor's remaining life is short.
+                minimum = BigDecimal("0.01")
             }
         }
     }

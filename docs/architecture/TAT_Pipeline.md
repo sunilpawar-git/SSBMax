@@ -708,7 +708,7 @@ The result screen polls by observing the Flow — no manual refresh required. Wh
 | `TATAnalysisWorkPlannerTest.kt` | `app` | Batch sizing, story coverage, synthesis dependency, index/questionId preservation |
 | `RetryBackoffPolicyTest.kt` | `app` | Bounded delays, jitter range, exponential growth, cap, input validation |
 | `TATSubmissionResultScreenTest.kt` | `app` (androidTest) | Partial-assessment notice shown/hidden, string-resource-only text |
-| `TATSubmissionRepositoryTest.kt` | `core:data` | `finalizeTATAnalysisResult` atomicity (success/partial-failure paths) |
+| ~~`TATSubmissionRepositoryTest.kt`~~ | `core:data` | Deleted in KMP-convergence Phase 9e along with the class it tested — the `finalizeTATAnalysisResult` atomicity contract has no `shared/commonTest` equivalent yet (named gap, not silently dropped: GitLive's `Firebase.firestore` has no fake/mock seam in this codebase, same constraint every prior 9-series sub-phase hit) |
 | `TATImageCacheManagerTest.kt` | `core:data` | Cache sync, TTL gate, position-based selection |
 | `TATImageCacheDaoTest.kt` | `core:data` | `getLeastUsedImageByPosition()` SQL |
 
@@ -918,12 +918,11 @@ core/domain/src/main/kotlin/com/ssbmax/core/domain/
 
 core/data/src/main/kotlin/com/ssbmax/core/data/
 ├── repository/TATImageCacheManager.kt
-├── remote/
-│   ├── TATSubmissionRepository.kt        ← finalizeTATAnalysisResult() atomic contract
-│   ├── SubmissionMappers.kt              ← OLQMapper.toFirestoreMap() (write path)
-│   └── mapper/
-│       ├── PsychTestMapper.kt
-│       └── OLQResultMapper.kt            ← parseSharedOLQResult() (read path, shared by all OLQ tests)
+├── remote/  ← KMP-convergence Phase 9e deleted TATSubmissionRepository.kt/SubmissionMappers.kt/
+│             mapper/{PsychTestMapper,OLQResultMapper}.kt; the finalizeTATAnalysisResult() atomic
+│             contract and OLQ parse/write logic now live in
+│             shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/
+│             GitLivePsychTestSubmissionRepository.kt (TAT) + GitLiveWAT/SRT/SDTSubmissionDelegate.kt
 ├── local/
 │   ├── entity/
 │   │   ├── CachedTATImageEntity.kt

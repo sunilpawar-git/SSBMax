@@ -68,15 +68,12 @@ import org.koin.dsl.module
  * sessions) purely to bring the DI graph back under the repo's 300-line
  * Quality Limit — zero behavior change.
  *
- * `SubmissionRepository`/`TestSessionRepository`/`TestSubmissionRepository`
- * (as of Phase 9d) are also bound by `core:data`'s own `repositoryModule`
- * (Android-only, loaded after this one in `app`'s `appModules` list) — the
- * same shadow-binding pattern documented since Phase 3/5: on Android the
- * `core:data` impl wins (unchanged legacy behavior); on iOS, `core:data`
- * doesn't exist, so these GitLive impls are the only binding. Phase 9e is the
- * last sub-phase that closes this — see git history (Phase 5 sessions,
- * pre-split; Phase 9a-9d for each repository's individual closure) for the
- * full per-repository rationale.
+ * As of Phase 9e (KMP-convergence plan), every repository this module binds is single-sourced —
+ * `core:data`'s own `repositoryModule` is now empty (its last 3 shadow bindings,
+ * `SubmissionRepository`/`TestSessionRepository`/`TestSubmissionRepository`, closed this phase).
+ * These `GitLive*` implementations are the sole binding on both Android and iOS. See git history
+ * (Phase 5 sessions, pre-split; Phase 9a-9e for each repository's individual closure) for the full
+ * per-repository rationale.
  */
 val repositoryModule = module {
     // GitLiveAuthRepository's userRepository constructor param has a Kotlin default

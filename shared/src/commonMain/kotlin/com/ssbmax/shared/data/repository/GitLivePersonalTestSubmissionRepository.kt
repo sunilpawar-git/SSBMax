@@ -12,7 +12,7 @@ import dev.gitlive.firebase.firestore.Source
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 
 /**
  * GitLive-Firebase-backed port of the Android `PersonalTestSubmissionRepository` facade + its
@@ -119,14 +119,21 @@ class GitLivePersonalTestSubmissionRepository {
         Result.failure(Exception("Error fetching PPDT result: ${e.message}", e))
     }
 
+    /**
+     * A regression-filtered snapshot is skipped (`transform`), not mapped to `null` — see
+     * [GitLivePsychTestSubmissionRepository.observeTATSubmission]'s doc for why.
+     */
     fun observePPDTSubmission(submissionId: String): Flow<PPDTSubmission?> =
         submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
+            .transform { snapshot ->
+                if (!snapshot.exists) {
+                    emit(null)
+                    return@transform
+                }
                 val dto = snapshot.data(SubmissionDocDto.serializer(PPDTDataDto.serializer()))
                 val filter = ppdtRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@map null
-                dto.data.toDomain()
+                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@transform
+                emit(dto.data.toDomain())
             }
             .catch { emit(null) }
 

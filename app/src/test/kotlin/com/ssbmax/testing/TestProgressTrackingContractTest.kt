@@ -8,15 +8,15 @@ import org.junit.Ignore
 
 /**
  * Contract tests to verify all test types create submission records for progress tracking.
- * 
+ *
  * These tests ensure that when any test is completed, a submission record is created
  * in the 'submissions' collection with the correct testType, so it appears in "Your Progress".
- * 
+ *
  * BACKGROUND:
  * A bug was discovered where interview completions weren't showing up because:
  * - Interview results were saved to 'interview_results' collection
  * - Progress tracking queries 'submissions' collection
- * 
+ *
  * This test ensures ALL test types follow the correct pattern.
  *
  * NOTE: Disabled in CI due to file system access. Run manually locally.
@@ -24,39 +24,45 @@ import org.junit.Ignore
 @Ignore("Disabled in CI - file system access. Run manually locally.")
 class TestProgressTrackingContractTest {
 
-
-    private val personalRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PersonalTestSubmissionRepository.kt"
-    private val psychRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PsychTestSubmissionRepository.kt"
-    private val commonRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/CommonSubmissionRepository.kt"
+    // KMP-convergence Phase 9e: PersonalTestSubmissionRepository/PsychTestSubmissionRepository/
+    // CommonSubmissionRepository (core:data) deleted, GitLive* equivalents (shared) are the sole
+    // implementations now — repointed rather than left referencing files that no longer exist.
+    private val repoDir = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository"
+    private val personalRepoPath = "$repoDir/GitLivePersonalTestSubmissionRepository.kt"
+    private val psychRepoPath = "$repoDir/GitLivePsychTestSubmissionRepository.kt"
+    private val commonRepoPath = "$repoDir/GitLiveCommonSubmissionRepository.kt"
+    private val tatRepoPath = "$repoDir/GitLivePsychTestSubmissionRepository.kt"
+    private val watRepoPath = "$repoDir/GitLiveWATSubmissionDelegate.kt"
+    private val srtRepoPath = "$repoDir/GitLiveSRTSubmissionDelegate.kt"
+    private val sdtRepoPath = "$repoDir/GitLiveSDTSubmissionDelegate.kt"
     // KMP-convergence Phase 9a: TestProgressRepositoryImpl (core:data) deleted,
     // GitLiveTestProgressRepository (shared) is the sole implementation now —
     // repointed rather than left referencing a file that no longer exists.
-    private val progressRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveTestProgressRepository.kt"
+    private val progressRepoPath = "$repoDir/GitLiveTestProgressRepository.kt"
 
     @Test
     fun `Phase1 tests must create submissions with correct testType`() {
         // Given - Phase 1 tests: OIR, PPDT
         val repoFile = findProjectFile(personalRepoPath)
-        assertTrue("PersonalTestSubmissionRepository.kt should exist", repoFile.exists())
-        
+        assertTrue("GitLivePersonalTestSubmissionRepository.kt should exist", repoFile.exists())
+
         val content = repoFile.readText()
-        
+
         // Then - Must have submission methods for Phase 1 tests
         val phase1Tests = listOf(
             "submitOIR" to "OIR",
             "submitPPDT" to "PPDT"
         )
-        
+
         phase1Tests.forEach { (methodName, testType) ->
             assertTrue(
                 "Missing $methodName() - Phase 1 test $testType must create submission record",
                 content.contains("fun $methodName")
             )
-            
+
             assertTrue(
                 "$methodName must set testType to '$testType'",
-                content.contains("FIELD_TEST_TYPE to TestType.$testType.name") ||
-                content.contains("testType.*$testType")
+                content.contains("testType = TestType.$testType.name")
             )
         }
     }
@@ -64,57 +70,56 @@ class TestProgressTrackingContractTest {
     @Test
     fun `Phase2 psychology tests must create submissions with correct testType`() {
         // Given - Phase 2 psychology tests: TAT, WAT, SRT, SD
-        // NOTE: After Phase 2 refactoring, PsychTestSubmissionRepository is a facade
-        // that delegates to individual repositories. We check both the facade and the delegates.
+        // NOTE: TAT stays on the GitLivePsychTestSubmissionRepository facade; WAT/SRT/SDT are
+        // delegated to their own GitLive*SubmissionDelegate classes (structural split to stay
+        // under the 300-line-per-file limit — see GitLivePsychTestSubmissionRepository's class doc).
         val psychRepoFile = findProjectFile(psychRepoPath)
         val psychContent = psychRepoFile.readText()
 
-        val psychologyTests = listOf(
-            "submitTAT" to "TAT",
-            "submitWAT" to "WAT",
-            "submitSRT" to "SRT",
-            "submitSDT" to "SD"
+        // TAT stays directly on the facade
+        assertTrue(
+            "Missing submitTAT() - Psychology test must create submission record",
+            psychContent.contains("fun submitTAT")
         )
-
-        // Check facade has the methods (delegates to individual repos)
-        psychologyTests.forEach { (methodName, _) ->
+        // WAT/SRT/SDT are delegated (still reachable through the facade's public API)
+        listOf("submitWAT", "submitSRT", "submitSDT").forEach { methodName ->
             assertTrue(
-                "Missing $methodName() - Psychology test must create submission record",
+                "Missing $methodName() delegation - Psychology test must create submission record",
                 psychContent.contains("fun $methodName")
             )
         }
 
         // Check individual repositories have the implementations with correct testType
-        val tatRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt")
-        assertTrue("TATSubmissionRepository.kt should exist", tatRepoFile.exists())
+        val tatRepoFile = findProjectFile(tatRepoPath)
+        assertTrue("GitLivePsychTestSubmissionRepository.kt should exist", tatRepoFile.exists())
         val tatContent = tatRepoFile.readText()
         assertTrue(
             "submitTAT must set testType to 'TAT'",
-            tatContent.contains("FIELD_TEST_TYPE to TestType.TAT.name")
+            tatContent.contains("testType = TestType.TAT.name")
         )
 
-        val watRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/WATSubmissionRepository.kt")
-        assertTrue("WATSubmissionRepository.kt should exist", watRepoFile.exists())
+        val watRepoFile = findProjectFile(watRepoPath)
+        assertTrue("GitLiveWATSubmissionDelegate.kt should exist", watRepoFile.exists())
         val watContent = watRepoFile.readText()
         assertTrue(
             "submitWAT must set testType to 'WAT'",
-            watContent.contains("FIELD_TEST_TYPE to TestType.WAT.name")
+            watContent.contains("testType = TestType.WAT.name")
         )
 
-        val srtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SRTSubmissionRepository.kt")
-        assertTrue("SRTSubmissionRepository.kt should exist", srtRepoFile.exists())
+        val srtRepoFile = findProjectFile(srtRepoPath)
+        assertTrue("GitLiveSRTSubmissionDelegate.kt should exist", srtRepoFile.exists())
         val srtContent = srtRepoFile.readText()
         assertTrue(
             "submitSRT must set testType to 'SRT'",
-            srtContent.contains("FIELD_TEST_TYPE to TestType.SRT.name")
+            srtContent.contains("testType = TestType.SRT.name")
         )
 
-        val sdtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SDTSubmissionRepository.kt")
-        assertTrue("SDTSubmissionRepository.kt should exist", sdtRepoFile.exists())
+        val sdtRepoFile = findProjectFile(sdtRepoPath)
+        assertTrue("GitLiveSDTSubmissionDelegate.kt should exist", sdtRepoFile.exists())
         val sdtContent = sdtRepoFile.readText()
         assertTrue(
             "submitSDT must set testType to 'SD'",
-            sdtContent.contains("FIELD_TEST_TYPE to TestType.SD.name")
+            sdtContent.contains("testType = TestType.SD.name")
         )
     }
 
@@ -123,15 +128,15 @@ class TestProgressTrackingContractTest {
         // Given
         val progressRepoFile = findProjectFile(progressRepoPath)
         assertTrue("GitLiveTestProgressRepository.kt should exist", progressRepoFile.exists())
-        
+
         val content = progressRepoFile.readText()
-        
+
         // Then - Phase1 query must include OIR and PPDT
         assertTrue(
             "getPhase1Progress must query for 'OIR' testType",
             content.contains("\"OIR\"")
         )
-        
+
         assertTrue(
             "getPhase1Progress must query for 'PPDT' testType",
             content.contains("\"PPDT\"")
@@ -143,10 +148,10 @@ class TestProgressTrackingContractTest {
         // Given
         val progressRepoFile = findProjectFile(progressRepoPath)
         val content = progressRepoFile.readText()
-        
+
         // Then - Phase2 query must include all psychology tests, GTO, and IO
         val phase2TestTypes = listOf("TAT", "WAT", "SRT", "SD", "GTO", "IO")
-        
+
         phase2TestTypes.forEach { testType ->
             assertTrue(
                 "getPhase2Progress must query for '$testType' testType",
@@ -166,45 +171,46 @@ class TestProgressTrackingContractTest {
 
         // Then - All submission repositories must use submissionsCollection
         assertTrue(
-            "CommonSubmissionRepository must use 'submissions' collection",
+            "GitLiveCommonSubmissionRepository must use 'submissions' collection",
             commonContent.contains("submissionsCollection") ||
-            commonContent.contains("collection(\"submissions\")")
+            commonContent.contains("collection(\"submissions\")") ||
+            commonContent.contains("collection(SUBMISSIONS_COLLECTION)")
         )
         assertTrue(
-            "PersonalTestSubmissionRepository must use 'submissions' collection",
+            "GitLivePersonalTestSubmissionRepository must use 'submissions' collection",
             personalContent.contains("submissionsCollection") ||
-            personalContent.contains("collection(\"submissions\")")
+            personalContent.contains("collection(\"submissions\")") ||
+            personalContent.contains("collection(SUBMISSIONS_COLLECTION)")
         )
 
-        // After Phase 2 refactoring, check individual psychology test repositories
-        val tatRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/TATSubmissionRepository.kt")
+        val tatRepoFile = findProjectFile(tatRepoPath)
         val tatContent = tatRepoFile.readText()
         assertTrue(
-            "TATSubmissionRepository must use 'submissions' collection",
+            "GitLivePsychTestSubmissionRepository must use 'submissions' collection",
             tatContent.contains("submissionsCollection") ||
             tatContent.contains("collection(\"submissions\")")
         )
 
-        val watRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/WATSubmissionRepository.kt")
+        val watRepoFile = findProjectFile(watRepoPath)
         val watContent = watRepoFile.readText()
         assertTrue(
-            "WATSubmissionRepository must use 'submissions' collection",
+            "GitLiveWATSubmissionDelegate must use 'submissions' collection",
             watContent.contains("submissionsCollection") ||
             watContent.contains("collection(\"submissions\")")
         )
 
-        val srtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SRTSubmissionRepository.kt")
+        val srtRepoFile = findProjectFile(srtRepoPath)
         val srtContent = srtRepoFile.readText()
         assertTrue(
-            "SRTSubmissionRepository must use 'submissions' collection",
+            "GitLiveSRTSubmissionDelegate must use 'submissions' collection",
             srtContent.contains("submissionsCollection") ||
             srtContent.contains("collection(\"submissions\")")
         )
 
-        val sdtRepoFile = findProjectFile("core/data/src/main/kotlin/com/ssbmax/core/data/remote/SDTSubmissionRepository.kt")
+        val sdtRepoFile = findProjectFile(sdtRepoPath)
         val sdtContent = sdtRepoFile.readText()
         assertTrue(
-            "SDTSubmissionRepository must use 'submissions' collection",
+            "GitLiveSDTSubmissionDelegate must use 'submissions' collection",
             sdtContent.contains("submissionsCollection") ||
             sdtContent.contains("collection(\"submissions\")")
         )
@@ -218,16 +224,16 @@ class TestProgressTrackingContractTest {
         val interviewRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
         val interviewRepoFile = findProjectFile(interviewRepoPath)
         assertTrue("GitLiveInterviewRepository.kt should exist", interviewRepoFile.exists())
-        
+
         val content = interviewRepoFile.readText()
-        
+
         // Then - completeInterview must create submission record
         assertTrue(
             "completeInterview() must create submission record in 'submissions' collection",
             content.contains("COLLECTION_SUBMISSIONS") ||
             content.contains("collection(\"submissions\")")
         )
-        
+
         assertTrue(
             "Interview submission must have testType='IO'",
             content.contains("\"IO\"") && content.contains("testType")
@@ -241,7 +247,7 @@ class TestProgressTrackingContractTest {
         // Try from project root (most common)
         var file = File(relativePath)
         if (file.exists()) return file
-        
+
         // Try going up from app module
         var dir = File(".").absoluteFile
         repeat(5) {
@@ -249,8 +255,7 @@ class TestProgressTrackingContractTest {
             if (candidate.exists()) return candidate
             dir = dir.parentFile ?: return File(relativePath)
         }
-        
+
         return File(relativePath)
     }
 }
-

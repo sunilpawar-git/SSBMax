@@ -10,7 +10,7 @@ import com.ssbmax.shared.domain.model.scoring.OLQAnalysisResult
 import dev.gitlive.firebase.firestore.Direction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.serialization.Serializable
 
 /**
@@ -93,14 +93,21 @@ internal class GitLiveSDTSubmissionDelegate(private val store: GitLiveOlqResultS
 
     private val sdtRegressionFilters = mutableMapOf<String, OLQRegressionFilter>()
 
+    /**
+     * A regression-filtered snapshot is skipped (`transform`), not mapped to `null` — see
+     * [GitLivePsychTestSubmissionRepository.observeTATSubmission]'s doc for why.
+     */
     fun observeSDTSubmission(submissionId: String): Flow<SDTSubmission?> =
         submissionsCollection.document(submissionId).snapshots
-            .map { snapshot ->
-                if (!snapshot.exists) return@map null
+            .transform { snapshot ->
+                if (!snapshot.exists) {
+                    emit(null)
+                    return@transform
+                }
                 val dto = snapshot.data(SubmissionDocDto.serializer(SDTDataDto.serializer()))
                 val filter = sdtRegressionFilters.getOrPut(submissionId) { OLQRegressionFilter() }
-                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@map null
-                dto.data.toDomain()
+                if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@transform
+                emit(dto.data.toDomain())
             }
             .catch { emit(null) }
 }
