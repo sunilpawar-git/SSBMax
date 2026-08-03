@@ -1,6 +1,5 @@
 package com.ssbmax.di
 
-import com.ssbmax.core.data.di.contentRepositoryModule
 import com.ssbmax.core.data.di.coreDataInjectablesModule
 import com.ssbmax.core.data.di.coroutineScopeModule
 import com.ssbmax.core.data.di.databaseModule
@@ -51,7 +50,6 @@ val appModules = listOf(
     // :core:data
     databaseModule,
     repositoryModule,
-    contentRepositoryModule,
     firebaseModule,
     coroutineScopeModule,
     coreDataInjectablesModule,

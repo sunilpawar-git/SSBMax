@@ -6,7 +6,6 @@ import com.ssbmax.shared.domain.repository.StudyProgressRepository
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -17,6 +16,14 @@ import kotlinx.serialization.Serializable
  * (`${userId}_$materialId` for progress); uses DocumentReference.snapshots
  * (a Flow) in place of the Android SDK's addSnapshotListener/callbackFlow,
  * same as the other GitLive*Repository ports.
+ *
+ * [observeProgress] deliberately does NOT catch-and-emit-null on listener
+ * errors (an earlier version did) -- the Android original's
+ * `addSnapshotListener` closes the flow with the error (`close(error)`),
+ * and every ViewModel caller (`TopicViewModel`) already has its own
+ * `.catch { }` expecting to see it and show a real error state. Swallowing
+ * it here made that ViewModel code unreachable and showed "no progress"
+ * for what was actually a permission/network failure.
  */
 class GitLiveStudyProgressRepository : StudyProgressRepository {
 
@@ -30,7 +37,6 @@ class GitLiveStudyProgressRepository : StudyProgressRepository {
             .map { snapshot ->
                 if (snapshot.exists) snapshot.data(StudyProgressDto.serializer()).toDomain() else null
             }
-            .catch { emit(null) }
 
     override suspend fun saveProgress(progress: StudyProgress): Result<Unit> = try {
         progressCollection
@@ -82,7 +88,16 @@ class GitLiveStudyProgressRepository : StudyProgressRepository {
     override suspend fun endSession(sessionId: String, progressIncrement: Float): Result<Unit> = try {
         val now = Clock.System.now().toEpochMilliseconds()
         val sessionDoc = sessionsCollection.document(sessionId)
-        val startedAt = sessionDoc.get().data(StudySessionDto.serializer()).startedAt
+        // Matches the Android original's forgiving fallback: a missing/already-deleted
+        // session doc defaults startedAt to `now` (duration = 0) rather than failing --
+        // this is a best-effort close of a session that may have raced with deletion,
+        // not a caller error worth surfacing.
+        val snapshot = sessionDoc.get()
+        val startedAt = if (snapshot.exists) {
+            snapshot.data(StudySessionDto.serializer()).startedAt
+        } else {
+            now
+        }
         val duration = now - startedAt
 
         sessionDoc.update(

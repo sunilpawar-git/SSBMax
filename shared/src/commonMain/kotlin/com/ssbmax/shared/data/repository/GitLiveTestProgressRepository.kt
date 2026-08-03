@@ -10,7 +10,6 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
@@ -20,6 +19,14 @@ import kotlinx.serialization.Serializable
  * per test type, psychology tests TAT/WAT/SRT/SD grouped into one representative
  * progress entry); uses Query.snapshots (a Flow) in place of the Android SDK's
  * addSnapshotListener/callbackFlow, same as the other GitLive*Repository ports.
+ *
+ * [getPhase1Progress]/[getPhase2Progress] deliberately do NOT catch-and-emit a
+ * default on listener errors (an earlier version did) -- the Android original's
+ * `addSnapshotListener` closes the flow with the error (`close(error)`), and
+ * both `Phase1DetailViewModel`/`Phase2DetailViewModel` already have their own
+ * `.catch { }` expecting to see it and show a real error state. Swallowing it
+ * here made that ViewModel code unreachable and showed "not attempted" for
+ * what was actually a permission/network failure.
  */
 class GitLiveTestProgressRepository : TestProgressRepository {
 
@@ -44,7 +51,6 @@ class GitLiveTestProgressRepository : TestProgressRepository {
                     ppdtProgress = createTestProgress(TestType.PPDT, ppdtSubmission)
                 )
             }
-            .catch { emit(Phase1Progress(TestProgress(TestType.OIR), TestProgress(TestType.PPDT))) }
 
     override fun getPhase2Progress(userId: String): Flow<Phase2Progress> =
         submissionsCollection
@@ -72,15 +78,6 @@ class GitLiveTestProgressRepository : TestProgressRepository {
                     ),
                     gtoProgress = createTestProgress(TestType.GTO_GD, gtoSubmission),
                     interviewProgress = createTestProgress(TestType.IO, interviewSubmission)
-                )
-            }
-            .catch {
-                emit(
-                    Phase2Progress(
-                        TestProgress(TestType.TAT),
-                        TestProgress(TestType.GTO_GD),
-                        TestProgress(TestType.IO)
-                    )
                 )
             }
 

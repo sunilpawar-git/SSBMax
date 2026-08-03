@@ -187,13 +187,15 @@ SubmitOIRTestUseCase:
 markQuestionsUsed()      → Room (7-day suppression)
 ```
 
+> **KMP-convergence Phase 9a (stale below, not rewritten):** `core/data`'s Room-backed `OIRQuestionCacheManager`/`OIRQuestionSelector`/`OIRSyncMetadataEntity`/`OIRQuestionCacheDao` — and `TestContentRepositoryImpl`, the repository that wired them — are deleted; `shared`'s SQLDelight-backed `GitLiveOIRQuestionCacheManager` (`shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/`) is the sole implementation on both platforms now, ported to the same sync lifecycle/content-version-reconciliation/7-day-reuse design this section describes. File paths below are historical; the algorithm they document is intended to still apply 1:1 to the SQLDelight port — not independently re-verified line-by-line here.
+
 ### Key Files
 | File | Responsibility |
 |---|---|
-| `core/data/.../OIRQuestionCacheManager.kt` | Sync lifecycle + content-version reconciliation (meta doc → clear/redownload/top-up) |
-| `core/data/.../OIRQuestionSelector.kt` | Type-distribution selection + selection-time validity filter + 7-day reuse logic |
+| `core/data/.../OIRQuestionCacheManager.kt` (deleted, see note above) | Sync lifecycle + content-version reconciliation (meta doc → clear/redownload/top-up) |
+| `core/data/.../OIRQuestionSelector.kt` (deleted, see note above) | Type-distribution selection + selection-time validity filter + 7-day reuse logic |
 | `core/domain/.../model/OIRQuestionDistribution.kt` | Distribution SSOT (V40/NV40/N20, largest-remainder `counts()`) |
-| `core/data/.../local/entity/OIRSyncMetadataEntity.kt` | Single-row local content-version mirror (DB v20) |
+| `core/data/.../local/entity/OIRSyncMetadataEntity.kt` (deleted, see note above) | Single-row local content-version mirror (DB v20) |
 | `core/domain/.../validation/OIRQuestionValidator.kt` | Validity SSOT — enforced at ingestion (gate), selection (selector), and runtime (assertion) |
 | `scripts/oir-extraction/upload-oir-batch.js` (`validateBatch`) | Write-time enforcement of the validator's rules |
 | `core/data/.../SubscriptionManager.kt` | Monthly limits — single source of truth |

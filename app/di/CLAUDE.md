@@ -13,12 +13,14 @@
 ```kotlin
 val appModules = listOf(
     sharedModule,                 // :shared's full Koin graph (screens, ViewModels, use cases)
-    databaseModule, repositoryModule, contentRepositoryModule,
+    databaseModule, repositoryModule,
     firebaseModule, coroutineScopeModule,
     coreDataInjectablesModule,    // :core:data
     testUseCaseModule, debugModule, workManagerModule, appInjectablesModule  // :app
 )
 ```
+
+**KMP-convergence Phase 9a:** `contentRepositoryModule` deleted — it bound only `StudyContentRepositoryImpl`, which along with 9 sibling repositories (`TestContentRepository`, `QuestionCacheRepository`, `TestRepository`, `TestProgressRepository`, `StudyProgressRepository`, `UnifiedResultRepository`, `AnalyticsRepository`, `NotificationRepository`, `GradingQueueRepository`) is now single-bound in `shared`'s own `RepositoryModule.kt` (`GitLive*` implementations). `repositoryModule`/`coreDataInjectablesModule` still bind the repositories/helpers not yet converged (Phase 9c/9d/9e).
 
 **Before adding a module here**, check whether it belongs in `shared` instead — if the class it binds is reachable from a Compose screen, it almost certainly does. `app`'s modules should only ever bind things `app/workers`/`app/notifications`/`MainActivity`/`SSBMaxApplication` need directly.
 

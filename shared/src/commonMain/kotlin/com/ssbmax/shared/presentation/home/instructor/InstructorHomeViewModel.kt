@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -53,16 +54,23 @@ class InstructorHomeViewModel(
             }
             // Observe grading statistics
             launch {
-                gradingQueueRepository.observeGradingStats(instructorId).collect { stats ->
-                    _uiState.update {
-                        it.copy(
-                            pendingGradingCount = stats.totalPending,
-                            testsGradedToday = stats.todayGraded,
-                            avgResponseTime = stats.averageGradingTimeMinutes / 60, // Convert to hours
-                            isLoading = false
-                        )
+                gradingQueueRepository.observeGradingStats(instructorId)
+                    .catch { error ->
+                        _uiState.update {
+                            it.copy(isLoading = false, error = "Failed to load grading stats: ${error.message}")
+                        }
                     }
-                }
+                    .collect { stats ->
+                        _uiState.update {
+                            it.copy(
+                                pendingGradingCount = stats.totalPending,
+                                testsGradedToday = stats.todayGraded,
+                                avgResponseTime = stats.averageGradingTimeMinutes / 60, // Convert to hours
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
             }
             // TODO: Load batches and students from BatchRepository
             // For now, keep mock data for batches and students until BatchRepository is implemented

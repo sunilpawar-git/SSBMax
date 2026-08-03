@@ -50,14 +50,7 @@ val databaseModule = module {
             .build()
     }
 
-    single { get<SSBDatabase>().testResultDao() }
-    single { get<SSBDatabase>().notificationDao() }
-    single { get<SSBDatabase>().oirQuestionCacheDao() }
     single { get<SSBDatabase>().testUsageDao() }
-    single { get<SSBDatabase>().watWordCacheDao() }
-    single { get<SSBDatabase>().srtSituationCacheDao() }
-    single { get<SSBDatabase>().tatImageCacheDao() }
-    single { get<SSBDatabase>().ppdtImageCacheDao() }
     single { get<SSBDatabase>().gpeImageCacheDao() }
     single { get<SSBDatabase>().gtoTaskCacheDao() }
     single { get<SSBDatabase>().interviewQuestionCacheDao() }

@@ -6,38 +6,18 @@ import androidx.room.TypeConverters
 import com.ssbmax.core.data.local.dao.GPEImageCacheDao
 import com.ssbmax.core.data.local.dao.GTOTaskCacheDao
 import com.ssbmax.core.data.local.dao.InterviewQuestionCacheDao
-import com.ssbmax.core.data.local.dao.NotificationDao
-import com.ssbmax.core.data.local.dao.OIRQuestionCacheDao
-import com.ssbmax.core.data.local.dao.PPDTImageCacheDao
-import com.ssbmax.core.data.local.dao.SRTSituationCacheDao
-import com.ssbmax.core.data.local.dao.TATImageCacheDao
 import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
-import com.ssbmax.core.data.local.dao.TestResultDao
 import com.ssbmax.core.data.local.dao.TestUsageDao
 import com.ssbmax.core.data.local.dao.UserPerformanceDao
-import com.ssbmax.core.data.local.dao.WATWordCacheDao
 import com.ssbmax.core.data.local.entity.CachedGPEImageEntity
 import com.ssbmax.core.data.local.entity.CachedGTOTaskEntity
 import com.ssbmax.core.data.local.entity.CachedInterviewQuestionEntity
-import com.ssbmax.core.data.local.entity.CachedOIRQuestionEntity
-import com.ssbmax.core.data.local.entity.CachedPPDTImageEntity
-import com.ssbmax.core.data.local.entity.CachedSRTSituationEntity
-import com.ssbmax.core.data.local.entity.CachedTATImageEntity
-import com.ssbmax.core.data.local.entity.CachedWATWordEntity
 import com.ssbmax.core.data.local.entity.GPEBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.GTOBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.InterviewBatchMetadataEntity
-import com.ssbmax.core.data.local.entity.NotificationEntity
-import com.ssbmax.core.data.local.entity.OIRBatchMetadataEntity
-import com.ssbmax.core.data.local.entity.OIRSyncMetadataEntity
-import com.ssbmax.core.data.local.entity.PPDTBatchMetadataEntity
-import com.ssbmax.core.data.local.entity.SRTBatchMetadataEntity
-import com.ssbmax.core.data.local.entity.TATBatchMetadataEntity
 import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
-import com.ssbmax.core.data.local.entity.TestResultEntity
 import com.ssbmax.core.data.local.entity.TestUsageEntity
 import com.ssbmax.core.data.local.entity.UserPerformanceEntity
-import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
 
 /**
  * SSBMax Room Database
@@ -45,20 +25,7 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
  */
 @Database(
     entities = [
-        TestResultEntity::class,
-        NotificationEntity::class,
-        CachedOIRQuestionEntity::class,
-        OIRBatchMetadataEntity::class,
-        OIRSyncMetadataEntity::class,
         TestUsageEntity::class,
-        CachedWATWordEntity::class,
-        WATBatchMetadataEntity::class,
-        CachedSRTSituationEntity::class,
-        SRTBatchMetadataEntity::class,
-        CachedTATImageEntity::class,
-        TATBatchMetadataEntity::class,
-        CachedPPDTImageEntity::class,
-        PPDTBatchMetadataEntity::class,
         CachedGPEImageEntity::class,
         GPEBatchMetadataEntity::class,
         CachedGTOTaskEntity::class,
@@ -68,51 +35,27 @@ import com.ssbmax.core.data.local.entity.WATBatchMetadataEntity
         UserPerformanceEntity::class,
         TATStoryAssessmentEntity::class
     ],
-    version = 26, // Adds totalQuestionsAttempted to user_performance (fixes accuracy >100% bug, migrated from 25)
+    // v27 (Phase 9a/9b): dropped OIR/WAT/SRT/PPDT/TAT question-cache tables,
+    // test_results, and notifications — their repositories
+    // (TestContentRepositoryImpl/FirestoreQuestionCacheRepository/
+    // TestRepositoryImpl/NotificationRepositoryImpl) and cache managers are
+    // deleted; shared's SQLDelight-backed GitLive* equivalents are now the
+    // sole implementation on both platforms. UserPerformanceEntity stays —
+    // DifficultyProgressionManager (core:data) still reads/writes it. No
+    // explicit migration: fallbackToDestructiveMigration() (below) recreates
+    // the DB, acceptable since these are re-downloadable/re-derivable caches,
+    // not unrecoverable user data, and there are no production users (KMP-
+    // convergence plan decision).
+    version = 27,
     exportSchema = true
 )
 @TypeConverters(RoomTypeConverters::class)
 abstract class SSBDatabase : RoomDatabase() {
-    
-    /**
-     * Test results DAO
-     */
-    abstract fun testResultDao(): TestResultDao
-    
-    /**
-     * Notifications DAO
-     */
-    abstract fun notificationDao(): NotificationDao
-    
-    /**
-     * OIR question cache DAO
-     */
-    abstract fun oirQuestionCacheDao(): OIRQuestionCacheDao
-    
+
     /**
      * Test usage DAO
      */
     abstract fun testUsageDao(): TestUsageDao
-    
-    /**
-     * WAT word cache DAO
-     */
-    abstract fun watWordCacheDao(): WATWordCacheDao
-    
-    /**
-     * SRT situation cache DAO
-     */
-    abstract fun srtSituationCacheDao(): SRTSituationCacheDao
-    
-    /**
-     * TAT image cache DAO
-     */
-    abstract fun tatImageCacheDao(): TATImageCacheDao
-    
-    /**
-     * PPDT image cache DAO
-     */
-    abstract fun ppdtImageCacheDao(): PPDTImageCacheDao
 
     /**
      * GPE image cache DAO

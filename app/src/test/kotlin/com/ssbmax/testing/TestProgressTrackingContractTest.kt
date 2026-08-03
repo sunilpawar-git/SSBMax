@@ -28,7 +28,10 @@ class TestProgressTrackingContractTest {
     private val personalRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PersonalTestSubmissionRepository.kt"
     private val psychRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/PsychTestSubmissionRepository.kt"
     private val commonRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/remote/CommonSubmissionRepository.kt"
-    private val progressRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/TestProgressRepositoryImpl.kt"
+    // KMP-convergence Phase 9a: TestProgressRepositoryImpl (core:data) deleted,
+    // GitLiveTestProgressRepository (shared) is the sole implementation now —
+    // repointed rather than left referencing a file that no longer exists.
+    private val progressRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveTestProgressRepository.kt"
 
     @Test
     fun `Phase1 tests must create submissions with correct testType`() {
@@ -119,7 +122,7 @@ class TestProgressTrackingContractTest {
     fun `TestProgressRepository must query for all Phase1 testTypes`() {
         // Given
         val progressRepoFile = findProjectFile(progressRepoPath)
-        assertTrue("TestProgressRepositoryImpl.kt should exist", progressRepoFile.exists())
+        assertTrue("GitLiveTestProgressRepository.kt should exist", progressRepoFile.exists())
         
         val content = progressRepoFile.readText()
         

@@ -1,7 +1,6 @@
 package com.ssbmax.core.data.di
 
 import com.ssbmax.core.data.analytics.AnalyticsManager
-import com.ssbmax.core.data.metrics.ContentMetrics
 import com.ssbmax.core.data.remote.CommonSubmissionRepository
 import com.ssbmax.core.data.remote.FirebaseAuthService
 import com.ssbmax.core.data.remote.FirebaseInitializer
@@ -21,16 +20,9 @@ import com.ssbmax.core.data.repository.DifficultyProgressionManager
 import com.ssbmax.core.data.repository.GPEImageCacheManager
 import com.ssbmax.core.data.repository.GTOTaskCacheManager
 import com.ssbmax.core.data.repository.InterviewQuestionCacheManager
-import com.ssbmax.core.data.repository.OIRQuestionCacheManager
-import com.ssbmax.core.data.repository.OIRQuestionSelector
-import com.ssbmax.core.data.repository.PPDTImageCacheManager
-import com.ssbmax.core.data.repository.SRTSituationCacheManager
-import com.ssbmax.core.data.repository.TATImageCacheManager
-import com.ssbmax.core.data.repository.WATWordCacheManager
 import com.ssbmax.core.data.repository.interview.InterviewQuestionGenerator
 import com.ssbmax.core.data.repository.interview.PIQDataMapper
 import com.ssbmax.core.data.security.SecurityEventLogger
-import com.ssbmax.core.data.source.FirestoreContentSource
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
@@ -46,11 +38,9 @@ import org.koin.dsl.module
 val coreDataInjectablesModule = module {
     singleOf(::AnalyticsManager)
     singleOf(::CommonSubmissionRepository)
-    singleOf(::ContentMetrics)
     singleOf(::DifficultyProgressionManager)
     singleOf(::FirebaseAuthService)
     singleOf(::FirebaseInitializer)
-    singleOf(::FirestoreContentSource)
     singleOf(::FirestoreUserRepository)
     singleOf(::GPEImageCacheManager)
     singleOf(::GTOSubmissionRepository)
@@ -58,21 +48,15 @@ val coreDataInjectablesModule = module {
     singleOf(::InterviewQuestionCacheManager)
     singleOf(::InterviewQuestionGenerator)
     singleOf(::OIRPersonalSubmissionDataSource)
-    singleOf(::OIRQuestionCacheManager)
-    singleOf(::OIRQuestionSelector)
     singleOf(::PIQDataMapper)
     singleOf(::PIQPersonalSubmissionDataSource)
-    singleOf(::PPDTImageCacheManager)
     singleOf(::PPDTPersonalSubmissionDataSource)
     singleOf(::PersonalTestSubmissionRepository)
     singleOf(::PsychTestSubmissionRepository)
     singleOf(::SDTSubmissionRepository)
-    singleOf(::SRTSituationCacheManager)
     singleOf(::SRTSubmissionRepository)
     singleOf(::SecurityEventLogger)
     singleOf(::SubmissionArchiveRepository)
-    singleOf(::TATImageCacheManager)
     singleOf(::TATSubmissionRepository)
     singleOf(::WATSubmissionRepository)
-    singleOf(::WATWordCacheManager)
 }

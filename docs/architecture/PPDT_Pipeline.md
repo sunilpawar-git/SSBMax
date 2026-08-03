@@ -182,6 +182,8 @@ Active batch: `batch_001` (64 images — replaced in Phase 5).
 
 ### Local cache (Room)
 
+> **KMP-convergence Phase 9a (stale below, not rewritten):** this Room-backed cache (`CachedPPDTImageEntity`/`PPDTImageCacheDao`/`PPDTImageCacheManager`) and the repository that wired it (`TestContentRepositoryImpl`) are deleted; `shared`'s SQLDelight-backed `GitLivePPDTImageCacheManager` (`shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/`) is the sole implementation on both platforms now, ported to the same target/minimum-cache-size, least-used-selection, and 24h TTL-staleness-gate design this section describes. File paths below are historical; the algorithm they document is intended to still apply 1:1 to the SQLDelight port — not independently re-verified line-by-line here.
+
 - **Entity:** `CachedPPDTImageEntity` → table `cached_ppdt_images`
   - Fields: `id`, `imageUrl`, `imageDescription`, `imageContextJson` (JSON-serialized `PPDTImageContext`), `genderTag` (default `MIXED`)
   - DB version: **23** (22→23 migration added `lastStalenessCheckAt INTEGER NOT NULL DEFAULT 0` to `ppdt_batch_metadata`)

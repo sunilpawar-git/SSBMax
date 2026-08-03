@@ -27,7 +27,10 @@ class InterviewProgressTrackingContractTest {
 
 
     private val firestoreInterviewRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/FirestoreInterviewRepository.kt"
-    private val testProgressRepoPath = "core/data/src/main/kotlin/com/ssbmax/core/data/repository/TestProgressRepositoryImpl.kt"
+    // KMP-convergence Phase 9a: TestProgressRepositoryImpl (core:data) deleted,
+    // GitLiveTestProgressRepository (shared) is the sole implementation now —
+    // repointed rather than left referencing a file that no longer exists.
+    private val testProgressRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveTestProgressRepository.kt"
 
     @Test
     fun `completeInterview must write to submissions collection for progress tracking`() {
@@ -53,18 +56,18 @@ class InterviewProgressTrackingContractTest {
         val content = repoFile.readText()
         
         // Then - It must set testType to "IO" (not "INTERVIEW" or anything else)
-        // because TestProgressRepositoryImpl queries for testType == "IO"
+        // because GitLiveTestProgressRepository queries for testType == "IO"
         assertTrue(
-            "Interview submission must have testType='IO' to match TestProgressRepositoryImpl query",
+            "Interview submission must have testType='IO' to match GitLiveTestProgressRepository query",
             content.contains("\"IO\"") && content.contains("testType")
         )
     }
 
     @Test
     fun `TestProgressRepository must query for IO testType in Phase2`() {
-        // Given - The TestProgressRepositoryImpl that queries for progress
+        // Given - The GitLiveTestProgressRepository that queries for progress
         val progressRepoFile = findProjectFile(testProgressRepoPath)
-        assertTrue("TestProgressRepositoryImpl.kt should exist", progressRepoFile.exists())
+        assertTrue("GitLiveTestProgressRepository.kt should exist", progressRepoFile.exists())
         
         val content = progressRepoFile.readText()
         

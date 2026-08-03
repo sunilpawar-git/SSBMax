@@ -208,6 +208,8 @@ test_content/tat/image_batches/batch_001
 
 ### Local cache (Room)
 
+> **KMP-convergence Phase 9a (stale below, not rewritten):** this Room-backed cache (`CachedTATImageEntity`/`TATImageCacheDao`/`TATImageCacheManager`) and the repository that wired it (`TestContentRepositoryImpl`) are deleted; `shared`'s SQLDelight-backed `GitLiveTATImageCacheManager` (`shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/`) is the sole implementation on both platforms now, ported to the same target/minimum-cache-size, position-based least-used selection, and 24h TTL-staleness-gate design this section describes. File paths below are historical; the algorithm they document is intended to still apply 1:1 to the SQLDelight port — not independently re-verified line-by-line here.
+
 - **Entity:** `CachedTATImageEntity` → table `cached_tat_images`
   - Key fields: `id`, `batchId`, `cardPosition`, `genderTag = "MIXED"`, `imageUrl`, `imageContextJson = "{}"`, `usageCount = 0`
   - `@Entity(indices = [@Index("cardPosition"), @Index("genderTag"), @Index("usageCount"), @Index("batchId")])`

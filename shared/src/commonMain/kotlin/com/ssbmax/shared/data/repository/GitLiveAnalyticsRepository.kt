@@ -14,10 +14,13 @@ import com.ssbmax.shared.domain.repository.AnalyticsRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -29,6 +32,14 @@ import kotlinx.datetime.toLocalDateTime
  * repo's only writer -- neither is Firestore-backed, both were ported in the
  * same slice so the read side isn't left pointing at a table nothing fills).
  * userProfileRepository/firebaseAuth mirror the Android constructor exactly.
+ *
+ * The 4 Flow-returning methods use SQLDelight's `.asFlow().mapToList(...)`
+ * (same reactive-query pattern as `GitLiveNotificationCacheManager`), not a
+ * one-shot `flow { emit(...) }` -- an earlier version used the latter, which
+ * lost the Android original's Room `Flow<List<UserPerformanceEntity>>`
+ * live-reactivity: a dashboard screen collecting these would silently stop
+ * updating after a test submission until it re-subscribed. SQLDelight's query
+ * listener re-emits on every write to `UserPerformance`, restoring parity.
  */
 class GitLiveAnalyticsRepository(
     private val database: SharedDatabase,
@@ -41,7 +52,7 @@ class GitLiveAnalyticsRepository(
         val userId = Firebase.auth.currentUser?.uid ?: return flowOf(null)
 
         return combine(
-            flow { emit(queries.selectAllPerformance().executeAsList()) },
+            queries.selectAllPerformance().asFlow().mapToList(Dispatchers.Default),
             userProfileRepository.getUserProfile(userId)
         ) { performances, profileResult ->
             if (performances.isEmpty()) return@combine null
@@ -73,21 +84,20 @@ class GitLiveAnalyticsRepository(
         }
     }
 
-    override fun getTestTypeStats(testType: String): Flow<TestTypeStats?> = flow {
-        val performances = queries.selectPerformanceByTestType(testType).executeAsList()
-        emit(buildTestTypeStats(testType, performances))
-    }
+    override fun getTestTypeStats(testType: String): Flow<TestTypeStats?> =
+        queries.selectPerformanceByTestType(testType).asFlow().mapToList(Dispatchers.Default)
+            .map { performances -> buildTestTypeStats(testType, performances) }
 
-    override fun getAllTestTypeStats(): Flow<List<TestTypeStats>> = flow {
-        val performances = queries.selectAllPerformance().executeAsList()
-        val testTypes = performances.map { it.testType }.distinct()
-        emit(testTypes.mapNotNull { testType -> buildTestTypeStats(testType, performances.filter { it.testType == testType }) })
-    }
+    override fun getAllTestTypeStats(): Flow<List<TestTypeStats>> =
+        queries.selectAllPerformance().asFlow().mapToList(Dispatchers.Default)
+            .map { performances ->
+                val testTypes = performances.map { it.testType }.distinct()
+                testTypes.mapNotNull { testType -> buildTestTypeStats(testType, performances.filter { it.testType == testType }) }
+            }
 
-    override fun getRecentProgress(limit: Int): Flow<List<TestPerformancePoint>> = flow {
-        val performances = queries.selectAllPerformance().executeAsList()
-        emit(performances.sortedByDescending { it.lastAttemptAt }.take(limit).map { it.toPerformancePoint() })
-    }
+    override fun getRecentProgress(limit: Int): Flow<List<TestPerformancePoint>> =
+        queries.selectAllPerformance().asFlow().mapToList(Dispatchers.Default)
+            .map { performances -> performances.sortedByDescending { it.lastAttemptAt }.take(limit).map { it.toPerformancePoint() } }
 
     override suspend fun getDifficultyStats(testType: String, difficulty: String): DifficultyStats? {
         val perf = queries.selectPerformance(testType, difficulty).executeAsOneOrNull()

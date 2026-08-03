@@ -11,7 +11,6 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -22,6 +21,17 @@ import kotlinx.serialization.Serializable
  * data isn't precomputed server-side in the Android version either); uses
  * Query.snapshots (a Flow) in place of the Android SDK's
  * addSnapshotListener/callbackFlow, same as the other GitLive*Repository ports.
+ *
+ * None of the four observe* methods catch-and-emit a default on listener
+ * errors (an earlier version did) -- the Android original's
+ * `addSnapshotListener` closes the flow with the error (`close(error)`), and
+ * `InstructorGradingViewModel` already has its own `.catch { }` for
+ * [observePendingSubmissions]/[observeSubmissionsByTestType] expecting to see
+ * it and show a real error state. Swallowing it here made that ViewModel code
+ * unreachable and showed "no submissions" for what was actually a
+ * permission/network failure. [observeGradingStats]'s caller
+ * (`InstructorHomeViewModel`) didn't have a `.catch` either -- fixed there too,
+ * see its own comment.
  */
 class GitLiveGradingQueueRepository : GradingQueueRepository {
 
@@ -33,7 +43,6 @@ class GitLiveGradingQueueRepository : GradingQueueRepository {
             .orderBy(FIELD_SUBMITTED_AT, Direction.ASCENDING)
             .snapshots
             .map { snapshot -> snapshot.documents.mapNotNull { documentToGradingQueueItem(it) } }
-            .catch { emit(emptyList()) }
 
     override fun observeSubmissionsByBatch(batchId: String): Flow<List<GradingQueueItem>> =
         submissionsCollection
@@ -42,7 +51,6 @@ class GitLiveGradingQueueRepository : GradingQueueRepository {
             .orderBy(FIELD_SUBMITTED_AT, Direction.ASCENDING)
             .snapshots
             .map { snapshot -> snapshot.documents.mapNotNull { documentToGradingQueueItem(it) } }
-            .catch { emit(emptyList()) }
 
     override fun observeSubmissionsByTestType(testType: TestType): Flow<List<GradingQueueItem>> =
         submissionsCollection
@@ -51,7 +59,6 @@ class GitLiveGradingQueueRepository : GradingQueueRepository {
             .orderBy(FIELD_SUBMITTED_AT, Direction.ASCENDING)
             .snapshots
             .map { snapshot -> snapshot.documents.mapNotNull { documentToGradingQueueItem(it) } }
-            .catch { emit(emptyList()) }
 
     override fun observeGradingStats(instructorId: String): Flow<InstructorGradingStats> =
         submissionsCollection
@@ -99,9 +106,6 @@ class GitLiveGradingQueueRepository : GradingQueueRepository {
                     pendingByTestType = pendingByType,
                     averageScoreGiven = averageScore
                 )
-            }
-            .catch {
-                emit(InstructorGradingStats(0, 0, 0, 0, 0, emptyMap(), 0f))
             }
 
     override suspend fun markSubmissionUnderReview(
