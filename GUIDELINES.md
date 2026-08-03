@@ -26,9 +26,9 @@ The CLAUDE.md hierarchy is a **living documentation system** for development pat
 ### During Development
 
 1. **Starting a task?** Open the relevant CLAUDE.md:
-   - Building a feature screen → [app/ui/CLAUDE.md](app/ui/CLAUDE.md)
+   - Building a feature screen → `shared/src/commonMain/.../presentation` + `.../ui` (no dedicated CLAUDE.md yet; `app/ui` was deleted once `shared` became the UI/ViewModel SSOT, KMP-convergence Phase 5/6a)
    - Implementing a use case → `shared/src/commonMain/.../domain` (no dedicated CLAUDE.md yet; `core:domain` was absorbed into `shared`)
-   - Adding a database → [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md)
+   - Adding a database or repository → `shared/src/commonMain/.../data/repository` (no dedicated CLAUDE.md yet; `core:data` was absorbed into `shared`/`app`, KMP-convergence Phase 9f)
    - Building a component → `shared/src/commonMain/.../ui` (no dedicated CLAUDE.md yet; `core:designsystem` was deleted once confirmed fully duplicated there — see the KMP-convergence plan's Phase 0f)
 
 2. **Stuck on a pattern?** Check the relevant file's code examples:
@@ -96,8 +96,8 @@ The CLAUDE.md hierarchy is a **living documentation system** for development pat
 4. **Cross-reference** if it connects to other patterns:
    ```markdown
    # References
-   - **Parent:** [core/domain/CLAUDE.md](../CLAUDE.md)
-   - **Related:** [core/data/remote/CLAUDE.md](./remote/CLAUDE.md)
+   - **Parent:** [claude.md](../claude.md)
+   - **Related:** [app/di/CLAUDE.md](../app/di/CLAUDE.md)
    ```
 
 5. **Increment version** (in file footer):
@@ -340,9 +340,7 @@ A: Check [app/navigation/CLAUDE.md](app/navigation/CLAUDE.md)
 |----------|---------|
 | [CLAUDE_HIERARCHY.md](CLAUDE_HIERARCHY.md) | Navigation guide (find the right file) |
 | [claude.md](claude.md) | Root rules & architecture |
-| [app/CLAUDE.md](app/CLAUDE.md) | UI layer patterns |
-| [core/domain/CLAUDE.md](core/domain/CLAUDE.md) | Business logic SSOT |
-| [core/data/CLAUDE.md](core/data/CLAUDE.md) | Data layer patterns |
+| [app/CLAUDE.md](app/CLAUDE.md) | Android platform glue (no dedicated `shared` doc yet — see [app/CLAUDE.md](app/CLAUDE.md)'s own note) |
 | [lint/CLAUDE.md](lint/CLAUDE.md) | Custom lint detector patterns |
 | [functions/CLAUDE.md](functions/CLAUDE.md) | Backend Cloud Functions |
 

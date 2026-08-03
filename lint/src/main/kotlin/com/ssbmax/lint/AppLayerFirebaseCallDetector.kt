@@ -19,7 +19,8 @@ class AppLayerFirebaseCallDetector : Detector(), SourceCodeScanner {
       id = "AppLayerFirebaseCall",
       briefDescription = "Firebase call in UI layer",
       explanation = "ViewModels and Composables should never directly import or call Firebase. " +
-        "Use repository pattern instead. Firebase imports should only be in core:data module.",
+        "Use repository pattern instead — repository implementations live in `shared` " +
+        "(GitLive Firebase, KMP-convergence plan's Phase 9f deleted the old `core:data` module).",
       category = Category.SECURITY,
       priority = 10,
       severity = Severity.ERROR,
@@ -71,7 +72,7 @@ class AppLayerFirebaseCallDetector : Detector(), SourceCodeScanner {
           issue = ISSUE,
           location = context.getLocation(node),
           message = "Firebase ($importPath) should not be imported in a ViewModel or Composable. " +
-            "Use repositories from core:data instead — inject a repository interface, not Firebase."
+            "Use repositories from shared instead — inject a repository interface, not Firebase."
         )
       }
     }

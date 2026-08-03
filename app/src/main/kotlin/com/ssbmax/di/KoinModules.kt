@@ -1,24 +1,20 @@
 package com.ssbmax.di
 
-import com.ssbmax.core.data.di.coreDataInjectablesModule
-import com.ssbmax.core.data.di.coroutineScopeModule
-import com.ssbmax.core.data.di.databaseModule
-import com.ssbmax.core.data.di.firebaseModule
-import com.ssbmax.core.data.di.repositoryModule
 import com.ssbmax.shared.di.sharedModule
 
 /**
  * All Koin modules the app needs, in one place for `startKoin()`
- * (see [com.ssbmax.SSBMaxApplication]). Mirrors the module set previously
+ * (see [com.ssbmax.SSBMaxApplication]). Originally mirrored the module set
  * wired via Hilt's `@InstallIn(SingletonComponent::class)` across
- * `core:data`'s 6 modules and `app`'s 11 modules — split here into
- * `core:data` modules (repositories/Room/Firebase/AI) and `app` modules
- * (use cases bridging :shared, platform singletons, ViewModels).
+ * `core:data`'s 6 modules and `app`'s 11 modules; `core:data` itself was
+ * deleted in the KMP-convergence plan's Phase 9f (see [databaseModule]'s
+ * class doc for where its one surviving live piece — the TAT Room cache —
+ * landed).
  *
- * `sharedModule` (the KMP `:shared` module's own Koin graph) is included
- * too — per this phase's scope, `app` still depends on both `:shared` and
- * `:core:data` side by side (not yet rewired to consume only `:shared`,
- * that's Phase 5 territory), so both graphs must be live at once.
+ * `sharedModule` (the KMP `:shared` module's own Koin graph) is the SSOT for
+ * every screen/ViewModel/use-case/repository binding on both platforms;
+ * `app`'s own modules below only bind the handful of classes
+ * `app/workers`/`app/notifications` need directly.
  *
  * KMP-convergence Phase 6a: `viewModelModule` removed (its file, and every
  * ViewModel it bound, deleted along with `app/ui` — nothing reaches them at
@@ -50,19 +46,24 @@ import com.ssbmax.shared.di.sharedModule
  * supplied by [com.ssbmax.SSBMaxApplication] into `shared`'s
  * `CheckTestEligibilityUseCase` — same shape as the Gemini key above, not a
  * ported `DebugConfig` interface.
+ *
+ * KMP-convergence Phase 9f (module retirement): `repositoryModule` (already
+ * empty since 9e), `firebaseModule`, `coreDataInjectablesModule` removed —
+ * every binding they carried (`AnalyticsManager`, `DifficultyProgressionManager`,
+ * `FirebaseAuthService`, `FirebaseInitializer`, `FirestoreUserRepository`, the
+ * 5 raw Firebase SDK singles) had zero production callers left, confirmed by
+ * grep before deleting (`shared`'s `GitLive*` equivalents or `AnalyticsTracker`
+ * already covered every real call site). `coroutineScopeModule` folded into
+ * `databaseModule` (this module now binds `app`'s Room database directly,
+ * having moved out of the deleted `core:data`, plus the application-scoped
+ * `CoroutineScope` — see [databaseModule]'s own class doc).
  */
 val appModules = listOf(
     // :shared (KMP)
     sharedModule,
 
-    // :core:data
-    databaseModule,
-    repositoryModule,
-    firebaseModule,
-    coroutineScopeModule,
-    coreDataInjectablesModule,
-
     // :app
+    databaseModule,
     testUseCaseModule,
     workManagerModule,
     appInjectablesModule

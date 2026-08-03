@@ -28,9 +28,10 @@ import com.ssbmax.shared.domain.model.TestType
  *   dispatches to the actual `PPDTAnalysisWorker`/`TATStoryAnalysisWorker`+
  *   `TATSynthesisWorker`/`WATAnalysisWorker`/`SRTAnalysisWorker`/
  *   `SDTAnalysisWorker`/`GTOAnalysisWorker`/`InterviewAnalysisWorker`,
- *   overriding `shared`'s own binding (Koin last-wins, same pattern
- *   `core:data`'s `repositoryModule` already uses for
- *   `TestUsageRecorder`/`TestSessionRepository`).
+ *   overriding `shared`'s own binding (Koin last-wins, the same pattern
+ *   `core:data`'s `repositoryModule` used to shadow-override
+ *   `TestUsageRecorder`/`TestSessionRepository` before both were single-sourced
+ *   into `shared` in Phases 9d/9e and `core:data` itself was deleted in 9f).
  * - Resolved for iOS: `shared`'s own binding
  *   ([com.ssbmax.shared.analysis.KtorSubmissionAnalysisTrigger], registered in
  *   `coreInfraModule`) dispatches immediately in the foreground (not via

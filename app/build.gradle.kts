@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.ksp)
 }
 
 // Temporarily disable mock google-services.json generation for local development
@@ -78,6 +79,12 @@ extensions.getByType<ApplicationExtension>().apply {
 
         vectorDrawables {
             useSupportLibrary = true
+        }
+
+        // Room schema export (KMP-convergence Phase 9f: SSBDatabase moved here
+        // from the deleted core:data module)
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
         }
 
         // Gemini API Key for AI Interview Feature
@@ -151,7 +158,9 @@ extensions.getByType<ApplicationExtension>().apply {
         // lint checks) crashes with IncompatibleClassChangeError when analyzing
         // this module's dependency on :shared (a Compose Multiplatform module) --
         // a lint tooling/UAST version mismatch, not a real violation. Same crash
-        // and same workaround as shared/build.gradle.kts and core/data/build.gradle.kts.
+        // and same workaround as shared/build.gradle.kts (core/data/build.gradle.kts
+        // used to carry the same disable before the module was deleted in the
+        // KMP-convergence plan's Phase 9f).
         disable += "NullSafeMutableLiveData"
 
         // Lint baseline for systematic cleanup of warnings (Phase 1.5)
@@ -211,11 +220,16 @@ extensions.getByType<ApplicationExtension>().apply {
 dependencies {
     // Core modules
     implementation(project(":shared"))
-    implementation(project(":core:data"))
 
     // Custom lint rules
     lintChecks(project(":lint"))
-    
+
+    // Room (KMP-convergence Phase 9f: SSBDatabase moved here from the
+    // deleted core:data module — see app/src/.../data/local/SSBDatabase.kt)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -302,7 +316,8 @@ dependencies {
 
     // Robolectric for Android unit tests
     testImplementation("org.robolectric:robolectric:4.11.1")
-    
+    testImplementation("androidx.test:core:1.5.0")
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

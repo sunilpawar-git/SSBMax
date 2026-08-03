@@ -487,19 +487,18 @@ The result screen polls by observing the Flow — no manual refresh required.
 | `KtorAIServiceTest.kt` (was `GeminiAIServiceTest.kt`) | `shared` | AI service (6 tests): analyzePPDTMultimodal success/failure, Content vs String call, empty-bytes edge case, temperature=0 |
 | `PPDTPromptsTest.kt` (was `PPDTPromptTest.kt`) | `shared` | Prompt (4 tests): coreElements present, penalizedThemes present, candidateGender present, no `{placeholder}` or `null` in output |
 | `PPDTImageContextTest.kt` | `shared` | Domain model (3 tests): empty coreElements detectable, DeviationTolerance has exactly 3 values, PPDTQuestion defaults to empty context |
-| `PPDTImageContextMappingTest.kt` | `core:data` | JSON (2 tests): PPDTImageContext serializes/deserializes losslessly, CachedPPDTImageEntity defaults genderTag to MIXED |
+| ~~`PPDTImageContextMappingTest.kt`~~ | `core:data` (deleted, Phase 9a/9b) | JSON (2 tests): PPDTImageContext serializes/deserializes losslessly, CachedPPDTImageEntity defaults genderTag to MIXED |
 | `PPDTQuestionDefaultsTest.kt` | `shared` | Model defaults (2 tests): minCharacters=200 matches UI, maxCharacters=1000 |
-| `PPDTImageCacheManagerTest.kt` | `core:data` | Cache sync, eviction, status tracking; + 24h TTL gate (skips Firestore within 24h; calls Firestore after TTL expires); + gender SQL filter verified at DAO level (no in-memory filter) |
-| `PPDTImageCacheDaoTest.kt` | `core:data` | Room DAO queries |
+| ~~`PPDTImageCacheManagerTest.kt`~~ | `core:data` (deleted, Phase 9a/9b) | Cache sync, eviction, status tracking; + 24h TTL gate (skips Firestore within 24h; calls Firestore after TTL expires); + gender SQL filter verified at DAO level (no in-memory filter) |
+| ~~`PPDTImageCacheDaoTest.kt`~~ | `core:data` (deleted, Phase 9a/9b) | Room DAO queries |
 | `GetOLQDashboardUseCaseTest.kt` | `shared` | Dashboard aggregation logic, timeout/cache behaviour |
 
 **Total PPDT-specific tests (Phases 1–8 + bug-fix pass): 58**
 
-Run all PPDT-relevant tests:
+Run all PPDT-relevant tests (`core:data` itself was deleted in the KMP-convergence plan's Phase 9f):
 
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "*PPDT*"
-./gradlew :core:data:testDebugUnitTest --tests "*PPDT*"
 ./gradlew :shared:testDebugUnitTest --tests "*PPDT*"
 ```
 

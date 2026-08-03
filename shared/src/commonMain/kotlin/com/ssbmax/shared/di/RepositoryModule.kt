@@ -69,11 +69,11 @@ import org.koin.dsl.module
  * Quality Limit — zero behavior change.
  *
  * As of Phase 9e (KMP-convergence plan), every repository this module binds is single-sourced —
- * `core:data`'s own `repositoryModule` is now empty (its last 3 shadow bindings,
- * `SubmissionRepository`/`TestSessionRepository`/`TestSubmissionRepository`, closed this phase).
- * These `GitLive*` implementations are the sole binding on both Android and iOS. See git history
- * (Phase 5 sessions, pre-split; Phase 9a-9e for each repository's individual closure) for the full
- * per-repository rationale.
+ * `core:data`'s own `repositoryModule` was empty (its last 3 shadow bindings,
+ * `SubmissionRepository`/`TestSessionRepository`/`TestSubmissionRepository`, closed that phase),
+ * and `core:data` itself was deleted outright in Phase 9f. These `GitLive*` implementations are
+ * the sole binding on both Android and iOS. See git history (Phase 5 sessions, pre-split; Phase
+ * 9a-9e for each repository's individual closure) for the full per-repository rationale.
  */
 val repositoryModule = module {
     // GitLiveAuthRepository's userRepository constructor param has a Kotlin default
@@ -81,9 +81,11 @@ val repositoryModule = module {
     // Kotlin default parameters and always resolves every constructor param through
     // Koin -- so this binding is required, not optional, despite the default value
     // suggesting otherwise. Discovered via a real iOS launch crash
-    // (NoDefinitionFoundException): Android never hit this because core:data's own
-    // AuthRepositoryImpl shadow-overrides AuthRepository there, so GitLiveAuthRepository
-    // itself is never actually constructed on that platform.
+    // (NoDefinitionFoundException); at the time, Android didn't hit it because
+    // core:data's (now-deleted, KMP-convergence Phase 9f) AuthRepositoryImpl
+    // shadow-overrode AuthRepository there, so GitLiveAuthRepository itself was never
+    // actually constructed on that platform. The binding stays required today
+    // regardless -- this reflection behavior of singleOf is platform-independent.
     singleOf(::GitLiveUserRepository)
     singleOf(::GitLiveAuthRepository) bind AuthRepository::class
     singleOf(::GitLiveOirResultRepository) bind OirResultRepository::class

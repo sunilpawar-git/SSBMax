@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
-import com.ssbmax.core.data.local.entity.TATStoryAssessmentEntity
+import com.ssbmax.data.local.dao.TATStoryAssessmentDao
+import com.ssbmax.data.local.entity.TATStoryAssessmentEntity
 import com.ssbmax.shared.analysis.AnalysisRetry
 import com.ssbmax.shared.domain.model.TATImageContext
 import com.ssbmax.shared.domain.repository.SubmissionRepository

@@ -18,7 +18,8 @@ private const val TAG = "SSBMaxApplication"
  * Koin entry point for dependency injection.
  *
  * Responsibilities:
- * - Start Koin with all app/core:data/:shared modules
+ * - Start Koin with all app/:shared modules (`core:data` deleted in the
+ *   KMP-convergence plan's Phase 9f)
  * - Initialize WorkManager for background jobs (default WorkManager worker
  *   factory now that workers resolve their own dependencies via
  *   `KoinComponent`/`inject()` instead of Hilt's assisted-injection worker

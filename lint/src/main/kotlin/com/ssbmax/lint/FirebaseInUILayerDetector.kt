@@ -43,7 +43,8 @@ class FirebaseInUILayerDetector : Detector(), SourceCodeScanner {
 
             For data access:
             - Use repository interfaces from shared/commonMain/domain
-            - Implement repositories in core/data (where Firebase is allowed)
+            - Implement repositories in shared (GitLive Firebase — the old
+              `core:data` module was deleted in the KMP-convergence plan's Phase 9f)
 
             **Example:**
             ```kotlin
@@ -124,10 +125,10 @@ class FirebaseInUILayerDetector : Detector(), SourceCodeScanner {
                 "Do not import Firebase Auth in UI layer. Use `ObserveCurrentUserUseCase` or `AuthRepository` instead."
             }
             importPath.contains("firebase.firestore") -> {
-                "Do not import Firestore in UI layer. Create a repository in core/data and use it via dependency injection."
+                "Do not import Firestore in UI layer. Create a repository in shared and use it via dependency injection."
             }
             importPath.contains("firebase.storage") -> {
-                "Do not import Firebase Storage in UI layer. Create a repository in core/data for storage operations."
+                "Do not import Firebase Storage in UI layer. Create a repository in shared for storage operations."
             }
             else -> {
                 "Do not import Firebase classes in UI layer. Use domain layer abstractions (repositories, use cases) instead."

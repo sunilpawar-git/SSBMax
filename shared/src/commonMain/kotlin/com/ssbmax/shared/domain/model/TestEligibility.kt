@@ -4,8 +4,9 @@ package com.ssbmax.shared.domain.model
  * Result of a subscription-limit eligibility check for starting a test.
  *
  * KMP port of the Android `core:data` `SubscriptionManager.TestEligibility`
- * sealed class (see `core/data/.../repository/SubscriptionManager.kt`) — same
- * shape, moved to `domain` so [com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase]
+ * sealed class (`core/data/.../repository/SubscriptionManager.kt`, deleted in
+ * the KMP-convergence plan's Phase 9d) — same shape, moved to `domain` so
+ * [com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase]
  * (and the ViewModels that call it) can depend on it without an Android import.
  *
  * [Eligible]     — user may proceed.

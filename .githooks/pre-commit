@@ -156,7 +156,7 @@ APP_FILES=$(echo "$KOTLIN_JAVA_FILES" | grep 'app/src' | grep -v 'firebase.auth'
 if [ -n "$APP_FILES" ]; then
     if echo "$APP_FILES" | xargs grep -E '^import com\.(google\.firebase|firebase)\.' 2>/dev/null | grep -v 'firebase\.auth'; then
         echo -e "${RED}❌ ERROR: Firebase imports in app layer (except Firebase Auth)${NC}"
-        echo "Use repositories from core:data layer instead"
+        echo "Use repositories from shared instead (core:data was deleted, KMP-convergence Phase 9f)"
         ERRORS=$((ERRORS + 1))
     fi
 fi

@@ -22,8 +22,10 @@ import org.koin.dsl.module
  *
  * [StudentHomeViewModel]/[InstructorHomeViewModel]'s constructor dependencies
  * (`UserProfileRepository`, `TestProgressRepository`, `NotificationRepository`,
- * `GradingQueueRepository`) are shadow-bound by `core:data`'s Android-only
- * `repositoryModule` too — see [repositoryModule]'s doc comment.
+ * `GradingQueueRepository`) used to also be shadow-bound by `core:data`'s
+ * Android-only `repositoryModule` — closed sub-phase by sub-phase across
+ * Phases 9a-9c, `core:data` itself deleted in Phase 9f. [repositoryModule]'s
+ * `GitLive*` bindings are now the sole source for all four.
  */
 val authHomeModule = module {
     factoryOf(::SignInWithGoogleUseCase)

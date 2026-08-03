@@ -394,7 +394,7 @@ console.log(result.data);
 ## References
 
 - **Root guidance:** [claude.md](../claude.md) (security principles)
-- **Firestore patterns:** [core/data/remote/CLAUDE.md](../core/data/remote/CLAUDE.md)
+- **Firestore patterns:** `shared/src/commonMain/.../data/repository/` (`GitLive*` repositories — `core:data`, which used to cover this, was deleted in the KMP-convergence plan's Phase 9f; no dedicated `shared` CLAUDE.md exists yet)
 - **AI integration:** [shared/ai/CLAUDE.md](../shared/ai/CLAUDE.md)
 - **Firebase Admin SDK:** https://firebase.google.com/docs/reference/admin
 

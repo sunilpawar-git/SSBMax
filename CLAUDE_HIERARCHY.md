@@ -21,19 +21,14 @@ SSBMax Project (Root)
 │       └── [app/di/CLAUDE.md](app/di/CLAUDE.md) — Koin dependency injection (not Hilt)
 │
 ├── 🧬 Shared Module (KMP): no CLAUDE.md yet — SSOT for UI, ViewModels,
-│   navigation, and DI on both Android and iOS (KMP-convergence plan).
+│   navigation, data, and DI on both Android and iOS (KMP-convergence plan).
 │   `core:domain`'s use-case/repository-interface/Result<T>/zero-Android-deps
-│   patterns now live in `shared/commonMain/.../domain`, and `shared`'s UI
+│   patterns now live in `shared/commonMain/.../domain`, `shared`'s UI
 │   (`.../ui`) is the convergence target `core:designsystem` used to cover
-│   before its deletion
-│
-├── 🔌 Core Data Module: [core/data/CLAUDE.md](core/data/CLAUDE.md)
-│   ├── Repository Implementations
-│   ├── Secret Management
-│   ├── Error Wrapping (Result<T>)
-│   └── Sub-Modules:
-│       ├── [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md) — Room database patterns
-│       └── [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md) — Firebase integration
+│   before its deletion, and `shared`'s `GitLive*` repositories are the
+│   convergence target `core:data` used to cover before its Phase 9f deletion
+│   (one Android-only piece — a Room cache for two WorkManager workers —
+│   landed in `app` instead; see [app/CLAUDE.md](app/CLAUDE.md))
 │
 ├── 🛠 Lint Module: [lint/CLAUDE.md](lint/CLAUDE.md)
 │   ├── Custom Detector Development
@@ -71,21 +66,26 @@ new screens go post-convergence; there is no `app/ui` anymore.
 - Then read: [app/CLAUDE.md](app/CLAUDE.md) for what (little) still lives in `app`
 
 ### "I'm implementing a new use case"
-**Start here:** [core/domain/CLAUDE.md](core/domain/CLAUDE.md)
+**Start here:** `shared/src/commonMain/kotlin/com/ssbmax/shared/domain/usecase/` — no
+dedicated CLAUDE.md yet (`core:domain`, which used to cover this, was fully absorbed
+into `shared` and deleted)
 - Use case structure (suspend function → Result<T>)
 - Repository interfaces (SSOT)
 - Error handling patterns
-- Then read: [core/data/CLAUDE.md](core/data/CLAUDE.md) (repository impl)
+- Then read: root [claude.md](claude.md)'s "Guiding Principles" section (repository impl pattern)
 
 ### "I'm storing data (database or cache)"
-**Start here:** [core/data/local/CLAUDE.md](core/data/local/CLAUDE.md) (for Room) OR [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md) (for Firestore)
-- Entity design & migrations
-- DAO query patterns
+**Start here:** `shared/src/commonMain/.../data/repository/` (`GitLive*` repositories —
+GitLive-Firebase for Firestore, SQLDelight for local caches) — no dedicated CLAUDE.md yet
+(`core:data`, which used to cover this, was deleted in the KMP-convergence plan's Phase 9f;
+its one Android-only survivor, a Room cache for two WorkManager workers, is documented in
+[app/CLAUDE.md](app/CLAUDE.md) instead)
+- Entity/DTO design & SQLDelight migrations
+- Repository query patterns
 - Caching with TTL
-- Firebase security rules
-- Transaction patterns
+- Firebase security rules (`firestore.rules` at repo root; validated by
+  `app/src/test/kotlin/com/ssbmax/security/FirebaseRulesValidationTest.kt`)
 - Batch operations
-- Then read: [core/data/CLAUDE.md](core/data/CLAUDE.md) (error handling)
 
 ### "I'm integrating AI (Gemini evaluation)"
 **Start here:** [shared/ai/CLAUDE.md](shared/ai/CLAUDE.md)
@@ -159,11 +159,10 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 | **Root** | 1 | 400+ | Global patterns & rules |
 | **app** | 2 | ~200 | Android platform glue (MainActivity, notifications, workers, Koin bootstrap) |
 | **shared** | 0 | — | KMP module: UI, ViewModels, navigation, business logic, data, Koin DI (SSOT; no dedicated CLAUDE.md yet, see above) |
-| **core:data** | 4 | 1,400+ | Data layer (repositories, AI, DB, Firebase) — being dissolved into `shared` |
 | **lint** | 1 | 286 | Custom detectors |
 | **functions** | 1 | 281 | Backend Cloud Functions |
 | **scripts** | 1 | 297 | Data ingestion & batch ops |
-| **TOTAL** | **12 CLAUDE.md files** | **~4,000 lines** | Full development guidance |
+| **TOTAL** | **9 CLAUDE.md files** | **~2,600 lines** | Full development guidance |
 
 ---
 
@@ -173,11 +172,11 @@ already duplicated in `shared`; see the KMP-convergence plan's Phase 0f)
 
 | Pattern | Location | Used By |
 |---------|----------|---------|
-| Result<T> (error handling) | [core/domain/CLAUDE.md](core/domain/CLAUDE.md#result--sealed-class) | All data/use case code |
+| Result<T> (error handling) | root [claude.md](claude.md) — "Guiding Principles" | All data/use case code |
 | Koin `viewModelOf` | [app/di/CLAUDE.md](app/di/CLAUDE.md) | All feature screens (bindings live in `shared`) |
 | StateFlow<UiState> | `shared`'s `presentation/` ViewModels | All ViewModels |
-| Repository Pattern | [core/data/CLAUDE.md](core/data/CLAUDE.md) | Repositories, use cases |
-| Firestore Security Rules | [core/data/remote/CLAUDE.md](core/data/remote/CLAUDE.md#security-rules-ssot) | Firebase backend |
+| Repository Pattern | `shared/src/commonMain/.../data/repository/` (`GitLive*`) | Repositories, use cases |
+| Firestore Security Rules | `firestore.rules` (repo root) | Firebase backend |
 | SSBMaxDestinations | `shared/src/commonMain/.../navigation/SSBMaxDestinations.kt` | All routing |
 | Gemini Prompts | [shared/ai/CLAUDE.md](shared/ai/CLAUDE.md) | Evaluation features |
 

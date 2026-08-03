@@ -124,7 +124,6 @@ jobs:
         run: |
           ./gradlew \
             :app:lintDebug \
-            :core:data:lintDebug \
             :shared:lintDebug \
             --build-cache \
             --parallel \
@@ -165,7 +164,6 @@ jobs:
           ./gradlew \
             :app:testDebugUnitTest \
             :shared:testDebugUnitTest \
-            :core:data:testDebugUnitTest \
             :lint:test \
             :detekt-rules:test \
             --build-cache \
@@ -178,7 +176,6 @@ jobs:
         run: |
           ./gradlew \
             :app:jacocoTestCoverageVerification \
-            :core:data:jacocoTestCoverageVerification \
             --build-cache \
             --parallel \
             --stacktrace

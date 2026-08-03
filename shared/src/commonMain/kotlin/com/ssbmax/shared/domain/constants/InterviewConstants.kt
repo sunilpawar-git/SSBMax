@@ -1,12 +1,11 @@
 package com.ssbmax.shared.domain.constants
 
 /**
- * Constants for interview feature used across modules (domain, data, app)
+ * Constants for interview feature used across modules (shared, app)
  *
  * These constants are placed in domain layer so they can be accessed by:
- * - core/domain (use cases)
- * - core/data (repositories)
- * - app (ViewModels, workers)
+ * - shared (use cases, repositories — the former core:domain/core:data)
+ * - app (workers)
  */
 object InterviewConstants {
 

@@ -25,12 +25,13 @@ dependencyResolutionManagement {
 
 rootProject.name = "SSBMax"
 include(":app")
-include(":core:data")
 include(":lint")
 include(":detekt-rules")
 
 // Phase 1 KMP migration (see docs/architecture/ or CLAUDE plan for context):
 // core:domain was fully moved into shared/commonMain/domain and the old
-// module deleted. `shared` is now a required dependency (app, core:data),
-// not an additive/parallel one.
+// module deleted. KMP-convergence Phase 9f: core:data deleted too — its one
+// surviving live piece (the TAT Room cache) moved into `app`, everything
+// else had zero production callers left. `shared` is now the SSOT data/UI/
+// navigation module for both platforms; `app` is Android platform glue only.
 include(":shared")

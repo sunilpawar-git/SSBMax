@@ -45,8 +45,7 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 | Module | Purpose |
 |---|---|
 | `app` | Android platform glue only: `MainActivity`, `Application`, notifications, WorkManager workers, Koin bootstrap (`app/ui`/`app/navigation`/app-module ViewModels deleted in the KMP-convergence plan's Phase 6a — `shared` is the UI/ViewModel/nav SSOT on both platforms) |
-| `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it |
-| `core:data` | Repository implementations, Room DB, Firebase, Gemini AI (being dissolved into `shared` incrementally, see the KMP-convergence plan) |
+| `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it, and `core:data` (repository implementations, Room DB, Firebase, Gemini AI) was deleted into it in the plan's Phase 9f — the one piece that didn't move (a Room cache local to two Android-only WorkManager workers) landed in `app` instead |
 | `lint` | Custom lint rules (build fails if violated) |
 | `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks — AGP Lint doesn't analyze a KMP module's commonMain) |
 
@@ -54,20 +53,17 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 
 ## Architecture Guidance Hierarchy (Phase 4)
 
-**Multi-tier guidance system** (12 CLAUDE.md files) enforces patterns at every layer:
+**Multi-tier guidance system** (9 CLAUDE.md files) enforces patterns at every layer:
 
 ```
 Root: claude.md (12 core rules, global patterns)
   ├── app/CLAUDE.md (Android platform glue only — UI/ViewModel/navigation
-  │   │  moved to `shared` in the KMP-convergence plan's Phase 5/6a)
+  │   │  moved to `shared` in the KMP-convergence plan's Phase 5/6a;
+  │   │  core:data deleted into shared/app in Phase 9f)
   │   └── app/di/CLAUDE.md (Koin dependency injection, not Hilt)
   │
   ├── shared/ai/CLAUDE.md (Gemini AI integration — the only AI path,
   │      both platforms; core/data/ai was deleted in Phase 9.0)
-  │
-  ├── core/data/CLAUDE.md (data repositories, error handling)
-  │   ├── core/data/local/CLAUDE.md (Room database patterns)
-  │   └── core/data/remote/CLAUDE.md (Firebase/Firestore)
   │
   ├── lint/CLAUDE.md (custom lint detectors)
   │

@@ -2,25 +2,25 @@
 
 **Scope:** `app`'s Koin modules. Inherits [app/CLAUDE.md](../CLAUDE.md).
 
-**This project uses Koin, not Hilt.** `shared`'s modules (`shared/src/commonMain/.../di/*Module.kt`) are the SSOT for ViewModel and use-case bindings — everything reachable from a Compose screen lives there. `app`'s own modules exist only to bind the handful of classes `app/workers` and `app/notifications` need that `shared`/`core:data` don't already provide.
+**This project uses Koin, not Hilt.** `shared`'s modules (`shared/src/commonMain/.../di/*Module.kt`) are the SSOT for ViewModel, use-case, and repository bindings — everything reachable from a Compose screen (and every repository) lives there. `app`'s own modules exist only to bind the handful of classes `app/workers` and `app/notifications` need directly.
 
 ---
 
 ## Structure
 
-`SSBMaxApplication.onCreate()` calls `startKoin { modules(appModules) }`, where `appModules` (`KoinModules.kt`) is `sharedModule` + `core:data`'s repository/Firebase/Room modules + `app`'s own small set:
+`SSBMaxApplication.onCreate()` calls `startKoin { modules(appModules) }`, where `appModules` (`KoinModules.kt`) is `sharedModule` + `app`'s own small set:
 
 ```kotlin
 val appModules = listOf(
-    sharedModule,                 // :shared's full Koin graph (screens, ViewModels, use cases)
-    databaseModule, repositoryModule,
-    firebaseModule, coroutineScopeModule,
-    coreDataInjectablesModule,    // :core:data
-    testUseCaseModule, debugModule, workManagerModule, appInjectablesModule  // :app
+    sharedModule,                 // :shared's full Koin graph (screens, ViewModels, use cases, repositories)
+    databaseModule,                                                        // :app
+    testUseCaseModule, workManagerModule, appInjectablesModule             // :app
 )
 ```
 
-**KMP-convergence Phase 9a:** `contentRepositoryModule` deleted — it bound only `StudyContentRepositoryImpl`, which along with 9 sibling repositories (`TestContentRepository`, `QuestionCacheRepository`, `TestRepository`, `TestProgressRepository`, `StudyProgressRepository`, `UnifiedResultRepository`, `AnalyticsRepository`, `NotificationRepository`, `GradingQueueRepository`) is now single-bound in `shared`'s own `RepositoryModule.kt` (`GitLive*` implementations). `repositoryModule`/`coreDataInjectablesModule` still bind the repositories/helpers not yet converged (Phase 9c/9d/9e).
+**KMP-convergence Phase 9a-9e:** every repository binding `core:data` used to shadow (19 at plan-authoring time — `contentRepositoryModule`, `repositoryModule`, `coreDataInjectablesModule`) moved to `shared`'s own `RepositoryModule.kt` (`GitLive*` implementations) one sub-phase at a time.
+
+**KMP-convergence Phase 9f (module retirement):** `core:data` itself deleted — `repositoryModule` (already empty since 9e), `firebaseModule`, `coreDataInjectablesModule`, `coroutineScopeModule` removed with it; every binding they carried had either moved to `shared` already or turned out to have zero production callers left (confirmed by grep before deleting: `AnalyticsManager`, `DifficultyProgressionManager`, `FirebaseAuthService`, `FirebaseInitializer`, `FirestoreUserRepository`, `AuthRepositoryImpl`, and the 5 raw Firebase SDK singles were all superseded by `shared` equivalents or simply unused). The one genuinely live survivor — a Room cache (`TATStoryAssessmentDao`) local to two Android-only WorkManager workers, with no iOS equivalent — moved into `app`'s own `databaseModule` (`di/DatabaseModule.kt`), alongside the application-scoped `CoroutineScope` that used to live in `coroutineScopeModule`.
 
 **Before adding a module here**, check whether it belongs in `shared` instead — if the class it binds is reachable from a Compose screen, it almost certainly does. `app`'s modules should only ever bind things `app/workers`/`app/notifications`/`MainActivity`/`SSBMaxApplication` need directly.
 
@@ -45,8 +45,8 @@ val appInjectablesModule = module {
 
 - ❌ `@Module`/`@InstallIn`/`@Provides`/`@HiltViewModel` — this is Koin, not Hilt; none of these annotations exist in this codebase
 - ❌ Binding a ViewModel here — `app` has no ViewModels; they live in `shared`
-- ❌ A module that duplicates a binding `sharedModule` or `core:data`'s modules already provide
+- ❌ A module that duplicates a binding `sharedModule` already provides
 
 ---
 
-**Last Updated:** 2026-08-01 | **Maintainer:** Sunil Pawar
+**Last Updated:** 2026-08-03 | **Maintainer:** Sunil Pawar

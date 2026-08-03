@@ -16,10 +16,12 @@ package com.ssbmax.shared.platform.billing
  * lifecycle webhooks, which remain genuinely platform-specific concerns
  * outside this interface's scope.
  *
- * [SubscriptionManager] (`core:data`) stays the SSOT for subscription
- * *limits* (unchanged by this shim) — this interface only handles the
- * purchase transaction itself; wiring a completed purchase into
- * `SubscriptionManager`'s state is `BillingRepository`'s (app-layer) job.
+ * `SubscriptionLimits`/`CheckTestEligibilityUseCase` (`shared`) stay the SSOT
+ * for subscription *limits* (unchanged by this shim; `core:data`'s
+ * `SubscriptionManager`, the original SSOT this doc used to name, was
+ * deleted in the KMP-convergence plan's Phase 9d) — this interface only
+ * handles the purchase transaction itself; wiring a completed purchase into
+ * subscription state is `BillingRepository`'s (app-layer) job.
  */
 interface BillingClient {
     /** Establishes the store connection. Must succeed before any other call. */

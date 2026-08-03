@@ -11,10 +11,11 @@
 | Area | Files | Responsibility |
 |---|---|---|
 | Entry point | `MainActivity.kt` | Registers `ActivityResultLauncher`s (must happen before STARTED), submits deep links to `DeepLinkGateway`, renders `SSBMaxRoot()` |
-| DI bootstrap | `SSBMaxApplication.kt`, `di/KoinModules.kt` | Starts Koin with `appModules` (`sharedModule` + `core:data` modules + the handful of `app`-local modules `app/workers`/`app/notifications` still need); schedules background tasks via `BackgroundTaskScheduler` |
+| DI bootstrap | `SSBMaxApplication.kt`, `di/KoinModules.kt` | Starts Koin with `appModules` (`sharedModule` + the handful of `app`-local modules `app/workers`/`app/notifications` still need — `core:data`'s modules were deleted in the KMP-convergence plan's Phase 9f, its one live piece — a Room cache for the TAT WorkManager chain — now lives in `app`'s own `data/local/`); schedules background tasks via `BackgroundTaskScheduler` |
 | Push | `notifications/{SSBMaxFirebaseMessagingService,NotificationHelper}.kt` | FCM token handling, notification channel/display |
 | Background analysis | `workers/` (13 files) | WorkManager workers for AI grading (GTO/Interview/PPDT/TAT/SRT/WAT/SDT). **Duplication closed (KMP-convergence Phase 8):** GTO/WAT/SRT/SD/PPDT/Interview workers are thin shells delegating to `shared/analysis/*Orchestrator.kt`; TAT's per-story/synthesis workers keep their WorkManager-chain topology (real process-death resilience the orchestrator's single-coroutine design doesn't need) but converge onto the same `shared/analysis/AnalysisRetry` retry/prompt logic. `InterviewQuestionGenerationWorker` is a shell over `shared`'s `InterviewQuestionGenerator` |
-| DI modules | `di/{AppInjectablesModule,TestUseCaseModule,WorkManagerModule}.kt` | Koin bindings for the above — **not Hilt**; see [app/di/CLAUDE.md](di/CLAUDE.md) (`DebugModule` deleted in the KMP-convergence plan's Phase 9d — its `DebugConfig`/`BYPASS_SUBSCRIPTION_LIMITS` bypass is now a Koin property `SSBMaxApplication` supplies into `shared`'s `CheckTestEligibilityUseCase`) |
+| Local Room cache | `data/local/{SSBDatabase,DatabaseMigrations}.kt`, `data/local/{dao,entity}/TATStoryAssessment*.kt` | **KMP-convergence Phase 9f:** moved here from the deleted `core:data` module. `TATStoryAssessmentDao` is a synthesis buffer between `TATStoryAnalysisWorker` and `TATSynthesisWorker` (two Android-only WorkManager jobs — iOS's single-coroutine `TATAnalysisOrchestrator` holds the same data in memory instead), the one piece of `core:data`'s Room database with a live caller by the time the module was retired |
+| DI modules | `di/{AppInjectablesModule,DatabaseModule,TestUseCaseModule,WorkManagerModule}.kt` | Koin bindings for the above — **not Hilt**; see [app/di/CLAUDE.md](di/CLAUDE.md) (`DebugModule` deleted in the KMP-convergence plan's Phase 9d — its `DebugConfig`/`BYPASS_SUBSCRIPTION_LIMITS` bypass is now a Koin property `SSBMaxApplication` supplies into `shared`'s `CheckTestEligibilityUseCase`) |
 
 ## Anti-patterns (still enforced here)
 
@@ -30,4 +31,4 @@
 
 ---
 
-**Last Updated:** 2026-08-01 | **Maintainer:** Sunil Pawar
+**Last Updated:** 2026-08-03 | **Maintainer:** Sunil Pawar

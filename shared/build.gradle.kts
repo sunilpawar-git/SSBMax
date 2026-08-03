@@ -3,9 +3,11 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // SSOT target of the KMP-convergence plan: `shared` is where business logic,
-// data, and (eventually, post-Phase-5-cutover) UI converge. `app` and
-// `core:data` are being dissolved into this module incrementally, not the
-// reverse -- see the plan's phase list for the still-open items.
+// data, and UI converge. `core:data` was fully dissolved into this module
+// (Phase 9f); `app`'s UI/ViewModel/navigation layers dissolved into it earlier
+// (Phase 5/6a) -- `app` itself persists by design as Android platform glue
+// (MainActivity, notifications, WorkManager workers), not an ongoing
+// dissolution target. See the plan's phase list for history.
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)

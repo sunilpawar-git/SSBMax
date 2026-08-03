@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.ssbmax.core.data.local.dao.TATStoryAssessmentDao
+import com.ssbmax.data.local.dao.TATStoryAssessmentDao
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
 import com.ssbmax.shared.domain.model.TATStoryResponse

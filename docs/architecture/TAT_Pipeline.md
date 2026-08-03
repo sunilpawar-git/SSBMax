@@ -691,7 +691,7 @@ The result screen polls by observing the Flow — no manual refresh required. Wh
 | `TATTestConfig` | same | Defaults: viewingTime=30s, writingTime=4min, minCharacters=150, maxCharacters=1500 |
 | `OLQAnalysisResult` | `core/domain/.../model/scoring/UnifiedOLQResult.kt` | Unified AI result (15 OLQ scores with reasoning, overallScore, rating, strengths, weaknesses) |
 | `AnalysisStatus` | same | `PENDING_ANALYSIS`, `ANALYZING`, `COMPLETED`, `FAILED` |
-| `TATStoryAssessmentEntity` | `core/data/.../local/entity/` | Room bridge between per-story workers and synthesis worker |
+| `TATStoryAssessmentEntity` | `app/src/main/kotlin/com/ssbmax/data/local/entity/` (moved from `core:data` in the KMP-convergence plan's Phase 9f) | Room bridge between per-story workers and synthesis worker |
 
 ---
 
@@ -708,15 +708,14 @@ The result screen polls by observing the Flow — no manual refresh required. Wh
 | `TATAnalysisWorkPlannerTest.kt` | `app` | Batch sizing, story coverage, synthesis dependency, index/questionId preservation |
 | `RetryBackoffPolicyTest.kt` | `app` | Bounded delays, jitter range, exponential growth, cap, input validation |
 | `TATSubmissionResultScreenTest.kt` | `app` (androidTest) | Partial-assessment notice shown/hidden, string-resource-only text |
-| ~~`TATSubmissionRepositoryTest.kt`~~ | `core:data` | Deleted in KMP-convergence Phase 9e along with the class it tested — the `finalizeTATAnalysisResult` atomicity contract has no `shared/commonTest` equivalent yet (named gap, not silently dropped: GitLive's `Firebase.firestore` has no fake/mock seam in this codebase, same constraint every prior 9-series sub-phase hit) |
-| `TATImageCacheManagerTest.kt` | `core:data` | Cache sync, TTL gate, position-based selection |
-| `TATImageCacheDaoTest.kt` | `core:data` | `getLeastUsedImageByPosition()` SQL |
+| ~~`TATSubmissionRepositoryTest.kt`~~ | `core:data` (deleted, Phase 9e) | Deleted in KMP-convergence Phase 9e along with the class it tested — the `finalizeTATAnalysisResult` atomicity contract has no `shared/commonTest` equivalent yet (named gap, not silently dropped: GitLive's `Firebase.firestore` has no fake/mock seam in this codebase, same constraint every prior 9-series sub-phase hit) |
+| ~~`TATImageCacheManagerTest.kt`~~ | `core:data` (deleted, Phase 9a/9b) | Cache sync, TTL gate, position-based selection |
+| ~~`TATImageCacheDaoTest.kt`~~ | `core:data` (deleted, Phase 9a/9b) | `getLeastUsedImageByPosition()` SQL |
 
-Run all TAT-relevant tests:
+Run all TAT-relevant tests (`core:data` itself was deleted in Phase 9f — its surviving TAT test, `SSBDatabaseMigrationTest`, moved to `:app`):
 
 ```bash
 ./gradlew :app:testDebugUnitTest --tests "*TAT*"
-./gradlew :core:data:testDebugUnitTest --tests "*TAT*"
 ./gradlew :shared:testDebugUnitTest --tests "*TAT*"
 ```
 
