@@ -6,7 +6,7 @@ import com.ssbmax.shared.domain.model.interview.InterviewSession
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQCategory
 import com.ssbmax.shared.domain.model.interview.OLQScore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Same OLQ-aggregation and feedback-generation logic as the Android original's

@@ -5,7 +5,7 @@ import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.domain.model.WATWord
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 
 /**

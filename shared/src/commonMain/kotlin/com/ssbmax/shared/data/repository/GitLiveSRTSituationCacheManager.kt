@@ -6,7 +6,7 @@ import com.ssbmax.shared.domain.model.SRTCategory
 import com.ssbmax.shared.domain.model.SRTSituation
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 
 /**

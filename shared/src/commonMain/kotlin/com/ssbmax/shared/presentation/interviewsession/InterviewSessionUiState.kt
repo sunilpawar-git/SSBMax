@@ -3,7 +3,7 @@ package com.ssbmax.shared.presentation.interviewsession
 import com.ssbmax.shared.domain.model.interview.InterviewMode
 import com.ssbmax.shared.domain.model.interview.InterviewQuestion
 import com.ssbmax.shared.domain.model.interview.InterviewSession
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Pending response stored locally during interview (before AI analysis).

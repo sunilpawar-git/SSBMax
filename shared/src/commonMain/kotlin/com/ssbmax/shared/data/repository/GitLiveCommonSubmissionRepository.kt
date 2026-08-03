@@ -9,7 +9,7 @@ import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * GitLive-Firebase-backed port of the Android `CommonSubmissionRepository`.

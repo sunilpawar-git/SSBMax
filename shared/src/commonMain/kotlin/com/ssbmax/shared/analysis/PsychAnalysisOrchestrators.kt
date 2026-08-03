@@ -12,7 +12,7 @@ import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.validation.ValidationIntegration
 import kotlinx.coroutines.flow.first
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * WAT/SRT/SD share the exact same orchestration shape in the Android originals

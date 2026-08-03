@@ -3,7 +3,7 @@ package com.ssbmax.shared.presentation.interviewstart
 import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.model.interview.InterviewStatus
 import com.ssbmax.shared.domain.model.interview.PrerequisiteCheckResult
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * KMP port of `app/.../ui/interview/start/StartInterviewUiState.kt`. Field-for-field

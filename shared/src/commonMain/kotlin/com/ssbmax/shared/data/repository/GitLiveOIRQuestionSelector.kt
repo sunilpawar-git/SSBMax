@@ -8,7 +8,7 @@ import com.ssbmax.shared.domain.model.OIRQuestionDistribution
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.QuestionDifficulty
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer

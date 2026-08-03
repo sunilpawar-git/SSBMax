@@ -71,7 +71,7 @@ class StartInterviewViewModelTest {
 
     @Test
     fun `loads past interview history on init`() = runTest(testDispatcher) {
-        val completedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(1_000)
+        val completedAt = kotlin.time.Instant.fromEpochMilliseconds(1_000)
         interviewRepository.userResultsFlow = flowOf(
             listOf(
                 com.ssbmax.shared.domain.model.interview.InterviewResult(

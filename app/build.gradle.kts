@@ -142,6 +142,14 @@ extensions.getByType<ApplicationExtension>().apply {
 
     kotlin {
         jvmToolchain(21)
+        // Same ExperimentalTime opt-in as shared/build.gradle.kts: kotlin.time.Clock/
+        // Instant are still @ExperimentalTime under Kotlin 2.2.20 (bumped for Xcode 26
+        // SDK support), and app's own workers call into shared repository methods
+        // whose signatures carry these types (e.g. InterviewAnalysisWorker ->
+        // InterviewRepository.updateSession).
+        compilerOptions {
+            optIn.add("kotlin.time.ExperimentalTime")
+        }
     }
     
     buildFeatures {

@@ -67,7 +67,7 @@ class HistoricResultsViewModelTest {
             listOf(
                 mapOf(
                     "id" to "sub-1",
-                    "submittedAt" to kotlinx.datetime.Clock.System.now().toEpochMilliseconds(),
+                    "submittedAt" to kotlin.time.Clock.System.now().toEpochMilliseconds(),
                     "analysisStatus" to "COMPLETED",
                     "olqResult" to mapOf("overallScore" to 7.5, "overallRating" to "Above Average")
                 )

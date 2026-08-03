@@ -15,7 +15,7 @@ import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.model.interview.InterviewMode
 import com.ssbmax.shared.domain.model.interview.OLQCategory
 import com.ssbmax.shared.domain.util.NoOpLogger
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

@@ -4,7 +4,7 @@ import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.results.HistoricResult
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.SubmissionRepository
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 /**

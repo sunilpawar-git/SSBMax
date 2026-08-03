@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.usecase.dashboard
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.dashboard.OLQDashboardData

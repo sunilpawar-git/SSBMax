@@ -5,7 +5,7 @@ import com.ssbmax.shared.db.SharedDatabase
 import com.ssbmax.shared.domain.model.GPEQuestion
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer

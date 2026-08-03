@@ -6,7 +6,7 @@ import com.ssbmax.shared.domain.model.TestPerformanceSummary
 import com.ssbmax.shared.domain.repository.DifficultyProgressionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Port of the Android DifficultyProgressionManager -- the writer for the

@@ -5,7 +5,7 @@ import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.QuestionCacheEntry
 import com.ssbmax.shared.domain.model.interview.QuestionCacheType
 import com.ssbmax.shared.domain.model.interview.QuestionSource
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

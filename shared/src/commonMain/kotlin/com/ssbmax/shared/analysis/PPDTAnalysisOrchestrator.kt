@@ -17,7 +17,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.flow.first
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * KMP port of `app`'s `PPDTAnalysisWorker`, minus WorkManager (this runs immediately in

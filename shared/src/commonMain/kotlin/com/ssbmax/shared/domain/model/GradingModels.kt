@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.model
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents a grading queue item visible to instructors

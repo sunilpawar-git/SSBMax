@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.model
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Study material categories aligned with SSB test types

@@ -9,7 +9,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNotEquals
 import kotlin.test.fail
 import kotlin.test.Test
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

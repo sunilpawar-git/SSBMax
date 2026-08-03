@@ -8,7 +8,7 @@ import com.ssbmax.shared.domain.model.interview.InterviewStatus
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.util.DomainLogger
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

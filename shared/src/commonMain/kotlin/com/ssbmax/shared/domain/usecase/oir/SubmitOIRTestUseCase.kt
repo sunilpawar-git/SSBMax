@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.usecase.oir
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 import com.ssbmax.shared.domain.model.*
 import com.ssbmax.shared.domain.repository.SubmissionRepository

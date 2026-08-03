@@ -7,7 +7,7 @@ import com.ssbmax.shared.domain.model.TATImageContext
 import com.ssbmax.shared.domain.model.TATQuestion
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 

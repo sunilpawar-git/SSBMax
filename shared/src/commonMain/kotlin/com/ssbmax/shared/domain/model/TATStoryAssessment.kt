@@ -1,7 +1,7 @@
 @file:OptIn(ExperimentalUuidApi::class)
 package com.ssbmax.shared.domain.model
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 import com.ssbmax.shared.domain.model.interview.OLQ
 import com.ssbmax.shared.domain.model.interview.OLQScore

@@ -83,6 +83,24 @@ kotlin {
 
     applyDefaultHierarchyTemplate()
 
+    // Kotlin 2.2.20 (bumped for Xcode 26 SDK support, see gradle/libs.versions.toml)
+    // ships kotlin.time.Clock/Instant as @ExperimentalTime -- kotlinx-datetime 0.7.1's
+    // kotlinx.datetime.Clock/Instant are now deprecated typealiases for those stdlib
+    // types, so every pre-existing `Clock.System.now()` / `Instant.fromEpochMilliseconds()`
+    // call site across shared/commonMain needs this opt-in (some surfaced as "needs
+    // opt-in", others cascaded into a misleading "unresolved reference" -- same cause,
+    // fixed for real by importing kotlin.time.Clock/Instant directly instead of the
+    // deprecated kotlinx.datetime typealiases, which weren't propagating the opt-in
+    // correctly across Kotlin/Native metadata compilation).
+    // ExperimentalForeignApi: IosCrashReporter/IosAnalyticsTracker's raw Objective-C
+    // interop (NSError, FIRCrashlytics) started needing this opt-in too under 2.2.20's
+    // stricter checking -- it wasn't annotated before and evidently wasn't enforced.
+    // Blanket module opt-in instead of annotating individual files.
+    sourceSets.all {
+        languageSettings.optIn("kotlin.time.ExperimentalTime")
+        languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.runtime)

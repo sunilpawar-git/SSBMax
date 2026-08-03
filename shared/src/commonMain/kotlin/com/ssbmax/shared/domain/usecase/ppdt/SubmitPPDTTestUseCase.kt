@@ -1,7 +1,7 @@
 @file:OptIn(ExperimentalUuidApi::class)
 package com.ssbmax.shared.domain.usecase.ppdt
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 import com.ssbmax.shared.domain.model.PPDTSubmission
 import com.ssbmax.shared.domain.model.PPDTTestSession

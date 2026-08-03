@@ -1,7 +1,7 @@
 package com.ssbmax.shared.domain.model.interview
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Cached interview question with metadata

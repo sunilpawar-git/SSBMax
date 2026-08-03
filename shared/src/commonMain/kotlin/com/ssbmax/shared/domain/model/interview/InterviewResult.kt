@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.model.interview
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Final interview assessment result

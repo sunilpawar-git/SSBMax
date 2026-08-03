@@ -1,6 +1,6 @@
 package com.ssbmax.shared.domain.usecase.ppdt
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 import com.ssbmax.shared.domain.model.Gender
 import com.ssbmax.shared.domain.model.GenderTag

@@ -1,7 +1,7 @@
 package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.db.SharedDatabase
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.Json
 
 /**
