@@ -1,7 +1,9 @@
 package com.ssbmax.shared.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -169,7 +171,16 @@ fun SSBMaxAppScaffold(
             }
         }
     ) {
-        Scaffold { paddingValues ->
+        // Leaves the status-bar inset unconsumed here (only navigation-bar/
+        // horizontal insets are reserved) so each routed screen's own
+        // Scaffold+TopAppBar -- every one of them has one: StudentHomeScreen,
+        // InstructorHomeScreen, SettingsScreen, SSBOverviewScreen,
+        // TopicScreen, UserProfileScreen -- receives the real top inset and
+        // can paint its TopAppBar's background behind the status bar instead
+        // of this outer Scaffold's default background showing through as a
+        // gap above it. Affects Android and iOS identically since this is
+        // shared/commonMain.
+        Scaffold(contentWindowInsets = WindowInsets.navigationBars) { paddingValues ->
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 content({ scope.launch { drawerState.open() } })
             }
