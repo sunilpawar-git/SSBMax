@@ -62,7 +62,7 @@ class GitLiveInterviewRepository(
     override suspend fun checkInterviewLimits(userId: String, mode: InterviewMode): Result<Boolean> {
         val tier = subscriptionRepository.getSubscriptionTier(userId).getOrElse { return Result.failure(it) }
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val month = "${now.year}-${now.monthNumber.toString().padStart(2, '0')}"
+        val month = "${now.year}-${(now.month.ordinal + 1).toString().padStart(2, '0')}"
         val usage = subscriptionRepository.getMonthlyUsage(userId, month).getOrElse { return Result.failure(it) }
         val key = SubscriptionLimits.keyFor(TestType.IO)
         val info = usage[key]

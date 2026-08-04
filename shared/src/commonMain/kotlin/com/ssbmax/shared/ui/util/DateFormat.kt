@@ -21,8 +21,8 @@ private val monthAbbreviations = arrayOf(
 fun formatFullDate(timestampMillis: Long): String {
     val localDateTime = Instant.fromEpochMilliseconds(timestampMillis)
         .toLocalDateTime(TimeZone.currentSystemDefault())
-    val month = monthAbbreviations[localDateTime.monthNumber - 1]
-    val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+    val month = monthAbbreviations[localDateTime.month.ordinal]
+    val day = localDateTime.day.toString().padStart(2, '0')
     return "$month $day, ${localDateTime.year}"
 }
 
@@ -36,8 +36,8 @@ fun formatFullDate(timestampMillis: Long): String {
 fun formatDateTime(timestampMillis: Long): String {
     val localDateTime = Instant.fromEpochMilliseconds(timestampMillis)
         .toLocalDateTime(TimeZone.currentSystemDefault())
-    val month = monthAbbreviations[localDateTime.monthNumber - 1]
-    val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+    val month = monthAbbreviations[localDateTime.month.ordinal]
+    val day = localDateTime.day.toString().padStart(2, '0')
     val hour24 = localDateTime.hour
     val amPm = if (hour24 < 12) "AM" else "PM"
     val hour12 = when {
@@ -62,8 +62,8 @@ fun formatDateTime(timestampMillis: Long): String {
 fun formatFullDateTime24h(timestampMillis: Long): String {
     val localDateTime = Instant.fromEpochMilliseconds(timestampMillis)
         .toLocalDateTime(TimeZone.currentSystemDefault())
-    val month = monthAbbreviations[localDateTime.monthNumber - 1]
-    val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+    val month = monthAbbreviations[localDateTime.month.ordinal]
+    val day = localDateTime.day.toString().padStart(2, '0')
     val hour = localDateTime.hour.toString().padStart(2, '0')
     val minute = localDateTime.minute.toString().padStart(2, '0')
     return "$month $day, ${localDateTime.year} $hour:$minute"

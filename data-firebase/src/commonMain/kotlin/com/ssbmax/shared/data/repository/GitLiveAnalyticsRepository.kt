@@ -252,7 +252,7 @@ private val shortMonthNames = listOf(
  */
 internal fun formatShortDate(epochMillis: Long): String {
     val local = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(TimeZone.currentSystemDefault())
-    val month = shortMonthNames[local.monthNumber - 1]
-    val day = local.dayOfMonth.toString().padStart(2, '0')
+    val month = shortMonthNames[local.month.ordinal]
+    val day = local.day.toString().padStart(2, '0')
     return "$month $day"
 }

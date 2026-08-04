@@ -88,18 +88,19 @@ class CheckTestEligibilityUseCase(
 
     private fun currentYearMonth(): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        return "${now.year}-${now.monthNumber.toString().padStart(2, '0')}"
+        return "${now.year}-${(now.month.ordinal + 1).toString().padStart(2, '0')}"
     }
 
     /** e.g. "Aug 1, 2026" — first day of next calendar month, matching the Android original's format. */
     private fun nextMonthResetLabel(): String {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val nextMonthFirst = if (today.monthNumber == 12) {
+        val todayMonthNumber = today.month.ordinal + 1
+        val nextMonthFirst = if (todayMonthNumber == 12) {
             LocalDate(today.year + 1, 1, 1)
         } else {
-            LocalDate(today.year, today.monthNumber + 1, 1)
+            LocalDate(today.year, todayMonthNumber + 1, 1)
         }
-        val monthName = MONTH_NAMES[nextMonthFirst.monthNumber - 1]
+        val monthName = MONTH_NAMES[nextMonthFirst.month.ordinal]
         return "$monthName 1, ${nextMonthFirst.year}"
     }
 

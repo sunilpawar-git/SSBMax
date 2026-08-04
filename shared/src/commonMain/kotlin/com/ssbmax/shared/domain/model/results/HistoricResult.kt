@@ -28,8 +28,8 @@ data class HistoricResult(
     fun getFormattedDate(): String {
         val localDateTime = Instant.fromEpochMilliseconds(submittedAt)
             .toLocalDateTime(TimeZone.currentSystemDefault())
-        val month = MONTH_ABBREVIATIONS[localDateTime.monthNumber - 1]
-        val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+        val month = MONTH_ABBREVIATIONS[localDateTime.month.ordinal]
+        val day = localDateTime.day.toString().padStart(2, '0')
         return "$month $day, ${localDateTime.year}"
     }
 

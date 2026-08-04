@@ -119,10 +119,6 @@ class SplashViewModel(
                         logger.d(tag, "User has BOTH roles, navigating to role selection")
                         _navigationEvent.value = SplashNavigationEvent.NavigateToRoleSelection
                     }
-                    else -> {
-                        logger.d(tag, "User role unknown, navigating to role selection")
-                        _navigationEvent.value = SplashNavigationEvent.NavigateToRoleSelection
-                    }
                 }
             } catch (e: Exception) {
                 logger.e(tag, "Failed to check authentication state", e)

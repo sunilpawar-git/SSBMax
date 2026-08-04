@@ -19,7 +19,7 @@ class GetMonthlyUsageUseCase constructor(
      */
     suspend operator fun invoke(userId: String): Result<Map<String, UsageInfo>> {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val currentMonth = "${now.year}-${now.monthNumber.toString().padStart(2, '0')}"
+        val currentMonth = "${now.year}-${(now.month.ordinal + 1).toString().padStart(2, '0')}"
         return subscriptionRepository.getMonthlyUsage(userId, currentMonth)
     }
 }
