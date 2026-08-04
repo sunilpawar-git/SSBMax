@@ -9,9 +9,9 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -59,7 +59,7 @@ fun StudentTestsScreen(
         }
     ) { paddingValues ->
         Column(modifier = modifier.fillMaxSize().padding(paddingValues)) {
-            TabRow(selectedTabIndex = selectedTab, containerColor = MaterialTheme.colorScheme.surface) {
+            PrimaryTabRow(selectedTabIndex = selectedTab, containerColor = MaterialTheme.colorScheme.surface) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
