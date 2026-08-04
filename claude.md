@@ -8,6 +8,18 @@ Kotlin Multiplatform (KMP) app for SSB (Services Selection Board) preparation �
 
 **Android/iOS SSOT is non-negotiable.** `shared` is the single source of truth for use cases, models, repository interfaces, and UI/ViewModel/navigation on both platforms — there must be no Android-only or iOS-only fork of business logic, screen state, or navigation behavior. Any divergence between the two platforms — intentional or accidental — must be surfaced to the user before it's introduced or left in place. Never silently patch one platform without checking whether the other needs the same fix.
 
+## KMP Migration: Expect and Fix Debt
+
+This codebase was recently converted from an Android-only app to KMP (Android + iOS). Bugs, broken wiring, and leftover single-platform code are **expected**, not exceptional. Treat encountering them as normal, not a detour from the task at hand.
+
+**When you hit migration debt, fix it as part of the current task — don't just work around it:**
+- **Broken wiring** (missing Koin bindings, an expect/actual with no actual on one platform, a screen wired on Android but not reachable on iOS or vice versa) → fix the wiring, don't route around it with a platform-specific hack.
+- **Stale references to pre-migration modules** (`core/domain`, `core/data`, `app/ui`, `app/navigation`, Hilt) → these were absorbed into `shared`/`data-firebase` or deleted; if you find code, imports, or docs still pointing at them, that's drift to correct, not a valid alternate path to follow.
+- **Platform forks of business logic** — if Android and iOS diverge on a use case, ViewModel, or nav route, that's an SSOT violation regardless of when it was introduced; surface it and fix toward one shared implementation.
+- **Dangling/unused code from the old Android-only structure** (unused imports, orphaned files, dead Hilt modules) → delete it when you're already touching the area; don't leave it "for later" once you've noticed it.
+- **Don't silently patch and move on.** When you fix migration debt, say what was broken and what you changed, even if it's outside the literal scope of the user's ask — this is exactly the kind of thing Rule 12 (Fail loud) exists for.
+- **When the fix is large or ambiguous** (e.g., which platform's behavior is "correct" when they've diverged, or a fix would touch many files), stop and ask rather than guessing — per Rule 1.
+
 ## Your 12 Core Rules (Always follow)
 
 1. **State assumptions explicitly** — if uncertain, ask rather than guess; present multiple interpretations when ambiguous
