@@ -4,7 +4,9 @@
 
 ## What Is SSBMax
 
-Android app for SSB (Services Selection Board) preparation — India's military officer selection process. Candidates practice psychology tests (TAT, WAT, SRT, SD), GTO tasks (Group Discussion, Lecturette, GPE), and Interview simulation. Tech stack: Gemini AI for evaluation, Firebase for auth/storage, Room DB for caching, Jetpack Compose (100% — no XML layouts).
+Kotlin Multiplatform (KMP) app for SSB (Services Selection Board) preparation — India's military officer selection process — shipping Android and iOS apps from a shared codebase. Candidates practice psychology tests (TAT, WAT, SRT, SD), GTO tasks (Group Discussion, Lecturette, GPE), and Interview simulation. Tech stack: Gemini AI for evaluation, Firebase for auth/storage, Room DB for caching, Jetpack Compose (100% — no XML layouts, both platforms render Compose Multiplatform UI from `shared`).
+
+**Android/iOS SSOT is non-negotiable.** `shared` is the single source of truth for use cases, models, repository interfaces, and UI/ViewModel/navigation on both platforms — there must be no Android-only or iOS-only fork of business logic, screen state, or navigation behavior. Any divergence between the two platforms — intentional or accidental — must be surfaced to the user before it's introduced or left in place. Never silently patch one platform without checking whether the other needs the same fix.
 
 ## Your 12 Core Rules (Always follow)
 
@@ -130,7 +132,7 @@ Reference: `scripts/oir-extraction/` + `docs/architecture/OIR_Architecture.md`
 
 ## Test Infrastructure & Build Commands
 
-**Setup:** JUnit 4 + MockK + Turbine + kotlinx-coroutines-test. Compose: `@HiltAndroidTest` + `HiltTestRunner`. Timeout: 60 sec/test.
+**Setup:** JUnit 4 + MockK + Turbine + kotlinx-coroutines-test. Compose tests use Koin's test module overrides (no Hilt). Timeout: 60 sec/test.
 
 **Commands:**
 ```bash
@@ -140,4 +142,4 @@ Reference: `scripts/oir-extraction/` + `docs/architecture/OIR_Architecture.md`
 ```
 Full list: see `claude.local.md`.
 
-**Tech Stack:** Kotlin 2.1.0, AGP 8.7.3, compileSdk 35, minSdk 26, JVM 21, Compose BOM 2024.05.00, Hilt 2.54, Room 2.6.1, Firebase BOM 33.7.0, Gemini AI 0.9.0. Versions: `gradle/libs.versions.toml`.
+**Tech Stack:** Kotlin 2.1.0, AGP 8.7.3, compileSdk 35, minSdk 26, JVM 21, Compose BOM 2024.05.00, Koin DI, Room 2.8.4, Firebase BOM 33.7.0, Gemini AI 0.9.0. Versions: `gradle/libs.versions.toml`.
