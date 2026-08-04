@@ -96,7 +96,7 @@ Root: claude.md (12 core rules, global patterns)
 7. **ID-based navigation only** — pass string IDs between screens; result screens fetch data via their own ViewModel
 8. **No Android deps in `shared`'s domain layer** — `shared/commonMain/.../domain` is 100% pure Kotlin — enables JVM/iOS testing, reusability
 9. **No Firebase imports in app layer** — except Firebase Auth (Phase 4) — use repositories; no direct Firestore/Database calls
-10. **Reusable Composables need @Preview** — required for visual validation. ⚠️ Currently **unenforced**: `ComponentMissingPreviewDetector` only ever targeted `core:designsystem`, deleted in the KMP-convergence plan's Phase 0f once its only two SSOT-worthy objects were confirmed duplicated in `shared`. No replacement detector scoped to `shared/ui`'s reusable components exists yet — a real gap, not a rewritten rule
+10. **Reusable Composables need @Preview** — required for visual validation. Enforced by `detekt-rules`' `MissingComposePreviewRule` (`MissingComposePreview`, package-scoped to `com.ssbmax.shared.ui.components*` since AGP Lint can't see `shared`'s commonMain), the replacement for the `core:designsystem`-only `ComponentMissingPreviewDetector` deleted in Phase 0f. Pre-existing violations are grandfathered in `shared/detekt-baseline.xml`; new components must add a `@Preview`
 
 ## Quality Limits
 

@@ -7,3 +7,5 @@
 ssbmax:
   HardcodedComposeText:
     active: true
+  MissingComposePreview:
+    active: true

@@ -11,7 +11,8 @@ class SSBMaxRuleSetProvider : RuleSetProvider {
     override fun instance(config: Config) = RuleSet(
         ruleSetId,
         listOf(
-            HardcodedComposeTextRule(config)
+            HardcodedComposeTextRule(config),
+            MissingComposePreviewRule(config)
         )
     )
 }
