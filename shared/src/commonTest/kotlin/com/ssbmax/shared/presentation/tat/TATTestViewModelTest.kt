@@ -197,7 +197,7 @@ class TATTestViewModelTest {
     }
 
     @Test
-    fun `submitTest builds a submission, records usage, and triggers analysis`() = runTest(testDispatcher) {
+    fun `submitTest builds a submission and records usage and triggers analysis`() = runTest(testDispatcher) {
         val fakeWithTAT = object : com.ssbmax.shared.domain.repository.TestContentRepository by testContentRepository {
             override suspend fun getTATQuestions(testId: String, genderTag: com.ssbmax.shared.domain.model.GenderTag?) =
                 Result.success(questions())

@@ -106,7 +106,7 @@ class TATSubmissionResultViewModelTest {
     }
 
     @Test
-    fun `regression from COMPLETED to an earlier status is logged, not blocked`() = runTest(testDispatcher) {
+    fun `regression from COMPLETED to an earlier status is logged rather than blocked`() = runTest(testDispatcher) {
         repository.observeFlow = sequentialFlow(
             submission(AnalysisStatus.COMPLETED),
             submission(AnalysisStatus.PENDING_ANALYSIS)

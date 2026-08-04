@@ -22,7 +22,13 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
+// kotlin.time.Clock, not the kotlinx.datetime.Clock typealias: under Kotlin
+// 2.2.20 the latter is a deprecated alias for this type, and the @ExperimentalTime
+// opt-in doesn't propagate through it -- which surfaces here as a misleading
+// "Unresolved reference 'System'" rather than an opt-in error. Same fix already
+// applied across shared/commonMain in the 2.2.20 bump; this was the last file in
+// app/src still on the old import.
+import kotlin.time.Clock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before

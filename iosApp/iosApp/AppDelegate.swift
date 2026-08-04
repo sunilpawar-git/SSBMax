@@ -51,7 +51,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // their first requests. See BackgroundTaskRegistrar.kt's class doc
         // for what the launch handlers do (and, just as importantly, don't
         // do yet).
-        AppBootstrapKt.ensureKoinStarted()
+        //
+        // The two observability implementations are passed in from Swift
+        // because Swift owns the Firebase SPM dependency they wrap -- see
+        // FirebaseObservability.swift and IosObservabilityModule.kt. Kotlin
+        // has loud no-op defaults, but Kotlin/Native does not export default
+        // arguments to Swift, so this call site must supply both, which is
+        // what keeps the real ones from being silently forgotten. Runs after
+        // FirebaseApp.configure() above, since Crashlytics/Analytics both
+        // need the default FirebaseApp.
+        AppBootstrapKt.ensureKoinStarted(
+            crashReporter: FirebaseCrashReporter(),
+            analyticsTracker: FirebaseAnalyticsTracker()
+        )
         BackgroundTaskRegistrarKt.registerAndScheduleBackgroundTasks()
 
         UNUserNotificationCenter.current().delegate = self

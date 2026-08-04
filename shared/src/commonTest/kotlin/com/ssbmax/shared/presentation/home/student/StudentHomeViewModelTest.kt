@@ -126,7 +126,7 @@ class StudentHomeViewModelTest {
     }
 
     @Test
-    fun `dashboard cache miss on first load fires dashboard_cache_miss (Phase 7a telemetry restore)`() = runTest(testDispatcher) {
+    fun `dashboard cache miss on first load fires dashboard_cache_miss for Phase 7a telemetry restore`() = runTest(testDispatcher) {
         buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -136,7 +136,7 @@ class StudentHomeViewModelTest {
     }
 
     @Test
-    fun `forced dashboard refresh fires dashboard_cache_miss again (forceRefresh always bypasses cache)`() = runTest(testDispatcher) {
+    fun `forced dashboard refresh fires dashboard_cache_miss again because forceRefresh always bypasses cache`() = runTest(testDispatcher) {
         val viewModel = buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
 

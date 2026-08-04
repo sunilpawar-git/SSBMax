@@ -26,7 +26,7 @@ class GitLiveUserProfileRepositoryTest {
     private val repository = GitLiveUserProfileRepository()
 
     @Test
-    fun `todayStartMillis matches device-local midnight, not UTC epoch-day midnight`() {
+    fun `todayStartMillis matches device-local midnight rather than UTC epoch-day midnight`() {
         val now = Clock.System.now()
         val zone = TimeZone.currentSystemDefault()
         val expectedLocalMidnight = now.toLocalDateTime(zone).date.atStartOfDayIn(zone).toEpochMilliseconds()

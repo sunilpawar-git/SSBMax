@@ -64,7 +64,7 @@ class GTOAnalysisOrchestratorTest {
     }
 
     @Test
-    fun `analyze writes neutral fallback scores, not FAILED, when AI never succeeds`() = kotlinx.coroutines.test.runTest {
+    fun `analyze writes neutral fallback scores rather than FAILED when AI never succeeds`() = kotlinx.coroutines.test.runTest {
         val gtoRepo = FakeGTORepository().apply {
             submissionResult = Result.success(lecturetteSubmission(GTOSubmissionStatus.PENDING_ANALYSIS))
         }

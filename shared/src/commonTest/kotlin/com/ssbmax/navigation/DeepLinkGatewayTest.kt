@@ -52,7 +52,7 @@ class DeepLinkGatewayTest {
     }
 
     @Test
-    fun `submit with an unsupported scheme is tolerated, not crashed`() {
+    fun `submit with an unsupported scheme is tolerated rather than crashed`() {
         val gateway = DeepLinkGateway()
 
         gateway.submit("https://ssbmax.com/interview/result/abc123")
