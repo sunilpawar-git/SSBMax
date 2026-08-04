@@ -74,7 +74,7 @@ import ssbmax.shared.generated.resources.section_your_progress
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentHomeScreen(
-    onNavigateToTopic: (String) -> Unit,
+    onNavigateToTopic: (topicId: String, selectedTab: Int) -> Unit,
     onNavigateToPhaseDetail: (TestPhase) -> Unit,
     onNavigateToStudy: () -> Unit,
     onNavigateToSubmissions: () -> Unit = {},
@@ -168,9 +168,10 @@ fun StudentHomeScreen(
                     phase2Progress = uiState.phase2Progress,
                     onPhaseClick = onNavigateToPhaseDetail,
                     onTopicClick = { topicId ->
-                        // Navigate to topic with Tests tab selected (tab index 2)
-                        val route = buildTopicRoute(topicId, selectedTab = 2)
-                        onNavigateToTopic(route)
+                        // Tests tab selected (tab index 2) via TopicScreen's
+                        // typed `selectedTab` constructor arg, not a
+                        // hand-built "topicId?selectedTab=2" route string.
+                        onNavigateToTopic(topicId, 2)
                     }
                 )
             }
@@ -237,19 +238,5 @@ fun StudentHomeScreen(
                 Spacer(modifier = Modifier.height(Spacing.large))
             }
         }
-    }
-}
-
-/**
- * Builds topic route with optional query parameters
- * @param topicId The topic ID
- * @param selectedTab Optional tab index (defaults to Overview tab)
- * @return Route string for navigation
- */
-private fun buildTopicRoute(topicId: String, selectedTab: Int? = null): String {
-    return if (selectedTab != null) {
-        "$topicId?selectedTab=$selectedTab"
-    } else {
-        topicId
     }
 }

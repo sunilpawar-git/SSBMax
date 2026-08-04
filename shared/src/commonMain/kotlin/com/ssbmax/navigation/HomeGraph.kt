@@ -14,8 +14,8 @@ fun NavGraphBuilder.homeGraph(navController: NavHostController, onOpenDrawer: ()
             navController.navigate(SSBMaxDestinations.NotYetPorted(screen))
         }
         StudentHomeScreen(
-            onNavigateToTopic = { topicId ->
-                navController.navigate(SSBMaxDestinations.TopicScreen(topicId))
+            onNavigateToTopic = { topicId, selectedTab ->
+                navController.navigate(SSBMaxDestinations.TopicScreen(topicId, selectedTab))
             },
             onNavigateToPhaseDetail = { phase ->
                 // Phase1Detail/Phase2Detail are real ported screens (this session) --

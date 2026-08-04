@@ -13,6 +13,7 @@ import com.ssbmax.shared.domain.model.TestProgress
 import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
+import kotlin.test.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -106,5 +107,34 @@ class PhaseProgressRibbonUiTest {
         waitForIdle()
 
         assert(phaseClicked) { "Phase click callback should be called" }
+    }
+
+    // Pins the origin of the topic id this component hands upward: it must
+    // always be the bare lowercase id ("oir", not e.g. "OIR" or a
+    // "oir?selectedTab=2"-style templated string). `StudentHomeScreen` (the
+    // one caller that used to mangle this id before forwarding it on) relies
+    // on that guarantee -- see its own `homeScreen_topicClick_*` regression
+    // tests for the bug this was covering.
+    @Test
+    fun phaseProgressRibbon_topicClick_passesCleanLowercaseTopicId() = runComposeUiTest {
+        var capturedTopicId: String? = null
+        val phase1Progress = Phase1Progress(
+            oirProgress = TestProgress(TestType.OIR, TestStatus.NOT_ATTEMPTED),
+            ppdtProgress = TestProgress(TestType.PPDT, TestStatus.NOT_ATTEMPTED)
+        )
+
+        setContent {
+            PhaseProgressRibbon(
+                phase1Progress = phase1Progress,
+                phase2Progress = null,
+                onPhaseClick = {},
+                onTopicClick = { capturedTopicId = it }
+            )
+        }
+
+        onNodeWithText("OIR Test", substring = false).performClick()
+        waitForIdle()
+
+        assertEquals("oir", capturedTopicId)
     }
 }

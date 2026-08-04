@@ -10,9 +10,11 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.runComposeUiTest
 import com.ssbmax.shared.domain.model.Phase1Progress
+import com.ssbmax.shared.domain.model.Phase2Progress
 import com.ssbmax.shared.domain.model.TestProgress
 import com.ssbmax.shared.domain.model.TestStatus
 import com.ssbmax.shared.domain.model.TestType
@@ -25,6 +27,8 @@ import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -192,10 +196,117 @@ class StudentHomeScreenUiTest {
         onNodeWithText("Failed to load progress", substring = true).assertIsDisplayed()
     }
 
+    // REGRESSION (root cause of the reported bug): this screen's own
+    // onTopicClick used to hand-build "ppdt?selectedTab=2" as a single string
+    // via a since-deleted `buildTopicRoute` helper and funnel it through a
+    // (String) -> Unit callback -- SSBMaxDestinations.TopicScreen only ever
+    // set that whole string as `topicId`, and TopicViewModel.getTestsForTopic
+    // matches `topicId.uppercase()` via an exact `when`, so the mangled id
+    // matched nothing and the Overview/Study Material/Tests tabs all rendered
+    // empty. The side drawer (DrawerContent.kt) never had this bug -- it
+    // always called onNavigateToTopic("ppdt") directly. These tests pin the
+    // callback contract at its origin (this screen) so a future edit can't
+    // silently reintroduce string-templating here.
+    @Test
+    fun homeScreen_topicClick_oir_passesCleanTopicIdAndTestsTabSelected() = runComposeUiTest {
+        var capturedTopicId: String? = null
+        var capturedSelectedTab: Int? = null
+        uiStateFlow.value = uiStateFlow.value.copy(
+            phase1Progress = Phase1Progress(
+                oirProgress = TestProgress(TestType.OIR, TestStatus.NOT_ATTEMPTED),
+                ppdtProgress = TestProgress(TestType.PPDT, TestStatus.NOT_ATTEMPTED)
+            )
+        )
+        setContent {
+            withTestDependencies {
+                StudentHomeScreenUnderTest(
+                    onNavigateToTopic = { topicId, selectedTab ->
+                        capturedTopicId = topicId
+                        capturedSelectedTab = selectedTab
+                    }
+                )
+            }
+        }
+
+        onNodeWithText("OIR Test", substring = false).performClick()
+        waitForIdle()
+
+        assertEquals("oir", capturedTopicId)
+        assertEquals(2, capturedSelectedTab)
+    }
+
+    @Test
+    fun homeScreen_topicClick_ppdt_passesCleanTopicIdNotMangledQueryString() = runComposeUiTest {
+        var capturedTopicId: String? = null
+        var capturedSelectedTab: Int? = null
+        uiStateFlow.value = uiStateFlow.value.copy(
+            phase1Progress = Phase1Progress(
+                oirProgress = TestProgress(TestType.OIR, TestStatus.NOT_ATTEMPTED),
+                ppdtProgress = TestProgress(TestType.PPDT, TestStatus.COMPLETED)
+            )
+        )
+        setContent {
+            withTestDependencies {
+                StudentHomeScreenUnderTest(
+                    onNavigateToTopic = { topicId, selectedTab ->
+                        capturedTopicId = topicId
+                        capturedSelectedTab = selectedTab
+                    }
+                )
+            }
+        }
+
+        // "PPDT" also renders in OLQDashboardCard's Phase1Section chip -- the
+        // ribbon's TestProgressItem renders first in the LazyColumn (same
+        // precedent as "PHASE 1"/"Interview" elsewhere in this file), so
+        // onFirst() targets the ribbon's row.
+        onAllNodesWithText("PPDT", substring = false).onFirst().performClick()
+        waitForIdle()
+
+        assertEquals("ppdt", capturedTopicId)
+        assertFalse(capturedTopicId.orEmpty().contains("?"))
+        assertEquals(2, capturedSelectedTab)
+    }
+
+    @Test
+    fun homeScreen_topicClick_phase2Topics_passCleanTopicIds() = runComposeUiTest {
+        val captured = mutableListOf<Pair<String, Int>>()
+        uiStateFlow.value = uiStateFlow.value.copy(
+            phase2Progress = Phase2Progress(
+                psychologyProgress = TestProgress(TestType.TAT, TestStatus.NOT_ATTEMPTED),
+                gtoProgress = TestProgress(TestType.GTO_GD, TestStatus.NOT_ATTEMPTED),
+                interviewProgress = TestProgress(TestType.IO, TestStatus.NOT_ATTEMPTED)
+            )
+        )
+        setContent {
+            withTestDependencies {
+                StudentHomeScreenUnderTest(
+                    onNavigateToTopic = { topicId, selectedTab -> captured += topicId to selectedTab }
+                )
+            }
+        }
+
+        onNodeWithText("Psychology Tests", substring = false).performClick()
+        waitForIdle()
+        onNodeWithText("GTO Tasks", substring = false).performClick()
+        waitForIdle()
+        // "Interview" also renders in OLQDashboardCard's InterviewSection --
+        // same onFirst() reasoning as the "PPDT" test above.
+        onAllNodesWithText("Interview", substring = true).onFirst().performClick()
+        waitForIdle()
+
+        assertEquals(
+            listOf("psychology" to 2, "gto" to 2, "interview" to 2),
+            captured
+        )
+    }
+
     @Composable
-    private fun StudentHomeScreenUnderTest() {
+    private fun StudentHomeScreenUnderTest(
+        onNavigateToTopic: (String, Int) -> Unit = { _, _ -> }
+    ) {
         StudentHomeScreen(
-            onNavigateToTopic = {},
+            onNavigateToTopic = onNavigateToTopic,
             onNavigateToPhaseDetail = {},
             onNavigateToStudy = {},
             onNavigateToResult = { _, _ -> },
