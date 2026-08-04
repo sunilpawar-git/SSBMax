@@ -28,6 +28,16 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.serialization)
+    // Not for any @Composable code here -- this module has none. Needed so the
+    // iOS framework this module produces (export(project(":shared"))) picks up
+    // the Compose Resources bundling task (.cvr files) for :shared's
+    // stringResource()/painterResource() calls. Without it, `shared`'s Compose
+    // plugin registers the resource generation but no module in this graph
+    // wires those resources into the framework embedAndSignAppleFrameworkForXcode
+    // copies into iosApp.app, causing a MissingResourceException at first
+    // stringResource() call on iOS (regression from Move 2's framework move).
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.compiler.kmp)
 }
 
 kotlin {
@@ -79,6 +89,15 @@ kotlin {
             // binaries, so consumers depending on this module must also see
             // `:shared`'s domain types, ViewModels and UI.
             api(project(":shared"))
+
+            // This module has no @Composable code, but the compose.compiler
+            // plugin above (applied for Compose Resources bundling, not UI)
+            // runs on every Kotlin compile here regardless. Without the
+            // runtime on the classpath it throws
+            // IncompatibleComposeRuntimeVersionException -- `:shared` can't
+            // supply this transitively since it declares compose.runtime as
+            // `implementation`, not `api`.
+            implementation(compose.runtime)
 
             implementation(libs.gitlive.firebase.auth)
             implementation(libs.gitlive.firebase.firestore)

@@ -18,6 +18,14 @@ plugins {
 }
 
 kotlin {
+    // expect/actual classes (DatabaseDriverFactory, SettingsFactory, WhiteNoisePlayer)
+    // are Beta as of Kotlin 2.2.20 -- this repo relies on them deliberately for
+    // platform-specific singletons, so silence the per-declaration warning rather
+    // than restructure around it.
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
