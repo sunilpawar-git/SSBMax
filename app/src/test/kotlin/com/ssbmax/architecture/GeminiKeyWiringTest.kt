@@ -62,9 +62,15 @@ class GeminiKeyWiringTest {
             GEMINI_API_KEY_PROPERTY == "GEMINI_API_KEY"
         )
 
+        // Move 2 (iOS CocoaPods->SPM convergence): AppBootstrap.kt moved from
+        // :shared to :data-firebase. The composition root has to sit above
+        // :shared so it can name `firebaseDataModule`, which binds the
+        // Firebase-backed repositories that :shared deliberately no longer
+        // binds. This test catching the stale path is exactly its job -- unlike
+        // the @Ignore'd contract tests, it actually runs.
         val iosBootstrap = File(
             projectRoot,
-            "shared/src/iosMain/kotlin/com/ssbmax/shared/platform/AppBootstrap.kt"
+            "data-firebase/src/iosMain/kotlin/com/ssbmax/shared/platform/AppBootstrap.kt"
         )
         assertTrue("AppBootstrap.kt not found", iosBootstrap.exists())
         assertTrue(

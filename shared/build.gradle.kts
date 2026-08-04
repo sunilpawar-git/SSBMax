@@ -15,7 +15,6 @@ plugins {
     alias(libs.plugins.compose.compiler.kmp)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.cocoapods)
 }
 
 kotlin {
@@ -31,74 +30,14 @@ kotlin {
     // extra cost to configure and keeps the target list "real" rather than
     // simulator-only, but only the simulator target was actually exercised
     // in this spike (no physical device available).
-    val xcfName = "SharedKit"
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { target ->
-        target.binaries.framework {
-            baseName = xcfName
-            isStatic = true
-        }
-    }
-
-    // Phase 0d/0b (KMP-convergence plan): GitLive's Firebase Kotlin/Native
-    // artifacts are published as CocoaPods-shaped cinterops -- their klibs'
-    // own manifests declare `linkerOpts=-framework FirebaseAuth` etc. and
-    // `package=cocoapods.FirebaseAuth` (verified by unzipping and inspecting
-    // them directly). `iosApp`'s own Firebase integration uses Swift Package
-    // Manager, which compiles FirebaseCore/Auth/Storage straight into the app
-    // binary as object code -- it never produces the standalone .framework
-    // bundles Kotlin/Native needs to link against, which is exactly why
-    // `:shared:iosSimulatorArm64Test` couldn't link before this block existed
-    // (confirmed: it failed identically on the pre-existing suite, before any
-    // of this phase's tests were added). This block is scoped to `:shared`'s
-    // own Kotlin/Native compilation only -- it resolves these pods into a
-    // synthetic Xcode project purely to build real frameworks for the linker;
-    // `iosApp` keeps using SPM and is untouched by it.
-    cocoapods {
-        summary = "SSBMax shared KMP module"
-        homepage = "https://github.com/ssbmax/ssbmax"
-        version = "1.0"
-        ios.deploymentTarget = "15.0"
-        // No `podfile = ...` here on purpose: leaving it unset makes the
-        // plugin generate its own synthetic Podfile/Xcode project under
-        // build/cocoapods/synthetic/ to resolve these pods, rather than
-        // requiring (or writing into) a Podfile in `iosApp`.
-
-        // linkOnly = true on the Firebase pods this module only consumes via
-        // GitLive's precompiled Kotlin bindings (no raw cinterop of our own):
-        // `iosApp` links its OWN copy of Firebase via SPM (see iosApp.xcodeproj),
-        // separate from this cocoapods block, which otherwise exists purely to
-        // give Kotlin/Native's cinterop something to compile GitLive's bindings
-        // against. Without linkOnly, these pods' real .framework binaries get
-        // compiled into SharedKit.framework (static) AND iosApp separately links
-        // its own SPM Firebase copy into the same app binary -- two copies of
-        // Firebase's ObjC classes/symbols in one process, a known duplicate-symbol
-        // dyld crash risk GitLive's own docs warn about for exactly this
-        // CocoaPods+SPM split. linkOnly=true makes this block satisfy the
-        // Kotlin/Native linker at `shared`'s build time without embedding a
-        // second copy -- iosApp's SPM-linked Firebase remains the single real
-        // copy at runtime.
-        //
-        // FirebaseCrashlytics/FirebaseAnalytics used to be declared here too,
-        // and were the only two that could NOT be linkOnly: IosCrashReporter.kt/
-        // IosAnalyticsTracker.kt cinterop'd their raw Obj-C APIs
-        // (FIRCrashlytics/FIRAnalytics), and linkOnly suppresses Kotlin binding
-        // generation. Both are now implemented in Swift against the SPM Firebase
-        // `iosApp` already owns, so they're gone from here entirely -- see
-        // IosObservabilityModule.kt for that reasoning.
-        //
-        // What that did NOT buy: every pod below still gets a real
-        // podBuild<Name>Ios* task and still shells out to `xcodebuild`
-        // (verified -- see the CORRECTION note on the afterEvaluate block
-        // below). linkOnly is about Kotlin bindings, not about skipping the
-        // framework build. Removing pods reduces how much races; only
-        // deleting this whole block ends it.
-        pod("FirebaseAuth") { linkOnly = true }
-        pod("FirebaseFirestore") { linkOnly = true }
-        pod("FirebaseStorage") { linkOnly = true }
-    }
+    // No `binaries.framework { }` here: Move 2 (iOS CocoaPods->SPM convergence)
+    // moved `SharedKit` up to `:data-firebase`, which `api`-exports this module.
+    // The framework has to be produced by the topmost module so the shipped app
+    // carries the Firebase-backed repository implementations AND this module's
+    // UI/ViewModels; a framework built here would link an app whose Koin graph
+    // has no repository bindings at all.
+    iosArm64()
+    iosSimulatorArm64()
 
     applyDefaultHierarchyTemplate()
 
@@ -157,15 +96,13 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
-            implementation(libs.gitlive.firebase.auth)
-            implementation(libs.gitlive.firebase.firestore)
-            implementation(libs.gitlive.firebase.common)
-            // Not re-exported as `api` by firebase-common/-firestore (implementation-only
-            // upstream), so it must be depended on directly to reach the public
-            // FirebaseDecoder/FirebaseEncoder classes used by FirestoreRawMapSerializer for the
-            // raw Map<String, Any> Firestore decode/encode path. See that file's class doc.
-            implementation(libs.gitlive.firebase.common.internal)
-            implementation(libs.gitlive.firebase.storage)
+            // NO Firebase here, deliberately -- Move 2 of the iOS CocoaPods->SPM
+            // convergence moved every GitLive-backed implementation to
+            // `:data-firebase`. Keeping this module's klib graph Firebase-free is
+            // what lets its Kotlin/Native test binaries link without CocoaPods,
+            // which is why the `cocoapods {}` block and its ~90 lines of Xcode
+            // workarounds are gone from this file. Do not add a Firebase
+            // dependency back here.
 
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
@@ -242,97 +179,6 @@ kotlin {
             implementation(libs.sqldelight.native.driver)
             implementation(libs.ktor.client.darwin)
         }
-    }
-}
-
-// This task patches the Kotlin CocoaPods Gradle plugin's generated
-// synthetic Pods.xcodeproj immediately after `pod install` runs, fixing two
-// issues Xcode 26 exposes that the plugin (still, as of Kotlin 2.2.20)
-// doesn't know about:
-tasks.matching { it.name == "podInstallSyntheticIos" }.configureEach {
-    val podsDirProvider = layout.buildDirectory.dir("cocoapods/synthetic/ios/Pods")
-    doLast {
-        val podsDir = podsDirProvider.get().asFile
-        val pbxproj = podsDir.resolve("Pods.xcodeproj/project.pbxproj")
-        if (pbxproj.exists()) {
-            // Xcode 26 raised its minimum supported IPHONEOS_DEPLOYMENT_TARGET
-            // to 12.0. The plugin's own generated Podfile post_install (see
-            // shared/build/cocoapods/synthetic/ios/Podfile, "KT-57741") only
-            // raises pod targets BELOW 11.0 up to 11.0. PromisesObjC/PromisesSwift
-            // (transitive Firebase deps) declare 11.0 in their podspecs, so
-            // `pod install` leaves them at 11.0 and Xcode 26 rejects the project
-            // outright. Raise anything below 12.0 to match this module's own
-            // ios.deploymentTarget (15.0) above.
-            val deploymentTargetRegex = Regex("""IPHONEOS_DEPLOYMENT_TARGET = (\d+(?:\.\d+)?);""")
-            var patchedPbxproj = pbxproj.readText().replace(deploymentTargetRegex) { match ->
-                if (match.groupValues[1].toDouble() < 12.0) {
-                    "IPHONEOS_DEPLOYMENT_TARGET = 15.0;"
-                } else {
-                    match.value
-                }
-            }
-            // Belt-and-suspenders alongside the per-scheme patch below: this
-            // is the project-wide "Parallelize Build" default, which schemes
-            // without their own explicit parallelizeBuildables would
-            // otherwise fall back to.
-            if (!patchedPbxproj.contains("BuildIndependentTargetsInParallel")) {
-                patchedPbxproj = patchedPbxproj.replaceFirst(
-                    "attributes = {",
-                    "attributes = {\n\t\t\t\tBuildIndependentTargetsInParallel = 0;"
-                )
-            }
-            pbxproj.writeText(patchedPbxproj)
-        }
-
-        // CocoaPods' generated "<pod>-<pod>_Privacy" resource-bundle
-        // aggregation targets (e.g. nanopb-nanopb_Privacy, which ends up
-        // holding leveldb/gRPC/abseil/GoogleUtilities' privacy bundles too)
-        // are missing target-dependency edges to whatever actually produces
-        // those bundles. Every generated .xcscheme sets
-        // parallelizeBuildables="YES", which overrides the project's own
-        // "Parallelize Build" default for scheme-driven builds (like the
-        // `xcodebuild -project Pods.xcodeproj -scheme <PodName>` the Kotlin
-        // plugin's podBuild<Name>Ios* tasks run) -- with that freedom, Xcode's
-        // scheduler can run the aggregation target's copy phase before its
-        // (undeclared) dependencies finish, intermittently failing with
-        // "couldn't be opened because there is no such file" (confirmed:
-        // repeated clean builds of the same scheme are consistently green
-        // once parallelizeBuildables is off, consistently racy with it on).
-        podsDir.resolve("Pods.xcodeproj").walkTopDown()
-            .filter { it.extension == "xcscheme" }
-            .forEach { scheme ->
-                val patchedScheme = scheme.readText()
-                    .replace("""parallelizeBuildables = "YES"""", """parallelizeBuildables = "NO"""")
-                scheme.writeText(patchedScheme)
-            }
-    }
-}
-
-// Fixing the intra-project scheduling above isn't sufficient on its own:
-// org.gradle.parallel=true (gradle.properties) also lets Gradle run each
-// pod's podBuild<Name>Ios* task concurrently, and each one shells out to its
-// own `xcodebuild -project Pods.xcodeproj -scheme <PodName> build` against
-// the SAME shared build output directory
-// (shared/build/cocoapods/synthetic/ios/build/) -- the Firebase pods share
-// nanopb/GoogleUtilities/abseil/gRPC transitively, so two concurrent
-// xcodebuild *processes* race writing those shared targets' resource bundles
-// even with each process's own internal target parallelism turned off above.
-//
-// CORRECTION (verified empirically, 2026-08-04): an earlier version of this
-// comment claimed only NON-linkOnly pods get a podBuild<Name>Ios* task, and
-// this block was briefly deleted on that basis. A real
-// `:shared:iosSimulatorArm64Test` run disproves it -- podBuildFirebaseAuthIosSimulator,
-// podBuildFirebaseFirestoreIosSimulator and podBuildFirebaseStorageIosSimulator
-// all executed, concurrently, with all three pods declared linkOnly. linkOnly
-// suppresses Kotlin *binding generation*, not the pod's framework build. So
-// this guard is still load-bearing and must stay for as long as ANY pod is
-// declared above, linkOnly or not. Only removing the cocoapods block entirely
-// retires it.
-afterEvaluate {
-    listOf(Regex("""^podBuild.*IosSimulator$"""), Regex("""^podBuild.*Ios$""")).forEach { pattern ->
-        tasks.names.filter { pattern.matches(it) }.sorted()
-            .map { tasks.named(it) }
-            .zipWithNext { earlier, later -> later.configure { mustRunAfter(earlier) } }
     }
 }
 

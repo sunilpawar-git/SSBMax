@@ -47,6 +47,13 @@ fun ensureKoinStarted(
         properties(mapOf(com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY to geminiApiKey))
         modules(
             com.ssbmax.shared.di.sharedModule,
+            // Move 2: `sharedModule` alone is an INCOMPLETE graph -- it declares
+            // the repository interfaces but no longer binds them, so that
+            // `:shared` carries no Firebase and its Kotlin/Native test binaries
+            // link without CocoaPods. `firebaseDataModule` (this module) supplies
+            // the GitLive-backed implementations. This bootstrap lives here, not
+            // in `:shared`, precisely because it must name both.
+            com.ssbmax.shared.di.firebaseDataModule,
             iosObservabilityModule(crashReporter, analyticsTracker)
         )
     }.koin

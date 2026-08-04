@@ -6,8 +6,6 @@
     <ID>CyclomaticComplexMethod:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$suspend operator fun invoke( userId: String, bypassSubscriptionCheck: Boolean = false, bypassPrerequisites: Boolean = false ): Result&lt;PrerequisiteCheckResult&gt;</ID>
     <ID>CyclomaticComplexMethod:DashboardTestScoreChip.kt$@Composable fun TestScoreChip( testName: String, score: Float?, isOLQBased: Boolean = true, isRefreshing: Boolean = false, onClick: (() -&gt; Unit)? = null )</ID>
     <ID>CyclomaticComplexMethod:GDTestScreen.kt$@Composable fun GDTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: GDTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
-    <ID>CyclomaticComplexMethod:GitLivePPDTImageCacheManager.kt$GitLivePPDTImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
-    <ID>CyclomaticComplexMethod:GitLiveTATImageCacheManager.kt$GitLiveTATImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
     <ID>CyclomaticComplexMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:LecturetteTestScreen.kt$@Composable fun LecturetteTestScreen( testId: String, onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -&gt; Unit = { _, _ -&gt; }, onNavigateBack: () -&gt; Unit = {}, viewModel: LecturetteTestViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MarkdownText.kt$@Composable fun MarkdownText( content: String, modifier: Modifier = Modifier, textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant )</ID>
@@ -135,7 +133,6 @@
     <ID>LongParameterList:SubscriptionManagementViewModel.kt$SubscriptionTierModel$( val displayName: String, val price: String, val oirTestLimit: Int, val tatTestLimit: Int, val watTestLimit: Int, val srtTestLimit: Int, val ppdtTestLimit: Int, val piqTestLimit: Int, val sdTestLimit: Int, val gtoTestLimit: Int, val interviewTestLimit: Int, val features: List&lt;String&gt; )</ID>
     <ID>LongParameterList:UnifiedOLQResultTemplate.kt$( uiState: T, paddingValues: PaddingValues, submissionConfirmationContent: @Composable (T) -&gt; Unit, testSpecificContent: (@Composable (T) -&gt; Unit)?, submissionStatus: SubmissionStatus?, showInstructorReview: Boolean, onNavigateHome: () -&gt; Unit, onRetry: (() -&gt; Unit)? )</ID>
     <ID>LongParameterList:WATInProgressPhase.kt$( word: String, wordNumber: Int, totalWords: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, onSubmit: () -&gt; Unit, onSkip: () -&gt; Unit, onShowExitDialog: () -&gt; Unit )</ID>
-    <ID>LoopWithTooManyJumpStatements:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$for</ID>
     <ID>MaxLineLength:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$is OIRStatus.CompletedBelowThreshold -&gt; failureReasons.add("Score at least 50% in OIR test (current: ${oirStatus.score.toInt()}%)")</ID>
     <ID>MaxLineLength:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$is SubscriptionStatus.LimitReached -&gt; failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")</ID>
     <ID>MaxLineLength:GDDiscussionPhase.kt$Text(stringResource(Res.string.gd_topic_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)</ID>
@@ -183,22 +180,6 @@
     <ID>MaxLineLength:GPETestViewModel.kt$GPETestViewModel$_uiState.update { it.copy(isSubmitting = false, phase = GPEPhase.SUBMITTED, submissionId = submissionId, isCompleted = true) }</ID>
     <ID>MaxLineLength:GetOLQDashboardUseCase.kt$GetOLQDashboardUseCase$logger.d(TAG, " Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")</ID>
     <ID>MaxLineLength:GetOLQDashboardUseCase.kt$GetOLQDashboardUseCase$logger.d(TAG, " Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")</ID>
-    <ID>MaxLineLength:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$questions = filterValid(applyDifficulty(queries.selectOIRQuestionsByType(type, (count * 3).toLong()).executeAsList(), difficulty))</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$internal fun TATStoryDto.toDomain()</ID>
-    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$internal fun TATStoryResponse.toDto()</ID>
-    <ID>MaxLineLength:GitLiveSDTSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
-    <ID>MaxLineLength:GitLiveSDTSubmissionDelegate.kt$internal fun SDTResponseDto.toDomain()</ID>
-    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
-    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$internal fun SRTResponseDto.toDomain()</ID>
-    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$internal fun SRTSituationResponse.toDto()</ID>
-    <ID>MaxLineLength:GitLiveWATSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
     <ID>MaxLineLength:InterviewResultScreen.kt$OLQListCard(titleRes = Res.string.interview_result_strengths_title, olqs = uiState.strengths, isPositive = true)</ID>
     <ID>MaxLineLength:InterviewResultScreen.kt$OLQListCard(titleRes = Res.string.interview_result_weaknesses_title, olqs = uiState.weaknesses, isPositive = false)</ID>
     <ID>MaxLineLength:InterviewResultScreen.kt$Text(text = stringResource(Res.string.interview_result_olq_scores_title), style = MaterialTheme.typography.titleMedium)</ID>
@@ -266,7 +247,6 @@
     <ID>MaxLineLength:PPDTInstructionsPhase.kt$Text(text = stringResource(Res.string.ppdt_instructions_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)</ID>
     <ID>MaxLineLength:PPDTReviewPhase.kt$Text(text = stringResource(Res.string.ppdt_review_story_label), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)</ID>
     <ID>MaxLineLength:PPDTReviewPhase.kt$Text(text = stringResource(Res.string.ppdt_review_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:PPDTSubmissionMappers.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
     <ID>MaxLineLength:PPDTTest.kt$PPDTSubmission$val analysisStatus: com.ssbmax.shared.domain.model.scoring.AnalysisStatus = com.ssbmax.shared.domain.model.scoring.AnalysisStatus.PENDING_ANALYSIS</ID>
     <ID>MaxLineLength:PPDTTestViewModel.kt$PPDTTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
     <ID>MaxLineLength:PPDTWritingPhase.kt$color = if (charactersCount &gt;= minCharacters) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error</ID>
@@ -361,8 +341,6 @@
     <ID>MaxLineLength:TATTestViewModel.kt$TATTestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }</ID>
     <ID>MaxLineLength:TATWritingPhase.kt$Text(stringResource(Res.string.tat_blank_slide_reminder_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)</ID>
     <ID>MaxLineLength:TATWritingPhase.kt$text = stringResource(if (sequenceNumber == 12) Res.string.tat_writing_title_blank else Res.string.tat_writing_title)</ID>
-    <ID>MaxLineLength:TestContentMockFallback.kt$TestContentMockFallback$imageDescription = "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads."</ID>
-    <ID>MaxLineLength:TestContentMockFallback.kt$TestContentMockFallback$situation = "You are selected for a prestigious assignment, but your best friend who is more deserving is not. How do you handle this?"</ID>
     <ID>MaxLineLength:TopicComponents.kt$Card</ID>
     <ID>MaxLineLength:TopicComponents.kt$LazyColumn</ID>
     <ID>MaxLineLength:TopicComponents.kt$Text(text = material.duration, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)</ID>
@@ -386,10 +364,6 @@
     <ID>MayBeConst:ContentFeatureFlags.kt$ContentFeatureFlags$val cacheExpiryDays: Int = 7</ID>
     <ID>NestedBlockDepth:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$suspend operator fun invoke( userId: String, bypassSubscriptionCheck: Boolean = false, bypassPrerequisites: Boolean = false ): Result&lt;PrerequisiteCheckResult&gt;</ID>
     <ID>NestedBlockDepth:GetHistoricResultsUseCase.kt$GetHistoricResultsUseCase$suspend operator fun invoke( userId: String, testType: TestType? = null ): Result&lt;List&lt;HistoricResult&gt;&gt;</ID>
-    <ID>NestedBlockDepth:GitLiveGPEImageCacheManager.kt$GitLiveGPEImageCacheManager$suspend fun getImageForTest(): Result&lt;GPEQuestion&gt;</ID>
-    <ID>NestedBlockDepth:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$suspend fun selectQuestions(count: Int = 50, difficulty: String? = null): Result&lt;List&lt;OIRQuestion&gt;&gt;</ID>
-    <ID>NestedBlockDepth:GitLivePPDTImageCacheManager.kt$GitLivePPDTImageCacheManager$private suspend fun isCacheStale(batchId: String): Boolean</ID>
-    <ID>NestedBlockDepth:GitLiveTATImageCacheManager.kt$GitLiveTATImageCacheManager$private suspend fun isCacheStale(batchId: String): Boolean</ID>
     <ID>RethrowCaughtException:OIRTestViewModel.kt$OIRTestViewModel$throw e</ID>
     <ID>ReturnCount:SessionManager.kt$SessionManager$suspend fun loadNextQuestion(): Result&lt;InterviewQuestion?&gt;</ID>
     <ID>ReturnCount:SessionManager.kt$SessionManager$suspend fun loadSession(sessionId: String): Result&lt;Unit&gt;</ID>
@@ -398,8 +372,6 @@
     <ID>TooGenericExceptionThrown:OIRTestViewModel.kt$OIRTestViewModel$throw Exception("All questions failed validation.")</ID>
     <ID>TooGenericExceptionThrown:OIRTestViewModel.kt$OIRTestViewModel$throw Exception("No questions available.")</ID>
     <ID>UnusedParameter:DashboardTestScoreChip.kt$isOLQBased: Boolean = true</ID>
-    <ID>UnusedParameter:GitLiveDifficultyProgressionManager.kt$GitLiveDifficultyProgressionManager$hardPerf: UserPerformanceRow?</ID>
-    <ID>UnusedParameter:GitLiveGTOProgressDelegate.kt$GitLiveGTOProgressDelegate$submissionId: String</ID>
     <ID>UnusedParameter:InstructorPlaceholderScreens.kt$onBatchCreated: (String) -&gt; Unit = {}</ID>
     <ID>UnusedParameter:InstructorPlaceholderScreens.kt$onNavigateToStudent: (String) -&gt; Unit = {}</ID>
     <ID>UnusedParameter:InstructorPlaceholderScreens.kt$onNavigateToSubmission: (String) -&gt; Unit = {}</ID>
@@ -420,8 +392,6 @@
     <ID>UseCheckOrError:SubscriptionManagementViewModel.kt$SubscriptionManagementViewModel$throw IllegalStateException("User not authenticated")</ID>
     <ID>WildcardImport:AnalyticsRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:GTORepository.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
-    <ID>WildcardImport:GitLiveGTOContentDtos.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
-    <ID>WildcardImport:GitLiveGTORepository.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
     <ID>WildcardImport:OIRTestScoreCalculator.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmissionRepository.kt$import com.ssbmax.shared.domain.model.*</ID>
     <ID>WildcardImport:SubmitOIRTestUseCase.kt$import com.ssbmax.shared.domain.model.*</ID>

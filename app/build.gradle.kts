@@ -226,7 +226,13 @@ extensions.getByType<ApplicationExtension>().apply {
 
 
 dependencies {
-    // Core modules
+    // Core modules. `:data-firebase` (Move 2 of the iOS CocoaPods->SPM
+    // convergence) supplies the Firebase-backed implementations of
+    // `:shared`'s repository interfaces; it `api`-exposes `:shared`, so the
+    // explicit `:shared` dependency below is redundant for compilation but
+    // kept deliberately -- `app` uses `:shared`'s types directly and should
+    // declare what it uses rather than rely on a transitive.
+    implementation(project(":data-firebase"))
     implementation(project(":shared"))
 
     // Custom lint rules

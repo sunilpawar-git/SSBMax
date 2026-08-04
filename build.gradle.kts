@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
-    alias(libs.plugins.kotlin.cocoapods) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.sqldelight) apply false
     jacoco
@@ -51,7 +50,12 @@ subprojects {
     // ComposeHardcodedText coverage via AGP Lint (with its own long-standing
     // `lint-baseline.xml`), so applying this there too would just demand a
     // second, redundant baseline for the exact same pre-existing findings.
-    if (path == ":shared") {
+    //
+    // `:data-firebase` is included for the same reason as `:shared`: it is
+    // also a KMP module with a commonMain that AGP Lint cannot see. It holds
+    // no Compose today, so HardcodedComposeText finds nothing -- wired up now
+    // so the coverage exists by default rather than being noticed later.
+    if (path in setOf(":shared", ":data-firebase")) {
         dependencies {
             add("detektPlugins", project(":detekt-rules"))
         }
@@ -89,7 +93,10 @@ subprojects {
     // found nothing until these were wired in directly). Route `detekt`
     // through the tasks that really have source instead of leaving it to
     // silently report success over zero files.
-    if (path == ":shared") {
+    //
+    // `:data-firebase` (Move 2) is a KMP module too and would inherit the
+    // exact same silent NO-SOURCE blind spot, so it gets the same routing.
+    if (path in setOf(":shared", ":data-firebase")) {
         tasks.named("detekt") {
             dependsOn("detektMetadataCommonMain", "detektAndroidDebug", "detektIosSimulatorArm64Main")
         }

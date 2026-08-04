@@ -1,5 +1,6 @@
 package com.ssbmax.di
 
+import com.ssbmax.shared.di.firebaseDataModule
 import com.ssbmax.shared.di.sharedModule
 
 /**
@@ -61,6 +62,12 @@ import com.ssbmax.shared.di.sharedModule
 val appModules = listOf(
     // :shared (KMP)
     sharedModule,
+
+    // :data-firebase (KMP) — the Firebase-backed repository bindings, split
+    // out of `sharedModule` by Move 2 of the iOS CocoaPods->SPM convergence.
+    // `sharedModule` alone is an INCOMPLETE graph: it declares the repository
+    // interfaces but no longer binds them. See FirebaseDataModule.kt.
+    firebaseDataModule,
 
     // :app
     databaseModule,

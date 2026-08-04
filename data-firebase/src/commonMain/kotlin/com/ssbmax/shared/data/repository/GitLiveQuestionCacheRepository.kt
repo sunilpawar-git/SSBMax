@@ -197,10 +197,6 @@ class GitLiveQuestionCacheRepository : QuestionCacheRepository {
     }
 }
 
-internal fun randomId(): String = kotlin.random.Random.nextBytes(16).joinToString("") { byte ->
-    (byte.toInt() and 0xFF).toString(16).padStart(2, '0')
-}
-
 @Serializable
 internal data class QuestionCacheEntryDto(
     val id: String = "",

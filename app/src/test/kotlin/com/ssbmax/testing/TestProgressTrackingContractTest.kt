@@ -24,10 +24,15 @@ import org.junit.Ignore
 @Ignore("Disabled in CI - file system access. Run manually locally.")
 class TestProgressTrackingContractTest {
 
+    // Move 2 (iOS CocoaPods->SPM convergence): the GitLive* repositories moved
+    // from :shared to :data-firebase, so :shared carries no Firebase and its
+    // Kotlin/Native test binaries link without CocoaPods. These paths are
+    // repointed with that move -- this test is @Ignore'd (file-system access),
+    // so a stale path would rot silently rather than fail.
     // KMP-convergence Phase 9e: PersonalTestSubmissionRepository/PsychTestSubmissionRepository/
     // CommonSubmissionRepository (core:data) deleted, GitLive* equivalents (shared) are the sole
     // implementations now — repointed rather than left referencing files that no longer exist.
-    private val repoDir = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository"
+    private val repoDir = "data-firebase/src/commonMain/kotlin/com/ssbmax/shared/data/repository"
     private val personalRepoPath = "$repoDir/GitLivePersonalTestSubmissionRepository.kt"
     private val psychRepoPath = "$repoDir/GitLivePsychTestSubmissionRepository.kt"
     private val commonRepoPath = "$repoDir/GitLiveCommonSubmissionRepository.kt"
@@ -221,7 +226,7 @@ class TestProgressTrackingContractTest {
         // Given - Interview uses different repository. KMP-convergence Phase 9c:
         // FirestoreInterviewRepository (core:data) deleted, GitLiveInterviewRepository
         // (shared) is the sole implementation now.
-        val interviewRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
+        val interviewRepoPath = "data-firebase/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
         val interviewRepoFile = findProjectFile(interviewRepoPath)
         assertTrue("GitLiveInterviewRepository.kt should exist", interviewRepoFile.exists())
 

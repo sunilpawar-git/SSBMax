@@ -21,10 +21,34 @@ import org.koin.dsl.module
  * `SSBMaxNavHost` (built from these verticals) is the production nav graph on
  * both platforms since the KMP-convergence plan's Phase 5 cutover.
  */
+/**
+ * Move 2 (iOS CocoaPods->SPM convergence): `repositoryModule` is deliberately
+ * NOT included here anymore. It binds the Firebase-backed implementations and
+ * now lives in `:data-firebase`, above this module -- keeping `:shared` free
+ * of Firebase is what lets its Kotlin/Native test binaries link without
+ * CocoaPods (see data-firebase/build.gradle.kts for the linker facts).
+ *
+ * Consequence: `sharedModule` alone is an INCOMPLETE graph. Every composition
+ * root must load `firebaseDataModule` alongside it -- `app`'s KoinModules.kt
+ * and iOS's `ensureKoinStarted()`.
+ *
+ * KNOWN COVERAGE GAP, recorded rather than papered over: that pairing is
+ * verified only on Android, by `app/src/test/.../PlatformModuleCheckTest.kt`,
+ * which composes both modules and really instantiates every definition. The
+ * iOS equivalent (`SharedModuleCheckTest` in `shared/src/iosTest`) was deleted
+ * in Move 2 because it can no longer exist anywhere useful: a full-graph check
+ * needs `firebaseDataModule`, `:shared` sits below `:data-firebase` and cannot
+ * see it, and `:data-firebase` deliberately has no iOS test source set (an
+ * `iosTest` there would drag GitLive's `-framework Firebase*` linker opts back
+ * into a Kotlin/Native test executable and bring CocoaPods back with them).
+ * So iOS's `platformModule` actual is exercised only by the app actually
+ * launching, not by any test. Closing this would mean either a Kotlin/Native
+ * mocking story for Obj-C statics (none exists) or an instrumented iOS test
+ * target.
+ */
 val sharedModule = module {
     includes(
         coreInfraModule,
-        repositoryModule,
         authHomeModule,
         testTakingModule,
         gtoModule,

@@ -150,15 +150,3 @@ class GitLiveStudyContentRepository : StudyContentRepository {
         private const val COLLECTION_VERSIONS = "content_versions"
     }
 }
-
-data class TopicContentData(
-    val title: String,
-    val introduction: String,
-    val materials: List<CloudStudyMaterial>,
-    val source: ContentSource
-)
-
-enum class ContentSource {
-    CLOUD,
-    LOCAL
-}

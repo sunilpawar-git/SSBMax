@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:GitLivePPDTImageCacheManager.kt$GitLivePPDTImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:GitLiveTATImageCacheManager.kt$GitLiveTATImageCacheManager$suspend fun downloadBatch(batchId: String): Result&lt;Unit&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$for</ID>
+    <ID>MaxLineLength:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$questions = filterValid(applyDifficulty(queries.selectOIRQuestionsByType(type, (count * 3).toLong()).executeAsList(), difficulty))</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSDTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSDTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSRTAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateSRTOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateWATAnalysisStatus(submissionId: String, status: AnalysisStatus): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$GitLivePsychTestSubmissionRepository$suspend fun updateWATOLQResult(submissionId: String, olqResult: OLQAnalysisResult): Result&lt;Unit&gt;</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$internal fun TATStoryDto.toDomain()</ID>
+    <ID>MaxLineLength:GitLivePsychTestSubmissionRepository.kt$internal fun TATStoryResponse.toDto()</ID>
+    <ID>MaxLineLength:GitLiveSDTSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
+    <ID>MaxLineLength:GitLiveSDTSubmissionDelegate.kt$internal fun SDTResponseDto.toDomain()</ID>
+    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
+    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$internal fun SRTResponseDto.toDomain()</ID>
+    <ID>MaxLineLength:GitLiveSRTSubmissionDelegate.kt$internal fun SRTSituationResponse.toDto()</ID>
+    <ID>MaxLineLength:GitLiveWATSubmissionDelegate.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
+    <ID>MaxLineLength:PPDTSubmissionMappers.kt$analysisStatus = analysisStatus?.let { runCatching { AnalysisStatus.valueOf(it) }.getOrDefault(AnalysisStatus.PENDING_ANALYSIS) } ?: AnalysisStatus.PENDING_ANALYSIS</ID>
+    <ID>MaxLineLength:TestContentMockFallback.kt$TestContentMockFallback$imageDescription = "Tactical map showing a river with a railway bridge, a forest area to the north, a tribal settlement, a temple to the east, and connecting roads."</ID>
+    <ID>MaxLineLength:TestContentMockFallback.kt$TestContentMockFallback$situation = "You are selected for a prestigious assignment, but your best friend who is more deserving is not. How do you handle this?"</ID>
+    <ID>NestedBlockDepth:GitLiveGPEImageCacheManager.kt$GitLiveGPEImageCacheManager$suspend fun getImageForTest(): Result&lt;GPEQuestion&gt;</ID>
+    <ID>NestedBlockDepth:GitLiveOIRQuestionSelector.kt$GitLiveOIRQuestionSelector$suspend fun selectQuestions(count: Int = 50, difficulty: String? = null): Result&lt;List&lt;OIRQuestion&gt;&gt;</ID>
+    <ID>NestedBlockDepth:GitLivePPDTImageCacheManager.kt$GitLivePPDTImageCacheManager$private suspend fun isCacheStale(batchId: String): Boolean</ID>
+    <ID>NestedBlockDepth:GitLiveTATImageCacheManager.kt$GitLiveTATImageCacheManager$private suspend fun isCacheStale(batchId: String): Boolean</ID>
+    <ID>UnusedParameter:GitLiveDifficultyProgressionManager.kt$GitLiveDifficultyProgressionManager$hardPerf: UserPerformanceRow?</ID>
+    <ID>UnusedParameter:GitLiveGTOProgressDelegate.kt$GitLiveGTOProgressDelegate$submissionId: String</ID>
+    <ID>WildcardImport:GitLiveGTOContentDtos.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
+    <ID>WildcardImport:GitLiveGTORepository.kt$import com.ssbmax.shared.domain.model.gto.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

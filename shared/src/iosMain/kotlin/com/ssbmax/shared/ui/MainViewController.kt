@@ -4,20 +4,24 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.ComposeUIViewController
 import com.ssbmax.shared.platform.auth.GoogleSignInLauncher
 import com.ssbmax.shared.platform.auth.IosGoogleSignInLauncher
-import com.ssbmax.shared.platform.ensureKoinStarted
 import com.ssbmax.shared.platform.permissions.NotificationPermissionController
 import com.ssbmax.shared.ui.auth.LocalGoogleSignInLauncher
 import com.ssbmax.shared.ui.permissions.LocalNotificationPermissionController
 import org.koin.compose.koinInject
 
 /**
- * iOS entry point. Koin is started via [ensureKoinStarted] -- as of Phase 6,
- * the real bootstrap happens earlier, from `AppDelegate.swift`'s
- * `application(_:didFinishLaunchingWithOptions:)` (needed before
- * `BGTaskScheduler` registration/APNs token hand-off, both Koin-dependent).
- * The call here is a guarded no-op in that case; kept as a defensive
- * fallback for any future entry point that renders this Composable without
- * going through `AppDelegate` first.
+ * iOS entry point. Koin must already be started before this renders --
+ * `AppDelegate.swift`'s `application(_:didFinishLaunchingWithOptions:)` does
+ * it, which it must anyway for `BGTaskScheduler` registration and APNs token
+ * hand-off (both Koin-dependent).
+ *
+ * This Composable used to also call `ensureKoinStarted()` itself as a Phase 5
+ * defensive fallback. Move 2 (iOS CocoaPods->SPM convergence) removed that
+ * call: the bootstrap now lives in `:data-firebase` because the graph needs
+ * `firebaseDataModule`, which this module sits below and cannot see. A
+ * fallback that cannot assemble a complete graph is worse than none -- if Koin
+ * is unstarted, [koinInject] below fails loudly and immediately instead of
+ * silently building a half-wired container.
  *
  * Phase 5: renders the real nav graph + chrome (drawer/bottom nav) via
  * [SSBMaxRoot] instead of the Phase 0 single-screen demo it replaced — the
@@ -55,7 +59,6 @@ import org.koin.compose.koinInject
 fun MainViewController(
     googleSignInLauncher: GoogleSignInLauncher = IosGoogleSignInLauncher()
 ) = ComposeUIViewController {
-    ensureKoinStarted()
     val notificationPermissionController = koinInject<NotificationPermissionController>()
     CompositionLocalProvider(
         LocalGoogleSignInLauncher provides googleSignInLauncher,

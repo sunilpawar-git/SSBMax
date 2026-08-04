@@ -45,11 +45,16 @@ Architecture: `Compose Screen → ViewModel (StateFlow<UiState>) → UseCase →
 | Module | Purpose |
 |---|---|
 | `app` | Android platform glue only: `MainActivity`, `Application`, notifications, WorkManager workers, Koin bootstrap (`app/ui`/`app/navigation`/app-module ViewModels deleted in the KMP-convergence plan's Phase 6a — `shared` is the UI/ViewModel/nav SSOT on both platforms) |
-| `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it, and `core:data` (repository implementations, Room DB, Firebase, Gemini AI) was deleted into it in the plan's Phase 9f — the one piece that didn't move (a Room cache local to two Android-only WorkManager workers) landed in `app` instead |
+| `shared` | KMP module: use cases, models, repository/service interfaces, Compose UI, Koin DI (ZERO Android-only dependencies in commonMain) — SSOT target of the KMP-convergence plan; `core:domain` was fully absorbed into it, and `core:data` was deleted into it in the plan's Phase 9f. **Carries no Firebase**: Move 2 of the iOS CocoaPods→SPM convergence extracted the GitLive-backed implementations to `:data-firebase`, which is what lets this module's Kotlin/Native test binaries link without CocoaPods |
+| `data-firebase` | KMP module ABOVE `shared` (`api`-exports it): the ~57 GitLive/Firestore implementation files, `repositoryModule`, the `SharedKit` iOS framework, and the iOS entry points Swift calls (`ensureKoinStarted`, the BGTaskScheduler registrar, the APNs/deep-link bridges — the composition root must name `firebaseDataModule`, which `shared` sits below and cannot see). **Must never gain an `iosTest` source set** — that would pull GitLive's `-framework Firebase*` linker opts into a Kotlin/Native test executable and bring CocoaPods back |
 | `lint` | Custom lint rules (build fails if violated) |
 | `detekt-rules` | Custom Detekt rule set (`shared`'s commonMain-reaching equivalent of `:lint`'s Compose checks — AGP Lint doesn't analyze a KMP module's commonMain) |
 
-**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) + `shared/.../domain/usecase/subscription/CheckTestEligibilityUseCase.kt` | AI: `shared/.../ai/` | Tests enum: `shared/.../SSBPhase.kt`
+**Key paths (SSOT):** Navigation: `shared/.../SSBMaxDestinations.kt` | Subscription limits: `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) + `shared/.../domain/usecase/subscription/CheckTestEligibilityUseCase.kt` | AI: `shared/.../ai/` | Tests enum: `shared/.../SSBPhase.kt` | Firebase repository impls + `repositoryModule`: `data-firebase/.../data/repository/`
+
+**Koin composition:** `sharedModule` is deliberately an INCOMPLETE graph — it declares the repository interfaces but binds none of them. Every composition root loads `sharedModule` + `firebaseDataModule` together (`app`'s `KoinModules.kt`, iOS's `ensureKoinStarted()`). iOS additionally receives `CrashReporter`/`AnalyticsTracker` from Swift, which owns the Firebase SPM dependency (`FirebaseObservability.swift`).
+
+**iOS dependency management: SPM only.** There is no CocoaPods integration and none should be reintroduced. A task-graph dry run confirmed framework linking needs zero pod tasks (`SharedKit` is static; Xcode resolves Firebase from SPM at final app link) — CocoaPods had existed solely to link Kotlin/Native *test* executables against GitLive's Firebase linker opts.
 
 ## Architecture Guidance Hierarchy (Phase 4)
 

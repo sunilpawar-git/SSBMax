@@ -25,15 +25,23 @@ import org.junit.Ignore
 @Ignore("Disabled in CI - file system access. Run manually locally.")
 class InterviewProgressTrackingContractTest {
 
+    private val repoDir = "data-firebase/src/commonMain/kotlin/com/ssbmax/shared/data/repository"
 
     // KMP-convergence Phase 9c: FirestoreInterviewRepository (core:data) deleted,
     // GitLiveInterviewRepository (shared) is the sole implementation now —
     // repointed rather than left referencing a file that no longer exists.
-    private val firestoreInterviewRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveInterviewRepository.kt"
+    // Move 2 (iOS CocoaPods->SPM convergence): the GitLive* repositories moved
+    // from :shared to :data-firebase, so :shared carries no Firebase and its
+    // Kotlin/Native test binaries link without CocoaPods. These paths are
+    // repointed with that move -- this test is @Ignore'd (file-system access),
+    // so a stale path would rot silently rather than fail.
+    private val firestoreInterviewRepoPath =
+        "$repoDir/GitLiveInterviewRepository.kt"
     // KMP-convergence Phase 9a: TestProgressRepositoryImpl (core:data) deleted,
     // GitLiveTestProgressRepository (shared) is the sole implementation now —
     // repointed rather than left referencing a file that no longer exists.
-    private val testProgressRepoPath = "shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/GitLiveTestProgressRepository.kt"
+    private val testProgressRepoPath =
+        "$repoDir/GitLiveTestProgressRepository.kt"
 
     @Test
     fun `completeInterview must write to submissions collection for progress tracking`() {
