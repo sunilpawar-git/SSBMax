@@ -15,7 +15,18 @@ struct iosAppApp: App {
 
     var body: some Scene {
         WindowGroup {
+            // Compose's shared SSBMaxAppScaffold (shared/commonMain) reserves
+            // only the navigation-bar inset and expects each screen's own
+            // TopAppBar to consume the real status-bar inset itself, painting
+            // its background behind it -- matching Android's edge-to-edge
+            // behavior. SwiftUI lays out UIViewControllerRepresentable content
+            // *inside* the safe area by default, so without ignoresSafeArea()
+            // here, Compose's WindowInsets.statusBars never sees a non-zero
+            // value (the hosting view's frame already excludes it) and the
+            // status-bar strip falls back to the window's default black
+            // background instead of the TopAppBar's color.
             ContentView()
+                .ignoresSafeArea()
         }
     }
 }
