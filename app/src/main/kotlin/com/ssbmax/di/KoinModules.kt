@@ -43,10 +43,10 @@ import com.ssbmax.shared.di.sharedModule
  * KMP-convergence Phase 9d: `debugModule` removed — its sole binding,
  * `DebugConfig`, existed only for `core:data`'s `SubscriptionManager` (now
  * deleted, along with `DebugConfig` itself). The `BYPASS_SUBSCRIPTION_LIMITS`
- * local-dev convenience it gated is restored, but as a Koin *property*
- * supplied by [com.ssbmax.SSBMaxApplication] into `shared`'s
- * `CheckTestEligibilityUseCase` — same shape as the Gemini key above, not a
- * ported `DebugConfig` interface.
+ * local-dev convenience it gated was restored as a Koin property (same shape
+ * as the Gemini key above), then retired again by the dev-subscription-override
+ * plan's Phase 6 once `shared`'s `DeveloperSettings` + `SubscriptionOverride.FORCE_PREMIUM`
+ * gave both platforms an equivalent, non-`BuildConfig` debug toggle.
  *
  * KMP-convergence Phase 9f (module retirement): `repositoryModule` (already
  * empty since 9e), `firebaseModule`, `coreDataInjectablesModule` removed —

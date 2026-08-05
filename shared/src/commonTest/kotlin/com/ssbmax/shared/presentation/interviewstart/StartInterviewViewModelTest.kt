@@ -6,9 +6,11 @@ import com.ssbmax.shared.domain.model.interview.InterviewMode
 import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeInterviewRepository
 import com.ssbmax.shared.presentation.testing.FakeQuestionCacheRepository
+import com.ssbmax.shared.presentation.testing.FakeSettings
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.testUser
@@ -40,6 +42,7 @@ class StartInterviewViewModelTest {
     private lateinit var interviewRepository: FakeInterviewRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
     private lateinit var questionCacheRepository: FakeQuestionCacheRepository
+    private lateinit var developerSettings: DeveloperSettings
 
     @BeforeTest
     fun setUp() {
@@ -49,6 +52,7 @@ class StartInterviewViewModelTest {
         interviewRepository = FakeInterviewRepository()
         submissionRepository = FakeSubmissionRepository()
         questionCacheRepository = FakeQuestionCacheRepository()
+        developerSettings = DeveloperSettings(FakeSettings())
     }
 
     @AfterTest
@@ -66,6 +70,7 @@ class StartInterviewViewModelTest {
         submissionRepository = submissionRepository,
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
         questionCacheRepository = questionCacheRepository,
+        developerSettings = developerSettings,
         logger = NoOpLogger()
     )
 
@@ -115,6 +120,26 @@ class StartInterviewViewModelTest {
         assertFalse(state.isEligible)
         assertFalse(state.isLoading)
         assertTrue(state.getFailureReasons().isNotEmpty())
+    }
+
+    /**
+     * Dev-subscription-override plan Phase 6: `BYPASS_INTERVIEW_PREREQUISITES` used to be dead --
+     * the `BuildConfig` field existed but this ViewModel hardcoded both use-case bypass params
+     * `false` regardless. This pins that `DeveloperSettings.bypassInterviewPrerequisites` now
+     * genuinely drives both, unblocking eligibility with no PIQ/OIR/PPDT submissions present.
+     */
+    @Test
+    fun `checkEligibility bypasses prerequisites when developer setting is enabled`() = runTest(testDispatcher) {
+        developerSettings.setBypassInterviewPrerequisites(true)
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.checkEligibility()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.isEligible)
+        assertTrue(state.getFailureReasons().isEmpty())
     }
 
     @Test

@@ -37,30 +37,20 @@ import kotlinx.datetime.toLocalDateTime
  *   call `core:data`'s Android-only `SecurityEventLogger` made from this
  *   exact decision point.
  *
- * `bypassSubscriptionLimits` (KMP-convergence Phase 9d): the debug-only
- * `BYPASS_SUBSCRIPTION_LIMITS` escape hatch, restored. It had silently gone
- * dead the moment every test ViewModel migrated to this use case (still
- * documented as working in `CLAUDE.local.md`'s debug-flags section, but
- * `core:data`'s `SubscriptionManager.canTakeTest` — the only place that ever
- * read it — had zero production callers left, grep-confirmed). Supplied as a
- * Koin property ([com.ssbmax.shared.di.BYPASS_SUBSCRIPTION_LIMITS_PROPERTY],
- * same shape as [com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY]) rather than
- * ported as a `DebugConfig` interface — Android's `SSBMaxApplication` supplies
- * `BuildConfig.DEBUG && BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`; iOS supplies
- * nothing, so the property's `false` default applies (the bypass was always
- * an Android-`BuildConfig`-only local-dev convenience, never an iOS one — this
- * restores that exact scope, not a new one).
+ * The debug-only `BYPASS_SUBSCRIPTION_LIMITS` `BuildConfig` escape hatch this use case once
+ * accepted as a `bypassSubscriptionLimits` constructor param (Android-only, never wired on iOS) was
+ * retired by the dev-subscription-override plan's Phase 6. `SubscriptionOverride.FORCE_PREMIUM`
+ * (via [developerSettings], both platforms) replaces it: `data-firebase`'s
+ * `DebugOverrideSubscriptionRepository` maps every [SubscriptionRepository] read this use case makes
+ * onto the forced tier, so eligibility genuinely reaches the same "no meaningful limit" outcome
+ * through the real lookup path rather than a hardcoded short-circuit.
  */
 class CheckTestEligibilityUseCase(
     private val subscriptionRepository: SubscriptionRepository,
     private val analyticsTracker: AnalyticsTracker,
-    private val bypassSubscriptionLimits: Boolean = false,
     private val developerSettings: DeveloperSettings? = null
 ) {
     suspend operator fun invoke(testType: TestType, userId: String): TestEligibility {
-        if (bypassSubscriptionLimits) {
-            return TestEligibility.Eligible(remainingTests = BYPASS_REMAINING_TESTS)
-        }
         val tier = subscriptionRepository.getSubscriptionTier(userId).getOrElse {
             return TestEligibility.NetworkError
         }
@@ -114,7 +104,6 @@ class CheckTestEligibilityUseCase(
     }
 
     private companion object {
-        const val BYPASS_REMAINING_TESTS = 999
         val MONTH_NAMES = listOf(
             "Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"

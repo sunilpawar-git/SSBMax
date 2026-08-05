@@ -28,17 +28,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * Koin property key carrying the debug-only subscription-limit bypass into
- * [CheckTestEligibilityUseCase]. Same shape as
- * [com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY]: Android's
- * `SSBMaxApplication` supplies `BuildConfig.DEBUG && BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`;
- * iOS supplies nothing, so [CheckTestEligibilityUseCase]'s `false` default
- * applies (this bypass was always Android-`BuildConfig`-only, see that
- * class's own doc comment).
- */
-const val BYPASS_SUBSCRIPTION_LIMITS_PROPERTY = "BYPASS_SUBSCRIPTION_LIMITS"
-
-/**
  * OIR/PPDT/TAT/WAT/SRT/SDT/PIQ test-taking vertical. Repository dependencies
  * come from [repositoryModule]; async-analysis dispatch uses
  * [coreInfraModule]'s single `SubmissionAnalysisTrigger` binding. Split out of
@@ -59,7 +48,6 @@ val testTakingModule = module {
         CheckTestEligibilityUseCase(
             subscriptionRepository = get(),
             analyticsTracker = get(),
-            bypassSubscriptionLimits = getProperty(BYPASS_SUBSCRIPTION_LIMITS_PROPERTY, false),
             developerSettings = get()
         )
     }

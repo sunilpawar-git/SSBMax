@@ -7,6 +7,7 @@ import com.ssbmax.shared.domain.model.interview.QuestionCacheRepository
 import com.ssbmax.shared.domain.usecase.CheckInterviewPrerequisitesUseCase
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -35,10 +36,15 @@ import kotlinx.coroutines.launch
  *   plumbing exercise for values that never reach the UI as anything but
  *   opaque display text.
  * - `BuildConfig.DEBUG`/`BuildConfig.BYPASS_INTERVIEW_PREREQUISITES` (Android
- *   `BuildConfig`-only) are NOT ported -- always calls
- *   [CheckInterviewPrerequisitesUseCase] with both bypass flags `false`,
- *   same "fails safe, more restrictive" precedent as
- *   `CheckTestEligibilityUseCase`'s own doc comment.
+ *   `BuildConfig`-only, and never actually wired -- the flag existed but this
+ *   ViewModel hardcoded both [CheckInterviewPrerequisitesUseCase] bypass
+ *   params `false` regardless) are replaced by [DeveloperSettings]'s
+ *   `bypassInterviewPrerequisites` (dev-subscription-override plan Phase 6):
+ *   one toggle now drives both `bypassPrerequisites` and
+ *   `bypassSubscriptionCheck`, matching the original flag's stated intent of
+ *   unblocking the whole interview feature for testing (PIQ/OIR/PPDT
+ *   completion *and* the interview subscription gate together), not just the
+ *   completion checks alone.
  * - `trackMemoryLeaks`/`MemoryLeakTracker` (Android-only) dropped -- no KMP
  *   equivalent, and `viewModelScope` already cancels automatically in
  *   `onCleared`, same precedent as `OIRTestViewModel`'s doc comment.
@@ -49,6 +55,7 @@ class StartInterviewViewModel(
     private val submissionRepository: SubmissionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val questionCacheRepository: QuestionCacheRepository,
+    private val developerSettings: DeveloperSettings,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val tag = "StartInterviewViewModel"
@@ -101,10 +108,11 @@ class StartInterviewViewModel(
                     return@launch
                 }
 
+                val bypass = developerSettings.getBypassInterviewPrerequisites()
                 val result = checkPrerequisites(
                     userId = userId,
-                    bypassSubscriptionCheck = false,
-                    bypassPrerequisites = false
+                    bypassSubscriptionCheck = bypass,
+                    bypassPrerequisites = bypass
                 )
 
                 if (result.isFailure) {

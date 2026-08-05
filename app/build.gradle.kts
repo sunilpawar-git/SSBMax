@@ -107,18 +107,8 @@ extensions.getByType<ApplicationExtension>().apply {
             // TODO: Enable after adding com.ssbmax.debug to Firebase Console
             // applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-
-            // Debug bypass for subscription limits during development
-            // Applies to ALL tests: OIR, PPDT, WAT, SRT, TAT, GTO, Self Description, Interview
-            // ENABLED FOR DEVELOPMENT - DISABLE TO TEST SUBSCRIPTION FLOW
-            buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
-            
-            // Debug: Bypass interview prerequisites (PIQ, OIR score >= 50%, PPDT)
-            // Set to "true" to bypass all prerequisite checks for testing TTS and interview features
-            // ENABLED FOR DEVELOPMENT - DISABLE TO TEST PREREQUISITE FLOW
-            buildConfigField("boolean", "BYPASS_INTERVIEW_PREREQUISITES", "true")
         }
-        
+
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -126,12 +116,6 @@ extensions.getByType<ApplicationExtension>().apply {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-
-            // Production: Subscription limits enforced
-            buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "false")
-            
-            // Production: Prerequisites enforced
-            buildConfigField("boolean", "BYPASS_INTERVIEW_PREREQUISITES", "false")
         }
     }
 

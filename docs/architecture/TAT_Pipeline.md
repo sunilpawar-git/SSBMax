@@ -278,7 +278,7 @@ SubscriptionManager.canTakeTest(TestType.TAT, userId)
 
 Usage persisted in Firestore: `users/{userId}/subscription/usage_{month}.tatTestsUsed` (incremented atomically at submission via `recordTestUsage()`).
 
-Debug override: `BuildConfig.BYPASS_SUBSCRIPTION_LIMITS = true` returns 999 remaining.
+Debug override: Settings → Developer section → `SubscriptionOverride.FORCE_PREMIUM` (dev-subscription-override plan Phase 6; replaces the retired `BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`) routes through the real eligibility lookup with tier forced to PREMIUM, rather than a hardcoded remaining count.
 
 ---
 

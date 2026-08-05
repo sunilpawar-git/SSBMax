@@ -3,7 +3,6 @@ package com.ssbmax
 import android.app.Application
 import android.util.Log
 import com.ssbmax.di.appModules
-import com.ssbmax.shared.di.BYPASS_SUBSCRIPTION_LIMITS_PROPERTY
 import com.ssbmax.shared.di.GEMINI_API_KEY_PROPERTY
 import com.ssbmax.shared.platform.worker.BackgroundTaskScheduler
 import org.koin.android.ext.koin.androidContext
@@ -36,13 +35,13 @@ private const val TAG = "SSBMaxApplication"
  *   build `KtorGeminiClient`; without this the key would resolve to "" and
  *   every AI evaluation would fail silently (no compile error) now that
  *   `core:data`'s `BuildConfig`-reading `aiModule` is gone.
- * - Supply the debug subscription-limit bypass as a Koin property (Phase 9d),
- *   same shape as the Gemini key above. `shared`'s `CheckTestEligibilityUseCase`
- *   reads it via `getProperty("BYPASS_SUBSCRIPTION_LIMITS", false)`; without
- *   this, local debug builds silently enforce real subscription limits
- *   instead of the `BYPASS_SUBSCRIPTION_LIMITS` convenience documented in
- *   `CLAUDE.local.md` (this restores it — it had gone dead once every test
- *   ViewModel migrated off `core:data`'s Android-only `SubscriptionManager`).
+ *
+ * The old `BYPASS_SUBSCRIPTION_LIMITS`/`BYPASS_INTERVIEW_PREREQUISITES`
+ * `BuildConfig` fields (Android-only, and the latter never actually wired)
+ * were retired by the dev-subscription-override plan's Phase 6: the debug UI's
+ * `SubscriptionOverride.FORCE_PREMIUM` (Settings -> Developer section, both
+ * platforms) replaces the former, and `DeveloperSettings.bypassInterviewPrerequisites`
+ * replaces the latter.
  */
 class SSBMaxApplication : Application() {
 
@@ -53,12 +52,7 @@ class SSBMaxApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@SSBMaxApplication)
-            properties(
-                mapOf(
-                    GEMINI_API_KEY_PROPERTY to BuildConfig.GEMINI_API_KEY,
-                    BYPASS_SUBSCRIPTION_LIMITS_PROPERTY to (BuildConfig.DEBUG && BuildConfig.BYPASS_SUBSCRIPTION_LIMITS)
-                )
-            )
+            properties(mapOf(GEMINI_API_KEY_PROPERTY to BuildConfig.GEMINI_API_KEY))
             modules(appModules)
         }
 
