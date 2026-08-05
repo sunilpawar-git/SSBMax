@@ -219,6 +219,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    // Phase 1 (dev subscription override plan): needed so androidMain's
+    // `isDebugBuild()` actual can read the generated BuildConfig.DEBUG --
+    // this module previously had no BuildConfig class at all.
+    buildFeatures {
+        buildConfig = true
+    }
+
     lint {
         // NonNullableMutableLiveDataDetector (bundled in AGP's androidx-lifecycle
         // lint checks) crashes with IncompatibleClassChangeError on this module's

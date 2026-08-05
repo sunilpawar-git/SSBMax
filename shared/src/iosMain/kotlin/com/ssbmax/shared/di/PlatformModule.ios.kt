@@ -8,6 +8,7 @@ import com.ssbmax.shared.platform.billing.StoreKitBillingClient
 import com.ssbmax.shared.platform.permissions.IosNotificationPermissionController
 import com.ssbmax.shared.platform.permissions.NotificationPermissionController
 import com.ssbmax.shared.platform.settings.AppThemeSettings
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import com.ssbmax.shared.platform.settings.SettingsFactory
 import com.ssbmax.shared.platform.tts.IosTTSService
 import com.ssbmax.shared.platform.tts.TTSService
@@ -20,6 +21,7 @@ actual val platformModule = module {
     single { DatabaseDriverFactory() }
     single { SettingsFactory().create() }
     single { AppThemeSettings(get()) }
+    single { DeveloperSettings(get()) }
     single<TTSService> { IosTTSService() }
     single { WhiteNoisePlayer() }
     // Unlike Android's AndroidNotificationPermissionController, iOS's
