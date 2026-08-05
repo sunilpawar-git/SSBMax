@@ -59,7 +59,8 @@ val testTakingModule = module {
         CheckTestEligibilityUseCase(
             subscriptionRepository = get(),
             analyticsTracker = get(),
-            bypassSubscriptionLimits = getProperty(BYPASS_SUBSCRIPTION_LIMITS_PROPERTY, false)
+            bypassSubscriptionLimits = getProperty(BYPASS_SUBSCRIPTION_LIMITS_PROPERTY, false),
+            developerSettings = get()
         )
     }
     factoryOf(::OIRTestScoreCalculator)

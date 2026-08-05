@@ -133,6 +133,11 @@ kotlin {
                 // DB rather than mocking the queries, so they need a driver that
                 // runs on the JVM without an emulator.
                 implementation(libs.sqldelight.sqlite.driver)
+                // `:shared` declares this `implementation`, not `api`, so `Settings` (the type
+                // DeveloperSettings's constructor takes) isn't on this module's classpath by
+                // default. Needed here to build a real DeveloperSettings for the debug-override
+                // decorator tests (DebugOverrideSubscriptionRepositoryTest etc.) rather than mocking it.
+                implementation(libs.multiplatform.settings)
             }
         }
 

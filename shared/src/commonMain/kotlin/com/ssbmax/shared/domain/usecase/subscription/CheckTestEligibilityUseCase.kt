@@ -1,11 +1,13 @@
 package com.ssbmax.shared.domain.usecase.subscription
 
 import com.ssbmax.shared.data.repository.SubscriptionLimits
+import com.ssbmax.shared.domain.model.SubscriptionOverride
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -52,7 +54,8 @@ import kotlinx.datetime.toLocalDateTime
 class CheckTestEligibilityUseCase(
     private val subscriptionRepository: SubscriptionRepository,
     private val analyticsTracker: AnalyticsTracker,
-    private val bypassSubscriptionLimits: Boolean = false
+    private val bypassSubscriptionLimits: Boolean = false,
+    private val developerSettings: DeveloperSettings? = null
 ) {
     suspend operator fun invoke(testType: TestType, userId: String): TestEligibility {
         if (bypassSubscriptionLimits) {
@@ -73,10 +76,16 @@ class CheckTestEligibilityUseCase(
         return if (limit == -1 || used < limit) {
             TestEligibility.Eligible(remainingTests = if (limit == -1) Int.MAX_VALUE else limit - used)
         } else {
-            analyticsTracker.trackEvent(
-                SecurityEvents.LIMIT_REACHED,
-                mapOf("test_type" to testType.name, "tier" to tier.name)
-            )
+            // Suppressed while a dev tier override is active -- toggling Force Free to see the
+            // limit-reached dialog isn't a real user hitting a real limit, and shouldn't pollute
+            // production security-event metrics.
+            val isOverridden = developerSettings?.getOverride()?.let { it != SubscriptionOverride.FOLLOW_REAL } ?: false
+            if (!isOverridden) {
+                analyticsTracker.trackEvent(
+                    SecurityEvents.LIMIT_REACHED,
+                    mapOf("test_type" to testType.name, "tier" to tier.name)
+                )
+            }
             TestEligibility.LimitReached(
                 tier = tier,
                 limit = limit,

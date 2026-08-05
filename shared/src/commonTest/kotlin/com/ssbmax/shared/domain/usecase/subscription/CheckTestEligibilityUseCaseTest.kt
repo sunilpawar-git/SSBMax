@@ -1,10 +1,13 @@
 package com.ssbmax.shared.domain.usecase.subscription
 
+import com.ssbmax.shared.domain.model.SubscriptionOverride
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.UsageInfo
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.platform.settings.DeveloperSettings
+import com.ssbmax.shared.presentation.testing.FakeSettings
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import kotlinx.coroutines.test.runTest
@@ -93,5 +96,50 @@ class CheckTestEligibilityUseCaseTest {
         val result = useCase(TestType.OIR, "user-1")
 
         assertTrue(result is TestEligibility.LimitReached)
+    }
+
+    /**
+     * Phase 3 (KMP-convergence plan): a dev toggling Force Free to see the limit-reached dialog
+     * isn't a real user hitting a real limit -- firing `sec_limit_reached` for that would pollute
+     * production security-event metrics with dev-session noise.
+     */
+    @Test
+    fun `limit reached while overridden does not fire security event`() = runTest {
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult = Result.success(
+            mapOf("OIR Tests" to UsageInfo(used = 1, limit = 1))
+        )
+        val developerSettings = DeveloperSettings(FakeSettings())
+        developerSettings.setOverride(SubscriptionOverride.FORCE_FREE)
+        val overriddenUseCase = CheckTestEligibilityUseCase(
+            subscriptionRepository = subscriptionRepository,
+            analyticsTracker = analyticsTracker,
+            developerSettings = developerSettings
+        )
+
+        val result = overriddenUseCase(TestType.OIR, "user-1")
+
+        assertTrue(result is TestEligibility.LimitReached)
+        assertTrue(analyticsTracker.events.isEmpty())
+    }
+
+    /** FOLLOW_REAL is not an override -- the event must still fire, same as the no-DeveloperSettings case. */
+    @Test
+    fun `limit reached with FOLLOW_REAL still fires security event`() = runTest {
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult = Result.success(
+            mapOf("OIR Tests" to UsageInfo(used = 1, limit = 1))
+        )
+        val developerSettings = DeveloperSettings(FakeSettings())
+        val followRealUseCase = CheckTestEligibilityUseCase(
+            subscriptionRepository = subscriptionRepository,
+            analyticsTracker = analyticsTracker,
+            developerSettings = developerSettings
+        )
+
+        val result = followRealUseCase(TestType.OIR, "user-1")
+
+        assertTrue(result is TestEligibility.LimitReached)
+        assertEquals(1, analyticsTracker.events.size)
     }
 }
