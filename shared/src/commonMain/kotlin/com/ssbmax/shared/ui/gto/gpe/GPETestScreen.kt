@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.GPEPhase
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.gpe.GPETestViewModel
 import com.ssbmax.shared.ui.gto.common.GTOErrorDialog
 import com.ssbmax.shared.ui.gto.common.GTOExitDialog
@@ -54,7 +54,7 @@ import ssbmax.shared.generated.resources.gpe_title
 @Composable
 fun GPETestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: GPETestViewModel = koinViewModel(),
     modifier: Modifier = Modifier

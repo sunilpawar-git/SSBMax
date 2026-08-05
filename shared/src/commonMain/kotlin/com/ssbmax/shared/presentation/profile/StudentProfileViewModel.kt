@@ -1,8 +1,10 @@
 package com.ssbmax.shared.presentation.profile
 
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.repository.TestProgressRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,6 +32,7 @@ class StudentProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val testProgressRepository: TestProgressRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(StudentProfileUiState())
@@ -61,6 +64,7 @@ class StudentProfileViewModel(
 
                 val profileResult = userProfileRepository.getUserProfile(currentUser.id).first()
                 val userProfile = profileResult.getOrNull()
+                val subscriptionTier = getSubscriptionTier(currentUser.id).getOrDefault(SubscriptionTier.FREE)
 
                 val phase1Progress = testProgressRepository.getPhase1Progress(currentUser.id).first()
                 val phase2Progress = testProgressRepository.getPhase2Progress(currentUser.id).first()
@@ -94,7 +98,7 @@ class StudentProfileViewModel(
                     userName = userProfile?.fullName ?: currentUser.displayName ?: "SSB Aspirant",
                     userEmail = userProfile?.userId ?: currentUser.email ?: "",
                     photoUrl = userProfile?.profilePictureUrl ?: currentUser.photoUrl,
-                    isPremium = userProfile?.subscriptionType?.name == "PREMIUM",
+                    isPremium = subscriptionTier == SubscriptionTier.PREMIUM,
                     totalTestsAttempted = totalTestsAttempted,
                     totalStudyHours = 0,
                     streakDays = 0,

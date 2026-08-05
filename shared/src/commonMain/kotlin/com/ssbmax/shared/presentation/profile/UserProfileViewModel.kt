@@ -2,9 +2,11 @@ package com.ssbmax.shared.presentation.profile
 
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,10 +28,19 @@ import kotlinx.coroutines.launch
  * with [DomainLogger], same seam every other ported ViewModel in this phase
  * uses. Behavior (auth-state-reactive profile loading, validation, save)
  * otherwise unchanged.
+ *
+ * Also fetches [SubscriptionTier] via [GetSubscriptionTierUseCase] (the
+ * `SubscriptionRepository`-backed SSOT) for the drawer's tier badge --
+ * `UserProfile.subscriptionType`/`UserProfileDto.subscriptionType` used to
+ * feed that badge but was only ever written as a hardcoded FREE default at
+ * profile creation, never updated, so the badge showed "Free" forever
+ * regardless of the real tier. Same root cause as the "Current Plan" bug
+ * [com.ssbmax.shared.presentation.settings.SettingsViewModel] fixed.
  */
 class UserProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val authRepository: AuthRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -52,6 +63,7 @@ class UserProfileViewModel(
                     _uiState.update {
                         it.copy(
                             profile = null,
+                            subscriptionTier = null,
                             isLoading = false,
                             error = "Please sign in to view your profile"
                         )
@@ -64,6 +76,10 @@ class UserProfileViewModel(
     private fun loadProfileForUser(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
+
+            getSubscriptionTier(userId)
+                .onSuccess { tier -> _uiState.update { it.copy(subscriptionTier = tier) } }
+                .onFailure { error -> logger.e(TAG, "Failed to load subscription tier for user: $userId", error) }
 
             userProfileRepository.getUserProfile(userId)
                 .collect { result ->
@@ -200,6 +216,7 @@ class UserProfileViewModel(
  */
 data class UserProfileUiState(
     val profile: UserProfile? = null,
+    val subscriptionTier: SubscriptionTier? = null,
     val fullName: String = "",
     val age: Int? = null,
     val gender: Gender? = null,

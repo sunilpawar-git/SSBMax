@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.shared.presentation.lecturette.LecturettePhase
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestUiState
@@ -43,7 +43,7 @@ import ssbmax.shared.generated.resources.lecturette_title
 @Composable
 fun LecturetteTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit = {},
     viewModel: LecturetteTestViewModel = koinViewModel(),

@@ -5,7 +5,6 @@ import com.ssbmax.shared.domain.model.Gender
 import com.ssbmax.shared.domain.model.GenderTag
 import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.PPDTQuestion
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.domain.model.UserRole
@@ -43,7 +42,7 @@ class LoadPPDTTestUseCaseTest {
 
     private fun profileOf(gender: Gender) = UserProfile(
         userId = "u1", fullName = "Test", age = 22, gender = gender,
-        entryType = EntryType.GRADUATE, subscriptionType = SubscriptionType.FREE,
+        entryType = EntryType.GRADUATE,
         createdAt = 0L
     )
 

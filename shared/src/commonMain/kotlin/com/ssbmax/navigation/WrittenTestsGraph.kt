@@ -22,7 +22,7 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
                 // subscriptionType -- FREE/PRO wait for manual grading.
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.SRT,
                     navController = navController
                 )
@@ -60,7 +60,7 @@ fun NavGraphBuilder.writtenTestsGraph(navController: NavHostController) {
                 // SD is the other test type gated by subscriptionType.
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.SD,
                     navController = navController
                 )

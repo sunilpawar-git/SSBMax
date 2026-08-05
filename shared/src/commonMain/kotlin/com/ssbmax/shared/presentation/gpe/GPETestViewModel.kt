@@ -2,7 +2,7 @@ package com.ssbmax.shared.presentation.gpe
 
 import com.ssbmax.shared.domain.model.GPEPhase
 import com.ssbmax.shared.domain.model.GPEQuestion
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -209,7 +209,7 @@ data class GPETestUiState(
     val testId: String = "",
     val userId: String = "",
     val question: GPEQuestion? = null,
-    val subscriptionType: SubscriptionType = SubscriptionType.FREE,
+    val subscriptionType: SubscriptionTier = SubscriptionTier.FREE,
     val phase: GPEPhase = GPEPhase.INSTRUCTIONS,
     val planningStartTime: Long = 0L,
     val timeRemaining: Int = 600,

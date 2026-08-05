@@ -8,7 +8,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
@@ -179,12 +179,12 @@ class TATTestScreenUiTest {
     fun completedTest_triggersCallback() = runComposeUiTest {
         val submissionId = "sub-123"
         var completedId: String? = null
-        var completedType: SubscriptionType? = null
+        var completedType: SubscriptionTier? = null
         uiStateFlow.value = uiStateFlow.value.copy(
             phase = TATPhase.SUBMITTED,
             isSubmitted = true,
             submissionId = submissionId,
-            subscriptionType = SubscriptionType.FREE
+            subscriptionType = SubscriptionTier.FREE
         )
 
         setContent {
@@ -197,7 +197,7 @@ class TATTestScreenUiTest {
         waitForIdle()
 
         assert(completedId == submissionId) { "Expected callback with $submissionId, got $completedId" }
-        assert(completedType == SubscriptionType.FREE)
+        assert(completedType == SubscriptionTier.FREE)
     }
 
     @Test

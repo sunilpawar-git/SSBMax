@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.ui.components.ProfileAvatarWithBadge
 import org.jetbrains.compose.resources.stringResource
@@ -48,6 +49,7 @@ import ssbmax.shared.generated.resources.drawer_header_loading
 @Composable
 fun DrawerHeader(
     userProfile: UserProfile?,
+    subscriptionTier: SubscriptionTier?,
     isLoading: Boolean = false,
     onEditProfile: () -> Unit,
     modifier: Modifier = Modifier
@@ -78,7 +80,7 @@ fun DrawerHeader(
                 userProfile != null && userProfile.fullName.isNotBlank() -> {
                     ProfileAvatarWithBadge(
                         initials = userProfile.getInitials(),
-                        subscriptionType = userProfile.subscriptionType,
+                        subscriptionType = subscriptionTier,
                         modifier = Modifier.size(72.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))

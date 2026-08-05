@@ -1,6 +1,6 @@
 package com.ssbmax.shared.presentation.tat
 
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
@@ -10,11 +10,11 @@ import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
@@ -52,7 +52,7 @@ import kotlin.time.Clock
  *
  * Unlike PPDT (which delegates submission-building to
  * `SubmitPPDTTestUseCase`), this ViewModel builds the [TATSubmission] itself
- * and calls [UserProfileRepository]/[TestUsageRecorder] directly, mirroring
+ * and calls [GetSubscriptionTierUseCase]/[TestUsageRecorder] directly, mirroring
  * the Android original's `submitTest()`. [SubmitTATTestUseCase] stayed a thin
  * pass-through (not widened like PPDT's) because
  * `app/.../ui/tests/tat/TATTestViewModel.kt` -- the live, untouched Android
@@ -70,7 +70,7 @@ class TATTestViewModel(
     private val submitTATTest: SubmitTATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
-    private val userProfileRepository: UserProfileRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val logger: DomainLogger,
@@ -215,8 +215,7 @@ class TATTestViewModel(
                 return@launch
             }
 
-            val subscriptionType = userProfileRepository.getUserProfile(userId).first()
-                .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+            val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)
 
             val totalTimeTakenMinutes = if (state.startTime > 0) {
                 ((Clock.System.now().toEpochMilliseconds() - state.startTime) / 60000).toInt()

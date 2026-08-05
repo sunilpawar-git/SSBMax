@@ -4,18 +4,18 @@ import com.ssbmax.shared.domain.model.SRTPhase
 import com.ssbmax.shared.domain.model.SRTSituationResponse
 import com.ssbmax.shared.domain.model.SRTSubmission
 import com.ssbmax.shared.domain.model.SRTTestConfig
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
@@ -55,7 +55,7 @@ import kotlin.time.Clock
  * behavior, not incidental.
  *
  * Builds its own [SRTSubmission] and calls
- * [UserProfileRepository]/[TestUsageRecorder] directly, same precedent as
+ * [GetSubscriptionTierUseCase]/[TestUsageRecorder] directly, same precedent as
  * WAT -- [SubmitSRTTestUseCase] stays the thin pass-through it already was.
  */
 class SRTTestViewModel(
@@ -64,7 +64,7 @@ class SRTTestViewModel(
     private val submitSRTTest: SubmitSRTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
-    private val userProfileRepository: UserProfileRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val observability: ObservabilitySeam
@@ -240,8 +240,7 @@ class SRTTestViewModel(
                 return@launch
             }
 
-            val subscriptionType = userProfileRepository.getUserProfile(userId).first()
-                .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+            val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)
 
             // Flush a partial (mid-typing) response for the currently-open situation,
             // same as the Android original -- only relevant if submit is reached from

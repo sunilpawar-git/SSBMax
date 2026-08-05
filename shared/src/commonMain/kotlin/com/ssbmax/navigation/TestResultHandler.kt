@@ -1,7 +1,7 @@
 package com.ssbmax.navigation
 
 import androidx.navigation.NavController
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 
 /**
@@ -28,15 +28,15 @@ object TestResultHandler {
     )
 
     /**
-     * Handle test submission navigation based on subscription type.
+     * Handle test submission navigation based on subscription tier.
      * @param submissionId The ID of the submitted test (or sessionId for OIR)
-     * @param subscriptionType User's subscription type (FREE, PRO, PREMIUM)
+     * @param subscriptionTier User's subscription tier (FREE, PRO, PREMIUM)
      * @param testType The type of test that was submitted
      * @param navController Navigation controller for routing
      */
     fun handleTestSubmission(
         submissionId: String,
-        subscriptionType: SubscriptionType,
+        subscriptionTier: SubscriptionTier,
         testType: TestType,
         navController: NavController
     ) {
@@ -45,10 +45,10 @@ object TestResultHandler {
             return
         }
 
-        when (subscriptionType) {
-            SubscriptionType.PREMIUM -> navigateToResult(submissionId, testType, navController)
-            SubscriptionType.PRO,
-            SubscriptionType.FREE -> navigateToPendingReview(submissionId, navController)
+        when (subscriptionTier) {
+            SubscriptionTier.PREMIUM -> navigateToResult(submissionId, testType, navController)
+            SubscriptionTier.PRO,
+            SubscriptionTier.FREE -> navigateToPendingReview(submissionId, navController)
         }
     }
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SDTPhase
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.sdt.SDTTestViewModel
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.sdt.components.SDTExitDialog
@@ -54,7 +54,7 @@ import ssbmax.shared.generated.resources.sdt_retry_button
 @Composable
 fun SDTTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: SDTTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier

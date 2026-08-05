@@ -10,7 +10,7 @@ import com.ssbmax.shared.domain.model.SRTCategory
 import com.ssbmax.shared.domain.model.SRTPhase
 import com.ssbmax.shared.domain.model.SRTSituation
 import com.ssbmax.shared.domain.model.SRTSituationResponse
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.srt.SRTTestUiState
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
@@ -136,12 +136,12 @@ class SRTTestScreenUiTest {
     fun completedTest_triggersCallback() = runComposeUiTest {
         val submissionId = "sub-srt-789"
         var completedId: String? = null
-        var completedType: SubscriptionType? = null
+        var completedType: SubscriptionTier? = null
         uiStateFlow.value = uiStateFlow.value.copy(
             phase = SRTPhase.SUBMITTED,
             isSubmitted = true,
             submissionId = submissionId,
-            subscriptionType = SubscriptionType.FREE
+            subscriptionType = SubscriptionTier.FREE
         )
 
         setContent {
@@ -154,7 +154,7 @@ class SRTTestScreenUiTest {
         waitForIdle()
 
         assert(completedId == submissionId) { "Expected callback with $submissionId, got $completedId" }
-        assert(completedType == SubscriptionType.FREE)
+        assert(completedType == SubscriptionTier.FREE)
     }
 
     @Test

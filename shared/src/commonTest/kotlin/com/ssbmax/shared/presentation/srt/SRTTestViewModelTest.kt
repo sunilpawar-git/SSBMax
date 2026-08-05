@@ -10,6 +10,7 @@ import com.ssbmax.shared.domain.repository.UsageInfo
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSRTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.presentation.testing.clearForTest
@@ -20,7 +21,6 @@ import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
-import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
 import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +48,6 @@ class SRTTestViewModelTest {
     private lateinit var subscriptionRepository: FakeSubscriptionRepository
     private lateinit var testContentRepository: com.ssbmax.shared.domain.repository.TestContentRepository
     private lateinit var testSessionRepository: FakeTestSessionRepository
-    private lateinit var userProfileRepository: FakeUserProfileRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
     private lateinit var usageRecorder: FakeTestUsageRecorder
     private lateinit var analysisTrigger: FakeSubmissionAnalysisTrigger
@@ -64,7 +63,6 @@ class SRTTestViewModelTest {
             override suspend fun getSRTQuestions(testId: String) = Result.success(situations())
         }
         testSessionRepository = FakeTestSessionRepository()
-        userProfileRepository = FakeUserProfileRepository()
         submissionRepository = FakeSubmissionRepository()
         usageRecorder = FakeTestUsageRecorder()
         analysisTrigger = FakeSubmissionAnalysisTrigger()
@@ -90,7 +88,7 @@ class SRTTestViewModelTest {
         submitSRTTest = SubmitSRTTestUseCase(submissionRepository),
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
         checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
-        userProfileRepository = userProfileRepository,
+        getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
         usageRecorder = usageRecorder,
         analysisTrigger = analysisTrigger,
         observability = ObservabilitySeam(NoOpLogger(), analyticsTracker)

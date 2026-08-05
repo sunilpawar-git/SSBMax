@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserProfile
 
 /**
@@ -15,6 +16,7 @@ import com.ssbmax.shared.domain.model.UserProfile
 @Composable
 fun SSBMaxDrawer(
     userProfile: UserProfile?,
+    subscriptionTier: SubscriptionTier?,
     isLoadingProfile: Boolean = false,
     currentRoute: String,
     phase1Expanded: Boolean,
@@ -33,6 +35,7 @@ fun SSBMaxDrawer(
     Column(modifier = modifier.fillMaxSize()) {
         DrawerHeader(
             userProfile = userProfile,
+            subscriptionTier = subscriptionTier,
             isLoading = isLoadingProfile,
             onEditProfile = onEditProfile
         )

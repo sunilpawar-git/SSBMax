@@ -18,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
@@ -54,7 +54,7 @@ import ssbmax.shared.generated.resources.wat_retry_button
 @Composable
 fun WATTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: WATTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier

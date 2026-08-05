@@ -27,7 +27,7 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.GTO_GD,
                     navController = navController
                 )
@@ -57,7 +57,7 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.GTO_LECTURETTE,
                     navController = navController
                 )
@@ -87,7 +87,7 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.GTO_GPE,
                     navController = navController
                 )

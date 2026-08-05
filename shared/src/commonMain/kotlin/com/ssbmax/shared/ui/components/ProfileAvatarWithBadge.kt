@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 
 /**
  * KMP port of `app/.../ui/components/ProfileAvatarWithBadge.kt` -- user
@@ -25,7 +25,7 @@ import com.ssbmax.shared.domain.model.SubscriptionType
 @Composable
 fun ProfileAvatarWithBadge(
     initials: String,
-    subscriptionType: SubscriptionType?,
+    subscriptionType: SubscriptionTier?,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {

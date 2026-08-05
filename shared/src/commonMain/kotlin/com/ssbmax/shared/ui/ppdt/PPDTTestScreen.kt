@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.PPDTPhase
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.ppdt.components.PPDTBottomBar
@@ -62,7 +62,7 @@ import ssbmax.shared.generated.resources.ppdt_retry_button
 @Composable
 fun PPDTTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: PPDTTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier

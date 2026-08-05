@@ -26,48 +26,12 @@ data class SSBMaxUser(
     val displayName: String,
     val photoUrl: String? = null,
     val role: UserRole,
-    val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val subscription: UserSubscription? = null,
     val studentProfile: StudentProfile? = null,
     val instructorProfile: InstructorProfile? = null,
     val createdAt: Long = Clock.System.now().toEpochMilliseconds(),
     val lastLoginAt: Long = Clock.System.now().toEpochMilliseconds()
-) {
-    /**
-     * Legacy property for backward compatibility.
-     *
-     * @deprecated Use [subscriptionTier] instead for granular tier checking
-     *
-     * **Migration Timeline:**
-     * - Deprecated: Phase 3 (2024-Q3)
-     * - Removal Target: Phase 6 (2025-Q2)
-     *
-     * **Migration Guide:**
-     * ```kotlin
-     * // OLD (deprecated - boolean check)
-     * if (user.isPremium) { /* ... */ }
-     *
-     * // NEW (recommended - tier-specific checks)
-     * when (user.subscriptionTier) {
-     *     SubscriptionTier.FREE -> { /* Free tier */ }
-     *     SubscriptionTier.PRO -> { /* Pro features */ }
-     *     SubscriptionTier.PREMIUM -> { /* Premium features */ }
-     * }
-     *
-     * // Or for simple paid check:
-     * if (user.subscriptionTier != SubscriptionTier.FREE) { /* Paid tier */ }
-     * ```
-     *
-     * **Breaking Changes:**
-     * - Binary check (free/premium) replaced with three-tier system (FREE/PRO/PREMIUM)
-     * - Use `subscriptionTier` for more precise feature gating
-     *
-     * @see subscriptionTier
-     */
-    @Deprecated("Use subscriptionTier instead", ReplaceWith("subscriptionTier != SubscriptionTier.FREE"))
-    val isPremium: Boolean
-        get() = subscriptionTier != SubscriptionTier.FREE
-}
+)
 
 /**
  * Student-specific profile information

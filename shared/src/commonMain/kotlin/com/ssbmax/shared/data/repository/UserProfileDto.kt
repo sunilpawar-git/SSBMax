@@ -2,7 +2,6 @@ package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.UserProfile
 import kotlinx.serialization.Serializable
 
@@ -19,7 +18,6 @@ data class UserProfileDto(
     val gender: String = Gender.MALE.name,
     val entryType: String = EntryType.GRADUATE.name,
     val profilePictureUrl: String? = null,
-    val subscriptionType: String = SubscriptionType.FREE.name,
     val currentStreak: Int = 0,
     val lastLoginDate: Long? = null,
     val longestStreak: Int = 0,
@@ -34,7 +32,6 @@ fun UserProfile.toDto(): UserProfileDto = UserProfileDto(
     gender = gender.name,
     entryType = entryType.name,
     profilePictureUrl = profilePictureUrl,
-    subscriptionType = subscriptionType.name,
     currentStreak = currentStreak,
     lastLoginDate = lastLoginDate,
     longestStreak = longestStreak,
@@ -49,7 +46,6 @@ fun UserProfileDto.toDomain(): UserProfile = UserProfile(
     gender = runCatching { Gender.valueOf(gender) }.getOrDefault(Gender.MALE),
     entryType = runCatching { EntryType.valueOf(entryType) }.getOrDefault(EntryType.GRADUATE),
     profilePictureUrl = profilePictureUrl,
-    subscriptionType = runCatching { SubscriptionType.valueOf(subscriptionType) }.getOrDefault(SubscriptionType.FREE),
     currentStreak = currentStreak,
     lastLoginDate = lastLoginDate,
     longestStreak = longestStreak,

@@ -23,10 +23,9 @@ import org.koin.dsl.module
  *
  * [GetSubscriptionTierUseCase]/[GetMonthlyUsageUseCase] existed in
  * `core:domain`/`shared` before Phase 5's Settings session but were never
- * bound in this Koin graph until then. None of these screens is swapped into
- * the live Android app's nav graph — Settings/Profile were judged less
- * monetization-adjacent than the test verticals but still deferred pending
- * their own review pass.
+ * bound in this Koin graph until then. These screens ARE reachable from the
+ * live nav graph — `SettingsScreen`/`SSBMaxDrawer`'s profile section are
+ * wired via `SSBMaxNavHost.kt`'s `profileSettingsGraph(navController)`.
  */
 val profileSettingsModule = module {
     viewModelOf(::UserProfileViewModel)

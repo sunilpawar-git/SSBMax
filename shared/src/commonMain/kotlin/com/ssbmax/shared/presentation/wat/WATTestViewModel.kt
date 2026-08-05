@@ -1,6 +1,6 @@
 package com.ssbmax.shared.presentation.wat
 
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.WATPhase
@@ -11,11 +11,11 @@ import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitWATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
@@ -72,7 +72,7 @@ import kotlin.time.Clock
  * the timer.
  *
  * This ViewModel builds its own [WATSubmission] and calls
- * [UserProfileRepository]/[TestUsageRecorder] directly (matching the Android
+ * [GetSubscriptionTierUseCase]/[TestUsageRecorder] directly (matching the Android
  * original's own `submitTest()` shape) -- [SubmitWATTestUseCase] stays the
  * thin pass-through it already was (no widening attempted, since TAT's
  * session already demonstrated that would only benefit a PPDT-shaped call
@@ -84,7 +84,7 @@ class WATTestViewModel(
     private val submitWATTest: SubmitWATTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
-    private val userProfileRepository: UserProfileRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val observability: ObservabilitySeam
@@ -234,8 +234,7 @@ class WATTestViewModel(
                 return@launch
             }
 
-            val subscriptionType = userProfileRepository.getUserProfile(userId).first()
-                .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+            val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)
 
             val totalTimeTakenMinutes = if (state.startTime > 0) {
                 ((Clock.System.now().toEpochMilliseconds() - state.startTime) / 60000).toInt()

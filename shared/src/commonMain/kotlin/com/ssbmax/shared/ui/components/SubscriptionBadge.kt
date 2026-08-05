@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.subscription_badge_free
@@ -23,21 +23,21 @@ import ssbmax.shared.generated.resources.subscription_badge_pro
  */
 @Composable
 fun SubscriptionBadge(
-    subscriptionType: SubscriptionType,
+    subscriptionType: SubscriptionTier,
     modifier: Modifier = Modifier
 ) {
     val (label, containerColor, contentColor) = when (subscriptionType) {
-        SubscriptionType.FREE -> Triple(
+        SubscriptionTier.FREE -> Triple(
             stringResource(Res.string.subscription_badge_free),
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer
         )
-        SubscriptionType.PRO -> Triple(
+        SubscriptionTier.PRO -> Triple(
             stringResource(Res.string.subscription_badge_pro),
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer
         )
-        SubscriptionType.PREMIUM -> Triple(
+        SubscriptionTier.PREMIUM -> Triple(
             stringResource(Res.string.subscription_badge_premium),
             MaterialTheme.colorScheme.tertiaryContainer,
             MaterialTheme.colorScheme.onTertiaryContainer

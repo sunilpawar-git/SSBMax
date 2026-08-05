@@ -2,7 +2,6 @@ package com.ssbmax.shared.domain.usecase.auth
 
 import app.cash.turbine.test
 import com.ssbmax.shared.domain.model.SSBMaxUser
-import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
 import io.mockk.every
@@ -36,7 +35,6 @@ class ObserveCurrentUserUseCaseTest {
             email = "test@ssbmax.com",
             displayName = "Test User",
             role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.FREE,
             subscription = null
         )
         every { authRepository.currentUser } returns MutableStateFlow(mockUser)
@@ -72,7 +70,6 @@ class ObserveCurrentUserUseCaseTest {
             email = "user1@ssbmax.com",
             displayName = "User One",
             role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.FREE,
             subscription = null
         )
         val userFlow = MutableStateFlow<SSBMaxUser?>(user1)
@@ -100,7 +97,6 @@ class ObserveCurrentUserUseCaseTest {
             email = "premium@ssbmax.com",
             displayName = "Premium User",
             role = UserRole.STUDENT,
-            subscriptionTier = SubscriptionTier.PRO,
             subscription = null
         )
         every { authRepository.currentUser } returns MutableStateFlow(mockUser)
@@ -114,7 +110,6 @@ class ObserveCurrentUserUseCaseTest {
             assertEquals("premium@ssbmax.com", emittedUser?.email)
             assertEquals("Premium User", emittedUser?.displayName)
             assertEquals(UserRole.STUDENT, emittedUser?.role)
-            assertEquals(SubscriptionTier.PRO, emittedUser?.subscriptionTier)
             cancelAndIgnoreRemainingEvents()
         }
     }

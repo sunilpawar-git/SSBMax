@@ -1,7 +1,6 @@
 package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.constants.InterviewConstants
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.interview.InterviewLimits
 import com.ssbmax.shared.domain.model.interview.InterviewMode
@@ -256,7 +255,7 @@ class GitLiveInterviewRepository(
     override suspend fun getRemainingInterviews(userId: String, mode: InterviewMode): Result<Int> = try {
         val tier = subscriptionRepository.getSubscriptionTier(userId).getOrNull() ?: return Result.success(0)
         val totalUsed = getInterviewStats(userId).getOrDefault(emptyMap()).values.sum()
-        val limits = InterviewLimits.forSubscription(SubscriptionType.valueOf(tier.name), totalUsed)
+        val limits = InterviewLimits.forSubscription(tier, totalUsed)
         Result.success(limits.remaining)
     } catch (e: Exception) { Result.failure(e) }
 

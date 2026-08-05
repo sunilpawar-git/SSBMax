@@ -3,16 +3,16 @@ package com.ssbmax.shared.presentation.oir
 import com.ssbmax.shared.domain.model.OIRAnswer
 import com.ssbmax.shared.domain.model.OIRTestConfig
 import com.ssbmax.shared.domain.model.OIRTestSession
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
@@ -82,8 +82,8 @@ class OIRTestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: UserProfileRepository,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val scoreCalculator: OIRTestScoreCalculator,
     private val submitOIRTestUseCase: SubmitOIRTestUseCase,
     private val logger: DomainLogger,
@@ -230,8 +230,7 @@ class OIRTestViewModel(
         }
         viewModelScope.launch {
             try {
-                val subscriptionType = userProfileRepository.getUserProfile(session.userId).first()
-                    .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+                val subscriptionType = getSubscriptionTier(session.userId).getOrDefault(SubscriptionTier.FREE)
                 val submissionId = submitOIRTestUseCase(session).getOrThrow()
                 // Note: served questions are marked used inside SubmitOIRTestUseCase --
                 // the single source of truth for submission orchestration. Do NOT mark

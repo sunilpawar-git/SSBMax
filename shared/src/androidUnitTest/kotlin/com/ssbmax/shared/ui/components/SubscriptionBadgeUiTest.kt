@@ -4,7 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
 import org.junit.Before
 import org.junit.Test
@@ -18,12 +18,12 @@ import org.robolectric.RobolectricTestRunner
  * KMP-convergence plan). Pure presentational composables, no ViewModel/Koin.
  *
  * Real label drift from the pre-cutover original, verified against
- * `strings.xml` rather than assumed: `SubscriptionType.FREE` now renders
+ * `strings.xml` rather than assumed: `SubscriptionTier.FREE` now renders
  * "Free" (`subscription_badge_free`), not the old hardcoded "Basic"; `PREMIUM`
  * renders "Premium" (`subscription_badge_premium`), not the old "AI". `PRO`
  * still renders "Pro". The dropped `PREMIUM_AI`/`PREMIUM_ASSESSOR` cases from
  * the original (already commented out there) don't exist in the current
- * 3-value `SubscriptionType` enum (`FREE`/`PRO`/`PREMIUM`) -- nothing to port.
+ * 3-value `SubscriptionTier` enum (`FREE`/`PRO`/`PREMIUM`) -- nothing to port.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -36,21 +36,21 @@ class SubscriptionBadgeUiTest {
 
     @Test
     fun subscriptionBadge_displaysFreeTier() = runComposeUiTest {
-        setContent { SubscriptionBadge(subscriptionType = SubscriptionType.FREE) }
+        setContent { SubscriptionBadge(subscriptionType = SubscriptionTier.FREE) }
 
         onNodeWithText("Free").assertIsDisplayed()
     }
 
     @Test
     fun subscriptionBadge_displaysProTier() = runComposeUiTest {
-        setContent { SubscriptionBadge(subscriptionType = SubscriptionType.PRO) }
+        setContent { SubscriptionBadge(subscriptionType = SubscriptionTier.PRO) }
 
         onNodeWithText("Pro").assertIsDisplayed()
     }
 
     @Test
     fun subscriptionBadge_displaysPremiumTier() = runComposeUiTest {
-        setContent { SubscriptionBadge(subscriptionType = SubscriptionType.PREMIUM) }
+        setContent { SubscriptionBadge(subscriptionType = SubscriptionTier.PREMIUM) }
 
         onNodeWithText("Premium").assertIsDisplayed()
     }
@@ -58,7 +58,7 @@ class SubscriptionBadgeUiTest {
     @Test
     fun profileAvatarWithBadge_showsBadgeWhenSubscriptionExists() = runComposeUiTest {
         setContent {
-            ProfileAvatarWithBadge(initials = "TU", subscriptionType = SubscriptionType.FREE)
+            ProfileAvatarWithBadge(initials = "TU", subscriptionType = SubscriptionTier.FREE)
         }
 
         onNodeWithText("Free").assertIsDisplayed()
@@ -78,7 +78,7 @@ class SubscriptionBadgeUiTest {
     @Test
     fun profileAvatarWithBadge_displaysInitials() = runComposeUiTest {
         setContent {
-            ProfileAvatarWithBadge(initials = "JD", subscriptionType = SubscriptionType.PRO)
+            ProfileAvatarWithBadge(initials = "JD", subscriptionType = SubscriptionTier.PRO)
         }
 
         onNodeWithText("JD").assertIsDisplayed()

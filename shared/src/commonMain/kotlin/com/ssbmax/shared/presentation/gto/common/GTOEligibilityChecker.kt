@@ -1,13 +1,13 @@
 package com.ssbmax.shared.presentation.gto.common
 
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOTestType
 import com.ssbmax.shared.domain.repository.GTORepository
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
@@ -28,16 +28,16 @@ import kotlinx.coroutines.flow.first
  */
 class GTOEligibilityChecker(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
-    private val userProfileRepository: UserProfileRepository,
     private val gtoRepository: GTORepository,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val logger: DomainLogger,
     private val analyticsTracker: AnalyticsTracker
 ) {
     private val tag = "GTOEligibilityChecker"
 
     sealed class Result {
-        data class Eligible(val userId: String, val subscriptionType: SubscriptionType) : Result()
+        data class Eligible(val userId: String, val subscriptionType: SubscriptionTier) : Result()
         data class Error(val message: String) : Result()
         data class LimitReached(val message: String) : Result()
     }
@@ -66,8 +66,7 @@ class GTOEligibilityChecker(
             )
             is TestEligibility.NetworkError -> Result.Error("No connection. Please check your network and try again.")
             is TestEligibility.Eligible -> {
-                val subscriptionType = userProfileRepository.getUserProfile(userId).first()
-                    .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+                val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)
                 Result.Eligible(userId, subscriptionType)
             }
         }

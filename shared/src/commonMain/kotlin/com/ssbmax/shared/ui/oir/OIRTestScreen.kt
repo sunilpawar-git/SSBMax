@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.oir.OIRErrorType
 import com.ssbmax.shared.presentation.oir.OIRTestViewModel
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
@@ -55,7 +55,7 @@ import ssbmax.shared.generated.resources.oir_loading
  */
 @Composable
 fun OIRTestScreen(
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     viewModel: OIRTestViewModel = koinViewModel(),
     modifier: Modifier = Modifier

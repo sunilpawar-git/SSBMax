@@ -13,6 +13,7 @@ import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.LoadPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeDifficultyProgressionRepository
@@ -92,7 +93,11 @@ class PPDTTestViewModelTest {
 
     private fun buildViewModel(): PPDTTestViewModel = PPDTTestViewModel(
         loadPPDTTest = LoadPPDTTestUseCase(testContentRepository, testSessionRepository, userProfileRepository),
-        submitPPDTTest = SubmitPPDTTestUseCase(submissionRepository, userProfileRepository, com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder()),
+        submitPPDTTest = SubmitPPDTTestUseCase(
+            submissionRepository, userProfileRepository,
+            GetSubscriptionTierUseCase(subscriptionRepository),
+            com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder()
+        ),
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
         checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
         analysisTrigger = analysisTrigger,

@@ -261,16 +261,13 @@ class CheckInterviewPrerequisitesUseCase constructor(
                 limit = 0
             )
 
-        // Convert SubscriptionTier to SubscriptionType
-        val subscriptionType = com.ssbmax.shared.domain.model.SubscriptionType.valueOf(tier.name)
-
         // Get used count (sum all interview modes for unified system)
         val statsResult = interviewRepository.getInterviewStats(userId)
         val stats = statsResult.getOrNull() ?: emptyMap()
         val used = stats.values.sum()
 
         // Calculate limits using new InterviewLimits API
-        val limits = InterviewLimits.forSubscription(subscriptionType, used)
+        val limits = InterviewLimits.forSubscription(tier, used)
 
         return if (limits.canStartInterview()) {
             SubscriptionStatus.Available(

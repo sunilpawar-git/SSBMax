@@ -2,7 +2,6 @@ package com.ssbmax.shared.domain.model.interview
 
 import com.ssbmax.shared.data.repository.SubscriptionLimits
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * TTS service type available based on subscription tier
@@ -28,7 +27,7 @@ enum class TTSServiceType {
  * @param ttsService TTS service provided for this tier
  */
 data class InterviewLimits(
-    val subscriptionType: SubscriptionType,
+    val subscriptionType: SubscriptionTier,
     val totalLimit: Int,
     val used: Int,
     val remaining: Int,
@@ -48,11 +47,8 @@ data class InterviewLimits(
          * @param used Number of interviews already used this month
          * @return InterviewLimits with tier-specific values, sourced from [SubscriptionLimits]
          */
-        fun forSubscription(subscriptionType: SubscriptionType, used: Int): InterviewLimits {
-            val totalLimit = SubscriptionLimits.limitFor(
-                "Interview",
-                SubscriptionTier.valueOf(subscriptionType.name)
-            )
+        fun forSubscription(subscriptionType: SubscriptionTier, used: Int): InterviewLimits {
+            val totalLimit = SubscriptionLimits.limitFor("Interview", subscriptionType)
             val remaining = if (totalLimit < 0) Int.MAX_VALUE else maxOf(0, totalLimit - used)
             return InterviewLimits(
                 subscriptionType = subscriptionType,
@@ -66,17 +62,17 @@ data class InterviewLimits(
         /**
          * Check if user has interviews remaining
          */
-        fun hasInterviewsRemaining(subscriptionType: SubscriptionType, used: Int): Boolean {
+        fun hasInterviewsRemaining(subscriptionType: SubscriptionTier, used: Int): Boolean {
             return forSubscription(subscriptionType, used).remaining > 0
         }
 
         /**
          * Get TTS service type for subscription tier
          */
-        fun getTTSService(subscriptionType: SubscriptionType): TTSServiceType {
+        fun getTTSService(subscriptionType: SubscriptionTier): TTSServiceType {
             return when (subscriptionType) {
-                SubscriptionType.FREE -> TTSServiceType.ANDROID
-                SubscriptionType.PRO, SubscriptionType.PREMIUM -> TTSServiceType.QWEN_TTS
+                SubscriptionTier.FREE -> TTSServiceType.ANDROID
+                SubscriptionTier.PRO, SubscriptionTier.PREMIUM -> TTSServiceType.QWEN_TTS
             }
         }
     }

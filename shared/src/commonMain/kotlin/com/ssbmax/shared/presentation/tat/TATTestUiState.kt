@@ -1,7 +1,6 @@
 package com.ssbmax.shared.presentation.tat
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
@@ -28,7 +27,7 @@ data class TATTestUiState(
     val startTime: Long = 0L,
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: SubscriptionType? = null,
+    val subscriptionType: SubscriptionTier? = null,
     val submission: TATSubmission? = null,
     val error: String? = null,
     val isProfileIncomplete: Boolean = false,

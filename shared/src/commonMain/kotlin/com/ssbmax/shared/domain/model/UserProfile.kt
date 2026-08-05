@@ -13,7 +13,6 @@ data class UserProfile(
     val gender: Gender,
     val entryType: EntryType,
     val profilePictureUrl: String? = null,
-    val subscriptionType: SubscriptionType = SubscriptionType.FREE,
     val currentStreak: Int = 0,
     val lastLoginDate: Long? = null,
     val longestStreak: Int = 0,
@@ -66,14 +65,5 @@ enum class EntryType(val displayName: String) {
             return values().find { it.displayName.equals(name, ignoreCase = true) }
         }
     }
-}
-
-/**
- * Subscription type for determining grading method
- */
-enum class SubscriptionType {
-    FREE,              // Free users - limited tests, manual grading (wait for assessor review)
-    PRO,               // Pro users - more tests, manual grading (wait for assessor review)  
-    PREMIUM            // Premium users - unlimited tests, AI grading (immediate results)
 }
 

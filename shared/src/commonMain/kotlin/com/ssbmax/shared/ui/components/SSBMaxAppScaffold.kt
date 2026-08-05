@@ -109,6 +109,7 @@ fun SSBMaxAppScaffold(
             ModalDrawerSheet {
                 SSBMaxDrawer(
                     userProfile = profileUiState.profile,
+                    subscriptionTier = profileUiState.subscriptionTier,
                     isLoadingProfile = profileUiState.isLoading,
                     currentRoute = currentRoute,
                     phase1Expanded = phase1Expanded,

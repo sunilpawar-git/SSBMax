@@ -4,7 +4,6 @@ import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.domain.model.OIRTestSession
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * KMP port of the Android `app/.../ui/tests/oir/OIRTestUiState.kt`.
@@ -31,7 +30,7 @@ data class OIRTestUiState(
     val currentQuestionAnswered: Boolean = false,
     val isCompleted: Boolean = false,
     val sessionId: String? = null,
-    val subscriptionType: SubscriptionType? = null,
+    val subscriptionType: SubscriptionTier? = null,
     /** Result calculated locally after submission — no extra Firestore read needed. */
     val testResult: OIRTestResult? = null,
     // Subscription limit fields

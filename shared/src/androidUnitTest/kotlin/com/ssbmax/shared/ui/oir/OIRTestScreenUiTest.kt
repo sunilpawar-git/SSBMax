@@ -10,7 +10,7 @@ import com.ssbmax.shared.domain.model.OIROption
 import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.QuestionDifficulty
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.oir.OIRErrorType
 import com.ssbmax.shared.presentation.oir.OIRTestUiState
 import com.ssbmax.shared.presentation.oir.OIRTestViewModel
@@ -146,11 +146,11 @@ class OIRTestScreenUiTest {
     fun completedTest_triggersCallback() = runComposeUiTest {
         val sessionId = "session-oir-123"
         var completedId: String? = null
-        var completedType: SubscriptionType? = null
+        var completedType: SubscriptionTier? = null
         uiStateFlow.value = uiStateFlow.value.copy(
             isCompleted = true,
             sessionId = sessionId,
-            subscriptionType = SubscriptionType.FREE
+            subscriptionType = SubscriptionTier.FREE
         )
 
         setContent {
@@ -162,7 +162,7 @@ class OIRTestScreenUiTest {
         waitForIdle()
 
         assert(completedId == sessionId) { "Expected callback with $sessionId, got $completedId" }
-        assert(completedType == SubscriptionType.FREE)
+        assert(completedType == SubscriptionTier.FREE)
     }
 
     @Test

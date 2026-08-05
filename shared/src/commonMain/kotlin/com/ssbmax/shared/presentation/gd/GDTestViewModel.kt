@@ -1,6 +1,6 @@
 package com.ssbmax.shared.presentation.gd
 
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -181,7 +181,7 @@ data class GDTestUiState(
     val testId: String = "",
     val userId: String = "",
     val topic: String = "",
-    val subscriptionType: SubscriptionType = SubscriptionType.FREE,
+    val subscriptionType: SubscriptionTier = SubscriptionTier.FREE,
     val phase: GDPhase = GDPhase.INSTRUCTIONS,
     val discussionStartTime: Long = 0L,
     val timeRemaining: Int = 1200,

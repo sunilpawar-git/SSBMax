@@ -6,7 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.shared.domain.model.WATWord
 import com.ssbmax.shared.domain.model.WATWordResponse
@@ -114,12 +114,12 @@ class WATTestScreenUiTest {
     fun completedTest_triggersCallback() = runComposeUiTest {
         val submissionId = "sub-456"
         var completedId: String? = null
-        var completedType: SubscriptionType? = null
+        var completedType: SubscriptionTier? = null
         uiStateFlow.value = uiStateFlow.value.copy(
             phase = WATPhase.SUBMITTED,
             isSubmitted = true,
             submissionId = submissionId,
-            subscriptionType = SubscriptionType.FREE
+            subscriptionType = SubscriptionTier.FREE
         )
 
         setContent {
@@ -132,7 +132,7 @@ class WATTestScreenUiTest {
         waitForIdle()
 
         assert(completedId == submissionId) { "Expected callback with $submissionId, got $completedId" }
-        assert(completedType == SubscriptionType.FREE)
+        assert(completedType == SubscriptionTier.FREE)
     }
 
     @Test

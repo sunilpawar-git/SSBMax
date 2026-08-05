@@ -5,7 +5,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.createGraph
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -46,13 +46,13 @@ class TestResultHandlerTest {
 
     // SRT/SD are the only two test types actually gated by subscriptionType --
     // FREE/PRO wait for manual grading, PREMIUM gets the immediate result.
-    private val gatedMatrix: List<Triple<SubscriptionType, TestType, (NavDestination?) -> Boolean>> = listOf(
-        Triple(SubscriptionType.FREE, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
-        Triple(SubscriptionType.PRO, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
-        Triple(SubscriptionType.PREMIUM, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SRTSubmissionResult>() == true },
-        Triple(SubscriptionType.FREE, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
-        Triple(SubscriptionType.PRO, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
-        Triple(SubscriptionType.PREMIUM, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SDSubmissionResult>() == true }
+    private val gatedMatrix: List<Triple<SubscriptionTier, TestType, (NavDestination?) -> Boolean>> = listOf(
+        Triple(SubscriptionTier.FREE, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionTier.PRO, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionTier.PREMIUM, TestType.SRT) { it?.hasRoute<SSBMaxDestinations.SRTSubmissionResult>() == true },
+        Triple(SubscriptionTier.FREE, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionTier.PRO, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SubmissionDetail>() == true },
+        Triple(SubscriptionTier.PREMIUM, TestType.SD) { it?.hasRoute<SSBMaxDestinations.SDSubmissionResult>() == true }
     )
 
     @Test
@@ -61,7 +61,7 @@ class TestResultHandlerTest {
             val navController = buildController()
             TestResultHandler.handleTestSubmission(
                 submissionId = "sub-1",
-                subscriptionType = subscriptionType,
+                subscriptionTier = subscriptionType,
                 testType = testType,
                 navController = navController
             )
@@ -92,7 +92,7 @@ class TestResultHandlerTest {
             val navController = buildController()
             TestResultHandler.handleTestSubmission(
                 submissionId = "sub-2",
-                subscriptionType = SubscriptionType.FREE,
+                subscriptionTier = SubscriptionTier.FREE,
                 testType = testType,
                 navController = navController
             )
@@ -111,7 +111,7 @@ class TestResultHandlerTest {
         val navController = buildController()
         TestResultHandler.handleTestSubmission(
             submissionId = "sub-3",
-            subscriptionType = SubscriptionType.PREMIUM,
+            subscriptionTier = SubscriptionTier.PREMIUM,
             testType = TestType.IO,
             navController = navController
         )

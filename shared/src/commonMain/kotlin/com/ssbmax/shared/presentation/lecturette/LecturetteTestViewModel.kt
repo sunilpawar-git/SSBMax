@@ -1,6 +1,6 @@
 package com.ssbmax.shared.presentation.lecturette
 
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -180,7 +180,7 @@ data class LecturetteTestUiState(
     val userId: String = "",
     val topicChoices: List<String> = emptyList(),
     val selectedTopic: String = "",
-    val subscriptionType: SubscriptionType = SubscriptionType.FREE,
+    val subscriptionType: SubscriptionTier = SubscriptionTier.FREE,
     val phase: LecturettePhase = LecturettePhase.INSTRUCTIONS,
     val speechStartTime: Long = 0L,
     val timeRemaining: Int = 180,

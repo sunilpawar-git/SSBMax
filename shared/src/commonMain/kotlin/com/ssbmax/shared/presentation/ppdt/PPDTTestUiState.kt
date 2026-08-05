@@ -4,7 +4,6 @@ import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.PPDTSubmission
 import com.ssbmax.shared.domain.model.PPDTTestSession
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
  * KMP port of `app/.../ui/tests/ppdt/PPDTTestUiState.kt`. Field-for-field
@@ -25,7 +24,7 @@ data class PPDTTestUiState(
     val canProceedToNextPhase: Boolean = false,
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: SubscriptionType? = null,
+    val subscriptionType: SubscriptionTier? = null,
     val submission: PPDTSubmission? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,

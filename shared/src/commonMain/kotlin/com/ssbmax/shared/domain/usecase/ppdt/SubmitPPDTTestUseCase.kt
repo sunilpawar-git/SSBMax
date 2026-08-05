@@ -6,12 +6,13 @@ import kotlin.time.Clock
 import com.ssbmax.shared.domain.model.PPDTSubmission
 import com.ssbmax.shared.domain.model.PPDTTestSession
 import com.ssbmax.shared.domain.model.SubmissionStatus
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import kotlinx.coroutines.flow.first
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -19,7 +20,7 @@ import kotlin.uuid.Uuid
 data class SubmitPPDTTestResult(
     val submissionId: String,
     val submission: PPDTSubmission,
-    val subscriptionType: SubscriptionType
+    val subscriptionType: SubscriptionTier
 )
 
 /**
@@ -29,13 +30,14 @@ data class SubmitPPDTTestResult(
 class SubmitPPDTTestUseCase constructor(
     private val submissionRepository: SubmissionRepository,
     private val userProfileRepository: UserProfileRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val usageRecorder: TestUsageRecorder
 ) {
 
     suspend operator fun invoke(session: PPDTTestSession): Result<SubmitPPDTTestResult> = runCatching {
         val profileResult = userProfileRepository.getUserProfile(session.userId).first()
         val userProfile = profileResult.getOrNull()
-        val subscriptionType = userProfile?.subscriptionType ?: SubscriptionType.FREE
+        val subscriptionType = getSubscriptionTier(session.userId).getOrDefault(SubscriptionTier.FREE)
 
         val submissionId = Uuid.random().toString()
         val submission = PPDTSubmission(

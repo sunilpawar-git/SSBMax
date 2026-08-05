@@ -12,6 +12,7 @@ import com.ssbmax.shared.domain.repository.UsageInfo
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitTATTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.clearForTest
@@ -93,7 +94,7 @@ class TATTestViewModelTest {
         submitTATTest = SubmitTATTestUseCase(submissionRepository),
         observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
         checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
-        userProfileRepository = userProfileRepository,
+        getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
         usageRecorder = usageRecorder,
         analysisTrigger = analysisTrigger,
         logger = NoOpLogger(),
@@ -149,7 +150,7 @@ class TATTestViewModelTest {
             submitTATTest = SubmitTATTestUseCase(submissionRepository),
             observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
             checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
-            userProfileRepository = userProfileRepository,
+            getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
             usageRecorder = usageRecorder,
             analysisTrigger = analysisTrigger,
             logger = NoOpLogger(),
@@ -174,7 +175,7 @@ class TATTestViewModelTest {
         val viewModel = TATTestViewModel(
             LoadTATTestUseCase(fakeWithTAT, testSessionRepository, userProfileRepository),
             SubmitTATTestUseCase(submissionRepository), ObserveCurrentUserUseCase(authRepository),
-            CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()), userProfileRepository, usageRecorder,
+            CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()), GetSubscriptionTierUseCase(subscriptionRepository), usageRecorder,
             analysisTrigger, NoOpLogger(), RecordingAnalyticsTracker()
         )
         viewModel.loadTest()
@@ -205,7 +206,7 @@ class TATTestViewModelTest {
         val viewModel = TATTestViewModel(
             LoadTATTestUseCase(fakeWithTAT, testSessionRepository, userProfileRepository),
             SubmitTATTestUseCase(submissionRepository), ObserveCurrentUserUseCase(authRepository),
-            CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()), userProfileRepository, usageRecorder,
+            CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()), GetSubscriptionTierUseCase(subscriptionRepository), usageRecorder,
             analysisTrigger, NoOpLogger(), RecordingAnalyticsTracker()
         )
         viewModel.loadTest()

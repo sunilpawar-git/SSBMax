@@ -3,7 +3,6 @@ package com.ssbmax.shared.data.repository
 import com.ssbmax.shared.domain.model.GoogleSignInData
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.StudentProfile
-import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
 import com.ssbmax.shared.domain.repository.AuthRepository
 import dev.gitlive.firebase.Firebase
@@ -154,7 +153,6 @@ class GitLiveAuthRepository(
         displayName = displayName ?: "User",
         photoUrl = photoURL,
         role = UserRole.STUDENT,
-        subscriptionTier = SubscriptionTier.FREE,
         studentProfile = StudentProfile(userId = uid),
         createdAt = Clock.System.now().toEpochMilliseconds(),
         lastLoginAt = Clock.System.now().toEpochMilliseconds()

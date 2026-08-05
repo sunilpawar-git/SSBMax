@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.gd.GDPhase
 import com.ssbmax.shared.presentation.gd.GDTestUiState
 import com.ssbmax.shared.presentation.gd.GDTestViewModel
@@ -45,7 +45,7 @@ import ssbmax.shared.generated.resources.gd_title
 @Composable
 fun GDTestScreen(
     testId: String,
-    onTestComplete: (submissionId: String, subscriptionType: SubscriptionType) -> Unit = { _, _ -> },
+    onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit = {},
     viewModel: GDTestViewModel = koinViewModel(),

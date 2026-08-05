@@ -1,7 +1,6 @@
 package com.ssbmax.shared.presentation.wat
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.WATSubmission
 import com.ssbmax.shared.domain.model.WATTestConfig
 import com.ssbmax.shared.domain.model.WATWord
@@ -28,7 +27,7 @@ data class WATTestUiState(
     val startTime: Long = 0L,
     val isSubmitted: Boolean = false,
     val submissionId: String? = null,
-    val subscriptionType: SubscriptionType? = null,
+    val subscriptionType: SubscriptionTier? = null,
     val submission: WATSubmission? = null,
     val error: String? = null,
     val isLimitReached: Boolean = false,

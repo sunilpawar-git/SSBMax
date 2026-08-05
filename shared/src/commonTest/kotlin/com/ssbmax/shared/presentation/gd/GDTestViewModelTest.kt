@@ -4,6 +4,7 @@ package com.ssbmax.shared.presentation.gd
 
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.gto.common.GTOEligibilityChecker
 import com.ssbmax.shared.presentation.gto.common.GTOSubmissionCoordinator
@@ -13,7 +14,6 @@ import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
-import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
 import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +42,6 @@ class GDTestViewModelTest {
 
     private lateinit var authRepository: FakeAuthRepository
     private lateinit var subscriptionRepository: FakeSubscriptionRepository
-    private lateinit var userProfileRepository: FakeUserProfileRepository
     private lateinit var gtoRepository: FakeGTORepository
     private lateinit var testContentRepository: FakeTestContentRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
@@ -53,7 +52,6 @@ class GDTestViewModelTest {
         Dispatchers.setMain(testDispatcher)
         authRepository = FakeAuthRepository(initialUser = testUser())
         subscriptionRepository = FakeSubscriptionRepository()
-        userProfileRepository = FakeUserProfileRepository()
         gtoRepository = FakeGTORepository()
         testContentRepository = FakeTestContentRepository()
         submissionRepository = FakeSubmissionRepository()
@@ -72,7 +70,7 @@ class GDTestViewModelTest {
         val logger = NoOpLogger()
         val eligibilityChecker = GTOEligibilityChecker(
             observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
-            userProfileRepository = userProfileRepository,
+            getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
             gtoRepository = gtoRepository,
             checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
             logger = logger,

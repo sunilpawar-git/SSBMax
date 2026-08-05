@@ -4,18 +4,18 @@ import com.ssbmax.shared.domain.model.SDTPhase
 import com.ssbmax.shared.domain.model.SDTQuestionResponse
 import com.ssbmax.shared.domain.model.SDTSubmission
 import com.ssbmax.shared.domain.model.SDTTestConfig
-import com.ssbmax.shared.domain.model.SubscriptionType
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.scoring.AnalysisStatus
 import com.ssbmax.shared.domain.repository.TestContentRepository
 import com.ssbmax.shared.domain.repository.TestSessionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
-import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.service.SubmissionAnalysisTrigger
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.submission.SubmitSDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
 import androidx.lifecycle.ViewModel
@@ -54,7 +54,7 @@ import kotlin.time.Clock
  * submit.
  *
  * Builds its own [SDTSubmission] and calls
- * [UserProfileRepository]/[TestUsageRecorder] directly, same precedent as
+ * [GetSubscriptionTierUseCase]/[TestUsageRecorder] directly, same precedent as
  * SRT/WAT -- [SubmitSDTTestUseCase] stays the thin pass-through it already
  * was. Android original's `DifficultyProgressionManager.recordPerformance`
  * call is dropped here, same precedent as other ported verticals (it's a
@@ -66,7 +66,7 @@ class SDTTestViewModel(
     private val submitSDTTest: SubmitSDTTestUseCase,
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val checkTestEligibility: CheckTestEligibilityUseCase,
-    private val userProfileRepository: UserProfileRepository,
+    private val getSubscriptionTier: GetSubscriptionTierUseCase,
     private val usageRecorder: TestUsageRecorder,
     private val analysisTrigger: SubmissionAnalysisTrigger,
     private val observability: ObservabilitySeam
@@ -242,8 +242,7 @@ class SDTTestViewModel(
 
             _uiState.update { it.copy(isTimerActive = false) }
 
-            val subscriptionType = userProfileRepository.getUserProfile(userId).first()
-                .getOrNull()?.subscriptionType ?: SubscriptionType.FREE
+            val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)
 
             val totalTimeTakenMinutes = if (state.startTime > 0) {
                 ((Clock.System.now().toEpochMilliseconds() - state.startTime) / 60000).toInt()

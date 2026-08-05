@@ -25,7 +25,6 @@ class UserDtoTest {
         displayName = "Jordan Rivera",
         photoUrl = "https://example.com/pic.jpg",
         role = UserRole.BOTH,
-        subscriptionTier = SubscriptionTier.PRO,
         subscription = UserSubscription(
             userId = "user-1",
             tier = SubscriptionTier.PRO,
@@ -81,9 +80,8 @@ class UserDtoTest {
 
     @Test
     fun `unrecognized enum strings fall back to safe defaults instead of throwing`() {
-        val dto = UserDto(id = "u", email = "e", displayName = "d", role = "NOT_A_ROLE", subscriptionTier = "NOT_A_TIER")
+        val dto = UserDto(id = "u", email = "e", displayName = "d", role = "NOT_A_ROLE")
         val domain = dto.toDomain()
         assertEquals(UserRole.STUDENT, domain.role)
-        assertEquals(SubscriptionTier.FREE, domain.subscriptionTier)
     }
 }

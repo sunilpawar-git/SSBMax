@@ -35,7 +35,6 @@ class UserProfileTest {
         assertEquals(25, profile.age)
         assertEquals(Gender.MALE, profile.gender)
         assertEquals(EntryType.GRADUATE, profile.entryType)
-        assertEquals(SubscriptionType.FREE, profile.subscriptionType)
     }
     
     @Test
@@ -190,22 +189,6 @@ class UserProfileTest {
     fun `EntryType fromDisplayName returns null for invalid name`() {
         assertNull(EntryType.fromDisplayName("Invalid Entry"))
         assertNull(EntryType.fromDisplayName(""))
-    }
-    
-    @Test
-    fun `UserProfile with premium subscription is created correctly`() {
-        // Given
-        val profile = UserProfile(
-            userId = "user123",
-            fullName = "John Doe",
-            age = 25,
-            gender = Gender.MALE,
-            entryType = EntryType.GRADUATE,
-            subscriptionType = SubscriptionType.PREMIUM
-        )
-        
-        // Then
-        assertEquals(SubscriptionType.PREMIUM, profile.subscriptionType)
     }
     
     @Test

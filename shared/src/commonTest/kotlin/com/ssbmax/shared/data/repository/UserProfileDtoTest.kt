@@ -2,7 +2,6 @@ package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.model.UserProfile
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +23,6 @@ class UserProfileDtoTest {
         gender = Gender.OTHER,
         entryType = EntryType.SERVICE,
         profilePictureUrl = "https://example.com/pic.jpg",
-        subscriptionType = SubscriptionType.PRO,
         currentStreak = 5,
         lastLoginDate = 1_700_000_000_000L,
         longestStreak = 12,

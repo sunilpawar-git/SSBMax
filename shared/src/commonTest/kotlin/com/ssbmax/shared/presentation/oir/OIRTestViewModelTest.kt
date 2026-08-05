@@ -7,13 +7,13 @@ import com.ssbmax.shared.domain.model.OIRQuestion
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.QuestionDifficulty
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.dashboard.GetOLQDashboardUseCase
 import com.ssbmax.shared.domain.usecase.oir.OIRTestScoreCalculator
 import com.ssbmax.shared.domain.usecase.oir.SubmitOIRTestUseCase
 import com.ssbmax.shared.domain.repository.UsageInfo
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
+import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeGTORepository
@@ -23,7 +23,6 @@ import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestContentRepository
 import com.ssbmax.shared.presentation.testing.FakeTestSessionRepository
 import com.ssbmax.shared.presentation.testing.FakeTestUsageRecorder
-import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
 import com.ssbmax.shared.presentation.testing.RecordingAnalyticsTracker
 import com.ssbmax.shared.presentation.testing.testUser
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +53,6 @@ class OIRTestViewModelTest {
     private lateinit var subscriptionRepository: FakeSubscriptionRepository
     private lateinit var testContentRepository: FakeTestContentRepository
     private lateinit var testSessionRepository: FakeTestSessionRepository
-    private lateinit var userProfileRepository: FakeUserProfileRepository
     private lateinit var submissionRepository: FakeSubmissionRepository
 
     @BeforeTest
@@ -66,7 +64,6 @@ class OIRTestViewModelTest {
             oirQuestionsResult = Result.success(listOf(question("q1"), question("q2")))
         }
         testSessionRepository = FakeTestSessionRepository()
-        userProfileRepository = FakeUserProfileRepository()
         submissionRepository = FakeSubmissionRepository()
     }
 
@@ -111,8 +108,8 @@ class OIRTestViewModelTest {
             testContentRepository = testContentRepository,
             testSessionRepository = testSessionRepository,
             observeCurrentUser = ObserveCurrentUserUseCase(authRepository),
-            userProfileRepository = userProfileRepository,
             checkTestEligibility = CheckTestEligibilityUseCase(subscriptionRepository, RecordingAnalyticsTracker()),
+            getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
             scoreCalculator = scoreCalculator,
             submitOIRTestUseCase = submitOIRTestUseCase,
             logger = logger,
@@ -204,7 +201,7 @@ class OIRTestViewModelTest {
 
     @Test
     fun `submitTest completes session and carries subscription type`() = runTest(testDispatcher) {
-        userProfileRepository.profileFlow.value = Result.success(null)
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
         val viewModel = buildViewModel()
         testDispatcher.scheduler.runCurrent()
 
@@ -214,7 +211,7 @@ class OIRTestViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state.isCompleted)
         assertNotNull(state.sessionId)
-        assertEquals(SubscriptionType.FREE, state.subscriptionType)
+        assertEquals(SubscriptionTier.FREE, state.subscriptionType)
         assertNotNull(state.testResult)
         assertEquals(false, state.isTimerActive)
     }

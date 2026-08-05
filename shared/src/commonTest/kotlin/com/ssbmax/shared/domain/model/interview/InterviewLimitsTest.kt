@@ -2,7 +2,6 @@ package com.ssbmax.shared.domain.model.interview
 
 import com.ssbmax.shared.data.repository.SubscriptionLimits
 import com.ssbmax.shared.domain.model.SubscriptionTier
-import com.ssbmax.shared.domain.model.SubscriptionType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -25,21 +24,21 @@ class InterviewLimitsTest {
 
     @Test
     fun `used above totalLimit constructs without throwing for FREE`() {
-        val limits = InterviewLimits.forSubscription(SubscriptionType.FREE, used = 5)
+        val limits = InterviewLimits.forSubscription(SubscriptionTier.FREE, used = 5)
         assertEquals(0, limits.totalLimit)
         assertEquals(0, limits.remaining)
     }
 
     @Test
     fun `used above totalLimit constructs without throwing for PRO`() {
-        val limits = InterviewLimits.forSubscription(SubscriptionType.PRO, used = 5)
+        val limits = InterviewLimits.forSubscription(SubscriptionTier.PRO, used = 5)
         assertEquals(1, limits.totalLimit)
         assertEquals(0, limits.remaining)
     }
 
     @Test
     fun `used above totalLimit constructs without throwing for PREMIUM`() {
-        val limits = InterviewLimits.forSubscription(SubscriptionType.PREMIUM, used = 5)
+        val limits = InterviewLimits.forSubscription(SubscriptionTier.PREMIUM, used = 5)
         assertEquals(3, limits.totalLimit)
         assertEquals(0, limits.remaining)
     }
@@ -50,15 +49,10 @@ class InterviewLimitsTest {
 
     @Test
     fun `forSubscription totalLimit matches SubscriptionLimits table for every tier`() {
-        val pairs = listOf(
-            SubscriptionType.FREE to SubscriptionTier.FREE,
-            SubscriptionType.PRO to SubscriptionTier.PRO,
-            SubscriptionType.PREMIUM to SubscriptionTier.PREMIUM
-        )
-        pairs.forEach { (type, tier) ->
+        SubscriptionTier.entries.forEach { tier ->
             val expected = SubscriptionLimits.limitFor("Interview", tier)
-            val actual = InterviewLimits.forSubscription(type, used = 0).totalLimit
-            assertEquals(expected, actual, "$type totalLimit must match SubscriptionLimits table")
+            val actual = InterviewLimits.forSubscription(tier, used = 0).totalLimit
+            assertEquals(expected, actual, "$tier totalLimit must match SubscriptionLimits table")
         }
     }
 
@@ -68,24 +62,24 @@ class InterviewLimitsTest {
 
     @Test
     fun `hasInterviewsRemaining is false when used equals limit`() {
-        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PRO, used = 1))
-        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PREMIUM, used = 3))
+        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PRO, used = 1))
+        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PREMIUM, used = 3))
     }
 
     @Test
     fun `hasInterviewsRemaining is false when used exceeds limit`() {
-        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PRO, used = 2))
-        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PREMIUM, used = 4))
+        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PRO, used = 2))
+        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PREMIUM, used = 4))
     }
 
     @Test
     fun `hasInterviewsRemaining is true just under the limit`() {
-        assertTrue(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PRO, used = 0))
-        assertTrue(InterviewLimits.hasInterviewsRemaining(SubscriptionType.PREMIUM, used = 2))
+        assertTrue(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PRO, used = 0))
+        assertTrue(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.PREMIUM, used = 2))
     }
 
     @Test
     fun `FREE tier has zero interviews remaining even when unused`() {
-        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionType.FREE, used = 0))
+        assertFalse(InterviewLimits.hasInterviewsRemaining(SubscriptionTier.FREE, used = 0))
     }
 }

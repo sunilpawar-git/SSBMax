@@ -21,7 +21,7 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.OIR,
                     navController = navController
                 )
@@ -59,7 +59,7 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.PPDT,
                     navController = navController
                 )
@@ -97,7 +97,7 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.TAT,
                     navController = navController
                 )
@@ -134,7 +134,7 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
             onTestComplete = { submissionId, subscriptionType ->
                 TestResultHandler.handleTestSubmission(
                     submissionId = submissionId,
-                    subscriptionType = subscriptionType,
+                    subscriptionTier = subscriptionType,
                     testType = TestType.WAT,
                     navController = navController
                 )
