@@ -45,7 +45,7 @@ object SubscriptionLimits {
         "SRT Tests" to mapOf(SubscriptionTier.FREE to 0, SubscriptionTier.PRO to 3, SubscriptionTier.PREMIUM to -1),
         "Self Description" to mapOf(SubscriptionTier.FREE to 0, SubscriptionTier.PRO to 3, SubscriptionTier.PREMIUM to -1),
         "GTO Tests" to mapOf(SubscriptionTier.FREE to 0, SubscriptionTier.PRO to 3, SubscriptionTier.PREMIUM to -1),
-        "Interview" to mapOf(SubscriptionTier.FREE to 0, SubscriptionTier.PRO to 1, SubscriptionTier.PREMIUM to -1)
+        "Interview" to mapOf(SubscriptionTier.FREE to 0, SubscriptionTier.PRO to 1, SubscriptionTier.PREMIUM to 3)
     )
 
     val testTypeKeys: Set<String> get() = limits.keys

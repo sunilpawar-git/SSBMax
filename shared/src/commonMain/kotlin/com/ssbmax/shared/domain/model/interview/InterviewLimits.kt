@@ -1,5 +1,7 @@
 package com.ssbmax.shared.domain.model.interview
 
+import com.ssbmax.shared.data.repository.SubscriptionLimits
+import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.SubscriptionType
 
 /**
@@ -16,12 +18,11 @@ enum class TTSServiceType {
  * New model after removing text-based interview:
  * - All interviews use the same unified implementation
  * - Subscription tier determines TTS quality and monthly limit
- * - FREE: 1 interview/month with Android TTS
- * - PRO: 1 interview/month with Qwen TTS
- * - PREMIUM: 3 interviews/month with Qwen TTS
+ * - `totalLimit` is derived from [SubscriptionLimits] (the "Interview" row) — this class
+ *   redeclares no numbers of its own, so the enforcement and display tables can't diverge again.
  *
  * @param subscriptionType User's subscription tier
- * @param totalLimit Total interviews allowed per month
+ * @param totalLimit Total interviews allowed per month; -1 means unlimited
  * @param used Number of interviews used this month
  * @param remaining Interviews remaining this month
  * @param ttsService TTS service provided for this tier
@@ -34,44 +35,32 @@ data class InterviewLimits(
     val ttsService: TTSServiceType
 ) {
     init {
-        require(totalLimit >= 0) { "Total limit cannot be negative" }
+        require(totalLimit >= -1) { "Total limit must be non-negative or -1 (unlimited)" }
         require(used >= 0) { "Used count cannot be negative" }
         require(remaining >= 0) { "Remaining count cannot be negative" }
-        require(used + remaining == totalLimit) { "Used + remaining must equal total limit" }
     }
 
     companion object {
         /**
-         * Get interview limits for a subscription tier
+         * Get interview limits for a subscription tier.
          *
          * @param subscriptionType User's subscription tier
          * @param used Number of interviews already used this month
-         * @return InterviewLimits with tier-specific values
+         * @return InterviewLimits with tier-specific values, sourced from [SubscriptionLimits]
          */
         fun forSubscription(subscriptionType: SubscriptionType, used: Int): InterviewLimits {
-            return when (subscriptionType) {
-                SubscriptionType.FREE -> InterviewLimits(
-                    subscriptionType = subscriptionType,
-                    totalLimit = 1,
-                    used = used,
-                    remaining = maxOf(0, 1 - used),
-                    ttsService = TTSServiceType.ANDROID
-                )
-                SubscriptionType.PRO -> InterviewLimits(
-                    subscriptionType = subscriptionType,
-                    totalLimit = 1,
-                    used = used,
-                    remaining = maxOf(0, 1 - used),
-                    ttsService = TTSServiceType.QWEN_TTS
-                )
-                SubscriptionType.PREMIUM -> InterviewLimits(
-                    subscriptionType = subscriptionType,
-                    totalLimit = 3,
-                    used = used,
-                    remaining = maxOf(0, 3 - used),
-                    ttsService = TTSServiceType.QWEN_TTS
-                )
-            }
+            val totalLimit = SubscriptionLimits.limitFor(
+                "Interview",
+                SubscriptionTier.valueOf(subscriptionType.name)
+            )
+            val remaining = if (totalLimit < 0) Int.MAX_VALUE else maxOf(0, totalLimit - used)
+            return InterviewLimits(
+                subscriptionType = subscriptionType,
+                totalLimit = totalLimit,
+                used = used,
+                remaining = remaining,
+                ttsService = getTTSService(subscriptionType)
+            )
         }
 
         /**
@@ -101,7 +90,7 @@ data class InterviewLimits(
      * Get percentage of limit used (0-100)
      */
     fun getUsagePercentage(): Int {
-        if (totalLimit == 0) return 0
+        if (totalLimit <= 0) return 0
         return ((used.toFloat() / totalLimit) * 100).toInt()
     }
 

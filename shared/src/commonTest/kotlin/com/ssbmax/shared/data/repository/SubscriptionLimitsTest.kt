@@ -35,10 +35,21 @@ class SubscriptionLimitsTest {
     }
 
     @Test
-    fun `PREMIUM tier is unlimited for every test type`() {
-        SubscriptionLimits.testTypeKeys.forEach { key ->
+    fun `PREMIUM tier is unlimited for every test type except Interview`() {
+        SubscriptionLimits.testTypeKeys.filter { it != "Interview" }.forEach { key ->
             assertEquals(-1, SubscriptionLimits.limitFor(key, SubscriptionTier.PREMIUM), "expected $key unlimited for PREMIUM")
         }
+    }
+
+    /**
+     * Interview is capped at 3/month even for PREMIUM — the one deliberate exception to
+     * "PREMIUM is unlimited," per the interview-limits SSOT unification (was nominally
+     * unlimited here while [com.ssbmax.shared.domain.model.interview.InterviewLimits] separately
+     * enforced 3; this table is now the only place either number lives).
+     */
+    @Test
+    fun `PREMIUM tier caps Interview at 3`() {
+        assertEquals(3, SubscriptionLimits.limitFor("Interview", SubscriptionTier.PREMIUM))
     }
 
     @Test

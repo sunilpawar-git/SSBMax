@@ -18,10 +18,10 @@ import com.ssbmax.shared.domain.repository.SubscriptionRepository
  * 1. PIQ must be completed (submitted with form data)
  * 2. OIR must be completed with score >= 50%
  * 3. PPDT must be completed
- * 4. User must have remaining interviews based on subscription:
- *    - FREE: 1 interview/month with Android TTS
- *    - PRO: 1 interview/month with Qwen TTS
- *    - PREMIUM: 3 interviews/month with Qwen TTS
+ * 4. User must have remaining interviews based on subscription — the monthly limit per tier is
+ *    the "Interview" row of [com.ssbmax.shared.data.repository.SubscriptionLimits], the single
+ *    source of truth; TTS quality (Android vs Qwen) is decided separately by
+ *    [InterviewLimits.getTTSService].
  *
  * Note: PIQ AI quality score is optional user feedback, not required for interview.
  * The interview only needs the PIQ form data (background, family, education, etc.)
