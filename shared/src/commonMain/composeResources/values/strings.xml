@@ -806,6 +806,17 @@
     <string name="theme_dark_description">Dark theme</string>
     <string name="theme_system_description">Follow system setting</string>
 
+    <string name="developer_section_title">Developer Settings</string>
+    <string name="developer_section_description">Dev-only subscription tier override, for testing without a real upgrade</string>
+    <string name="developer_override_follow_real">Follow Real</string>
+    <string name="developer_override_force_free">Force Free</string>
+    <string name="developer_override_force_pro">Force Pro</string>
+    <string name="developer_override_force_premium">Force Premium</string>
+    <string name="developer_override_offline_note">Unlike the old bypass flag, an active override still requires network -- it exercises the real eligibility lookup instead of skipping it, so it won\'t work offline.</string>
+    <string name="developer_bypass_interview_prerequisites_title">Bypass Interview Prerequisites</string>
+    <string name="developer_bypass_interview_prerequisites_description">Skip PIQ/OIR/PPDT completion checks when starting an interview</string>
+    <string name="developer_known_limitation_note">Toggling doesn\'t refresh already-loaded screens -- re-enter a screen to see the change.</string>
+
     <string name="notification_settings_title">Notifications</string>
     <string name="notification_settings_description">Manage your notification preferences</string>
     <string name="notification_push_title">Push Notifications</string>

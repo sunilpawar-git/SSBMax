@@ -33,11 +33,13 @@ import ssbmax.shared.generated.resources.settings_title
 /**
  * KMP port of the Android `app/.../ui/settings/SettingsScreen.kt` — main
  * Settings screen composed of independently-state-managed sections
- * (subscription, theme, notifications, help, about).
+ * (subscription, theme, developer, notifications, help, about).
  *
- * Each section (`SubscriptionSection`, `ThemeSection`, `NotificationSettingsSection`,
- * `HelpSection`, `AppInfoSection`) is its own file, matching the Android
- * original's file layout and this repo's 300-line Quality Limit.
+ * Each section (`SubscriptionSection`, `ThemeSection`, `DeveloperSection`,
+ * `NotificationSettingsSection`, `HelpSection`, `AppInfoSection`) is its own file, matching the
+ * Android original's file layout and this repo's 300-line Quality Limit. `DeveloperSection`
+ * (dev-subscription-override plan, Phase 5) renders nothing outside a debug build -- always
+ * included here, same as every other section, rather than gated at this call site.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +91,8 @@ fun SettingsScreen(
             }
 
             item { ThemeSection() }
+
+            item { DeveloperSection() }
 
             item { NotificationSettingsSection() }
 

@@ -76,6 +76,13 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            // Phase 5 (dev subscription override plan): DeveloperSection.kt is this
+            // codebase's first real @Preview -- every prior Composable's violation is
+            // grandfathered in shared/detekt-baseline.xml instead. See the version
+            // catalog entry's own comment for why this needs a direct GAV declaration
+            // rather than the (deprecated on this Compose Multiplatform version)
+            // `compose.components.uiToolingPreview` accessor.
+            implementation(libs.compose.ui.tooling.preview)
             // Phase 3c (#12): commonMain `BackHandler` -- see the version
             // catalog entry's own comment for why this needs a direct
             // declaration.

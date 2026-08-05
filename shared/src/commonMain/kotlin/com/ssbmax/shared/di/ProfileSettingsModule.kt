@@ -6,6 +6,7 @@ import com.ssbmax.shared.presentation.profile.StudentProfileViewModel
 import com.ssbmax.shared.presentation.profile.UserProfileViewModel
 import com.ssbmax.shared.presentation.settings.SettingsViewModel
 import com.ssbmax.shared.presentation.settings.SubscriptionManagementViewModel
+import com.ssbmax.shared.presentation.settings.developer.DeveloperSettingsViewModel
 import com.ssbmax.shared.presentation.settings.notifications.NotificationSettingsViewModel
 import com.ssbmax.shared.presentation.settings.theme.ThemeSettingsViewModel
 import org.koin.core.module.dsl.factoryOf
@@ -37,4 +38,5 @@ val profileSettingsModule = module {
     viewModelOf(::ThemeSettingsViewModel)
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::SubscriptionManagementViewModel)
+    viewModelOf(::DeveloperSettingsViewModel)
 }

@@ -118,6 +118,12 @@ androidx-lifecycle-viewmodel-compose-kmp = { group = "org.jetbrains.androidx.lif
 # matches the rest of the Compose Multiplatform artifact set.
 compose-ui-backhandler = { group = "org.jetbrains.compose.ui", name = "ui-backhandler", version.ref = "composeMultiplatform" }
 
+# Phase 5 (dev-subscription-override plan): the `compose.*` Gradle DSL accessor has no
+# `uiToolingPreview` entry on this composeMultiplatform version -- `compose.components.uiToolingPreview`
+# resolves but is deprecated at compile time in favor of this direct GAV, which publishes the
+# same androidx.compose.ui.tooling.preview.Preview annotation as a KMP artifact.
+compose-ui-tooling-preview = { group = "org.jetbrains.compose.ui", name = "ui-tooling-preview", version.ref = "composeMultiplatform" }
+
 # Compose BOM
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
