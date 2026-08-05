@@ -1,5 +1,7 @@
 package com.ssbmax.shared.di
 
+import com.ssbmax.shared.data.repository.DebugOverrideSubscriptionRepository
+import com.ssbmax.shared.data.repository.DebugOverrideTestUsageRecorder
 import com.ssbmax.shared.data.repository.GitLiveAnalyticsRepository
 import com.ssbmax.shared.data.repository.GitLiveAuthRepository
 import com.ssbmax.shared.data.repository.GitLiveDifficultyProgressionManager
@@ -57,6 +59,7 @@ import com.ssbmax.shared.domain.repository.TestSubmissionRepository
 import com.ssbmax.shared.domain.repository.TestUsageRecorder
 import com.ssbmax.shared.domain.repository.UnifiedResultRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
+import com.ssbmax.shared.platform.isDebugBuild
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -90,7 +93,17 @@ val repositoryModule = module {
     singleOf(::GitLiveAuthRepository) bind AuthRepository::class
     singleOf(::GitLiveOirResultRepository) bind OirResultRepository::class
     singleOf(::GitLiveUserProfileRepository) bind UserProfileRepository::class
-    singleOf(::GitLiveSubscriptionRepository) bind SubscriptionRepository::class
+    // Phase 3/4 (KMP-convergence plan): wraps the real repository in the dev-tier-override
+    // decorator only when isDebugBuild() -- fail-closed, since isDebugBuild() is false in every
+    // release binary, so DebugOverrideSubscriptionRepository is never even constructed there.
+    // Nothing else constructs GitLiveSubscriptionRepository() directly, so this one seam covers
+    // every caller (CheckTestEligibilityUseCase, GetSubscriptionTierUseCase,
+    // CheckInterviewPrerequisitesUseCase, SubscriptionManagementViewModel, UpgradeViewModel) with
+    // zero edits at those call sites.
+    single<SubscriptionRepository> {
+        val plain = GitLiveSubscriptionRepository()
+        if (isDebugBuild()) DebugOverrideSubscriptionRepository(plain, get()) else plain
+    }
     singleOf(::GitLiveTestProgressRepository) bind TestProgressRepository::class
     singleOf(::GitLiveStudyProgressRepository) bind StudyProgressRepository::class
     singleOf(::GitLiveGradingQueueRepository) bind GradingQueueRepository::class
@@ -124,6 +137,11 @@ val repositoryModule = module {
     single { InterviewQuestionGenerator(get(), get(), get()) }
     singleOf(::GitLiveInterviewRepository) bind InterviewRepository::class
     singleOf(::GitLiveTestSessionRepository) bind TestSessionRepository::class
-    singleOf(::GitLiveTestUsageRecorder) bind TestUsageRecorder::class
+    // Same treatment as SubscriptionRepository above: fail-closed on isDebugBuild(), one seam
+    // covers every recordTestUsage caller.
+    single<TestUsageRecorder> {
+        val plain = GitLiveTestUsageRecorder()
+        if (isDebugBuild()) DebugOverrideTestUsageRecorder(plain, get()) else plain
+    }
     singleOf(::GitLiveTestSubmissionRepository) bind TestSubmissionRepository::class
 }
