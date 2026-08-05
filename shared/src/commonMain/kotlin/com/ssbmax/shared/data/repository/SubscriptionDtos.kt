@@ -14,9 +14,17 @@ data class SubscriptionTierDto(val tier: String = "FREE") {
     }
 }
 
-/** Wire-format DTO for users/{userId}/subscription/usage_{yyyy-MM}. */
+/**
+ * Wire-format DTO for users/{userId}/subscription/usage_{yyyy-MM}.
+ *
+ * `userId`/`month`/`lastUpdated` exist only to satisfy firestore.rules' `subscription/{document}`
+ * create rule (`hasAll(['month', ..., 'lastUpdated'])` + `data.userId == userId`) — they aren't
+ * read back anywhere (GitLiveSubscriptionRepository.getMonthlyUsage only reads the counters).
+ */
 @Serializable
 data class SubscriptionUsageDto(
+    val userId: String = "",
+    val month: String = "",
     val oirTestsUsed: Int = 0,
     val ppdtTestsUsed: Int = 0,
     val piqTestsUsed: Int = 0,
@@ -25,7 +33,8 @@ data class SubscriptionUsageDto(
     val srtTestsUsed: Int = 0,
     val sdTestsUsed: Int = 0,
     val gtoTestsUsed: Int = 0,
-    val interviewTestsUsed: Int = 0
+    val interviewTestsUsed: Int = 0,
+    val lastUpdated: Long = 0
 )
 
 /**

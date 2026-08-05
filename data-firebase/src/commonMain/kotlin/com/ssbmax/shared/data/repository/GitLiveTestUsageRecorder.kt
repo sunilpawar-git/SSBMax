@@ -52,9 +52,21 @@ class GitLiveTestUsageRecorder : TestUsageRecorder {
             // Phase 2 note on FirestoreRawMapSerializer; a full second
             // serializer isn't warranted here when the typed DTO already
             // covers every field this document needs).
-            docRef.set(SubscriptionUsageDto().withIncrementedField(fieldName))
+            // userId/month/lastUpdated must be populated: firestore.rules' `subscription/{document}`
+            // create rule requires `data.userId == userId` and hasAll(['month', ..., 'lastUpdated']) —
+            // omitting them (as this used to) makes every first-of-the-month submission PERMISSION_DENIED.
+            docRef.set(
+                SubscriptionUsageDto(
+                    userId = userId,
+                    month = month,
+                    lastUpdated = Clock.System.now().toEpochMilliseconds()
+                ).withIncrementedField(fieldName)
+            )
         } else {
-            docRef.update(fieldName to FieldValue.increment(1))
+            docRef.update(
+                fieldName to FieldValue.increment(1),
+                "lastUpdated" to Clock.System.now().toEpochMilliseconds()
+            )
         }
     }
 
