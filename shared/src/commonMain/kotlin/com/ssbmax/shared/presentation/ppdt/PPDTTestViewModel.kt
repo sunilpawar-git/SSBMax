@@ -12,6 +12,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.presentation.common.TestError
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -83,7 +84,7 @@ class PPDTTestViewModel(
                 logger.e(tag, "SECURITY: Unauthenticated PPDT test access blocked", null)
                 analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "PPDT"))
                 _uiState.update {
-                    it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
+                    it.copy(isLoading = false, loadingMessage = null, error = TestError.AUTH_REQUIRED)
                 }
                 return@launch
             }
@@ -101,7 +102,7 @@ class PPDTTestViewModel(
                     return@launch
                 }
                 is TestEligibility.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.NETWORK_UNAVAILABLE) }
                     return@launch
                 }
                 is TestEligibility.Eligible -> Unit
@@ -121,18 +122,11 @@ class PPDTTestViewModel(
                         is CancellationException -> throw e
                         else -> {
                             logger.e(tag, "PPDT loadTest failed: ${e.message}", e)
-                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = mapLoadError(e)) }
+                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                         }
                     }
                 }
         }
-    }
-
-    private fun mapLoadError(e: Throwable): String = when {
-        e.message?.contains("Firestore", ignoreCase = true) == true -> "Firestore connection failed: ${e.message}"
-        e.message?.contains("database", ignoreCase = true) == true -> "Database error: ${e.message}"
-        e.message?.contains("Cache", ignoreCase = true) == true -> "Cache initialization failed: ${e.message}"
-        else -> "Failed to load test. ${e.message ?: "Check your internet connection."}"
     }
 
     fun startTest() {
@@ -218,7 +212,7 @@ class PPDTTestViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     logger.e(tag, "Failed to submit PPDT test for user: ${session.userId}", error)
-                    _uiState.update { it.copy(error = "Failed to submit: ${error.message}") }
+                    _uiState.update { it.copy(error = TestError.SUBMIT_FAILED) }
                 }
         }
     }

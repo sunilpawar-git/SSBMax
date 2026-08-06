@@ -4,6 +4,7 @@ import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.PPDTSubmission
 import com.ssbmax.shared.domain.model.PPDTTestSession
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/ppdt/PPDTTestUiState.kt`. Field-for-field
@@ -13,7 +14,7 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 data class PPDTTestUiState(
     val isLoading: Boolean = true,
     val loadingMessage: String? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val currentPhase: PPDTPhase = PPDTPhase.INSTRUCTIONS,
     val imageUrl: String = "",
     val story: String = "",

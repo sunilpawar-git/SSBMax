@@ -19,6 +19,7 @@ import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.presentation.common.TestError
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -93,7 +94,7 @@ class TATTestViewModel(
                 logger.e(tag, "SECURITY: Unauthenticated TAT test access blocked", null)
                 analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "TAT"))
                 _uiState.update {
-                    it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
+                    it.copy(isLoading = false, loadingMessage = null, error = TestError.AUTH_REQUIRED)
                 }
                 return@launch
             }
@@ -112,7 +113,7 @@ class TATTestViewModel(
                     return@launch
                 }
                 is TestEligibility.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.NETWORK_UNAVAILABLE) }
                     return@launch
                 }
                 is TestEligibility.Eligible -> Unit
@@ -124,7 +125,7 @@ class TATTestViewModel(
                 .onSuccess { questions ->
                     if (questions.isEmpty()) {
                         logger.e(tag, "No TAT questions found for test: $testId", null)
-                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.LOAD_FAILED) }
                         return@onSuccess
                     }
                     _uiState.update {
@@ -142,7 +143,7 @@ class TATTestViewModel(
                         is CancellationException -> throw e
                         else -> {
                             logger.e(tag, "Failed to load TAT test: $testId", e)
-                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                            _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                         }
                     }
                 }
@@ -211,7 +212,7 @@ class TATTestViewModel(
                     SecurityEvents.UNAUTHENTICATED_ACCESS,
                     mapOf("test_type" to "TAT", "phase" to "submission")
                 )
-                _uiState.update { it.copy(isLoading = false, error = "Please login to submit test") }
+                _uiState.update { it.copy(isLoading = false, error = TestError.LOGIN_TO_SUBMIT) }
                 return@launch
             }
 
@@ -246,7 +247,7 @@ class TATTestViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     logger.e(tag, "Failed to submit TAT test for user: $userId", error)
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to submit: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, error = TestError.SUBMIT_FAILED) }
                 }
         }
     }

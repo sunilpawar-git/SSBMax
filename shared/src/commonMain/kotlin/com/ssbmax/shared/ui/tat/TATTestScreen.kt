@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
+import com.ssbmax.shared.ui.common.TestErrorState
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.tat.components.TATBottomBar
 import com.ssbmax.shared.ui.tat.components.TATExitDialog
@@ -44,7 +44,6 @@ import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.tat_back_cd
 import ssbmax.shared.generated.resources.tat_loading
 import ssbmax.shared.generated.resources.tat_picture_number
-import ssbmax.shared.generated.resources.tat_retry_button
 import ssbmax.shared.generated.resources.tat_test_title
 
 /**
@@ -141,7 +140,11 @@ fun TATTestScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
                 uiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
-                uiState.error != null -> ErrorState(error = uiState.error!!, onRetry = { viewModel.loadTest(testId) }, modifier = Modifier.fillMaxSize())
+                uiState.error != null -> TestErrorState(
+                    error = uiState.error!!,
+                    onRetry = { viewModel.loadTest(testId) },
+                    modifier = Modifier.fillMaxSize()
+                )
                 else -> Box(modifier = Modifier.fillMaxSize()) {
                     when (uiState.phase) {
                         TATPhase.INSTRUCTIONS -> TATInstructionsPhase(onStart = { viewModel.startTest() })
@@ -199,16 +202,6 @@ private fun LoadingState(modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CircularProgressIndicator()
             Text(text = stringResource(Res.string.tat_loading), style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun ErrorState(error: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(text = error, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onRetry) { Text(stringResource(Res.string.tat_retry_button)) }
         }
     }
 }

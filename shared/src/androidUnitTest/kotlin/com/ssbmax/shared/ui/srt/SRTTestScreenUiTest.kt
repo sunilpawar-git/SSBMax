@@ -11,6 +11,7 @@ import com.ssbmax.shared.domain.model.SRTPhase
 import com.ssbmax.shared.domain.model.SRTSituation
 import com.ssbmax.shared.domain.model.SRTSituationResponse
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.srt.SRTTestUiState
 import com.ssbmax.shared.presentation.srt.SRTTestViewModel
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
@@ -167,10 +168,10 @@ class SRTTestScreenUiTest {
 
     @Test
     fun errorState_displaysErrorMessage() = runComposeUiTest {
-        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = "Failed to load SRT test")
+        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = TestError.LOAD_FAILED)
         setContent { SRTTestScreen(testId = "test-123", viewModel = mockViewModel) }
 
-        onNodeWithText("Failed to load SRT test", substring = true).assertIsDisplayed()
+        onNodeWithText("Failed to load test", substring = true).assertIsDisplayed()
     }
 
     @Test

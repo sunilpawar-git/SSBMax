@@ -12,6 +12,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
 import com.ssbmax.shared.domain.util.ObservabilitySeam
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.testing.clearForTest
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
@@ -102,7 +103,7 @@ class WATTestViewModelTest {
         viewModel.loadTest()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("Authentication required. Please login to continue.", viewModel.uiState.value.error)
+        assertEquals(TestError.AUTH_REQUIRED, viewModel.uiState.value.error)
         assertEquals(listOf(com.ssbmax.shared.domain.util.SecurityEvents.UNAUTHENTICATED_ACCESS), analyticsTracker.events.map { it.name })
     }
 
@@ -188,6 +189,26 @@ class WATTestViewModelTest {
         assertNotNull(state.submissionId)
         assertEquals(1, usageRecorder.recorded.size)
         assertEquals(1, analysisTrigger.triggered.size)
+        viewModel.clearForTest() // see the timer note in the first test
+    }
+
+    @Test
+    fun `submitTest failure surfaces a typed error not raw exception text`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        viewModel.loadTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.startTest()
+        testDispatcher.scheduler.runCurrent()
+        submissionRepository.submitResult = Result.failure(Exception("PERMISSION_DENIED: Missing or insufficient permissions."))
+
+        viewModel.skipWord()
+        testDispatcher.scheduler.runCurrent()
+        viewModel.skipWord()
+        testDispatcher.scheduler.runCurrent()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isSubmitted)
+        assertEquals(TestError.SUBMIT_FAILED, state.error)
         viewModel.clearForTest() // see the timer note in the first test
     }
 }

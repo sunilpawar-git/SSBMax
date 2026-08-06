@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
+import com.ssbmax.shared.ui.common.TestErrorState
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.wat.components.WATExitDialog
 import com.ssbmax.shared.ui.wat.components.WATInProgressPhase
@@ -29,7 +29,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.wat_loading
-import ssbmax.shared.generated.resources.wat_retry_button
 
 /**
  * KMP port of `app/.../ui/tests/wat/WATTestScreen.kt`.
@@ -87,7 +86,11 @@ fun WATTestScreen(
     Box(modifier = modifier.fillMaxSize()) {
         when {
             uiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
-            uiState.error != null -> ErrorState(error = uiState.error!!, onRetry = { viewModel.loadTest(testId) }, modifier = Modifier.fillMaxSize())
+            uiState.error != null -> TestErrorState(
+                error = uiState.error!!,
+                onRetry = { viewModel.loadTest(testId) },
+                modifier = Modifier.fillMaxSize()
+            )
             else -> when (uiState.phase) {
                 WATPhase.INSTRUCTIONS -> WATInstructionsPhase(onStart = { viewModel.startTest() })
                 WATPhase.IN_PROGRESS -> WATInProgressPhase(
@@ -121,16 +124,6 @@ private fun LoadingState(modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CircularProgressIndicator()
             Text(text = stringResource(Res.string.wat_loading), style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun ErrorState(error: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(text = error, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onRetry) { Text(stringResource(Res.string.wat_retry_button)) }
         }
     }
 }

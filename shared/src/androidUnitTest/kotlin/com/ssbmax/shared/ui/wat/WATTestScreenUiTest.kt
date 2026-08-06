@@ -10,6 +10,7 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.WATPhase
 import com.ssbmax.shared.domain.model.WATWord
 import com.ssbmax.shared.domain.model.WATWordResponse
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.wat.WATTestUiState
 import com.ssbmax.shared.presentation.wat.WATTestViewModel
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
@@ -145,10 +146,10 @@ class WATTestScreenUiTest {
 
     @Test
     fun errorState_displaysErrorMessage() = runComposeUiTest {
-        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = "Failed to load WAT test")
+        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = TestError.LOAD_FAILED)
         setContent { WATTestScreen(testId = "test-123", viewModel = mockViewModel) }
 
-        onNodeWithText("Failed to load WAT test", substring = true).assertIsDisplayed()
+        onNodeWithText("Failed to load test", substring = true).assertIsDisplayed()
     }
 
     @Test

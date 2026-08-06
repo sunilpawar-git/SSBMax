@@ -5,6 +5,7 @@ import com.ssbmax.shared.domain.model.WATSubmission
 import com.ssbmax.shared.domain.model.WATTestConfig
 import com.ssbmax.shared.domain.model.WATWord
 import com.ssbmax.shared.domain.model.WATWordResponse
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/wat/WATTestViewModel.kt`'s `WATTestUiState`.
@@ -29,7 +30,7 @@ data class WATTestUiState(
     val submissionId: String? = null,
     val subscriptionType: SubscriptionTier? = null,
     val submission: WATSubmission? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,

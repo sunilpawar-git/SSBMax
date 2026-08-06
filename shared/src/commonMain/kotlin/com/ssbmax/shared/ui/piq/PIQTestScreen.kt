@@ -31,6 +31,7 @@ import com.ssbmax.shared.domain.model.PIQPage
 import com.ssbmax.shared.presentation.piq.PIQTestViewModel
 import com.ssbmax.shared.presentation.piq.PIQ_SELECTION_BOARD_OPTIONS
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
+import com.ssbmax.shared.ui.common.testErrorMessage
 import com.ssbmax.shared.ui.piq.components.PIQNavigationBar
 import com.ssbmax.shared.ui.piq.components.PIQPage1EducationFields
 import com.ssbmax.shared.ui.piq.components.PIQPage1FamilyFields
@@ -180,7 +181,7 @@ fun PIQTestScreen(
             AlertDialog(
                 onDismissRequest = { viewModel.clearError() },
                 title = { Text(stringResource(Res.string.piq_error)) },
-                text = { Text(error) },
+                text = { Text(testErrorMessage(error)) },
                 confirmButton = {
                     TextButton(onClick = { viewModel.clearError() }) {
                         Text(stringResource(Res.string.piq_ok))

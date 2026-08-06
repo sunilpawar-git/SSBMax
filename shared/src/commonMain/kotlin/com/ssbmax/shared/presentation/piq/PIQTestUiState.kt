@@ -7,6 +7,7 @@ import com.ssbmax.shared.domain.model.Sibling
 import com.ssbmax.shared.domain.model.SportsParticipation
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.WorkExperience
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/piq/PIQTestViewModel.kt`'s `PIQUiState`.
@@ -32,7 +33,7 @@ data class PIQTestUiState(
     val showReviewScreen: Boolean = false,
     val submissionComplete: Boolean = false,
     val submissionId: String? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,

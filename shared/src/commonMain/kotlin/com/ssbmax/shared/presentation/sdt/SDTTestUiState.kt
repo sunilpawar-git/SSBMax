@@ -6,6 +6,7 @@ import com.ssbmax.shared.domain.model.SDTQuestionResponse
 import com.ssbmax.shared.domain.model.SDTSubmission
 import com.ssbmax.shared.domain.model.SDTTestConfig
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/sdt/SDTTestViewModel.kt`'s `SDTTestUiState`.
@@ -33,7 +34,7 @@ data class SDTTestUiState(
     val submissionId: String? = null,
     val subscriptionType: SubscriptionTier? = null,
     val submission: SDTSubmission? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,

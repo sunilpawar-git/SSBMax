@@ -12,6 +12,7 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.TATPhase
 import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.tat.TATTestUiState
 import com.ssbmax.shared.presentation.tat.TATTestViewModel
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
@@ -222,10 +223,10 @@ class TATTestScreenUiTest {
 
     @Test
     fun errorState_displaysErrorMessage() = runComposeUiTest {
-        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = "Failed to load test questions")
+        uiStateFlow.value = uiStateFlow.value.copy(isLoading = false, error = TestError.LOAD_FAILED)
         setContent { TATTestScreen(testId = "test-123", viewModel = mockViewModel) }
 
-        onNodeWithText("Failed to load test questions", substring = true).assertIsDisplayed()
+        onNodeWithText("Failed to load test", substring = true).assertIsDisplayed()
     }
 
     @Test

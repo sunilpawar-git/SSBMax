@@ -7,6 +7,7 @@ import com.ssbmax.shared.domain.repository.UsageInfo
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeBackgroundTaskScheduler
 import com.ssbmax.shared.presentation.testing.FakeSubmissionRepository
@@ -169,6 +170,6 @@ class PIQTestViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(false, state.submissionComplete)
-        assertNotNull(state.error)
+        assertEquals(TestError.SUBMIT_FAILED, state.error)
     }
 }

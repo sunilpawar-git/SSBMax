@@ -15,6 +15,7 @@ import com.ssbmax.shared.domain.usecase.ppdt.SubmitPPDTTestUseCase
 import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeDifficultyProgressionRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
@@ -114,7 +115,7 @@ class PPDTTestViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertEquals("Authentication required. Please login to continue.", state.error)
+        assertEquals(TestError.AUTH_REQUIRED, state.error)
         assertEquals(false, state.isLoading)
     }
 
@@ -231,6 +232,6 @@ class PPDTTestViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(false, state.isSubmitted)
-        assertNotNull(state.error)
+        assertEquals(TestError.SUBMIT_FAILED, state.error)
     }
 }

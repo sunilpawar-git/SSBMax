@@ -11,6 +11,7 @@ import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.platform.worker.BackgroundTaskScheduler
+import com.ssbmax.shared.presentation.common.TestError
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -195,7 +196,7 @@ class PIQTestViewModel(
             if (userId == null) {
                 logger.e(tag, "Unauthenticated PIQ submission blocked", null)
                 analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "PIQ"))
-                _uiState.update { it.copy(isLoading = false, error = "Please login to submit PIQ") }
+                _uiState.update { it.copy(isLoading = false, error = TestError.LOGIN_TO_SUBMIT) }
                 return@launch
             }
 
@@ -211,7 +212,7 @@ class PIQTestViewModel(
                     return@launch
                 }
                 is TestEligibility.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, error = "No connection. Please check your network and try again.") }
+                    _uiState.update { it.copy(isLoading = false, error = TestError.NETWORK_UNAVAILABLE) }
                     return@launch
                 }
                 is TestEligibility.Eligible -> Unit
@@ -232,7 +233,7 @@ class PIQTestViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     logger.e(tag, "Failed to submit PIQ test for user: $userId", error)
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to submit: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, error = TestError.SUBMIT_FAILED) }
                 }
         }
     }

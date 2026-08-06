@@ -15,6 +15,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.usecase.tat.LoadTATTestUseCase
 import com.ssbmax.shared.domain.util.NoOpLogger
+import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.presentation.testing.clearForTest
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeSubmissionAnalysisTrigger
@@ -109,7 +110,7 @@ class TATTestViewModelTest {
         viewModel.loadTest()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("Authentication required. Please login to continue.", viewModel.uiState.value.error)
+        assertEquals(TestError.AUTH_REQUIRED, viewModel.uiState.value.error)
     }
 
     @Test
@@ -234,6 +235,6 @@ class TATTestViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(false, state.isSubmitted)
-        assertNotNull(state.error)
+        assertEquals(TestError.SUBMIT_FAILED, state.error)
     }
 }

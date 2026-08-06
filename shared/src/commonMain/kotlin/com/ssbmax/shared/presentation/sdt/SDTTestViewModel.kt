@@ -18,6 +18,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.presentation.common.TestError
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -87,7 +88,7 @@ class SDTTestViewModel(
             val userId = observeCurrentUser().first()?.id ?: run {
                 observability.logger.e(tag, "SECURITY: Unauthenticated SDT test access blocked", null)
                 observability.analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "SDT"))
-                _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.") }
+                _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.AUTH_REQUIRED) }
                 return@launch
             }
             capturedUserId = userId
@@ -104,7 +105,7 @@ class SDTTestViewModel(
                     return@launch
                 }
                 is TestEligibility.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.NETWORK_UNAVAILABLE) }
                     return@launch
                 }
                 is TestEligibility.Eligible -> Unit
@@ -115,7 +116,7 @@ class SDTTestViewModel(
             testSessionRepository.createTestSession(userId, testId, TestType.SD)
                 .onFailure { e ->
                     observability.logger.e(tag, "Failed to create SDT test session: $testId", e)
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                     return@launch
                 }
 
@@ -123,7 +124,7 @@ class SDTTestViewModel(
                 .onSuccess { questions ->
                     if (questions.isEmpty()) {
                         observability.logger.e(tag, "No SDT questions found for test: $testId", null)
-                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.LOAD_FAILED) }
                         return@onSuccess
                     }
                     _uiState.update {
@@ -137,7 +138,7 @@ class SDTTestViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     observability.logger.e(tag, "Failed to load SDT test: $testId", e)
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                 }
         }
     }
@@ -236,7 +237,7 @@ class SDTTestViewModel(
                     SecurityEvents.UNAUTHENTICATED_ACCESS,
                     mapOf("test_type" to "SDT", "phase" to "submission")
                 )
-                _uiState.update { it.copy(isLoading = false, error = "Please login to submit test") }
+                _uiState.update { it.copy(isLoading = false, error = TestError.LOGIN_TO_SUBMIT) }
                 return@launch
             }
 
@@ -273,7 +274,7 @@ class SDTTestViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     observability.logger.e(tag, "Failed to submit SDT test for user: $userId", error)
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to submit: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, error = TestError.SUBMIT_FAILED) }
                 }
         }
     }

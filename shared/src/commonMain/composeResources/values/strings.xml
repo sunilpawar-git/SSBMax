@@ -184,6 +184,18 @@
     <string name="test_limit_premium_subtitle">Unlimited all tests for ₹999/month</string>
     <string name="test_limit_recommended">Recommended</string>
 
+    <!-- Shared typed test-error state (Phase 8 of the subscription-override plan), replacing
+         5 copy-pasted private ErrorState composables (TAT/WAT/SRT/SDT/PPDT) that leaked raw
+         exception text (e.g. "Failed to submit: PERMISSION_DENIED: ...") to users. One message
+         per TestError case, resolved in shared/.../ui/common/TestErrorState.kt. -->
+    <string name="test_error_auth_required">Authentication required. Please login to continue.</string>
+    <string name="test_error_network_unavailable">No connection. Please check your network and try again.</string>
+    <string name="test_error_cloud_required">Cloud connection required. Please check your internet connection.</string>
+    <string name="test_error_login_to_submit">Please login to submit test</string>
+    <string name="test_error_submit_failed">Failed to submit test. Please try again.</string>
+    <string name="test_error_load_failed">Failed to load test. Please try again.</string>
+    <string name="test_error_retry_button">Retry</string>
+
     <!-- Unified OLQ result-screen components (Phase 5 port of
          app/.../ui/components/result/*.kt). Shared by every OLQ-based test
          result screen; PPDT is the first KMP consumer (this session). -->
@@ -231,7 +243,6 @@
 
     <!-- PPDT test-taking screen (Phase 5 port of app/.../ui/tests/ppdt/*.kt). -->
     <string name="ppdt_loading">Loading PPDT test from cloud...</string>
-    <string name="ppdt_retry_button">Retry</string>
     <string name="ppdt_profile_required_title">Complete Your Profile</string>
     <string name="ppdt_profile_required_message">Your gender is needed for PPDT assessment. Set it in Settings before continuing.</string>
     <string name="ppdt_profile_go_to_settings">Go to Settings</string>
@@ -277,7 +288,6 @@
 
     <!-- TAT test-taking screen (Phase 5 port of app/.../ui/tests/tat/*.kt). -->
     <string name="tat_loading">Loading TAT test from cloud...</string>
-    <string name="tat_retry_button">Retry</string>
     <string name="tat_test_title">TAT Test</string>
     <string name="tat_picture_number">Picture %1$d of %2$d</string>
     <string name="tat_back_cd">Back</string>
@@ -331,7 +341,6 @@
 
     <!-- WAT test-taking screen (Phase 5 port of app/.../ui/tests/wat/*.kt). -->
     <string name="wat_loading">Loading WAT test from cloud...</string>
-    <string name="wat_retry_button">Retry</string>
     <string name="wat_test_title">WAT Test</string>
     <string name="wat_back_cd">Back</string>
     <string name="wat_exit_title">Exit Test?</string>
@@ -367,7 +376,6 @@
 
     <!-- SRT test-taking screen (Phase 5 port of app/.../ui/tests/srt/*.kt). -->
     <string name="srt_loading">Loading SRT test situations from cloud...</string>
-    <string name="srt_retry_button">Retry</string>
     <string name="srt_test">SRT Test</string>
     <string name="srt_back_cd">Back</string>
     <string name="srt_full_title">SRT - Situation Reaction Test</string>
@@ -415,7 +423,6 @@
 
     <!-- SDT test-taking screen (Phase 5 port of app/.../ui/tests/sdt/*.kt). -->
     <string name="sdt_loading">Loading SDT questions from cloud...</string>
-    <string name="sdt_retry_button">Retry</string>
     <string name="sdt_instructions_title">Instructions</string>
     <string name="sdt_instruction_1">You will be presented with 4 questions</string>
     <string name="sdt_instruction_2">Describe how others perceive you and how you see yourself</string>

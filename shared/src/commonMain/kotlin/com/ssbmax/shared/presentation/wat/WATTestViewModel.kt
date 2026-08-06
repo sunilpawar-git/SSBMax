@@ -18,6 +18,7 @@ import com.ssbmax.shared.domain.usecase.subscription.CheckTestEligibilityUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
+import com.ssbmax.shared.presentation.common.TestError
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -106,7 +107,7 @@ class WATTestViewModel(
                 observability.logger.e(tag, "SECURITY: Unauthenticated WAT test access blocked", null)
                 observability.analyticsTracker.trackEvent(SecurityEvents.UNAUTHENTICATED_ACCESS, mapOf("test_type" to "WAT"))
                 _uiState.update {
-                    it.copy(isLoading = false, loadingMessage = null, error = "Authentication required. Please login to continue.")
+                    it.copy(isLoading = false, loadingMessage = null, error = TestError.AUTH_REQUIRED)
                 }
                 return@launch
             }
@@ -125,7 +126,7 @@ class WATTestViewModel(
                     return@launch
                 }
                 is TestEligibility.NetworkError -> {
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No connection. Please check your network and try again.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.NETWORK_UNAVAILABLE) }
                     return@launch
                 }
                 is TestEligibility.Eligible -> Unit
@@ -136,7 +137,7 @@ class WATTestViewModel(
             testSessionRepository.createTestSession(userId, testId, TestType.WAT)
                 .onFailure { e ->
                     observability.logger.e(tag, "Failed to create WAT test session: $testId", e)
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                     return@launch
                 }
 
@@ -144,7 +145,7 @@ class WATTestViewModel(
                 .onSuccess { words ->
                     if (words.isEmpty()) {
                         observability.logger.e(tag, "No WAT words found for test: $testId", null)
-                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                        _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.LOAD_FAILED) }
                         return@onSuccess
                     }
                     _uiState.update {
@@ -158,7 +159,7 @@ class WATTestViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     observability.logger.e(tag, "Failed to load WAT test: $testId", e)
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
                 }
         }
     }
@@ -230,7 +231,7 @@ class WATTestViewModel(
                     SecurityEvents.UNAUTHENTICATED_ACCESS,
                     mapOf("test_type" to "WAT", "phase" to "submission")
                 )
-                _uiState.update { it.copy(isLoading = false, error = "Please login to submit test") }
+                _uiState.update { it.copy(isLoading = false, error = TestError.LOGIN_TO_SUBMIT) }
                 return@launch
             }
 
@@ -265,7 +266,7 @@ class WATTestViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     observability.logger.e(tag, "Failed to submit WAT test for user: $userId", error)
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to submit: ${error.message}") }
+                    _uiState.update { it.copy(isLoading = false, error = TestError.SUBMIT_FAILED) }
                 }
         }
     }

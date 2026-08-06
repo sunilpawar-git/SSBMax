@@ -6,6 +6,7 @@ import com.ssbmax.shared.domain.model.SRTSituationResponse
 import com.ssbmax.shared.domain.model.SRTSubmission
 import com.ssbmax.shared.domain.model.SRTTestConfig
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/srt/SRTTestViewModel.kt`'s `SRTTestUiState`.
@@ -32,7 +33,7 @@ data class SRTTestUiState(
     val submissionId: String? = null,
     val subscriptionType: SubscriptionTier? = null,
     val submission: SRTSubmission? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
     val testsLimit: Int = 1,

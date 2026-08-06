@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.PPDTPhase
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.presentation.ppdt.PPDTTestViewModel
+import com.ssbmax.shared.ui.common.TestErrorState
 import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.ppdt.components.PPDTBottomBar
 import com.ssbmax.shared.ui.ppdt.components.PPDTExitDialog
@@ -38,7 +38,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.ppdt_loading
-import ssbmax.shared.generated.resources.ppdt_retry_button
 
 /**
  * KMP port of `app/.../ui/tests/ppdt/PPDTTestScreen.kt`.
@@ -121,7 +120,7 @@ fun PPDTTestScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
                 uiState.isLoading -> LoadingState()
-                uiState.error != null -> ErrorState(error = uiState.error!!, onRetry = { viewModel.loadTest() })
+                uiState.error != null -> TestErrorState(error = uiState.error!!, onRetry = { viewModel.loadTest() })
                 else -> when (uiState.currentPhase) {
                     PPDTPhase.INSTRUCTIONS -> PPDTInstructionsPhase(onStart = { viewModel.startTest() })
                     PPDTPhase.IMAGE_VIEWING -> PPDTImageViewingPhase(
@@ -168,16 +167,6 @@ private fun LoadingState() {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CircularProgressIndicator()
             Text(text = stringResource(Res.string.ppdt_loading), style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun ErrorState(error: String, onRetry: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(text = error, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onRetry) { Text(stringResource(Res.string.ppdt_retry_button)) }
         }
     }
 }

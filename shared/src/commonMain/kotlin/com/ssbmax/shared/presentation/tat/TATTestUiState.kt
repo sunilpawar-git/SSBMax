@@ -6,11 +6,14 @@ import com.ssbmax.shared.domain.model.TATQuestion
 import com.ssbmax.shared.domain.model.TATStoryResponse
 import com.ssbmax.shared.domain.model.TATSubmission
 import com.ssbmax.shared.domain.model.TATTestConfig
+import com.ssbmax.shared.presentation.common.TestError
 
 /**
  * KMP port of `app/.../ui/tests/tat/TATTestUiState.kt`. Field-for-field match
  * with the Android original (including the derived properties below) so
- * [TATTestViewModel]'s logic is a near drop-in.
+ * [TATTestViewModel]'s logic is a near drop-in. `error: String?` was typed to
+ * [TestError]? in Phase 8 of the subscription-override plan to stop raw
+ * exception text (e.g. `PERMISSION_DENIED: ...`) from reaching the screen.
  */
 data class TATTestUiState(
     val isLoading: Boolean = true,
@@ -29,7 +32,7 @@ data class TATTestUiState(
     val submissionId: String? = null,
     val subscriptionType: SubscriptionTier? = null,
     val submission: TATSubmission? = null,
-    val error: String? = null,
+    val error: TestError? = null,
     val isProfileIncomplete: Boolean = false,
     val isLimitReached: Boolean = false,
     val subscriptionTier: SubscriptionTier = SubscriptionTier.FREE,
