@@ -14,10 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.GPEPhase
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.presentation.gpe.GPETestUiState
 import com.ssbmax.shared.presentation.gpe.GPETestViewModel
+import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.gto.common.GTOErrorDialog
 import com.ssbmax.shared.ui.gto.common.GTOExitDialog
-import com.ssbmax.shared.ui.gto.common.GTOLimitDialog
 import com.ssbmax.shared.ui.gto.common.GTOSubmissionSuccessScreen
 import com.ssbmax.shared.ui.gto.gpe.components.GPEInstructionsPhase
 import com.ssbmax.shared.ui.gto.gpe.components.GPEPlanningPhase
@@ -56,6 +57,7 @@ fun GPETestScreen(
     testId: String,
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit = {},
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: GPETestViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -71,21 +73,15 @@ fun GPETestScreen(
         }
     }
 
-    if (showExitDialog) {
-        GTOExitDialog(onDismiss = { showExitDialog = false }, onExit = onNavigateBack)
-    }
-
-    if (uiState.showLimitDialog) {
-        GTOLimitDialog(
-            message = uiState.limitMessage,
-            onUpgrade = { viewModel.dismissLimitDialog(); onNavigateBack() },
-            onDismiss = { viewModel.dismissLimitDialog(); onNavigateBack() }
-        )
-    }
-
-    if (uiState.error != null) {
-        GTOErrorDialog(message = uiState.error!!, onDismiss = { viewModel.dismissError() })
-    }
+    GPEDialogs(
+        uiState = uiState,
+        showExitDialog = showExitDialog,
+        onDismissExit = { showExitDialog = false },
+        onExit = onNavigateBack,
+        onUpgrade = { viewModel.dismissLimitDialog(); onNavigateToUpgrade() },
+        onDismissLimit = { viewModel.dismissLimitDialog(); onNavigateBack() },
+        onDismissError = { viewModel.dismissError() }
+    )
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
@@ -119,5 +115,36 @@ fun GPETestScreen(
                 GPEPhase.SUBMITTED -> GTOSubmissionSuccessScreen(testName = stringResource(Res.string.gpe_title), onNavigateHome = onNavigateBack)
             }
         }
+    }
+}
+
+@Composable
+private fun GPEDialogs(
+    uiState: GPETestUiState,
+    showExitDialog: Boolean,
+    onDismissExit: () -> Unit,
+    onExit: () -> Unit,
+    onUpgrade: () -> Unit,
+    onDismissLimit: () -> Unit,
+    onDismissError: () -> Unit
+) {
+    if (showExitDialog) {
+        GTOExitDialog(onDismiss = onDismissExit, onExit = onExit)
+    }
+    uiState.limitReached?.let { limitReached ->
+        TestLimitReachedDialog(
+            tier = limitReached.tier,
+            testsLimit = limitReached.limit,
+            testsUsed = limitReached.usedCount,
+            resetsAt = limitReached.resetsAt,
+            onUpgrade = onUpgrade,
+            onDismiss = onDismissLimit
+        )
+    }
+    if (uiState.error != null) {
+        GTOErrorDialog(message = uiState.error, onDismiss = onDismissError)
+    }
+    if (uiState.submitError != null) {
+        GTOErrorDialog(message = uiState.submitError, onDismiss = onDismissError)
     }
 }

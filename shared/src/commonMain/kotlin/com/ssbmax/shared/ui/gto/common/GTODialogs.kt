@@ -12,9 +12,6 @@ import ssbmax.shared.generated.resources.gto_exit_cancel
 import ssbmax.shared.generated.resources.gto_exit_confirm
 import ssbmax.shared.generated.resources.gto_exit_message
 import ssbmax.shared.generated.resources.gto_exit_title
-import ssbmax.shared.generated.resources.gto_limit_default_message
-import ssbmax.shared.generated.resources.gto_limit_title
-import ssbmax.shared.generated.resources.gto_upgrade
 
 /**
  * Shared dialogs for GD/Lecturette (and future GPE/PGT/etc.) -- extracted
@@ -30,17 +27,6 @@ fun GTOExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
         title = { Text(stringResource(Res.string.gto_exit_title)) },
         text = { Text(stringResource(Res.string.gto_exit_message)) },
         confirmButton = { TextButton(onClick = onExit) { Text(stringResource(Res.string.gto_exit_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.gto_exit_cancel)) } }
-    )
-}
-
-@Composable
-fun GTOLimitDialog(message: String?, onUpgrade: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.gto_limit_title)) },
-        text = { Text(message ?: stringResource(Res.string.gto_limit_default_message)) },
-        confirmButton = { TextButton(onClick = onUpgrade) { Text(stringResource(Res.string.gto_upgrade)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.gto_exit_cancel)) } }
     )
 }

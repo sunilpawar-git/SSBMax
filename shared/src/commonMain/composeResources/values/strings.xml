@@ -617,9 +617,6 @@
     <string name="gto_exit_message">Your progress will be lost. Are you sure you want to exit?</string>
     <string name="gto_exit_confirm">Exit</string>
     <string name="gto_exit_cancel">Cancel</string>
-    <string name="gto_limit_title">Test Limit Reached</string>
-    <string name="gto_limit_default_message">You\'ve reached your monthly test limit.</string>
-    <string name="gto_upgrade">Upgrade</string>
     <string name="gto_error_title">Error</string>
     <string name="gto_error_ok">OK</string>
     <string name="gto_submitted_title">Test Submitted!</string>

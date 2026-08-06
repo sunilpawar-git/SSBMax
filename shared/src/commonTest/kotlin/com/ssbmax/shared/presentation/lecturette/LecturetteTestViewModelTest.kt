@@ -103,6 +103,24 @@ class LecturetteTestViewModelTest {
     }
 
     @Test
+    fun `loadTest surfaces limit reached without loading topics`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.success(com.ssbmax.shared.domain.model.SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult = Result.success(
+            mapOf("GTO Tests" to com.ssbmax.shared.domain.repository.UsageInfo(used = 1, limit = 1))
+        )
+        val viewModel = buildViewModel()
+
+        viewModel.loadTest("gto_lecturette_standard")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.limitReached)
+        assertEquals(1, state.limitReached?.limit)
+        assertEquals(false, state.isLoading)
+        assertEquals(emptyList(), state.topicChoices)
+    }
+
+    @Test
     fun `selectTopic moves to speech phase and starts the timer`() = runTest(testDispatcher) {
         val viewModel = buildViewModel()
         viewModel.loadTest("gto_lecturette_standard")

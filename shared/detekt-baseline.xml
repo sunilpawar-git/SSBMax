@@ -170,7 +170,6 @@
     <ID>MaxLineLength:GPETestScreen.kt$GPEPhase.SUBMITTED -&gt; GTOSubmissionSuccessScreen(testName = stringResource(Res.string.gpe_title), onNavigateHome = onNavigateBack)</ID>
     <ID>MaxLineLength:GPETestViewModel.kt$GPETestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "Cloud connection required. Please check your internet connection.") }</ID>
     <ID>MaxLineLength:GPETestViewModel.kt$GPETestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, error = "No scenarios found for this test") }</ID>
-    <ID>MaxLineLength:GPETestViewModel.kt$GPETestViewModel$_uiState.update { it.copy(isLoading = false, loadingMessage = null, showLimitDialog = true, limitMessage = result.message) }</ID>
     <ID>MaxLineLength:GPETestViewModel.kt$GPETestViewModel$_uiState.update { it.copy(isSubmitting = false, phase = GPEPhase.SUBMITTED, submissionId = submissionId, isCompleted = true) }</ID>
     <ID>MaxLineLength:GetOLQDashboardUseCase.kt$GetOLQDashboardUseCase$logger.d(TAG, " Phase 2 results: TAT=${finalData.dashboard.phase2Results.tatResult != null}, WAT=${finalData.dashboard.phase2Results.watResult != null}, SRT=${finalData.dashboard.phase2Results.srtResult != null}, SDT=${finalData.dashboard.phase2Results.sdResult != null}")</ID>
     <ID>MaxLineLength:GetOLQDashboardUseCase.kt$GetOLQDashboardUseCase$logger.d(TAG, " Phase 2 results: TAT=${tatResult != null}, WAT=${watResult != null}, SRT=${srtResult != null}, SDT=${sdResult != null}")</ID>

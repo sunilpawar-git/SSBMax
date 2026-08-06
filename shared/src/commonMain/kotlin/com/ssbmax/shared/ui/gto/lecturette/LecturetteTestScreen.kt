@@ -18,10 +18,10 @@ import com.ssbmax.shared.platform.audio.WhiteNoisePlayer
 import com.ssbmax.shared.presentation.lecturette.LecturettePhase
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestUiState
 import com.ssbmax.shared.presentation.lecturette.LecturetteTestViewModel
+import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import com.ssbmax.shared.ui.gto.common.AnimatedWhiteNoiseOverlay
 import com.ssbmax.shared.ui.gto.common.GTOErrorDialog
 import com.ssbmax.shared.ui.gto.common.GTOExitDialog
-import com.ssbmax.shared.ui.gto.common.GTOLimitDialog
 import com.ssbmax.shared.ui.gto.common.GTOSubmissionSuccessScreen
 import com.ssbmax.shared.ui.gto.common.rememberWhiteNoiseState
 import com.ssbmax.shared.ui.gto.lecturette.components.LecturetteInstructionsPhase
@@ -145,10 +145,20 @@ private fun LecturetteDialogs(
     if (showExitDialog) {
         GTOExitDialog(onDismiss = onDismissExit, onExit = onExit)
     }
-    if (uiState.showLimitDialog) {
-        GTOLimitDialog(message = uiState.limitMessage, onUpgrade = onUpgrade, onDismiss = onDismissLimit)
+    uiState.limitReached?.let { limitReached ->
+        TestLimitReachedDialog(
+            tier = limitReached.tier,
+            testsLimit = limitReached.limit,
+            testsUsed = limitReached.usedCount,
+            resetsAt = limitReached.resetsAt,
+            onUpgrade = onUpgrade,
+            onDismiss = onDismissLimit
+        )
     }
     if (uiState.error != null) {
         GTOErrorDialog(message = uiState.error, onDismiss = onDismissError)
+    }
+    if (uiState.submitError != null) {
+        GTOErrorDialog(message = uiState.submitError, onDismiss = onDismissError)
     }
 }

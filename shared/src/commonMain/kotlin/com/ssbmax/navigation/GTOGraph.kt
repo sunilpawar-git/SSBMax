@@ -92,7 +92,8 @@ fun NavGraphBuilder.gtoGraph(navController: NavHostController) {
                     navController = navController
                 )
             },
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToUpgrade = { navController.navigate(SSBMaxDestinations.UpgradeScreen) }
         )
     }
 

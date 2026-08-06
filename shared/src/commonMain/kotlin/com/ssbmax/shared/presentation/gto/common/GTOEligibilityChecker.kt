@@ -39,7 +39,7 @@ class GTOEligibilityChecker(
     sealed class Result {
         data class Eligible(val userId: String, val subscriptionType: SubscriptionTier) : Result()
         data class Error(val message: String) : Result()
-        data class LimitReached(val message: String) : Result()
+        data class LimitReached(val eligibility: TestEligibility.LimitReached) : Result()
     }
 
     suspend fun checkEligibility(testType: TestType, gtoTestType: GTOTestType): Result {
@@ -60,10 +60,7 @@ class GTOEligibilityChecker(
         }
 
         return when (val eligibility = checkTestEligibility(testType, userId)) {
-            is TestEligibility.LimitReached -> Result.LimitReached(
-                "You've completed ${eligibility.usedCount} of ${eligibility.limit} tests this month on the " +
-                    "${eligibility.tier.displayName} plan. Your limit resets on ${eligibility.resetsAt}."
-            )
+            is TestEligibility.LimitReached -> Result.LimitReached(eligibility)
             is TestEligibility.NetworkError -> Result.Error("No connection. Please check your network and try again.")
             is TestEligibility.Eligible -> {
                 val subscriptionType = getSubscriptionTier(userId).getOrDefault(SubscriptionTier.FREE)

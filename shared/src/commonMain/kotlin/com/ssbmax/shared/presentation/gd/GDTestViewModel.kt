@@ -1,6 +1,7 @@
 package com.ssbmax.shared.presentation.gd
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -72,7 +73,7 @@ class GDTestViewModel(
                     _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
                 is GTOEligibilityChecker.Result.LimitReached -> {
-                    _uiState.update { it.copy(isLoading = false, showLimitDialog = true, limitMessage = result.message) }
+                    _uiState.update { it.copy(isLoading = false, limitReached = result.eligibility) }
                 }
                 is GTOEligibilityChecker.Result.Eligible -> {
                     _uiState.update { it.copy(loadingMessage = "Loading topic...") }
@@ -166,7 +167,7 @@ class GDTestViewModel(
     }
 
     fun dismissLimitDialog() {
-        _uiState.update { it.copy(showLimitDialog = false) }
+        _uiState.update { it.copy(limitReached = null) }
     }
 
     override fun onCleared() {
@@ -192,8 +193,7 @@ data class GDTestUiState(
     val submitError: String? = null,
     val submissionId: String? = null,
     val isCompleted: Boolean = false,
-    val showLimitDialog: Boolean = false,
-    val limitMessage: String? = null
+    val limitReached: TestEligibility.LimitReached? = null
 ) {
     val isTimeLow: Boolean get() = timeRemaining in 1..119
 

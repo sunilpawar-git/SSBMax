@@ -3,6 +3,7 @@ package com.ssbmax.shared.presentation.gpe
 import com.ssbmax.shared.domain.model.GPEPhase
 import com.ssbmax.shared.domain.model.GPEQuestion
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.TestType
 import com.ssbmax.shared.domain.model.gto.GTOSubmission
 import com.ssbmax.shared.domain.model.gto.GTOTestType
@@ -80,7 +81,7 @@ class GPETestViewModel(
                     _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = result.message) }
                 }
                 is GTOEligibilityChecker.Result.LimitReached -> {
-                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, showLimitDialog = true, limitMessage = result.message) }
+                    _uiState.update { it.copy(isLoading = false, loadingMessage = null, limitReached = result.eligibility) }
                 }
                 is GTOEligibilityChecker.Result.Eligible -> {
                     _uiState.update { it.copy(loadingMessage = "Fetching scenario from cloud...") }
@@ -194,7 +195,7 @@ class GPETestViewModel(
     }
 
     fun dismissLimitDialog() {
-        _uiState.update { it.copy(showLimitDialog = false) }
+        _uiState.update { it.copy(limitReached = null) }
     }
 
     override fun onCleared() {
@@ -220,8 +221,7 @@ data class GPETestUiState(
     val submitError: String? = null,
     val submissionId: String? = null,
     val isCompleted: Boolean = false,
-    val showLimitDialog: Boolean = false,
-    val limitMessage: String? = null
+    val limitReached: TestEligibility.LimitReached? = null
 ) {
     val formattedTime: String
         get() {

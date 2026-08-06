@@ -108,6 +108,24 @@ class GPETestViewModelTest {
     }
 
     @Test
+    fun `loadTest surfaces limit reached without loading a scenario`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.success(com.ssbmax.shared.domain.model.SubscriptionTier.FREE)
+        subscriptionRepository.monthlyUsageResult = Result.success(
+            mapOf("GTO Tests" to com.ssbmax.shared.domain.repository.UsageInfo(used = 1, limit = 1))
+        )
+        val viewModel = buildViewModel()
+
+        viewModel.loadTest("gpe_standard")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.limitReached)
+        assertEquals(1, state.limitReached?.limit)
+        assertEquals(false, state.isLoading)
+        assertEquals(null, state.question)
+    }
+
+    @Test
     fun `loadTest loads the scenario when eligible`() = runTest(testDispatcher) {
         testContentRepository.gpeQuestionsResult = Result.success(listOf(question()))
         val viewModel = buildViewModel()

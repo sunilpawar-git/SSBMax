@@ -102,7 +102,8 @@ class GDTestViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertTrue(state.showLimitDialog)
+        assertNotNull(state.limitReached)
+        assertEquals(1, state.limitReached?.limit)
         assertEquals(false, state.isLoading)
     }
 
