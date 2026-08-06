@@ -18,7 +18,8 @@ typealias SRTQuestion = SRTSituation
 /**
  * Repository for fetching test content from Firestore.
  * All test questions are stored in the cloud to prevent APK sideloading/extraction.
- * Content is never persisted locally - only cached in memory during active test sessions.
+ * OIR content is persisted in the platform cache for first-run readiness; other test content
+ * may be cached in memory during active test sessions.
  */
 interface TestContentRepository {
     
