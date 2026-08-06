@@ -197,22 +197,20 @@ class CheckInterviewPrerequisitesUseCase constructor(
 
     /** PIQ is complete once submitted (has form data) -- AI quality score is optional feedback, not a requirement. */
     private suspend fun checkPIQStatus(userId: String): PIQStatus {
-        val piqResult = submissionRepository.getLatestPIQSubmission(userId)
-        return if (piqResult.isFailure || piqResult.getOrNull() == null) {
+        val submission = submissionRepository.getLatestPIQSubmission(userId).getOrNull()
+        return if (submission == null) {
             PIQStatus.NotStarted
         } else {
-            val submission = piqResult.getOrNull()!!
             PIQStatus.Completed(submissionId = submission.id, aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f)
         }
     }
 
     /** OIR completion and score threshold (>= 50%). */
     private suspend fun checkOIRStatus(userId: String): OIRStatus {
-        val oirResult = submissionRepository.getLatestOIRSubmission(userId)
-        return if (oirResult.isFailure || oirResult.getOrNull() == null) {
+        val submission = submissionRepository.getLatestOIRSubmission(userId).getOrNull()
+        return if (submission == null) {
             OIRStatus.NotStarted
         } else {
-            val submission = oirResult.getOrNull()!!
             val score = submission.testResult.percentageScore
             if (score >= 50f) OIRStatus.Completed(submissionId = submission.id, score = score) else OIRStatus.CompletedBelowThreshold(score)
         }
@@ -220,11 +218,11 @@ class CheckInterviewPrerequisitesUseCase constructor(
 
     /** PPDT completion. */
     private suspend fun checkPPDTStatus(userId: String): PPDTStatus {
-        val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId)
-        return if (ppdtResult.isFailure || ppdtResult.getOrNull() == null) {
+        val submission = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
+        return if (submission == null) {
             PPDTStatus.NotStarted
         } else {
-            PPDTStatus.Completed(ppdtResult.getOrNull()!!.submissionId)
+            PPDTStatus.Completed(submission.submissionId)
         }
     }
 
