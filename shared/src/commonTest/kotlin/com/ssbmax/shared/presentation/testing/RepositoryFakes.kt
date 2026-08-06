@@ -118,7 +118,17 @@ class FakeTestSessionRepository : TestSessionRepository {
 
     override suspend fun hasActiveTestSession(userId: String, testId: String) = hasActiveSessionResult
     override suspend fun createTestSession(userId: String, testId: String, testType: TestType) = createSessionResult
-    override suspend fun endTestSession(sessionId: String): Result<Unit> {
+    override suspend fun completeTestSession(sessionId: String): Result<Unit> {
+        endedSessionIds += sessionId
+        return endSessionResult
+    }
+
+    override suspend fun abandonTestSession(sessionId: String): Result<Unit> {
+        endedSessionIds += sessionId
+        return endSessionResult
+    }
+
+    override suspend fun expireTestSession(sessionId: String): Result<Unit> {
         endedSessionIds += sessionId
         return endSessionResult
     }

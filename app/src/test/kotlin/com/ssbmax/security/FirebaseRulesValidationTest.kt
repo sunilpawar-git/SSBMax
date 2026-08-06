@@ -232,6 +232,30 @@ class FirebaseRulesValidationTest {
     }
 
     @Test
+    fun `test sessions require durable active metadata on creation`() {
+        val content = getRulesContent()
+        val sessionCreate = content.substringAfter("// Users can create test sessions")
+            .substringBefore("// Users can update their own sessions")
+
+        assertTrue("Sessions require ACTIVE status", sessionCreate.contains("request.resource.data.status == 'ACTIVE'"))
+        assertTrue(
+            "Sessions require an unexpired absolute expiry",
+            sessionCreate.contains("request.resource.data.expiresAt > request.time.toMillis()")
+        )
+    }
+
+    @Test
+    fun `test sessions cannot mutate identity or delete audit records`() {
+        val content = getRulesContent()
+        val sessionRules = content.substringAfter("match /test_sessions/{sessionId}")
+            .substringBefore("// TEST SUBMISSIONS")
+
+        assertTrue("Session identity is immutable", sessionRules.contains("request.resource.data.testType == resource.data.testType"))
+        assertTrue("Session deletion is forbidden", sessionRules.contains("allow delete: if false"))
+        assertTrue("Only terminal states are allowed", sessionRules.contains("['ABANDONED', 'SUBMITTED', 'EXPIRED']"))
+    }
+
+    @Test
     fun `test sessions require isActive flag on creation`() {
         val content = getRulesContent()
         val sessionCreate = content.substringAfter("// Users can create test sessions")

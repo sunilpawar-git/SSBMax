@@ -150,6 +150,17 @@ class OIRTestViewModelTest {
     }
 
     @Test
+    fun `durable session creation failure blocks question loading`() = runTest(testDispatcher) {
+        testSessionRepository.createSessionResult = Result.failure(IllegalStateException("session unavailable"))
+
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(OIRErrorType.SESSION_UNAVAILABLE, viewModel.uiState.value.errorType)
+        assertEquals(0, testContentRepository.getOIRQuestionsCallCount)
+    }
+
+    @Test
     fun `partial question set is rejected before test starts`() = runTest(testDispatcher) {
         testContentRepository.oirQuestionsResult = Result.success(testQuestionSet().take(49))
 
@@ -263,7 +274,7 @@ class OIRTestViewModelTest {
     }
 
     @Test
-    fun `pauseTest stops the timer and ends the session`() = runTest(testDispatcher) {
+    fun `pauseTest stops the timer and abandons the session`() = runTest(testDispatcher) {
         val viewModel = buildViewModel()
         testDispatcher.scheduler.runCurrent()
 

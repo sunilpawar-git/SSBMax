@@ -36,6 +36,7 @@ import ssbmax.shared.generated.resources.oir_error_auth_required
 import ssbmax.shared.generated.resources.oir_error_invalid_question
 import ssbmax.shared.generated.resources.oir_error_questions_unavailable
 import ssbmax.shared.generated.resources.oir_error_submit_failed
+import ssbmax.shared.generated.resources.oir_error_session_unavailable
 import ssbmax.shared.generated.resources.oir_exit
 import ssbmax.shared.generated.resources.oir_exit_message
 import ssbmax.shared.generated.resources.oir_exit_title
@@ -169,6 +170,7 @@ private fun errorMessageFor(errorType: OIRErrorType) = when (errorType) {
     OIRErrorType.AUTH_REQUIRED -> Res.string.oir_error_auth_required
     OIRErrorType.QUESTIONS_UNAVAILABLE -> Res.string.oir_error_questions_unavailable
     OIRErrorType.SUBMIT_FAILED -> Res.string.oir_error_submit_failed
+    OIRErrorType.SESSION_UNAVAILABLE -> Res.string.oir_error_session_unavailable
     OIRErrorType.INVALID_QUESTION -> Res.string.oir_error_invalid_question
 }
 

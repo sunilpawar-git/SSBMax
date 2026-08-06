@@ -75,6 +75,7 @@ data class OIRTestSession(
     val currentQuestionIndex: Int = 0,
     val startTime: Long,
     val timeRemainingSeconds: Int,
+    val expiresAt: Long = startTime + timeRemainingSeconds * 1000L,
     val isPaused: Boolean = false,
     val isCompleted: Boolean = false,
 ) {

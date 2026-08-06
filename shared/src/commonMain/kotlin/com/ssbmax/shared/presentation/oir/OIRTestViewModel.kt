@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
-import kotlin.random.Random
 
 /** Coordinates eligibility, question readiness, answering, timing, and submission for OIR. */
 class OIRTestViewModel(
@@ -90,8 +89,19 @@ class OIRTestViewModel(
                 _uiState.update { it.copy(isLoading = false, errorType = OIRErrorType.QUESTIONS_UNAVAILABLE) }
                 return@launch
             }
+            var createdSessionId: String? = null
             try {
-                val config = OIRTestConfig()
+                val config = OIRTestConfig(testId = testId)
+                val sessionId = testSessionRepository
+                    .createTestSession(userId, testId, TestType.OIR)
+                    .getOrElse {
+                        logger.e(tag, "Failed to create durable OIR test session", it)
+                        _uiState.update { state ->
+                            state.copy(isLoading = false, errorType = OIRErrorType.SESSION_UNAVAILABLE)
+                        }
+                        return@launch
+                    }
+                createdSessionId = sessionId
                 val questions = testContentRepository.getOIRTestQuestions(
                     count = config.totalQuestions,
                     difficulty = null
@@ -101,11 +111,12 @@ class OIRTestViewModel(
                 }
                 OIRTestQuestionSetValidator.validate(validatedQuestions, config).getOrElse { throw it }
                 val newSession = OIRTestSession(
-                    sessionId = newSessionId(),
+                    sessionId = sessionId,
                     userId = userId, testId = testId,
                     questions = validatedQuestions, answers = emptyMap(),
                     currentQuestionIndex = 0, startTime = Clock.System.now().toEpochMilliseconds(),
-                    timeRemainingSeconds = config.totalTimeMinutes * 60
+                    timeRemainingSeconds = config.totalTimeMinutes * 60,
+                    expiresAt = Clock.System.now().toEpochMilliseconds() + config.totalTimeMinutes * 60_000L
                 )
                 _uiState.update { it.copy(session = newSession) }
                 updateUiFromSession()
@@ -114,6 +125,7 @@ class OIRTestViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                createdSessionId?.let { testSessionRepository.abandonTestSession(it) }
                 logger.e(tag, "Exception loading OIR test", e)
                 _uiState.update { it.copy(isLoading = false, errorType = OIRErrorType.QUESTIONS_UNAVAILABLE) }
             }
@@ -181,7 +193,8 @@ class OIRTestViewModel(
     }
 
     fun submitTest() {
-        _uiState.update { it.copy(isTimerActive = false) }
+        if (_uiState.value.isSubmitting || _uiState.value.isCompleted) return
+        _uiState.update { it.copy(isTimerActive = false, isSubmitting = true) }
         timerJob?.cancel()
         val session = _uiState.value.session ?: run {
             logger.e(tag, "OIR test session null during test submission", null)
@@ -198,6 +211,7 @@ class OIRTestViewModel(
                 _uiState.update {
                     it.copy(
                         session = session.copy(isCompleted = true),
+                        isSubmitting = false,
                         isCompleted = true, sessionId = submissionId,
                         subscriptionType = subscriptionType,
                         testResult = scoreCalculator.calculate(session)
@@ -206,8 +220,9 @@ class OIRTestViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                testSessionRepository.expireTestSession(session.sessionId)
                 logger.e(tag, "OIR test submission failed", e)
-                _uiState.update { it.copy(errorType = OIRErrorType.SUBMIT_FAILED) }
+                _uiState.update { it.copy(isSubmitting = false, errorType = OIRErrorType.SUBMIT_FAILED) }
             }
         }
     }
@@ -217,7 +232,7 @@ class OIRTestViewModel(
         _uiState.update { it.copy(isTimerActive = false, session = session.copy(isPaused = true)) }
         timerJob?.cancel()
         viewModelScope.launch {
-            testSessionRepository.endTestSession(session.sessionId)
+            testSessionRepository.abandonTestSession(session.sessionId)
         }
     }
 
@@ -231,7 +246,12 @@ class OIRTestViewModel(
                 ) {
                     delay(1000)
                     if (!isActive || !_uiState.value.isTimerActive) break
-                    val newTime = _uiState.value.timeRemainingSeconds - 1
+                    val session = _uiState.value.session ?: return@launch
+                    val absoluteRemaining = ((session.expiresAt - Clock.System.now().toEpochMilliseconds()) / 1000L)
+                        .toInt().coerceAtLeast(0)
+                    // The local tick keeps virtual/test clocks deterministic; the absolute
+                    // expiry is the upper bound and prevents background drift extending a test.
+                    val newTime = minOf(_uiState.value.timeRemainingSeconds - 1, absoluteRemaining)
                     _uiState.update { state ->
                         state.copy(timeRemainingSeconds = newTime, session = state.session?.copy(timeRemainingSeconds = newTime))
                     }
@@ -270,8 +290,6 @@ class OIRTestViewModel(
         }
     }
 
-    private fun newSessionId(): String =
-        "oir_${Clock.System.now().toEpochMilliseconds()}_${Random.nextInt(100000, 999999)}"
 
     override fun onCleared() {
         timerJob?.cancel()

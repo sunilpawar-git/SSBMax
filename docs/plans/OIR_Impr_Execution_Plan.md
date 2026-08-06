@@ -1,6 +1,6 @@
 # OIR Improvement Execution Plan
 
-**Status:** Proposed
+**Status:** Phase 3 complete; Phase 4 pending
 **Target branch:** `feature/OIR_Impr_01`
 **Scope:** First-time OIR experience from eligibility check through test completion, result display, and Home dashboard refresh.
 **Source architecture:** `docs/architecture/OIR_Architecture.md`
@@ -246,6 +246,8 @@ Do not proceed if the first-run cache tests are flaky, timing-dependent, or allo
 
 ## 3.1 Design decision
 
+**Implemented decision (preferred durable Firestore session):** OIR creates a durable Firestore session before questions are exposed. Exiting marks it `ABANDONED`; successful submission marks it `SUBMITTED`; expiry is represented by the terminal `EXPIRED` rule state. Resume is intentionally not implemented in this phase, so abandoned/expired sessions are not re-entered.
+
 Choose and document one model:
 
 ### Preferred model: durable Firestore session
@@ -300,6 +302,8 @@ Test:
 ```
 
 Run Firestore rules tests before marking the phase complete.
+
+**Phase 3 implementation checkpoint:** Complete. The OIR flow now uses the persisted session ID for submissions/results, fails closed when session creation fails, uses absolute expiry bounded timer updates, and has explicit active/abandoned/submitted rule transitions. The phase gate and final deep audit are recorded in the implementation handoff, not this plan, so this plan remains the scope SSOT.
 
 ---
 

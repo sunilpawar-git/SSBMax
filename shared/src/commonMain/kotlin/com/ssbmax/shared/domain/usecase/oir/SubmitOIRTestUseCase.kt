@@ -53,8 +53,8 @@ class SubmitOIRTestUseCase constructor(
             )
             submissionRepository.submitOIR(submission, null).getOrThrow()
 
-            // Step 5: End the test session
-            testSessionRepository.endTestSession(session.sessionId)
+            // Step 5: Complete the durable test session
+            testSessionRepository.completeTestSession(session.sessionId).getOrThrow()
 
             // Step 6: Mark served questions as used (best-effort — never fails the submission)
             runCatching {

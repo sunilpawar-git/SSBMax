@@ -15,7 +15,7 @@ import org.junit.Test
 
 /**
  * TDD tests for SubmitOIRTestUseCase.
- * RED phase: all tests fail until the use case is created (Phase 0-B GREEN).
+ * Covers the durable-session completion contract and submission orchestration.
  */
 class SubmitOIRTestUseCaseTest {
 
@@ -72,7 +72,7 @@ class SubmitOIRTestUseCaseTest {
             mockUsageRecorder.recordTestUsage(TestType.OIR, testSession.userId)
             mockDashboardUseCase.invalidateCache(testSession.userId)
             mockSubmissionRepo.submitOIR(any(), null)
-            mockSessionRepo.endTestSession(testSession.sessionId)
+            mockSessionRepo.completeTestSession(testSession.sessionId)
         }
     }
 
