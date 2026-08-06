@@ -246,9 +246,9 @@ jobs:
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY || 'your_api_key_here' }}" >> local.properties
 
       - name: Setup google-services.json
-        if: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
         run: printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
 
       - name: Setup iOS secrets
@@ -257,9 +257,9 @@ jobs:
           cp iosApp/iosApp/GoogleService-Info.plist.example iosApp/iosApp/GoogleService-Info.plist
 
       - name: Setup real GoogleService-Info.plist
-        if: ${{ secrets.IOS_GOOGLE_SERVICES_PLIST != '' }}
         env:
           IOS_GOOGLE_SERVICES_PLIST: ${{ secrets.IOS_GOOGLE_SERVICES_PLIST }}
+        if: ${{ env.IOS_GOOGLE_SERVICES_PLIST != '' }}
         run: printf '%s' "$IOS_GOOGLE_SERVICES_PLIST" > iosApp/iosApp/GoogleService-Info.plist
 
       - name: Run shared's Kotlin/Native tests
