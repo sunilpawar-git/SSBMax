@@ -36,21 +36,21 @@ class BottomChromeInsetContractTest {
     }
 
     @Test
-    fun `app scaffold has one navigation inset boundary`() {
-        val navigationInsetUsages =
-            Regex("WindowInsets\\.navigationBars").findAll(scaffoldSource).count()
-
-        assertEquals(
-            "The current scaffold must reserve navigation space at one outer boundary",
-            1,
-            navigationInsetUsages
+    fun `app scaffold delegates system insets to routed screens`() {
+        assertTrue(
+            "The drawer wrapper must not reserve the navigation-bar inset",
+            !scaffoldSource.contains("WindowInsets.navigationBars")
         )
         assertTrue(
-            "The current scaffold must consume its applied inset before composing routed screens",
-            scaffoldSource.contains(".consumeWindowInsets(paddingValues)")
+            "The drawer wrapper must not consume insets intended for routed screens",
+            !scaffoldSource.contains("consumeWindowInsets")
         )
         assertTrue(
-            "The current scaffold must not contain a hardcoded bottom inset workaround",
+            "The drawer wrapper must use zero content insets",
+            scaffoldSource.contains("WindowInsets(0, 0, 0, 0)")
+        )
+        assertTrue(
+            "The scaffold must not contain a hardcoded bottom inset workaround",
             !Regex("padding\\s*\\(\\s*bottom\\s*=|height\\s*\\([^)]*dp").containsMatchIn(scaffoldSource)
         )
     }
@@ -73,22 +73,23 @@ class BottomChromeInsetContractTest {
     }
 
     @Test
-    fun `only the shared app scaffold owns navigation bar inset APIs`() {
+    fun `no outer app chrome claims the navigation bar inset`() {
         val commonMain = File(projectRoot, "shared/src/commonMain")
-        val insetOwners = commonMain.walkTopDown()
+        val outerInsetClaims = commonMain.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .filter { source ->
                 val text = source.readText()
                 text.contains("WindowInsets.navigationBars") ||
-                    text.contains("navigationBarsPadding()")
+                    text.contains("navigationBarsPadding()") ||
+                    text.contains("consumeWindowInsets")
             }
             .map { it.relativeTo(projectRoot).path.replace(File.separatorChar, '/') }
             .toList()
 
         assertEquals(
-            "Navigation-bar inset APIs must remain centralized in the shared app scaffold",
-            listOf("shared/src/commonMain/kotlin/com/ssbmax/shared/ui/components/SSBMaxAppScaffold.kt"),
-            insetOwners
+            "Without an app-level bottom bar, routed screens must own the navigation-bar inset",
+            emptyList<String>(),
+            outerInsetClaims
         )
     }
 

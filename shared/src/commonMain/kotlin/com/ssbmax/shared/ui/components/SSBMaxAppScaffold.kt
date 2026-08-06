@@ -2,9 +2,7 @@ package com.ssbmax.shared.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -165,25 +163,12 @@ fun SSBMaxAppScaffold(
             }
         }
     ) {
-        // Leaves the status-bar inset unconsumed here (only navigation-bar/
-        // horizontal insets are reserved) so each routed screen's own
-        // Scaffold+TopAppBar -- every one of them has one: StudentHomeScreen,
-        // InstructorHomeScreen, SettingsScreen, SSBOverviewScreen,
-        // TopicScreen, UserProfileScreen -- receives the real top inset and
-        // can paint its TopAppBar's background behind the status bar instead
-        // of this outer Scaffold's default background showing through as a
-        // gap above it. Affects Android and iOS identically since this is
-        // shared/commonMain.
-        // Routed screens use their own Material3 Scaffold, whose default safe-drawing
-        // insets include navigation bars. Marking this outer inset as consumed prevents
-        // those descendants from reserving the same bottom space a second time.
-        Scaffold(contentWindowInsets = WindowInsets.navigationBars) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .consumeWindowInsets(paddingValues)
-            ) {
+        // The drawer wrapper owns no system-bar inset. Each routed screen's own
+        // Material3 Scaffold owns its safe-drawing inset and paints its background
+        // through the status/navigation areas. Reserving the navigation inset here
+        // would shrink every screen and expose this wrapper's background below it.
+        Scaffold(contentWindowInsets = WindowInsets(0, 0, 0, 0)) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 content({ scope.launch { drawerState.open() } })
             }
         }
