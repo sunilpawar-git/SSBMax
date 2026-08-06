@@ -1,9 +1,12 @@
 package com.ssbmax.shared.ui.oir
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,7 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
 import com.ssbmax.shared.domain.model.SubscriptionTier
@@ -35,6 +40,7 @@ import ssbmax.shared.generated.resources.oir_exit
 import ssbmax.shared.generated.resources.oir_exit_message
 import ssbmax.shared.generated.resources.oir_exit_title
 import ssbmax.shared.generated.resources.oir_loading
+import ssbmax.shared.generated.resources.oir_retry
 
 /**
  * KMP port of `app/.../ui/tests/oir/OIRTestScreen.kt`. Delegates rendering
@@ -81,6 +87,19 @@ fun OIRTestScreen(
         return
     }
 
+    if (uiState.isLoading) {
+        OIRTestMessage(message = stringResource(Res.string.oir_loading))
+        return
+    }
+    uiState.errorType?.let { errorType ->
+        OIRTestMessage(
+            message = stringResource(errorMessageFor(errorType)),
+            actionLabel = stringResource(Res.string.oir_retry),
+            onAction = { viewModel.loadTest() }
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             OIRTestTopBar(
@@ -103,8 +122,6 @@ fun OIRTestScreen(
     ) { paddingValues ->
         Box(modifier = modifier.fillMaxSize().padding(paddingValues)) {
             when {
-                uiState.isLoading -> Text(stringResource(Res.string.oir_loading))
-                uiState.errorType != null -> Text(stringResource(errorMessageFor(uiState.errorType!!)))
                 uiState.currentQuestion != null -> OIRQuestionView(
                     question = uiState.currentQuestion!!,
                     selectedOptionIds = uiState.selectedOptionIds,
@@ -125,6 +142,26 @@ fun OIRTestScreen(
             },
             onDismiss = { showExitDialog = false }
         )
+    }
+}
+
+@Composable
+private fun OIRTestMessage(
+    message: String,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Text(message)
+            if (actionLabel != null && onAction != null) {
+                Button(onClick = onAction) { Text(actionLabel) }
+            }
+        }
     }
 }
 

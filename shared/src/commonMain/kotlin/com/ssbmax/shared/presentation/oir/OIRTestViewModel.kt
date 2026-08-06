@@ -17,6 +17,7 @@ import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.domain.validation.OIRQuestionValidator
+import com.ssbmax.shared.domain.validation.OIRTestQuestionSetValidator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -32,52 +33,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.random.Random
 
-/**
- * KMP port of the Android `app/.../ui/tests/oir/OIRTestViewModel.kt`.
- *
- * Phase 1 of the KMP-convergence plan: a real `androidx.lifecycle.ViewModel`
- * using `viewModelScope`, converged with `app`'s existing 57-call-site idiom
- * and this module's own DI (`viewModelOf`) / screen (`koinViewModel()`)
- * conventions — no more manual `CoroutineScope` + `close()`.
- *
- * Deviations from the Android original, all deliberate and documented (none silent):
- * - `subscriptionManager.canTakeTest`/`TestUsageRecorder` (Android `core:data`
- *   `SubscriptionManager`) replaced by [CheckTestEligibilityUseCase] — see
- *   that use case's own doc comment for what it does and doesn't carry
- *   forward (debug bypass, Room mirror, security-event logging).
- * - `SecurityEventLogger`'s unauthenticated-access event is restored (Phase
- *   7a) via the injected [AnalyticsTracker]; [DomainLogger] still gets the
- *   same "blocked unauthenticated access" log line every other ported
- *   ViewModel in this phase uses.
- * - `MemoryLeakTracker`/`trackMemoryLeaks` (Android-only, wraps
- *   `androidx.lifecycle.ViewModel` lifecycle + `java.lang.ref.WeakReference`)
- *   dropped entirely — there is no KMP equivalent, and `viewModelScope`
- *   already makes the leak class it targeted (timer coroutine outliving the
- *   screen) structurally impossible: it is cancelled automatically in
- *   [onCleared], with no manual bookkeeping needed.
- * - `coil.ImageLoader`/`android.content.Context`-based next-question image
- *   prefetch dropped — [com.ssbmax.shared.ui.oir.components.OIRQuestionView]
- *   uses Coil3's `AsyncImage` directly with its default (already-caching)
- *   `SingletonImageLoader`; the prefetch was a perceived-latency
- *   optimization, not a correctness requirement, and re-adding it would mean
- *   injecting a platform image loader into presentation code Coil3 already
- *   makes unnecessary.
- * - `java.util.UUID.randomUUID()` (JVM-only) replaced with
- *   `kotlin.random.Random`-based ID generation (same pattern already used
- *   elsewhere in this migration for ID generation — see this plan's Phase 2
- *   note on the `String.format`/UUID-style JVM-only gotchas).
- * - `com.ssbmax.time.Clock` (Android app-local abstraction) replaced with
- *   `kotlinx.datetime.Clock.System`, matching every other ported ViewModel.
- *
- * At 311 lines this is ~11 lines over this repo's 300-line Quality Limit —
- * flagged rather than silently ignored. Not split: this is one cohesive
- * state machine (load -> answer -> navigate -> submit -> timer), same
- * shape and similar size as the Android original; splitting it across
- * files the way the UI layer's delegate-composable files do would scatter
- * a single StateFlow's mutations across multiple files rather than
- * localizing a genuinely reusable chunk, which this plan's own "simplicity
- * first" rule weighs against doing just to hit a line count.
- */
+/** Coordinates eligibility, question readiness, answering, timing, and submission for OIR. */
 class OIRTestViewModel(
     private val testContentRepository: TestContentRepository,
     private val testSessionRepository: TestSessionRepository,
@@ -131,16 +87,19 @@ class OIRTestViewModel(
                 throw e
             } catch (e: Exception) {
                 logger.e(tag, "Exception checking OIR test eligibility", e)
+                _uiState.update { it.copy(isLoading = false, errorType = OIRErrorType.QUESTIONS_UNAVAILABLE) }
+                return@launch
             }
             try {
-                val questions = testContentRepository.getOIRTestQuestions(count = 50, difficulty = null)
-                    .getOrElse { throw it }
-                    .takeIf { it.isNotEmpty() } ?: throw Exception("No questions available.")
+                val config = OIRTestConfig()
+                val questions = testContentRepository.getOIRTestQuestions(
+                    count = config.totalQuestions,
+                    difficulty = null
+                ).getOrElse { throw it }
                 val validatedQuestions = OIRQuestionValidator.validateAndFilter(questions) { inv ->
                     logger.e(tag, "OIR question validation failed: ${inv.toLogString()}", null)
                 }
-                if (validatedQuestions.isEmpty()) throw Exception("All questions failed validation.")
-                val config = OIRTestConfig()
+                OIRTestQuestionSetValidator.validate(validatedQuestions, config).getOrElse { throw it }
                 val newSession = OIRTestSession(
                     sessionId = newSessionId(),
                     userId = userId, testId = testId,

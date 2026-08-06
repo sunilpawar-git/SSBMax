@@ -36,6 +36,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.math.absoluteValue
 
 /**
  * Characterization test, written before converting [OIRTestViewModel] to
@@ -61,7 +62,7 @@ class OIRTestViewModelTest {
         authRepository = FakeAuthRepository(initialUser = testUser())
         subscriptionRepository = FakeSubscriptionRepository()
         testContentRepository = FakeTestContentRepository().apply {
-            oirQuestionsResult = Result.success(listOf(question("q1"), question("q2")))
+            oirQuestionsResult = Result.success(testQuestionSet())
         }
         testSessionRepository = FakeTestSessionRepository()
         submissionRepository = FakeSubmissionRepository()
@@ -72,10 +73,18 @@ class OIRTestViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun question(id: String) = OIRQuestion(
+    private fun testQuestionSet(): List<OIRQuestion> = buildList {
+        add(question("q1", OIRQuestionType.VERBAL_REASONING))
+        add(question("q2", OIRQuestionType.VERBAL_REASONING))
+        repeat(18) { add(question("verbal-$it", OIRQuestionType.VERBAL_REASONING)) }
+        repeat(20) { add(question("non-verbal-$it", OIRQuestionType.NON_VERBAL_REASONING)) }
+        repeat(10) { add(question("numerical-$it", OIRQuestionType.NUMERICAL_ABILITY)) }
+    }
+
+    private fun question(id: String, type: OIRQuestionType) = OIRQuestion(
         id = id,
-        questionNumber = 1,
-        type = OIRQuestionType.NON_VERBAL_REASONING,
+        questionNumber = id.hashCode().absoluteValue,
+        type = type,
         questionText = "Which shape completes the sequence?",
         options = listOf(
             OIROption("opt_a", "Circle"),
@@ -129,6 +138,29 @@ class OIRTestViewModelTest {
     }
 
     @Test
+    fun `eligibility failure blocks question loading`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.failure(IllegalStateException("eligibility unavailable"))
+
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(OIRErrorType.QUESTIONS_UNAVAILABLE, viewModel.uiState.value.errorType)
+        assertEquals(null, viewModel.uiState.value.currentQuestion)
+        assertEquals(0, testContentRepository.getOIRQuestionsCallCount)
+    }
+
+    @Test
+    fun `partial question set is rejected before test starts`() = runTest(testDispatcher) {
+        testContentRepository.oirQuestionsResult = Result.success(testQuestionSet().take(49))
+
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(OIRErrorType.QUESTIONS_UNAVAILABLE, viewModel.uiState.value.errorType)
+        assertEquals(null, viewModel.uiState.value.currentQuestion)
+    }
+
+    @Test
     fun `limit reached surfaces subscription details without loading questions`() = runTest(testDispatcher) {
         subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
         subscriptionRepository.monthlyUsageResult =
@@ -153,7 +185,7 @@ class OIRTestViewModelTest {
         val state = viewModel.uiState.value
         assertEquals(false, state.isLoading)
         assertNotNull(state.currentQuestion)
-        assertEquals(2, state.totalQuestions)
+        assertEquals(50, state.totalQuestions)
         assertTrue(state.isTimerActive)
     }
 

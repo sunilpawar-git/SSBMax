@@ -80,13 +80,17 @@ class FakeSubscriptionRepository : SubscriptionRepository {
 
 class FakeTestContentRepository : TestContentRepository {
     var oirQuestionsResult: Result<List<OIRQuestion>> = Result.success(emptyList())
+    var getOIRQuestionsCallCount = 0
     var ppdtQuestionResult: Result<PPDTQuestion> = Result.failure(UnsupportedOperationException("not stubbed"))
     var gpeQuestionsResult: Result<List<com.ssbmax.shared.domain.model.GPEQuestion>> = Result.success(emptyList())
     var getRandomLecturetteTopicsResult: Result<List<String>> = Result.success(emptyList())
     var clearCacheCalls = 0
 
     override suspend fun getOIRQuestions(testId: String) = oirQuestionsResult
-    override suspend fun getOIRTestQuestions(count: Int, difficulty: String?) = oirQuestionsResult
+    override suspend fun getOIRTestQuestions(count: Int, difficulty: String?): Result<List<OIRQuestion>> {
+        getOIRQuestionsCallCount++
+        return oirQuestionsResult
+    }
     override suspend fun initializeOIRCache(): Result<Unit> = Result.success(Unit)
     override suspend fun getOIRCacheStatus(): CacheStatus = CacheStatus(
         cachedQuestions = 0, batchesDownloaded = 0, lastSyncTime = null,
