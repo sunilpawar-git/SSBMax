@@ -16,8 +16,8 @@ import com.ssbmax.shared.ui.submissions.SubmissionsListScreen
 
 fun NavGraphBuilder.submissionsResultsGraph(navController: NavHostController) {
     // Join Batch (KMP-convergence Phase 3a, row #11) -- `batch/join` was
-    // unregistered in both the Android and shared graphs, yet both drawers
-    // (`SSBMaxScaffold.kt`/`SSBMaxAppScaffold.kt`) navigate to it -- a crash
+    // unregistered in both the Android and shared graphs, yet the shared drawer
+    // (`SSBMaxAppScaffold.kt`) navigates to it -- a crash
     // on both platforms today. No `JoinBatchScreen` exists yet on either
     // platform (this is a real feature gap, not a KMP-port regression), so
     // this registers the honest placeholder rather than inventing new scope.

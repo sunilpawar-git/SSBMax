@@ -81,19 +81,16 @@ import androidx.navigation.compose.rememberNavController
  * `app`-only graph's source files are unreached but not yet deleted — that's
  * Phase 6a's job.
  *
- * Nav chrome (drawer + bottom nav bar): this `NavHost` itself stays
- * chrome-agnostic (exactly the composable destination graph, as before) --
- * the persistent drawer/bottom-nav UI wrapping it lives one level up, in
- * [com.ssbmax.shared.ui.components.SSBMaxAppScaffold] (ported from
- * `app/.../ui/components/SSBMaxScaffold.kt`), which owns the
+ * Nav chrome (drawer): this `NavHost` itself stays chrome-agnostic (exactly
+ * the composable destination graph, as before) -- the persistent drawer
+ * wrapping it lives one level up, in
+ * [com.ssbmax.shared.ui.components.SSBMaxAppScaffold], which owns the
  * `NavHostController` passed to this composable and threads a real
  * [onOpenDrawer] callback down into the two home screens' `onOpenDrawer`
  * parameter (previously both routed to the honest [NotYetPortedScreen]
  * placeholder -- now they open the real drawer). See [MainViewController]
  * for how the two compose together on iOS; on Android, [SSBMaxRoot] wraps
- * this same `SSBMaxAppScaffold`/`SSBMaxNavHost` pair since Phase 5's
- * cutover -- `app`'s own `SSBMaxScaffold`/`SSBMaxNavGraph` are dead code,
- * pending Phase 6a's deletion.
+ * this same `SSBMaxAppScaffold`/`SSBMaxNavHost` pair as the production graph.
  *
  * Split into per-vertical `*Graph.kt` `NavGraphBuilder` extensions (this
  * session) to bring this file back under the repo's 300-line Quality Limit

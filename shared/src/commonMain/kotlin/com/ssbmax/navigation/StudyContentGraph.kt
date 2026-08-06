@@ -27,12 +27,9 @@ fun NavGraphBuilder.studyContentGraph(navController: NavHostController) {
         )
     }
 
-    // Student Study (KMP-convergence Phase 3a, row #9) -- a declared
-    // `BottomNavItem` (`student/study`) that, before this fix, was
-    // Android-only: `StudentNavGraph.kt`'s own registration renders the same
-    // `StudyMaterialsScreen` as `StudyMaterialsList` above, just reached from
-    // the bottom nav bar rather than Student Home's "Study" quick action.
-    // Same no-op rationale for onNavigateToSearch/onNavigateToBookmarks.
+    // Student Study (KMP-convergence Phase 3a, row #9) -- the shared drawer
+    // reaches the same `StudyMaterialsScreen` as Student Home's "Study" quick
+    // action. Same no-op rationale for onNavigateToSearch/onNavigateToBookmarks.
     composable<SSBMaxDestinations.StudentStudy> {
         StudyMaterialsScreen(
             onNavigateToTopic = { topicId ->

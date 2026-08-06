@@ -35,29 +35,21 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * KMP port of the Android `app/.../ui/components/SSBMaxScaffold.kt` — the
- * app-wide chrome (nav drawer + bottom nav bar) wrapping every authenticated
- * screen in [com.ssbmax.navigation.SSBMaxNavHost]. This is the structural
- * gap named at the top of Phase 5's progress notes ("nav drawer + bottom
- * nav bar not ported") -- every screen already existed and was individually
- * reachable, but nothing let a logged-in user navigate BETWEEN them via
- * persistent chrome the way the Android app does. This closes that gap for
- * the routes ported into `shared/commonMain/ui` so far.
+ * KMP port of the Android app scaffold — the app-wide navigation drawer
+ * wrapping every authenticated screen in [com.ssbmax.navigation.SSBMaxNavHost].
+ * The drawer is the product's persistent navigation chrome; test-specific tabs
+ * remain owned by their individual screens.
  *
- * Deviations from the Android original, named explicitly:
- * - The Android `SSBMaxScaffold` takes a `user: SSBMaxUser` parameter
+ * Deviations from the pre-KMP Android scaffold, named explicitly:
+ * - The Android scaffold takes a `user: SSBMaxUser` parameter
  *   (sourced from `app`'s own `AppViewModel`, an `androidx.lifecycle.ViewModel`
  *   not available in `commonMain`). This port reads [AuthRepository.currentUser]
  *   directly instead -- one fewer indirection, same data, and consistent with
  *   this phase's existing pattern of injecting repositories/plain-class
  *   ViewModels straight into `commonMain` screens via `koinInject()`.
- * - No app-level bottom navigation bar, matching the Android original: its
- *   `shouldShowBottomBar` is hardcoded `return false`, and that is a product
- *   decision, not an oversight -- the drawer is this app's primary navigation,
- *   and the only bottom navigation that exists is `TopicScreen`'s own internal
- *   tab row. An earlier revision of this port "made the bottom bar real" for
- *   routes matching a registered `BottomNavItem`; that shipped chrome on iOS
- *   the Android app has never shown, so it is reverted here.
+ * - There is no app-level bottom navigation bar. This is a product decision:
+ *   the drawer is the primary navigation, while `TopicScreen`'s tab row and
+ *   test-specific bottom controls remain local to their owning screens.
  * - Sign-out navigates via `popUpTo(0) { inclusive = true }` to
  *   [SSBMaxDestinations.Login], matching the Android original's own
  *   `onSignOut` callback shape exactly.

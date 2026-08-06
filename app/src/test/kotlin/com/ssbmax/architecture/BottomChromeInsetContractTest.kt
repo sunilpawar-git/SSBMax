@@ -73,6 +73,47 @@ class BottomChromeInsetContractTest {
     }
 
     @Test
+    fun `only the shared app scaffold owns navigation bar inset APIs`() {
+        val commonMain = File(projectRoot, "shared/src/commonMain")
+        val insetOwners = commonMain.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filter { source ->
+                val text = source.readText()
+                text.contains("WindowInsets.navigationBars") ||
+                    text.contains("navigationBarsPadding()")
+            }
+            .map { it.relativeTo(projectRoot).path.replace(File.separatorChar, '/') }
+            .toList()
+
+        assertEquals(
+            "Navigation-bar inset APIs must remain centralized in the shared app scaffold",
+            listOf("shared/src/commonMain/kotlin/com/ssbmax/shared/ui/components/SSBMaxAppScaffold.kt"),
+            insetOwners
+        )
+    }
+
+    @Test
+    fun `legacy app-level bottom navigation scaffolding is absent`() {
+        val commonMain = File(projectRoot, "shared/src/commonMain")
+        val legacyBottomNavDeclarations = commonMain.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filter { source -> source.readText().contains("sealed class BottomNavItem") }
+            .toList()
+        val legacyAndroidScaffolds = commonMain.walkTopDown()
+            .filter { it.isFile && it.name == "SSBMaxScaffold.kt" }
+            .toList()
+
+        assertTrue(
+            "The unused BottomNavItem model must not be reintroduced without a real app chrome owner",
+            legacyBottomNavDeclarations.isEmpty()
+        )
+        assertTrue(
+            "The deleted Android-only app scaffold must not return to shared commonMain",
+            legacyAndroidScaffolds.isEmpty()
+        )
+    }
+
+    @Test
     fun `platform hosts remain edge to edge`() {
         val activity = readSource("app/src/main/kotlin/com/ssbmax/MainActivity.kt")
         val iosApp = readSource("iosApp/iosApp/iosAppApp.swift")

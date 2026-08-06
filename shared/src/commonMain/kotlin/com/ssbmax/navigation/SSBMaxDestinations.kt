@@ -458,31 +458,9 @@ sealed class DrawerItem(
 }
 
 /**
- * Bottom navigation items. `titleRes` — see [DrawerItem]'s class doc for why
- * this is a [StringResource] handle rather than a hardcoded `String` now.
- */
-sealed class BottomNavItem(
-    val route: String,
-    val titleRes: StringResource
-) {
-    // Student Bottom Nav
-    data object StudentHome : BottomNavItem(SSBMaxDestinations.StudentHome.route, Res.string.nav_home)
-    data object StudentTests : BottomNavItem(SSBMaxDestinations.StudentTests.route, Res.string.nav_tests)
-    data object StudentSubmissions : BottomNavItem(SSBMaxDestinations.StudentSubmissions.route, Res.string.nav_results)
-    data object StudentStudy : BottomNavItem(SSBMaxDestinations.StudentStudy.route, Res.string.nav_study)
-    data object StudentProfile : BottomNavItem(SSBMaxDestinations.StudentProfile.route, Res.string.nav_profile)
-
-    // Instructor Bottom Nav
-    data object InstructorHome : BottomNavItem(SSBMaxDestinations.InstructorHome.route, Res.string.nav_home)
-    data object InstructorStudents : BottomNavItem(SSBMaxDestinations.InstructorStudents.route, Res.string.nav_students)
-    data object InstructorGrading : BottomNavItem(SSBMaxDestinations.InstructorGrading.route, Res.string.nav_grading)
-    data object InstructorAnalytics : BottomNavItem(SSBMaxDestinations.InstructorAnalytics.route, Res.string.nav_analytics)
-}
-
-/**
- * Screens that render full-bleed with no drawer/bottom-nav chrome
- * ([com.ssbmax.shared.ui.components.SSBMaxAppScaffold]'s `showChrome`
- * exclusion list) and that a cold-start deep link must wait to pass before
+ * Screens that render full-bleed without the shared navigation drawer
+ * ([com.ssbmax.shared.ui.components.SSBMaxAppScaffold]'s auth-route
+ * exclusion) and that a cold-start deep link must wait to pass before
  * navigating ([com.ssbmax.shared.ui.DeepLinkEffect]'s auth deferral) --
  * one definition shared by both rather than two hand-kept lists agreeing by
  * convention (KMP-convergence Phase 4).
