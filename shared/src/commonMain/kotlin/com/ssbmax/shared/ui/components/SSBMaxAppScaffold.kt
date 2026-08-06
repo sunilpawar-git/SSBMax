@@ -2,6 +2,7 @@ package com.ssbmax.shared.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -181,8 +182,20 @@ fun SSBMaxAppScaffold(
         // of this outer Scaffold's default background showing through as a
         // gap above it. Affects Android and iOS identically since this is
         // shared/commonMain.
+        //
+        // consumeWindowInsets(paddingValues) is required below: each routed
+        // screen's own Scaffold has no contentWindowInsets override, so it
+        // falls back to Material3's default (WindowInsets.safeDrawing, which
+        // includes navigationBars) and would otherwise re-reserve the same
+        // navigation-bar height a second time, producing a blank gap at the
+        // bottom of every screen on both platforms.
         Scaffold(contentWindowInsets = WindowInsets.navigationBars) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .consumeWindowInsets(paddingValues)
+            ) {
                 content({ scope.launch { drawerState.open() } })
             }
         }
