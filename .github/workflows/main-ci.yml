@@ -6,7 +6,7 @@ name: SSBMax CI
 on:
   pull_request:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/*', 'feature/**', 'fix/*', 'fix/**', 'tech-debt/*', 'tech-debt/**', PsyTests ]
   merge_group:
   workflow_dispatch:
 
@@ -372,7 +372,12 @@ jobs:
           echo "detekt:             ${{ needs.detekt.result }}"
           echo "unit-tests:         ${{ needs.unit-tests.result }}"
           echo "build:              ${{ needs.build.result }}"
-          if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
+          if [ "${{ needs.wrapper-validation.result }}" != "success" ] || \
+             [ "${{ needs.security-scan.result }}" != "success" ] || \
+             [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.detekt.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
             echo "❌ One or more CI jobs failed."
             exit 1
           fi
