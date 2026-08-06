@@ -86,7 +86,7 @@ class StudentProfileViewModelTest {
     }
 
     @Test
-    fun `override change alone, with no auth change, triggers a refetch`() = runTest(testDispatcher) {
+    fun `override change alone with no auth change triggers a refetch`() = runTest(testDispatcher) {
         subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
         val viewModel = buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -100,7 +100,7 @@ class StudentProfileViewModelTest {
     }
 
     @Test
-    fun `auth-state change alone, with no override, triggers a refetch`() = runTest(testDispatcher) {
+    fun `auth-state change alone with no override triggers a refetch`() = runTest(testDispatcher) {
         subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
         val viewModel = buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()

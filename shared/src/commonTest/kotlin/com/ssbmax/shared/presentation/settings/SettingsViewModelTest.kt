@@ -104,7 +104,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `override change alone, with no auth change, triggers a tier refetch`() = runTest(testDispatcher) {
+    fun `override change alone with no auth change triggers a tier refetch`() = runTest(testDispatcher) {
         subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
         val viewModel = buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -163,7 +163,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `one override toggle produces exactly one tier fetch, not a duplicate or race`() = runTest(testDispatcher) {
+    fun `one override toggle produces exactly one tier fetch not a duplicate or race`() = runTest(testDispatcher) {
         val viewModel = buildViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
         val callsAfterInit = subscriptionRepository.getSubscriptionTierCallCount
