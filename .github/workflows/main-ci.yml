@@ -270,7 +270,7 @@ jobs:
 
       - name: Link shared's debug framework
         run: |
-          ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 \
+          ./gradlew :data-firebase:linkDebugFrameworkIosSimulatorArm64 \
             --build-cache \
             --stacktrace
 
