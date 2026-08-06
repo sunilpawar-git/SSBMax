@@ -4,12 +4,14 @@ import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
+    private val developerSettings: DeveloperSettings,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -41,7 +44,7 @@ class SettingsViewModel(
 
     private fun observeSubscriptionTier() {
         viewModelScope.launch {
-            observeCurrentUser()
+            combine(observeCurrentUser(), developerSettings.overrideFlow) { user, _ -> user }
                 .catch { error ->
                     logger.e(TAG, "Failed to observe subscription tier", error)
                     _uiState.update { it.copy(error = "Failed to load subscription") }

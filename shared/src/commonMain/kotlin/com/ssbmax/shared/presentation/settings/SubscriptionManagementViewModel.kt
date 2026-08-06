@@ -199,7 +199,9 @@ enum class SubscriptionTierModel(
         piqTestLimit = -1,
         sdTestLimit = -1,
         gtoTestLimit = -1,
-        interviewTestLimit = -1,
+        // 3/month, not unlimited -- matches SubscriptionLimits's "Interview" row (the enforcement
+        // SSOT, dev-subscription-override plan Phase 2), which this UI-only enum had drifted from.
+        interviewTestLimit = 3,
         features = listOf(
             "Unlimited all tests",
             "AI-powered feedback",

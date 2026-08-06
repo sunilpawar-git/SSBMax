@@ -1,7 +1,5 @@
 package com.ssbmax.shared.domain.model
 
-import kotlin.time.Clock
-
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -28,34 +26,6 @@ class SubscriptionTierTest {
 
         assertEquals(999, SubscriptionTier.PRO.yearlyPriceInt)
         assertEquals(9999, SubscriptionTier.PREMIUM.yearlyPriceInt)
-    }
-
-    @Test
-    fun user_subscription_expiry_and_renewal_flags() {
-        val now = Clock.System.now().toEpochMilliseconds()
-        val expired = UserSubscription(
-            userId = "u1",
-            tier = SubscriptionTier.PRO,
-            expiryDate = now - 1_000L
-        )
-        assertTrue(expired.isExpired)
-        assertTrue(expired.needsRenewal)
-
-        val renewSoon = UserSubscription(
-            userId = "u1",
-            tier = SubscriptionTier.PRO,
-            expiryDate = now + 3 * 24 * 60 * 60 * 1_000L // 3 days
-        )
-        assertFalse(renewSoon.isExpired)
-        assertTrue(renewSoon.needsRenewal)
-
-        val longTerm = UserSubscription(
-            userId = "u1",
-            tier = SubscriptionTier.PREMIUM,
-            expiryDate = now + 10 * 24 * 60 * 60 * 1_000L // 10 days
-        )
-        assertFalse(longTerm.isExpired)
-        assertFalse(longTerm.needsRenewal)
     }
 
     @Test

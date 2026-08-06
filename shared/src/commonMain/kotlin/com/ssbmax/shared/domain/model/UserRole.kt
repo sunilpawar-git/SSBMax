@@ -26,7 +26,6 @@ data class SSBMaxUser(
     val displayName: String,
     val photoUrl: String? = null,
     val role: UserRole,
-    val subscription: UserSubscription? = null,
     val studentProfile: StudentProfile? = null,
     val instructorProfile: InstructorProfile? = null,
     val createdAt: Long = Clock.System.now().toEpochMilliseconds(),

@@ -4,11 +4,14 @@ package com.ssbmax.shared.presentation.profile
 
 import com.ssbmax.shared.domain.model.EntryType
 import com.ssbmax.shared.domain.model.Gender
+import com.ssbmax.shared.domain.model.SubscriptionOverride
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserProfile
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import com.ssbmax.shared.presentation.testing.FakeAuthRepository
 import com.ssbmax.shared.presentation.testing.FakeLogger
+import com.ssbmax.shared.presentation.testing.FakeSettings
 import com.ssbmax.shared.presentation.testing.FakeSubscriptionRepository
 import com.ssbmax.shared.presentation.testing.FakeUserProfileRepository
 import com.ssbmax.shared.presentation.testing.testUser
@@ -38,6 +41,7 @@ class UserProfileViewModelTest {
     private lateinit var userProfileRepository: FakeUserProfileRepository
     private lateinit var authRepository: FakeAuthRepository
     private lateinit var subscriptionRepository: FakeSubscriptionRepository
+    private lateinit var developerSettings: DeveloperSettings
 
     @BeforeTest
     fun setUp() {
@@ -45,6 +49,7 @@ class UserProfileViewModelTest {
         userProfileRepository = FakeUserProfileRepository(initialProfile = profile())
         authRepository = FakeAuthRepository(initialUser = testUser())
         subscriptionRepository = FakeSubscriptionRepository()
+        developerSettings = DeveloperSettings(FakeSettings())
     }
 
     @AfterTest
@@ -61,6 +66,7 @@ class UserProfileViewModelTest {
         userProfileRepository = userProfileRepository,
         authRepository = authRepository,
         getSubscriptionTier = GetSubscriptionTierUseCase(subscriptionRepository),
+        developerSettings = developerSettings,
         logger = FakeLogger()
     )
 
@@ -85,5 +91,19 @@ class UserProfileViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(null, viewModel.uiState.value.subscriptionTier)
+    }
+
+    @Test
+    fun `override change alone updates subscriptionTier with no auth-state change`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.FREE)
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(SubscriptionTier.FREE, viewModel.uiState.value.subscriptionTier)
+
+        subscriptionRepository.tierResult = Result.success(SubscriptionTier.PREMIUM)
+        developerSettings.setOverride(SubscriptionOverride.FORCE_PREMIUM)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(SubscriptionTier.PREMIUM, viewModel.uiState.value.subscriptionTier)
     }
 }

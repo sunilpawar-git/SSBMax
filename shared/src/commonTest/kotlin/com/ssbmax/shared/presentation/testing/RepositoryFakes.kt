@@ -68,8 +68,12 @@ class FakeSubscriptionRepository : SubscriptionRepository {
     var tierResult: Result<SubscriptionTier> = Result.success(SubscriptionTier.FREE)
     var monthlyUsageResult: Result<Map<String, UsageInfo>> = Result.success(emptyMap())
     var updateTierResult: Result<Unit> = Result.success(Unit)
+    var getSubscriptionTierCallCount = 0
 
-    override suspend fun getSubscriptionTier(userId: String) = tierResult
+    override suspend fun getSubscriptionTier(userId: String): Result<SubscriptionTier> {
+        getSubscriptionTierCallCount++
+        return tierResult
+    }
     override suspend fun getMonthlyUsage(userId: String, month: String) = monthlyUsageResult
     override suspend fun updateSubscriptionTier(userId: String, tier: SubscriptionTier) = updateTierResult
 }

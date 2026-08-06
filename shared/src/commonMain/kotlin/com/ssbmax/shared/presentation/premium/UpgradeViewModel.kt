@@ -1,16 +1,18 @@
 package com.ssbmax.shared.presentation.premium
 
 import com.ssbmax.shared.domain.model.BillingCycle
+import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.usecase.auth.ObserveCurrentUserUseCase
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -51,6 +53,7 @@ import kotlinx.coroutines.launch
 class UpgradeViewModel(
     private val observeCurrentUser: ObserveCurrentUserUseCase,
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
+    private val developerSettings: DeveloperSettings,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UpgradeUiState())
@@ -61,32 +64,36 @@ class UpgradeViewModel(
     }
 
     init {
-        loadCurrentSubscription()
+        observeCurrentSubscription()
         loadAvailablePlans()
     }
 
-    private fun loadCurrentSubscription() {
+    private fun observeCurrentSubscription() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                val currentUser = observeCurrentUser().first()
-                if (currentUser == null) {
-                    logger.w(TAG, "No user logged in, defaulting to FREE tier")
-                    _uiState.update { it.copy(currentTier = SubscriptionTier.FREE, isLoading = false) }
-                    return@launch
-                }
+            combine(observeCurrentUser(), developerSettings.overrideFlow) { user, _ -> user }
+                .collect { user -> loadCurrentSubscriptionFor(user) }
+        }
+    }
 
-                val tierResult = getSubscriptionTier(currentUser.id)
-                val tier = tierResult.getOrElse {
-                    logger.e(TAG, "Error loading subscription tier", it)
-                    SubscriptionTier.FREE
-                }
-
-                _uiState.update { it.copy(currentTier = tier, isLoading = false) }
-            } catch (e: Exception) {
-                logger.e(TAG, "Error in loadCurrentSubscription", e)
+    private suspend fun loadCurrentSubscriptionFor(currentUser: SSBMaxUser?) {
+        _uiState.update { it.copy(isLoading = true) }
+        try {
+            if (currentUser == null) {
+                logger.w(TAG, "No user logged in, defaulting to FREE tier")
                 _uiState.update { it.copy(currentTier = SubscriptionTier.FREE, isLoading = false) }
+                return
             }
+
+            val tierResult = getSubscriptionTier(currentUser.id)
+            val tier = tierResult.getOrElse {
+                logger.e(TAG, "Error loading subscription tier", it)
+                SubscriptionTier.FREE
+            }
+
+            _uiState.update { it.copy(currentTier = tier, isLoading = false) }
+        } catch (e: Exception) {
+            logger.e(TAG, "Error in loadCurrentSubscription", e)
+            _uiState.update { it.copy(currentTier = SubscriptionTier.FREE, isLoading = false) }
         }
     }
 

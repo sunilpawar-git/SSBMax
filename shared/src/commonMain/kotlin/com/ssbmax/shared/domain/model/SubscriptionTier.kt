@@ -1,7 +1,5 @@
 package com.ssbmax.shared.domain.model
 
-import kotlin.time.Clock
-
 /**
  * Subscription tiers available in SSBMax
  * IMPORTANT: This is the SINGLE SOURCE OF TRUTH for pricing
@@ -141,35 +139,6 @@ enum class SubscriptionTier {
                 "Lifetime access to materials"
             )
         }
-}
-
-/**
- * User subscription information
- */
-data class UserSubscription(
-    val userId: String,
-    val tier: SubscriptionTier,
-    val subscriptionId: String? = null,
-    val startDate: Long = Clock.System.now().toEpochMilliseconds(),
-    val expiryDate: Long? = null,
-    val autoRenew: Boolean = false,
-    val isActive: Boolean = true,
-    val billingCycle: BillingCycle = BillingCycle.MONTHLY
-) {
-    /**
-     * Check if subscription is expired
-     */
-    val isExpired: Boolean
-        get() = expiryDate?.let { it < Clock.System.now().toEpochMilliseconds() } ?: false
-    
-    /**
-     * Check if subscription needs renewal soon (within 7 days)
-     */
-    val needsRenewal: Boolean
-        get() = expiryDate?.let {
-            val daysUntilExpiry = (it - Clock.System.now().toEpochMilliseconds()) / (1000 * 60 * 60 * 24)
-            daysUntilExpiry in 0..7
-        } ?: false
 }
 
 /**

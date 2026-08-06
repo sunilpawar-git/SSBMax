@@ -8,11 +8,13 @@ import com.ssbmax.shared.domain.repository.AuthRepository
 import com.ssbmax.shared.domain.repository.UserProfileRepository
 import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.DomainLogger
+import com.ssbmax.shared.platform.settings.DeveloperSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -41,6 +43,7 @@ class UserProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val authRepository: AuthRepository,
     private val getSubscriptionTier: GetSubscriptionTierUseCase,
+    private val developerSettings: DeveloperSettings,
     private val logger: DomainLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -56,7 +59,10 @@ class UserProfileViewModel(
 
     private fun observeAuthState() {
         viewModelScope.launch {
-            authRepository.currentUser.collect { currentUser ->
+            combine(
+                authRepository.currentUser,
+                developerSettings.overrideFlow
+            ) { user, _ -> user }.collect { currentUser ->
                 if (currentUser != null) {
                     loadProfileForUser(currentUser.id)
                 } else {

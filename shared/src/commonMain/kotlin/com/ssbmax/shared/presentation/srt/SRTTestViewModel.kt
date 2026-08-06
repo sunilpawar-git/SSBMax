@@ -19,6 +19,7 @@ import com.ssbmax.shared.domain.usecase.subscription.GetSubscriptionTierUseCase
 import com.ssbmax.shared.domain.util.ObservabilitySeam
 import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.presentation.common.TestError
+import com.ssbmax.shared.presentation.common.runCountdownLoop
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -157,12 +158,7 @@ class SRTTestViewModel(
 
         timerJob = viewModelScope.launch {
             try {
-                while (isActive) {
-                    val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
-                    if (remaining <= 0) break
-                    _uiState.update { it.copy(timeRemaining = remaining) }
-                    delay(500)
-                }
+                runCountdownLoop(endTime, tickMillis = 500L) { remaining -> _uiState.update { it.copy(timeRemaining = remaining) } }
                 if (isActive) {
                     _uiState.update { it.copy(isTimeUp = true) }
                     delay(2000) // grace period -- let the "Time's Up" dialog be seen

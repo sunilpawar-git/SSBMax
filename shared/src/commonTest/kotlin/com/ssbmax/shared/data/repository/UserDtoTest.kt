@@ -1,12 +1,9 @@
 package com.ssbmax.shared.data.repository
 
-import com.ssbmax.shared.domain.model.BillingCycle
 import com.ssbmax.shared.domain.model.InstructorProfile
 import com.ssbmax.shared.domain.model.SSBMaxUser
 import com.ssbmax.shared.domain.model.StudentProfile
-import com.ssbmax.shared.domain.model.SubscriptionTier
 import com.ssbmax.shared.domain.model.UserRole
-import com.ssbmax.shared.domain.model.UserSubscription
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -14,7 +11,7 @@ import kotlin.test.assertEquals
  * Round-trips SSBMaxUser through the Firestore wire DTO. Why it matters: this
  * is the seam GitLiveUserRepository depends on instead of the Android SDK's
  * hand-rolled Map<String, Any?> mapping in FirestoreUserRepository — a silent
- * enum-name or nested-object mismatch here would corrupt user/subscription
+ * enum-name or nested-object mismatch here would corrupt user profile
  * data without the build ever failing.
  */
 class UserDtoTest {
@@ -25,16 +22,6 @@ class UserDtoTest {
         displayName = "Jordan Rivera",
         photoUrl = "https://example.com/pic.jpg",
         role = UserRole.BOTH,
-        subscription = UserSubscription(
-            userId = "user-1",
-            tier = SubscriptionTier.PRO,
-            subscriptionId = "sub-123",
-            startDate = 1_600_000_000_000L,
-            expiryDate = 1_700_000_000_000L,
-            autoRenew = true,
-            isActive = true,
-            billingCycle = BillingCycle.ANNUALLY
-        ),
         studentProfile = StudentProfile(
             userId = "user-1",
             currentBatchIds = listOf("batch-1", "batch-2"),
@@ -66,7 +53,7 @@ class UserDtoTest {
     }
 
     @Test
-    fun `null subscription and instructor profile round-trip as null`() {
+    fun `null instructor profile round-trips as null`() {
         val minimal = SSBMaxUser(
             id = "user-2",
             email = "min@example.com",

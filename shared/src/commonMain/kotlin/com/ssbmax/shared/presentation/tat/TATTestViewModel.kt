@@ -20,11 +20,11 @@ import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.DomainLogger
 import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.presentation.common.TestError
+import com.ssbmax.shared.presentation.common.runCountdownLoop
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -260,12 +260,7 @@ class TATTestViewModel(
         val endTime = Clock.System.now().toEpochMilliseconds() + (viewingTime * 1000L)
         timerJob = viewModelScope.launch {
             try {
-                while (isActive) {
-                    val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
-                    if (remaining <= 0) break
-                    _uiState.update { it.copy(viewingTimeRemaining = remaining) }
-                    delay(200)
-                }
+                runCountdownLoop(endTime) { remaining -> _uiState.update { it.copy(viewingTimeRemaining = remaining) } }
                 if (isActive) {
                     _uiState.update { it.copy(phase = TATPhase.WRITING) }
                     startWritingTimer()
@@ -284,12 +279,7 @@ class TATTestViewModel(
         val endTime = Clock.System.now().toEpochMilliseconds() + (writingTimeSeconds * 1000L)
         timerJob = viewModelScope.launch {
             try {
-                while (isActive) {
-                    val remaining = ((endTime - Clock.System.now().toEpochMilliseconds()) / 1000).toInt()
-                    if (remaining <= 0) break
-                    _uiState.update { it.copy(writingTimeRemaining = remaining) }
-                    delay(200)
-                }
+                runCountdownLoop(endTime) { remaining -> _uiState.update { it.copy(writingTimeRemaining = remaining) } }
                 if (isActive) {
                     saveCurrentStoryToResponses()
                     _uiState.update { it.copy(phase = TATPhase.REVIEW) }

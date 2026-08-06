@@ -34,8 +34,7 @@ class ObserveCurrentUserUseCaseTest {
             id = "user123",
             email = "test@ssbmax.com",
             displayName = "Test User",
-            role = UserRole.STUDENT,
-            subscription = null
+            role = UserRole.STUDENT
         )
         every { authRepository.currentUser } returns MutableStateFlow(mockUser)
         
@@ -69,8 +68,7 @@ class ObserveCurrentUserUseCaseTest {
             id = "user1",
             email = "user1@ssbmax.com",
             displayName = "User One",
-            role = UserRole.STUDENT,
-            subscription = null
+            role = UserRole.STUDENT
         )
         val userFlow = MutableStateFlow<SSBMaxUser?>(user1)
         every { authRepository.currentUser } returns userFlow
@@ -96,8 +94,7 @@ class ObserveCurrentUserUseCaseTest {
             id = "user-premium",
             email = "premium@ssbmax.com",
             displayName = "Premium User",
-            role = UserRole.STUDENT,
-            subscription = null
+            role = UserRole.STUDENT
         )
         every { authRepository.currentUser } returns MutableStateFlow(mockUser)
         
