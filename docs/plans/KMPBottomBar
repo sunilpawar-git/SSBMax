@@ -1,0 +1,433 @@
+Phase 0 — Baseline, Source-of-Truth, and Reproduction
+
+## Goal
+
+Confirm the implementation responsible for the screenshots before changing code.
+
+## Tasks
+
+1. Inspect the current navigation/chrome path:
+   - `SSBMaxRoot`
+   - `SSBMaxAppScaffold`
+   - `SSBMaxNavHost`
+   - Any remaining platform-specific or legacy bottom-navigation implementation.
+2. Verify whether the screenshots come from:
+   - The current `shared/commonMain` scaffold.
+   - A legacy Android implementation.
+   - An iOS-specific or stale build.
+3. Trace all current uses of:
+   - `WindowInsets.navigationBars`
+   - `navigationBarsPadding()`
+   - `Scaffold(contentWindowInsets = ...)`
+   - `enableEdgeToEdge()`
+   - `.ignoresSafeArea()`
+4. Record baseline build and test results.
+5. Reproduce the blank strip on:
+   - iOS simulator with a home indicator.
+   - Android gesture navigation, if available.
+   - Android three-button navigation, if available.
+
+## Tests/verification
+
+Run:
+
+```bash
+./gradlew check
+./gradlew :shared:testDebugUnitTest
+./gradlew :app:testDebugUnitTest
+```
+
+Add or prepare a diagnostic UI/integration test only if an existing test harness can reliably inspect the relevant layout.
+
+## Success criteria
+
+- The actual rendering path is identified.
+- Baseline build status is recorded.
+- Existing failures are documented and classified as pre-existing or task-related.
+- No implementation changes are made until the correct bottom chrome is confirmed.
+
+## Phase 0 handoff summary
+
+At the end of this phase, report:
+
+1. Tech debt incurred.
+2. Exact resolution steps.
+3. Exact build/test commands and results.
+4. Confirmed source file responsible for the blank region.
+
+Do not proceed if the baseline build or tests fail without first determining whether the failure is pre-existing.
+
+---
+
+# Phase 1 — Define the Inset Ownership Contract
+
+## Goal
+
+Establish a clear, testable contract before implementation.
+
+## Contract
+
+For app-level bottom chrome:
+
+1. The bottom chrome surface owns the visual navigation-bar inset.
+2. Its background must extend behind the home indicator/system navigation area.
+3. Navigation icons, labels, and buttons must remain above the safe area.
+4. `WindowInsets.navigationBars` must not be consumed twice.
+5. Screens must not add manual device-specific bottom padding.
+6. The behavior must be shared through `shared/commonMain`.
+7. Full-screen/auth screens remain responsible for their own edge-to-edge behavior.
+8. Test-specific bottom bars remain responsible for their own insets.
+
+## Test design
+
+Before implementation, add or update structural tests where practical:
+
+- Verify the shared app scaffold contains the app-level bottom chrome.
+- Verify bottom chrome uses `navigationBarsPadding()`.
+- Verify no hardcoded bottom inset values exist.
+- Verify no duplicate app-level navigation inset handling is introduced.
+- Verify auth/full-screen route exclusion behavior remains unchanged.
+
+If Compose UI tests can run in the project’s available test target, add an integration test that:
+
+- Renders the scaffold with a fake content composable.
+- Supplies a controllable bottom inset.
+- Verifies the bottom chrome’s measured layout includes the inset.
+- Verifies the navigation content remains above the inset.
+
+If platform insets cannot be deterministically injected in unit tests, use structural tests for ownership and manual device validation for pixel-level behavior.
+
+## Success criteria
+
+- Tests fail for the current implementation where appropriate.
+- The intended behavior is encoded before production implementation.
+- No test depends on a particular device height, OS version, or pixel count.
+
+## Phase 1 handoff summary
+
+Report:
+
+1. Tech debt discovered while defining the contract.
+2. Exact cleanup performed.
+3. Tests added and why each test matters.
+4. Build/test results.
+
+Do not proceed until all Phase 1 tests compile and fail only for the expected missing behavior.
+
+---
+
+# Phase 2 — Implement Shared Bottom-Chrome Ownership
+
+## Goal
+
+Move navigation-bar inset ownership to the shared bottom chrome.
+
+## Implementation direction
+
+The bottom chrome should have a structure equivalent to:
+
+```kotlin
+Surface(
+    modifier = Modifier.fillMaxWidth(),
+    color = bottomNavigationColor
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+    ) {
+        BottomNavigationContent()
+    }
+}
+```
+
+The exact implementation must follow the current project’s existing component and theme patterns.
+
+## Required decisions
+
+1. Use the established universal color scheme.
+2. Do not introduce new hardcoded colors.
+3. Do not hardcode dimensions for the safe area.
+4. Do not add platform-specific branches unless actual platform behavior proves necessary.
+5. Preserve the existing top-bar behavior.
+6. Preserve route visibility and auth exclusions.
+7. Ensure only one layer owns the app-level navigation-bar inset.
+
+## Scaffold considerations
+
+Review whether the current outer scaffold’s:
+
+```kotlin
+contentWindowInsets = WindowInsets.navigationBars
+```
+
+is still appropriate once the bottom chrome owns the inset.
+
+Possible valid outcomes:
+
+- Keep it if Material Scaffold correctly accounts for the bottom bar without double-padding.
+- Narrow or remove it if it causes duplicate bottom spacing.
+- Replace it with an explicit content-inset strategy if that is clearer and testable.
+
+This must be determined from actual measurement/tests, not assumed.
+
+## Tests
+
+Run focused tests first:
+
+```bash
+./gradlew :shared:testDebugUnitTest
+```
+
+Then:
+
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+Add/update Compose integration tests for:
+
+- App chrome layout.
+- Bottom inset ownership.
+- Auth-screen chrome exclusion.
+- Screen content not being obscured by bottom chrome.
+
+## Success criteria
+
+- Bottom chrome background extends through the navigation-bar inset.
+- Interactive content remains above the home indicator.
+- No duplicate bottom gap is introduced.
+- Shared code remains the single source of truth.
+- All touched files remain below 300 lines.
+
+## Phase 2 handoff summary
+
+Report:
+
+1. Tech debt incurred.
+2. Exact refactors or cleanup performed immediately.
+3. Files changed and architectural reason for each.
+4. Focused test results.
+5. Full build/test results.
+
+Do not proceed if any test or build fails.
+
+---
+
+# Phase 3 — Remove Competing or Legacy Inset Handling
+
+## Goal
+
+Eliminate stale or duplicate inset logic that could reintroduce the problem.
+
+## Tasks
+
+1. Search for legacy bottom-navigation implementations.
+2. Identify duplicate `navigationBarsPadding()` calls.
+3. Identify screen-level manual bottom padding added as a workaround.
+4. Remove only code proven to be obsolete or duplicated.
+5. Preserve screen-specific bottom bars that serve a different purpose.
+6. Update comments and documentation that still describe the old architecture.
+
+## Special handling
+
+### App-level bottom navigation
+
+Must use the shared app scaffold’s inset ownership.
+
+### Test-specific bottom bars
+
+OIR, PPDT, GTO, PIQ, and similar screens may have their own bottom controls. Each must be reviewed independently and must either:
+
+- Own its own navigation-bar inset, or
+- Delegate inset handling to its parent scaffold.
+
+They must not both do so.
+
+### Authentication and full-screen routes
+
+Do not force app-level bottom chrome or padding onto routes intentionally excluded from it.
+
+## Tests
+
+Run focused structural searches and tests:
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :app:testDebugUnitTest
+./gradlew lintDebug
+```
+
+If any screen-level inset behavior changes, add or update that screen’s UI test.
+
+## Success criteria
+
+- No duplicate inset ownership remains.
+- No workaround spacing remains without a documented layout reason.
+- Legacy code is removed only when confirmed unreachable.
+- Test-specific bars still render correctly.
+
+## Phase 3 handoff summary
+
+Report:
+
+1. Tech debt found.
+2. Exact removal/refactor steps.
+3. Why each removed inset path was obsolete or duplicated.
+4. Tests and lint results.
+5. Confirmation that no file exceeds 300 lines.
+
+---
+
+# Phase 4 — Cross-Platform UI Validation
+
+## Goal
+
+Verify the shared implementation on real layout environments.
+
+## Android validation
+
+Test on:
+
+1. Gesture navigation.
+2. Three-button navigation, if supported by the test device/emulator.
+3. Light and dark themes.
+4. Small and large screen sizes.
+5. App-level screens with bottom chrome.
+6. Screens without bottom chrome.
+7. Test screens with custom bottom bars.
+
+Validate:
+
+- Bottom surface reaches the physical bottom edge.
+- Home/navigation indicator area uses the correct surface color.
+- Labels/icons are not hidden behind system UI.
+- No extra gap appears above or below the bar.
+- Rotation and configuration changes preserve layout.
+
+## iOS validation
+
+Test on:
+
+1. iPhone with a home indicator.
+2. A device/simulator with a different safe-area height.
+3. Light and dark themes.
+4. Authentication/full-screen routes.
+5. App routes with persistent chrome.
+6. Test-specific bottom bars.
+
+Validate:
+
+- `.ignoresSafeArea()` remains enabled at the SwiftUI host.
+- Compose content reaches the full UIViewController bounds.
+- Bottom chrome paints behind the home indicator.
+- Interactive controls remain above the home indicator.
+- No black strip appears below the chrome.
+
+## Tests
+
+Run:
+
+```bash
+./gradlew check
+```
+
+Run the project’s iOS build/Xcode validation workflow as available. If the iOS build cannot be run in the current environment, explicitly report that limitation rather than claiming it passed.
+
+## Success criteria
+
+- Android and iOS behavior are visually and structurally consistent.
+- Differences are limited to platform-provided inset dimensions.
+- No platform-specific business/UI fork is introduced.
+
+## Phase 4 handoff summary
+
+Report:
+
+1. Platform-specific issues found.
+2. Exact fixes applied.
+3. Devices/simulators and configurations tested.
+4. Android build/test results.
+5. iOS validation result or explicit environment limitation.
+
+---
+
+# Phase 5 — Security, Quality, and Regression Review
+
+## Goal
+
+Perform the final quality gate before declaring the fix complete.
+
+## Security review
+
+Confirm that the change:
+
+- Adds no external dependency.
+- Adds no network request.
+- Adds no user-data handling.
+- Adds no logging of user, auth, or device information.
+- Does not weaken authentication route handling.
+- Does not expose navigation state or sensitive data.
+- Does not introduce unsafe platform interop.
+
+## Code-quality review
+
+Verify:
+
+- MVVM boundaries remain unchanged.
+- UI-only inset behavior stays in the UI layer.
+- Shared UI remains in `commonMain`.
+- No hardcoded user-facing strings were added.
+- No hardcoded colors were added.
+- No hardcoded device/inset dimensions were added.
+- No file exceeds 300 lines.
+- Existing naming and theme conventions are followed.
+- Comments explain ownership decisions rather than restating code.
+
+## Final validation
+
+Run:
+
+```bash
+./gradlew check
+./gradlew assembleDebug
+```
+
+Also run any relevant shared UI/integration test tasks and the iOS validation workflow.
+
+## Success criteria
+
+- 100% of available tests pass.
+- Build succeeds.
+- Lint and static checks pass.
+- Cross-platform validation is complete or limitations are explicitly documented.
+- No unresolved tech debt remains from this task.
+
+## Phase 5 handoff summary
+
+Report:
+
+1. All tech debt incurred across the implementation.
+2. Exact steps taken to resolve it.
+3. Final changed-file list.
+4. Full build/test/lint commands and results.
+5. Remaining environmental limitations, if any.
+6. Confirmation that the task is complete.
+
+---
+
+# Execution Gate
+
+At the end of **every phase**, execution pauses for the required handoff summary.
+
+The next phase begins only when:
+
+```text
+Build succeeds
++ Tests pass
++ New tech debt is resolved
++ No unresolved diagnostics remain
++ Phase summary is accepted
+```
+
+The implementation should not begin by adding padding to individual screens. The first implementation target should be the actual shared bottom-chrome owner confirmed during Phase 0.
