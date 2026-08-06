@@ -1,6 +1,7 @@
 package com.ssbmax.shared.domain.usecase
 
 import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.interview.InterviewLimits
 import com.ssbmax.shared.domain.model.interview.OIRStatus
 import com.ssbmax.shared.domain.model.interview.PIQStatus
@@ -10,6 +11,7 @@ import com.ssbmax.shared.domain.model.interview.SubscriptionStatus
 import com.ssbmax.shared.domain.repository.InterviewRepository
 import com.ssbmax.shared.domain.repository.SubmissionRepository
 import com.ssbmax.shared.domain.repository.SubscriptionRepository
+import com.ssbmax.shared.domain.usecase.subscription.nextMonthResetLabel
 
 /**
  * Use case to check if user meets all prerequisites for starting an interview
@@ -48,70 +50,9 @@ class CheckInterviewPrerequisitesUseCase constructor(
         return try {
             // If bypassing prerequisites, return eligible result immediately
             if (bypassPrerequisites) {
-                // Debug mode: Mock all prerequisites as completed
-                val mockPiqStatus = try {
-                    val piqResult = submissionRepository.getLatestPIQSubmission(userId)
-                    if (piqResult.isSuccess && piqResult.getOrNull() != null) {
-                        val submission = piqResult.getOrNull()!!
-                        PIQStatus.Completed(
-                            submissionId = submission.id,
-                            aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f
-                        )
-                    } else {
-                        PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
-                    }
-                } catch (e: Exception) {
-                    PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
-                }
-                
-                val mockOirStatus = try {
-                    val oirResult = submissionRepository.getLatestOIRSubmission(userId)
-                    if (oirResult.isSuccess && oirResult.getOrNull() != null) {
-                        val submission = oirResult.getOrNull()!!
-                        OIRStatus.Completed(
-                            submissionId = submission.id,
-                            score = submission.testResult.percentageScore
-                        )
-                    } else {
-                        OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
-                    }
-                } catch (e: Exception) {
-                    OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
-                }
-                
-                val mockPpdtStatus = try {
-                    val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId)
-                    if (ppdtResult.isSuccess && ppdtResult.getOrNull() != null) {
-                        val submission = ppdtResult.getOrNull()!!
-                        PPDTStatus.Completed(submission.submissionId)
-                    } else {
-                        PPDTStatus.Completed("DEBUG")
-                    }
-                } catch (e: Exception) {
-                    PPDTStatus.Completed("DEBUG")
-                }
-                
-                val subscriptionStatus = if (bypassSubscriptionCheck) {
-                    SubscriptionStatus.Available(
-                        tier = "DEBUG",
-                        remaining = Int.MAX_VALUE
-                    )
-                } else {
-                    checkSubscriptionStatus(userId)
-                }
-                
-                return Result.success(
-                    PrerequisiteCheckResult(
-                        isEligible = true,
-                        piqStatus = mockPiqStatus,
-                        oirStatus = mockOirStatus,
-                        ppdtStatus = mockPpdtStatus,
-                        subscriptionStatus = subscriptionStatus,
-                        failureReasons = emptyList()
-                    )
-                )
+                return Result.success(buildBypassResult(userId, bypassSubscriptionCheck))
             }
-            
+
             // 1. Check PIQ status
             val piqStatus = checkPIQStatus(userId)
 
@@ -132,42 +73,16 @@ class CheckInterviewPrerequisitesUseCase constructor(
                 checkSubscriptionStatus(userId)
             }
 
-            // Collect failure reasons
-            val failureReasons = mutableListOf<String>()
-
-            when (piqStatus) {
-                is PIQStatus.NotStarted -> failureReasons.add("Complete Personal Information Questionnaire (PIQ)")
-                is PIQStatus.Completed -> {} // Valid
-            }
-
-            when (oirStatus) {
-                is OIRStatus.NotStarted -> failureReasons.add("Complete Officer Intelligence Rating (OIR) test")
-                is OIRStatus.CompletedBelowThreshold -> failureReasons.add("Score at least 50% in OIR test (current: ${oirStatus.score.toInt()}%)")
-                is OIRStatus.Completed -> {} // Valid
-            }
-
-            when (ppdtStatus) {
-                is PPDTStatus.NotStarted -> failureReasons.add("Complete Picture Perception & Description Test (PPDT)")
-                is PPDTStatus.Completed -> {} // Valid
-            }
-
-            // Only add subscription failure if not bypassed
-            if (!bypassSubscriptionCheck) {
-                when (subscriptionStatus) {
-                    is SubscriptionStatus.LimitReached -> failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")
-                    is SubscriptionStatus.Available -> {} // Valid
-                }
-            }
-
-            val isEligible = failureReasons.isEmpty()
+            val assessment = assessFailures(piqStatus, oirStatus, ppdtStatus, subscriptionStatus, bypassSubscriptionCheck)
 
             val result = PrerequisiteCheckResult(
-                isEligible = isEligible,
+                isEligible = assessment.failureReasons.isEmpty() && assessment.limitReached == null,
                 piqStatus = piqStatus,
                 oirStatus = oirStatus,
                 ppdtStatus = ppdtStatus,
                 subscriptionStatus = subscriptionStatus,
-                failureReasons = failureReasons
+                failureReasons = assessment.failureReasons,
+                limitReached = assessment.limitReached
             )
 
             Result.success(result)
@@ -176,109 +91,164 @@ class CheckInterviewPrerequisitesUseCase constructor(
         }
     }
 
-    /**
-     * Check PIQ completion status
-     *
-     * Only checks if PIQ is submitted with form data.
-     * AI quality score is optional and not required for interview eligibility.
-     */
-    private suspend fun checkPIQStatus(userId: String): PIQStatus {
-        // Get latest PIQ submission
-        val piqResult = submissionRepository.getLatestPIQSubmission(userId)
+    private class FailureAssessment(val failureReasons: List<String>, val limitReached: TestEligibility.LimitReached?)
 
+    /**
+     * Collects the plain-string failure reasons for PIQ/OIR/PPDT, plus the subscription outcome.
+     * A genuine interview limit (real `subscriptionTier` on [SubscriptionStatus.LimitReached]) is
+     * carried in `limitReached` instead of one more sentence here -- the two fallback paths (tier
+     * lookup itself failed) have no real tier, so they still fall back to a plain string.
+     */
+    private fun assessFailures(
+        piqStatus: PIQStatus,
+        oirStatus: OIRStatus,
+        ppdtStatus: PPDTStatus,
+        subscriptionStatus: SubscriptionStatus,
+        bypassSubscriptionCheck: Boolean
+    ): FailureAssessment {
+        val failureReasons = mutableListOf<String>()
+
+        when (piqStatus) {
+            is PIQStatus.NotStarted -> failureReasons.add("Complete Personal Information Questionnaire (PIQ)")
+            is PIQStatus.Completed -> {} // Valid
+        }
+
+        when (oirStatus) {
+            is OIRStatus.NotStarted -> failureReasons.add("Complete Officer Intelligence Rating (OIR) test")
+            is OIRStatus.CompletedBelowThreshold -> failureReasons.add("Score at least 50% in OIR test (current: ${oirStatus.score.toInt()}%)")
+            is OIRStatus.Completed -> {} // Valid
+        }
+
+        when (ppdtStatus) {
+            is PPDTStatus.NotStarted -> failureReasons.add("Complete Picture Perception & Description Test (PPDT)")
+            is PPDTStatus.Completed -> {} // Valid
+        }
+
+        var limitReached: TestEligibility.LimitReached? = null
+        if (!bypassSubscriptionCheck && subscriptionStatus is SubscriptionStatus.LimitReached) {
+            val genuineTier = subscriptionStatus.subscriptionTier
+            if (genuineTier != null) {
+                limitReached = TestEligibility.LimitReached(
+                    tier = genuineTier,
+                    limit = subscriptionStatus.limit,
+                    usedCount = subscriptionStatus.used,
+                    resetsAt = nextMonthResetLabel()
+                )
+            } else {
+                failureReasons.add(
+                    "Interview limit reached for ${subscriptionStatus.tier} tier " +
+                        "(${subscriptionStatus.used}/${subscriptionStatus.limit})"
+                )
+            }
+        }
+
+        return FailureAssessment(failureReasons, limitReached)
+    }
+
+    /**
+     * Fully-eligible result for [bypassPrerequisites][invoke] (debug testing only), mocking
+     * any PIQ/OIR/PPDT submission that isn't already there.
+     */
+    private suspend fun buildBypassResult(userId: String, bypassSubscriptionCheck: Boolean): PrerequisiteCheckResult {
+        val mockPiqStatus = try {
+            val submission = submissionRepository.getLatestPIQSubmission(userId).getOrNull()
+            if (submission != null) {
+                PIQStatus.Completed(submissionId = submission.id, aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f)
+            } else {
+                PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
+            }
+        } catch (e: Exception) {
+            PIQStatus.Completed(submissionId = "DEBUG", aiScore = 0f)
+        }
+
+        val mockOirStatus = try {
+            val submission = submissionRepository.getLatestOIRSubmission(userId).getOrNull()
+            if (submission != null) {
+                OIRStatus.Completed(submissionId = submission.id, score = submission.testResult.percentageScore)
+            } else {
+                OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
+            }
+        } catch (e: Exception) {
+            OIRStatus.Completed(submissionId = "DEBUG", score = 100f)
+        }
+
+        val mockPpdtStatus = try {
+            val submission = submissionRepository.getLatestPPDTSubmission(userId).getOrNull()
+            PPDTStatus.Completed(submission?.submissionId ?: "DEBUG")
+        } catch (e: Exception) {
+            PPDTStatus.Completed("DEBUG")
+        }
+
+        val subscriptionStatus = if (bypassSubscriptionCheck) {
+            SubscriptionStatus.Available(tier = "DEBUG", remaining = Int.MAX_VALUE)
+        } else {
+            checkSubscriptionStatus(userId)
+        }
+
+        return PrerequisiteCheckResult(
+            isEligible = true,
+            piqStatus = mockPiqStatus,
+            oirStatus = mockOirStatus,
+            ppdtStatus = mockPpdtStatus,
+            subscriptionStatus = subscriptionStatus,
+            failureReasons = emptyList()
+        )
+    }
+
+    /** PIQ is complete once submitted (has form data) -- AI quality score is optional feedback, not a requirement. */
+    private suspend fun checkPIQStatus(userId: String): PIQStatus {
+        val piqResult = submissionRepository.getLatestPIQSubmission(userId)
         return if (piqResult.isFailure || piqResult.getOrNull() == null) {
             PIQStatus.NotStarted
         } else {
             val submission = piqResult.getOrNull()!!
-
-            // PIQ is completed if it's submitted (has form data)
-            // AI quality score is optional feedback, not a requirement
-            PIQStatus.Completed(
-                submissionId = submission.id,
-                aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f
-            )
+            PIQStatus.Completed(submissionId = submission.id, aiScore = submission.aiPreliminaryScore?.overallScore ?: 0f)
         }
     }
 
-    /**
-     * Check OIR completion and score threshold
-     */
+    /** OIR completion and score threshold (>= 50%). */
     private suspend fun checkOIRStatus(userId: String): OIRStatus {
-        // Get latest OIR submission
         val oirResult = submissionRepository.getLatestOIRSubmission(userId)
-
         return if (oirResult.isFailure || oirResult.getOrNull() == null) {
             OIRStatus.NotStarted
         } else {
             val submission = oirResult.getOrNull()!!
             val score = submission.testResult.percentageScore
-
-            if (score >= 50f) {
-                OIRStatus.Completed(
-                    submissionId = submission.id,
-                    score = score
-                )
-            } else {
-                OIRStatus.CompletedBelowThreshold(score)
-            }
+            if (score >= 50f) OIRStatus.Completed(submissionId = submission.id, score = score) else OIRStatus.CompletedBelowThreshold(score)
         }
     }
 
-    /**
-     * Check PPDT completion
-     */
+    /** PPDT completion. */
     private suspend fun checkPPDTStatus(userId: String): PPDTStatus {
-        // Get latest PPDT submission
         val ppdtResult = submissionRepository.getLatestPPDTSubmission(userId)
-
         return if (ppdtResult.isFailure || ppdtResult.getOrNull() == null) {
             PPDTStatus.NotStarted
         } else {
-            val submission = ppdtResult.getOrNull()!!
-            PPDTStatus.Completed(submission.submissionId)
+            PPDTStatus.Completed(ppdtResult.getOrNull()!!.submissionId)
         }
     }
 
-    /**
-     * Check subscription tier and interview limits
-     */
+    /** Subscription tier and interview limit, sourced from [InterviewLimits]. */
     private suspend fun checkSubscriptionStatus(userId: String): SubscriptionStatus {
-        // Get current subscription tier
         val tierResult = subscriptionRepository.getSubscriptionTier(userId)
-
         if (tierResult.isFailure) {
-            return SubscriptionStatus.LimitReached(
-                tier = "Unknown",
-                used = 0,
-                limit = 0
-            )
+            return SubscriptionStatus.LimitReached(tier = "Unknown", used = 0, limit = 0)
         }
-
         val tier = tierResult.getOrNull()
-            ?: return SubscriptionStatus.LimitReached(
-                tier = "Unknown",
-                used = 0,
-                limit = 0
-            )
+            ?: return SubscriptionStatus.LimitReached(tier = "Unknown", used = 0, limit = 0)
 
-        // Get used count (sum all interview modes for unified system)
-        val statsResult = interviewRepository.getInterviewStats(userId)
-        val stats = statsResult.getOrNull() ?: emptyMap()
-        val used = stats.values.sum()
-
-        // Calculate limits using new InterviewLimits API
-        val limits = InterviewLimits.forSubscription(tier, used)
+        // Used count sums all interview modes for the unified interview system.
+        val stats = interviewRepository.getInterviewStats(userId).getOrNull() ?: emptyMap()
+        val limits = InterviewLimits.forSubscription(tier, stats.values.sum())
 
         return if (limits.canStartInterview()) {
-            SubscriptionStatus.Available(
-                tier = tier.displayName,
-                remaining = limits.remaining
-            )
+            SubscriptionStatus.Available(tier = tier.displayName, remaining = limits.remaining)
         } else {
             SubscriptionStatus.LimitReached(
                 tier = tier.displayName,
                 used = limits.used,
-                limit = limits.totalLimit
+                limit = limits.totalLimit,
+                subscriptionTier = tier
             )
         }
     }

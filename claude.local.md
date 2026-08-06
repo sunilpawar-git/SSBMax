@@ -1,6 +1,6 @@
 # SSBMax - Local Development Guide
 # Quick reference for local development setup and debugging
-# Last Updated: January 25, 2026
+# Last Updated: August 6, 2026
 
 ## 🚀 QUICK START
 
@@ -54,19 +54,22 @@ echo "ELEVENLABS_API_KEY=your_elevenlabs_key" >> local.properties
 
 ## 🐛 DEBUG FLAGS
 
-In `app/build.gradle.kts`:
+The old `BuildConfig.BYPASS_SUBSCRIPTION_LIMITS`/`BYPASS_INTERVIEW_PREREQUISITES` fields (Android-only,
+never wired on iOS) were retired by the dev-subscription-override plan (Phase 6) and replaced by an
+in-app **Developer Settings** section — same override, both platforms, no rebuild needed:
 
-```kotlin
-debug {
-    // Bypass subscription limits for testing all features
-    buildConfigField("boolean", "BYPASS_SUBSCRIPTION_LIMITS", "true")
-    
-    // Force premium TTS (Sarvam AI) even for free users
-    buildConfigField("boolean", "FORCE_PREMIUM_TTS", "true")
-}
-```
+- Visible only in debug builds (`shared/.../platform/isDebugBuild()`, `expect`/`actual`).
+- Settings → Developer Settings → **Subscription Override**: `Follow Real` / `Force Free` / `Force Pro` /
+  `Force Premium`. Changes what every eligibility/limit read sees; `updateSubscriptionTier` always
+  writes the real value regardless of the override (fail-safe — the override only changes what's *read*).
+  Usage counters are **not** incremented while overridden, so toggling back to `Follow Real` doesn't
+  leave you limit-locked from testing.
+- Settings → Developer Settings → **Bypass Interview Prerequisites**: skips the PIQ/OIR/PPDT completion
+  checks and the interview subscription gate together (mirrors the old flag's intent).
+- Toggling doesn't refresh already-loaded ViewModels — re-enter the screen to see the change.
 
-**To test real subscription limits:** Set `BYPASS_SUBSCRIPTION_LIMITS` to `"false"`
+(`FORCE_PREMIUM_TTS` — the other `BuildConfig` flag previously documented here — was removed from this
+doc during the same cleanup; it didn't exist anywhere in the codebase.)
 
 ## 📱 TEST TYPES
 
@@ -97,7 +100,15 @@ debug {
 - `core/domain/src/main/kotlin/com/ssbmax/core/domain/model/interview/` - Interview models
 
 ### Subscription Management
-- `core/data/src/main/kotlin/com/ssbmax/core/data/repository/SubscriptionManager.kt` - Limits & usage
+- `shared/src/commonMain/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) - the one
+  monthly-limit table (per-tier, per-test-type); `core/data`'s old `SubscriptionManager` was deleted
+  into `shared` in the KMP-convergence plan
+- `shared/src/commonMain/.../domain/usecase/subscription/CheckTestEligibilityUseCase.kt` - enforcement
+- **Interview limit changed** (dev-subscription-override plan, Phase 2): the old, contradictory
+  `InterviewLimits.forSubscription` table (FREE 1 / PRO 1 / PREMIUM 3) is gone — `InterviewLimits` now
+  derives its numbers from `SubscriptionLimits`'s "Interview" row: **FREE 0 / PRO 1 / PREMIUM 3**. FREE
+  lost the one free interview it was inconsistently granted; PREMIUM gained an explicit 3/month cap
+  instead of nominally unlimited.
 
 ### Navigation
 - `app/src/main/kotlin/com/ssbmax/navigation/SSBMaxDestinations.kt` - All routes

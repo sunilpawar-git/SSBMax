@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.interviewstart.StartInterviewUiState
 import com.ssbmax.shared.presentation.interviewstart.StartInterviewViewModel
+import com.ssbmax.shared.ui.common.TestLimitReachedDialog
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
@@ -78,11 +80,14 @@ import ssbmax.shared.generated.resources.interview_start_title
 fun StartInterviewScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSession: (sessionId: String) -> Unit,
+    onNavigateToUpgrade: () -> Unit = {},
     viewModel: StartInterviewViewModel = koinViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var consentGiven by remember { mutableStateOf(false) }
+    val limitReached = uiState.getLimitReached()
+    var limitDialogDismissed by rememberSaveable(limitReached) { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isSessionCreated) {
         if (uiState.isSessionCreated && uiState.sessionId != null) {
@@ -92,6 +97,17 @@ fun StartInterviewScreen(
 
     LaunchedEffect(Unit) {
         viewModel.checkEligibility()
+    }
+
+    if (limitReached != null && !limitDialogDismissed) {
+        TestLimitReachedDialog(
+            tier = limitReached.tier,
+            testsLimit = limitReached.limit,
+            testsUsed = limitReached.usedCount,
+            resetsAt = limitReached.resetsAt,
+            onUpgrade = { limitDialogDismissed = true; onNavigateToUpgrade() },
+            onDismiss = { limitDialogDismissed = true }
+        )
     }
 
     Scaffold(

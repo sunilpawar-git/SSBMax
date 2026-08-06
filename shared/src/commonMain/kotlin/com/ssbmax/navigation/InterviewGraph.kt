@@ -32,7 +32,8 @@ fun NavGraphBuilder.interviewGraph(navController: NavHostController) {
                 navController.navigate(SSBMaxDestinations.VoiceInterviewSession(sessionId)) {
                     popUpTo<SSBMaxDestinations.StartInterview> { inclusive = true }
                 }
-            }
+            },
+            onNavigateToUpgrade = { navController.navigate(SSBMaxDestinations.UpgradeScreen) }
         )
     }
 

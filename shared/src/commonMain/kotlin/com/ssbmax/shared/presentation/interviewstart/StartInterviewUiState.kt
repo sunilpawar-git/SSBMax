@@ -1,5 +1,6 @@
 package com.ssbmax.shared.presentation.interviewstart
 
+import com.ssbmax.shared.domain.model.TestEligibility
 import com.ssbmax.shared.domain.model.interview.InterviewResult
 import com.ssbmax.shared.domain.model.interview.InterviewStatus
 import com.ssbmax.shared.domain.model.interview.PrerequisiteCheckResult
@@ -26,6 +27,8 @@ data class StartInterviewUiState(
     fun canStartInterview(): Boolean = isEligible && !isLoading && !isGeneratingQuestions && error == null
 
     fun getFailureReasons(): List<String> = prerequisiteResult?.failureReasons ?: emptyList()
+
+    fun getLimitReached(): TestEligibility.LimitReached? = prerequisiteResult?.limitReached
 
     fun hasPastInterviews(): Boolean = pastResults.isNotEmpty() || pendingSessions.isNotEmpty()
 }

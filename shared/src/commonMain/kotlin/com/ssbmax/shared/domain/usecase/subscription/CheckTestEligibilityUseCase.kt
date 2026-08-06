@@ -9,7 +9,6 @@ import com.ssbmax.shared.domain.util.AnalyticsTracker
 import com.ssbmax.shared.domain.util.SecurityEvents
 import com.ssbmax.shared.platform.settings.DeveloperSettings
 import kotlin.time.Clock
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -88,25 +87,5 @@ class CheckTestEligibilityUseCase(
     private fun currentYearMonth(): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         return "${now.year}-${(now.month.ordinal + 1).toString().padStart(2, '0')}"
-    }
-
-    /** e.g. "Aug 1, 2026" — first day of next calendar month, matching the Android original's format. */
-    private fun nextMonthResetLabel(): String {
-        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val todayMonthNumber = today.month.ordinal + 1
-        val nextMonthFirst = if (todayMonthNumber == 12) {
-            LocalDate(today.year + 1, 1, 1)
-        } else {
-            LocalDate(today.year, todayMonthNumber + 1, 1)
-        }
-        val monthName = MONTH_NAMES[nextMonthFirst.month.ordinal]
-        return "$monthName 1, ${nextMonthFirst.year}"
-    }
-
-    private companion object {
-        val MONTH_NAMES = listOf(
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        )
     }
 }

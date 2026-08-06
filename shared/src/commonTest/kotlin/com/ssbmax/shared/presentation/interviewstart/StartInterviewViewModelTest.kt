@@ -122,6 +122,29 @@ class StartInterviewViewModelTest {
         assertTrue(state.getFailureReasons().isNotEmpty())
     }
 
+    /** Dev-subscription-override plan Phase 10: a genuine interview limit now populates
+     * `limitReached` (rendered through the shared `TestLimitReachedDialog`) instead of only a
+     * `failureReasons` sentence. */
+    @Test
+    fun `checkEligibility surfaces limitReached when a genuine interview limit is hit`() = runTest(testDispatcher) {
+        subscriptionRepository.tierResult = Result.success(com.ssbmax.shared.domain.model.SubscriptionTier.PRO)
+        interviewRepository.interviewStatsResult = Result.success(
+            mapOf(InterviewMode.VOICE_BASED to 1)
+        )
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.checkEligibility()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        val limitReached = state.getLimitReached()
+        assertEquals(com.ssbmax.shared.domain.model.SubscriptionTier.PRO, limitReached?.tier)
+        assertEquals(1, limitReached?.limit)
+        assertEquals(1, limitReached?.usedCount)
+        assertTrue(state.getFailureReasons().none { it.contains("Interview limit reached") })
+    }
+
     /**
      * Dev-subscription-override plan Phase 6: `BYPASS_INTERVIEW_PREREQUISITES` used to be dead --
      * the `BuildConfig` field existed but this ViewModel hardcoded both use-case bypass params

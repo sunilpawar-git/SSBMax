@@ -3,7 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>ComplexCondition:OIRTestViewModel.kt$OIRTestViewModel$isActive &amp;&amp; _uiState.value.isTimerActive &amp;&amp; _uiState.value.timeRemainingSeconds &gt; 0 &amp;&amp; !_uiState.value.isCompleted</ID>
-    <ID>CyclomaticComplexMethod:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$suspend operator fun invoke( userId: String, bypassSubscriptionCheck: Boolean = false, bypassPrerequisites: Boolean = false ): Result&lt;PrerequisiteCheckResult&gt;</ID>
     <ID>CyclomaticComplexMethod:DashboardTestScoreChip.kt$@Composable fun TestScoreChip( testName: String, score: Float?, isOLQBased: Boolean = true, isRefreshing: Boolean = false, onClick: (() -&gt; Unit)? = null )</ID>
     <ID>CyclomaticComplexMethod:InterviewSessionScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun InterviewSessionScreen( sessionId: String, onNavigateBack: () -&gt; Unit, onNavigateToResult: (String) -&gt; Unit, onNavigateToHome: () -&gt; Unit, viewModel: InterviewSessionViewModel = koinViewModel(), modifier: Modifier = Modifier )</ID>
     <ID>CyclomaticComplexMethod:MarkdownText.kt$@Composable fun MarkdownText( content: String, modifier: Modifier = Modifier, textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant )</ID>
@@ -47,7 +46,6 @@
     <ID>FunctionParameterNaming:SharedDatabaseQueries.kt$SharedDatabaseQueries$value_: Long</ID>
     <ID>LargeClass:GTOAnalysisPrompts.kt$GTOAnalysisPrompts</ID>
     <ID>LargeClass:SharedDatabaseQueries.kt$SharedDatabaseQueries : TransacterImpl</ID>
-    <ID>LongMethod:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$suspend operator fun invoke( userId: String, bypassSubscriptionCheck: Boolean = false, bypassPrerequisites: Boolean = false ): Result&lt;PrerequisiteCheckResult&gt;</ID>
     <ID>LongMethod:DrawerContent.kt$@Composable fun DrawerContent( currentRoute: String, phase1Expanded: Boolean, phase2Expanded: Boolean, onNavigateToHome: () -&gt; Unit, onNavigateToTopic: (topicId: String) -&gt; Unit, onNavigateToSSBOverview: () -&gt; Unit, onNavigateToMyBatches: () -&gt; Unit, onNavigateToSettings: () -&gt; Unit, onTogglePhase1: () -&gt; Unit, onTogglePhase2: () -&gt; Unit, onSignOut: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:DrawerHeader.kt$@Composable fun DrawerHeader( userProfile: UserProfile?, subscriptionTier: SubscriptionTier?, isLoading: Boolean = false, onEditProfile: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
     <ID>LongMethod:GPEPlanningPhase.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GPEPlanningPhase( question: GPEQuestion, planningResponse: String, charactersCount: Int, timeRemaining: String, isTimeLow: Boolean, onResponseChanged: (String) -&gt; Unit, onProceedToReview: () -&gt; Unit, onNavigateBack: () -&gt; Unit )</ID>
@@ -128,7 +126,6 @@
     <ID>LongParameterList:UnifiedOLQResultTemplate.kt$( uiState: T, paddingValues: PaddingValues, submissionConfirmationContent: @Composable (T) -&gt; Unit, testSpecificContent: (@Composable (T) -&gt; Unit)?, submissionStatus: SubmissionStatus?, showInstructorReview: Boolean, onNavigateHome: () -&gt; Unit, onRetry: (() -&gt; Unit)? )</ID>
     <ID>LongParameterList:WATInProgressPhase.kt$( word: String, wordNumber: Int, totalWords: Int, timeRemaining: Int, response: String, onResponseChange: (String) -&gt; Unit, onSubmit: () -&gt; Unit, onSkip: () -&gt; Unit, onShowExitDialog: () -&gt; Unit )</ID>
     <ID>MaxLineLength:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$is OIRStatus.CompletedBelowThreshold -&gt; failureReasons.add("Score at least 50% in OIR test (current: ${oirStatus.score.toInt()}%)")</ID>
-    <ID>MaxLineLength:CheckInterviewPrerequisitesUseCase.kt$CheckInterviewPrerequisitesUseCase$is SubscriptionStatus.LimitReached -&gt; failureReasons.add("Interview limit reached for ${subscriptionStatus.tier} tier (${subscriptionStatus.used}/${subscriptionStatus.limit})")</ID>
     <ID>MaxLineLength:GDDiscussionPhase.kt$Text(stringResource(Res.string.gd_topic_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)</ID>
     <ID>MaxLineLength:GDDiscussionPhase.kt$Text(stringResource(Res.string.gto_char_range_label, 50, 1500), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)</ID>
     <ID>MaxLineLength:GDDiscussionPhase.kt$color = if (charCount &lt; 50 || charCount &gt; 1500) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary</ID>

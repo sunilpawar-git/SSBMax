@@ -1,5 +1,8 @@
 package com.ssbmax.shared.domain.model.interview
 
+import com.ssbmax.shared.domain.model.SubscriptionTier
+import com.ssbmax.shared.domain.model.TestEligibility
+
 /**
  * Result of prerequisite validation for interview eligibility
  *
@@ -8,7 +11,12 @@ package com.ssbmax.shared.domain.model.interview
  * @param oirStatus OIR completion and score status
  * @param ppdtStatus PPDT completion status
  * @param subscriptionStatus Subscription tier and limit status
- * @param failureReasons List of reasons for ineligibility (if any)
+ * @param failureReasons List of reasons for ineligibility (if any), excluding a genuine interview
+ *   limit -- that's carried in [limitReached] instead so the UI can render it through the same
+ *   shared `TestLimitReachedDialog` every other test type uses (dev-subscription-override plan's
+ *   Phase 10), rather than as one more plain sentence in this list.
+ * @param limitReached Set only when ineligibility is a genuine, real subscription-tier limit (not
+ *   the [SubscriptionStatus.LimitReached] fallback paths used when the tier lookup itself fails).
  */
 data class PrerequisiteCheckResult(
     val isEligible: Boolean,
@@ -16,11 +24,14 @@ data class PrerequisiteCheckResult(
     val oirStatus: OIRStatus,
     val ppdtStatus: PPDTStatus,
     val subscriptionStatus: SubscriptionStatus,
-    val failureReasons: List<String> = emptyList()
+    val failureReasons: List<String> = emptyList(),
+    val limitReached: TestEligibility.LimitReached? = null
 ) {
     init {
         if (!isEligible) {
-            require(failureReasons.isNotEmpty()) { "Ineligible result must have failure reasons" }
+            require(failureReasons.isNotEmpty() || limitReached != null) {
+                "Ineligible result must have failure reasons or a limit-reached reason"
+            }
         }
     }
 
@@ -165,14 +176,19 @@ sealed class SubscriptionStatus {
     /**
      * User reached interview limit for their tier
      *
-     * @param tier Subscription tier
+     * @param tier Subscription tier display name
      * @param used Number of interviews used
      * @param limit Maximum interviews allowed
+     * @param subscriptionTier The real, typed tier -- only set at the genuine construction site
+     *   (a real tier lookup that came back over its limit); left `null` at the two fallback sites
+     *   (tier lookup itself failed), which is how [CheckInterviewPrerequisitesUseCase] tells a real
+     *   limit apart from a lookup failure without a third type.
      */
     data class LimitReached(
         val tier: String,
         val used: Int,
-        val limit: Int
+        val limit: Int,
+        val subscriptionTier: SubscriptionTier? = null
     ) : SubscriptionStatus() {
         init {
             require(used >= limit) { "Used must be >= limit for this status" }
