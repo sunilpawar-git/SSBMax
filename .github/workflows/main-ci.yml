@@ -3,7 +3,7 @@ name: SSBMax CI
 # Triggers cover every branch without a brittle name list:
 #  - pull_request runs on PRs from ANY source branch (feature/*, fix/*, etc.)
 #  - push runs only on protected branches, so PR commits aren't built twice.
-on:
+'on':
   pull_request:
   push:
     branches: [ main, develop, 'feature/*', 'feature/**', 'fix/*', 'fix/**', 'tech-debt/*', 'tech-debt/**', PsyTests ]

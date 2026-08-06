@@ -1,7 +1,7 @@
 name: CodeQL
 
 # Static application security testing (SAST) for Kotlin/Java.
-on:
+'on':
   push:
     branches: [ main, develop ]
   pull_request:
