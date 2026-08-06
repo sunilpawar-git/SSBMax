@@ -10,8 +10,8 @@ import java.io.File
  *
  * These are source-level architecture tests because platform safe-area values
  * cannot be deterministically injected into the current JVM test harness. The
- * tests characterize the confirmed pre-implementation boundary; Phase 2 will
- * extend them when the actual app-level bottom chrome is restored.
+ * tests characterize the confirmed shared-scaffold boundary; any future
+ * app-level bottom chrome must preserve this single-inset ownership contract.
  */
 class BottomChromeInsetContractTest {
 
@@ -41,10 +41,13 @@ class BottomChromeInsetContractTest {
             Regex("WindowInsets\\.navigationBars").findAll(scaffoldSource).count()
 
         assertEquals(
-            "The current scaffold must reserve navigation space at one boundary until the " +
-                "real bottom chrome owns the inset in Phase 2",
+            "The current scaffold must reserve navigation space at one outer boundary",
             1,
             navigationInsetUsages
+        )
+        assertTrue(
+            "The current scaffold must consume its applied inset before composing routed screens",
+            scaffoldSource.contains(".consumeWindowInsets(paddingValues)")
         )
         assertTrue(
             "The current scaffold must not contain a hardcoded bottom inset workaround",
