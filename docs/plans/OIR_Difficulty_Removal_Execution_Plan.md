@@ -1,6 +1,6 @@
 # OIR Difficulty Removal Execution Plan
 
-**Status:** Phase 4 complete; Phases 5–6 pending
+**Status:** Phase 5 complete; Phase 6 pending
 **Parent plan:** `docs/plans/OIR_Impr_Execution_Plan.md`
 **Scope:** Remove Easy/Medium/Hard classification from the OIR product while preserving valid-question selection, 20/20/10 distribution, subscription enforcement, durable sessions, scoring integrity, result persistence, and answer review.
 **Target branch:** `feature/OIR_Impr_01`
@@ -435,6 +435,8 @@ Add/update tests for:
 ./gradlew :shared:compileDebugKotlinAndroid
 ./gradlew check
 ```
+
+**Phase 5 completion evidence:** The active OIR result flow no longer renders or references difficulty breakdown UI or its OIR-specific strings. Category cards remain filtered to positive question counts, quick stats and all three result actions remain present, and the result route passes the existing submission ID to answer review. “Take Another Test” enters the existing `OIRTestScreen` route, whose ViewModel performs the fail-closed OIR eligibility check before creating a session. Status remains a non-clickable themed surface. Android and iOS shared code compile and the full `check` gate passes; no Phase 5 tech debt remains.
 
 ---
 

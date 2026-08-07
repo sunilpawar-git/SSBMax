@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.TripOrigin
+
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -28,23 +26,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.CategoryScore
-import com.ssbmax.shared.domain.model.DifficultyScore
-import com.ssbmax.shared.domain.model.QuestionDifficulty
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_result_avg_time
 import ssbmax.shared.generated.resources.oir_result_back_home
 import ssbmax.shared.generated.resources.oir_result_correct_of_total
-import ssbmax.shared.generated.resources.oir_result_difficulty_unavailable
 import ssbmax.shared.generated.resources.oir_result_less_than_one_second
 import ssbmax.shared.generated.resources.oir_result_review_answers
 import ssbmax.shared.generated.resources.oir_result_take_another_test
 
 /**
- * Further delegate composables for [OIRTestResultScreen] — category/difficulty
- * breakdown cards + the bottom action-buttons card. Split out of
+ * Further delegate composables for [OIRTestResultScreen] — category
+ * performance and action cards. Split out of
  * `OIRTestResultSections.kt` for the same 300-line Quality Limit reason (see
  * [OIRTestResultScreen]'s doc comment).
  */
@@ -106,64 +101,6 @@ private fun Int.toAverageTimeLabel(): String = if (this == 0) {
     stringResource(Res.string.oir_result_less_than_one_second)
 } else {
     toString()
-}
-
-@Composable
-internal fun DifficultyBreakdownCard(difficultyScores: Map<QuestionDifficulty, DifficultyScore>) {
-    val orderedScores = visibleOIRDifficultyScores(difficultyScores)
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (!hasMeaningfulOIRDifficultyBreakdown(difficultyScores)) {
-                Text(
-                    text = stringResource(Res.string.oir_result_difficulty_unavailable),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            orderedScores.forEach { score ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = when (score.difficulty) {
-                                QuestionDifficulty.EASY -> Icons.Default.Circle
-                                QuestionDifficulty.MEDIUM -> Icons.Default.TripOrigin
-                                QuestionDifficulty.HARD -> Icons.Default.RadioButtonChecked
-                            },
-                            contentDescription = null,
-                            tint = when (score.difficulty) {
-                                QuestionDifficulty.EASY -> MaterialTheme.colorScheme.tertiary
-                                QuestionDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
-                                QuestionDifficulty.HARD -> MaterialTheme.colorScheme.error
-                            },
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(text = score.difficulty.displayName, style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Text(
-                        text = "${score.correctAnswers}/${score.totalQuestions}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = "${score.percentage.toInt()}%",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.width(60.dp),
-                        textAlign = TextAlign.End
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable

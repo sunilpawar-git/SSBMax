@@ -44,8 +44,8 @@ import ssbmax.shared.generated.resources.oir_result_time_taken
  * Delegate composables for [OIRTestResultScreen] — score header + quick
  * stats. Split out to keep every file in this vertical under this repo's
  * 300-line-per-file Quality Limit (see [OIRTestResultScreen]'s doc comment
- * for the full split rationale — category/difficulty/action cards live in
- * `OIRTestResultBreakdown.kt`).
+ * for the full split rationale — category/action cards live in
+ * `OIRTestResultCards.kt`).
  */
 @Composable
 internal fun ScoreHeaderCard(result: OIRTestResult) {
