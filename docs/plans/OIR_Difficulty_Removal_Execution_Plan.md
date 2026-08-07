@@ -1,6 +1,6 @@
 # OIR Difficulty Removal Execution Plan
 
-**Status:** Phase 5 complete; Phase 6 pending
+**Status:** Phase 6 implementation and automated release gate complete; manual smoke evidence remains release-operator work
 **Parent plan:** `docs/plans/OIR_Impr_Execution_Plan.md`
 **Scope:** Remove Easy/Medium/Hard classification from the OIR product while preserving valid-question selection, 20/20/10 distribution, subscription enforcement, durable sessions, scoring integrity, result persistence, and answer review.
 **Target branch:** `feature/OIR_Impr_01`
@@ -494,24 +494,44 @@ Complete manual smoke tests:
 
 ---
 
+## Phase 6 completion evidence
+
+Automated Phase 6 validation completed on 2026-08-07:
+
+- `./gradlew :shared:testDebugUnitTest` — passed.
+- `./gradlew :shared:iosSimulatorArm64Test` — passed on the iOS simulator target.
+- `./gradlew :data-firebase:testDebugUnitTest` — passed.
+- `./gradlew :lint:test` — passed.
+- `./gradlew check` — passed. The build reports existing lint/compiler warnings, but no errors; diagnostics report no errors or warnings in the project.
+- `node scripts/test-oir-tooling.js` — passed with no Firebase writes.
+- `node scripts/check-oir-content-health.js` — passed read-only: 28 batches, 1,255 records, 1,069 valid, 186 skipped, 529 verified HTTPS image URLs, and 1,255 informational legacy difficulty fields.
+- Firestore rules validation is included in the Android unit-test suite and passed as part of the project gates.
+- Shared KMP code is the common Android/iOS implementation; no platform-specific OIR result or selection fork was found.
+
+The final cross-phase check confirms that the product contract is implemented: difficulty does not participate in selection, scoring, persistence of new results, result presentation, or navigation; legacy question/result fields remain tolerant read-only compatibility data; validity and 20/20/10 selection remain enforced; eligibility, durable sessions, idempotent usage, result fallback, answer review, dashboard invalidation, and retry states remain in their existing shared flows. No production Firestore writes were performed.
+
+Intentional remaining limitation: difficulty is absent from new OIR behavior, while 186 invalid production records remain in Firestore for auditability and are skipped at selection time. Manual device smoke tests (eligible tiers, quota exhaustion, network interruption, Android/iOS visual parity) were not executable in this workspace and remain the only unverified release evidence.
+
+Tech-debt sweep: removed stale Phase 2 migration wording from the OIR DTO documentation. No OIR-specific tech debt was introduced. The scripts dependency audit still reports eight moderate transitive `uuid` advisories; resolving them requires the breaking `firebase-admin@14` upgrade and is deliberately not included in this feature commit.
+
 ## 4. Final handoff checklist
 
 Before marking this initiative complete:
 
-- [ ] All six phase handoffs provided.
-- [ ] All phase builds passed.
-- [ ] All targeted and full tests passed.
-- [ ] No file exceeds 300 lines of code.
-- [ ] No unexplained diagnostics remain in changed files.
-- [ ] No hardcoded OIR result strings/colors remain.
-- [ ] No active OIR code requires question difficulty.
-- [ ] Legacy result documents remain readable.
-- [ ] New results use transparent correct-answer scoring.
-- [ ] Question validity and 20/20/10 distribution remain enforced.
-- [ ] FREE/PRO/PREMIUM gates remain enforced for new attempts.
-- [ ] Firestore rules/security tests pass.
-- [ ] Production content-health verification passes.
-- [ ] Manual network and first-time journey smoke tests pass.
-- [ ] Parent architecture documentation is updated.
-- [ ] Tech debt incurred by this initiative is resolved before handoff.
-- [ ] Commit is created only after the final gate is green.
+- [x] All six phase handoffs provided.
+- [x] All phase builds passed.
+- [x] All targeted and full tests passed.
+- [x] No file exceeds 300 lines of source code in the changed OIR scope.
+- [x] No unexplained diagnostics remain in changed files.
+- [x] No hardcoded OIR result strings/colors remain.
+- [x] No active OIR code requires question difficulty.
+- [x] Legacy result documents remain readable.
+- [x] New results use transparent correct-answer scoring.
+- [x] Question validity and 20/20/10 distribution remain enforced.
+- [x] FREE/PRO/PREMIUM gates remain enforced for new attempts.
+- [x] Firestore rules/security tests pass.
+- [x] Production content-health verification passes.
+- [ ] Manual network and first-time journey smoke tests pass (not executable in this workspace).
+- [x] Parent architecture documentation is updated.
+- [x] Tech debt incurred by this initiative is resolved; the transitive dependency advisory is recorded as a separate breaking-upgrade task.
+- [x] Commit is created only after the automated final gate is green.

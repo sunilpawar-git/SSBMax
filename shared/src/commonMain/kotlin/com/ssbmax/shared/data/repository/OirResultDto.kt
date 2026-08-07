@@ -17,8 +17,8 @@ import kotlinx.serialization.Serializable
  * reads (`DocumentSnapshot.data<T>(serializer)`), unlike the Android
  * firebase-firestore-ktx SDK which lets the existing ViewModel read a raw
  * `Map<String, Any>` and hand-parse it (see OIRSubmissionResultViewModel in
- * app/). This is a genuine, structural difference between the two SDKs, not
- * a style choice — flagged as a Phase 2 migration cost item.
+ * app/). This is a genuine structural difference between the two SDKs, not
+ * a style choice.
  *
  * Mirrors the "data.testResult" nested shape of the existing Firestore
  * document (see OIRSubmissionResultViewModel.parseOIRTestResult).

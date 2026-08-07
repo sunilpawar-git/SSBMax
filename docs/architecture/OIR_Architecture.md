@@ -288,6 +288,12 @@ Firestore rules enforce ownership, authentication, OIR session linkage, immutabl
 
 The OIR UI has explicit states for loading, authentication required, limit reached, cache/content failure, retry, active test, submit confirmation, submission in progress, result loading/error, and answer-review loading/error. Active question controls are hidden while loading or submitting. Image loading failures have an explicit fallback state, and timer/navigation/image controls expose accessibility labels.
 
+### Difficulty-Free Result Contract
+
+OIR no longer classifies or displays Easy/Medium/Hard. New scoring is transparent: each exact correct answer contributes one point, incorrect and skipped answers contribute zero, `rawScore` equals `correctAnswers`, and `percentageScore` is `correctAnswers / totalQuestions * 100`. Results show category performance only for categories with questions, plus correct/incorrect/skipped counts, time taken, raw score, and the actions `Review Answers`, `Take Another Test`, and `Back to Home`.
+
+Historical Firestore result documents may still contain `difficultyBreakdown`, and historical answered questions may still contain `difficulty`; the shared DTO mapper tolerates those fields but new serialization omits the result breakdown and no active OIR UI reads either field. Review uses the existing durable submission ID, while `Take Another Test` returns through the normal eligibility-gated start route.
+
 ### Key Files
 | File | Responsibility |
 |---|---|
