@@ -1,6 +1,6 @@
 # OIR Architecture
 
-Covers both the **content pipeline** (PDF → Firestore) and the **serving layer** (Room cache → user test).
+Covers both the **content pipeline** (PDF → Firestore) and the **serving layer** (SQLDelight cache → user test).
 
 ---
 
@@ -15,7 +15,8 @@ Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and
 | `scripts/oir-extraction/oir_extract_v2.py` | Extract the 20 practice-set batches (001–020) from the SSBCrack PDF |
 | `scripts/oir-extraction/oir_extract_part3.py` | Extract the 8 topic-family batches (021–028) from `OIR PART 3`; reuses v2 helpers (`composite_figure`, `page_images`, `OPT_IDS`) |
 | `scripts/oir-extraction/upload-oir-batch.js` | Ingestion **gate** + upload images → Storage, questions → Firestore |
-| `scripts/set-oir-meta-config.js` | Publish `test_content/oir/meta/config` `{contentVersion, batchCount}` — the client reconciliation trigger |
+| `scripts/set-oir-meta-config.js` | Publish `test_content/oir/meta/config` `{contentVersion, batchCount}` — dry-run by default and rejects committed downgrades |
+| `scripts/check-oir-content-health.js` | Read-only production verification of metadata, all 28 batches, question IDs/types, totals, and HTTPS image URLs |
 
 The upload script's `validateBatch()` is a **fail-closed ingestion gate**: it mirrors the error-level rules of the domain `OIRQuestionValidator` (non-empty options, `correctAnswerId` present unless a figure question, answer ∈ option ids, non-blank text) and rejects the write if any question violates them. The Kotlin validator stays the SSOT for the *rules*; the gate enforces them at write time.
 
@@ -48,14 +49,15 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 ✅ **All 28 batches extracted, uploaded, and meta doc PUBLISHED (June 7, 2026)**
 - Batches 001–020: 1,000 questions (SSBCrack original sets) + Batches 021–028: 255 questions (Part-3 topic families)
 - Total: ~1,255 questions live in Firestore
-- Images: All live at `gs://ssbmax.../oir/pdf_questions/` (public HTTPS)
-- Meta doc: `test_content/oir/meta/config` = `{ contentVersion: 2, batchCount: 28 }` (published)
+- Images: All live at `gs://ssbmax.../oir/pdf_questions/` (public HTTPS); the health gate verified 529 unique URLs with HTTP 200.
+- Content health baseline: 1,069 valid questions and 186 skipped legacy/invalid records; all three runtime categories have ample valid coverage.
+- Meta doc: `test_content/oir/meta/config` targets `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }` (publish with the explicit metadata command)
+- Run `node scripts/check-oir-content-health.js` for the production read-only gate; it performs no writes and requires `FIREBASE_SERVICE_ACCOUNT` (or the local development key).
 
-> **Known legacy duds (deferred):** 140 questions in batches 001–020 are genuine free-response
-> fill-in-the-blank items (no options in the source). A free-response question type that rescues
-> them is planned for a later sprint (`~/.claude/plans/staged-splashing-sifakis.md`). Until then
-> they remain in Firestore but are **skipped at selection-time** (see Serving Layer) so they never
-> reach an assembled test.
+> **Skipped legacy/invalid records:** The production health check currently reports 186 records that
+> fail the runtime validity contract (including the known optionless free-response records in batches
+> 001–020). They remain in Firestore for auditability but are **skipped at selection-time** (see
+> Serving Layer) so they never reach an assembled test.
 
 ---
 
@@ -63,7 +65,7 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 
 ### Storage Layout & Organization
 
-**Firestore** (28 batch documents + 1 meta doc):
+**Firestore** (28 canonical batch documents + 1 meta doc):
 ```
 test_content/oir/batches/
 ├─ batch_pdf_001..020 (50 Qs each, source = SSBCrack Sets 1–20)
@@ -75,7 +77,7 @@ the content-version SSOT that drives client reconciliation (see below).
 
 **Firebase Storage:** `oir/pdf_questions/set{N}_q{MM}.png` (public HTTPS URLs)
 
-**Room (local cache):** All questions (~1255 across 28 batches) **flattened into ONE table** (`cached_oir_questions`):
+**SQLDelight (local cache):** All questions (~1,255 across 28 batches) are **flattened into ONE table** (`cached_oir_questions`):
 ```sql
 cached_oir_questions (~1255 rows)
 ├─ oir_pdf_s01_q0001 | VERBAL_REASONING      | batchId='batch_pdf_001' | lastUsed=null
@@ -87,10 +89,10 @@ cached_oir_questions (~1255 rows)
 ```
 **Key:** The `batchId` column preserves which batch each question came from (for auditing/analytics), but **batches are NOT isolated** — all questions are pooled together.
 
-### Content-Version Reconciliation (Firestore is SSOT, Room mirrors)
-`OIRQuestionCacheManager.initialSync()` reads `test_content/oir/meta/config` and compares
-`remote.contentVersion` to the locally-stored value in the single-row `oir_sync_metadata` table
-(DB v20, `MIGRATION_19_20`):
+### Content-Version Reconciliation (Firestore is SSOT, SQLDelight mirrors)
+`GitLiveOIRQuestionCacheManager.initialSync()` reads `test_content/oir/meta/config` and compares
+`remote.contentVersion` to the locally-stored value in SQLDelight's single-row
+`oir_sync_metadata` table. SQLDelight is the active KMP cache on Android and iOS; the former Android-only Room path is no longer part of OIR serving:
 
 | Condition | Action |
 |---|---|
@@ -100,13 +102,13 @@ cached_oir_questions (~1255 rows)
 
 So existing installs **self-heal** to new content on the next launch — bump `contentVersion` (and
 `batchCount` when batches are added) via `set-oir-meta-config.js`; **no Kotlin change** is needed for
-a future content drop. If the meta doc is unreadable, the manager falls back to a legacy 20-batch sync.
+a future content drop. Metadata read failures are surfaced as a retryable cache state; the client no
+longer silently treats an unreadable metadata document as a current legacy 20-batch bank.
 
-> ✅ **Release gate status (as of June 7, 2026):**
-> - Firestore side: **META DOC PUBLISHED** — `test_content/oir/meta/config` = `{ contentVersion: 2, batchCount: 28 }`
-> - DB side: **v20 migration ready** — `MIGRATION_19_20` creates `oir_sync_metadata` table; registered in DataModule
-> - App side: **Reconciliation code ready** — `OIRQuestionCacheManager` reads meta doc; Phase 1/2 caching active
-> - **Pending client release:** Merge PR #18 → ship v20 app build. Old builds fall back to legacy 20-batch sync (contentVersion reader absent). Once v20 ships, all users converge on 28-batch pool with ~1,255 questions.
+> ✅ **Release gate status:**
+> - Firestore side: metadata is expected to be `{ contentVersion: 4, batchCount: 28 }`; verify with `node scripts/check-oir-content-health.js`.
+> - Cache side: SQLDelight stores the local content-version mirror and supports reconciliation, missing-batch top-up, and the two-phase readiness contract.
+> - App side: `GitLiveOIRQuestionCacheManager` is the sole KMP implementation; metadata failures remain visible and retryable.
 
 ### Two-Phase Latency Model
 | Phase | Batches | Behaviour |
@@ -116,9 +118,9 @@ a future content drop. If the meta doc is unreadable, the manager falls back to 
 
 ### How a Test Is Assembled (Pool Model, Not Batch-Sequential)
 
-Each OIR test is a **freshly sampled 50-question set** drawn from the **flattened Room pool (~1255 questions)** — **NOT** in batch order, and **NOT** from a single batch. `OIRQuestionSelector.selectQuestions(50)` works like this:
+Each OIR test is a **freshly sampled 50-question set** drawn from the **flattened SQLDelight pool (~1,255 questions)** — **NOT** in batch order, and **NOT** from a single batch. `OIRQuestionSelector.selectQuestions(50)` works like this:
 
-1. Query Room for unused questions of each type (ignoring `batchId`):
+1. Query SQLDelight for unused questions of each type (ignoring `batchId`):
    ```sql
    SELECT * FROM cached_oir_questions 
    WHERE type = 'VERBAL_REASONING' 
@@ -143,17 +145,17 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **flattene
 
 **Validity is defined once (the domain `OIRQuestionValidator`) and enforced at three layers:** the ingestion gate (write-time, new content), the selector (selection-time, skips legacy duds), and the ViewModel (runtime assertion).
 
-**Example:** A user's first test might contain Q1 from batch_001 + Q87 from batch_002 + Q150 from batch_003, etc. — a random mix.
+**Example:** A user's first test might contain Q1 from `batch_pdf_001` + Q87 from `batch_pdf_002` + Q150 from `batch_pdf_003`, etc. — a random mix.
 
-**7-day reuse window:** Questions unused in the last 7 days are preferred; already-used questions are only drawn when unused supply runs short. After test submission, `markQuestionsUsed()` updates `lastUsed` in Room.
+**7-day reuse window:** Questions unused in the last 7 days are preferred; already-used questions are only drawn when unused supply runs short. After test submission, `markQuestionsUsed()` updates `lastUsed` in SQLDelight.
 
 ### Why This Architecture?
 
 | Design Decision | Reason |
 |---|---|
-| Firestore: 20 batch documents | Tracks download source, version history, audit trail; supports selective re-download |
-| Room: 1 flattened table | Enables efficient type-based random sampling via SQL `ORDER BY RANDOM()` + `WHERE type = ?` |
-| Selection: ignore `batchId` | Users get **diverse question coverage** across all 1000, not exhausting one batch before moving to the next |
+| Firestore: 28 batch documents | Tracks download source, version history, audit trail; supports selective re-download |
+| SQLDelight: 1 flattened table | Enables efficient type-based random sampling on both Android and iOS |
+| Selection: ignore `batchId` | Users get **diverse question coverage** across all 1,255, not exhausting one batch before the next |
 
 ### Subscription Limits (per calendar month)
 | Tier | OIR tests/month |
@@ -167,7 +169,7 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **flattene
   - Returns `TestEligibility.LimitReached` → show upgrade prompt (also used as fail-closed fallback for unknown errors)
   - Returns `TestEligibility.NetworkError` → show retryable error; security invariant preserved (only `IOException` / `FirebaseNetworkException` / Firestore `UNAVAILABLE` reach this path)
 - `recordTestUsage()` increments atomically via Firestore transaction after successful submission
-- `markQuestionsUsed()` updates Room for the 7-day reuse window
+- `markQuestionsUsed()` updates SQLDelight for the 7-day reuse window
 
 ### Submit Flow
 ```
@@ -176,30 +178,33 @@ canTakeTest()            → Firestore usage check (monthly gate)
   ├─ LimitReached        → upgrade prompt shown (fail-closed for unknown errors too)
   └─ Eligible            → continue ↓
 
-getTestQuestions(50)     → Room query with type distribution + 7-day preference
+getTestQuestions(50)     → SQLDelight query with type distribution + 7-day preference
 [user takes test]
 SubmitOIRTestUseCase:
   1. scoreCalculator.calculate(session)
-  2. usageRecorder.recordTestUsage(OIR, userId)   ← Firestore atomic increment
-  3. dashboardUseCase.invalidateCache(userId)
-  4. submissionRepository.submitOIR(submission)   → submissionId
-  5. testSessionRepository.endTestSession(sessionId)
-markQuestionsUsed()      → Room (7-day suppression)
+  2. submissionRepository.submitOIR(submission)  → durable submissionId
+  3. usageRecorder.recordTestUsage(OIR, userId, submissionId) ← idempotent Firestore transaction
+  4. testSessionRepository.endTestSession(sessionId)
+  5. dashboardUseCase.invalidateCache(userId)
+markQuestionsUsed()      → SQLDelight (7-day suppression)
 ```
+A session is created before questions are exposed. Leaving the test marks it `ABANDONED`; a
+successful submit marks it `SUBMITTED`; an expired session is terminal `EXPIRED`. Abandoned and
+expired sessions are not resumed in the current release. Result and answer-review routes pass only
+the durable submission ID, and the review screen fetches the persisted result through its ViewModel.
 
-> **KMP-convergence Phase 9a (stale below, not rewritten):** `core/data`'s Room-backed `OIRQuestionCacheManager`/`OIRQuestionSelector`/`OIRSyncMetadataEntity`/`OIRQuestionCacheDao` — and `TestContentRepositoryImpl`, the repository that wired them — are deleted; `shared`'s SQLDelight-backed `GitLiveOIRQuestionCacheManager` (`shared/src/commonMain/kotlin/com/ssbmax/shared/data/repository/`) is the sole implementation on both platforms now, ported to the same sync lifecycle/content-version-reconciliation/7-day-reuse design this section describes. File paths below are historical; the algorithm they document is intended to still apply 1:1 to the SQLDelight port — not independently re-verified line-by-line here.
+
 
 ### Key Files
 | File | Responsibility |
 |---|---|
-| `core/data/.../OIRQuestionCacheManager.kt` (deleted, see note above) | Sync lifecycle + content-version reconciliation (meta doc → clear/redownload/top-up) |
-| `core/data/.../OIRQuestionSelector.kt` (deleted, see note above) | Type-distribution selection + selection-time validity filter + 7-day reuse logic |
-| `core/domain/.../model/OIRQuestionDistribution.kt` | Distribution SSOT (V40/NV40/N20, largest-remainder `counts()`) |
-| `core/data/.../local/entity/OIRSyncMetadataEntity.kt` (deleted, see note above) | Single-row local content-version mirror (DB v20) |
-| `core/domain/.../validation/OIRQuestionValidator.kt` | Validity SSOT — enforced at ingestion (gate), selection (selector), and runtime (assertion) |
+| `data-firebase/.../data/repository/GitLiveOIRQuestionCacheManager.kt` | Sync lifecycle, content-version reconciliation, and SQLDelight cache readiness |
+| `data-firebase/.../data/repository/GitLiveOIRQuestionSelector.kt` | Type-distribution selection, validity filtering, and 7-day reuse logic |
+| `shared/.../domain/model/OIRQuestionDistribution.kt` | Distribution SSOT (V40/NV40/N20, largest-remainder `counts()`) |
+| `shared/.../domain/validation/OIRQuestionValidator.kt` | Validity SSOT — enforced at ingestion, selection, and runtime |
 | `scripts/oir-extraction/upload-oir-batch.js` (`validateBatch`) | Write-time enforcement of the validator's rules |
-| `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) | Monthly limits — single source of truth (`core/data`'s `SubscriptionManager.kt` deleted, KMP-convergence Phase 9d) |
-| `core/domain/.../usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → usage → submit → end session |
+| `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) | Monthly limits — single source of truth |
+| `shared/.../domain/usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → durable submit → usage → session end → dashboard invalidation |
 
 ---
 
@@ -222,7 +227,7 @@ markQuestionsUsed()      → Room (7-day suppression)
 | Component | Scaling Capacity | Bottleneck |
 |---|---|---|
 | Firestore batches | Unlimited (40 batches = 2000 Qs, 100 batches = 5000 Qs, etc.) | Storage cost, not logic |
-| Room local table | Android devices typically handle 10,000+ rows comfortably | Device storage, not SQL query speed |
+| SQLDelight local table | Android and iOS devices handle 10,000+ rows comfortably | Device storage, not SQL query speed |
 | Selection logic | Works identically | Query still does `ORDER BY RANDOM()` — indexes make it fast |
 | Two-phase cache | Adjust Phase 1 count if needed (currently 1–4 = 200 Qs) | Still blocking → background pattern |
 | 7-day reuse window | Works better with more questions | More unused questions available |
@@ -242,17 +247,17 @@ markQuestionsUsed()      → Room (7-day suppression)
    - No code changes needed
 
 4. **Selection logic unchanged**
-   - Query still reads from flattened Room table
+   - Query still reads from the flattened SQLDelight table
    - Type distribution still enforced
    - 7-day window still applied
    - Users automatically get access to all 1000+ questions
 
 ### Cost of Expansion
 
-| Scenario | Firestore Reads | Room Storage | User Impact |
+| Scenario | Firestore Reads | SQLDelight Storage | User Impact |
 |---|---|---|---|
-| 1000 Qs (20 batches) | ~20 on first launch | ~50 MB | All batches in ~1 min |
-| 5000 Qs (100 batches) | ~100 on first launch | ~250 MB | Phase 1–4 blocks (few secs), then background |
+| 1,000 Qs (20 batches) | ~20 on first launch | ~50 MB | All batches in ~1 min |
+| 5,000 Qs (100 batches) | ~100 on first launch | ~250 MB | Phase 1–4 blocks briefly, then background |
 | 10,000 Qs (200 batches) | ~200 on first launch | ~500 MB | Consider increasing Phase 1 batches |
 
 **Optimization if scaling to 10k+:** Increase Phase 1 batches from 1–4 to 1–10 to reduce time-to-first-test.

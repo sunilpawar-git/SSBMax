@@ -595,6 +595,10 @@ Archive or remove obsolete batch-specific scripts, especially those referring to
 
 Run the production read-only content-health command and store its summary in the Phase Summary. Do not deploy content or rules from an unreviewed working tree.
 
+**Phase 8 implementation checkpoint:** Tooling and documentation cleanup is complete. `set-oir-meta-config.js` now defaults to content version 4, updates the runtime-owned 20/20/10 distribution and 1,255 total on explicit commit, and rejects committed downgrades. Added `check-oir-content-health.js` plus npm entry points; the production read-only run verified 28 canonical batches, 1,255 questions, 1,069 valid/186 skipped records, and 529 HTTPS image URLs returning HTTP 200. Architecture documentation now describes SQLDelight, current metadata/content counts, durable session/result-review behavior, idempotent submission ordering, and current subscription behavior. Obsolete scripts and fixtures for the deleted `question_batches/batch_002` schema were removed. Syntax, diagnostics, whitespace, and focused OIR tests pass.
+
+The live metadata document still contains legacy `distribution` fields (`20/20/7/3`) even though its `contentVersion=4`, `batchCount=28`, and `total_questions=1,255` are correct. The publisher is ready to correct this, but the production write was intentionally not executed because the security rule requires explicit confirmation before any production Firestore write. Therefore Phase 8's code gate is complete, but the final release gate remains blocked on that explicit metadata publish, a successful post-write health run, and the existing manual journey evidence.
+
 ---
 
 # 3. Cross-phase validation matrix
