@@ -1,7 +1,9 @@
 package com.ssbmax.shared.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 
@@ -11,6 +13,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -19,6 +22,8 @@ import com.ssbmax.shared.presentation.common.TestError
 import com.ssbmax.shared.testing.ensureComposeResourcesContextInitialized
 import kotlin.test.assertTrue
 import com.ssbmax.shared.ui.common.TestErrorState
+import com.ssbmax.shared.ui.common.progressSemantics
+import com.ssbmax.shared.ui.common.timerSemantics
 import com.ssbmax.shared.ui.components.drawer.DrawerExpandableSection
 import com.ssbmax.shared.ui.components.drawer.DrawerMenuItem
 import org.junit.Before
@@ -34,6 +39,17 @@ class AccessibilityPrimitivesUiTest {
     @Before
     fun setup() {
         ensureComposeResourcesContextInitialized()
+    }
+
+    @Test
+    fun sharedTimerAndProgressSemantics_exposeLocalizedDescriptions() = runComposeUiTest {
+        setContent {
+            Box(Modifier.timerSemantics("Time remaining: 10 seconds", 10, 30))
+            Box(Modifier.progressSemantics("Question progress: 50 percent", 5f, 10f))
+        }
+
+        onNodeWithContentDescription("Time remaining: 10 seconds").assertExists()
+        onNodeWithContentDescription("Question progress: 50 percent").assertExists()
     }
 
     @Test
