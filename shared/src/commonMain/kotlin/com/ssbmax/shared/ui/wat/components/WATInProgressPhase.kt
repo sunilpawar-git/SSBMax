@@ -33,14 +33,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.wat_back_cd
@@ -113,10 +111,11 @@ private fun WATHeader(
             fontWeight = FontWeight.Bold
         )
         Card(
-            modifier = Modifier.semantics {
-                contentDescription = timerDescription
-                progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..15f)
-            },
+            modifier = Modifier.timerSemantics(
+                description = timerDescription,
+                remainingSeconds = timeRemaining,
+                totalSeconds = 15
+            ),
             colors = CardDefaults.cardColors(
                 containerColor = if (timeRemaining <= 5) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
