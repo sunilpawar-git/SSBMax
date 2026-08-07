@@ -142,20 +142,33 @@ class GitLivePersonalTestSubmissionRepository {
     // ===========================
 
     suspend fun submitOIR(submission: OIRSubmission, batchId: String?): Result<String> = try {
-        val doc = SubmissionDocDto(
-            id = submission.id,
-            userId = submission.userId,
-            testId = submission.testId,
-            testType = TestType.OIR.name,
-            status = submission.status.name,
-            submittedAt = submission.submittedAt,
-            gradedByInstructorId = submission.gradedByInstructorId,
-            gradingTimestamp = submission.gradingTimestamp,
-            batchId = batchId,
-            data = submission.toDataDto()
-        )
-        submissionsCollection.document(submission.id).set(doc, merge = true)
-        Result.success(submission.id)
+        // The session ID is the idempotency key. Once a finalized document exists, a
+        // retry must return it rather than issue an update that could mutate the result.
+        val existing = submissionsCollection.document(submission.id).get()
+        if (existing.exists) {
+            if (existing.data(FirestoreRawMapSerializer)[FIELD_USER_ID] == submission.userId &&
+                existing.data(FirestoreRawMapSerializer)[FIELD_TEST_TYPE] == TestType.OIR.name
+            ) {
+                Result.success(submission.id)
+            } else {
+                Result.failure(IllegalStateException("Submission identity conflict"))
+            }
+        } else {
+            val doc = SubmissionDocDto(
+                id = submission.id,
+                userId = submission.userId,
+                testId = submission.testId,
+                testType = TestType.OIR.name,
+                status = submission.status.name,
+                submittedAt = submission.submittedAt,
+                gradedByInstructorId = submission.gradedByInstructorId,
+                gradingTimestamp = submission.gradingTimestamp,
+                batchId = batchId,
+                data = submission.toDataDto()
+            )
+            submissionsCollection.document(submission.id).set(doc, merge = true)
+            Result.success(submission.id)
+        }
     } catch (e: Exception) {
         Result.failure(Exception("Failed to submit OIR: ${e.message}", e))
     }

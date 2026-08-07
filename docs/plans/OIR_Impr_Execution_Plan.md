@@ -1,6 +1,6 @@
 # OIR Improvement Execution Plan
 
-**Status:** Phase 4 complete; Phase 5 pending
+**Status:** Phase 5 complete; Phase 6 pending
 **Target branch:** `feature/OIR_Impr_01`
 **Scope:** First-time OIR experience from eligibility check through test completion, result display, and Home dashboard refresh.
 **Source architecture:** `docs/architecture/OIR_Architecture.md`
@@ -420,6 +420,8 @@ Correct and test:
 ```
 
 Deploy rules only after local rules tests pass. After deployment, run authenticated/unauthenticated smoke checks without exposing user data.
+
+**Phase 5 implementation checkpoint:** Complete. OIR now persists the result before quota usage, uses the durable session ID as the submission and usage idempotency key, returns an existing submission on retry without mutating finalized data, records usage in a Firestore transaction, finalizes the session before dashboard invalidation, and treats question-use marking as best effort. Firestore rules enforce authenticated ownership, immutable session identity, OIR session linkage, immutable finalized submissions, monotonic single-attempt usage updates, and immutable usage identity/month fields. Focused shared submission tests, data-firebase compilation, and local Firestore rule validation passed. The full `check` graph repeatedly reached 667 shared Android tests and 586 iOS shared tests without reported failures but exceeded the bounded 10-minute command limit; pre-existing lint/deprecation warnings remain outside the changed scope. No production rules were deployed.
 
 ---
 
