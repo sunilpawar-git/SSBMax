@@ -1,6 +1,6 @@
 # OIR Improvement Execution Plan
 
-**Status:** Phase 3 complete; Phase 4 pending
+**Status:** Phase 4 complete; Phase 5 pending
 **Target branch:** `feature/OIR_Impr_01`
 **Scope:** First-time OIR experience from eligibility check through test completion, result display, and Home dashboard refresh.
 **Source architecture:** `docs/architecture/OIR_Architecture.md`
@@ -363,6 +363,8 @@ Test:
 ```
 
 Run available Compose/UI tests for Android and shared targets.
+
+**Phase 4 implementation checkpoint:** Complete. The shared OIR test-taking flow now hides active controls during loading/submission, confirms submission, prevents duplicate submits, records skipped/unanswered questions explicitly, derives timer updates from absolute session expiry, provides exit messaging, keeps immediate feedback, exposes image loading/error states, and includes timer/navigation/image accessibility labels. Focused shared Android Compose/use-case tests pass; changed Kotlin/resource diagnostics are clean. The full `check` graph reached lint and 586 iOS tests before the bounded command timeout; no changed-scope failures were reported. Remaining project-wide warnings are pre-existing and outside OIR scope.
 
 ---
 

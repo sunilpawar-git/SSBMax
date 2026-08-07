@@ -22,13 +22,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
+
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
@@ -177,11 +177,19 @@ class OIRTestViewModel(
     fun nextQuestion() {
         val session = _uiState.value.session ?: return
         if (session.currentQuestionIndex < session.questions.size - 1) {
-            _uiState.update { it.copy(session = session.copy(currentQuestionIndex = session.currentQuestionIndex + 1)) }
+            val updatedSession = addSkippedAnswerIfNeeded(
+                session,
+                Clock.System.now().toEpochMilliseconds(),
+                _uiState.value.questionStartTimeMs
+            )
+            _uiState.update {
+                it.copy(session = updatedSession.copy(currentQuestionIndex = updatedSession.currentQuestionIndex + 1))
+            }
             updateUiFromSession()
             _uiState.update { it.copy(questionStartTimeMs = Clock.System.now().toEpochMilliseconds()) }
         }
     }
+
 
     fun previousQuestion() {
         val session = _uiState.value.session ?: return
@@ -192,29 +200,44 @@ class OIRTestViewModel(
         }
     }
 
+    fun requestSubmit() {
+        if (_uiState.value.isSubmitting || _uiState.value.isCompleted) return
+        _uiState.update { it.copy(showSubmitConfirmation = true) }
+    }
+
+    fun dismissSubmitConfirmation() {
+        _uiState.update { it.copy(showSubmitConfirmation = false) }
+    }
+
     fun submitTest() {
         if (_uiState.value.isSubmitting || _uiState.value.isCompleted) return
-        _uiState.update { it.copy(isTimerActive = false, isSubmitting = true) }
+        _uiState.update { it.copy(showSubmitConfirmation = false, isTimerActive = false, isSubmitting = true) }
         timerJob?.cancel()
         val session = _uiState.value.session ?: run {
             logger.e(tag, "OIR test session null during test submission", null)
             return
         }
+        val completedSession = markUnansweredQuestionsSkipped(
+            session,
+            Clock.System.now().toEpochMilliseconds(),
+            _uiState.value.questionStartTimeMs
+        )
+        _uiState.update { it.copy(session = completedSession) }
         viewModelScope.launch {
             try {
-                val subscriptionType = getSubscriptionTier(session.userId).getOrDefault(SubscriptionTier.FREE)
-                val submissionId = submitOIRTestUseCase(session).getOrThrow()
+                val subscriptionType = getSubscriptionTier(completedSession.userId).getOrDefault(SubscriptionTier.FREE)
+                val submissionId = submitOIRTestUseCase(completedSession).getOrThrow()
                 // Note: served questions are marked used inside SubmitOIRTestUseCase --
                 // the single source of truth for submission orchestration. Do NOT mark
                 // them again here (that caused a duplicate write per submit on Android).
                 testContentRepository.clearCache()
                 _uiState.update {
                     it.copy(
-                        session = session.copy(isCompleted = true),
+                        session = completedSession.copy(isCompleted = true),
                         isSubmitting = false,
                         isCompleted = true, sessionId = submissionId,
                         subscriptionType = subscriptionType,
-                        testResult = scoreCalculator.calculate(session)
+                        testResult = scoreCalculator.calculate(completedSession)
                     )
                 }
             } catch (e: CancellationException) {
@@ -226,6 +249,7 @@ class OIRTestViewModel(
             }
         }
     }
+
 
     fun pauseTest() {
         val session = _uiState.value.session ?: return
@@ -239,30 +263,7 @@ class OIRTestViewModel(
     private fun startTimer() {
         _uiState.update { it.copy(isTimerActive = true, timerStartTime = Clock.System.now().toEpochMilliseconds()) }
         timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            try {
-                while (isActive && _uiState.value.isTimerActive &&
-                    _uiState.value.timeRemainingSeconds > 0 && !_uiState.value.isCompleted
-                ) {
-                    delay(1000)
-                    if (!isActive || !_uiState.value.isTimerActive) break
-                    val session = _uiState.value.session ?: return@launch
-                    val absoluteRemaining = ((session.expiresAt - Clock.System.now().toEpochMilliseconds()) / 1000L)
-                        .toInt().coerceAtLeast(0)
-                    // The local tick keeps virtual/test clocks deterministic; the absolute
-                    // expiry is the upper bound and prevents background drift extending a test.
-                    val newTime = minOf(_uiState.value.timeRemainingSeconds - 1, absoluteRemaining)
-                    _uiState.update { state ->
-                        state.copy(timeRemainingSeconds = newTime, session = state.session?.copy(timeRemainingSeconds = newTime))
-                    }
-                    if (newTime == 0 && isActive && _uiState.value.isTimerActive) submitTest()
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } finally {
-                _uiState.update { it.copy(isTimerActive = false) }
-            }
-        }
+        timerJob = startOIRTimer(viewModelScope, _uiState, ::submitTest)
     }
 
     private fun updateUiFromSession() {

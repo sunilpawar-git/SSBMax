@@ -129,6 +129,11 @@
     <string name="oir_previous">Previous</string>
     <string name="oir_next">Next</string>
     <string name="oir_submit_test">Submit Test</string>
+    <string name="oir_submit_confirmation_title">Submit test?</string>
+    <string name="oir_submit_confirmation_message">Are you sure you want to submit? Unanswered questions will be marked as skipped.</string>
+    <string name="oir_submit_confirm">Submit</string>
+    <string name="oir_submitting">Submitting your OIR test…</string>
+    <string name="oir_skip">Skip</string>
     <string name="oir_progress_format">%1$d/%2$d</string>
     <string name="oir_correct">Correct!</string>
     <string name="oir_incorrect">Incorrect</string>
@@ -139,6 +144,9 @@
     <string name="oir_error_questions_unavailable">OIR questions are temporarily unavailable. Please check your connection and try again.</string>
     <string name="oir_retry">Retry</string>
     <string name="oir_question_figure_description">OIR question figure</string>
+    <string name="oir_timer_content_description">Time remaining</string>
+    <string name="oir_question_figure_loading">Loading question figure…</string>
+    <string name="oir_question_figure_error">Question figure unavailable</string>
     <string name="oir_multi_select_hint">Select exactly 2 options</string>
     <string name="oir_multi_select_selections_complete">2 options selected</string>
 

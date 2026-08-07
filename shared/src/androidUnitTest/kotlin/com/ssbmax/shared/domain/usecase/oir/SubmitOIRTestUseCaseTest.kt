@@ -98,17 +98,17 @@ class SubmitOIRTestUseCaseTest {
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { mockDashboardUseCase.invalidateCache(any()) }
         coVerify(exactly = 0) { mockSubmissionRepo.submitOIR(any(), any()) }
-        coVerify(exactly = 0) { mockSessionRepo.endTestSession(any()) }
+        coVerify(exactly = 0) { mockSessionRepo.completeTestSession(any()) }
     }
 
     @Test
-    fun `invoke failure at step 4 submitOIR propagates and endTestSession NOT called`() = runTest {
+    fun `invoke failure at step 4 submitOIR propagates and completeTestSession NOT called`() = runTest {
         coEvery { mockSubmissionRepo.submitOIR(any(), any()) } returns Result.failure(Exception("Firestore error"))
 
         val result = useCase(testSession)
 
         assertTrue(result.isFailure)
-        coVerify(exactly = 0) { mockSessionRepo.endTestSession(any()) }
+        coVerify(exactly = 0) { mockSessionRepo.completeTestSession(any()) }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -130,9 +130,9 @@ class SubmitOIRTestUseCaseTest {
     }
 
     @Test
-    fun `invoke marks questions used even when endTestSession fails`() = runTest {
+    fun `invoke marks questions used even when completeTestSession fails`() = runTest {
         coEvery { mockSubmissionRepo.submitOIR(any(), null) } returns Result.success("session-001")
-        coEvery { mockSessionRepo.endTestSession(any()) } throws RuntimeException("session error")
+        coEvery { mockSessionRepo.completeTestSession(any()) } throws RuntimeException("session error")
 
         val result = useCase(testSession)
 

@@ -1,7 +1,9 @@
 package com.ssbmax.shared.ui.oir
 
 import androidx.compose.ui.test.ExperimentalTestApi
+
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -124,6 +126,7 @@ class OIRTestScreenUiTest {
         setContent { OIRTestScreen(viewModel = mockViewModel) }
 
         onNodeWithText("5:00", substring = true).assertIsDisplayed()
+        onNodeWithContentDescription("Time remaining").assertIsDisplayed()
     }
 
     @Test
@@ -132,6 +135,32 @@ class OIRTestScreenUiTest {
         setContent { OIRTestScreen(viewModel = mockViewModel) }
 
         onNodeWithText("Loading", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun loadingState_hidesActiveNavigationControls() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(isLoading = true)
+        setContent { OIRTestScreen(viewModel = mockViewModel) }
+
+        assert(onAllNodesWithText("1/2").fetchSemanticsNodes().isEmpty())
+        assert(onAllNodesWithText("Next").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun submitButton_showsConfirmationDialog() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(
+            currentQuestionIndex = 1,
+            totalQuestions = 2,
+            currentQuestion = testQuestions[1]
+        )
+        every { mockViewModel.requestSubmit() } answers {
+            uiStateFlow.value = uiStateFlow.value.copy(showSubmitConfirmation = true)
+        }
+        setContent { OIRTestScreen(viewModel = mockViewModel) }
+
+        onNodeWithText("Submit Test").performClick()
+        onNodeWithText("Submit test?").assertIsDisplayed()
+        onNodeWithText("Unanswered questions", substring = true).assertIsDisplayed()
     }
 
     @Test

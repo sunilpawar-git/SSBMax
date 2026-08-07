@@ -42,6 +42,10 @@ import ssbmax.shared.generated.resources.oir_exit_message
 import ssbmax.shared.generated.resources.oir_exit_title
 import ssbmax.shared.generated.resources.oir_loading
 import ssbmax.shared.generated.resources.oir_retry
+import ssbmax.shared.generated.resources.oir_submit_confirmation_message
+import ssbmax.shared.generated.resources.oir_submit_confirmation_title
+import ssbmax.shared.generated.resources.oir_submitting
+import ssbmax.shared.generated.resources.oir_submit_confirm
 
 /**
  * KMP port of `app/.../ui/tests/oir/OIRTestScreen.kt`. Delegates rendering
@@ -92,6 +96,10 @@ fun OIRTestScreen(
         OIRTestMessage(message = stringResource(Res.string.oir_loading))
         return
     }
+    if (uiState.isSubmitting) {
+        OIRTestMessage(message = stringResource(Res.string.oir_submitting))
+        return
+    }
     uiState.errorType?.let { errorType ->
         OIRTestMessage(
             message = stringResource(errorMessageFor(errorType)),
@@ -115,9 +123,10 @@ fun OIRTestScreen(
                 currentIndex = uiState.currentQuestionIndex,
                 totalQuestions = uiState.totalQuestions,
                 isAnswered = uiState.currentQuestionAnswered,
+                isSubmitting = uiState.isSubmitting,
                 onPrevious = { viewModel.previousQuestion() },
                 onNext = { viewModel.nextQuestion() },
-                onSubmit = { viewModel.submitTest() }
+                onSubmit = { viewModel.requestSubmit() }
             )
         }
     ) { paddingValues ->
@@ -133,6 +142,13 @@ fun OIRTestScreen(
                 )
             }
         }
+    }
+
+    if (uiState.showSubmitConfirmation) {
+        OIRSubmitConfirmationDialog(
+            onSubmit = { viewModel.submitTest() },
+            onDismiss = { viewModel.dismissSubmitConfirmation() }
+        )
     }
 
     if (showExitDialog) {
@@ -172,6 +188,21 @@ private fun errorMessageFor(errorType: OIRErrorType) = when (errorType) {
     OIRErrorType.SUBMIT_FAILED -> Res.string.oir_error_submit_failed
     OIRErrorType.SESSION_UNAVAILABLE -> Res.string.oir_error_session_unavailable
     OIRErrorType.INVALID_QUESTION -> Res.string.oir_error_invalid_question
+}
+
+@Composable
+private fun OIRSubmitConfirmationDialog(onSubmit: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.oir_submit_confirmation_title)) },
+        text = { Text(stringResource(Res.string.oir_submit_confirmation_message)) },
+        confirmButton = {
+            TextButton(onClick = onSubmit) { Text(stringResource(Res.string.oir_submit_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.oir_continue_test)) }
+        }
+    )
 }
 
 @Composable

@@ -286,6 +286,41 @@ class OIRTestViewModelTest {
     }
 
     @Test
+    fun `unanswered question is recorded as skipped when advancing`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.nextQuestion()
+
+        val session = viewModel.uiState.value.session
+        assertTrue(session?.answers?.get("q1")?.skipped == true)
+        assertEquals(1, viewModel.uiState.value.currentQuestionIndex)
+    }
+
+    @Test
+    fun `submit request shows confirmation without starting submission`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.requestSubmit()
+
+        assertTrue(viewModel.uiState.value.showSubmitConfirmation)
+        assertEquals(false, viewModel.uiState.value.isSubmitting)
+    }
+
+    @Test
+    fun `submit marks unanswered questions skipped before scoring`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.submitTest()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val result = viewModel.uiState.value.testResult
+        assertEquals(50, result?.skippedQuestions)
+    }
+
+    @Test
     fun `timer counts down one second at a time`() = runTest(testDispatcher) {
         val viewModel = buildViewModel()
         testDispatcher.scheduler.runCurrent()

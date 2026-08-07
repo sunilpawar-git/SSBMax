@@ -17,7 +17,9 @@ class OIRTestScoreCalculator constructor(
 
         val correctAnswers   = scoredAnswers.values.count { it.isCorrect }
         val incorrectAnswers = scoredAnswers.values.count { !it.isCorrect && !it.skipped }
-        val skippedQuestions = session.questions.size - scoredAnswers.size
+        val skippedQuestions = session.questions.count { question ->
+            session.answers[question.id]?.skipped ?: true
+        }
 
         val rawScore = scoredAnswers.values.filter { it.isCorrect }.sumOf { answer ->
             session.questions.find { it.id == answer.questionId }?.difficulty?.points ?: 1
