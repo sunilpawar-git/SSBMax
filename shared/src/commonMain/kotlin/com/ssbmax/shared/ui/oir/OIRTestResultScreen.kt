@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.presentation.oirresult.OirResultViewModel
+import com.ssbmax.shared.ui.common.loadingSemantics
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_result_cd_home
@@ -124,7 +125,10 @@ fun OIRTestResultScreen(
 @Composable
 private fun LoadingState(paddingValues: PaddingValues) {
     Box(
-        modifier = Modifier.fillMaxSize().padding(paddingValues),
+        modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .loadingSemantics(stringResource(Res.string.oir_result_loading)),
         contentAlignment = Alignment.Center
     ) {
         Column(

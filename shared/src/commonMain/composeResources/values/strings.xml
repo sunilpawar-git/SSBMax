@@ -173,6 +173,7 @@
     <string name="oir_result_raw_score">Raw Score</string>
     <string name="oir_result_performance_by_category">Performance by Category</string>
     <string name="oir_result_correct_of_total">%1$d/%2$d correct</string>
+    <string name="oir_result_category_progress">Category score: %1$d percent</string>
     <string name="oir_result_avg_time">Avg: %1$s/q</string>
     <string name="oir_result_less_than_one_second">&lt;1</string>
     <string name="oir_result_review_answers">Review Answers</string>

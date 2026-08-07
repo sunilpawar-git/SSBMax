@@ -29,9 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.CategoryScore
+import com.ssbmax.shared.ui.common.progressSemantics
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_result_avg_time
 import ssbmax.shared.generated.resources.oir_result_back_home
+import ssbmax.shared.generated.resources.oir_result_category_progress
 import ssbmax.shared.generated.resources.oir_result_correct_of_total
 import ssbmax.shared.generated.resources.oir_result_less_than_one_second
 import ssbmax.shared.generated.resources.oir_result_review_answers
@@ -66,7 +68,16 @@ internal fun CategoryPerformanceCard(categoryScore: CategoryScore) {
             }
             LinearProgressIndicator(
                 progress = { categoryScore.percentage / 100f },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .progressSemantics(
+                        description = stringResource(
+                            Res.string.oir_result_category_progress,
+                            categoryScore.percentage.toInt()
+                        ),
+                        current = categoryScore.percentage,
+                        maximum = 100f
+                    ),
                 color = when {
                     categoryScore.percentage >= 75 -> MaterialTheme.colorScheme.tertiary
                     categoryScore.percentage >= 50 -> MaterialTheme.colorScheme.primary
