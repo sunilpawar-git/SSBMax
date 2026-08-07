@@ -1,6 +1,6 @@
 # Initiative B — Codebase UI Quality Execution Plan
 
-**Status:** Phase 2 complete; Phase 3 not started
+**Status:** Phase 3 complete; Phase 4 not started
 **Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
 **Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
 **Target branch:** `feature/OIR_Impr_01`
@@ -348,6 +348,17 @@ Add/update tests for:
 ./gradlew :lint:test
 ./gradlew check
 ```
+
+**Phase 3 completion evidence (August 2026):**
+
+- Shared drawer menu items and sub-menu items now expose button roles; selected menu items expose selected state.
+- Expandable drawer sections and the recommendation banner expose localized expanded/collapsed state on one parent action; decorative chevrons are silent so they are not announced as duplicate controls.
+- Role-selection cards expose selected state, and analytics progression indicators expose a 0–100 progress range for screen readers.
+- `AccessibilityPrimitivesUiTest` covers selected actions, expandable state/action behavior, duplicate-chevron prevention, and retry callback behavior. No answer text, URLs, IDs, backend errors, or private content is added to semantics.
+- Validation passed: focused accessibility UI test compilation, `:shared:testDebugUnitTest`, `:shared:compileDebugKotlinAndroid`, `:lint:test`, and `check`. Existing Android API, unresolved opt-in, lint-baseline, and coroutine-test warnings remain pre-existing and unrelated.
+- Tech-debt sweep completed: no new suppressions, hardcoded resources, files over 300 lines, diagnostics, or generated artifacts were introduced.
+
+**Phase 3 deep-check:** The Phase 3 goal is met for the shared primitives in scope: reusable interactive components now provide one actionable semantic node, localized labels/state, selected/disabled-compatible state behavior, progress range semantics, decorative-icon silence, and retry action coverage. The broader initiative is not complete: feature-screen migration (Phase 4), Android-only UI (Phase 5), enforcement hardening (Phase 6), and cross-platform release validation (Phase 7) remain planned work.
 
 ---
 

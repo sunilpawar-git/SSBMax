@@ -37,6 +37,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -103,8 +106,15 @@ private fun BannerCard(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
+    val expansionDescription = stringResource(
+        if (isExpanded) Res.string.ssb_banner_collapse_cd else Res.string.ssb_banner_expand_cd
+    )
     Card(
-        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { stateDescription = expansionDescription },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = style.background)
@@ -150,7 +160,7 @@ private fun BannerCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Icon(
                     if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = stringResource(if (isExpanded) Res.string.ssb_banner_collapse_cd else Res.string.ssb_banner_expand_cd),
+                    contentDescription = null,
                     tint = style.content.copy(alpha = 0.7f), modifier = Modifier.size(20.dp)
                 )
                 BannerDetails(model, style, isExpanded)

@@ -20,6 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -228,7 +231,14 @@ private fun ProgressionIndicator(status: ProgressionStatus) {
         Spacer(Modifier.height(4.dp))
         LinearProgressIndicator(
             progress = { status.progressPercentage / 100f },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = status.progressPercentage,
+                        range = 0f..100f
+                    )
+                }
         )
         if (!status.canProgress) {
             Spacer(Modifier.height(4.dp))
