@@ -49,6 +49,59 @@ import ssbmax.shared.generated.resources.tat_writing_title_blank
  * config value.
  */
 @Composable
+private fun TATWritingHeader(
+    sequenceNumber: Int,
+    charactersCount: Int,
+    maxCharacters: Int,
+    minCharacters: Int,
+    timeRemaining: Int,
+    timerDescription: String
+) {
+    if (sequenceNumber == 12) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Lightbulb, contentDescription = null)
+                    Text(stringResource(Res.string.tat_blank_slide_reminder_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                }
+                Text(stringResource(Res.string.tat_blank_slide_reminder_message), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text(
+                    text = stringResource(if (sequenceNumber == 12) Res.string.tat_writing_title_blank else Res.string.tat_writing_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(Res.string.tat_writing_count_format, charactersCount, maxCharacters),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (charactersCount < minCharacters || charactersCount > maxCharacters) {
+                        MaterialTheme.colorScheme.error
+                    } else MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+            Text(
+                text = "${timeRemaining / 60}:${(timeRemaining % 60).toString().padStart(2, '0')}",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.timerSemantics(timerDescription, timeRemaining, 240)
+            )
+        }
+    }
+}
+
+@Composable
 fun TATWritingPhase(
     story: String,
     onStoryChange: (String) -> Unit,
@@ -68,55 +121,14 @@ fun TATWritingPhase(
             .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (sequenceNumber == 12) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Lightbulb, contentDescription = null)
-                        Text(stringResource(Res.string.tat_blank_slide_reminder_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    }
-                    Text(stringResource(Res.string.tat_blank_slide_reminder_message), style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(
-                        text = stringResource(if (sequenceNumber == 12) Res.string.tat_writing_title_blank else Res.string.tat_writing_title),
-                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(Res.string.tat_writing_count_format, charactersCount, maxCharacters),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (charactersCount < minCharacters || charactersCount > maxCharacters) {
-                            MaterialTheme.colorScheme.error
-                        } else MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Timer, contentDescription = null)
-                    Text(
-                        text = "${timeRemaining / 60}:${(timeRemaining % 60).toString().padStart(2, '0')}",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.timerSemantics(
-                            description = timerDescription,
-                            remainingSeconds = timeRemaining,
-                            totalSeconds = 240
-                        )
-                    )
-                }
-            }
-        }
+        TATWritingHeader(
+            sequenceNumber = sequenceNumber,
+            charactersCount = charactersCount,
+            maxCharacters = maxCharacters,
+            minCharacters = minCharacters,
+            timeRemaining = timeRemaining,
+            timerDescription = timerDescription
+        )
 
         OutlinedTextField(
             value = story,
