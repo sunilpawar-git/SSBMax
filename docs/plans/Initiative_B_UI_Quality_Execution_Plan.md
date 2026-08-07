@@ -446,6 +446,7 @@ Additional Phase 4 migration checkpoint:
 - Focused psychology-test compilation/tests and shared Android compilation passed. PPDT, TAT, WAT, SRT, SD, GTO, Interview, profile/settings/auth, common error, and result/review implementation sweeps are now complete for the shared UI scope. Dedicated PPDT/SD screen UI tests and broader result/profile screen-reader evidence remain required before the initiative can be marked fully complete.
 - A shared `AccessibilitySemantics.kt` helper now centralizes timer, progress-range, and loading/live-region mechanics while screens retain localized, domain-specific descriptions.
 - Final validation after the balance-screen sweep: `./gradlew check` passed; project diagnostics and `git diff --check` are clean. Existing Android API deprecation, coroutine opt-in, and lint-baseline warnings remain pre-existing.
+- Step 6 static sweep completed: grading priority and notification status/delete colors now use Material theme roles. Remaining raw colors are classified exceptions: Google branding, premium plan content-provided gradients/foreground contrast, and decorative white-noise rendering. Remaining null icon descriptions are decorative or accompanied by visible/actionable text; no unlabelled icon-only action remains in the audited scope.
 
 ---
 

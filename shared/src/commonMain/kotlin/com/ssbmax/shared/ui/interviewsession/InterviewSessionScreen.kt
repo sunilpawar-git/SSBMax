@@ -209,7 +209,11 @@ private fun LoadingContent(message: String) = Box(
 private fun ErrorContent(error: String?, onRetry: () -> Unit) = Column(
     Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
 ) {
-    Text(error ?: stringResource(Res.string.interview_error_generic), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error)
+    Text(
+        text = error ?: stringResource(Res.string.interview_error_generic),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.error
+    )
     Button(onClick = onRetry) { Text(stringResource(Res.string.interview_button_retry)) }
 }
 
