@@ -1,0 +1,593 @@
+# Initiative B — Codebase UI Quality Execution Plan
+
+**Status:** Proposed; implementation not started
+**Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
+**Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
+**Target branch:** `feature/OIR_Impr_01`
+**Platforms:** Android and iOS through shared Compose Multiplatform UI; Android-only platform glue where applicable.
+
+---
+
+## 1. Initiative goals and boundaries
+
+### 1.1 Goal
+
+Make the UI consistently usable with screen readers, keyboard/switch-style navigation where supported, large text, light/dark themes, and accessible color contrast—without introducing platform-specific business/UI behavior forks.
+
+The initiative also establishes a single semantic color system so screens use theme roles instead of arbitrary `Color.*`, RGB values, or feature-specific color conventions.
+
+### 1.2 Accessibility contract
+
+- Every interactive control has an understandable accessible name or visible text.
+- Icon-only controls expose meaningful semantics.
+- Decorative icons do not create redundant screen-reader announcements.
+- Color is never the only signal for correctness, status, selection, error, or progress.
+- Content descriptions do not expose secrets, tokens, private user data, or full sensitive responses.
+- Touch targets meet the project’s supported platform accessibility guidance.
+- Dynamic state changes are exposed through semantics where appropriate.
+- Loading, error, empty, retry, success, disabled, and selected states are distinguishable without relying only on color.
+- Reusable components provide correct semantics once so consuming screens do not duplicate or override them incorrectly.
+
+### 1.3 Color/theme contract
+
+- UI uses `MaterialTheme.colorScheme` or approved semantic design tokens.
+- Hardcoded UI colors and raw hex/RGB values are prohibited unless an external brand/content specification requires them and the value is documented.
+- Semantic roles include, at minimum:
+  - success/correct
+  - error/incorrect
+  - warning/attention
+  - informational
+  - selected/active
+  - disabled
+  - skipped/neutral
+  - test progress
+- Light and dark themes must maintain readable contrast.
+- Colors must not encode business logic in multiple screens; semantic mapping is centralized.
+
+### 1.4 Scope boundaries
+
+Included:
+
+- `shared/src/commonMain` Compose UI and reusable components.
+- `shared` Android/iOS UI tests and shared semantics.
+- `app` Android Compose/platform UI that remains outside shared.
+- Theme, color, typography, and reusable design-system code.
+- Custom lint/Detekt rules and baselines related to accessibility/colors.
+
+Excluded unless discovered as a blocking dependency:
+
+- Business logic changes unrelated to UI semantics.
+- Navigation or repository redesign.
+- Backend/Firebase behavior.
+- Product redesign or new visual branding.
+- Accessibility claims for third-party screens/components that cannot be controlled; these must be documented as external limitations.
+
+---
+
+## 2. Strict rules for every phase
+
+### 2.1 Phase independence and build gates
+
+- Work on one phase at a time.
+- Every phase must end with a successful relevant build and all relevant tests passing.
+- Do not proceed with failing tests, unexplained diagnostics, broken previews, or unresolved tech debt.
+- Pre-existing failures must be recorded separately and changed-scope behavior must still be verified.
+- A timeout is not a passing result.
+
+### 2.2 TDD
+
+For every behavior change:
+
+1. Add or update a failing test or static rule describing the desired behavior.
+2. Implement the smallest correct change.
+3. Refactor while preserving behavior.
+4. Run focused tests.
+5. Run the complete phase test suite.
+6. Run the phase build/check gate.
+
+Tests must cover both positive and negative paths, including invalid semantics, missing labels, theme variants, and security-sensitive content.
+
+### 2.3 Architecture and clean code
+
+- Preserve `Compose Screen → ViewModel → UseCase → Repository` boundaries.
+- Keep UI semantics in reusable UI components where possible.
+- Keep Android/iOS behavior in shared code unless a genuine platform API requires an actual/expect boundary.
+- Follow MVVM, SOLID, DRY, and SSOT.
+- No mutable singleton UI state.
+- No Firebase calls from UI/ViewModels.
+- No file may exceed 300 lines of code.
+- Do not hide code-quality problems by expanding suppressions or baselines.
+- Any new suppression requires a written reason and a removal/follow-up condition.
+
+### 2.4 Resources and localization
+
+- No new hardcoded user-facing strings.
+- Content descriptions use localized string resources where they are user-facing.
+- Do not construct accessibility text from untrusted raw content without sanitization or length limits.
+- Do not use resource names that leak private data or implementation details.
+- Existing hardcoded strings discovered in touched screens must be moved to the correct shared/app resource system rather than copied into new code.
+
+### 2.5 Security and privacy
+
+- Semantics must not expose access tokens, API keys, user IDs, private interview responses, answer keys, or hidden correct answers on active test screens.
+- Accessibility labels for answer options must describe the option safely; they must not announce the correct answer before submission.
+- Do not log semantic text or user content solely for accessibility debugging in production.
+- Keep authentication, subscription, ownership, and navigation security unchanged.
+- Run repository security/pre-commit checks for every phase.
+
+### 2.6 Required phase handoff
+
+At the end of every phase, stop and provide:
+
+1. Changes completed.
+2. Tests added and executed.
+3. Build/check commands and results.
+4. Tech debt incurred.
+5. Exact steps used to resolve that debt immediately.
+6. Remaining risks or blockers.
+7. Confirmation that the phase gate passed.
+
+No next phase begins until the handoff is accepted and the gate is green.
+
+---
+
+## 3. Baseline and inventory
+
+Before Phase 1:
+
+- Confirm branch and working-tree safety.
+- Record current diagnostics and build/check results.
+- Inventory all hardcoded colors and raw RGB/hex values in UI code.
+- Inventory all `contentDescription = null`, empty labels, icon-only controls, and custom clickable surfaces.
+- Inventory existing theme/color tokens, lint rules, Detekt rules, and baselines.
+- Identify shared reusable components before feature-by-feature edits.
+- Identify screens that display sensitive test content and require special semantics review.
+- Record baseline test count and known failures.
+
+Suggested inventory commands:
+
+```bash
+git --no-optional-locks status --short --branch
+./gradlew check
+./gradlew :shared:testDebugUnitTest
+./gradlew :lint:test
+```
+
+Search targets include:
+
+```text
+Color.
+Color(...)
+0x...
+contentDescription = null
+IconButton(
+clickable(
+selectable(
+semantics(
+clearAndSetSemantics
+```
+
+The inventory is an artifact for planning. It is not permission to replace every null description mechanically: decorative icons are valid when their meaning is already conveyed by adjacent text.
+
+### Final initiative success criteria
+
+- All changed UI files pass diagnostics and quality checks.
+- No new hardcoded UI colors or strings are introduced.
+- Approved semantic color roles are used consistently across migrated UI.
+- Interactive controls have correct labels and state semantics.
+- Decorative icons remain silent and meaningful icons are announced once.
+- Active test screens do not expose answers, credentials, or private content through semantics.
+- Light and dark theme contrast checks pass for migrated screens.
+- Shared UI behavior remains consistent on Android and iOS.
+- Lint/Detekt prevents regression without unjustified baseline growth.
+- All phase builds and tests pass.
+- All tech debt incurred during migration is resolved before final handoff.
+
+---
+
+# Phase 1 — UI quality inventory and semantic standards
+
+**Goal:** Establish the baseline, define the semantic color/accessibility contract, and prevent ambiguous migration decisions.
+
+## Scope
+
+- Produce the color and accessibility inventory.
+- Identify shared design-system primitives and feature-specific exceptions.
+- Define semantic color roles and their Material theme mappings.
+- Define rules for decorative versus meaningful icons.
+- Define minimum semantic requirements for buttons, icon buttons, images, progress, selection, errors, and test answers.
+- Define contrast and touch-target acceptance criteria for supported platforms.
+- Confirm whether existing theme definitions can support the roles without introducing a new dependency.
+
+## TDD/static tests first
+
+Add or update standards tests/rules for:
+
+- Semantic color roles resolve for light and dark themes.
+- Required color roles are present and non-null.
+- A decorative icon does not create an extra announcement.
+- An icon-only action has an accessible label.
+- Test answer semantics do not expose the correct answer before submission.
+- Loading/error/selected/disabled states expose state information without color-only reliance.
+
+## Implementation
+
+1. Create an inventory artifact under `docs/` or the relevant plan evidence location.
+2. Define semantic color tokens in the existing theme/design-system location.
+3. Document exceptions and acceptance criteria.
+4. Add test helpers for semantics and theme rendering.
+5. Do not migrate large screen groups in this phase.
+
+## Security checks
+
+- Review all planned content descriptions for PII/secret exposure.
+- Confirm test-answer semantics do not reveal answer keys.
+- Ensure inventory files do not contain production credentials or private user content.
+
+## Phase gate
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :lint:test
+./gradlew check
+```
+
+No feature migration begins if the standards are ambiguous or the baseline is not recorded.
+
+---
+
+# Phase 2 — Semantic color system and theme validation
+
+**Goal:** Establish the universal color foundation before migrating screens.
+
+## Scope
+
+- Implement approved semantic color roles using Material theme values.
+- Support light and dark themes.
+- Replace hardcoded colors in shared reusable components first.
+- Add contrast-focused tests for text, icons, indicators, cards, buttons, and status surfaces.
+- Preserve existing branding where it meets contrast and theme requirements.
+
+## TDD tests first
+
+Add/update tests for:
+
+- Every semantic role maps to a usable color in light theme.
+- Every semantic role maps to a usable color in dark theme.
+- Primary/secondary/error/success/warning text meets the defined contrast threshold.
+- Disabled controls remain distinguishable from enabled controls.
+- Correct/incorrect/skipped states remain distinguishable without relying only on hue.
+- No raw hardcoded color is introduced in migrated components.
+
+## Implementation
+
+1. Add semantic theme tokens with platform-neutral shared definitions.
+2. Migrate shared buttons, chips, cards, indicators, status surfaces, and common icons.
+3. Replace direct `Color.*`, RGB, and hex usage in touched reusable components.
+4. Add previews or screenshot fixtures for light/dark variants where the project supports them.
+5. Keep files below 300 lines; split component files when needed.
+
+## Security checks
+
+- Do not place secret/environment values in colors or preview fixtures.
+- Ensure debug-only visual indicators cannot display auth state or user identifiers in release UI.
+- Run secret scanning and pre-commit checks.
+
+## Phase gate
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :shared:compileDebugKotlinAndroid
+./gradlew :lint:test
+./gradlew check
+```
+
+---
+
+# Phase 3 — Shared accessibility primitives
+
+**Goal:** Fix reusable components once and propagate correct semantics to all consumers.
+
+## Scope
+
+Migrate and test shared primitives such as:
+
+- Icon-only buttons.
+- Navigation buttons.
+- Retry/refresh controls.
+- Buttons with icons and text.
+- Cards with clickable behavior.
+- Progress indicators.
+- Empty/error/loading states.
+- Selectable answer options.
+- Images and image-loading fallbacks.
+- Tabs, chips, toggles, and expandable rows.
+
+## TDD/UI tests first
+
+Add/update tests for:
+
+- Each icon-only component exposes a localized accessible name.
+- Text-plus-icon controls announce one meaningful label, not duplicate text.
+- Decorative icons are not independently announced.
+- Disabled controls expose disabled state.
+- Selected controls expose selected state.
+- Progress exposes current/maximum progress where meaningful.
+- Retry controls are discoverable and invoke the intended callback.
+- Clickable cards expose one action rather than nested conflicting actions.
+- Image failures expose a useful fallback label without leaking URLs or internal errors.
+
+## Implementation
+
+1. Add semantics to reusable components.
+2. Remove redundant child semantics with `clearAndSetSemantics` only when justified.
+3. Localize labels through shared Compose resources.
+4. Ensure semantics do not expose hidden/correct answers.
+5. Add previews for reusable visual components where required by Detekt rules.
+6. Refactor long components before crossing the 300-line limit.
+
+## Security checks
+
+- Answer-option semantics announce only option text/position while the test is active.
+- Correctness/explanation semantics appear only after submission/review state permits them.
+- No raw Firebase errors, IDs, or URLs are exposed through content descriptions.
+
+## Phase gate
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :shared:compileDebugKotlinAndroid
+./gradlew :lint:test
+./gradlew check
+```
+
+---
+
+# Phase 4 — Shared feature-screen migration
+
+**Goal:** Apply the primitives across shared student/instructor screens without platform divergence.
+
+## Scope
+
+Migrate shared Compose screens in verticals, prioritizing:
+
+1. Home and dashboard.
+2. OIR and other test-taking screens.
+3. Result and answer-review screens.
+4. PPDT/TAT/WAT/SRT/SD.
+5. GTO and Interview.
+6. Profile, settings, authentication, and common error flows.
+
+For each screen, verify:
+
+- Heading hierarchy.
+- Focus/order behavior.
+- Icon-only controls.
+- State announcements.
+- Color semantics.
+- Empty/loading/error/retry states.
+- Sensitive-content boundaries.
+
+## TDD/UI tests first
+
+Add/update tests for each migrated vertical:
+
+- Critical controls are discoverable by semantics.
+- Primary action invokes the correct ViewModel event.
+- Error and retry state is visible and actionable.
+- Loading state does not expose stale or interactive content.
+- Selected/disabled/completed states are semantically distinct.
+- OIR active screen does not expose answer keys.
+- Result/review screen exposes answer correctness only where intended.
+- Navigation controls continue to pass IDs only.
+
+## Implementation
+
+1. Migrate one vertical at a time.
+2. Reuse shared primitives rather than adding screen-local fixes.
+3. Replace hardcoded colors and strings encountered in touched files.
+4. Avoid unrelated business-logic changes.
+5. Keep Android and iOS on the same shared implementation.
+
+## Security checks
+
+- Confirm sensitive interview/test content is not announced in unintended parent semantics.
+- Confirm analytics/logging does not capture accessibility text containing private responses.
+- Confirm auth/subscription errors remain generic and do not disclose backend details.
+
+## Phase gate
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :shared:iosSimulatorArm64Test
+./gradlew :shared:compileDebugKotlinAndroid
+./gradlew check
+```
+
+---
+
+# Phase 5 — Android platform and remaining UI migration
+
+**Goal:** Bring Android-only UI and platform screens to the same semantic/color standard without creating an Android/iOS behavior fork.
+
+## Scope
+
+- Audit and migrate remaining `app` Compose/platform UI.
+- Align Android theme mappings with shared semantic roles.
+- Correct Android-only dialogs, notification/settings screens, platform permission explanations, and fallback screens.
+- Verify platform-specific wrappers preserve shared semantics.
+- Remove obsolete local color/string helpers only after all callers migrate.
+
+## TDD/UI tests first
+
+Add/update tests for:
+
+- Android-only controls have labels and state semantics.
+- Shared and Android entry points expose equivalent behavior.
+- Theme roles resolve consistently between app and shared UI.
+- Permission/auth error dialogs do not expose sensitive implementation details.
+- Back/home/retry actions remain reachable and correctly labeled.
+
+## Implementation
+
+1. Migrate reusable Android components before individual screens.
+2. Replace hardcoded colors with shared or app theme roles.
+3. Move user-facing strings into the correct resource system.
+4. Remove dead helpers and stale imports immediately.
+5. Keep platform-specific code limited to platform APIs and composition glue.
+
+## Security checks
+
+- Verify no Firebase credentials, user IDs, or tokens appear in semantics or error text.
+- Run app-layer Firebase import/security checks.
+- Confirm release builds do not expose debug-only accessibility overlays.
+
+## Phase gate
+
+```bash
+./gradlew :app:testDebugUnitTest
+./gradlew :shared:testDebugUnitTest
+./gradlew :app:assembleDebug
+./gradlew check
+```
+
+---
+
+# Phase 6 — Enforcement and regression prevention
+
+**Goal:** Make accessibility and color quality enforceable so the codebase does not regress after this initiative.
+
+## Scope
+
+- Add or strengthen custom lint/Detekt rules for:
+  - hardcoded Compose colors
+  - raw RGB/hex UI colors
+  - missing labels on icon-only controls where statically detectable
+  - new hardcoded user-facing strings
+  - missing previews for reusable components where required
+- Review and reduce existing baselines rather than expanding them without reason.
+- Add CI/pre-commit checks for changed UI files.
+- Document legitimate exceptions and suppression format.
+
+## TDD/static tests first
+
+Add rule tests proving:
+
+- A new hardcoded color fails.
+- A new raw hex/RGB UI color fails.
+- A valid Material theme/semantic token passes.
+- A labeled icon-only control passes.
+- An unlabeled icon-only control fails where detection is reliable.
+- Decorative icons with explicit justification pass.
+- Existing legacy violations are tracked separately and do not silently grow.
+
+## Implementation
+
+1. Implement rule tests first.
+2. Implement detectors with minimal false positives.
+3. Migrate or suppress existing violations only with documented reasons.
+4. Update pre-commit and CI commands.
+5. Add contributor documentation with examples.
+6. Keep detector files under 300 lines by splitting rules/helpers.
+
+## Security checks
+
+- Ensure detectors do not print source content containing secrets in reports.
+- Confirm generated reports are not committed if they contain private data.
+- Run dependency and secret audits.
+
+## Phase gate
+
+```bash
+./gradlew :lint:test
+./gradlew :detekt-rules:test
+./gradlew check
+```
+
+No final phase begins while the enforcement rules are flaky or produce unexplained false positives.
+
+---
+
+# Phase 7 — Cross-platform validation and release handoff
+
+**Goal:** Verify the complete UI quality initiative on supported platforms and finalize documentation.
+
+## Scope
+
+- Run shared JVM and iOS simulator tests.
+- Run Android unit, lint, Detekt, and debug build gates.
+- Execute accessibility checks on representative screens.
+- Validate light/dark themes and contrast.
+- Validate large text/layout behavior where tooling supports it.
+- Perform screen-reader smoke tests on Android and iOS.
+- Update architecture/development documentation.
+- Record remaining third-party/platform limitations separately.
+
+## Cross-phase validation matrix
+
+| Area | Required evidence |
+|---|---|
+| Colors | No new hardcoded UI colors; semantic roles used consistently |
+| Contrast | Text/status/action combinations pass defined contrast checks |
+| Labels | Icon-only and semantic controls are labeled |
+| Decorative content | Decorative icons/images do not create duplicate announcements |
+| State | Loading, error, retry, selected, disabled, success, and empty states are distinguishable |
+| Test safety | Active test does not expose correct answers through semantics |
+| Navigation | Back/home/retry/review actions remain reachable and ID-based |
+| KMP | Android/iOS shared behavior remains equivalent |
+| Resources | Strings/content descriptions are localized |
+| Enforcement | Lint/Detekt/pre-commit checks prevent regression |
+| Architecture | MVVM, SSOT, file-size, and dependency rules remain intact |
+| Security | No credentials, tokens, private answers, or PII leak through UI/logs |
+
+## Manual validation
+
+For representative screens:
+
+1. Navigate using screen reader controls only.
+2. Confirm every interactive element has one understandable announcement.
+3. Confirm decorative icons are not redundantly announced.
+4. Toggle light/dark themes and verify contrast/readability.
+5. Increase system font size and verify no critical clipping.
+6. Test active and submitted OIR states to ensure correct answers are not exposed prematurely.
+7. Test network error/retry states without exposing raw backend errors.
+8. Verify Android and iOS behavior from the same shared implementation.
+
+## Phase gate
+
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :shared:iosSimulatorArm64Test
+./gradlew :app:testDebugUnitTest
+./gradlew :lint:test
+./gradlew :detekt-rules:test
+./gradlew check
+./gradlew :app:assembleDebug
+```
+
+The initiative cannot be marked complete until all changed-scope tests and builds pass and manual accessibility/theme evidence is recorded.
+
+---
+
+## 4. Final handoff checklist
+
+- [ ] Baseline inventory recorded.
+- [ ] Semantic color contract documented.
+- [ ] Shared theme roles implemented and tested.
+- [ ] Shared accessibility primitives migrated.
+- [ ] Shared feature screens migrated.
+- [ ] Android-only UI migrated where applicable.
+- [ ] No new hardcoded strings/colors introduced.
+- [ ] No unjustified baseline growth.
+- [ ] Lint/Detekt/pre-commit enforcement enabled.
+- [ ] Light/dark contrast validation passed.
+- [ ] Screen-reader smoke tests completed on Android and iOS.
+- [ ] Active test semantics do not reveal answers or private content.
+- [ ] No credentials, tokens, or PII exposed through UI/logs.
+- [ ] No changed code file exceeds 300 lines.
+- [ ] All phase handoffs completed.
+- [ ] All targeted tests pass.
+- [ ] Full build/check gates pass.
+- [ ] All tech debt incurred during the initiative is resolved.
+- [ ] Architecture and contributor documentation updated.
+- [ ] Final commit created only after the release gate is green.
