@@ -77,9 +77,6 @@ internal fun OIRSubmission.toDataDto() = OIRDataDto(
         categoryScores = testResult.categoryScores.entries.associate { (category, score) ->
             category.name to CategoryScoreDto(score.totalQuestions, score.correctAnswers, score.percentage, score.averageTimeSeconds)
         },
-        difficultyBreakdown = testResult.difficultyBreakdown.entries.associate { (difficulty, score) ->
-            difficulty.name to DifficultyScoreDto(score.totalQuestions, score.correctAnswers, score.percentage)
-        },
         answeredQuestions = testResult.answeredQuestions.map { it.toDto() },
         completedAt = testResult.completedAt,
         passed = testResult.passed,

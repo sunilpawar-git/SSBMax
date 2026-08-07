@@ -108,7 +108,8 @@ data class OIRTestResult(
     val rawScore: Int,
     val percentageScore: Float,
     val categoryScores: Map<OIRQuestionType, CategoryScore>,
-    val difficultyBreakdown: Map<QuestionDifficulty, DifficultyScore>,
+    @Deprecated("Legacy OIR field; no longer calculated for new results")
+    val difficultyBreakdown: Map<QuestionDifficulty, DifficultyScore> = emptyMap(),
     val answeredQuestions: List<OIRAnsweredQuestion>,
     val completedAt: Long,
 ) {
@@ -133,6 +134,7 @@ data class CategoryScore(
     val averageTimeSeconds: Int,
 )
 
+@Deprecated("Legacy OIR field retained for historical result compatibility")
 data class DifficultyScore(
     val difficulty: QuestionDifficulty,
     val totalQuestions: Int,

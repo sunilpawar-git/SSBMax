@@ -133,8 +133,10 @@ class SubmissionClusterDtoTest {
             status = SubmissionStatus.SUBMITTED_PENDING_REVIEW
         )
 
-        val roundTripped = submission.toDataDto().toDomain()
-        assertEquals(submission.testResult, roundTripped.testResult)
+        val dto = submission.toDataDto()
+        val roundTripped = dto.toDomain()
+        assertTrue(dto.testResult.difficultyBreakdown.isEmpty())
+        assertEquals(submission.testResult.copy(difficultyBreakdown = emptyMap()), roundTripped.testResult)
         assertEquals(submission.id, roundTripped.id)
     }
 
