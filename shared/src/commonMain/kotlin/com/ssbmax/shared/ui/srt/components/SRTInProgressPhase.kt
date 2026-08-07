@@ -27,11 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.ssbmax.shared.ui.common.progressSemantics
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.srt_back_cd
@@ -118,9 +116,11 @@ private fun SRTHeader(
             Text(
                 text = stringResource(Res.string.srt_situation_number, situationNumber, totalSituations),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.semantics {
-                    contentDescription = progressDescription
-                }
+                modifier = Modifier.progressSemantics(
+                    description = progressDescription,
+                    current = (situationNumber * 100f / totalSituations).coerceIn(0f, 100f),
+                    maximum = 100f
+                )
             )
         },
         navigationIcon = {
@@ -138,10 +138,11 @@ private fun SRTHeader(
                 ),
                 modifier = Modifier
                     .padding(end = 8.dp)
-                    .semantics {
-                        contentDescription = timerDescription
-                        progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..1800f)
-                    }
+                    .timerSemantics(
+                        description = timerDescription,
+                        remainingSeconds = timeRemaining,
+                        totalSeconds = 1800
+                    )
             ) {
                 Text(
                     text = formatSrtTime(timeRemaining),
