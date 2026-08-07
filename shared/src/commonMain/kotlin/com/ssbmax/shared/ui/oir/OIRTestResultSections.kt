@@ -13,8 +13,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Score
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -83,27 +82,29 @@ internal fun ScoreHeaderCard(result: OIRTestResult) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
-            AssistChip(
-                onClick = { },
-                label = {
+            Surface(
+                color = if (result.passed) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
+                shape = MaterialTheme.shapes.small
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (result.passed) Icons.Default.CheckCircle else Icons.Default.Error,
+                        contentDescription = null,
+                        tint = if (result.passed) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onError
+                    )
                     Text(
                         text = stringResource(
                             if (result.passed) Res.string.oir_result_passed else Res.string.oir_result_needs_improvement
                         ),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (result.passed) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onError
                     )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = if (result.passed) Icons.Default.CheckCircle else Icons.Default.Error,
-                        contentDescription = null
-                    )
-                },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = if (result.passed) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
-                    labelColor = if (result.passed) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onError
-                )
-            )
+                }
+            }
         }
     }
 }

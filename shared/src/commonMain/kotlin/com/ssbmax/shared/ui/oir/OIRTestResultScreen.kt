@@ -75,7 +75,7 @@ import ssbmax.shared.generated.resources.oir_result_title
 fun OIRTestResultScreen(
     submissionId: String,
     onNavigateHome: () -> Unit = {},
-    onRetakeTest: () -> Unit = {},
+    onTakeAnotherTest: () -> Unit = {},
     onReviewAnswers: () -> Unit = {},
     viewModel: OirResultViewModel = koinViewModel(),
     modifier: Modifier = Modifier
@@ -113,7 +113,7 @@ fun OIRTestResultScreen(
                 result = uiState.result!!,
                 paddingValues = paddingValues,
                 modifier = modifier,
-                onRetakeTest = onRetakeTest,
+                onTakeAnotherTest = onTakeAnotherTest,
                 onReviewAnswers = onReviewAnswers,
                 onNavigateHome = onNavigateHome
             )
@@ -199,7 +199,7 @@ private fun ResultContent(
     result: OIRTestResult,
     paddingValues: PaddingValues,
     modifier: Modifier,
-    onRetakeTest: () -> Unit,
+    onTakeAnotherTest: () -> Unit,
     onReviewAnswers: () -> Unit,
     onNavigateHome: () -> Unit
 ) {
@@ -218,7 +218,7 @@ private fun ResultContent(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
-        items(result.categoryScores.values.toList()) { categoryScore ->
+        items(visibleOIRCategoryScores(result.categoryScores)) { categoryScore ->
             CategoryPerformanceCard(categoryScore = categoryScore)
         }
         item {
@@ -232,7 +232,7 @@ private fun ResultContent(
         item { DifficultyBreakdownCard(difficultyScores = result.difficultyBreakdown) }
         item {
             ActionButtonsCard(
-                onRetakeTest = onRetakeTest,
+                onTakeAnotherTest = onTakeAnotherTest,
                 onReviewAnswers = onReviewAnswers,
                 onBackToHome = onNavigateHome
             )

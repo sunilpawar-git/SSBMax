@@ -26,7 +26,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,8 +37,10 @@ import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.oir_result_avg_time
 import ssbmax.shared.generated.resources.oir_result_back_home
 import ssbmax.shared.generated.resources.oir_result_correct_of_total
-import ssbmax.shared.generated.resources.oir_result_retake_test
+import ssbmax.shared.generated.resources.oir_result_difficulty_unavailable
+import ssbmax.shared.generated.resources.oir_result_less_than_one_second
 import ssbmax.shared.generated.resources.oir_result_review_answers
+import ssbmax.shared.generated.resources.oir_result_take_another_test
 
 /**
  * Further delegate composables for [OIRTestResultScreen] — category/difficulty
@@ -88,7 +89,10 @@ internal fun CategoryPerformanceCard(categoryScore: CategoryScore) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = stringResource(Res.string.oir_result_avg_time, categoryScore.averageTimeSeconds),
+                    text = stringResource(
+                        Res.string.oir_result_avg_time,
+                        categoryScore.averageTimeSeconds.toAverageTimeLabel()
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -98,10 +102,25 @@ internal fun CategoryPerformanceCard(categoryScore: CategoryScore) {
 }
 
 @Composable
+private fun Int.toAverageTimeLabel(): String = if (this == 0) {
+    stringResource(Res.string.oir_result_less_than_one_second)
+} else {
+    toString()
+}
+
+@Composable
 internal fun DifficultyBreakdownCard(difficultyScores: Map<QuestionDifficulty, DifficultyScore>) {
+    val orderedScores = visibleOIRDifficultyScores(difficultyScores)
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            difficultyScores.values.forEach { score ->
+            if (!hasMeaningfulOIRDifficultyBreakdown(difficultyScores)) {
+                Text(
+                    text = stringResource(Res.string.oir_result_difficulty_unavailable),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            orderedScores.forEach { score ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -120,9 +139,9 @@ internal fun DifficultyBreakdownCard(difficultyScores: Map<QuestionDifficulty, D
                             },
                             contentDescription = null,
                             tint = when (score.difficulty) {
-                                QuestionDifficulty.EASY -> Color.Green
-                                QuestionDifficulty.MEDIUM -> Color.Yellow
-                                QuestionDifficulty.HARD -> Color.Red
+                                QuestionDifficulty.EASY -> MaterialTheme.colorScheme.tertiary
+                                QuestionDifficulty.MEDIUM -> MaterialTheme.colorScheme.primary
+                                QuestionDifficulty.HARD -> MaterialTheme.colorScheme.error
                             },
                             modifier = Modifier.size(16.dp)
                         )
@@ -149,7 +168,7 @@ internal fun DifficultyBreakdownCard(difficultyScores: Map<QuestionDifficulty, D
 
 @Composable
 internal fun ActionButtonsCard(
-    onRetakeTest: () -> Unit,
+    onTakeAnotherTest: () -> Unit,
     onReviewAnswers: () -> Unit,
     onBackToHome: () -> Unit
 ) {
@@ -160,10 +179,10 @@ internal fun ActionButtonsCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(Res.string.oir_result_review_answers))
             }
-            OutlinedButton(onClick = onRetakeTest, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onTakeAnotherTest, modifier = Modifier.fillMaxWidth()) {
                 Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(Res.string.oir_result_retake_test))
+                Text(stringResource(Res.string.oir_result_take_another_test))
             }
             TextButton(onClick = onBackToHome, modifier = Modifier.fillMaxWidth()) {
                 Icon(imageVector = Icons.Default.Home, contentDescription = null, modifier = Modifier.size(20.dp))

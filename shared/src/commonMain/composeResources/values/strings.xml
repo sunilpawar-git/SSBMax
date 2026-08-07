@@ -171,10 +171,12 @@
     <string name="oir_result_performance_by_category">Performance by Category</string>
     <string name="oir_result_difficulty_breakdown">Difficulty Breakdown</string>
     <string name="oir_result_correct_of_total">%1$d/%2$d correct</string>
-    <string name="oir_result_avg_time">Avg: %1$ds/q</string>
+    <string name="oir_result_avg_time">Avg: %1$s/q</string>
+    <string name="oir_result_less_than_one_second">&lt;1</string>
     <string name="oir_result_review_answers">Review Answers</string>
-    <string name="oir_result_retake_test">Retake Test</string>
+    <string name="oir_result_take_another_test">Take Another Test</string>
     <string name="oir_result_back_home">Back to Home</string>
+    <string name="oir_result_difficulty_unavailable">Difficulty breakdown is unavailable for this question set.</string>
     <string name="oir_result_submission_not_found">Submission not found</string>
     <string name="oir_result_parse_failed">Failed to parse submission data</string>
     <string name="oir_result_load_failed">Failed to load submission</string>

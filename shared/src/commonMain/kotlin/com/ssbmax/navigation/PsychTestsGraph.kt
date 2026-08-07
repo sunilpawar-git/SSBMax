@@ -40,7 +40,7 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
                     popUpTo<SSBMaxDestinations.StudentHome> { inclusive = true }
                 }
             },
-            onRetakeTest = {
+            onTakeAnotherTest = {
                 navController.navigate(SSBMaxDestinations.OIRTest("oir_standard")) {
                     popUpTo<SSBMaxDestinations.OIRTestResult> { inclusive = true }
                 }
