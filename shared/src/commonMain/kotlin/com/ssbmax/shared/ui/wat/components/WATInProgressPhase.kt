@@ -33,6 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +48,7 @@ import ssbmax.shared.generated.resources.wat_progress_format
 import ssbmax.shared.generated.resources.wat_response_placeholder
 import ssbmax.shared.generated.resources.wat_skip
 import ssbmax.shared.generated.resources.wat_submit
+import ssbmax.shared.generated.resources.wat_timer_content_description
 import ssbmax.shared.generated.resources.wat_timer_format
 
 /**
@@ -93,6 +98,7 @@ private fun WATHeader(
     timeRemaining: Int,
     onShowExitDialog: () -> Unit
 ) {
+    val timerDescription = stringResource(Res.string.wat_timer_content_description, timeRemaining)
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -107,6 +113,10 @@ private fun WATHeader(
             fontWeight = FontWeight.Bold
         )
         Card(
+            modifier = Modifier.semantics {
+                contentDescription = timerDescription
+                progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..15f)
+            },
             colors = CardDefaults.cardColors(
                 containerColor = if (timeRemaining <= 5) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )

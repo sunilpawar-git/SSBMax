@@ -25,11 +25,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.tat_blank_slide_reminder_message
+import ssbmax.shared.generated.resources.tat_timer_content_description
 import ssbmax.shared.generated.resources.tat_blank_slide_reminder_title
 import ssbmax.shared.generated.resources.tat_writing_count_format
 import ssbmax.shared.generated.resources.tat_writing_placeholder
@@ -54,6 +59,7 @@ fun TATWritingPhase(
     charactersCount: Int,
     sequenceNumber: Int
 ) {
+    val timerDescription = stringResource(Res.string.tat_timer_content_description, timeRemaining)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +108,11 @@ fun TATWritingPhase(
                         text = "${timeRemaining / 60}:${(timeRemaining % 60).toString().padStart(2, '0')}",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        color = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.semantics {
+                            contentDescription = timerDescription
+                            progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..240f)
+                        }
                     )
                 }
             }
@@ -120,7 +130,11 @@ fun TATWritingPhase(
 
         LinearProgressIndicator(
             progress = { timeRemaining.toFloat() / 240f },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics {
+                    progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..240f)
+                },
             color = if (timeRemaining < 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
 

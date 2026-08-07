@@ -294,6 +294,8 @@
     <string name="ppdt_writing_placeholder">Start writing your story here...</string>
     <string name="ppdt_writing_minimum_label">Minimum: %1$d characters</string>
     <string name="ppdt_writing_count_format">%1$d / %2$d</string>
+    <string name="ppdt_timer_content_description">Time remaining: %1$d seconds</string>
+    <string name="ppdt_progress_content_description">Writing progress: %1$d percent</string>
     <string name="ppdt_review_title">Review Your Submission</string>
     <string name="ppdt_review_story_label">Your Story</string>
     <string name="ppdt_review_character_count">%1$d characters</string>
@@ -343,6 +345,8 @@
     <string name="tat_image_number">Picture %1$d of %2$d</string>
     <string name="tat_observe_carefully">Observe carefully</string>
     <string name="tat_picture_content_description">TAT picture %1$d</string>
+    <string name="tat_timer_content_description">Time remaining: %1$d seconds</string>
+    <string name="tat_progress_content_description">Picture viewing progress: %1$d percent</string>
     <string name="tat_blank_slide_instruction">No picture -- use your imagination</string>
     <string name="tat_writing_title">Write Your Story</string>
     <string name="tat_writing_title_blank">Write Your Imagination</string>
@@ -369,6 +373,7 @@
     <string name="wat_continue_test">Continue Test</string>
     <string name="wat_progress_format">%1$d / %2$d</string>
     <string name="wat_timer_format">%1$ds</string>
+    <string name="wat_timer_content_description">Time remaining: %1$d seconds</string>
     <string name="wat_response_placeholder">Type your response...</string>
     <string name="wat_skip">Skip</string>
     <string name="wat_submit">Submit</string>
@@ -397,6 +402,8 @@
     <string name="srt_loading">Loading SRT test situations from cloud...</string>
     <string name="srt_test">SRT Test</string>
     <string name="srt_back_cd">Back</string>
+    <string name="srt_timer_content_description">Time remaining: %1$d seconds</string>
+    <string name="srt_progress_content_description">Situation progress: %1$d percent</string>
     <string name="srt_full_title">SRT - Situation Reaction Test</string>
     <string name="srt_subtitle">Describe how you would react in practical situations</string>
     <string name="srt_instructions_title">Instructions</string>
@@ -451,6 +458,8 @@
     <string name="sdt_instruction_6">Be honest and specific in your responses</string>
     <string name="sdt_start_test">Start Test</string>
     <string name="sdt_question_header">Question %1$d/%2$d</string>
+    <string name="sdt_timer_content_description">Time remaining: %1$d seconds</string>
+    <string name="sdt_progress_content_description">Question progress: %1$d percent</string>
     <string name="sdt_answer_label">Your Answer</string>
     <string name="sdt_char_count">Characters: %1$d / %2$d (Min: %3$d)</string>
     <string name="sdt_action_skip">Skip</string>
@@ -744,9 +753,13 @@
     <string name="interview_button_start">Start Interview</string>
 
     <string name="interview_question_number">Question %1$d of %2$d</string>
+    <string name="interview_progress_content_description">Interview progress: %1$d percent</string>
     <string name="interview_cd_mute_tts">Mute audio</string>
     <string name="interview_cd_unmute_tts">Unmute audio</string>
     <string name="interview_cd_exit">Exit Interview</string>
+    <string name="gd_exit_cd">Exit group discussion</string>
+    <string name="gpe_exit_cd">Exit group planning exercise</string>
+    <string name="lecturette_exit_cd">Exit lecturette</string>
     <string name="interview_exit_title">Exit Interview?</string>
     <string name="interview_exit_message">Are you sure you want to exit? Your progress will be saved, but you\'ll need to start a new interview session to continue.</string>
     <string name="interview_exit_confirm">Exit</string>

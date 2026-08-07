@@ -438,6 +438,13 @@ Deep check result: the Phase 4 goal is **not fully complete**. The listed vertic
 
 Tech-debt sweep for this checkpoint: resolved the new Detekt complexity violation by extracting OIR semantic-state mapping; removed raw feature colors from all changed dashboard files; fixed the test-fixture compatibility issue by avoiding an unprovided composition local in reusable Home components. No new suppressions, baselines, generated artifacts, or unresolved diagnostics remain. Pre-existing API deprecation/opt-in and baseline lint warnings remain outside this changed scope.
 
+Additional Phase 4 migration checkpoint:
+
+- PPDT, TAT, WAT, SRT, and SD active phases now expose localized timer and progress semantics through `ProgressBarRangeInfo`; WAT/SRT regression tests verify dynamic timer announcements. PPDT timers are non-clickable semantic surfaces rather than false action controls.
+- GTO GD, GPE, and Lecturette active-phase close actions now have localized accessible names. Interview session progress exposes a localized percentage and range semantics; TTS mute state uses the theme error role rather than a raw red color.
+- Shared test error state now uses a polite live region so loading/error/retry flows announce state changes without exposing backend details.
+- Focused psychology-test compilation/tests and shared Android compilation passed. Remaining gaps are explicit coverage depth for PPDT/SD UI tests and screen-by-screen review of result/review, profile/settings/auth, and other GTO/Interview states.
+
 ---
 
 # Phase 5 — Android platform and remaining UI migration

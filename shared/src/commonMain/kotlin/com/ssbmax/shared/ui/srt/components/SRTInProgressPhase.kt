@@ -27,6 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
@@ -34,7 +38,9 @@ import ssbmax.shared.generated.resources.srt_back_cd
 import ssbmax.shared.generated.resources.srt_char_count
 import ssbmax.shared.generated.resources.srt_next
 import ssbmax.shared.generated.resources.srt_response_placeholder
+import ssbmax.shared.generated.resources.srt_progress_content_description
 import ssbmax.shared.generated.resources.srt_situation
+import ssbmax.shared.generated.resources.srt_timer_content_description
 import ssbmax.shared.generated.resources.srt_situation_number
 import ssbmax.shared.generated.resources.srt_skip
 import ssbmax.shared.generated.resources.srt_your_response
@@ -102,11 +108,19 @@ private fun SRTHeader(
     timeRemaining: Int,
     onShowExitDialog: () -> Unit
 ) {
+    val progressDescription = stringResource(
+        Res.string.srt_progress_content_description,
+        (situationNumber * 100 / totalSituations).coerceIn(0, 100)
+    )
+    val timerDescription = stringResource(Res.string.srt_timer_content_description, timeRemaining)
     TopAppBar(
         title = {
             Text(
                 text = stringResource(Res.string.srt_situation_number, situationNumber, totalSituations),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics {
+                    contentDescription = progressDescription
+                }
             )
         },
         navigationIcon = {
@@ -122,7 +136,12 @@ private fun SRTHeader(
                 colors = CardDefaults.cardColors(
                     containerColor = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primaryContainer
                 ),
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .semantics {
+                        contentDescription = timerDescription
+                        progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..1800f)
+                    }
             ) {
                 Text(
                     text = formatSrtTime(timeRemaining),
