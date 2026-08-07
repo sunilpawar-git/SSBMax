@@ -182,6 +182,7 @@
     <string name="oir_result_parse_failed">Failed to parse submission data</string>
     <string name="oir_result_load_failed">Failed to load submission</string>
     <string name="oir_review_title">Review Answers</string>
+    <string name="oir_review_cd_back">Back to results</string>
     <string name="oir_review_answer">Question %1$d</string>
     <string name="oir_review_selected_answer">Your answer: %1$s</string>
     <string name="oir_review_correct_answer">Correct answer: %1$s</string>

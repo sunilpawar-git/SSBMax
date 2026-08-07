@@ -38,6 +38,7 @@ import ssbmax.shared.generated.resources.oir_review_correct_answer
 import ssbmax.shared.generated.resources.oir_review_explanation
 import ssbmax.shared.generated.resources.oir_review_not_answered
 import ssbmax.shared.generated.resources.oir_review_selected_answer
+import ssbmax.shared.generated.resources.oir_review_cd_back
 import ssbmax.shared.generated.resources.oir_review_title
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +57,7 @@ fun OIRAnswerReviewScreen(
                 title = { Text(stringResource(Res.string.oir_review_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.oir_review_cd_back))
                     }
                 }
             )
