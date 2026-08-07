@@ -1,6 +1,6 @@
 # OIR Difficulty Removal Execution Plan
 
-**Status:** Phase 3 complete; Phases 4–6 pending
+**Status:** Phase 4 complete; Phases 5–6 pending
 **Parent plan:** `docs/plans/OIR_Impr_Execution_Plan.md`
 **Scope:** Remove Easy/Medium/Hard classification from the OIR product while preserving valid-question selection, 20/20/10 distribution, subscription enforcement, durable sessions, scoring integrity, result persistence, and answer review.
 **Target branch:** `feature/OIR_Impr_01`
@@ -377,6 +377,8 @@ node scripts/check-oir-content-health.js
 ```
 
 Use the correct Python command (`python3 -m py_compile`) for Python scripts; do not treat a JavaScript command as a Python validator.
+
+**Phase 4 completion evidence:** Both extractors omit difficulty from new records; the upload gate accepts absent and legacy difficulty; health checks report legacy difficulty informationally without requiring it; metadata publishers default to dry-run and do not own difficulty fields; fixture tests cover absent/legacy difficulty, malformed required content, and dry-run no-write behavior. No production content was written.
 
 ---
 

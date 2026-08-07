@@ -39,6 +39,12 @@ function assert(condition, message) {
 
 function validateQuestion(question, seenIds, counters, batchId) {
   const id = typeof question.id === 'string' ? question.id.trim() : '';
+  if (Object.prototype.hasOwnProperty.call(question, 'difficulty')) {
+    counters.legacyDifficultyFields += 1;
+    if (typeof question.difficulty !== 'string' || !question.difficulty.trim()) {
+      counters.malformedDifficultyFields += 1;
+    }
+  }
   assert(id, `${batchId}: question has no stable id`);
   assert(!seenIds.has(id), `duplicate question id across batches: ${id}`);
   seenIds.add(id);
@@ -139,6 +145,8 @@ async function main() {
     types: {},
     validByType: {},
     imageUrls: [],
+    legacyDifficultyFields: 0,
+    malformedDifficultyFields: 0,
   };
   for (const batchDoc of batchSnapshot.docs) {
     const data = batchDoc.data();
@@ -181,6 +189,8 @@ async function main() {
   console.log(`   total questions: ${counters.totalQuestions}`);
   console.log(`   valid questions: ${counters.validQuestions}`);
   console.log(`   skipped questions: ${counters.invalidQuestions}`);
+  console.log(`   legacy difficulty fields (informational): ${counters.legacyDifficultyFields}`);
+  console.log(`   malformed legacy difficulty fields (informational): ${counters.malformedDifficultyFields}`);
   console.log(`   type coverage (all/valid): ${JSON.stringify(counters.types)} / ${JSON.stringify(counters.validByType)}`);
   console.log(`   unique HTTPS image URLs checked: ${uniqueImageUrls.length}`);
 }

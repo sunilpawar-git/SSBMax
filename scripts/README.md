@@ -25,10 +25,12 @@ node set-oir-meta-config.js
 node set-oir-meta-config.js --version 4 --batches 28 --commit
 ```
 
-`set-oir-meta-config.js` rejects a committed content-version downgrade. Set
-`FIREBASE_SERVICE_ACCOUNT` to the service-account JSON path; no credential is stored in this
-repository. Use `oir-extraction/upload-oir-batch.js` for new batch ingestion and run the health
-check after a reviewed production upload.
+`set-oir-meta-config.js` rejects a committed content-version downgrade and its default dry run
+requires no credentials or network access. Set `FIREBASE_SERVICE_ACCOUNT` to the service-account
+JSON path; no credential is stored in this repository. Use `oir-extraction/upload-oir-batch.js`
+for new batch ingestion and run the health
+check after a reviewed production upload. New OIR question JSON must not include a
+difficulty field; legacy fields are tolerated only when reading existing data.
 
 ## Available Scripts
 

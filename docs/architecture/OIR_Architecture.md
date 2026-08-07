@@ -57,7 +57,7 @@ The result and answer-review routes pass only the durable submission ID. They fe
 ## Content Pipeline (PDF → Firestore)
 
 ### Design Principle
-Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and `explanation` are extracted deterministically from the PDF text layer. LLM is only used for non-critical enrichment (type, difficulty tags).
+Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and `explanation` are extracted deterministically from the PDF text layer. OIR extraction emits no difficulty label; legacy difficulty fields are tolerated only for backward-compatible reads and are informational in health checks.
 
 ### Scripts
 | Script | Role |
@@ -66,7 +66,7 @@ Keep the LLM out of the correctness path. `questionText`, `correctAnswerId`, and
 | `scripts/oir-extraction/oir_extract_part3.py` | Extract the 8 topic-family batches (021–028) from `OIR PART 3`; reuses v2 helpers (`composite_figure`, `page_images`, `OPT_IDS`) |
 | `scripts/oir-extraction/upload-oir-batch.js` | Ingestion **gate** + upload images → Storage, questions → Firestore |
 | `scripts/set-oir-meta-config.js` | Publish `test_content/oir/meta/config` `{contentVersion, batchCount}` — dry-run by default and rejects committed downgrades |
-| `scripts/check-oir-content-health.js` | Read-only production verification of metadata, all 28 batches, question IDs/types, totals, and HTTPS image URLs |
+| `scripts/check-oir-content-health.js` | Read-only production verification of metadata, all 28 batches, question IDs/types, totals, HTTPS image URLs, and informational legacy-difficulty counts |
 
 The upload script's `validateBatch()` is a **fail-closed ingestion gate**: it mirrors the error-level rules of the domain `OIRQuestionValidator` (non-empty options, `correctAnswerId` present unless a figure question, answer ∈ option ids, non-blank text) and rejects the write if any question violates them. The Kotlin validator stays the SSOT for the *rules*; the gate enforces them at write time.
 
@@ -101,7 +101,7 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 - Total: ~1,255 questions live in Firestore
 - Images: All live at `gs://ssbmax.../oir/pdf_questions/` (public HTTPS); the health gate verified 529 unique URLs with HTTP 200.
 - Content health baseline: 1,069 valid questions and 186 skipped legacy/invalid records; all three runtime categories have ample valid coverage.
-- Meta doc: `test_content/oir/meta/config` is published as `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }`.
+- Meta doc: `test_content/oir/meta/config` is published as `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }`; metadata publishers do not own difficulty fields.
 - Run `node scripts/check-oir-content-health.js` for the production read-only gate; it performs no writes and requires `FIREBASE_SERVICE_ACCOUNT` (or the local development key).
 
 > **Skipped legacy/invalid records:** The production health check currently reports 186 records that

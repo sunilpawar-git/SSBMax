@@ -38,6 +38,13 @@ if (!Number.isInteger(contentVersion) || contentVersion < 1 ||
 }
 
 async function main() {
+  if (!commit) {
+    console.log(`Target meta: { contentVersion: ${contentVersion}, batchCount: ${batchCount} }`);
+    console.log('🧪 DRY RUN (default) — no credentials, network, or write required.');
+    console.log('   Re-run with --commit to read the current remote version and publish.');
+    return;
+  }
+
   const admin = require('firebase-admin');
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT ||
     path.join(process.env.HOME, 'Downloads/SSBMax/firebase-admin-key.json');
@@ -56,13 +63,6 @@ async function main() {
   const currentVersion = current.exists ? current.data().contentVersion : null;
   if (commit && Number.isInteger(currentVersion) && contentVersion < currentVersion) {
     throw new Error(`Refusing metadata downgrade from contentVersion ${currentVersion} to ${contentVersion}`);
-  }
-
-  if (!commit) {
-    console.log('🧪 DRY RUN (default) — no write. Re-run with --commit to publish.');
-    console.log('   Effect on clients: every device whose stored contentVersion != ' +
-      `${contentVersion} will clear its OIR cache and re-download batch_pdf_001..${String(batchCount).padStart(3, '0')}.`);
-    return;
   }
 
   // These fields are the metadata SSOT consumed by operators and clients. Keep
