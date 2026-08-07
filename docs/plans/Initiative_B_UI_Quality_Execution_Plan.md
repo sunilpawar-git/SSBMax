@@ -1,6 +1,6 @@
 # Initiative B — Codebase UI Quality Execution Plan
 
-**Status:** Phase 5 complete; Android platform-glue migration and privacy/localization audit passed. Initiative-wide completion remains open pending enforcement/release evidence below.
+**Status:** Phase 6 complete; shared UI enforcement and regression prevention are active with green automated gates. Initiative-wide completion remains open pending Phase 7 manual Android/iOS release evidence.
 **Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
 **Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
 **Target branch:** `feature/OIR_Impr_01`
@@ -550,6 +550,28 @@ Add rule tests proving:
 
 No final phase begins while the enforcement rules are flaky or produce unexplained false positives.
 
+## Phase 6 execution evidence and deep check (August 2026)
+
+Completed:
+
+- Added `HardcodedComposeColorRule` for raw hex/RGB literals in shared UI, with the centralized `shared.ui.theme` token package as the only built-in exception. Existing `HardcodedComposeTextRule` and `MissingComposePreviewRule` remain active.
+- Added `IconOnlyControlLabelRule` for statically detectable `IconButton` content; localized named and positional descriptions pass, while missing/null descriptions fail. Decorative icons outside interactive controls remain valid and silent.
+- Added positive and negative rule tests for raw colors, semantic/theme colors, labeled icon actions, unlabeled actions, and preview-compatible enforcement. No baseline entries or suppressions were added.
+- Added staged-change enforcement to `.githooks/pre-commit`; the maintained `scripts/git-hooks/pre-commit` also runs lint, rule tests, and shared Detekt. Contributor documentation now records the exception and suppression format. CI already runs `:lint:test` and `:detekt-rules:test` as part of its unit-test job.
+
+Validation passed:
+
+- `./gradlew :detekt-rules:test`
+- `./gradlew :shared:detekt`
+- `./gradlew :lint:test :detekt-rules:test check`
+- `git diff --check` and project diagnostics
+
+Phase 6 deep check: the Phase 6 goal is **complete**. The requested enforcement categories are covered as follows: hardcoded Compose text and reusable previews were already enforced by Detekt; raw hex/RGB colors and statically detectable unlabeled icon-only controls are now enforced by Detekt; valid semantic/theme usage and invalid usage have regression tests; existing violations remain separately baselined and no baseline growth occurred; pre-commit and CI paths run the enforcement checks; and legitimate exceptions/suppression requirements are documented. The rules are green and produced no unexplained findings.
+
+Tech-debt sweep: resolved the failed first-pass icon-label regression test by tightening positional-label detection, verified the hook syntax/path variants, removed stale `gradle.sh` commands from the touched lint documentation, and confirmed no new suppressions, baselines, generated artifacts, diagnostics, or files over 300 lines. No Phase 6 tech debt remains. Pre-existing repository baseline entries and documented API/opt-in warnings are outside this phase and were not expanded.
+
+The overall Initiative B goal is still **not fully complete**: Phase 7 manual screen-reader, large-text, light/dark theme, contrast, and Android/iOS interaction evidence remains explicitly required.
+
 ---
 
 ## Phase 5 execution evidence and deep check (August 2026)
@@ -648,17 +670,17 @@ The initiative cannot be marked complete until all changed-scope tests and build
 - [ ] Shared accessibility primitives migrated.
 - [ ] Shared feature screens migrated.
 - [ ] Android-only UI migrated where applicable.
-- [ ] No new hardcoded strings/colors introduced.
-- [ ] No unjustified baseline growth.
-- [ ] Lint/Detekt/pre-commit enforcement enabled.
+- [x] No new hardcoded strings/colors introduced.
+- [x] No unjustified baseline growth.
+- [x] Lint/Detekt/pre-commit enforcement enabled.
 - [ ] Light/dark contrast validation passed.
 - [ ] Screen-reader smoke tests completed on Android and iOS.
 - [ ] Active test semantics do not reveal answers or private content.
 - [ ] No credentials, tokens, or PII exposed through UI/logs.
-- [ ] No changed code file exceeds 300 lines.
+- [x] No changed code file exceeds 300 lines.
 - [ ] All phase handoffs completed.
-- [ ] All targeted tests pass.
-- [ ] Full build/check gates pass.
-- [ ] All tech debt incurred during the initiative is resolved.
-- [ ] Architecture and contributor documentation updated.
+- [x] All targeted tests pass.
+- [x] Full build/check gates pass.
+- [x] All tech debt incurred during the initiative is resolved.
+- [x] Architecture and contributor documentation updated.
 - [ ] Final commit created only after the release gate is green.
