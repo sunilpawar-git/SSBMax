@@ -794,6 +794,7 @@
 
     <!-- Student Profile screen (Phase 5: Profile vertical) -->
     <string name="profile_title">Profile</string>
+    <string name="profile_loading">Loading profile</string>
     <string name="profile_settings">Settings</string>
     <string name="profile_premium_member">Premium Member</string>
     <string name="profile_stats_title">Your Statistics</string>
@@ -885,6 +886,7 @@
 
     <!-- Subscription Management screen (Phase 5: Settings vertical) -->
     <string name="subscription_mgmt_title">Subscription &amp; Billing</string>
+    <string name="subscription_mgmt_loading">Loading subscription data</string>
     <string name="subscription_mgmt_cd_back">Back</string>
     <string name="subscription_mgmt_current_plan_label">Current Plan</string>
     <string name="subscription_mgmt_renews_on">Renews on %1$s</string>

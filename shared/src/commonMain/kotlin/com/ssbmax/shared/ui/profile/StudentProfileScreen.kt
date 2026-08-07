@@ -30,12 +30,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.profile.StudentProfileViewModel
+import com.ssbmax.shared.ui.common.loadingSemantics
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.profile_phase1_screening
 import ssbmax.shared.generated.resources.profile_phase2_assessment
 import ssbmax.shared.generated.resources.profile_phase_progress_title
+import ssbmax.shared.generated.resources.profile_loading
 import ssbmax.shared.generated.resources.profile_settings
 import ssbmax.shared.generated.resources.profile_title
 
@@ -80,7 +82,10 @@ fun StudentProfileScreen(
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .loadingSemantics(stringResource(Res.string.profile_loading)),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
             return@Scaffold

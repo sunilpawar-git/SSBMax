@@ -3,6 +3,8 @@ package com.ssbmax.shared.ui.common
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 
@@ -21,6 +23,11 @@ fun Modifier.timerSemantics(
         current = remainingSeconds.toFloat().coerceIn(0f, totalSeconds.toFloat()),
         range = 0f..totalSeconds.toFloat()
     )
+}
+
+fun Modifier.loadingSemantics(description: String): Modifier = semantics {
+    contentDescription = description
+    liveRegion = LiveRegionMode.Polite
 }
 
 fun Modifier.progressSemantics(
