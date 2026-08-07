@@ -443,7 +443,9 @@ Additional Phase 4 migration checkpoint:
 - PPDT, TAT, WAT, SRT, and SD active phases now expose localized timer and progress semantics through `ProgressBarRangeInfo`; WAT/SRT regression tests verify dynamic timer announcements. PPDT timers are non-clickable semantic surfaces rather than false action controls.
 - GTO GD, GPE, and Lecturette active-phase close actions now have localized accessible names. Interview session progress exposes a localized percentage and range semantics; TTS mute state uses the theme error role rather than a raw red color.
 - Shared test error state now uses a polite live region so loading/error/retry flows announce state changes without exposing backend details.
-- Focused psychology-test compilation/tests and shared Android compilation passed. Remaining gaps are explicit coverage depth for PPDT/SD UI tests and screen-by-screen review of result/review, profile/settings/auth, and other GTO/Interview states.
+- Focused psychology-test compilation/tests and shared Android compilation passed. PPDT, TAT, WAT, SRT, SD, GTO, Interview, profile/settings/auth, common error, and result/review implementation sweeps are now complete for the shared UI scope. Dedicated PPDT/SD screen UI tests and broader result/profile screen-reader evidence remain required before the initiative can be marked fully complete.
+- A shared `AccessibilitySemantics.kt` helper now centralizes timer, progress-range, and loading/live-region mechanics while screens retain localized, domain-specific descriptions.
+- Final validation after the balance-screen sweep: `./gradlew check` passed; project diagnostics and `git diff --check` are clean. Existing Android API deprecation, coroutine opt-in, and lint-baseline warnings remain pre-existing.
 
 ---
 
