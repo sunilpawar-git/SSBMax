@@ -35,14 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ssbmax.shared.presentation.interviewsession.InterviewSessionUiState
+import com.ssbmax.shared.ui.common.progressSemantics
 import com.ssbmax.shared.presentation.interviewsession.InterviewSessionViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -213,13 +211,11 @@ private fun InterviewContent(uiState: InterviewSessionUiState, viewModel: Interv
             progress = { uiState.getProgressPercentage() / 100f },
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics {
-                    contentDescription = progressDescription
-                    progressBarRangeInfo = ProgressBarRangeInfo(
-                        uiState.getProgressPercentage().toFloat(),
-                        0f..100f
-                    )
-                }
+                .progressSemantics(
+                    description = progressDescription,
+                    current = uiState.getProgressPercentage().toFloat(),
+                    maximum = 100f
+                )
         )
 
         QuestionCard(
