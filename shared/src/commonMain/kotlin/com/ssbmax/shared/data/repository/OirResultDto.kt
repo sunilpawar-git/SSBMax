@@ -124,7 +124,9 @@ fun OirTestResultDto.toDomain(): OIRTestResult = OIRTestResult(
     skippedQuestions = skippedQuestions,
     totalTimeSeconds = if (totalTimeSeconds == 0) timeTakenSeconds else totalTimeSeconds,
     timeTakenSeconds = timeTakenSeconds,
-    rawScore = rawScore,
+    // Legacy results stored difficulty-weighted raw scores (for example, 20 for 10 correct).
+    // The active OIR contract defines raw score as the correct-answer count.
+    rawScore = correctAnswers,
     percentageScore = percentageScore,
     categoryScores = categoryScores.mapNotNull { (key, score) ->
         runCatching { OIRQuestionType.valueOf(key) }.getOrNull()?.let { type ->

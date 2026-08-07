@@ -61,6 +61,21 @@ class OirResultCacheTest {
     }
 
     @Test
+    fun `legacy weighted raw score is normalized to correct answers when loaded`() {
+        val dto = OirTestResultDto(
+            totalQuestions = 50,
+            correctAnswers = 10,
+            rawScore = 20,
+            percentageScore = 20f
+        )
+
+        val result = dto.toDomain()
+
+        assertEquals(10, result.rawScore)
+        assertEquals(10, result.correctAnswers)
+    }
+
+    @Test
     fun `new cache serialization omits legacy difficulty breakdown`() {
         val dto = OirTestResultDto(correctAnswers = 10, rawScore = 10, percentageScore = 20f)
 
