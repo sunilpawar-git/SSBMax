@@ -1,6 +1,6 @@
 # Initiative B — Codebase UI Quality Execution Plan
 
-**Status:** Phase 4 execution checkpoint complete for Home/dashboard and OIR; remaining Phase 4 vertical migration is explicitly tracked below
+**Status:** Phase 5 complete; Android platform-glue migration and privacy/localization audit passed. Initiative-wide completion remains open pending enforcement/release evidence below.
 **Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
 **Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
 **Target branch:** `feature/OIR_Impr_01`
@@ -549,6 +549,26 @@ Add rule tests proving:
 ```
 
 No final phase begins while the enforcement rules are flaky or produce unexplained false positives.
+
+---
+
+## Phase 5 execution evidence and deep check (August 2026)
+
+Completed:
+
+- Confirmed `app` contains Android platform glue rather than a second Compose screen/navigation graph; `MainActivity` remains the only Android UI host and provides the shared notification-permission and Google Sign-In bridges to `SSBMaxRoot`.
+- Android local notifications now use localized resources for channel descriptions, GTO result copy, fallback titles, and action labels. Psychology and GTO notification builders were split into focused helpers; all changed production Kotlin files are below 300 lines.
+- FCM diagnostics no longer log payload maps, sender values, notification titles/bodies, or session/submission identifiers. User-facing fallback and channel text is resource-backed; deep-link forwarding remains ID-based and unchanged.
+- Added `AndroidPlatformUiQualityContractTest` covering shared-root/provider wiring, launcher registration ordering, resource-backed platform copy, and notification privacy contracts.
+- Tech-debt sweep: removed hardcoded Android notification copy, stale GTO code from the main helper, sensitive payload/identifier logging, overlong touched-file violations, and unused imports/constants. No new suppressions, baselines, generated artifacts, or unresolved diagnostics remain. Existing lint-baseline/API/opt-in warnings remain pre-existing and outside this phase's changed scope.
+
+Validation passed:
+
+- `./gradlew :app:testDebugUnitTest --tests com.ssbmax.architecture.AndroidPlatformUiQualityContractTest`
+- `./gradlew :app:testDebugUnitTest :shared:testDebugUnitTest :app:assembleDebug check`
+- `git diff --check` and project diagnostics
+
+Phase 5 deep check: the Phase 5 goal is **complete for the Android platform scope**. The app has no separate Android Compose UI to migrate, and its platform wrappers preserve the shared UI entry point and ID-based deep-link behavior. The overall Initiative B goal is **not yet complete**: Phase 6 enforcement work is still open, and Phase 7 manual Android/iOS screen-reader, large-text, theme, contrast, and cross-platform smoke-test evidence is explicitly still required. The final handoff checklist must remain unchecked for those items; this phase is not a release-completion claim.
 
 ---
 
