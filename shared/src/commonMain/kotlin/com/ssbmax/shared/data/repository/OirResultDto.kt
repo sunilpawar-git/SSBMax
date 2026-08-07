@@ -8,6 +8,7 @@ import com.ssbmax.shared.domain.model.OIROption
 import com.ssbmax.shared.domain.model.OIRQuestionType
 import com.ssbmax.shared.domain.model.OIRTestResult
 import com.ssbmax.shared.domain.model.QuestionDifficulty
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -32,6 +33,7 @@ data class OirSubmissionDataDto(
     val testResult: OirTestResultDto? = null
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class OirTestResultDto(
     val testId: String = "",
@@ -46,6 +48,8 @@ data class OirTestResultDto(
     val rawScore: Int = 0,
     val percentageScore: Float = 0f,
     val categoryScores: Map<String, OirCategoryScoreDto> = emptyMap(),
+    /** Legacy Firestore field; decoded for compatibility but omitted from new cache writes. */
+    @kotlinx.serialization.EncodeDefault(kotlinx.serialization.EncodeDefault.Mode.NEVER)
     val difficultyBreakdown: Map<String, OirDifficultyScoreDto> = emptyMap(),
     val answeredQuestions: List<OirAnsweredQuestionDto> = emptyList(),
     val completedAt: Long = 0L
@@ -139,7 +143,10 @@ fun OirTestResultDto.toDomain(): OIRTestResult = OIRTestResult(
 
 fun OirAnsweredQuestionDto.toDomain(): OIRAnsweredQuestion? {
     val questionType = runCatching { OIRQuestionType.valueOf(question.type) }.getOrNull() ?: return null
-    val difficulty = runCatching { QuestionDifficulty.valueOf(question.difficulty) }.getOrNull() ?: return null
+    // Difficulty was removed from the OIR contract. Keep the domain's legacy field populated so
+    // historical answer-review records with no difficulty remain readable.
+    val difficulty = runCatching { QuestionDifficulty.valueOf(question.difficulty) }
+        .getOrDefault(QuestionDifficulty.MEDIUM)
     val domainQuestion = OIRQuestion(
         id = question.id,
         questionNumber = question.questionNumber,

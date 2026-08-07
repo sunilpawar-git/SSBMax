@@ -2,6 +2,7 @@ package com.ssbmax.shared.data.repository
 
 import com.ssbmax.shared.domain.model.OIRSubmission
 import com.ssbmax.shared.domain.model.SubmissionStatus
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -21,6 +22,7 @@ internal data class OIRDataDto(
     val gradingTimestamp: Long? = null
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 internal data class OIRSubmissionTestResultDto(
     val testId: String = "",
@@ -35,6 +37,8 @@ internal data class OIRSubmissionTestResultDto(
     val rawScore: Int = 0,
     val percentageScore: Float = 0f,
     val categoryScores: Map<String, CategoryScoreDto> = emptyMap(),
+    /** Legacy Firestore field; decoded for compatibility but omitted from new writes. */
+    @kotlinx.serialization.EncodeDefault(kotlinx.serialization.EncodeDefault.Mode.NEVER)
     val difficultyBreakdown: Map<String, DifficultyScoreDto> = emptyMap(),
     val answeredQuestions: List<OirAnsweredQuestionDto> = emptyList(),
     val completedAt: Long = 0L,

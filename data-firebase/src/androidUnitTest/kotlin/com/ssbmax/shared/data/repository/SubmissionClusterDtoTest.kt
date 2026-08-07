@@ -11,7 +11,9 @@ import com.ssbmax.shared.domain.model.SRTCategory
 import com.ssbmax.shared.domain.model.SubmissionStatus
 import com.ssbmax.shared.domain.model.TestType
 import kotlin.test.Test
+import kotlinx.serialization.json.Json
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -138,6 +140,42 @@ class SubmissionClusterDtoTest {
         assertTrue(dto.testResult.difficultyBreakdown.isEmpty())
         assertEquals(submission.testResult.copy(difficultyBreakdown = emptyMap()), roundTripped.testResult)
         assertEquals(submission.id, roundTripped.id)
+    }
+
+    @Test
+    fun `new OIR result serialization omits legacy difficulty breakdown`() {
+        val dto = OIRSubmissionTestResultDto(
+            totalQuestions = 50,
+            correctAnswers = 25,
+            rawScore = 25,
+            percentageScore = 50f
+        )
+
+        val encoded = Json.encodeToString(OIRSubmissionTestResultDto.serializer(), dto)
+
+        assertFalse(encoded.contains("difficultyBreakdown"))
+    }
+
+    @Test
+    fun `legacy OIR result with complete difficulty breakdown still parses`() {
+        val legacyJson = """
+            {
+              "totalQuestions": 50,
+              "correctAnswers": 40,
+              "rawScore": 40,
+              "percentageScore": 80.0,
+              "difficultyBreakdown": {
+                "EASY": {"totalQuestions": 20, "correctAnswers": 16, "percentage": 80.0},
+                "BROKEN": {"totalQuestions": 10, "correctAnswers": 0, "percentage": 0.0}
+              }
+            }
+        """.trimIndent()
+
+        val dto = Json.decodeFromString(OIRSubmissionTestResultDto.serializer(), legacyJson)
+
+        assertEquals(40, dto.correctAnswers)
+        assertEquals(2, dto.difficultyBreakdown.size)
+        assertTrue(dto.difficultyBreakdown.containsKey("BROKEN"))
     }
 
     @Test
