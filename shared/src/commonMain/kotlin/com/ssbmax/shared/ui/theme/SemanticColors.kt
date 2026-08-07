@@ -34,22 +34,22 @@ data class SemanticColors(
 
 /** Maps semantic roles to the active Material theme, keeping business meaning centralized. */
 fun ColorScheme.toSemanticColors(): SemanticColors = SemanticColors(
-    success = primary,
-    onSuccess = onPrimary,
-    error = error,
-    onError = onError,
-    warning = tertiary,
-    onWarning = onTertiary,
-    informational = secondary,
-    onInformational = onSecondary,
-    selected = primaryContainer,
-    onSelected = onPrimaryContainer,
+    success = secondaryContainer,
+    onSuccess = if (background.red < 0.5f) onSecondaryContainer else onSurface,
+    error = errorContainer,
+    onError = onErrorContainer,
+    warning = tertiaryContainer,
+    onWarning = onSurface,
+    informational = primary,
+    onInformational = onPrimary,
+    selected = primary,
+    onSelected = onPrimary,
     disabled = surfaceVariant,
-    onDisabled = onSurfaceVariant,
-    skipped = surfaceVariant,
-    onSkipped = onSurfaceVariant,
-    testProgress = secondary,
-    onTestProgress = onSecondary
+    onDisabled = onSurface,
+    skipped = background,
+    onSkipped = onBackground,
+    testProgress = primary,
+    onTestProgress = onPrimary
 )
 
 val LocalSemanticColors = staticCompositionLocalOf<SemanticColors> {

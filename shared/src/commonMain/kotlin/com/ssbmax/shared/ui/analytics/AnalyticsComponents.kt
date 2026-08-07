@@ -20,7 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +28,7 @@ import com.ssbmax.shared.domain.model.DifficultyStats
 import com.ssbmax.shared.domain.model.PerformanceOverview
 import com.ssbmax.shared.domain.model.ProgressionStatus
 import com.ssbmax.shared.domain.model.TestTypeStats
+import com.ssbmax.shared.ui.theme.semanticColors
 import com.ssbmax.shared.ui.util.formatOneDecimal
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
@@ -148,15 +149,16 @@ internal fun TestStatsCard(stats: TestTypeStats) {
 
 @Composable
 private fun DifficultyChip(difficulty: String) {
-    val color = when (difficulty) {
-        "EASY" -> Color(0xFF4CAF50)
-        "MEDIUM" -> Color(0xFFFFA726)
-        "HARD" -> Color(0xFFEF5350)
-        else -> MaterialTheme.colorScheme.secondary
+    val colors = MaterialTheme.semanticColors
+    val (color, onColor) = when (difficulty) {
+        "EASY" -> colors.success to colors.onSuccess
+        "MEDIUM" -> colors.warning to colors.onWarning
+        "HARD" -> colors.error to colors.onError
+        else -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
     }
 
     Surface(
-        color = color.copy(alpha = 0.2f),
+        color = color,
         shape = MaterialTheme.shapes.small
     ) {
         Text(
@@ -164,7 +166,7 @@ private fun DifficultyChip(difficulty: String) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = color
+            color = onColor
         )
     }
 }

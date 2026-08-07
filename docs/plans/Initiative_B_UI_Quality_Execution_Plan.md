@@ -1,6 +1,6 @@
 # Initiative B — Codebase UI Quality Execution Plan
 
-**Status:** Phase 1 complete; Phase 2 not started
+**Status:** Phase 2 complete; Phase 3 not started
 **Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
 **Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
 **Target branch:** `feature/OIR_Impr_01`
@@ -281,6 +281,14 @@ Add/update tests for:
 ./gradlew :lint:test
 ./gradlew check
 ```
+
+**Phase 2 completion evidence (August 2026):**
+
+- Semantic roles now resolve through the active Material `ColorScheme`, with light/dark-aware foreground mappings for success, error, warning, informational, selected, disabled, skipped, and test-progress states.
+- `ColorContrast.kt` provides a platform-neutral WCAG contrast calculation; `SemanticUiStandardsTest` verifies all role pairs at the 4.5:1 AA threshold in both themes and verifies state surfaces remain distinguishable.
+- Shared analytics difficulty chips, recommendation banners, score colors, and study category cards no longer carry raw feature colors; they consume semantic theme roles. Study category state is now visualized in the composable layer rather than stored in ViewModel UI data.
+- Validation completed: `:shared:testDebugUnitTest --tests com.ssbmax.shared.ui.theme.SemanticUiStandardsTest`, `:shared:testDebugUnitTest`, `:shared:compileDebugKotlinAndroid`, `:lint:test`, and `check`.
+- Known pre-existing warnings remain in Android Google Sign-In/TTS APIs and unrelated coroutine test opt-ins; no new warnings were introduced by Phase 2.
 
 ---
 

@@ -24,6 +24,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import com.ssbmax.shared.domain.model.AppTheme
 import kotlin.test.Test
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import kotlin.test.assertNotNull
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -47,6 +48,40 @@ class SemanticUiStandardsTest {
         assertSemanticColorsAreUsable(light)
         assertSemanticColorsAreUsable(dark)
         assertNotEquals(light?.selected, dark?.selected)
+    }
+
+    @Test
+    fun `semantic foreground roles meet WCAG AA contrast in both themes`() = runComposeUiTest {
+        var light: SemanticColors? = null
+        var dark: SemanticColors? = null
+
+        setContent {
+            SSBMaxTheme(appTheme = AppTheme.LIGHT) { light = MaterialTheme.semanticColors }
+            SSBMaxTheme(appTheme = AppTheme.DARK) { dark = MaterialTheme.semanticColors }
+        }
+        waitForIdle()
+
+        listOfNotNull(light, dark).forEach { colors ->
+
+            assertTrue(contrastRatio(colors.onSuccess, colors.success) >= 4.5f, "success=${contrastRatio(colors.onSuccess, colors.success)}")
+            assertTrue(contrastRatio(colors.onError, colors.error) >= 4.5f, "error=${contrastRatio(colors.onError, colors.error)}")
+            assertTrue(contrastRatio(colors.onWarning, colors.warning) >= 4.5f, "warning=${contrastRatio(colors.onWarning, colors.warning)}")
+            assertTrue(contrastRatio(colors.onInformational, colors.informational) >= 4.5f, "info=${contrastRatio(colors.onInformational, colors.informational)}")
+            assertTrue(contrastRatio(colors.onDisabled, colors.disabled) >= 4.5f, "disabled=${contrastRatio(colors.onDisabled, colors.disabled)}")
+        }
+    }
+
+    @Test
+    fun `status surfaces remain distinguishable without hue alone`() = runComposeUiTest {
+        var colors: SemanticColors? = null
+        setContent { SSBMaxTheme(appTheme = AppTheme.LIGHT) { colors = MaterialTheme.semanticColors } }
+        waitForIdle()
+
+        val resolved = requireNotNull(colors)
+        assertNotEquals(resolved.success, resolved.error)
+        assertNotEquals(resolved.error, resolved.skipped)
+        assertNotEquals(resolved.selected, resolved.disabled)
+        assertNotEquals(resolved.testProgress, resolved.disabled)
     }
 
     @Test
