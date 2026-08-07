@@ -26,13 +26,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ssbmax.shared.domain.model.PPDTPhase
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.ppdt_exit_cd
@@ -88,10 +86,11 @@ fun TimerChip(timeRemainingSeconds: Int) {
     val isLowTime = timeRemainingSeconds < 30
 
     Surface(
-        modifier = Modifier.semantics {
-            contentDescription = timerDescription
-            progressBarRangeInfo = ProgressBarRangeInfo(timeRemainingSeconds.toFloat(), 0f..30f)
-        },
+        modifier = Modifier.timerSemantics(
+            description = timerDescription,
+            remainingSeconds = timeRemainingSeconds,
+            totalSeconds = 30
+        ),
         shape = MaterialTheme.shapes.small,
         color = if (isLowTime) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = if (isLowTime) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer
