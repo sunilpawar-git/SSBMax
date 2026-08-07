@@ -21,16 +21,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.ssbmax.shared.ui.common.ensureCoilNetworkFetcherRegistered
+import com.ssbmax.shared.ui.common.progressSemantics
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.tat_blank_slide_instruction
@@ -94,10 +93,11 @@ fun TATImageViewingPhase(
                         "${timeRemaining}s",
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (timeRemaining <= 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.semantics {
-                            contentDescription = timerDescription
-                            progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..totalSeconds.toFloat())
-                        }
+                        modifier = Modifier.timerSemantics(
+                            description = timerDescription,
+                            remainingSeconds = timeRemaining,
+                            totalSeconds = totalSeconds
+                        )
                     )
                 }
             }
@@ -115,13 +115,11 @@ fun TATImageViewingPhase(
             progress = { timeRemaining / totalSeconds.toFloat() },
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics {
-                    contentDescription = progressDescription
-                    progressBarRangeInfo = ProgressBarRangeInfo(
-                        timeRemaining.toFloat(),
-                        0f..totalSeconds.toFloat()
-                    )
-                },
+                .progressSemantics(
+                    description = progressDescription,
+                    current = timeRemaining.toFloat(),
+                    maximum = totalSeconds.toFloat()
+                ),
             color = if (timeRemaining < 10) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
     }

@@ -25,12 +25,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.shared.ui.common.progressSemantics
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.tat_blank_slide_reminder_message
@@ -109,10 +108,11 @@ fun TATWritingPhase(
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (timeRemaining <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.semantics {
-                            contentDescription = timerDescription
-                            progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..240f)
-                        }
+                        modifier = Modifier.timerSemantics(
+                            description = timerDescription,
+                            remainingSeconds = timeRemaining,
+                            totalSeconds = 240
+                        )
                     )
                 }
             }
@@ -132,9 +132,11 @@ fun TATWritingPhase(
             progress = { timeRemaining.toFloat() / 240f },
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics {
-                    progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..240f)
-                },
+                .progressSemantics(
+                    description = timerDescription,
+                    current = timeRemaining.toFloat(),
+                    maximum = 240f
+                ),
             color = if (timeRemaining < 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         )
 
