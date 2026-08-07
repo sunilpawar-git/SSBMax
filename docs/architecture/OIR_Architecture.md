@@ -2,6 +2,56 @@
 
 Covers both the **content pipeline** (PDF → Firestore) and the **serving layer** (SQLDelight cache → user test).
 
+## At a Glance
+
+OIR is a 50-question, timed test. A student starts from the shared Compose/KMP test route, passes authentication, subscription, cache-readiness, and question-set gates, then receives a freshly sampled set with this fixed distribution:
+
+```text
+20 verbal reasoning + 20 non-verbal reasoning + 10 numerical ability = 50 questions
+```
+
+Firestore is the source of truth for content, sessions, submissions, and monthly usage. SQLDelight is the local question cache. `shared` owns the domain, ViewModels, UI, and navigation; `data-firebase` owns the GitLive/Firebase implementations for both Android and iOS.
+
+### End-to-End Student Journey
+
+```text
+Student Home
+  → OIR test route (`test/oir/{testId}`)
+  → authentication and monthly eligibility gate
+  → metadata/cache readiness gate
+  → valid 50-question set gate
+  → durable session creation
+  → timed question interaction
+  → submit confirmation and one-shot submission
+  → durable result persistence
+  → idempotent usage recording
+  → session finalization and dashboard invalidation
+  → result route (`test/oir/result/{submissionId}`)
+  → answer review (`test/oir/review/{submissionId}`)
+  → fresh Home dashboard
+```
+
+The result and answer-review routes pass only the durable submission ID. They fetch result data through their own ViewModels; full questions, sessions, and result objects are never passed through navigation.
+
+### Implementation Map
+
+| Responsibility | Implementation |
+|---|---|
+| Navigation and routes | `shared/src/commonMain/kotlin/com/ssbmax/navigation/SSBMaxDestinations.kt`, `PsychTestsGraph.kt` |
+| Test UI | `shared/.../ui/oir/OIRTestScreen.kt` and `ui/oir/components/` |
+| Test state/orchestration | `shared/.../presentation/oir/OIRTestViewModel.kt` |
+| Eligibility | `shared/.../domain/usecase/subscription/CheckTestEligibilityUseCase.kt` |
+| Question-set contract | `shared/.../domain/validation/OIRTestQuestionSetValidator.kt` |
+| Question validity | `shared/.../domain/validation/OIRQuestionValidator.kt` |
+| Cache and sync | `data-firebase/.../GitLiveOIRQuestionCacheManager.kt` |
+| Selection/distribution | `data-firebase/.../GitLiveOIRQuestionSelector.kt` and `shared/.../OIRQuestionDistribution.kt` |
+| Durable sessions | `data-firebase/.../GitLiveTestSessionRepository.kt` |
+| Scoring/submission orchestration | `shared/.../domain/usecase/oir/SubmitOIRTestUseCase.kt` |
+| Firestore result/cache mapping | `shared/.../OIRSubmissionMappers.kt`, `data-firebase/.../GitLiveOirResultRepository.kt` |
+| Result and answer review | `shared/.../ui/oir/OIRTestResultScreen.kt`, `OIRAnswerReviewScreen.kt` |
+| Home refresh | `shared/.../presentation/home/student/StudentHomeViewModel.kt` and `GetOLQDashboardUseCase.kt` |
+| Firestore/Koin implementations | `data-firebase/.../di/RepositoryModule.kt` |
+
 ---
 
 ## Content Pipeline (PDF → Firestore)
@@ -51,7 +101,7 @@ node upload-oir-batch.js batch_pdf_001 --repair   # re-upload missing images + p
 - Total: ~1,255 questions live in Firestore
 - Images: All live at `gs://ssbmax.../oir/pdf_questions/` (public HTTPS); the health gate verified 529 unique URLs with HTTP 200.
 - Content health baseline: 1,069 valid questions and 186 skipped legacy/invalid records; all three runtime categories have ample valid coverage.
-- Meta doc: `test_content/oir/meta/config` targets `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }` (publish with the explicit metadata command)
+- Meta doc: `test_content/oir/meta/config` is published as `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }`.
 - Run `node scripts/check-oir-content-health.js` for the production read-only gate; it performs no writes and requires `FIREBASE_SERVICE_ACCOUNT` (or the local development key).
 
 > **Skipped legacy/invalid records:** The production health check currently reports 186 records that
@@ -106,7 +156,7 @@ a future content drop. Metadata read failures are surfaced as a retryable cache 
 longer silently treats an unreadable metadata document as a current legacy 20-batch bank.
 
 > ✅ **Release gate status:**
-> - Firestore side: metadata is expected to be `{ contentVersion: 4, batchCount: 28 }`; verify with `node scripts/check-oir-content-health.js`.
+> - Firestore side: metadata is published as `{ contentVersion: 4, batchCount: 28, total_questions: 1255, distribution: 20/20/10 }`; verify with `node scripts/check-oir-content-health.js`.
 > - Cache side: SQLDelight stores the local content-version mirror and supports reconciliation, missing-batch top-up, and the two-phase readiness contract.
 > - App side: `GitLiveOIRQuestionCacheManager` is the sole KMP implementation; metadata failures remain visible and retryable.
 
@@ -138,7 +188,7 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **flattene
 | Numerical Ability | 10 | 20% |
 
    (`SPATIAL_REASONING` remains a valid enum value but is no longer a distribution target.)
-3. **Selection-time validation:** `fetchByType` over-fetches (×3) and drops anything the domain `OIRQuestionValidator` rejects, so legacy duds (e.g. the 140 optionless fill-in-blank questions) are skipped here and never reach the test — keeping the assembled set at full count without deleting the data. Smart redistribution tops up across the three live types if one is short.
+3. **Selection-time validation:** `fetchByType` over-fetches (×3) and drops anything the domain `OIRQuestionValidator` rejects, so legacy/invalid records (including optionless fill-in-blank questions) are skipped here and never reach the test — keeping the assembled set at full count without deleting the data. Smart redistribution tops up across the three live types if one is short.
 4. Questions are sampled **from the whole pool**, **from all batches**, **randomly** — `batchId` is **ignored** during selection.
 5. The runtime `OIRQuestionValidator.validateAndFilter` in `OIRTestViewModel` remains as a **defensive assertion** — post-reconcile it should never fire; if it does, it signals an upstream breach and is logged loudly.
 6. Final set is shuffled before presentation.
@@ -164,12 +214,26 @@ Each OIR test is a **freshly sampled 50-question set** drawn from the **flattene
 | PRO | 5 |
 | PREMIUM | Unlimited |
 
-- `canTakeTest(TestType.OIR, userId)` checked before loading — reads Firestore server-side to prevent cache-clearing bypass
-  - Returns `TestEligibility.Eligible` → proceed
-  - Returns `TestEligibility.LimitReached` → show upgrade prompt (also used as fail-closed fallback for unknown errors)
-  - Returns `TestEligibility.NetworkError` → show retryable error; security invariant preserved (only `IOException` / `FirebaseNetworkException` / Firestore `UNAVAILABLE` reach this path)
-- `recordTestUsage()` increments atomically via Firestore transaction after successful submission
-- `markQuestionsUsed()` updates SQLDelight for the 7-day reuse window
+`canTakeTest(TestType.OIR, userId)` is checked against Firestore before content loading, so clearing the local cache cannot bypass the monthly limit:
+
+- `Eligible` → continue.
+- `LimitReached` → stop and show upgrade state.
+- `NetworkError` → stop and show retry state.
+- Unknown/malformed subscription data → fail closed rather than granting access.
+
+`recordTestUsage()` increments usage atomically in a Firestore transaction after durable submission. Its submission/session identity makes retries idempotent. `markQuestionsUsed()` updates SQLDelight for the 7-day reuse window and is best effort after the durable flow succeeds.
+
+### Start-Gate Decision Table
+
+| Condition | Start behavior |
+|---|---|
+| No authenticated user | Stop with authentication-required state |
+| Limit reached | Stop before question loading; show subscription details/upgrade action |
+| Eligibility network or unexpected failure | Stop; show retryable eligibility failure |
+| Metadata unavailable or cache sync failed | Stop; show cache retry state |
+| Fewer than 50 valid questions or missing a required category | Stop; no session interaction begins |
+| Durable session creation failed | Stop; no questions are exposed |
+| All gates pass | Create session, expose exactly 50 questions, and start timer |
 
 ### Submit Flow
 ```
@@ -195,6 +259,35 @@ the durable submission ID, and the review screen fetches the persisted result th
 
 
 
+### Session State Machine
+
+A durable Firestore session is created before questions are exposed. Identity fields (`sessionId`, `userId`, `testType`) are immutable.
+
+```text
+ACTIVE
+  ├─ user exits → ABANDONED (terminal; no resume in this release)
+  ├─ absolute expiry → EXPIRED (terminal)
+  └─ successful durable submit → SUBMITTED (terminal)
+```
+
+The timer derives remaining time from the session's absolute expiry rather than counting local ticks. Backgrounding, delayed frames, and device clock drift cannot extend the server-defined session lifetime. Submission is one-shot in the UI and idempotent in the repository/use-case path.
+
+### Firestore Data and Security Model
+
+| Data | Canonical location | Client invariant |
+|---|---|---|
+| OIR metadata | `test_content/oir/meta/config` | Read-only to app clients; content writes are tooling/server-only |
+| OIR batches | `test_content/oir/batches/{batchId}` | Authenticated content reads only |
+| Test session | `users/{userId}/test_sessions/{sessionId}` | Owner-only; identity and terminal transitions are protected |
+| Submission/result | `users/{userId}/test_submissions/{submissionId}` | Owner-only; finalized result fields are immutable |
+| Monthly usage | `users/{userId}/test_usage/{yyyy-MM}` | Owner-only; month/identity fields are immutable and updates are monotonic |
+
+Firestore rules enforce ownership, authentication, OIR session linkage, immutable identity fields, finalized-submission immutability, and exactly-once usage semantics. The Compose UI and ViewModels never call Firebase directly.
+
+### User-Visible State Contract
+
+The OIR UI has explicit states for loading, authentication required, limit reached, cache/content failure, retry, active test, submit confirmation, submission in progress, result loading/error, and answer-review loading/error. Active question controls are hidden while loading or submitting. Image loading failures have an explicit fallback state, and timer/navigation/image controls expose accessibility labels.
+
 ### Key Files
 | File | Responsibility |
 |---|---|
@@ -205,6 +298,49 @@ the durable submission ID, and the review screen fetches the persisted result th
 | `scripts/oir-extraction/upload-oir-batch.js` (`validateBatch`) | Write-time enforcement of the validator's rules |
 | `shared/.../data/repository/SubscriptionDtos.kt` (`SubscriptionLimits`) | Monthly limits — single source of truth |
 | `shared/.../domain/usecase/oir/SubmitOIRTestUseCase.kt` | Orchestrates score → durable submit → usage → session end → dashboard invalidation |
+
+### KMP Composition
+
+The OIR business flow is shared across Android and iOS. `sharedModule` declares interfaces and ViewModels; `firebaseDataModule` from `data-firebase` supplies the GitLive/Firebase implementations. Android loads both through its Koin composition root, and iOS loads both through `ensureKoinStarted()`. OIR behavior must not be forked into platform-specific ViewModels, selectors, navigation, or eligibility logic.
+
+### Operational Runbook
+
+Run these commands from the repository root after installing `scripts` dependencies with `npm ci --prefix scripts`:
+
+```bash
+# Read-only production verification; no Firestore or Storage writes.
+node scripts/check-oir-content-health.js
+
+# Preview the metadata target; dry run is the default.
+node scripts/set-oir-meta-config.js
+
+# Explicit production metadata publish after review and confirmation.
+node scripts/set-oir-meta-config.js --version 4 --batches 28 --commit
+```
+
+The health check must pass before a content release is considered complete. It verifies metadata consistency, exact batch IDs `batch_pdf_001..028`, the 1,255-question total, stable/unique IDs, valid category coverage, HTTPS image URLs, and HTTP 200 responses. The metadata publisher rejects content-version downgrades and removes the obsolete spatial distribution field. Never run a production write from an unreviewed working tree or with credentials committed to source control.
+
+### Validation Map
+
+| Behavior | Primary validation |
+|---|---|
+| Eligibility and blocked starts | `shared/.../presentation/oir/OIRTestViewModelTest.kt` |
+| Exact count/distribution/validity | `OIRTestQuestionSetValidatorTest.kt`, `GitLiveOIRQuestionSelectorTest.kt` |
+| Cache reconciliation/readiness | `GitLiveOIRQuestionCacheManagerTest.kt`, `GitLiveTestContentRepositoryContentTest.kt` |
+| Session lifecycle/timer | `TestSessionRepository` tests and OIR ViewModel tests |
+| Submission, quota, and idempotency | `SubmitOIRTestUseCaseTest.kt`, `GitLiveTestUsageRecorderTest.kt` |
+| Firestore ownership/security | `FirebaseRulesValidationTest.kt` and rules emulator tests |
+| Result mapping/fallback/review | `SubmissionClusterDtoTest.kt`, result ViewModel/UI tests |
+| Dashboard freshness | `GetOLQDashboardUseCaseTest.kt`, `StudentHomeViewModelTest.kt` |
+| Production content | `node scripts/check-oir-content-health.js` |
+
+### Current Limitations and Release Evidence
+
+- 186 production records are intentionally skipped by the runtime validator; 1,069 valid records remain available, with sufficient verbal, non-verbal, and numerical coverage.
+- Abandoned and expired sessions are terminal and are not resumed.
+- Question-use marking is local and best effort; durable submission, usage, and session state are the source of truth.
+- The production content-health check is automated and read-only. Full first-time and network-interruption journey smoke tests remain manual release evidence.
+- `./gradlew check` is the final project gate; a successful focused OIR test does not replace it.
 
 ---
 
