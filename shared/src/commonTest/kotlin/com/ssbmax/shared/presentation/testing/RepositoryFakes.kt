@@ -87,7 +87,7 @@ class FakeTestContentRepository : TestContentRepository {
     var clearCacheCalls = 0
 
     override suspend fun getOIRQuestions(testId: String) = oirQuestionsResult
-    override suspend fun getOIRTestQuestions(count: Int, difficulty: String?): Result<List<OIRQuestion>> {
+    override suspend fun getOIRTestQuestions(count: Int): Result<List<OIRQuestion>> {
         getOIRQuestionsCallCount++
         return oirQuestionsResult
     }

@@ -103,8 +103,7 @@ class OIRTestViewModel(
                     }
                 createdSessionId = sessionId
                 val questions = testContentRepository.getOIRTestQuestions(
-                    count = config.totalQuestions,
-                    difficulty = null
+                    count = config.totalQuestions
                 ).getOrElse { throw it }
                 val validatedQuestions = OIRQuestionValidator.validateAndFilter(questions) { inv ->
                     logger.e(tag, "OIR question validation failed: ${inv.toLogString()}", null)

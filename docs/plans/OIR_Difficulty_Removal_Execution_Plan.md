@@ -1,6 +1,6 @@
 # OIR Difficulty Removal Execution Plan
 
-**Status:** Proposed; implementation not started
+**Status:** Phase 3 complete; Phases 4–6 pending
 **Parent plan:** `docs/plans/OIR_Impr_Execution_Plan.md`
 **Scope:** Remove Easy/Medium/Hard classification from the OIR product while preserving valid-question selection, 20/20/10 distribution, subscription enforcement, durable sessions, scoring integrity, result persistence, and answer review.
 **Target branch:** `feature/OIR_Impr_01`

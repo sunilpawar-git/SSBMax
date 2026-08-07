@@ -187,9 +187,9 @@ class GitLiveOIRQuestionCacheManager(
     }
 
     /** Delegates question selection to [GitLiveOIRQuestionSelector]; triggers a sync first if the cache is thin. */
-    suspend fun getTestQuestions(count: Int = 50, difficulty: String? = null): Result<List<com.ssbmax.shared.domain.model.OIRQuestion>> {
+    suspend fun getTestQuestions(count: Int = 50): Result<List<com.ssbmax.shared.domain.model.OIRQuestion>> {
         if (!hasEnoughQuestions()) initialSync().getOrThrow()
-        val selected = selector.selectQuestions(count, difficulty).getOrThrow()
+        val selected = selector.selectQuestions(count).getOrThrow()
         return if (selected.size == count) Result.success(selected)
         else Result.failure(IllegalStateException("OIR cache has insufficient valid questions"))
     }
