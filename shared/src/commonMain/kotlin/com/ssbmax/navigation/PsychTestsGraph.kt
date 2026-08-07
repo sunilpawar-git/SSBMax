@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
 import com.ssbmax.shared.domain.model.TestType
+import com.ssbmax.shared.ui.oir.OIRAnswerReviewScreen
 import com.ssbmax.shared.ui.oir.OIRTestResultScreen
 import com.ssbmax.shared.ui.oir.OIRTestScreen
 import com.ssbmax.shared.ui.ppdt.PPDTSubmissionResultScreen
@@ -45,10 +46,16 @@ fun NavGraphBuilder.psychTestsGraph(navController: NavHostController) {
                 }
             },
             onReviewAnswers = {
-                // Review-answers screen isn't ported yet (same gap as the Android
-                // original, which also just has a `// TODO` here) -- not a new gap
-                // introduced by this port.
+                navController.navigate(SSBMaxDestinations.OIRAnswerReview(submissionId))
             }
+        )
+    }
+
+    composable<SSBMaxDestinations.OIRAnswerReview> { backStackEntry ->
+        val submissionId = backStackEntry.toRoute<SSBMaxDestinations.OIRAnswerReview>().sessionId
+        OIRAnswerReviewScreen(
+            submissionId = submissionId,
+            onNavigateBack = { navController.navigateUp() }
         )
     }
 

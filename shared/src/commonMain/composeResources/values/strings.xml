@@ -178,6 +178,12 @@
     <string name="oir_result_submission_not_found">Submission not found</string>
     <string name="oir_result_parse_failed">Failed to parse submission data</string>
     <string name="oir_result_load_failed">Failed to load submission</string>
+    <string name="oir_review_title">Review Answers</string>
+    <string name="oir_review_answer">Question %1$d</string>
+    <string name="oir_review_selected_answer">Your answer: %1$s</string>
+    <string name="oir_review_correct_answer">Correct answer: %1$s</string>
+    <string name="oir_review_explanation">Explanation: %1$s</string>
+    <string name="oir_review_not_answered">Not answered</string>
 
     <!-- Test-limit-reached dialog (Phase 5 port of app/.../ui/tests/common/TestLimitReachedDialog.kt),
          shared across every test type, first wired for OIR. Hardcoded strings in the

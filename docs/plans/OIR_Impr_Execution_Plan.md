@@ -1,6 +1,6 @@
 # OIR Improvement Execution Plan
 
-**Status:** Phase 5 complete; Phase 6 pending
+**Status:** Phase 6 complete; Phase 7 pending
 **Target branch:** `feature/OIR_Impr_01`
 **Scope:** First-time OIR experience from eligibility check through test completion, result display, and Home dashboard refresh.
 **Source architecture:** `docs/architecture/OIR_Architecture.md`
@@ -487,6 +487,8 @@ Also test:
 ```
 
 Verify result screenshots/manual flow on Android and, where available, iOS/shared targets.
+
+**Phase 6 implementation checkpoint:** Complete. Result DTOs now round-trip overall/category/difficulty scores, timing, skipped counts, and complete answered-question data (question, options, selected/correct answers, explanations). Firestore reads and SQLDelight cache reads use the same canonical mapper, malformed enum keys are ignored safely, missing optional fields use safe defaults, and successful Firestore reads populate the cache for equivalent fallback behavior. The result screen now navigates by submission ID to a dedicated answer-review screen with loading/error states. Focused data-firebase compilation and DTO tests passed; changed-file diagnostics and whitespace checks are clean. Full `check` remains the final release gate and must be run before commit.
 
 ---
 
