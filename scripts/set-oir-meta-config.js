@@ -77,6 +77,7 @@ async function main() {
       VERBAL_REASONING: 20,
       NON_VERBAL_REASONING: 20,
       NUMERICAL_ABILITY: 10,
+      SPATIAL_REASONING: admin.firestore.FieldValue.delete(),
     },
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
