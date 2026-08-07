@@ -1,6 +1,6 @@
 # OIR Improvement Execution Plan
 
-**Status:** Phase 6 complete; Phase 7 pending
+**Status:** Phase 7 complete; final release gate pending
 **Target branch:** `feature/OIR_Impr_01`
 **Scope:** First-time OIR experience from eligibility check through test completion, result display, and Home dashboard refresh.
 **Source architecture:** `docs/architecture/OIR_Architecture.md`
@@ -542,6 +542,8 @@ Test failure variants:
 ```
 
 Complete a manual first-time smoke test with network interruption/retry scenarios.
+
+**Phase 7 implementation checkpoint:** Complete for the code/test scope. Submission persistence, usage recording, session finalization, and dashboard invalidation are ordered so a successful OIR submission cannot leave a reusable stale dashboard snapshot. Home returns through a fresh `StudentHomeViewModel`, which fetches the dashboard after the result route is removed; manual refresh remains available as fallback. The dashboard path uses the canonical OIR result mapper and normalizes legacy internal session IDs to the submission document ID, so Home result navigation reopens the same persisted result. Added a regression test proving invalidation that races an in-flight dashboard fetch evicts the fetched snapshot before the next Home load. Existing tests cover cached older results, forced refresh, temporary partial fetch failures, result-cache fallback, and ID reconciliation. Focused shared dashboard/submission tests pass. The full project check, Firestore rules suite, production read-only content-health verification, and manual network-interruption smoke test remain final release-gate evidence and are not claimed by this checkpoint.
 
 ---
 
