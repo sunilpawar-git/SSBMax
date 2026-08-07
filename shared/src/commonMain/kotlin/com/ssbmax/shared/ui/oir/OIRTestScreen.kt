@@ -144,20 +144,36 @@ fun OIRTestScreen(
         }
     }
 
-    if (uiState.showSubmitConfirmation) {
+    OIRTestDialogs(
+        showSubmitConfirmation = uiState.showSubmitConfirmation,
+        showExitDialog = showExitDialog,
+        viewModel = viewModel,
+        onNavigateBack = onNavigateBack,
+        onDismissExit = { showExitDialog = false }
+    )
+}
+
+@Composable
+private fun OIRTestDialogs(
+    showSubmitConfirmation: Boolean,
+    showExitDialog: Boolean,
+    viewModel: OIRTestViewModel,
+    onNavigateBack: () -> Unit,
+    onDismissExit: () -> Unit
+) {
+    if (showSubmitConfirmation) {
         OIRSubmitConfirmationDialog(
             onSubmit = { viewModel.submitTest() },
             onDismiss = { viewModel.dismissSubmitConfirmation() }
         )
     }
-
     if (showExitDialog) {
         OIRExitDialog(
             onExit = {
                 viewModel.pauseTest()
                 onNavigateBack()
             },
-            onDismiss = { showExitDialog = false }
+            onDismiss = onDismissExit
         )
     }
 }
