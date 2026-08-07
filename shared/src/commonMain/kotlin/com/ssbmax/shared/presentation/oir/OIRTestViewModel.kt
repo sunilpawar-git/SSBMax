@@ -153,12 +153,18 @@ class OIRTestViewModel(
             current.size >= 2 -> current
             else -> current + optionId
         }
-        val isAnswerCorrect = if (question.isMultiSelect) updated == question.correctAnswerIds.toSet()
-        else updated.singleOrNull() == question.correctAnswerId
+        val selectionComplete = !question.isMultiSelect ||
+            updated.size == question.correctAnswerIds.size
+        val isAnswerCorrect = if (question.isMultiSelect) {
+            selectionComplete && updated == question.correctAnswerIds.toSet()
+        } else {
+            updated.singleOrNull() == question.correctAnswerId
+        }
         val answer = OIRAnswer(
             questionId = question.id,
             selectedOptionId = updated.singleOrNull(),
             selectedOptionIds = updated,
+            isCorrect = isAnswerCorrect,
             timeTakenSeconds = timeTaken,
             skipped = false
         )
@@ -166,9 +172,9 @@ class OIRTestViewModel(
             state.copy(
                 session = session.copy(answers = session.answers + (question.id to answer)),
                 selectedOptionIds = updated,
-                showFeedback = true,
+                showFeedback = selectionComplete,
                 isCurrentAnswerCorrect = isAnswerCorrect,
-                currentQuestionAnswered = true
+                currentQuestionAnswered = selectionComplete
             )
         }
     }

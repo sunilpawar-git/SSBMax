@@ -233,6 +233,36 @@ class OIRTestViewModelTest {
     }
 
     @Test
+    fun `multi-select answer remains editable until both options are selected`() = runViewModelTest {
+        val multiSelectQuestion = testQuestionSet().first().copy(
+            correctAnswerId = "",
+            correctAnswerIds = listOf("opt_b", "opt_c")
+        )
+        testContentRepository.oirQuestionsResult = Result.success(
+            testQuestionSet().mapIndexed { index, question ->
+                if (index == 0) multiSelectQuestion else question
+            }
+        )
+
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.runCurrent()
+
+        viewModel.selectOption("opt_b")
+        assertEquals(setOf("opt_b"), viewModel.uiState.value.selectedOptionIds)
+        assertEquals(false, viewModel.uiState.value.showFeedback)
+        assertEquals(false, viewModel.uiState.value.currentQuestionAnswered)
+
+        viewModel.selectOption("opt_c")
+        val state = viewModel.uiState.value
+        assertEquals(setOf("opt_b", "opt_c"), state.selectedOptionIds)
+        assertTrue(state.showFeedback)
+        assertTrue(state.isCurrentAnswerCorrect)
+        assertTrue(state.currentQuestionAnswered)
+        assertTrue(state.session?.answers?.get(multiSelectQuestion.id)?.isCorrect == true)
+        viewModel.clearForTest()
+    }
+
+    @Test
     fun `nextQuestion advances index and resets feedback for unanswered question`() = runViewModelTest {
         val viewModel = buildViewModel()
         testDispatcher.scheduler.runCurrent()
