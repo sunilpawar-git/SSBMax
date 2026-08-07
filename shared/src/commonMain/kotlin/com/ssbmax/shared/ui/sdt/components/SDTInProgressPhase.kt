@@ -31,12 +31,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ssbmax.shared.ui.common.progressSemantics
+import com.ssbmax.shared.ui.common.timerSemantics
 import org.jetbrains.compose.resources.stringResource
 import ssbmax.shared.generated.resources.Res
 import ssbmax.shared.generated.resources.sdt_action_exit
@@ -104,13 +103,11 @@ fun SDTInProgressPhase(
                 progress = { questionNumber.toFloat() / totalQuestions },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics {
-                        contentDescription = progressDescription
-                        progressBarRangeInfo = ProgressBarRangeInfo(
-                            questionNumber.toFloat(),
-                            0f..totalQuestions.toFloat()
-                        )
-                    }
+                    .progressSemantics(
+                        description = progressDescription,
+                        current = questionNumber.toFloat(),
+                        maximum = totalQuestions.toFloat()
+                    )
             )
 
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -168,9 +165,10 @@ private fun SDTTimerDisplay(timeRemaining: Int) {
         fontWeight = FontWeight.Bold,
         modifier = Modifier
             .padding(end = 16.dp)
-            .semantics {
-                contentDescription = timerDescription
-                progressBarRangeInfo = ProgressBarRangeInfo(timeRemaining.toFloat(), 0f..1800f)
-            }
+            .timerSemantics(
+                description = timerDescription,
+                remainingSeconds = timeRemaining,
+                totalSeconds = 1800
+            )
     )
 }
