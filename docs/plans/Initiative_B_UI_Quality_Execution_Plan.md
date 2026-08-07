@@ -1,6 +1,6 @@
 # Initiative B — Codebase UI Quality Execution Plan
 
-**Status:** Phase 3 complete; Phase 4 not started
+**Status:** Phase 4 execution checkpoint complete for Home/dashboard and OIR; remaining Phase 4 vertical migration is explicitly tracked below
 **Parent work:** OIR improvements and `docs/plans/OIR_Difficulty_Removal_Execution_Plan.md`
 **Scope:** Codebase-wide Compose accessibility, color/theme consistency, semantic UI quality, regression testing, and lint/Detekt enforcement across shared KMP UI and Android platform UI.
 **Target branch:** `feature/OIR_Impr_01`
@@ -422,6 +422,21 @@ Add/update tests for each migrated vertical:
 ./gradlew :shared:compileDebugKotlinAndroid
 ./gradlew check
 ```
+
+---
+
+## Phase 4 execution evidence and deep check (August 2026)
+
+Completed in this checkpoint:
+
+- Home/student dashboard status colors now use active Material theme roles; instructor dashboard stat cards use semantic theme roles and no longer create a false clickable action when no callback exists.
+- OIR active-test option cards expose radio/checkbox selection semantics and localized selected/correct/incorrect state descriptions. Active questions expose neither explanations nor correctness announcements before submission.
+- OIR regression tests cover answer-key privacy and selected-option semantics; existing Home/dashboard UI tests remain green.
+- No new hardcoded colors were introduced in changed UI files, no changed file exceeds 300 lines, diagnostics are clean, and the full `check` gate passed.
+
+Deep check result: the Phase 4 goal is **not fully complete**. The listed verticals PPDT/TAT/WAT/SRT/SD, GTO, Interview, result/review, profile/settings/auth, and common error flows still require explicit screen-by-screen semantic and sensitive-content review. Phase 5–7 and the final initiative checklist therefore remain open. This is recorded as an execution checkpoint, not a false completion claim.
+
+Tech-debt sweep for this checkpoint: resolved the new Detekt complexity violation by extracting OIR semantic-state mapping; removed raw feature colors from all changed dashboard files; fixed the test-fixture compatibility issue by avoiding an unprovided composition local in reusable Home components. No new suppressions, baselines, generated artifacts, or unresolved diagnostics remain. Pre-existing API deprecation/opt-in and baseline lint warnings remain outside this changed scope.
 
 ---
 

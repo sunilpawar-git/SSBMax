@@ -2,7 +2,9 @@ package com.ssbmax.shared.ui.oir
 
 import androidx.compose.ui.test.ExperimentalTestApi
 
+
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -107,6 +109,28 @@ class OIRTestScreenUiTest {
         onNodeWithText("Q 1/2").assertIsDisplayed()
         onNodeWithText(testQuestions[0].questionText, substring = true).assertIsDisplayed()
         onNodeWithText("Delhi").assertIsDisplayed()
+    }
+
+    @Test
+    fun activeQuestion_doesNotExposeAnswerExplanation() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(currentQuestion = testQuestions[0])
+        setContent { OIRTestScreen(viewModel = mockViewModel) }
+
+        assert(onAllNodesWithText("Delhi is the capital of India.", substring = true).fetchSemanticsNodes().isEmpty())
+        assert(onAllNodesWithText("Correct!", substring = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun selectedOption_exposesSelectionWithoutAnswerKey() = runComposeUiTest {
+        uiStateFlow.value = uiStateFlow.value.copy(currentQuestion = testQuestions[0])
+        every { mockViewModel.selectOption("opt1") } answers {
+            uiStateFlow.value = uiStateFlow.value.copy(selectedOptionIds = setOf("opt1"))
+        }
+        setContent { OIRTestScreen(viewModel = mockViewModel) }
+
+        onNodeWithText("Mumbai").performClick()
+        onNodeWithText("Mumbai").assertIsSelected()
+        assert(onAllNodesWithText("Delhi is the capital of India.", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
     @Test

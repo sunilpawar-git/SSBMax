@@ -149,6 +149,9 @@
     <string name="oir_question_figure_error">Question figure unavailable</string>
     <string name="oir_multi_select_hint">Select exactly 2 options</string>
     <string name="oir_multi_select_selections_complete">2 options selected</string>
+    <string name="oir_option_selected">Selected</string>
+    <string name="oir_option_correct">Correct answer</string>
+    <string name="oir_option_incorrect">Incorrect answer</string>
 
     <!-- OIR test result screen (Phase 5 port of app/.../ui/tests/oir/OIRTestResultScreen.kt).
          The Android original hardcoded these strings (a pre-existing lint-rule violation,
