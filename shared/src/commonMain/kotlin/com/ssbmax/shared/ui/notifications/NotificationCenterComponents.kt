@@ -30,6 +30,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,19 +74,16 @@ internal fun NotificationList(
             }
 
             items(items = group.notifications, key = { it.id }) { notification ->
-                val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = { dismissValue ->
-                        if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                            onDelete(notification.id)
-                            true
-                        } else {
-                            false
-                        }
+                val dismissState = rememberSwipeToDismissBoxState()
+                LaunchedEffect(dismissState.currentValue) {
+                    if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+                        onDelete(notification.id)
                     }
-                )
+                }
 
                 SwipeToDismissBox(
                     state = dismissState,
+                    enableDismissFromStartToEnd = false,
                     backgroundContent = {
                         Box(
                             modifier = Modifier

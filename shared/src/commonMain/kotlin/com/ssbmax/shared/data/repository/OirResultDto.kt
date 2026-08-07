@@ -113,6 +113,7 @@ data class OirAnswerDto(
     val selectedOptionIds: List<String> = emptyList()
 )
 
+@Suppress("DEPRECATION")
 fun OirTestResultDto.toDomain(): OIRTestResult = OIRTestResult(
     testId = testId,
     sessionId = sessionId,

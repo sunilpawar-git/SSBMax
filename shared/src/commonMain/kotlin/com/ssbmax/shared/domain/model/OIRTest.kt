@@ -95,6 +95,7 @@ data class OIRTestSession(
         get() = questions.size - answers.size
 }
 
+@Suppress("DEPRECATION")
 data class OIRTestResult(
     val testId: String,
     val sessionId: String,
