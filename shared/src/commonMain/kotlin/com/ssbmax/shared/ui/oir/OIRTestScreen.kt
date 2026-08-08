@@ -18,7 +18,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.jetbrains.compose.resources.stringResource
@@ -64,6 +66,7 @@ import ssbmax.shared.generated.resources.oir_submit_confirm
  * component isn't warranted yet; revisit if a second ported test-type
  * vertical needs the same shapes).
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OIRTestScreen(
     onTestComplete: (submissionId: String, subscriptionType: SubscriptionTier) -> Unit = { _, _ -> },
@@ -78,6 +81,13 @@ fun OIRTestScreen(
         if (uiState.isCompleted && uiState.sessionId != null && uiState.subscriptionType != null) {
             onTestComplete(uiState.sessionId!!, uiState.subscriptionType!!)
         }
+    }
+
+    // Hardware/predictive back must go through the same exit path as the X button --
+    // otherwise it bypasses pauseTest()'s abandonTestSession() call and leaves the durable
+    // test_sessions doc stuck ACTIVE (see PPDTTestScreen's identical fix for the same bug).
+    BackHandler(enabled = uiState.session != null && !uiState.isCompleted) {
+        showExitDialog = true
     }
 
     if (uiState.isLimitReached) {

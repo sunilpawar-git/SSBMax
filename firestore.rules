@@ -217,19 +217,33 @@ service cloud.firestore {
                        request.resource.data.startTime <= request.time.toMillis() &&
                        request.resource.data.expiresAt > request.time.toMillis();
       
-      // Identity and test configuration are immutable. Only active sessions may become
-      // terminal; clients cannot reactivate submitted, abandoned, or expired sessions.
+      // Identity and test configuration are immutable across any update. Three legal
+      // transitions on the shared userId_testId doc: an active session going terminal
+      // (submit/abandon/expire); a terminal session starting a fresh attempt (the
+      // client reuses the same doc id every time a test is retaken -- see
+      // GitLiveTestSessionRepository's class doc); or a fresh attempt reclaiming a
+      // session whose 2-hour expiresAt has already passed while still marked ACTIVE --
+      // the client doesn't reliably call abandonTestSession on every exit path (back
+      // button, process death), so a past-expiresAt ACTIVE doc is a legitimate stuck
+      // state, not evidence of a live session worth protecting.
       allow update: if isAuthenticated() &&
                        resource.data.userId == request.auth.uid &&
                        request.resource.data.userId == resource.data.userId &&
                        request.resource.data.testId == resource.data.testId &&
                        request.resource.data.testType == resource.data.testType &&
-                       request.resource.data.testId == resource.data.testId &&
-                       request.resource.data.startTime == resource.data.startTime &&
-                       request.resource.data.expiresAt == resource.data.expiresAt &&
-                       resource.data.status == 'ACTIVE' &&
-                       request.resource.data.isActive == false &&
-                       request.resource.data.status in ['ABANDONED', 'SUBMITTED', 'EXPIRED'];
+                       (
+                         (resource.data.status == 'ACTIVE' &&
+                          request.resource.data.isActive == false &&
+                          request.resource.data.status in ['ABANDONED', 'SUBMITTED', 'EXPIRED'] &&
+                          request.resource.data.startTime == resource.data.startTime &&
+                          request.resource.data.expiresAt == resource.data.expiresAt) ||
+                         ((resource.data.status in ['ABANDONED', 'SUBMITTED', 'EXPIRED'] ||
+                           resource.data.expiresAt <= request.time.toMillis()) &&
+                          request.resource.data.isActive == true &&
+                          request.resource.data.status == 'ACTIVE' &&
+                          request.resource.data.startTime <= request.time.toMillis() &&
+                          request.resource.data.expiresAt > request.time.toMillis())
+                       );
       
       // Sessions are retained as an audit trail; clients cannot delete them.
       allow delete: if false;

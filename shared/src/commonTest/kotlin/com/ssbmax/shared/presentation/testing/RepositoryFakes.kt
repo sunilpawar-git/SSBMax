@@ -116,20 +116,29 @@ class FakeTestSessionRepository : TestSessionRepository {
     var endSessionResult: Result<Unit> = Result.success(Unit)
     var endedSessionIds = mutableListOf<String>()
 
+    // Split out from endedSessionIds so tests can assert WHICH terminal transition fired
+    // (e.g. abandon-on-exit vs. complete-on-submit), not just that some transition happened.
+    var completedSessionIds = mutableListOf<String>()
+    var abandonedSessionIds = mutableListOf<String>()
+    var expiredSessionIds = mutableListOf<String>()
+
     override suspend fun hasActiveTestSession(userId: String, testId: String) = hasActiveSessionResult
     override suspend fun createTestSession(userId: String, testId: String, testType: TestType) = createSessionResult
     override suspend fun completeTestSession(sessionId: String): Result<Unit> {
         endedSessionIds += sessionId
+        completedSessionIds += sessionId
         return endSessionResult
     }
 
     override suspend fun abandonTestSession(sessionId: String): Result<Unit> {
         endedSessionIds += sessionId
+        abandonedSessionIds += sessionId
         return endSessionResult
     }
 
     override suspend fun expireTestSession(sessionId: String): Result<Unit> {
         endedSessionIds += sessionId
+        expiredSessionIds += sessionId
         return endSessionResult
     }
 }
