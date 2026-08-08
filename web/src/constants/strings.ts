@@ -56,5 +56,15 @@ export const strings = {
   offline: {
     queuedMessage: 'Test response saved offline. Will sync when back online.',
     reconnectNotice: 'You are currently offline. Local cache enabled.'
+  },
+  studyMaterial: {
+    title: 'Free Study Material',
+    allCategories: 'All Categories',
+    readTime: '{min} min read',
+    markAsRead: 'Mark as Read',
+    completed: 'Completed',
+    noMaterials: 'No study materials available at the moment.',
+    loadError: 'Failed to load study materials.',
+    offlineNotice: 'Viewing cached study material'
   }
 } as const;
