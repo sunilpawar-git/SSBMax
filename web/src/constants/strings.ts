@@ -120,7 +120,9 @@ export const strings = {
     reports: 'AI Reports',
     pricing: 'Officer Pass',
     account: 'Account',
-    settings: 'Settings'
+    settings: 'Settings',
+    privacy: 'Privacy Policy',
+    terms: 'Terms & Refunds'
   },
   landing: {
     heroBadge: 'AI-Powered SSB Intelligence Platform',
@@ -242,5 +244,36 @@ export const strings = {
     appVersion: 'Platform Version',
     pwaStatus: 'PWA Connectivity',
     onlineStatus: 'Network Connection Status'
+  },
+  footer: {
+    rights: 'Tactical Command Platform for Defence Officers.',
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Service & Refunds',
+    contact: 'Assessor Support',
+    disclaimer: 'SSBMax is an independent preparatory platform and is not officially affiliated with the Ministry of Defence or Defence Selection Boards.'
+  },
+  privacy: {
+    title: 'Candidate Privacy Policy & Data Security',
+    subtitle: 'Enterprise-grade data protection standards for SSB candidate responses and AI psychological dossiers.',
+    sec1Title: '1. Candidate Information Collection',
+    sec1Text: 'We store basic profile data (Name, Email, Target SSB Board, Entry Stream) strictly to personalize your SSB preparatory experience and tailor Gemini 2.5 Flash AI assessments.',
+    sec2Title: '2. Psychological Test Data & AI Processing',
+    sec2Text: 'Your answers for OIR, TAT, WAT, SRT, PPDT, and Self-Description tests are processed via encrypted cloud channels. Psychological dossiers are generated exclusively for candidate review and are never shared with external third parties.',
+    sec3Title: '3. Data Security & Encryption',
+    sec3Text: 'All network transmissions utilize TLS 1.3 256-bit encryption. Candidate test submissions stored in Firebase Firestore strictly follow role-based access rules.',
+    sec4Title: '4. Candidate Right to Erasure',
+    sec4Text: 'Candidates retain full ownership of their preparatory data and can request complete account and dossier erasure at any time via Account Settings.'
+  },
+  terms: {
+    title: 'Terms of Service & Refund Guidelines',
+    subtitle: 'Legal agreement, candidate code of conduct, and 100% transparent Razorpay payment refund rules.',
+    sec1Title: '1. Officer Pass Membership Terms',
+    sec1Text: 'Access to SSBMax Pro Officer Pass features, including unlimited Gemini 2.5 Flash AI dossier evaluations and 15 OLQ radar analytics, is granted per active subscription period.',
+    sec2Title: '2. 100% Refund Guarantee & Policy',
+    sec2Text: 'We offer a hassle-free 7-day money-back guarantee. If you are unsatisfied with your Officer Pass, submit a refund request to receive a 100% full refund processed via Razorpay.',
+    sec3Title: '3. Candidate Code of Conduct',
+    sec3Text: 'Candidates agree to use the platform solely for personal SSB preparation. Redistribution or unauthorized automated scraping of psychological test material and AI evaluation models is prohibited.',
+    sec4Title: '4. Independent Platform Disclaimer',
+    sec4Text: 'SSBMax is an independent educational preparatory platform. It is not directly affiliated with, endorsed by, or representing the Ministry of Defence or official Services Selection Boards.'
   }
 } as const;

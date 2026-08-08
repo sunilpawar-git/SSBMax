@@ -3,6 +3,7 @@ import { ShieldCheck, Menu, X, Sun, Moon, Wifi, WifiOff, LayoutDashboard, FileTe
 import { strings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { Footer } from '../legal/Footer';
 
 export interface AppLayoutProps {
   children: ReactNode;
@@ -156,19 +157,8 @@ export const AppLayout: FC<AppLayoutProps> = ({ children, activeTab = 'home', on
         {children}
       </main>
 
-      {/* Tactical Footer */}
-      <footer className="w-full bg-slate-950 border-t border-slate-800/80 text-slate-400 py-8 px-4 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-sky-400" />
-            <span className="text-sm font-bold text-slate-200 tracking-wide">{strings.common.appName}</span>
-            <span className="text-xs text-slate-500">| {strings.common.appTagline}</span>
-          </div>
-          <p className="text-xs text-slate-500">
-            &copy; {new Date().getFullYear()} {strings.common.appName}. Tactical Command Platform for Defence Officers.
-          </p>
-        </div>
-      </footer>
+      {/* Tactical Footer Component */}
+      <Footer onNavClick={handleNavClick} />
     </div>
   );
 };
