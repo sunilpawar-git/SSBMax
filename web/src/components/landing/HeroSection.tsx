@@ -9,7 +9,7 @@ export interface HeroSectionProps {
 
 export const HeroSection: FC<HeroSectionProps> = ({ onStartFreeClick, onUnlockProClick }) => {
   return (
-    <section className="relative overflow-hidden py-12 md:py-20 flex flex-col items-center text-center">
+    <section className="relative overflow-hidden py-12 md:py-20 flex flex-col items-center text-center" data-testid="hero-section">
       {/* Glow Background Gradient Orbs */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
