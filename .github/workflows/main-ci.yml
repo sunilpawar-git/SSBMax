@@ -376,6 +376,37 @@ jobs:
           path: '**/build/reports/detekt/detekt.html'
           retention-days: 7
 
+  # ── Web Platform CI (ssbmax-web) ────────────────────────────────────
+  web-ci:
+    name: Web Platform CI (ssbmax-web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Run Codebase Audit
+        run: node scripts/audit-web-codebase.js
+
+      - name: Run Web Unit Tests
+        working-directory: web
+        run: npm test
+
+      - name: Build Web Production Artifacts
+        working-directory: web
+        run: npm run build
+
   # ── Single required check for branch protection ──────────────────────
   # Make THIS the required status check in branch-protection rules; it stays
   # stable even as the jobs above are added or renamed.
@@ -393,7 +424,7 @@ jobs:
     name: CI Success
     runs-on: ubuntu-latest
     if: always()
-    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build, firestore-rules]
+    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build, firestore-rules, web-ci]
     steps:
       - name: Verify all jobs succeeded
         run: |
@@ -404,14 +435,17 @@ jobs:
           echo "unit-tests:         ${{ needs.unit-tests.result }}"
           echo "build:              ${{ needs.build.result }}"
           echo "firestore-rules:    ${{ needs.firestore-rules.result }}"
+          echo "web-ci:             ${{ needs.web-ci.result }}"
           if [ "${{ needs.wrapper-validation.result }}" != "success" ] || \
              [ "${{ needs.security-scan.result }}" != "success" ] || \
              [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.detekt.result }}" != "success" ] || \
              [ "${{ needs.unit-tests.result }}" != "success" ] || \
              [ "${{ needs.build.result }}" != "success" ] || \
-             [ "${{ needs.firestore-rules.result }}" != "success" ]; then
+             [ "${{ needs.firestore-rules.result }}" != "success" ] || \
+             [ "${{ needs.web-ci.result }}" != "success" ]; then
             echo "❌ One or more CI jobs failed."
             exit 1
           fi
           echo "✅ All CI jobs passed."
+
