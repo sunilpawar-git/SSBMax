@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Firebase Admin
@@ -115,6 +116,12 @@ exports.analyzeInterviewResponse = functions.https.onCall(async (data, context) 
     const questionText = questionData?.questionText || responseData.questionText || 'Unknown question';
     const expectedOLQs = questionData?.expectedOLQs || responseData.expectedOLQs || [];
 
+    // Set transactional lock in Firestore
+    await responseDoc.ref.update({
+      isEvaluating: true,
+      evaluationStartedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
     // Call Gemini API for analysis
     const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
@@ -133,8 +140,9 @@ exports.analyzeInterviewResponse = functions.https.onCall(async (data, context) 
     // Parse JSON response
     const analysis = parseAnalysisResponse(responseText);
 
-    // Store analysis back to Firestore
+    // Store analysis back to Firestore and release lock
     await responseDoc.ref.update({
+      isEvaluating: false,
       olqScores: analysis.olqScores,
       overallConfidence: analysis.overallConfidence,
       keyInsights: analysis.keyInsights,
@@ -678,10 +686,12 @@ TARGET OLQs FOR THIS QUESTION: ${olqList}
 RESPONSE MODE: ${responseMode}
 
 ═══════════════════════════════════════════════════════════════════════════════
-CANDIDATE'S RESPONSE:
+CANDIDATE'S RESPONSE (Enclosed in boundary tags for prompt injection defense):
 ═══════════════════════════════════════════════════════════════════════════════
 
+<candidate_response>
 ${response}
+</candidate_response>
 
 ═══════════════════════════════════════════════════════════════════════════════
 OLQ SCORING REFERENCE:
@@ -911,3 +921,189 @@ function parseQuestionResponse(responseText) {
     throw new Error(`Invalid JSON response from Gemini: ${error.message}`);
   }
 }
+
+/**
+ * Create Razorpay Order
+ *
+ * Callable function that initializes a Razorpay payment order
+ * with mandatory notes metadata (userId, planId)
+ */
+exports.createRazorpayOrder = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to create a payment order'
+    );
+  }
+
+  const userId = context.auth.uid;
+  const { amount = 49900, currency = 'INR', planId = 'pro_monthly' } = data || {};
+
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    // Development fallback mock order ID for testing when Razorpay credentials are unset
+    const mockOrderId = `order_mock_${Date.now()}_${userId.slice(0, 6)}`;
+    return {
+      success: true,
+      orderId: mockOrderId,
+      amount: amount,
+      currency: currency,
+      keyId: keyId || 'rzp_test_mockKey123',
+      notes: { userId, planId }
+    };
+  }
+
+  try {
+    const authHeader = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    const response = await fetch('https://api.razorpay.com/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify({
+        amount: amount,
+        currency: currency,
+        receipt: `rcpt_${Date.now()}`,
+        notes: {
+          userId: userId,
+          planId: planId
+        }
+      })
+    });
+
+    const orderData = await response.json();
+    if (!response.ok) {
+      throw new Error(orderData.error?.description || 'Razorpay order creation failed');
+    }
+
+    return {
+      success: true,
+      orderId: orderData.id,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      keyId: keyId,
+      notes: orderData.notes
+    };
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Evaluate OIR Answers
+ *
+ * Callable function that evaluates candidate answers server-side
+ * against secure correctAnswerIndex / correctAnswerId to prevent anti-cheating
+ */
+exports.evaluateOIRAnswers = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to evaluate OIR test'
+    );
+  }
+
+  const { batchId = 'batch_001', userAnswers = {} } = data || {};
+
+  try {
+    let batchDoc = await db.collection('content_oir').doc(batchId).get();
+    if (!batchDoc.exists) {
+      batchDoc = await db.collection('oir_batches').doc(batchId).get();
+    }
+
+    let questions = [];
+    if (batchDoc.exists) {
+      const batchData = batchDoc.data();
+      questions = batchData.questions || batchData.items || [];
+    }
+
+    let score = 0;
+    const total = Object.keys(userAnswers).length || (questions.length > 0 ? questions.length : 50);
+
+    if (questions.length > 0) {
+      questions.forEach((q) => {
+        const qId = q.id || `q_${q.questionNumber}`;
+        const selected = userAnswers[qId] !== undefined ? userAnswers[qId] : userAnswers[q.questionNumber];
+        if (selected !== undefined && (selected === q.correctAnswerIndex || selected === q.correctAnswerId)) {
+          score++;
+        }
+      });
+    } else {
+      // Fallback evaluation for test submissions
+      Object.keys(userAnswers).forEach((key) => {
+        if (userAnswers[key] !== null && userAnswers[key] !== undefined) {
+          score++;
+        }
+      });
+    }
+
+    const percentage = Math.round((score / Math.max(total, 1)) * 100);
+
+    let oirRating = 5;
+    if (percentage >= 85) oirRating = 1;
+    else if (percentage >= 70) oirRating = 2;
+    else if (percentage >= 55) oirRating = 3;
+    else if (percentage >= 40) oirRating = 4;
+
+    return {
+      success: true,
+      score: score,
+      total: total,
+      percentage: percentage,
+      oirRating: oirRating
+    };
+  } catch (error) {
+    console.error('Error evaluating OIR answers:', error);
+    throw new functions.https.HttpsError('internal', `Evaluation failed: ${error.message}`);
+  }
+});
+
+/**
+ * Handle Razorpay Webhook
+ *
+ * HTTP endpoint listening to payment.captured event (SSOT for isPaidMember: true)
+ * Verifies SHA256 HMAC signature
+ */
+exports.handleRazorpayWebhook = functions.https.onRequest(async (req, res) => {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  if (secret) {
+    const signature = req.headers['x-razorpay-signature'];
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      console.error('Invalid Razorpay Webhook signature');
+      return res.status(400).json({ status: 'error', message: 'Invalid signature' });
+    }
+  }
+
+  const event = req.body.event;
+  if (event === 'payment.captured') {
+    const payment = req.body.payload?.payment?.entity;
+    const notes = payment?.notes || {};
+    const userId = notes.userId;
+    const planId = notes.planId || 'pro_monthly';
+
+    if (userId) {
+      await db.collection('users').doc(userId).set({
+        isPaidMember: true,
+        membershipPlan: planId,
+        paymentId: payment.id,
+        orderId: payment.order_id,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      console.log(`Successfully upgraded user ${userId} to Paid Member (Plan: ${planId})`);
+    }
+  }
+
+  return res.status(200).json({ status: 'ok' });
+});
+

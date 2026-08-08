@@ -76,6 +76,17 @@ export const strings = {
     noMaterials: 'No study materials available at the moment.',
     loadError: 'Failed to load study materials.',
     offlineNotice: 'Viewing cached study material'
+  },
+  olq: {
+    scoreCardTitle: 'Officer-Like Qualities (OLQ) Assessment',
+    factor1: 'Factor I: Intellectual Qualities',
+    factor2: 'Factor II: Social Qualities',
+    factor3: 'Factor III: Dynamic Qualities',
+    factor4: 'Factor IV: Character & Physical Qualities',
+    recommendations: 'Key Recommendations & Improvement Areas',
+    overallConfidence: 'Overall Assessment Confidence',
+    scoreFormat: 'Score: {score} / 10',
+    noScores: 'No OLQ scores available.'
   }
 } as const;
 
