@@ -315,6 +315,37 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
+  # ── Firestore rules-unit tests ───────────────────────────────────────
+  # Guards against a repeat of the stuck-ACTIVE test_sessions incident: a
+  # firestore.rules change that looked like a tightening (or a
+  # simplification of the update rule's three-way OR) silently broke a real
+  # client transition, and nothing in CI exercised the rules file to catch
+  # it before merge. See firestore-tests/test_sessions.rules.test.mjs.
+  firestore-rules:
+    name: Firestore Rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+
+      - name: Install rules-test dependencies
+        working-directory: firestore-tests
+        run: npm ci
+
+      - name: Run rules-unit tests against the emulator
+        run: firebase emulators:exec --only firestore --project demo-ssbmax-rules-test "npm --prefix firestore-tests test"
+
   # ── Detekt (Kotlin static analysis) ──────────────────────────────────
   # Fails only on NEW smells; existing ones are grandfathered per-module via
   # detekt-baseline.xml (a ratchet target to drive down over time).
@@ -362,7 +393,7 @@ jobs:
     name: CI Success
     runs-on: ubuntu-latest
     if: always()
-    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build]
+    needs: [wrapper-validation, security-scan, lint, detekt, unit-tests, build, firestore-rules]
     steps:
       - name: Verify all jobs succeeded
         run: |
@@ -372,12 +403,14 @@ jobs:
           echo "detekt:             ${{ needs.detekt.result }}"
           echo "unit-tests:         ${{ needs.unit-tests.result }}"
           echo "build:              ${{ needs.build.result }}"
+          echo "firestore-rules:    ${{ needs.firestore-rules.result }}"
           if [ "${{ needs.wrapper-validation.result }}" != "success" ] || \
              [ "${{ needs.security-scan.result }}" != "success" ] || \
              [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.detekt.result }}" != "success" ] || \
              [ "${{ needs.unit-tests.result }}" != "success" ] || \
-             [ "${{ needs.build.result }}" != "success" ]; then
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.firestore-rules.result }}" != "success" ]; then
             echo "❌ One or more CI jobs failed."
             exit 1
           fi

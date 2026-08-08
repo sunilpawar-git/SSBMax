@@ -80,6 +80,7 @@ class SDTTestViewModel(
     private var timerGeneration = 0L
     private var timerJob: Job? = null
     private var capturedUserId: String? = null
+    private var capturedSessionId: String? = null
 
     fun loadTest(testId: String = "sdt_standard") {
         viewModelScope.launch {
@@ -114,6 +115,7 @@ class SDTTestViewModel(
             _uiState.update { it.copy(loadingMessage = "Fetching questions from cloud...") }
 
             testSessionRepository.createTestSession(userId, testId, TestType.SD)
+                .onSuccess { sessionId -> capturedSessionId = sessionId }
                 .onFailure { e ->
                     observability.logger.e(tag, "Failed to create SDT test session: $testId", e)
                     _uiState.update { it.copy(isLoading = false, loadingMessage = null, error = TestError.CLOUD_REQUIRED) }
@@ -263,6 +265,7 @@ class SDTTestViewModel(
                 .onSuccess { submissionId ->
                     analysisTrigger.trigger(TestType.SD, submissionId)
                     usageRecorder.recordTestUsage(TestType.SD, userId, submissionId)
+                    capturedSessionId?.let { testSessionRepository.completeTestSession(it) }
                     _uiState.update {
                         it.copy(
                             isLoading = false, isSubmitted = true, submissionId = submissionId,
@@ -276,6 +279,17 @@ class SDTTestViewModel(
                     observability.logger.e(tag, "Failed to submit SDT test for user: $userId", error)
                     _uiState.update { it.copy(isLoading = false, error = TestError.SUBMIT_FAILED) }
                 }
+        }
+    }
+
+    // Exiting a test must abandon the durable session (mirrors PPDT/OIR's pauseTest()) so a
+    // retake isn't blocked by a stuck-ACTIVE test_sessions doc for up to its 2-hour expiresAt.
+    fun pauseTest() {
+        val sessionId = capturedSessionId ?: return
+        _uiState.update { it.copy(isTimerActive = false) }
+        timerJob?.cancel()
+        viewModelScope.launch {
+            testSessionRepository.abandonTestSession(sessionId)
         }
     }
 
