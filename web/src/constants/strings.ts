@@ -152,5 +152,28 @@ export const strings = {
     skipModal: 'Skip for Now',
     editDiagnostic: 'Edit Profile Diagnostic',
     profileSaved: 'Diagnostic profile updated successfully.'
+  },
+  radar: {
+    title: '15 Officer Like Qualities (OLQ) Radar Profile',
+    subtitle: 'Interactive 15-axis assessment polygon mapping candidate scores against baseline thresholds.',
+    candidateScore: 'Candidate Score',
+    benchmarkLabel: 'SSB Baseline Threshold (7.0)',
+    selectOlqHint: 'Click or hover over an OLQ point to view detailed assessment reasoning.',
+    noData: 'No OLQ radar dataset available.'
+  },
+  dossier: {
+    title: 'Military Psychologist AI Dossier',
+    classification: 'CONFIDENTIAL // FOR OFFICIAL ASSESSOR USE ONLY',
+    candidateIdLabel: 'Candidate ID',
+    assessedDateLabel: 'Assessment Date',
+    overallStatusLabel: 'Psychological Recommendation Status',
+    statusRecommended: 'RECOMMENDED FOR SELECTION BOARD',
+    statusBorderline: 'BORDERLINE / REQUIRES CONFERENCE PROBE',
+    statusNotRecommended: 'NOT RECOMMENDED AT PRESENT',
+    summaryTitle: 'Executive Psychological Overview',
+    strengthsTitle: 'Observed Key Strengths',
+    concernsTitle: 'Areas of Concern / Red Flags',
+    probesTitle: 'Suggested Interview & GTO Probes',
+    noData: 'No Psychologist Dossier available. Complete a psychology battery test to generate.'
   }
 } as const;
