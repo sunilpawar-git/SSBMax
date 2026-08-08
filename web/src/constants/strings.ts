@@ -118,7 +118,9 @@ export const strings = {
     practice: 'Practice Tests',
     study: 'Study Material',
     reports: 'AI Reports',
-    pricing: 'Officer Pass'
+    pricing: 'Officer Pass',
+    account: 'Account',
+    settings: 'Settings'
   },
   landing: {
     heroBadge: 'AI-Powered SSB Intelligence Platform',
@@ -199,5 +201,46 @@ export const strings = {
     concernsTitle: 'Areas of Concern / Red Flags',
     probesTitle: 'Suggested Interview & GTO Probes',
     noData: 'No Psychologist Dossier available. Complete a psychology battery test to generate.'
+  },
+  account: {
+    title: 'Candidate Account Profile',
+    subtitle: 'Manage your SSB candidate profile, subscription status, and target board credentials.',
+    candidateDetails: 'Candidate Profile Details',
+    displayName: 'Full Name',
+    email: 'Email Address',
+    authStatus: 'Authentication Status',
+    signedIn: 'Authenticated Officer Cadet',
+    guestUser: 'Guest Cadet',
+    membershipTier: 'Active Pass Membership',
+    uidLabel: 'Candidate UID',
+    targetBoard: 'Target SSB Board',
+    entryStream: 'Entry Stream',
+    prepStatus: 'Preparation Stage',
+    editDiagnostic: 'Edit Profile',
+    upgradeTier: 'Upgrade Pass',
+    signOut: 'Sign Out Account'
+  },
+  settings: {
+    title: 'Candidate Command Settings',
+    subtitle: 'Configure theme preferences, notification triggers, and offline data caching.',
+    appearanceTitle: 'Appearance & Display Theme',
+    appearanceSub: 'Toggle between Tactical Dark Mode and Officer Light Mode.',
+    themeLabel: 'Current Active Theme',
+    themeDark: 'Tactical Dark Mode',
+    themeLight: 'Officer Light Mode',
+    notificationsTitle: 'Notification & Intelligence Sync',
+    notificationsSub: 'Manage test reminders, AI report notifications, and offline sync alerts.',
+    emailAlerts: 'Email AI Report Dossiers',
+    offlineSyncAlerts: 'Offline Queue Sync Alerts',
+    practiceReminders: 'Daily SSB Practice Reminders',
+    dataStorageTitle: 'Data & Offline Cache',
+    dataStorageSub: 'Manage local data cache and offline test submissions.',
+    clearCache: 'Clear Local Cache',
+    cacheCleared: 'Local cache cleared successfully.',
+    systemTitle: 'Platform & Environment Diagnostics',
+    systemSub: 'Verify SSBMax web application build version and PWA connectivity.',
+    appVersion: 'Platform Version',
+    pwaStatus: 'PWA Connectivity',
+    onlineStatus: 'Network Connection Status'
   }
 } as const;

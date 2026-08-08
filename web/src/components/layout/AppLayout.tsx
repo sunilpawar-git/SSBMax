@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState } from 'react';
-import { ShieldCheck, Menu, X, Sun, Moon, Wifi, WifiOff, LayoutDashboard, FileText, BookOpen, BarChart3, Award } from 'lucide-react';
+import { ShieldCheck, Menu, X, Sun, Moon, Wifi, WifiOff, LayoutDashboard, FileText, BookOpen, BarChart3, Award, User, Settings } from 'lucide-react';
 import { strings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -21,7 +21,9 @@ export const AppLayout: FC<AppLayoutProps> = ({ children, activeTab = 'home', on
     { id: 'practice', label: strings.nav.practice, icon: FileText },
     { id: 'study', label: strings.nav.study, icon: BookOpen },
     { id: 'reports', label: strings.nav.reports, icon: BarChart3 },
-    { id: 'pricing', label: strings.nav.pricing, icon: Award }
+    { id: 'pricing', label: strings.nav.pricing, icon: Award },
+    { id: 'account', label: strings.nav.account, icon: User },
+    { id: 'settings', label: strings.nav.settings, icon: Settings }
   ];
 
   const handleNavClick = (tabId: string) => {
