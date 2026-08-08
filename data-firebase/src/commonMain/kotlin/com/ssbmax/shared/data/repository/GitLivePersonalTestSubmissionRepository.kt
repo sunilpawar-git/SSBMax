@@ -11,7 +11,6 @@ import dev.gitlive.firebase.firestore.Direction
 import dev.gitlive.firebase.firestore.Source
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.transform
 
 /**
@@ -135,7 +134,6 @@ class GitLivePersonalTestSubmissionRepository {
                 if (filter.shouldFilterSnapshot(dto.data.analysisStatus, dto.data.olqResult != null, snapshot.metadata)) return@transform
                 emit(dto.data.toDomain())
             }
-            .catch { emit(null) }
 
     // ===========================
     // OIR

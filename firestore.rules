@@ -273,7 +273,7 @@ service cloud.firestore {
                        ((resource.data.userId == request.auth.uid && resource.data.status == 'IN_PROGRESS') ||
                         // Allow status and data.analysisStatus updates for background analysis workers
                         (resource.data.userId == request.auth.uid &&
-                         resource.data.status in ['PENDING_ANALYSIS', 'ANALYZING']) ||
+                         resource.data.status in ['PENDING_ANALYSIS', 'ANALYZING', 'SUBMITTED_PENDING_REVIEW']) ||
                         (resource.data.instructorId == request.auth.uid) ||
                         (isAssessor() && resource.data.keys().hasAny(['batchId']) &&
                          get(/databases/$(database)/documents/batches/$(resource.data.batchId)).data.instructorId == request.auth.uid));
