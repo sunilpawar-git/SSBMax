@@ -87,6 +87,34 @@ export const strings = {
     overallConfidence: 'Overall Assessment Confidence',
     scoreFormat: 'Score: {score} / 10',
     noScores: 'No OLQ scores available.'
+  },
+  nav: {
+    dashboard: 'Command Center',
+    landing: 'Home',
+    practice: 'Practice Tests',
+    study: 'Study Material',
+    reports: 'AI Reports',
+    pricing: 'Officer Pass'
+  },
+  landing: {
+    heroBadge: 'AI-Powered SSB Intelligence Platform',
+    heroTitle: 'Master the Services Selection Board with AI Precision',
+    heroSubtitle: 'Comprehensive Stage-I Screening, Stage-II Psychology Battery (TAT, WAT, SRT, SD), and Gemini 2.5 Flash AI Dossier Evaluation with 15 OLQ Analytics.',
+    startFree: 'Start Free OIR Test',
+    unlockPro: 'Unlock Pro Officer Pass',
+    statOlq: '15 Officer Like Qualities',
+    statStage: '5-Day SSB Coverage',
+    statAi: 'Gemini 2.5 AI Analysis',
+    featureTitle: 'Complete Selection Board Suite',
+    featureSubtitle: 'Trained on standardized Defence Selection Board guidelines for Army, Navy, and Air Force aspirants.'
+  },
+  dashboard: {
+    title: 'Candidate Command Center',
+    subtitle: 'Track your preparation progress, run timed SSB test simulators, and review AI OLQ assessments.',
+    readinessScore: 'SSB Readiness Score',
+    stage1Title: 'Stage I: Screening Battery',
+    stage2Title: 'Stage II: Psychology Tests',
+    recentReports: 'Recent AI Dossier Reports',
+    noReports: 'No AI test reports generated yet. Complete a Psychology test to receive your 15 OLQ evaluation.'
   }
 } as const;
-
