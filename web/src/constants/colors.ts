@@ -33,4 +33,4 @@ export const themeColors = {
   }
 } as const;
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light' | 'system';

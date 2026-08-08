@@ -40,4 +40,11 @@ describe('HeroSection Component', () => {
     expect(screen.getByText(strings.landing.statStage)).toBeInTheDocument();
     expect(screen.getByText(strings.landing.statAi)).toBeInTheDocument();
   });
+
+  it('uses theme-adaptive dark: text and background classes for light/dark contrast compliance', () => {
+    const { container } = render(<HeroSection />);
+    const heading = container.querySelector('h1');
+    expect(heading?.className).toContain('dark:text-white');
+    expect(heading?.className).toContain('text-slate-900');
+  });
 });

@@ -1,5 +1,5 @@
 import { useState, useEffect, FC } from 'react';
-import { Sun, Moon, Wifi, WifiOff, Download, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Monitor, Wifi, WifiOff, Download, ShieldCheck } from 'lucide-react';
 import { strings } from '../../constants/strings';
 import { useTheme } from '../../hooks/useTheme';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
@@ -33,6 +33,12 @@ export const Header: FC = () => {
     if (choiceResult.outcome === 'accepted') {
       setDeferredPrompt(null);
     }
+  };
+
+  const getThemeTitle = () => {
+    if (theme === 'dark') return `${strings.header.toggleThemeLight} (Current: Dark)`;
+    if (theme === 'light') return `${strings.header.toggleThemeSystem} (Current: Light)`;
+    return `${strings.header.toggleThemeDark} (Current: System OS)`;
   };
 
   return (
@@ -82,17 +88,25 @@ export const Header: FC = () => {
           </button>
         )}
 
-        {/* Theme Switcher */}
+        {/* Theme Switcher Button */}
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          title={theme === 'dark' ? strings.header.toggleThemeLight : strings.header.toggleThemeDark}
-          aria-label={theme === 'dark' ? strings.header.toggleThemeLight : strings.header.toggleThemeDark}
+          title={getThemeTitle()}
+          aria-label={getThemeTitle()}
           data-testid="theme-toggle-button"
         >
-          {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-300" />}
+          {theme === 'dark' ? (
+            <Moon className="w-5 h-5 text-sky-400" />
+          ) : theme === 'light' ? (
+            <Sun className="w-5 h-5 text-amber-400" />
+          ) : (
+            <Monitor className="w-5 h-5 text-emerald-400" />
+          )}
         </button>
       </div>
     </header>
   );
 };
+
+export default Header;

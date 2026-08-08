@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { strings } from '../../constants/strings';
-import { InteractiveRadarChart, OLQRadarItem } from '../evaluation/InteractiveRadarChart';
+import { InteractiveRadarChart } from '../evaluation/InteractiveRadarChart';
 import { PsychologistDossier, PsychologistDossierData } from '../evaluation/PsychologistDossier';
 import { OLQScoreCard, OLQScoreItem } from '../evaluation/OLQScoreCard';
-import { Sparkles, Lock, ArrowRight, History } from 'lucide-react';
+import { Sparkles, Lock, ArrowRight, History, Eye, UserCheck } from 'lucide-react';
 
 export interface AIReportAttempt {
   id: string;
@@ -67,136 +67,145 @@ export const AIReportsPage: React.FC<AIReportsPageProps> = ({
   onSignIn,
   onStartTest
 }) => {
-  const hasUserReports = !!(userReports && userReports.olqScores.length > 0);
-  const [showSampleMode, setShowSampleMode] = useState(!hasUserReports);
+  const [showSample, setShowSample] = useState(!userReports);
 
-  const activeOlqScores = showSampleMode || !hasUserReports ? SAMPLE_OLQ_SCORES : userReports.olqScores;
-  const activeDossier = showSampleMode || !hasUserReports ? SAMPLE_DOSSIER : userReports.dossier;
-
-  const radarItems: OLQRadarItem[] = activeOlqScores.map((s) => ({
-    olq: s.olq,
-    score: s.score,
-    reasoning: s.reasoning
-  }));
+  const activeReports = showSample || !userReports ? null : userReports;
+  const olqData = activeReports?.olqScores || SAMPLE_OLQ_SCORES;
+  const dossierData = activeReports?.dossier || SAMPLE_DOSSIER;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 p-4 sm:p-6">
+    <div className="w-full max-w-6xl mx-auto space-y-8" data-testid="ai-reports-page">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
-              {strings.reportsPage.title}
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-text-primary)]">
-            {strings.reportsPage.title}
-          </h1>
-          <p className="text-sm text-[var(--color-text-secondary)] mt-1 max-w-2xl">
-            {strings.reportsPage.subtitle}
-          </p>
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-bold uppercase tracking-wider">
+          <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+          <span>{strings.reportsPage.title}</span>
         </div>
-
-        {hasUserReports && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowSampleMode(!showSampleMode)}
-              className="px-4 py-2 text-xs font-semibold rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)] transition-all"
-            >
-              {showSampleMode ? strings.reportsPage.toggleUser : strings.reportsPage.toggleSample}
-            </button>
-          </div>
-        )}
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          {strings.reportsPage.title}
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400 text-sm max-w-2xl mx-auto">
+          {strings.reportsPage.subtitle}
+        </p>
       </div>
 
       {/* Guest Auth Banner */}
       {isGuest && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Lock className="w-5 h-5 text-[var(--color-warning)] shrink-0" />
-            <p className="text-xs text-[var(--color-text-primary)]">{strings.reportsPage.guestBanner}</p>
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm" data-testid="guest-banner">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>{strings.reportsPage.guestBanner}</span>
           </div>
-          {onSignIn && (
-            <button
-              onClick={onSignIn}
-              className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white text-xs font-bold hover:opacity-90 shrink-0 transition-opacity"
-            >
-              {strings.reportsPage.signInAction}
-            </button>
-          )}
+          <button
+            onClick={onSignIn}
+            className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold transition-colors shrink-0"
+            data-testid="guest-signin-btn"
+          >
+            {strings.reportsPage.signInAction}
+          </button>
         </div>
       )}
 
-      {/* Sample Banner Notice */}
-      {(showSampleMode || !hasUserReports) && (
-        <div className="p-4 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 rounded text-[10px] font-black bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+      {/* Sample Banner if no user report or viewing sample */}
+      {(showSample || !userReports) && (
+        <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-800 dark:text-sky-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-bold uppercase tracking-wider">
               {strings.reportsPage.sampleBadge}
             </span>
-            <p className="text-xs text-[var(--color-text-secondary)]">{strings.reportsPage.sampleBanner}</p>
+            <span>{strings.reportsPage.sampleBanner}</span>
           </div>
           {onStartTest && (
             <button
               onClick={onStartTest}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white text-xs font-bold hover:opacity-90 transition-opacity shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold transition-colors shrink-0 flex items-center gap-1.5"
             >
-              {strings.reportsPage.startTest}
+              <span>{strings.reportsPage.startTest}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       )}
 
-      {/* 15 OLQ Radar Chart */}
-      <InteractiveRadarChart scores={radarItems} />
+      {/* Controls Bar: Toggle Sample & Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md">
+        {userReports && (
+          <button
+            onClick={() => setShowSample(!showSample)}
+            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-2"
+          >
+            {showSample ? (
+              <>
+                <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{strings.reportsPage.toggleUser}</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <span>{strings.reportsPage.toggleSample}</span>
+              </>
+            )}
+          </button>
+        )}
 
-      {/* Military Psychologist Dossier */}
-      <PsychologistDossier dossier={activeDossier} />
-
-      {/* Detailed OLQ Factor Breakdown */}
-      <OLQScoreCard olqScores={activeOlqScores} overallConfidence={88} />
-
-      {/* Recent Test History */}
-      <div className="p-6 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-            <History className="w-5 h-5 text-[var(--color-accent)]" />
-            {strings.reportsPage.historyTitle}
-          </h3>
-          {onStartTest && (
-            <button
-              onClick={onStartTest}
-              className="text-xs font-semibold text-[var(--color-accent)] hover:underline flex items-center gap-1"
-            >
-              {strings.reportsPage.startTest}
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-        {recentAttempts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {recentAttempts.map((attempt) => (
-              <div
-                key={attempt.id}
-                className="p-4 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] space-y-1"
-              >
-                <div className="flex justify-between items-center text-xs font-bold text-[var(--color-text-primary)]">
-                  <span>{attempt.testType}</span>
-                  <span className="text-[var(--color-accent)]">{attempt.scoreOrRating}</span>
-                </div>
-                <p className="text-[11px] text-[var(--color-text-muted)]">{attempt.date}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-[var(--color-text-muted)] italic text-center py-4">
-            {strings.reportsPage.noHistory}
-          </p>
+        {onStartTest && (
+          <button
+            onClick={onStartTest}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md"
+            data-testid="take-new-test-btn"
+          >
+            <span>{strings.reportsPage.startTest}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         )}
       </div>
+
+      {/* Main Sections: Radar Chart, Dossier & Score Card */}
+      <div className="space-y-8">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-xl space-y-4" data-testid="radar-view">
+          <InteractiveRadarChart scores={olqData} />
+        </div>
+
+        <div data-testid="dossier-view">
+          <PsychologistDossier dossier={dossierData} />
+        </div>
+
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-xl space-y-4" data-testid="olq-view">
+          <OLQScoreCard olqScores={olqData} />
+        </div>
+      </div>
+
+      {/* Recent Assessment Attempts Table */}
+      {recentAttempts.length > 0 && (
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-xl space-y-4" data-testid="attempts-history">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-base">
+            <History className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+            <h2>{strings.reportsPage.historyTitle}</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 uppercase font-bold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th className="p-3">Test Type</th>
+                  <th className="p-3">Date</th>
+                  <th className="p-3">Score / Rating</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                {recentAttempts.map((attempt) => (
+                  <tr key={attempt.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="p-3 font-semibold text-slate-900 dark:text-white">{attempt.testType}</td>
+                    <td className="p-3 text-slate-500 dark:text-slate-400">{attempt.date}</td>
+                    <td className="p-3 font-bold text-sky-600 dark:text-sky-400">{attempt.scoreOrRating}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export default AIReportsPage;

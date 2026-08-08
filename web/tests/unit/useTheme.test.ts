@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTheme } from '../../src/hooks/useTheme';
 
-describe('useTheme hook', () => {
+describe('useTheme hook - Advanced System & Mode Tests', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.classList.remove('dark');
@@ -13,44 +13,69 @@ describe('useTheme hook', () => {
     document.documentElement.classList.remove('dark');
   });
 
-  it('should initialize theme based on default or localStorage', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(['dark', 'light']).toContain(result.current.theme);
-  });
+  it('should support system theme mode and resolve based on matchMedia', () => {
+    // Mock matchMedia for dark preference
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('dark'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
 
-  it('should toggle theme from dark to light and update DOM and localStorage', () => {
-    localStorage.setItem('theme', 'dark');
     const { result } = renderHook(() => useTheme());
 
-    expect(result.current.theme).toBe('dark');
+    act(() => {
+      result.current.setTheme('system');
+    });
+
+    expect(result.current.theme).toBe('system');
+    expect(result.current.resolvedTheme).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-
-    act(() => {
-      result.current.toggleTheme();
-    });
-
-    expect(result.current.theme).toBe('light');
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(localStorage.getItem('theme')).toBe('light');
   });
 
-  it('should explicitly set theme using setTheme', () => {
+  it('should resolve light system theme mode when prefers-color-scheme is light', () => {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }));
+
     const { result } = renderHook(() => useTheme());
 
     act(() => {
-      result.current.setTheme('light');
+      result.current.setTheme('system');
     });
 
-    expect(result.current.theme).toBe('light');
+    expect(result.current.theme).toBe('system');
+    expect(result.current.resolvedTheme).toBe('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(localStorage.getItem('theme')).toBe('light');
+  });
+
+  it('should cycle through light, dark, and system modes on toggle', () => {
+    const { result } = renderHook(() => useTheme());
 
     act(() => {
       result.current.setTheme('dark');
     });
-
     expect(result.current.theme).toBe('dark');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(localStorage.getItem('theme')).toBe('dark');
+
+    act(() => {
+      result.current.toggleTheme();
+    });
+    expect(result.current.theme).toBe('light');
+
+    act(() => {
+      result.current.toggleTheme();
+    });
+    expect(result.current.theme).toBe('system');
   });
 });

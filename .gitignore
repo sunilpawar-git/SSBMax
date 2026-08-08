@@ -182,3 +182,7 @@ ci_check.sh
 # build (Firebase pod versions can shift); nothing outside Gradle reads it,
 # unlike a podspec meant for external Xcode/Podfile consumption.
 /shared/*.podspec
+
+# Wrangler
+.wrangler/
+
