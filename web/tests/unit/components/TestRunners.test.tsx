@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UnifiedTestRunner } from '../../../src/components/testRunners/UnifiedTestRunner';
 import { OIRTestViewModel } from '../../../src/viewmodels/OIRTestViewModel';
 import { PsychologyTestViewModel } from '../../../src/viewmodels/PsychologyTestViewModel';
@@ -115,5 +115,39 @@ describe('TestRunners Components Suite', () => {
     render(<UnifiedTestRunner testType="PPDT" psychologyViewModel={vm} userId="user-123" />);
 
     expect(await screen.findByText(strings.psychology.ppdtTitle)).toBeInTheDocument();
+  });
+
+  it('triggers exit modal and handles exit confirmation for OIR runner', async () => {
+    const vm = new OIRTestViewModel(mockRepo as any);
+    const handleExit = vi.fn();
+    const { OIRTestRunner } = await import('../../../src/components/testRunners/OIRTestRunner');
+    
+    render(<OIRTestRunner viewModel={vm} userId="user-123" onExitTest={handleExit} />);
+    
+    const exitBtns = await screen.findAllByText(strings.exitTest.exitButton);
+    fireEvent.click(exitBtns[0]);
+
+    expect(screen.getByText(strings.exitTest.confirmTitle)).toBeInTheDocument();
+    const modalConfirmBtns = screen.getAllByText(strings.exitTest.confirmButton);
+    fireEvent.click(modalConfirmBtns[modalConfirmBtns.length - 1]);
+
+    expect(handleExit).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers exit modal and handles exit confirmation for Psychology runner', async () => {
+    const vm = new PsychologyTestViewModel('TAT', mockRepo as any);
+    const handleExit = vi.fn();
+    const { PsychologyTestRunner } = await import('../../../src/components/testRunners/PsychologyTestRunner');
+    
+    render(<PsychologyTestRunner viewModel={vm} userId="user-123" onExitTest={handleExit} />);
+    
+    const exitBtns = await screen.findAllByText(strings.exitTest.exitButton);
+    fireEvent.click(exitBtns[0]);
+
+    expect(screen.getByText(strings.exitTest.confirmTitle)).toBeInTheDocument();
+    const modalConfirmBtns = screen.getAllByText(strings.exitTest.confirmButton);
+    fireEvent.click(modalConfirmBtns[modalConfirmBtns.length - 1]);
+
+    expect(handleExit).toHaveBeenCalledTimes(1);
   });
 });

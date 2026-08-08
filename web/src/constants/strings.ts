@@ -304,5 +304,25 @@ export const strings = {
     interviewTitle: 'Personal Interview Questionnaire',
     interviewDesc: 'Comprehensive PIQ form evaluation with targeted officer probes.',
     searchPlaceholder: 'Search practice tests...'
+  },
+  reportsPage: {
+    title: 'AI Psychological Assessment Reports',
+    subtitle: 'Comprehensive 15 OLQ Radar Analytics and Military Psychologist Dossiers powered by Gemini 2.5 Flash.',
+    sampleBanner: 'Sample AI Report — Complete a test battery to generate your personalized psychological dossier.',
+    sampleBadge: 'SAMPLE DEMO REPORT',
+    guestBanner: 'Sign in with Google to save your AI reports and synchronize dossiers across devices.',
+    signInAction: 'Sign In to Save',
+    startTest: 'Take Practice Test',
+    historyTitle: 'Recent Test Attempt History',
+    noHistory: 'No test attempts recorded yet.',
+    toggleSample: 'View Sample Report',
+    toggleUser: 'View My Dossier'
+  },
+  exitTest: {
+    exitButton: 'Exit Test',
+    confirmTitle: 'Exit Test Confirmation',
+    confirmMessage: 'Are you sure you want to exit? Your current test progress will be lost.',
+    confirmButton: 'Exit Test',
+    cancelButton: 'Continue Test'
   }
 } as const;
