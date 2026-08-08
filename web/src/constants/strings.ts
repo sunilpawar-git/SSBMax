@@ -63,6 +63,30 @@ export const strings = {
     paymentSuccess: 'Payment successful! Access granted.',
     paymentFailed: 'Payment verification failed.'
   },
+  subscription: {
+    title: 'Officer Pass Membership Tiers',
+    subtitle: 'Choose your subscription plan to unlock full Gemini 2.5 AI psychological dossier evaluations and unlimited SSB test batteries.',
+    freePlanTitle: 'Free Cadet Pass',
+    freePlanPrice: '₹0 / Month',
+    freePlanBadge: 'FREE',
+    freeFeature1: 'Stage I OIR Test Simulators',
+    freeFeature2: 'Basic Practice Tests',
+    freeFeature3: 'Cached Study Materials',
+    currentPlan: 'Current Active Plan',
+    proPlanTitle: 'Pro Officer Pass',
+    proPlanPrice: '₹499 / Month',
+    proPlanBadge: 'MOST POPULAR',
+    proFeature1: 'Unlimited Stage II Psych Batteries (TAT, WAT, SRT, SD)',
+    proFeature2: 'Gemini 2.5 Flash AI Assessor Dossier Reports',
+    proFeature3: '15 Officer-Like Qualities (OLQ) Radar Analytics',
+    proFeature4: 'Stage I PPDT Canvas & Narration Practice',
+    proFeature5: 'Priority Assessor Feedback & Cloud Sync',
+    upgradeNow: 'Upgrade to Officer Pass',
+    processing: 'Processing Order...',
+    successBadge: 'Pro Officer Pass Active',
+    successMessage: 'Welcome to Pro Membership! Access unlocked across all AI evaluation engines.',
+    guarantee: '100% Refund Policy & Secure 256-Bit Razorpay Encryption'
+  },
   offline: {
     queuedMessage: 'Test response saved offline. Will sync when back online.',
     reconnectNotice: 'You are currently offline. Local cache enabled.'

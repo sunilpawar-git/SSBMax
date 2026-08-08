@@ -1,6 +1,7 @@
 import { useState, FC } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
 import { HeroSection } from './components/landing/HeroSection';
+import { SubscriptionPage } from './components/subscription/SubscriptionPage';
 
 export const App: FC = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -21,6 +22,7 @@ export const App: FC = () => {
           onUnlockProClick={handleUnlockPro}
         />
       )}
+      {activeTab === 'pricing' && <SubscriptionPage />}
     </AppLayout>
   );
 };
