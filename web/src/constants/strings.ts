@@ -35,7 +35,12 @@ export const strings = {
     timerLabel: 'Time Remaining',
     questionCount: 'Question {current} of {total}',
     submitTest: 'Submit Test',
-    requiresOnline: 'OIR score evaluation requires online connection.'
+    submitting: 'Submitting test answers...',
+    requiresOnline: 'OIR score evaluation requires online connection.',
+    completedTitle: 'OIR Test Completed',
+    scoreLabel: 'Your Score',
+    ratingLabel: 'OIR Rating',
+    noQuestions: 'No questions available'
   },
   psychology: {
     tatTitle: 'Thematic Apperception Test (TAT)',
@@ -44,7 +49,12 @@ export const strings = {
     ppdtTitle: 'Picture Perception & Discussion Test (PPDT)',
     sdTitle: 'Self Description (SD)',
     slideTimer: 'Slide Time',
-    requiresOnline: 'AI Evaluation requires active internet connection.'
+    requiresOnline: 'AI Evaluation requires active internet connection.',
+    writeResponsePlaceholder: 'Write your story / response here...',
+    nextSlide: 'Next Slide',
+    finishTest: 'Complete & Submit',
+    completedTitle: 'Psychology Test Completed',
+    completedMessage: 'Your responses have been recorded and sent for AI evaluation.'
   },
   payment: {
     upgradeTitle: 'Unlock Pro Membership',
@@ -68,3 +78,4 @@ export const strings = {
     offlineNotice: 'Viewing cached study material'
   }
 } as const;
+

@@ -4,7 +4,7 @@ export interface QueuedSubmission {
   id: string;
   testType: 'OIR' | 'TAT' | 'WAT' | 'SRT' | 'SD' | 'PPDT';
   userId: string;
-  payload: Record<string, unknown>;
+  payload: any;
   timestamp: number;
 }
 

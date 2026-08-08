@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { StudyMaterialViewModel } from '../../src/viewmodels/StudyMaterialViewModel';
 import { IContentRepository } from '../../src/repositories/interfaces/IContentRepository';
-import { StudyMaterial, BatchDocument, OIRQuestion } from '../../src/types/testContent';
+import { StudyMaterial, BatchDocument, OIRQuestion, PPDTContext, TATSet, WATBatch, SRTBatch } from '../../src/types/testContent';
 
 class MockContentRepository implements IContentRepository {
   async getStudyMaterials(): Promise<StudyMaterial[]> {
@@ -34,8 +34,31 @@ class MockContentRepository implements IContentRepository {
     return materials.find((m) => m.id === id) || null;
   }
 
-  async getOIRQuestions(): Promise<OIRQuestion[]> {
-    return [];
+  async getOIRQuestions(_batchIndex = 0): Promise<BatchDocument<OIRQuestion>> {
+    return { id: 'batch_0', batchIndex: 0, totalItems: 0, items: [] };
+  }
+
+  async getPPDTContext(): Promise<PPDTContext> {
+    return {
+      id: 'ppdt-1',
+      title: 'PPDT',
+      imageUrl: 'https://example.com/img.jpg',
+      viewingTimeSeconds: 30,
+      writingTimeSeconds: 240,
+      instructions: []
+    };
+  }
+
+  async getTATSet(): Promise<TATSet> {
+    return { id: 'tat-1', setName: 'Set 1', imageUrls: [], slideDurationSeconds: 240, totalSlides: 0 };
+  }
+
+  async getWATBatch(): Promise<WATBatch> {
+    return { id: 'wat-1', words: [], displayDurationSeconds: 15 };
+  }
+
+  async getSRTBatch(): Promise<SRTBatch> {
+    return { id: 'srt-1', situations: [], totalTimeMinutes: 30 };
   }
 
   async getCappedBatch<T>(_collectionName: string): Promise<BatchDocument<T>> {
